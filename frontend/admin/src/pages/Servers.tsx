@@ -797,7 +797,7 @@ export function ServersPage() {
           <EmptyState
             icon={<Server strokeWidth={1.5} />}
             title="No server with heartbeat"
-            description="Agent mode: only servers that send a heartbeat are shown. Create a server (or run ./manage.sh seed-agent-server), set SERVER_ID to its id in your node-agent env, then start the node-agent. See docs/agent-mode-one-server.md."
+            description="Agent mode: only servers that send a heartbeat are shown. Create a server (or run ./manage.sh seed-agent-server), set SERVER_ID to its id in your node-agent env, then start the node-agent. See docs/ops/agent-mode-one-server.md."
             actions={<ButtonLink to="/servers/new" variant="primary">Add Server</ButtonLink>}
           />
         ) : (

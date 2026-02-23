@@ -78,6 +78,6 @@ Rules are defined in `config/monitoring/alert_rules.yml`. Ensure Alertmanager is
 
 Link alerts to runbooks:
 
-- `INCIDENT_RESPONSE_RUNBOOK.md` — Compromise scenarios
-- `docs/RUNBOOK.md` — Operational procedures
+- `incident-response-runbook.md` — Compromise scenarios
+- `../ops/runbook.md` — Operational procedures
 - `docs/OUTLINE_RUSSIA_DPI_HARDENING.md` — DPI/blocking

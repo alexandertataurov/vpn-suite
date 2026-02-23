@@ -53,7 +53,7 @@ Outline (Shadowsocks) is complementary to AmneziaWG: use it where WireGuard is b
 
 ## References
 
-- **Config Generation Contract**: [CONFIG_GENERATION_CONTRACT.md](CONFIG_GENERATION_CONTRACT.md) — canonical builder, required fields, verified AWG keys.
+- **Config Generation Contract**: [../specs/config-generation-contract.md](../specs/config-generation-contract.md) — canonical builder, required fields, verified AWG keys.
 - `backend/app/services/issue_service.py` (issue_device: runtime obfuscation merge for user-issued configs).
 - `backend/app/services/node_runtime_docker.py` (get_obfuscation_from_node), `backend/app/core/amnezia_config.py` (get_obfuscation_params, build_amnezia_client_config).
 - `.cursor/skills/vpn-suite/troubleshooting.md` (handshake failure, obfuscation match).

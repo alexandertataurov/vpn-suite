@@ -45,7 +45,7 @@
 
 | Day | Task | Owner |
 |-----|------|-------|
-| 1 | Key rotation policy document; link to INCIDENT_RESPONSE_RUNBOOK | Ops |
+| 1 | Key rotation policy document; link to ../security/incident-response-runbook.md | Ops |
 | 2 | Backup restore drill | Ops |
 | 3 | Red Team simulation (see RED_TEAM_SIMULATION_PLAN.md) | Security |
 | 4 | External pentest prep (scope, contacts) | Ops |

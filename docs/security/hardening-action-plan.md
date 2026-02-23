@@ -110,11 +110,11 @@
 
 ## 6. Definition of Done (Audit)
 
-- [x] INFRASTRUCTURE_MAP.md
-- [x] SECURITY_RISK_REPORT.md
-- [x] PERFORMANCE_BOTTLENECK_REPORT.md
-- [x] THREAT_MODEL.md
-- [x] HARDENING_ACTION_PLAN.md
+- [x] docs/ops/infrastructure-map.md
+- [x] docs/audits/security-risk-report.md
+- [x] docs/audits/performance-bottleneck-report.md
+- [x] threat-model.md
+- [x] hardening-action-plan.md
 - [x] Agent token fix (secrets.compare_digest)
 
 System readiness:
@@ -131,9 +131,9 @@ System readiness:
 **Target:** Commercial VPN operator grade; 10x growth; external review.
 
 ### Deliverables
-- `docs/NETWORK_SEGMENTATION_MAP.md` — Zero-trust zones, port matrix, metadata block
-- `docs/ALERT_POLICY.md` — Thresholds, severities, runbook links
-- `docs/INCIDENT_RESPONSE_RUNBOOK.md` — Agent/DB/Redis/key leak/DDoS scenarios
+- `../ops/network-segmentation-map.md` — Zero-trust zones, port matrix, metadata block
+- `alert-policy.md` — Thresholds, severities, runbook links
+- `incident-response-runbook.md` — Agent/DB/Redis/key leak/DDoS scenarios
 
 ### v2 Checklist Summary
 | Domain | Status |
@@ -148,8 +148,8 @@ System readiness:
 | Auth hardening (refresh rotation, JWT blacklist) | Refresh rotation **DONE**; access-token blacklist pending |
 
 ### v2 Execution
-- `docs/EXECUTION_ROADMAP.md` — 2–4 week prioritized sprint
-- `docs/RED_TEAM_SIMULATION_PLAN.md` — Adversarial test scenarios
+- `../backlog/execution-roadmap.md` — 2–4 week prioritized sprint
+- `red-team-simulation-plan.md` — Adversarial test scenarios
 
 ### v2 Readiness Score (Projected)
 Security: 9/10 | Performance: 8.5/10 | Enterprise: 8.5/10

@@ -38,7 +38,7 @@ This document reflects the current control-plane model:
 
 - **S1, S2, H1–H4** must match the server in every issued client config; otherwise handshake or traffic can fail or be detectable by DPI.
 - **User-issued configs** (bot/WebApp) get obfuscation from the node when a runtime adapter is available: `issue_service.issue_device` calls `get_obfuscation_from_node(resolved_server_id)` and merges over ServerProfile defaults, same as admin-issued configs.
-- **Server [Interface] obfuscation**: The amnezia-awg2 entrypoint supports optional env vars (`AWG_Jc`, `AWG_Jmin`, `AWG_Jmax`, `AWG_S1`, `AWG_S2`, `AWG_H1`–`AWG_H4`) that are written into the server config; when set, they must match issued client configs. See `docs/AMNEZIAWG_OBFUSCATION_RUNBOOK.md`.
+- **Server [Interface] obfuscation**: The amnezia-awg2 entrypoint supports optional env vars (`AWG_Jc`, `AWG_Jmin`, `AWG_Jmax`, `AWG_S1`, `AWG_S2`, `AWG_H1`–`AWG_H4`) that are written into the server config; when set, they must match issued client configs. See [amneziawg-obfuscation-runbook.md](amneziawg-obfuscation-runbook.md).
 - Verify on each node / after image change: `docker exec <container> wg show <iface>` and confirm Jc, Jmin, Jmax, S1, S2, H1–H4 in output. Ensure ServerProfile `request_params` or runtime sync (`get_obfuscation_from_node`) use the same S1, S2, H1–H4.
 - Use AmneziaWG (profile_type=awg) as default in production, not plain WG. Prefer per-server or per-region obfuscation in ServerProfile. See `backend/app/services/node_runtime_docker.py` and `backend/app/core/amnezia_config.py`.
 

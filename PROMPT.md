@@ -1,6 +1,24 @@
-Prompt:
-Use this workflow together: (1) Invoke system-architect-gatekeeper to review the change and produce an architecture note, Go/No-Go decision, and task breakdown by agent. (2) Invoke orchestrator to enforce boundaries, hand off cross-boundary work as TODO + handoff notes, and keep work in small increments with manual test checklists. (3) Invoke frontend-engineer for frontend, backend-engineer for backend, and ci-watcher for CI/tooling in parallel as needed. (4) Invoke observability-engineer to add telemetry, standardize correlation IDs, define SLOs, and produce metrics, log spec, dashboard changes, and a runbook snippet.
+# Multi-Agent Workflow Prompt
 
-Or a shorter version:
+Use the full multi-agent workflow for this task:
 
-Use system-architect-gatekeeper to review and decide, orchestrator to assign work and enforce boundaries, frontend-engineer/backend-engineer/ci-watcher for implementation, and observability-engineer for telemetry and SLOs.
+1. Skills to apply
+   - team-contract: single owner per change, small deployable increments, manual test checklist + rollback note, cross-boundary = TODO only.
+   - system-architect: before large changes—RFC, Go/No-Go, rollback/observability/API plans, task breakdown.
+   - observability-engineer: for telemetry—metrics, logs, correlation IDs, SLOs, runbook snippets.
+   - vpn-suite: for project layout, services, and conventions.
+   - frontend-engineer: for UI and frontend work.
+
+2. Subagents to invoke
+   - system-architect-gatekeeper: review and architecture note before non-trivial or cross-boundary changes.
+   - orchestrator: classify scope, enforce boundaries, create handoff notes for cross-boundary work.
+   - frontend-engineer: frontend-only changes.
+   - backend-engineer: backend-only changes.
+   - ci-watcher: CI/tooling changes.
+   - observability-engineer: metrics, logs, dashboards, alerts.
+
+3. Execution order
+   - For any change: apply team-contract first.
+   - For large/cross-boundary changes: run system-architect-gatekeeper, then orchestrator, then implement via domain subagents.
+   - After implementation: run observability-engineer for telemetry.
+   - Keep increments small, with manual test checklist per increment.

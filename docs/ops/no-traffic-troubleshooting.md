@@ -24,7 +24,7 @@ The server’s `AllowedIPs` for that peer must match the client’s Address.
 
 If S1, S2, H1–H4 differ between client config and server, the handshake can fail or traffic can be dropped.
 
-**Check:** Compare `docker exec <container> wg show awg0` with the issued config. See [AMNEZIAWG_OBFUSCATION_RUNBOOK.md](AMNEZIAWG_OBFUSCATION_RUNBOOK.md).
+**Check:** Compare `docker exec <container> wg show awg0` with the issued config. See [amneziawg-obfuscation-runbook.md](amneziawg-obfuscation-runbook.md).
 
 ## 4. Firewall / NAT
 

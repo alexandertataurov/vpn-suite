@@ -5,7 +5,7 @@ import type { Config } from "tailwindcss";
  * Dark-first, near-black base with subtle layering.
  *
  * Typography: font/size/lineHeight/weight map to shared/theme/tokens.css.
- * See docs/typography-tokens.md for Tailwind utility → token mapping.
+ * See docs/frontend/typography-tokens.md for Tailwind utility → token mapping.
  */
 export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],

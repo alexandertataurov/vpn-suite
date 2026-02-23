@@ -200,7 +200,7 @@ Label as "inferred" when not from explicit health endpoint.
 
 | File | Change |
 |------|--------|
-| `docs/TELEMETRY_CONSOLE_AUDIT.md` | Audit baseline + spec |
+| `docs/audits/telemetry-console-audit.md` | Audit baseline + spec |
 | `frontend/admin/src/utils/telemetry-freshness.ts` | **NEW** Freshness constants + computeFreshnessStatus |
 | `frontend/admin/src/utils/telemetry-freshness.test.ts` | **NEW** Unit tests |
 | `frontend/admin/src/components/telemetry/DataSourceHealthStrip.tsx` | **NEW** Health strip UI |

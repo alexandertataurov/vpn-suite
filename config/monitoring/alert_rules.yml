@@ -255,7 +255,7 @@ groups:
           severity: warning
         annotations:
           summary: "Host memory pressure (>90% used)"
-          description: "Lag may cause connection drops. Consider: add RAM, tune swap, or restart stack. See INCIDENT_RESPONSE_RUNBOOK.md 'Server lag'."
+          description: "Lag may cause connection drops. Consider: add RAM, tune swap, or restart stack. See docs/security/incident-response-runbook.md 'Server lag'."
 
       - alert: NodeSwapHeavy
         expr: (1 - (node_memory_SwapFree_bytes / node_memory_SwapTotal_bytes)) > 0.5 and node_memory_SwapTotal_bytes > 1e9
@@ -264,7 +264,7 @@ groups:
           severity: warning
         annotations:
           summary: "Host swap heavily used (>50%, >1GB)"
-          description: "Memory pressure; lag and connection drops likely. Add RAM or reduce swap usage. See INCIDENT_RESPONSE_RUNBOOK.md 'Server lag'."
+          description: "Memory pressure; lag and connection drops likely. Add RAM or reduce swap usage. See docs/security/incident-response-runbook.md 'Server lag'."
 
       - alert: DockerHostDiskPressure
         expr: (node_filesystem_avail_bytes{mountpoint="/"} / clamp_min(node_filesystem_size_bytes{mountpoint="/"}, 1)) < 0.15

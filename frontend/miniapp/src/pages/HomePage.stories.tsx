@@ -53,7 +53,7 @@ export const WithLongText: Story = {
       ...webappMeActive,
       subscriptions: [
         {
-          ...webappMeActive.subscriptions[0],
+          ...webappMeActive.subscriptions[0]!,
           plan_id: "ultra-long-plan-id-with-extended-label-for-overflow-check",
         },
       ],

@@ -6,19 +6,8 @@
 98b173eb0dd0 vpn-suite-telegram-vpn-bot vpn-suite-telegram-vpn-bot-1 Up 7 minutes (healthy) 127.0.0.1:8090->8090/tcp
 e2af147c7d86 vpn-suite-admin-api vpn-suite-admin-api-1 Up 7 minutes (healthy) 127.0.0.1:8000->8000/tcp
 175e7b7d6fe7 postgres vpn-suite-postgres-1 Up 7 minutes (healthy) 5432/tcp
-d1f6c607ea17 redis vpn-suite-redis-1 Up 7 minutes (healthy) 6379/tcp
+d1f6c607ea17 redis vpn-suite-redis-1 Up 6379/tcp
 1fc3d811bee1 prom/prometheus vpn-suite-prometheus-1 Up 40 minutes 127.0.0.1:19090->9090/tcp
-43bd84e50009 vpn-suite-audit-admin-api vpn-suite-audit-admin-api-1 Up About an hour (healthy) 0.0.0.0:18001->8000/tcp, [::]:18001->8000/tcp
-bbf7ee1fdc4d vpn-suite-audit-telegram-vpn-bot vpn-suite-audit-telegram-vpn-bot-1 Up 2 seconds (health: starting)
-1c4ef5289385 postgres vpn-suite-audit-postgres-1 Up About an hour (healthy) 5432/tcp
-9c0856343a58 vpn-suite-node-agent vpn-suite-node-agent-1 Up About an hour (healthy) 9105/tcp
-f4cdd62775da containrrr/watchtower watchtower Up About an hour (healthy) 8080/tcp
-a9568e1f38af gcr.io/cadvisor/cadvisor vpn-suite-cadvisor-1 Up 40 minutes (healthy) 127.0.0.1:8080->8080/tcp
-093f35636646 prom/node-exporter vpn-suite-node-exporter-1 Up 40 minutes 127.0.0.1:9100->9100/tcp
-94770f42ad38 grafana/grafana vpn-suite-grafana-1 Up 40 minutes 127.0.0.1:3000->3000/tcp
-ccde81c7d12e grafana/loki vpn-suite-loki-1 Up 40 minutes 127.0.0.1:3100->3100/tcp
-7cb517fcfebd amnezia-awg2 amnezia-awg2 Up About an hour 0.0.0.0:40498->40498/udp, [::]:40498->40498/udp
-d123e1a28aaf quay.io/outline/shadowbox:stable shadowbox Up About an hour
 ...
 ```
 
@@ -28,7 +17,7 @@ d123e1a28aaf quay.io/outline/shadowbox:stable shadowbox Up About an hour
 - prometheus: binds `./config/monitoring/discovery/targets.json:/etc/prometheus/targets.json:ro`.
 - node-exporter: binds `/` to `/host`.
 - cadvisor: binds `/var/run`, `/var/lib/docker` etc.
-- node-agent: env includes `NODE_DISCOVERY=agent`, `OUTLINE_MANAGER_URL=https://vpn.vega.llc/outline-api/`.
+- node-agent: env includes `NODE_DISCOVERY=agent`, `OUTLINE_MANAGER_URL=...`.
 
 ## docker logs --tail=300
 - discovery service: not running (no container present).
@@ -50,19 +39,11 @@ lo, eth0, docker0, amn0, multiple docker bridges/veths (no wg/awg interfaces on 
 - TCP 25432 (Outline manager).
 - TCP 9092 (outline-ss metrics) bound to 127.0.0.1.
 
-### wg show all dump
-```
-/bin/bash: line 1: wg: command not found
-```
-
 ## Prometheus health
 ### /api/v1/targets
 - `admin-api`, `cadvisor`, `node-exporter` are up.
 - `outline-poller` target down (DNS lookup failure).
 - Missing targets: `node-agent`, `telegram-vpn-bot`, `outline-ss`, `wg-exporter`.
-
-### /service-discovery
-- UI loads; no JSON output without UI access.
 
 ## Discovery outputs
 - `config/monitoring/discovery/inventory.json` has `nodes: []`.

@@ -96,4 +96,4 @@ bash scripts/pre_release_validation.sh
 - **Backend:** FastAPI, Python 3.12, asyncpg, SQLAlchemy 2.x, Alembic, Redis
 - **Frontend:** React 18, TypeScript, Vite 6, TanStack Query 5
 - **Services:** admin-api:8000, reverse-proxy:80/443, postgres, redis, telegram-bot:8090
-- **Config:** .env at repo root (single source); ENV_FILE overrides (see docs/REQUIRED_SECRETS.md)
+- **Config:** .env at repo root (single source); ENV_FILE overrides (see docs/ops/required-secrets.md)

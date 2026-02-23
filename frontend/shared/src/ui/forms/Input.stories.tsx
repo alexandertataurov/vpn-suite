@@ -51,6 +51,21 @@ export const States: Story = {
   ),
 };
 
+/** Error state: invalid input with error message */
+export const Error: Story = {
+  args: { label: "Email", error: "Invalid email address", defaultValue: "invalid" },
+};
+
+/** Empty state: placeholder only, no value */
+export const Empty: Story = {
+  args: { label: "Search", placeholder: "Search..." },
+};
+
+/** Loading simulation: disabled during async validation */
+export const Loading: Story = {
+  args: { label: "Checking availability...", disabled: true, defaultValue: "user@example.com" },
+};
+
 export const WithLongText: Story = {
   args: { label: "Long label that should wrap gracefully on small screens", placeholder: "Long placeholder content" },
 };

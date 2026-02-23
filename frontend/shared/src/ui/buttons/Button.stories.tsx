@@ -127,6 +127,16 @@ export const Disabled: Story = {
   args: { children: "Disabled", disabled: true },
 };
 
+/** Error context: retry after failed action */
+export const Error: Story = {
+  render: () => (
+    <div className="sb-row">
+      <Button variant="secondary">Cancel</Button>
+      <Button variant="primary">Retry</Button>
+    </div>
+  ),
+};
+
 export const FullWidth: Story = {
   args: { children: "Full width", fullWidth: true },
 };

@@ -281,10 +281,10 @@ Pydantic schemas for API: `auth`, `user`, `server`, `server_ip`, `device`, `plan
 | Doc | Role |
 |-----|------|
 | `docs/README.md` | Docs index |
-| `docs/RELEASE_READINESS_REPORT.md` | Audit, scores, commands |
-| `docs/RUNBOOK.md` | Ops, troubleshooting, backups |
-| `docs/QUALITY_GATES.md` | Quality gates |
-| Plus: runbooks, specs, release checklist |
+| `docs/audits/release-readiness-report.md` | Audit, scores, commands |
+| `docs/ops/runbook.md` | Ops, troubleshooting, backups |
+| `docs/ops/quality-gates.md` | Quality gates |
+| Plus: api/, ops/, security/, specs/, backlog/, audits/, frontend/ |
 
 ---
 

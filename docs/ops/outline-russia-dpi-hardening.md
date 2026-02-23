@@ -37,7 +37,7 @@ Outline enables `--replay_history=10000` by default. Keep it enabled.
 
 ### 4. AmneziaWG as Alternative
 
-For users in Russia, AmneziaWG with obfuscation (Jc, Jmin, Jmax, S1–H4) may work when Outline is blocked. See `AMNEZIAWG_OBFUSCATION_RUNBOOK.md`.
+For users in Russia, AmneziaWG with obfuscation (Jc, Jmin, Jmax, S1–H4) may work when Outline is blocked. See `amneziawg-obfuscation-runbook.md`.
 
 ## Limitations
 

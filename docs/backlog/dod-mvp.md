@@ -17,9 +17,9 @@
 | **B) Users** | Search by tg_id (required), optional email/phone; subscriptions and device limits; ban/unban with confirmation. | Done |
 | **C) Profiles/Devices** | List user devices; issue and revoke profile; issued_at and revoke; bot: reset device. | Done |
 | **D) Payments** | Modular providers (Telegram Stars; CryptoPay optional); webhook idempotent by external_id; reconciliation and anti-dupe. | Done (Telegram Stars; GET /payments) |
-| **E) Analytics/Logs** | Funnel events (start, payment, issue, renewal) in DB; dashboard (Grafana) or queries for MRR/ARPPU/conversion. | Done (funnel_events, docs/analytics.md) |
+| **E) Analytics/Logs** | Funnel events (start, payment, issue, renewal) in DB; dashboard (Grafana) or queries for MRR/ARPPU/conversion. | Done (funnel_events, docs/audits/analytics.md) |
 | **F) Integrations** | Bot calls Admin API for issue and subscriptions; admin actions (e.g. reset device) available to bot. | Done (X-API-Key, by-tg, issue, reset) |
-| **NFR** | RBAC, audit log, two-step dangerous ops; rate limiting; structured logs; Prometheus metrics; backup/restore documented. | Done (docs/RUNBOOK.md) |
+| **NFR** | RBAC, audit log, two-step dangerous ops; rate limiting; structured logs; Prometheus metrics; backup/restore documented. | Done (../ops/runbook.md) |
 
 ## Commands (verification)
 

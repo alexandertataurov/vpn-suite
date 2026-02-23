@@ -35,8 +35,8 @@ cp .env.example .env
 ## Docs
 
 - [AGENTS.MD](AGENTS.MD) — architecture, constraints, API
-- [docs/RELEASE_READINESS_REPORT.md](docs/RELEASE_READINESS_REPORT.md) — audit, scores, commands
-- [docs/RUNBOOK.md](docs/RUNBOOK.md) — ops, troubleshooting, backups
+- [docs/audits/release-readiness-report.md](docs/audits/release-readiness-report.md) — audit, scores, commands
+- [docs/ops/runbook.md](docs/ops/runbook.md) — ops, troubleshooting, backups
 
 ## Stack
 

@@ -127,5 +127,3 @@
 | admin-api      | Single instance | Horizontal scaling behind Caddy                  |
 | Reconciliation | 60s interval    | Consider batching; per-server backoff            |
 | Node count     | Per env         | Multi-region; agent discovery                    |
-
-

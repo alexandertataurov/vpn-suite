@@ -20,7 +20,7 @@ All notable changes to the VPN Suite project are documented here.
 - Servers: metadata CRUD, health-check, restart (two-step), status, limits, block/reset peer via node API.
 - Limits: traffic/speed/connections via node API; soft/hard; auto-block when exceeded (background check).
 - Observability: structured logs (JSON, request_id), Prometheus `/metrics`, `/health` and `/health/ready`.
-- Backup/restore procedure: `docs/RUNBOOK.md`. Analytics queries: `docs/analytics.md`.
+- Backup/restore procedure: `docs/ops/runbook.md`. Analytics queries: `docs/audits/analytics.md`.
 
 ### Note
 

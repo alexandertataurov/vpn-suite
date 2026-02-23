@@ -66,6 +66,21 @@ export const States: Story = {
   ),
 };
 
+/** Error state: validation error */
+export const Error: Story = {
+  args: { options, value: "", onChange: () => {}, label: "Region", error: "Please select a region" },
+};
+
+/** Empty state: no options available */
+export const Empty: Story = {
+  args: { options: [], value: "", onChange: () => {}, label: "No options" },
+};
+
+/** Loading simulation: disabled while fetching options */
+export const Loading: Story = {
+  args: { options: [{ value: "", label: "Loading..." }], value: "", onChange: () => {}, label: "Region", disabled: true },
+};
+
 export const WithLongText: Story = {
   args: {
     options: [
