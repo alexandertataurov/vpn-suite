@@ -1,0 +1,35 @@
+"""User model — identification by tg_id, optional email/phone."""
+
+from __future__ import annotations
+
+from datetime import datetime
+
+from sqlalchemy import BigInteger, Boolean, DateTime, String, func
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.models.base import Base, TimestampMixin
+
+
+class User(Base, TimestampMixin):
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    tg_id: Mapped[int] = mapped_column(BigInteger, unique=True, nullable=False, index=True)
+    email: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    phone: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    meta: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    is_banned: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+    subscriptions: Mapped[list["Subscription"]] = relationship(
+        "Subscription", back_populates="user", foreign_keys="Subscription.user_id"
+    )
+    devices: Mapped[list["Device"]] = relationship(
+        "Device", back_populates="user", foreign_keys="Device.user_id"
+    )
+    payments: Mapped[list["Payment"]] = relationship(
+        "Payment", back_populates="user", foreign_keys="Payment.user_id"
+    )

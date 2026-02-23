@@ -1,0 +1,47 @@
+import { Meta } from "@storybook/blocks";
+
+<Meta title="Components/FilterBar/ServersBulkToolbar" />
+
+# ServersBulkToolbar
+
+## Purpose
+Bulk action toolbar for multi-select server actions.
+
+**When to use:** Server list with bulk actions.
+
+**When not to use:** Single-row actions (use RowActionsMenu).
+
+## API (Props)
+
+| Prop | Type |
+| --- | --- |
+| count | `number` |
+| pendingAction | `"mark_draining" \| "unmark_draining" \| "disable_provisioning" \| "enable_provisioning" \| null` |
+| confirmCode | `string` |
+| onConfirmCodeChange | `(v: string) => void` |
+| isLoading | `boolean` |
+| bulkSyncProgress | `{ done: number; total: number } \| null` |
+| onSync | `() => void` |
+| onMarkDraining | `() => void` |
+| onUnmarkDraining | `() => void` |
+| onDisableProvisioning | `() => void` |
+| onEnableProvisioning | `() => void` |
+| onClear | `() => void` |
+| onConfirmBulk? | `() => void` |
+
+## Examples
+
+```tsx
+<ServersBulkToolbar count={12} pendingAction={null} confirmCode="" onConfirmCodeChange={setCode} isLoading={false} />
+```
+
+## Design Tokens Used
+- Spacing: `--spacing-*`
+- Colors: `--color-*`
+
+## Anti-patterns
+- Inline styles or arbitrary pixel values.
+- Triggering destructive actions without confirmation.
+
+## Accessibility
+- Ensure all actions are keyboard accessible.

@@ -1,0 +1,37 @@
+import { Meta } from "@storybook/blocks";
+
+<Meta title="Patterns/BulkActionsBar" />
+
+# BulkActionsBar
+
+## Purpose
+Inline actions bar for bulk-selected rows.
+
+**When to use:** Table selections with bulk actions (delete, export).
+
+**When not to use:** Single-item actions.
+
+## API (Props)
+
+Use `BulkActionsBar` with selection counts and action buttons.
+
+## Examples
+
+```tsx
+<BulkActionsBar
+  selectedCount={3}
+  actions={<Button variant="ghost">Delete</Button>}
+/>
+```
+
+## Design Tokens Used
+- Spacing: `--spacing-*`
+- Colors: `--color-*`
+- Typography: `--text-*`
+
+## Anti-patterns
+- Showing when no items are selected.
+- Inline styles or arbitrary spacing.
+
+## Accessibility
+- Ensure actions are keyboard accessible.

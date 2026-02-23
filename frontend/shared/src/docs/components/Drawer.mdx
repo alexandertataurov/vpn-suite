@@ -1,0 +1,43 @@
+import { Meta } from "@storybook/blocks";
+
+<Meta title="Components/Drawer" />
+
+# Drawer
+
+## Purpose
+Side panel overlay for secondary workflows.
+
+**When to use:** Details panels, secondary forms.
+
+**When not to use:** Primary, long workflows.
+
+## API (Props)
+
+| Prop | Type |
+| --- | --- |
+| open | `boolean` |
+| onClose | `() => void` |
+| title? | `string` |
+| width? | `string` | number |
+| children | `ReactNode` |
+
+## Examples
+
+```tsx
+<Drawer open onClose={onClose} title="Details">...</Drawer>
+```
+
+## Design Tokens Used
+- Typography: `--text-*`
+- Spacing: `--spacing-*`
+- Colors: `--color-*`
+- Radius: `--radius-*`
+
+## Anti-patterns
+- Inline styles or arbitrary pixel values.
+- Using component for unrelated semantics.
+
+## Accessibility
+- Provide labels and aria attributes as needed.
+- Ensure focus visibility and keyboard access.
+

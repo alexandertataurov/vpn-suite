@@ -1,0 +1,44 @@
+import { Meta } from "@storybook/blocks";
+
+<Meta title="Primitives/Field" />
+
+# Field
+
+## Purpose
+Label + control + hint/error wrapper.
+
+**When to use:** All labeled form controls.
+
+**When not to use:** Non-form content or layout spacing (use Stack).
+
+## API (Props)
+
+| Prop | Type |
+| --- | --- |
+| id? | `string` |
+| label? | `ReactNode` |
+| description? | `ReactNode` |
+| error? | `string` |
+| children | `ReactNode` |
+| className? | `string` |
+
+## Examples
+
+```tsx
+<Field label="Name" description="Short identifier"><Input /></Field>
+```
+
+## Design Tokens Used
+- Typography: `--text-*`
+- Spacing: `--spacing-*`
+- Colors: `--color-*`
+- Radius: `--radius-*`
+
+## Anti-patterns
+- Inline styles or arbitrary pixel values.
+- Using component for unrelated semantics.
+
+## Accessibility
+- Provide labels and aria attributes as needed.
+- Ensure focus visibility and keyboard access.
+

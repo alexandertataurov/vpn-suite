@@ -1,0 +1,131 @@
+/*
+ * Toast, Tabs, Section, Progress
+ * Requires: tokens.css
+ */
+
+.toast-container {
+  position: fixed;
+  top: var(--spacing-lg);
+  right: var(--spacing-lg);
+  z-index: var(--z-toast);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  max-width: var(--max-width-form);
+  pointer-events: none;
+}
+.toast-container .toast {
+  pointer-events: auto;
+}
+.toast {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  animation: toastIn var(--duration-normal) var(--ease-out);
+}
+.toast-success { border-inline-start: var(--spacing-xs) solid var(--color-success); }
+.toast-error { border-inline-start: var(--spacing-xs) solid var(--color-error); }
+.toast-info { border-inline-start: var(--spacing-xs) solid var(--color-primary); }
+.toast-close {
+  background: none;
+  border: none;
+  font-size: var(--font-size-xl);
+  cursor: pointer;
+  color: var(--color-text-muted);
+  padding: 0;
+  line-height: 1;
+}
+.toast-close:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.tabs {
+  display: flex;
+  gap: var(--spacing-2);
+  flex-wrap: wrap;
+}
+.tabs.tabs--sm .tabs-page-item {
+  min-height: var(--table-row-height-op, 32px);
+  padding: var(--spacing-op-1, 4px) var(--spacing-op-2, 8px);
+  font-size: var(--text-sm);
+}
+.tabs-page {
+  padding: var(--spacing-1);
+  border: 1px solid color-mix(in oklab, var(--color-border) 80%, transparent);
+  border-radius: var(--radius-xl);
+  background: color-mix(in oklab, var(--surface-raised) 82%, var(--surface-base));
+}
+.tabs-page-item {
+  border: 1px solid transparent;
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-2) var(--spacing-4);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition: background-color var(--duration-fast), color var(--duration-fast), border-color var(--duration-fast);
+}
+.tabs-page-item:hover {
+  color: var(--color-text-primary);
+  background: color-mix(in oklab, var(--color-primary) 9%, var(--surface-raised));
+  border-color: color-mix(in oklab, var(--color-primary) 20%, transparent);
+}
+.tabs-page-item.active {
+  color: var(--color-text-primary);
+  background: color-mix(in oklab, var(--color-primary) 18%, var(--surface-raised));
+  border-color: color-mix(in oklab, var(--color-primary) 36%, transparent);
+}
+
+.ref-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+.ref-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+}
+.ref-section-title-wrap {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+.ref-section-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  flex-wrap: wrap;
+}
+.ref-section-body {
+  min-width: 0;
+}
+
+.progress-bar {
+  height: var(--spacing-2);
+  background: var(--color-background-tertiary);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%;
+  width: var(--progress, 0%);
+  background: linear-gradient(90deg, var(--color-success), color-mix(in oklab, var(--color-success) 70%, white 30%));
+  border-radius: var(--radius-sm, 4px);
+  transition: width 0.2s ease;
+}

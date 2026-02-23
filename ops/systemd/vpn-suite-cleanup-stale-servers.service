@@ -1,0 +1,8 @@
+[Unit]
+Description=VPN Suite cleanup inactive server rows (docker-only)
+Wants=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/docker exec vpn-suite-admin-api-1 /bin/sh -c "PYTHONPATH=/app python /app/scripts/cleanup_stale_servers.py --older-than-hours 24 --only-docker"

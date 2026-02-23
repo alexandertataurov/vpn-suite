@@ -1,0 +1,37 @@
+import { Meta } from "@storybook/blocks";
+
+<Meta title="Patterns/OperatorToolbar" />
+
+# OperatorToolbar
+
+## Purpose
+Dense action bar for operator tables and dashboards.
+
+**When to use:** Top-of-table actions, filters, or quick controls.
+
+**When not to use:** Simple single-action pages (use a Button in header).
+
+## API (Props)
+
+Use the `Toolbar` component with composed children.
+
+## Examples
+
+```tsx
+<Toolbar>
+  <Button variant="secondary" size="sm">Refresh</Button>
+  <Select options={options} value="name" onChange={setSort} />
+</Toolbar>
+```
+
+## Design Tokens Used
+- Spacing: `--spacing-*`
+- Colors: `--color-*`
+- Typography: `--text-*`
+
+## Anti-patterns
+- Adding unrelated content to the toolbar.
+- Inline styles or arbitrary spacing.
+
+## Accessibility
+- Ensure controls have labels and clear focus rings.

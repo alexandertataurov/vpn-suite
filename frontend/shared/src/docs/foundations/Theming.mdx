@@ -1,0 +1,22 @@
+import { Meta } from "@storybook/blocks";
+
+<Meta title="Foundations/Theming/Light-Dark-Dim" />
+
+# Theming
+
+VPN Suite supports `light`, `dark`, and `dim` themes. Theme is applied via `data-theme` on `html`.
+
+## How it works
+
+- `ThemeProvider` reads local storage and updates `data-theme`.
+- Tokens in `theme/tokens.css` define semantic colors per theme.
+
+## Usage
+
+- Use `useTheme()` to switch.
+- Use CSS variables only; never branch on theme in component logic.
+
+## Accessibility
+
+- Honor `prefers-reduced-motion`.
+- Ensure sufficient contrast for text and focus rings in all themes.

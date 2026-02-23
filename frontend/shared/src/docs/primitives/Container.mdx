@@ -1,0 +1,39 @@
+import { Meta } from "@storybook/blocks";
+
+<Meta title="Primitives/Container" />
+
+# Container
+
+## Purpose
+Constrained content container with tokenized padding and max-width sizes.
+
+**When to use:** Page sections and readable content blocks.
+
+**When not to use:** Full-bleed layouts.
+
+## API (Props)
+
+| Prop | Type |
+| --- | --- |
+| size? | `"sm" \| "md" \| "lg"` |
+| padding? | `"sm" \| "md"` |
+| nativeProps | `HTMLAttributes<HTMLDivElement>` |
+
+## Examples
+
+```tsx
+<Container size="md" padding="md">
+  <Content />
+</Container>
+```
+
+## Design Tokens Used
+- Spacing: `--spacing-*`
+- Layout: `--grid-min-card`
+
+## Anti-patterns
+- Inline styles or arbitrary pixel values.
+- Nesting multiple containers unnecessarily.
+
+## Accessibility
+- Use `aria-label` if the container represents a meaningful region.

@@ -1,0 +1,786 @@
+/* Operator Dashboard — strict grid, 1px borders, tokens only */
+.operator-dashboard {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto auto 1fr auto;
+  gap: 0;
+  border: 1px solid color-mix(in oklab, var(--border-subtle) 60%, transparent);
+  background: var(--surface-raised);
+  border-radius: var(--radius-op);
+  overflow: hidden;
+}
+
+.operator-health-strip--error {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--spacing-op-2);
+}
+
+.operator-error-text {
+  padding: 0 var(--spacing-op-2);
+}
+
+.operator-error-actions {
+  padding: 0 var(--spacing-op-2);
+  display: flex;
+  gap: var(--spacing-op-2);
+  align-items: center;
+}
+
+.operator-error-link {
+  margin-left: 0;
+}
+
+/* Top status bar — unified strip + groups + cells */
+.operator-health-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: var(--text-op-sm);
+}
+
+.operator-top-status-bar {
+  padding: var(--spacing-op-2) var(--spacing-op-3);
+  align-items: flex-end;
+}
+
+.operator-health-group,
+.operator-status-group {
+  display: flex;
+  align-items: flex-end;
+  padding-inline: var(--spacing-op-2);
+}
+
+.operator-status-group {
+  border-inline-end: 1px solid var(--border-subtle);
+  padding-block: var(--spacing-op-1);
+}
+
+.operator-status-group--sync {
+  border-inline-end: none;
+}
+
+.operator-health-group:first-child {
+  padding-inline-start: 0;
+}
+
+.operator-health-group--last {
+  border-inline-end: none;
+  margin-inline-end: 0;
+}
+
+.operator-health-group--score .operator-health-cell {
+  padding-inline: 0;
+  border-inline-end: none;
+}
+
+.operator-health-group--score .operator-health-value {
+  font-size: var(--text-op-score);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--color-text-primary);
+}
+
+.operator-health-group--score .operator-health-label {
+  font-size: var(--text-op-nav-section);
+}
+
+.operator-health-score .operator-health-value {
+  font-size: var(--text-op-score);
+  font-weight: 500;
+}
+
+.operator-health-score .operator-health-label {
+  font-size: var(--text-op-nav-section);
+}
+
+.operator-health-cell {
+  padding-inline: var(--spacing-op-2);
+  border-inline-end: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: var(--spacing-op-1);
+  min-height: 0;
+  transition: background 80ms ease-out;
+}
+
+.operator-health-cell:last-child {
+  border-inline-end: none;
+}
+
+.operator-health-cell:hover {
+  background: color-mix(in oklab, var(--color-background-secondary) 50%, transparent);
+  box-shadow: inset 0 0 0 1px var(--border-subtle);
+  border-radius: var(--radius-op);
+}
+
+.operator-health-cell--degraded {
+  background: color-mix(in oklab, var(--color-op-warning) 8%, transparent);
+}
+
+.operator-health-label {
+  font-size: var(--text-op-nav-section);
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+}
+
+.operator-health-value {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-op-1);
+  font-size: var(--text-op-base);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.operator-health-value--ok {
+  color: var(--color-success-600);
+}
+
+.operator-health-value--degraded {
+  color: var(--color-warning-600);
+}
+
+.operator-health-value--down {
+  color: var(--color-danger-600);
+}
+
+.operator-health-value--unknown {
+  color: var(--color-text-tertiary);
+}
+
+.operator-live-dot {
+  flex-shrink: 0;
+  width: var(--spacing-op-1);
+  height: var(--spacing-op-1);
+  border-radius: 50%;
+  background: var(--color-success);
+}
+
+.operator-live-dot--stream {
+  animation: operator-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes operator-pulse {
+
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+.operator-grid-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  border-bottom: 1px solid color-mix(in oklab, var(--border-subtle) 60%, transparent);
+  min-height: 72px;
+}
+
+.operator-grid-cell {
+  border-right: 1px solid color-mix(in oklab, var(--border-subtle) 60%, transparent);
+  padding: var(--spacing-op-4);
+  overflow: hidden;
+}
+
+.operator-grid-cell:last-child {
+  border-right: none;
+}
+
+.operator-section-title {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-op-2);
+  font-size: var(--text-op-heading);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--spacing-op-4);
+  padding-bottom: var(--spacing-op-2);
+  border-bottom: 2px solid color-mix(in oklab, var(--border-subtle) 40%, transparent);
+}
+
+.operator-section-icon {
+  flex-shrink: 0;
+  color: var(--color-text-tertiary);
+}
+
+.operator-placeholder {
+  font-size: var(--text-op-sm);
+  color: var(--color-text-tertiary);
+  margin: 0;
+  padding: var(--spacing-op-6) 0;
+}
+
+/* Tables — shared operator table base */
+.operator-table,
+.operator-server-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-op-table);
+}
+
+.operator-table th,
+.operator-table td,
+.operator-server-table th,
+.operator-server-table td {
+  padding: var(--spacing-op-2) var(--spacing-op-3);
+  border: 1px solid color-mix(in oklab, var(--border-subtle) 50%, transparent);
+  text-align: left;
+}
+
+.operator-table th,
+.operator-server-table th {
+  font-weight: 600;
+  background: var(--color-background-secondary);
+}
+
+.operator-server-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.operator-server-table thead th {
+  background: var(--color-background-secondary);
+}
+
+html[data-theme="dark"] .operator-table th,
+html[data-theme="dark"] .operator-server-table th,
+html[data-theme="dim"] .operator-table th,
+html[data-theme="dim"] .operator-server-table th {
+  background: color-mix(in oklab, var(--color-background-secondary) 80%, var(--color-text-tertiary) 5%);
+}
+
+.operator-table tbody tr,
+.operator-server-table tbody tr {
+  height: var(--table-row-height-op);
+}
+
+.operator-table .num,
+.operator-server-table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.operator-table .num-muted,
+.operator-server-table .num-muted {
+  color: var(--color-text-tertiary);
+}
+
+.operator-server-table a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.operator-server-table a:hover {
+  text-decoration: underline;
+}
+
+.operator-server-table tbody tr:hover {
+  background: color-mix(in oklab, var(--color-background-secondary) 50%, transparent);
+}
+
+.operator-server-filter-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-op-2);
+  margin-bottom: var(--spacing-op-2);
+}
+
+.operator-server-filter {
+  font-size: var(--text-op-sm);
+  padding: var(--spacing-op-1) var(--spacing-op-2);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-base);
+  color: var(--color-text-primary);
+  max-width: 200px;
+}
+
+.operator-server-filter::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+.operator-server-table {
+  table-layout: fixed;
+}
+
+.operator-server-table th:nth-child(1),
+.operator-server-table td:nth-child(1) {
+  width: 18%;
+  min-width: 100px;
+}
+
+.operator-server-table th:nth-child(2),
+.operator-server-table td:nth-child(2) {
+  width: 10%;
+}
+
+.operator-server-table th:nth-child(3),
+.operator-server-table td:nth-child(3) {
+  width: 12%;
+  min-width: 90px;
+}
+
+/* Incident list */
+.operator-incident-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.operator-incident-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-op-2);
+  padding: var(--spacing-op-3) 0;
+  border-bottom: 1px solid color-mix(in oklab, var(--border-subtle) 50%, transparent);
+  font-size: var(--text-op-sm);
+}
+
+.operator-incident-badges {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-op-1);
+  flex-shrink: 0;
+}
+
+.operator-incident-desc {
+  color: var(--color-text-secondary);
+}
+
+.operator-incident-time {
+  font-size: var(--text-op-sm);
+  color: var(--color-text-tertiary);
+  font-variant-numeric: tabular-nums;
+  margin-left: auto;
+}
+
+.operator-incident-item:last-child {
+  border-bottom: none;
+}
+
+.operator-incident-empty {
+  font-size: var(--text-op-sm);
+  color: var(--color-text-tertiary);
+  padding: var(--spacing-op-6) 0;
+  opacity: 0.8;
+}
+
+.operator-incident-severity {
+  flex-shrink: 0;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.operator-incident-severity--critical {
+  color: var(--color-danger-600);
+}
+
+.operator-incident-severity--warning {
+  color: var(--color-warning-600);
+}
+
+.operator-incident-link {
+  margin-left: var(--spacing-op-2);
+  color: var(--color-primary-600);
+  text-decoration: none;
+}
+
+.operator-incident-link:hover {
+  text-decoration: underline;
+}
+
+.operator-incident-status {
+  font-size: var(--text-op-sm);
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.operator-incident-affected {
+  font-size: var(--text-op-sm);
+  color: var(--color-text-tertiary);
+  margin-left: var(--spacing-op-2);
+}
+
+.operator-freshness {
+  font-size: var(--text-op-sm);
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: var(--spacing-op-1);
+}
+
+.operator-freshness--fresh {
+  background: var(--color-surface-2);
+  color: var(--color-success);
+}
+
+.operator-freshness--degraded {
+  background: var(--color-surface-2);
+  color: var(--color-warning);
+}
+
+.operator-freshness--stale {
+  background: var(--color-surface-2);
+  color: var(--color-danger);
+}
+
+.operator-freshness--unknown {
+  background: var(--color-background-secondary);
+  color: var(--color-text-tertiary);
+}
+
+.operator-freshness--muted {
+  opacity: 0.9;
+  background: color-mix(in oklab, var(--color-background-secondary) 60%, transparent);
+}
+
+/* Cluster matrix: threshold cells, micro-bars */
+.operator-cell--high {
+  color: var(--color-op-error, var(--color-error));
+}
+
+.operator-cell--medium {
+  color: var(--color-op-warning, var(--color-warning));
+}
+
+.operator-metric-cell {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-op-1);
+}
+
+.operator-micro-bar {
+  width: var(--spacing-op-6);
+  height: var(--spacing-op-1);
+  background: var(--color-background-secondary);
+  border-radius: var(--radius-op);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.operator-micro-bar-fill {
+  height: 100%;
+  background: var(--color-text-tertiary);
+  border-radius: var(--radius-op);
+  transition: width 0.1s ease;
+  width: 0%;
+}
+
+.operator-cell--high .operator-micro-bar-fill {
+  background: var(--color-op-error, var(--color-error));
+}
+
+.operator-cell--medium .operator-micro-bar-fill {
+  background: var(--color-op-warning, var(--color-warning));
+}
+
+.operator-micro-bar[data-pct="0"] .operator-micro-bar-fill {
+  width: 0%;
+}
+
+.operator-micro-bar[data-pct="5"] .operator-micro-bar-fill {
+  width: 5%;
+}
+
+.operator-micro-bar[data-pct="10"] .operator-micro-bar-fill {
+  width: 10%;
+}
+
+.operator-micro-bar[data-pct="15"] .operator-micro-bar-fill {
+  width: 15%;
+}
+
+.operator-micro-bar[data-pct="20"] .operator-micro-bar-fill {
+  width: 20%;
+}
+
+.operator-micro-bar[data-pct="25"] .operator-micro-bar-fill {
+  width: 25%;
+}
+
+.operator-micro-bar[data-pct="30"] .operator-micro-bar-fill {
+  width: 30%;
+}
+
+.operator-micro-bar[data-pct="35"] .operator-micro-bar-fill {
+  width: 35%;
+}
+
+.operator-micro-bar[data-pct="40"] .operator-micro-bar-fill {
+  width: 40%;
+}
+
+.operator-micro-bar[data-pct="45"] .operator-micro-bar-fill {
+  width: 45%;
+}
+
+.operator-micro-bar[data-pct="50"] .operator-micro-bar-fill {
+  width: 50%;
+}
+
+.operator-micro-bar[data-pct="55"] .operator-micro-bar-fill {
+  width: 55%;
+}
+
+.operator-micro-bar[data-pct="60"] .operator-micro-bar-fill {
+  width: 60%;
+}
+
+.operator-micro-bar[data-pct="65"] .operator-micro-bar-fill {
+  width: 65%;
+}
+
+.operator-micro-bar[data-pct="70"] .operator-micro-bar-fill {
+  width: 70%;
+}
+
+.operator-micro-bar[data-pct="75"] .operator-micro-bar-fill {
+  width: 75%;
+}
+
+.operator-micro-bar[data-pct="80"] .operator-micro-bar-fill {
+  width: 80%;
+}
+
+.operator-micro-bar[data-pct="85"] .operator-micro-bar-fill {
+  width: 85%;
+}
+
+.operator-micro-bar[data-pct="90"] .operator-micro-bar-fill {
+  width: 90%;
+}
+
+.operator-micro-bar[data-pct="95"] .operator-micro-bar-fill {
+  width: 95%;
+}
+
+.operator-micro-bar[data-pct="100"] .operator-micro-bar-fill {
+  width: 100%;
+}
+
+/* Traffic & load */
+.operator-traffic-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-op-2);
+  margin-bottom: var(--spacing-op-3);
+}
+
+.operator-traffic-toolbar .operator-toolbar-btn,
+.operator-traffic-toolbar .operator-toolbar-btn svg {
+  vertical-align: middle;
+}
+
+.operator-traffic-toolbar select,
+.operator-traffic-toolbar [role="combobox"] {
+  font-size: var(--text-op-sm);
+  padding: var(--spacing-op-1) var(--spacing-op-2);
+  min-height: var(--spacing-op-8);
+}
+
+.operator-chart-stale {
+  font-size: var(--text-op-sm);
+  color: var(--color-op-warning);
+  margin-bottom: var(--spacing-op-1);
+}
+
+.operator-charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-op-2);
+  align-items: start;
+}
+
+.operator-chart-placeholder {
+  min-height: 160px;
+  display: flex;
+  align-items: center;
+  font-size: var(--text-op-sm);
+  color: var(--color-text-tertiary);
+}
+
+.operator-placeholder-cell {
+  color: var(--color-text-tertiary);
+}
+
+.operator-grid-cell--no-border {
+  border-bottom: none;
+}
+
+/* Cluster health charts (Telemetry VPN tab) */
+.cluster-health-charts-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-op-2);
+  margin-bottom: var(--spacing-op-3);
+}
+
+.cluster-health-charts-toolbar button,
+.cluster-health-charts-toolbar button svg {
+  vertical-align: middle;
+}
+
+.cluster-health-charts-select {
+  font-size: var(--text-op-sm);
+  padding: var(--spacing-op-1) var(--spacing-op-2);
+  min-height: var(--spacing-op-8);
+}
+
+.cluster-health-charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-op-4);
+  align-items: start;
+}
+
+.cluster-health-chart-wrap {
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+}
+
+.cluster-health-chart-meta {
+  font-size: var(--text-op-sm);
+  color: var(--color-text-tertiary);
+  margin-top: var(--spacing-op-1);
+}
+
+.cluster-health-chart-placeholder {
+  min-height: 180px;
+  display: flex;
+  align-items: center;
+  font-size: var(--text-op-sm);
+  color: var(--color-text-tertiary);
+}
+
+.operator-chart-wrap {
+  position: relative;
+  min-height: 160px;
+  display: flex;
+  flex-direction: column;
+}
+
+.operator-chart-last {
+  position: absolute;
+  top: var(--spacing-op-2);
+  left: var(--spacing-op-2);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-op-1);
+  font-size: 10px;
+  color: var(--color-text-tertiary);
+  pointer-events: none;
+  background: color-mix(in oklab, var(--surface-base) 80%, transparent);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  backdrop-filter: blur(4px);
+}
+
+/* User sessions 2-col metric grid */
+.operator-user-sessions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-op-2);
+}
+
+.operator-sessions-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-op-2);
+}
+
+.operator-sessions-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-op-2);
+  flex-wrap: wrap;
+}
+
+.operator-sessions-input,
+.operator-sessions-select {
+  font-size: var(--text-op-sm);
+  padding: var(--spacing-op-1) var(--spacing-op-2);
+  min-height: var(--spacing-op-8);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-base);
+  color: var(--color-text-primary);
+}
+
+.operator-sessions-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-op-table);
+}
+
+.operator-sessions-table th,
+.operator-sessions-table td {
+  padding: var(--spacing-op-1) var(--spacing-op-2);
+  border-bottom: 1px solid color-mix(in oklab, var(--border-subtle) 50%, transparent);
+  text-align: left;
+  vertical-align: top;
+}
+
+.operator-sessions-table th {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: var(--text-op-sm);
+  color: var(--color-text-tertiary);
+}
+
+.operator-session-mono {
+  font-family: var(--font-mono);
+  font-size: var(--text-op-sm);
+}
+
+.operator-sessions-empty {
+  font-size: var(--text-op-sm);
+  color: var(--color-text-tertiary);
+  margin: 0;
+  padding: var(--spacing-op-4) 0;
+}
+
+.operator-user-sessions--grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-op-4);
+}
+
+.operator-session-metric {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-op-1);
+}
+
+.operator-delta-arrow {
+  color: var(--color-text-tertiary);
+  margin-right: var(--spacing-op-1);
+}
+
+.operator-session-label {
+  font-size: var(--text-op-sm);
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.operator-session-value {
+  font-size: var(--text-op-table);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}

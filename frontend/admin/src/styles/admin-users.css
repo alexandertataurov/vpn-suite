@@ -1,0 +1,73 @@
+/* Users */
+.ref-users-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  flex-wrap: wrap;
+}
+.ref-users-search {
+  position: relative;
+  flex: 1;
+  min-width: min(100%, var(--grid-min-col));
+}
+.ref-users-search .ref-search-icon {
+  position: absolute;
+  inset-inline-start: var(--spacing-4);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-neutral-400);
+  width: var(--spacing-4);
+  height: var(--spacing-4);
+  pointer-events: none;
+}
+.ref-users-search .ref-search-input {
+  width: 100%;
+  padding-inline-start: calc(var(--spacing-10) + var(--spacing-1));
+}
+.ref-users-views {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  flex-wrap: wrap;
+}
+.ref-users-view-label {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+.ref-users-view-select {
+  min-width: var(--width-select-lg);
+}
+
+.ref-user-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  font-size: var(--text-xs);
+}
+.ref-user-status-dot {
+  width: var(--size-dot-sm);
+  height: var(--size-dot-sm);
+  border-radius: var(--radius-full);
+}
+.ref-user-status.active {
+  color: var(--color-text-primary);
+}
+.ref-user-status.active .ref-user-status-dot {
+  background: var(--color-text-primary);
+}
+.ref-user-status.suspended {
+  color: var(--color-text-muted);
+}
+.ref-user-status.suspended .ref-user-status-dot {
+  background: var(--color-text-muted);
+}
+.ref-user-status.inactive {
+  color: var(--color-text-tertiary);
+}
+.ref-user-status.inactive .ref-user-status-dot {
+  background: var(--color-text-tertiary);
+}
+.ref-icon {
+  width: var(--icon-size-xs);
+  height: var(--icon-size-xs);
+}

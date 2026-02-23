@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Servers page: use design tokens (theme-aware) */
+.servers-modern {
+  --surface-base: var(--color-background-primary);
+  --surface-raised: var(--color-background-tertiary);
+  --surface-overlay: var(--color-background-overlay);
+  --surface-border: var(--color-border-subtle);
+  --accent-blue: var(--color-interactive-default);
+  --accent-green: var(--color-success);
+  --accent-yellow: var(--color-warning);
+  --accent-red: var(--color-error);
+  --accent-purple: var(--color-info);
+  --text-primary: var(--color-text-primary);
+  --text-secondary: var(--color-text-secondary);
+  --text-muted: var(--color-text-tertiary);
+}

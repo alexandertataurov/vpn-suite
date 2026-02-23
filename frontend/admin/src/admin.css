@@ -1,0 +1,11 @@
+/* Admin app styles — logical modules */
+@import "./styles/admin-animations.css";
+@import "./styles/admin-layout.css";
+@import "./styles/admin-pages.css";
+@import "./styles/admin-dashboard.css";
+@import "./styles/admin-servers.css";
+@import "./styles/admin-users.css";
+@import "./styles/admin-tables.css";
+@import "./styles/admin-misc.css";
+@import "./styles/admin-operator.css";
+@import "./styles/operator-dashboard.css";

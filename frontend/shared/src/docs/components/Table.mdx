@@ -1,0 +1,48 @@
+import { Meta } from "@storybook/blocks";
+
+<Meta title="Components/DataTable" />
+
+# Table
+
+## Purpose
+Data table with sorting, density, selection, and empty states.
+
+**When to use:** Tabular datasets with columns and consistent cell rules.
+
+**When not to use:** Layout or non-tabular content.
+
+## API (Props)
+
+| Prop | Type |
+| --- | --- |
+| columns | `Column<T>[]` |
+| data | `T[]` |
+| keyExtractor? | `(row: T) => string` | number |
+| emptyMessage? | `string` |
+| sortKey? | `string` |
+| sortDir? | `"asc"` | "desc" |
+| onSort? | `(key: string) => void` |
+| selection? | `TableSelection` |
+| density? | `"comfortable"` | "compact" |
+| className? | `string` |
+
+## Examples
+
+```tsx
+<Table columns={columns} data={rows} keyExtractor={(r) => r.id} />
+```
+
+## Design Tokens Used
+- Typography: `--text-*`
+- Spacing: `--spacing-*`
+- Colors: `--color-*`
+- Radius: `--radius-*`
+
+## Anti-patterns
+- Inline styles or arbitrary pixel values.
+- Using component for unrelated semantics.
+
+## Accessibility
+- Provide labels and aria attributes as needed.
+- Ensure focus visibility and keyboard access.
+

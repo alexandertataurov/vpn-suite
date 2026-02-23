@@ -1,0 +1,144 @@
+/* TableSection (reusable table block) */
+.ref-table-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+.ref-table-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+}
+.ref-table-section-title {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-neutral-900);
+}
+.section-header-title { margin: 0; }
+.section-header-description { margin: var(--spacing-1) 0 0; }
+.section-header-actions { display: inline-flex; align-items: center; gap: var(--spacing-2); }
+.ref-table-section-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  flex-wrap: wrap;
+}
+/* Configs cell: prevent overflow, allow wrap */
+.ref-configs-cell {
+  min-width: 0;
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+.ref-table-section-body {
+  min-width: 0;
+}
+.ref-table-section .pagination {
+  margin-top: var(--spacing-4);
+}
+
+/* FilterBar (search + status + sort + optional lastSeen, density, region) */
+.ref-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+  align-items: center;
+}
+.ref-filter-bar .ref-search-input {
+  min-width: var(--width-select-lg);
+}
+
+/* Presets and bulk toolbar (Servers) */
+.ref-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+  margin-bottom: var(--spacing-4);
+}
+.ref-preset-active {
+  background: var(--color-primary-100);
+  color: var(--color-primary-700);
+}
+.ref-bulk-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  margin-bottom: var(--spacing-4);
+  padding: var(--spacing-3);
+  background: var(--color-neutral-50);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-neutral-200);
+}
+
+/* Banners */
+.ref-banner {
+  margin-bottom: var(--spacing-4);
+  padding: var(--spacing-2) var(--spacing-3);
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+}
+.ref-banner-warning {
+  background: var(--color-warning-50);
+  border-color: var(--color-warning-200);
+  color: var(--color-warning-700);
+}
+
+/* Toolbar input widths (filter forms) */
+.ref-toolbar .input,
+.ref-toolbar input.input {
+  width: 100%;
+  min-width: 0;
+}
+.ref-toolbar-input-sm { width: var(--width-toolbar-input-sm); min-width: var(--width-toolbar-input-sm); }
+.ref-toolbar-input-md { width: var(--width-toolbar-input-md); min-width: var(--width-toolbar-input-md); }
+.ref-toolbar-input-lg { width: var(--width-toolbar-input-lg); min-width: var(--width-toolbar-input-lg); }
+
+/* Toolbar (filters, search, actions row) */
+.ref-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  flex-wrap: wrap;
+}
+.ref-toolbar-spaced {
+  margin-bottom: var(--spacing-4);
+}
+
+/* FormField (label + description + error) */
+.ref-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+.ref-form-field-label {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-neutral-700);
+}
+.ref-form-field-control {
+  min-width: 0;
+}
+.ref-form-field-description {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--color-neutral-500);
+}
+.ref-form-field-error {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-danger-600);
+}
+
+.admin-main {
+  --input-border-color: var(--color-border-default);
+  --input-border-radius: var(--radius-lg);
+  --input-focus-border-color: var(--color-border-strong);
+}
+.admin-main .input {
+  border-color: var(--input-border-color, var(--color-border));
+  border-radius: var(--input-border-radius, var(--radius-md));
+}

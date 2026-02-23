@@ -1,0 +1,34 @@
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+ignore = ["E501", "UP017"]  # UP017: datetime.UTC is 3.11+; CI uses 3.10
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+# SQLAlchemy: forward refs Mapped["Role"] required (circular import)
+"app/models/*.py" = ["F821", "UP037"]
+# Scripts: sys.path/path manipulation before app imports
+"scripts/*.py" = ["E402"]
+# Core/services: #region blocks put imports after region start
+"app/core/server_sync_loop.py" = ["E402"]
+"app/services/server_sync_service.py" = ["E402", "I001"]  # I001: single merged snapshot import block
+# Outline schemas: camelCase matches external Outline API
+"app/schemas/outline.py" = ["N815"]
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_ignores = true
+ignore_missing_imports = true
+# SQLAlchemy relationship forward refs (circular imports)
+[[tool.mypy.overrides]]
+module = "app.models.*"
+disable_error_code = ["name-defined", "no-redef"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = ["."]

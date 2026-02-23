@@ -1,0 +1,5 @@
+# Daily backup (Postgres + Redis). Install: sudo cp config/cron-vpn-suite-backup /etc/cron.d/vpn-suite-backup
+# Requires core stack running; ensure vpn-suite starts before this (e.g. systemd).
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+0 2 * * * root /opt/vpn-suite/scripts/backup-postgres-redis.sh >> /var/log/vpn-suite-backup.log 2>&1

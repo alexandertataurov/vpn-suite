@@ -1,0 +1,86 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+**/__pycache__/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Node / frontend artifacts (global)
+**/node_modules/
+**/storybook-static/
+**/node_modules.bak_*
+**/dist/
+**/.next/
+**/*.tsbuildinfo
+
+# Virtual env
+venv/
+.venv/
+env/
+.env
+.env.local
+*.env
+backend/.venv/
+
+# Backups (cron dumps)
+backups/
+
+# IDE
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+*.swp
+*.swo
+
+# Validation / CI artifacts
+pre_release_validation_report.txt
+
+# Testing / coverage
+.coverage
+.pytest_cache/
+htmlcov/
+.tox/
+.nox/
+frontend/**/playwright-report/
+frontend/**/test-results/
+
+# mypy
+.mypy_cache/
+
+# Alembic
+# Keep migrations; ignore env.py local overrides if any
+
+# Docker
+*.log
+frontend/**/node_modules/
+frontend/**/dist/
+frontend/**/.next/
+reports/
+
+# Local secrets (mTLS CA, keys, certs). .env is the single source for config.
+secrets/
+!secrets/README.md
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Discovery runtime state
+config/monitoring/discovery/.targets_state.json

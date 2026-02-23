@@ -1,0 +1,37 @@
+{
+  "fontFamily": {
+    "sans": "\"Inter Variable\", \"SF Pro Display\", -apple-system, BlinkMacSystemFont, \"Segoe UI Variable\", system-ui, sans-serif",
+    "serif": "\"Charter\", \"Iowan Old Style\", Georgia, serif",
+    "mono": "\"JetBrains Mono Variable\", \"SF Mono\", \"Cascadia Code\", Consolas, monospace"
+  },
+  "fontSize": {
+    "scale": {
+      "12": 12,
+      "13": 13,
+      "14": 14,
+      "16": 16
+    },
+    "legacyScale": {
+      "xs": 12,
+      "sm": 13,
+      "base": 14,
+      "md": 14,
+      "lg": 16,
+      "xl": 16,
+      "2xl": 16,
+      "3xl": 16,
+      "4xl": 16,
+      "5xl": 16
+    }
+  },
+  "fontWeight": { "light": 300, "normal": 400, "medium": 500, "semibold": 600, "bold": 700, "extrabold": 800 },
+  "lineHeight": { "title": 1.2, "body": 1.4, "label": 1.3 },
+  "letterSpacing": { "tighter": "-0.05em", "tight": "-0.025em", "normal": "0", "wide": "0.025em", "wider": "0.05em", "widest": "0.1em" },
+  "textStyles": {
+    "title": { "weight": "semibold", "size": "16", "lineHeight": "title", "font": "sans" },
+    "body": { "weight": "normal", "size": "14", "lineHeight": "body", "font": "sans" },
+    "label": { "weight": "medium", "size": "13", "lineHeight": "label", "font": "sans" },
+    "caption": { "weight": "normal", "size": "12", "lineHeight": "label", "font": "sans" },
+    "code": { "weight": "normal", "size": "13", "lineHeight": "label", "font": "mono" }
+  }
+}

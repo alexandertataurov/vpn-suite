@@ -1,0 +1,285 @@
+# Alert rules for VPN Suite. Use with Prometheus Alertmanager.
+# Policy: docs/ALERT_POLICY.md
+# p95 latency for /api/v1/servers: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{path_template=~"/api/v1/servers.*"}[5m])) by (le, path_template))
+groups:
+  - name: vpn-suite
+    rules:
+      - alert: AdminApiDown
+        expr: up{job="admin-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Admin API is down"
+
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status_class="5xx"}[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High 5xx rate on admin-api"
+
+      - alert: AdminPathsHighErrorRate
+        expr: |
+          sum(rate(http_requests_total{job="admin-api", status_class="5xx", path_template=~"/api/v1/(overview|servers|audit|cluster|control-plane|telemetry).*"}[5m]))
+          /
+          sum(rate(http_requests_total{job="admin-api", path_template=~"/api/v1/(overview|servers|audit|cluster|control-plane|telemetry).*"}[5m])) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High 5xx rate on admin key paths (overview, servers, audit, cluster, control-plane, telemetry)"
+
+      - alert: ServersAPIHigh5xxRate
+        expr: |
+          sum(rate(http_requests_total{path_template=~"/api/v1/servers.*", status_class="5xx"}[5m])) > 0.01
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Servers API 5xx rate exceeds threshold"
+          description: "Servers list/detail endpoint 5xx rate > 0.01/s. Check admin-api logs. Use request_id from error responses for correlation."
+
+      - alert: OverviewOperatorHigh5xxRate
+        expr: |
+          sum(rate(http_requests_total{path_template="/api/v1/overview/operator", status_class="5xx"}[5m])) > 0.005
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Operator overview endpoint 5xx rate exceeds threshold"
+          description: "GET /api/v1/overview/operator is failing. Check operator dashboard logs and request_id."
+
+      - alert: OverviewOperatorPrometheusDegraded
+        expr: |
+          sum(increase(prometheus_query_failures_total{query_name=~"core_batch_empty|api_up|vpn_nodes_online|vpn_cluster_load|vpn_peers|error_rate|latency_p50"}[5m])) >= 5
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Operator overview telemetry is degraded"
+          description: "Prometheus queries for /api/v1/overview/operator are repeatedly failing or returning empty core data."
+
+      - record: servers_api_p95_latency_seconds
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{path_template=~"/api/v1/servers.*"}[5m])) by (le, path_template))
+
+      - alert: HighLatency
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "95th percentile latency > 2s"
+
+      - alert: VpnNoSchedulableNodes
+        expr: absent(vpn_nodes_total) or sum(vpn_nodes_total{status=~"healthy|degraded"}) < 1
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "No healthy/degraded VPN nodes are schedulable"
+
+      - alert: VpnNodeHealthLow
+        expr: vpn_node_health < 0.5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "VPN node health is below 0.5"
+
+      - alert: VpnNodeUnhealthy
+        expr: sum(vpn_nodes_total{status="unhealthy"}) > 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "At least one VPN node is unhealthy"
+
+      - alert: VpnClusterLoadHigh
+        expr: vpn_cluster_load_index > 0.85
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "VPN cluster load index is above 0.85"
+
+      - alert: VpnReconciliationFailures
+        expr: increase(vpn_reconciliation_runs_total{status="failure"}[10m]) > 0
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "VPN reconciliation loop has failures in the last 10 minutes"
+
+      - alert: VpnReconciliationStalled
+        expr: increase(vpn_reconciliation_runs_total{status="success"}[15m]) < 1
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "VPN reconciliation loop has not completed successfully in 15 minutes"
+
+      # Server offline: no heartbeat (when using agent; requires agent to expose or CP to push last_seen metric)
+      - alert: VpnServerOffline
+        expr: (time() - vpn_node_last_seen_seconds) > 300
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "VPN server has not reported heartbeat in 5+ minutes"
+        # Note: requires vpn_node_last_seen_seconds from control-plane or agent. If absent, disable or use Redis-based check.
+
+      # Handshake freshness: node-agent exposes agent_last_handshake_max_age_seconds
+      - alert: VpnHandshakeFreshnessCollapse
+        expr: agent_last_handshake_max_age_seconds > 3600
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "VPN node handshake max age > 1h (peers may appear offline)"
+        # Note: only when node-agent /metrics is scraped by Prometheus.
+
+  - name: admin-operator
+    rules:
+      - alert: AdminIssuanceFailuresRepeated
+        expr: increase(vpn_admin_issue_total{status="failure"}[10m]) >= 3
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Repeated admin peer issuance failures in the last 10 minutes"
+          description: "May indicate server unreachable or node errors. Check admin-api logs and request_id."
+
+      - alert: AdminIssuanceFailureRateHigh
+        expr: |
+          sum(rate(vpn_admin_issue_total{status="failure"}[5m]))
+          /
+          (sum(rate(vpn_admin_issue_total[5m])) + 1) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Admin issuance failure rate above 50% (server unreachable or errors)"
+
+      - alert: ConfigDownloadFailureSpike
+        expr: rate(vpn_config_download_total{status=~"not_found|expired|decrypt_error|already_used"}[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Config download/QR failure rate spike (invalid or expired tokens, or decryption errors)"
+
+      - alert: AuthFailuresSpike
+        expr: sum(rate(auth_failures_total[5m])) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Auth failure rate spike (possible brute-force or credential stuffing)"
+
+      - alert: PaymentWebhookFailureRate
+        expr: |
+          sum(rate(payment_webhook_total{status="failed"}[5m]))
+          /
+          (sum(rate(payment_webhook_total[5m])) + 1) > 0.2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Payment webhook failure rate above 20%"
+
+      - alert: ProvisionFailureSpike
+        expr: sum(rate(provision_failures_total[5m])) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Provisioning failure rate spike (issue/rotate failures)"
+
+  - name: docker-telemetry
+    rules:
+      - alert: DockerContainerHighCPUWarning
+        expr: sum by (id, name) (rate(container_cpu_usage_seconds_total[5m])) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container CPU usage is above 85%"
+
+      - alert: DockerContainerHighCPUCritical
+        expr: sum by (id, name) (rate(container_cpu_usage_seconds_total[5m])) * 100 > 95
+        for: 3m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Container CPU usage is above 95%"
+
+      - alert: DockerContainerHighMemoryWarning
+        expr: (sum by (id, name) (container_memory_working_set_bytes) / clamp_min(sum by (id, name) (container_spec_memory_limit_bytes), 1)) * 100 > 90
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container memory usage is above 90%"
+
+      - alert: DockerContainerHighMemoryCritical
+        expr: (sum by (id, name) (container_memory_working_set_bytes) / clamp_min(sum by (id, name) (container_spec_memory_limit_bytes), 1)) * 100 > 97
+        for: 3m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Container memory usage is above 97%"
+
+      - alert: DockerContainerRestartLoop
+        expr: increase(docker_container_restart_count[5m]) > 3
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Container restart loop detected"
+
+      - alert: DockerContainerUnhealthy
+        expr: docker_container_health_status == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Container reported unhealthy status"
+
+      # Host memory/swap pressure — lag can cause connection drops; restart often fixes
+      - alert: NodeMemoryPressure
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Host memory pressure (>90% used)"
+          description: "Lag may cause connection drops. Consider: add RAM, tune swap, or restart stack. See INCIDENT_RESPONSE_RUNBOOK.md 'Server lag'."
+
+      - alert: NodeSwapHeavy
+        expr: (1 - (node_memory_SwapFree_bytes / node_memory_SwapTotal_bytes)) > 0.5 and node_memory_SwapTotal_bytes > 1e9
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Host swap heavily used (>50%, >1GB)"
+          description: "Memory pressure; lag and connection drops likely. Add RAM or reduce swap usage. See INCIDENT_RESPONSE_RUNBOOK.md 'Server lag'."
+
+      - alert: DockerHostDiskPressure
+        expr: (node_filesystem_avail_bytes{mountpoint="/"} / clamp_min(node_filesystem_size_bytes{mountpoint="/"}, 1)) < 0.15
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Host disk pressure on root filesystem (disk near full)"
+          description: "Less than 15% disk space available on root. See runbook-restart-rotate-profile.md."
+
+      # Cert expiring: optional; requires control-plane to expose cert_expiry_timestamp_seconds or similar
+      # - alert: AgentCertExpiringSoon
+      #   expr: (agent_cert_expiry_timestamp_seconds - time()) < 86400 * 7
+      #   for: 0m
+      #   labels:
+      #     severity: warning
+      #   annotations:
+      #     summary: "Agent mTLS cert expires in less than 7 days"

@@ -1,0 +1,44 @@
+# Build artifacts
+dist/
+build/
+.next/
+out/
+*.egg-info/
+*.egg
+
+# Dependencies (major index weight)
+node_modules/
+
+# Python
+venv/
+.venv/
+env/
+__pycache__/
+*.py[cod]
+*.pyc
+.mypy_cache/
+.pytest_cache/
+htmlcov/
+.tox/
+.nox/
+.coverage
+
+# Generated / caches
+*.min.js
+*.min.css
+*.js.map
+*.d.ts.map
+coverage/
+.vite/deps/
+
+# Git
+.git/
+.git/objects/
+
+# IDE / OS
+.idea/
+.DS_Store
+Thumbs.db
+*.log
+*.swp
+*.swo

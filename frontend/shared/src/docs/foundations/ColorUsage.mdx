@@ -1,0 +1,45 @@
+import { Meta } from "@storybook/blocks";
+
+<Meta title="Foundations/Tokens/Color/Usage" />
+
+# Color Usage Contracts
+
+> **Theme:** Switch dark/light/dim in the toolbar to see semantic colors in each theme.
+
+## When to Use
+
+| Token | `Use for` |
+| ------- | `---------` |
+| `--color-background-primary` | `Page chrome, app background` |
+| `--color-background-secondary` | `Cards, panels, dropdowns` |
+| `--color-text-primary` | `Headlines, body text` |
+| `--color-text-secondary` | `Labels, captions, meta` |
+| `--color-interactive-default` | `Primary buttons, links` |
+| `--color-border-subtle` | `Dividers, card edges` |
+
+## When NOT to Use
+
+- **Primitives** (`--color-gray-500`) — use semantics
+- **Raw hex** — never
+- **Status on backgrounds** — prefer `--color-text-primary` on `--color-success` for badges
+
+## Anti-patterns
+
+```
+❌ color: #5469d4
+❌ background: var(--color-gray-800)
+❌ border: 1px solid rgb(0,0,0)
+✅ color: var(--color-interactive-default)
+✅ background: var(--color-background-secondary)
+✅ border: 1px solid var(--color-border-default)
+```
+
+## Component Mapping
+
+| Component | `Tokens` |
+| ----------- | `--------` |
+| Button.primary | `--color-interactive-default`, `--color-on-primary` |
+| Panel | `--color-background-secondary`, `--color-border-subtle` |
+| Input | `--color-background-tertiary`, `--color-border-default` |
+| Table | `--color-border-subtle`, `--color-text-primary` |
+

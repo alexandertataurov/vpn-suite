@@ -1,0 +1,27 @@
+/*
+ * Typography primitives
+ * Requires: tokens.css
+ */
+.typo-text-body { font: var(--text-body); color: var(--color-text-primary); }
+.typo-text-body-sm { font: var(--text-body-sm); color: var(--color-text-primary); }
+.typo-text-body-lg { font: var(--text-body-lg); color: var(--color-text-primary); }
+.typo-text-muted { font: var(--text-body-sm); color: var(--color-text-secondary); }
+.typo-text-caption { font: var(--text-caption); color: var(--color-text-secondary); }
+.typo-text-code { font: var(--text-body-sm); font-family: var(--font-mono); color: var(--color-text-primary); }
+.typo-text-danger { font: var(--text-body-sm); color: var(--color-error); }
+.typo-heading-1 { font: var(--text-h1); color: var(--color-text-primary); margin: 0; }
+.typo-heading-2 { font: var(--text-h2); color: var(--color-text-primary); margin: 0; }
+.typo-heading-3 { font: var(--text-h3); color: var(--color-text-primary); margin: 0; }
+.typo-heading-4 { font: var(--text-h4); color: var(--color-text-primary); margin: 0; }
+.typo-label { font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); color: var(--color-text-secondary); }
+.typo-helper-hint { font: var(--text-caption); color: var(--color-text-secondary); margin: 0; }
+.typo-helper-error { font: var(--text-body-sm); color: var(--color-error); margin: 0; }
+.typo-stat { display: flex; flex-direction: column; gap: var(--spacing-1); }
+.typo-stat-value { font: var(--font-weight-semibold) var(--font-size-2xl)/var(--line-height-tight) var(--font-sans); font-variant-numeric: tabular-nums; color: var(--color-text-primary); margin: 0; }
+.typo-stat-label { font: var(--text-caption); color: var(--color-text-secondary); margin: 0; }
+.typo-stat-delta { font: var(--text-body-sm); font-variant-numeric: tabular-nums; }
+.typo-stat-delta-up { color: var(--color-success); }
+.typo-stat-delta-down { color: var(--color-error); }
+.typo-stat-delta-neutral { color: var(--color-text-secondary); }
+.typo-code-inline { font: var(--text-body-sm); font-family: var(--font-mono); color: var(--color-text-primary); }
+.typo-code-block { font: var(--text-body-sm); font-family: var(--font-mono); color: var(--color-text-primary); display: block; white-space: pre-wrap; margin: 0; }

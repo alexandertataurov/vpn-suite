@@ -1,0 +1,56 @@
+/*
+ * Utility classes — use sparingly; prefer component classes.
+ * Display, visibility, flex, text, spacing. All values reference tokens.
+ */
+
+/* Display & visibility */
+.hidden { display: none; }
+.visible { display: block; }
+.block { display: block; }
+
+/* Flexbox */
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.flex-wrap { flex-wrap: wrap; }
+.items-center { align-items: center; }
+.items-stretch { align-items: stretch; }
+.justify-between { justify-content: space-between; }
+.justify-center { justify-content: center; }
+
+/* Text */
+.text-left { text-align: left; }
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+.text-primary { color: var(--color-text); }
+.text-break { word-break: break-all; }
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Sizing */
+.w-full { width: 100%; }
+.w-auto { width: auto; }
+.overflow-auto { overflow: auto; }
+.max-w-200 { max-width: var(--grid-min-card); }
+
+/* Spacing */
+.m-0 { margin: 0; }
+.mt-0 { margin-top: 0; }
+.mt-sm { margin-top: var(--spacing-sm); }
+.mt-md { margin-top: var(--spacing-md); }
+.mt-lg { margin-top: var(--spacing-lg); }
+.mt-xl { margin-top: var(--spacing-xl); }
+.mb-0 { margin-bottom: 0; }
+.mb-md { margin-bottom: var(--spacing-md); }
+.mb-lg { margin-bottom: var(--spacing-lg); }
+.mb-xl { margin-bottom: var(--spacing-xl); }
+.p-lg { padding: var(--spacing-lg); }
+.pl-lg { padding-left: var(--spacing-lg); }
+.gap-xs { gap: var(--spacing-xs); }
+.gap-sm { gap: var(--spacing-sm); }
+.gap-md { gap: var(--spacing-md); }
+
+/* Typography */
+.fs-sm { font-size: var(--font-size-sm); }

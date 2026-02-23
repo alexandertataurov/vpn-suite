@@ -1,0 +1,26 @@
+import { Meta } from "@storybook/blocks";
+
+<Meta title="Foundations/Tokens/Radius" />
+
+# Radius & Shape
+
+Border radius scale. Use semantic aliases when available.
+
+## Scale
+
+<div className="sb-radius-grid">
+  {["none", "sm", "md", "lg", "xl", "2xl", "full"].map((r) => (
+    <div key={r} className="sb-radius-item" data-radius={r}>
+      <div className="sb-radius-swatch" aria-hidden />
+      <code className="sb-code">{r}</code>
+    </div>
+  ))}
+</div>
+
+## Semantic Aliases
+
+| Token | `Maps to` | Use |
+| ------- | `---------` | ----- |
+| `--radius-card` | `xl` | Cards, panels |
+| `--radius-button` | `md` | Buttons, inputs |
+

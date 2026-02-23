@@ -1,0 +1,70 @@
+syntax = "proto3";
+
+package vpnsuite.agent.v1;
+
+option go_package = "vpnsuite/gen/agentv1;agentv1";
+
+// Control-plane endpoints consumed by node-agent (pull model).
+// Transport: gRPC over mTLS (recommended). REST/JSON can be generated via grpc-gateway.
+
+message Ack {
+  bool ok = 1;
+  string server_time_utc = 2; // RFC3339
+}
+
+message Heartbeat {
+  string server_id = 1;
+  string container_name = 2;
+  string interface_name = 3;
+  string public_key = 4;
+  uint32 listen_port = 5;
+  uint32 peer_count = 6;
+  uint64 total_rx_bytes = 7;
+  uint64 total_tx_bytes = 8;
+  double health_score = 9; // 0..1
+  string status = 10;      // healthy|degraded|unhealthy|unknown
+  string agent_version = 11;
+  string ts_utc = 12;      // RFC3339
+}
+
+message DesiredStateRequest {
+  string server_id = 1;
+  // Optional: last applied revision for long-poll/conditional responses.
+  string have_revision = 2;
+}
+
+message DesiredPeer {
+  string public_key = 1;
+  string allowed_ips = 2; // "0.0.0.0/0, ::/0" or per-device /32
+  uint32 persistent_keepalive = 3;
+}
+
+message DesiredState {
+  string server_id = 1;
+  string interface_name = 2;
+  string revision = 3;
+  repeated DesiredPeer peers = 4;
+}
+
+message Stats {
+  string server_id = 1;
+  string interface_name = 2;
+  uint32 peers_online = 3;
+  uint32 peers_total = 4;
+  uint32 handshake_age_p95_seconds = 5;
+  uint64 rx_bytes_delta = 6;
+  uint64 tx_bytes_delta = 7;
+  string ts_utc = 8; // RFC3339
+}
+
+message RotateKeysRequest {
+  string server_id = 1;
+  string reason = 2;
+}
+
+service ControlPlaneAgent {
+  rpc Heartbeat(Heartbeat) returns (Ack);
+  rpc GetDesiredState(DesiredStateRequest) returns (DesiredState);
+  rpc PushStats(Stats) returns (Ack);
+  rpc RotateKeys(RotateKeysRequest) returns (Ack);
+}

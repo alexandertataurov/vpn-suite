@@ -1,0 +1,46 @@
+import { Meta } from "@storybook/blocks";
+
+<Meta title="Components/Modal/IssueConfigModal" />
+
+# IssueConfigModal
+
+## Purpose
+Modal to issue a new VPN config for a selected server.
+
+**When to use:** Provisioning a peer/config for a server.
+
+**When not to use:** Lightweight inputs without async actions (use FormStack + Button).
+
+## API (Props)
+
+| Prop | Type |
+| --- | --- |
+| open | `boolean` |
+| onClose | `() => void` |
+| server | `ServerOut \| null` |
+| onSuccess? | `() => void` |
+
+## Examples
+
+```tsx
+<IssueConfigModal
+  open
+  onClose={() => setOpen(false)}
+  server={server}
+  onSuccess={() => refetch()}
+/>
+```
+
+## Design Tokens Used
+- Spacing: `--spacing-*`
+- Colors: `--color-*`
+- Radius: `--radius-*`
+- Typography: `--text-*`
+
+## Anti-patterns
+- Inline styles or arbitrary pixel values.
+- Passing `server={null}` when issuance is expected.
+
+## Accessibility
+- Form fields include labels and aria attributes.
+- Modal provides focus trapping and escape support.

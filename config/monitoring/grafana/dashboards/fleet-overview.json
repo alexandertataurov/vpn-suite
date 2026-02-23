@@ -1,0 +1,49 @@
+{
+  "title": "Fleet Overview",
+  "uid": "fleet-overview",
+  "schemaVersion": 38,
+  "version": 1,
+  "time": { "from": "now-6h", "to": "now" },
+  "panels": [
+    {
+      "type": "stat",
+      "title": "AWG Nodes Online",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+      "targets": [
+        { "expr": "sum(vpn_nodes_total{status=~\"healthy|ok\"})", "refId": "A" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Cluster RX Bytes",
+      "gridPos": { "x": 6, "y": 0, "w": 9, "h": 8 },
+      "targets": [
+        { "expr": "sum(vpn_node_traffic_rx_bytes)", "refId": "A" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Cluster TX Bytes",
+      "gridPos": { "x": 15, "y": 0, "w": 9, "h": 8 },
+      "targets": [
+        { "expr": "sum(vpn_node_traffic_tx_bytes)", "refId": "A" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Agent Peers Active",
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+      "targets": [
+        { "expr": "agent_peers_active", "refId": "A" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Node CPU (non-idle)",
+      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+      "targets": [
+        { "expr": "100 - (avg by (instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)", "refId": "A" }
+      ]
+    }
+  ]
+}

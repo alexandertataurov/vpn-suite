@@ -1,0 +1,95 @@
+{
+  "primitives": {
+    "gray": {
+      "50": "oklch(0.985 0.002 247)",
+      "100": "oklch(0.967 0.003 247)",
+      "200": "oklch(0.928 0.006 247)",
+      "300": "oklch(0.869 0.01 247)",
+      "400": "oklch(0.704 0.015 247)",
+      "500": "oklch(0.551 0.016 247)",
+      "600": "oklch(0.446 0.016 247)",
+      "700": "oklch(0.372 0.014 247)",
+      "800": "oklch(0.279 0.01 247)",
+      "900": "oklch(0.21 0.006 247)",
+      "950": "oklch(0.129 0.004 265)"
+    },
+    "ink": {
+      "800": "oklch(0.18 0.02 265)",
+      "900": "oklch(0.145 0.02 265)"
+    },
+    "primary": {
+      "50": "oklch(0.97 0.015 250)",
+      "100": "oklch(0.93 0.03 250)",
+      "200": "oklch(0.87 0.06 250)",
+      "300": "oklch(0.78 0.12 250)",
+      "400": "oklch(0.707 0.152 252)",
+      "500": "oklch(0.623 0.214 259)",
+      "600": "oklch(0.546 0.245 262)",
+      "700": "oklch(0.488 0.243 264)",
+      "800": "oklch(0.417 0.2 265)",
+      "900": "oklch(0.316 0.15 265)",
+      "950": "oklch(0.21 0.1 265)"
+    },
+    "success": {
+      "50": "oklch(0.98 0.02 145)",
+      "100": "oklch(0.95 0.04 145)",
+      "200": "oklch(0.89 0.08 145)",
+      "300": "oklch(0.81 0.12 145)",
+      "400": "oklch(0.73 0.16 145)",
+      "500": "oklch(0.646 0.222 145)",
+      "600": "oklch(0.557 0.205 149)"
+    },
+    "warning": {
+      "50": "oklch(0.98 0.03 86)",
+      "100": "oklch(0.96 0.06 86)",
+      "200": "oklch(0.92 0.1 86)",
+      "300": "oklch(0.88 0.12 86)",
+      "400": "oklch(0.84 0.15 86)",
+      "500": "oklch(0.796 0.184 86)",
+      "600": "oklch(0.701 0.17 87)"
+    },
+    "error": {
+      "50": "oklch(0.98 0.02 25)",
+      "100": "oklch(0.95 0.05 25)",
+      "200": "oklch(0.9 0.1 25)",
+      "300": "oklch(0.82 0.15 25)",
+      "400": "oklch(0.72 0.2 25)",
+      "500": "oklch(0.637 0.237 25)",
+      "600": "oklch(0.577 0.245 27)",
+      "700": "oklch(0.52 0.22 27)"
+    },
+    "info": {
+      "500": "oklch(0.623 0.214 259)",
+      "600": "oklch(0.546 0.245 262)"
+    }
+  },
+  "semantic": {
+    "dark": {
+      "background": { "primary": "gray.950", "secondary": "gray.900", "tertiary": "gray.800", "inverse": "gray.50", "overlay": "oklch(0 0 0 / 0.5)", "scrim": "oklch(0 0 0 / 0.32)" },
+      "text": { "primary": "gray.50", "secondary": "gray.400", "tertiary": "gray.500", "inverse": "gray.950" },
+      "border": { "subtle": "gray.800", "default": "gray.700", "strong": "gray.600" },
+      "interactive": { "default": "primary.500", "hover": "primary.400", "active": "primary.600", "disabled": "gray.600" },
+      "focus": { "ring": "primary.500" },
+      "onPrimary": "oklch(1 0 0)",
+      "status": { "success": "success.500", "warning": "warning.500", "error": "error.500", "info": "info.500", "connected": "success.500", "syncing": "info.500" }
+    },
+    "light": {
+      "background": { "primary": "gray.50", "secondary": "gray.100", "tertiary": "gray.200", "inverse": "gray.900", "overlay": "oklch(0 0 0 / 0.4)", "scrim": "oklch(0 0 0 / 0.32)" },
+      "text": { "primary": "gray.950", "secondary": "gray.600", "tertiary": "gray.500", "inverse": "gray.50" },
+      "border": { "subtle": "gray.200", "default": "gray.300", "strong": "gray.400" },
+      "interactive": { "default": "ink.900", "hover": "ink.800", "active": "ink.900", "disabled": "gray.400" },
+      "focus": { "ring": "ink.900" },
+      "onPrimary": "oklch(1 0 0)",
+      "status": { "success": "success.600", "warning": "warning.600", "error": "error.600", "info": "info.600", "connected": "success.600", "syncing": "info.600" }
+    },
+    "dim": {
+      "background": { "primary": "gray.900", "secondary": "gray.800", "tertiary": "gray.700", "inverse": "gray.100", "overlay": "oklch(0 0 0 / 0.5)", "scrim": "oklch(0 0 0 / 0.32)" },
+      "text": { "primary": "gray.200", "secondary": "gray.500", "tertiary": "gray.600", "inverse": "gray.900" },
+      "border": { "subtle": "gray.700", "default": "gray.600", "strong": "gray.500" },
+      "interactive": { "default": "primary.500", "hover": "primary.400", "active": "primary.600", "disabled": "gray.600" },
+      "focus": { "ring": "primary.500" },
+      "onPrimary": "oklch(1 0 0)",
+      "status": { "success": "success.500", "warning": "warning.500", "error": "error.500", "info": "info.500", "connected": "success.500", "syncing": "info.500" }
+    }
+  }
+}

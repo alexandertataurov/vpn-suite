@@ -1,0 +1,33 @@
+{
+  "title": "Outline View",
+  "uid": "outline-view",
+  "schemaVersion": 38,
+  "version": 1,
+  "time": { "from": "now-6h", "to": "now" },
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Outline Access Keys",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+      "targets": [
+        { "expr": "outline_access_keys_total", "refId": "A" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Outline Access Key Traffic",
+      "gridPos": { "x": 6, "y": 0, "w": 18, "h": 8 },
+      "targets": [
+        { "expr": "sum by (access_key) (rate(shadowsocks_data_bytes[5m]))", "refId": "A" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Outline Poller Errors",
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+      "targets": [
+        { "expr": "rate(outline_poll_errors_total[5m])", "refId": "A" }
+      ]
+    }
+  ]
+}

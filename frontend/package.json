@@ -1,0 +1,33 @@
+{
+  "name": "vpn-suite-frontend",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "admin",
+    "miniapp",
+    "shared"
+  ],
+  "scripts": {
+    "dev:admin": "npm run dev -w admin",
+    "dev:miniapp": "npm run dev -w miniapp",
+    "build:admin": "npm run build -w admin",
+    "build:miniapp": "npm run build -w miniapp",
+    "build": "npm run build:admin && npm run build:miniapp",
+    "lint": "npm run lint -w shared && npm run lint -w admin && npm run lint -w miniapp",
+    "typecheck": "npm run typecheck -w shared && npm run typecheck -w admin && npm run typecheck -w miniapp",
+    "test": "npm run test -w shared",
+    "test:e2e": "npm run test:e2e -w admin",
+    "test:e2e:miniapp": "npm run test:e2e -w miniapp",
+    "test:e2e:ui": "npm run test:e2e:ui -w admin",
+    "storybook": "npm run storybook -w shared"
+  },
+  "devDependencies": {
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "typescript": "~5.9.3"
+  },
+  "overrides": {
+    "@types/react": "18.3.28",
+    "@types/react-dom": "18.3.7"
+  }
+}

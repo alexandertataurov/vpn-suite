@@ -1,0 +1,240 @@
+"""Prometheus metrics for VPN control-plane (cluster, nodes, reconciliation)."""
+
+from prometheus_client import Counter, Gauge, Histogram
+
+# HTTP errors and auth failures (observability)
+http_errors_total = Counter(
+    "http_errors_total",
+    "Total HTTP errors by path template and error type",
+    ["path_template", "error_type"],
+)
+auth_failures_total = Counter(
+    "auth_failures_total",
+    "Total auth failures (login, refresh)",
+    ["reason"],  # e.g. invalid_credentials, invalid_totp, token_revoked, invalid_refresh
+)
+
+health_check_failures_total = Counter(
+    "health_check_failures_total",
+    "Health check failures per server",
+    ["server_id"],
+)
+
+# Cluster
+vpn_nodes_total = Gauge(
+    "vpn_nodes_total",
+    "Total number of VPN nodes",
+    ["status"],
+)
+vpn_cluster_capacity = Gauge("vpn_cluster_capacity", "Total peer capacity across all nodes")
+vpn_cluster_load = Gauge("vpn_cluster_load", "Current number of active peers")
+vpn_cluster_health_score = Gauge("vpn_cluster_health_score", "Cluster health score (0-1)")
+vpn_cluster_load_index = Gauge(
+    "vpn_cluster_load_index",
+    "Cluster load factor (current_load/total_capacity, 0-1)",
+)
+
+# Per-node (labels: node_id, container_name)
+vpn_node_health = Gauge(
+    "vpn_node_health",
+    "Node health score",
+    ["node_id", "container_name"],
+)
+vpn_node_peers = Gauge(
+    "vpn_node_peers",
+    "Active peers on node",
+    ["node_id", "container_name"],
+)
+vpn_node_interface_info = Gauge(
+    "vpn_node_interface_info",
+    "Node interface metadata (value is always 1)",
+    ["node_id", "container_name", "interface_name"],
+)
+# Per-node traffic from wg show dump (updated by telemetry poll)
+vpn_node_traffic_rx_bytes = Gauge(
+    "vpn_node_traffic_rx_bytes",
+    "Total RX bytes on node (from wg show dump)",
+    ["server_id"],
+)
+vpn_node_traffic_tx_bytes = Gauge(
+    "vpn_node_traffic_tx_bytes",
+    "Total TX bytes on node (from wg show dump)",
+    ["server_id"],
+)
+
+# Peers
+vpn_peers_total = Gauge(
+    "vpn_peers_total",
+    "Total number of peers",
+    ["status"],
+)
+
+# Reconciliation
+vpn_reconciliation_runs_total = Counter(
+    "vpn_reconciliation_runs_total",
+    "Number of reconciliation cycles",
+    ["status"],
+)
+vpn_reconciliation_drift = Gauge(
+    "vpn_reconciliation_drift",
+    "Number of items requiring correction",
+    ["drift_type"],
+)
+vpn_reconciliation_duration_seconds = Histogram(
+    "vpn_reconciliation_duration_seconds",
+    "Reconciliation cycle duration",
+    buckets=(0.5, 1.0, 2.0, 5.0, 10.0, 30.0),
+)
+
+# Bot funnel (spec: bot_conversion_rate; use funnel_events_total + PromQL for rate)
+funnel_events_total = Counter(
+    "funnel_events_total",
+    "Funnel events from bot/webapp (start, plan_selected, payment, issue, etc.)",
+    ["event_type"],
+)
+# Conversion rate = issue/start over window; expose as Gauge for dashboards (optional update in task).
+bot_conversion_rate = Gauge(
+    "bot_conversion_rate",
+    "Conversion rate (issue/start) over last 24h; 0 if no starts.",
+)
+
+# Admin operator: issue / rotate / revoke
+admin_issue_total = Counter(
+    "vpn_admin_issue_total",
+    "Admin peer issuance (create on server)",
+    ["status"],
+)
+# Server snapshot sync (auto/manual)
+server_sync_total = Counter(
+    "vpn_server_sync_total",
+    "Server snapshot sync attempts",
+    ["mode", "status"],  # mode=auto|manual, status=success|failure
+)
+server_sync_latency_seconds = Histogram(
+    "vpn_server_sync_latency_seconds",
+    "Server snapshot sync duration",
+    buckets=(0.5, 1.0, 2.0, 5.0, 10.0, 30.0),
+)
+server_snapshot_staleness_seconds = Gauge(
+    "vpn_server_snapshot_staleness_seconds",
+    "Seconds since last successful snapshot per server",
+    ["server_id"],
+)
+
+admin_issue_latency_seconds = Histogram(
+    "vpn_admin_issue_latency_seconds",
+    "Admin peer issuance latency",
+    ["status"],
+    buckets=(0.1, 0.25, 0.5, 1.0, 2.0, 5.0),
+)
+admin_revoke_total = Counter(
+    "vpn_admin_revoke_total",
+    "Admin peer revocations",
+    ["status"],
+)
+admin_rotate_total = Counter(
+    "vpn_admin_rotate_total",
+    "Admin peer key rotations",
+    ["status"],
+)
+config_download_total = Counter(
+    "vpn_config_download_total",
+    "One-time config download by token (download or qr)",
+    ["endpoint", "status"],
+)
+config_gen_success_total = Counter(
+    "vpn_config_gen_success_total",
+    "Config generation success",
+    ["profile"],
+)
+config_gen_failure_total = Counter(
+    "vpn_config_gen_failure_total",
+    "Config generation failure",
+    ["profile", "reason"],
+)
+
+payment_webhook_total = Counter(
+    "payment_webhook_total",
+    "Payment webhook events",
+    ["status"],  # received, processed, failed
+)
+
+provision_failures_total = Counter(
+    "provision_failures_total",
+    "Provisioning failures (issue, rotate, revoke)",
+    ["server_id", "reason"],
+)
+
+# Docker telemetry internals
+docker_telemetry_cache_hits_total = Counter(
+    "docker_telemetry_cache_hits_total",
+    "Docker telemetry cache hits",
+    ["scope"],
+)
+docker_telemetry_cache_misses_total = Counter(
+    "docker_telemetry_cache_misses_total",
+    "Docker telemetry cache misses",
+    ["scope"],
+)
+docker_telemetry_upstream_failures_total = Counter(
+    "docker_telemetry_upstream_failures_total",
+    "Docker telemetry upstream failures",
+    ["upstream", "endpoint"],
+)
+docker_telemetry_upstream_latency_seconds = Histogram(
+    "docker_telemetry_upstream_latency_seconds",
+    "Docker telemetry upstream request latency",
+    ["upstream", "endpoint"],
+    buckets=(0.01, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0),
+)
+
+# Operator dashboard endpoint health
+overview_operator_requests_total = Counter(
+    "overview_operator_requests_total",
+    "Operator dashboard requests by response mode",
+    ["status"],  # ok|degraded|error
+)
+overview_operator_latency_seconds = Histogram(
+    "overview_operator_latency_seconds",
+    "Latency of operator dashboard aggregation",
+    buckets=(0.05, 0.1, 0.25, 0.5, 1.0, 2.0, 5.0),
+)
+prometheus_query_failures_total = Counter(
+    "prometheus_query_failures_total",
+    "Prometheus query failures from operator dashboard aggregation",
+    ["query_name"],
+)
+
+
+def update_topology_metrics(topo) -> None:
+    """Update gauges from ClusterTopology."""
+    vpn_cluster_capacity.set(topo.total_capacity)
+    vpn_cluster_load.set(topo.current_load)
+    vpn_cluster_health_score.set(topo.health_score)
+    vpn_cluster_load_index.set(topo.load_factor)
+    # Label-based gauges can retain stale series between updates; clear before re-populating.
+    vpn_nodes_total.clear()
+    vpn_node_health.clear()
+    vpn_node_peers.clear()
+    vpn_node_interface_info.clear()
+    vpn_node_traffic_rx_bytes.clear()
+    vpn_node_traffic_tx_bytes.clear()
+    status_counts: dict[str, int] = {}
+    for n in topo.nodes:
+        st = n.status or "unknown"
+        status_counts[st] = status_counts.get(st, 0) + 1
+        vpn_node_health.labels(node_id=n.node_id, container_name=n.container_name).set(
+            n.health_score or 0
+        )
+        vpn_node_peers.labels(node_id=n.node_id, container_name=n.container_name).set(n.peer_count)
+        vpn_node_interface_info.labels(
+            node_id=n.node_id,
+            container_name=n.container_name,
+            interface_name=n.interface_name or "unknown",
+        ).set(1)
+        vpn_node_traffic_rx_bytes.labels(server_id=n.node_id).set(int(n.total_rx_bytes or 0))
+        vpn_node_traffic_tx_bytes.labels(server_id=n.node_id).set(int(n.total_tx_bytes or 0))
+    for st, count in status_counts.items():
+        vpn_nodes_total.labels(status=st).set(count)
+    total_peers = sum(n.peer_count for n in topo.nodes)
+    vpn_peers_total.labels(status="active").set(total_peers)

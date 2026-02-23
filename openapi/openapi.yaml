@@ -1,0 +1,7466 @@
+openapi: 3.1.0
+info:
+  title: VPN Admin API
+  description: Control plane for commercial VPN (AmneziaWG).
+  version: 0.1.0-rc.1
+paths:
+  /api/v1/auth/login:
+    post:
+      tags:
+      - auth
+      summary: Login
+      operationId: login_api_v1_auth_login_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/auth/logout:
+    post:
+      tags:
+      - auth
+      summary: Logout
+      description: 'Revoke refresh token: add to blocklist so it cannot be used for
+        /refresh.'
+      operationId: logout_api_v1_auth_logout_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogoutRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/auth/refresh:
+    post:
+      tags:
+      - auth
+      summary: Refresh
+      operationId: refresh_api_v1_auth_refresh_post
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+      security:
+      - HTTPBearer: []
+  /api/v1/auth/totp/setup:
+    post:
+      tags:
+      - auth
+      summary: Totp Setup
+      description: 'Enable 2FA: generate TOTP secret, store on user, return provisioning_uri
+        for QR.'
+      operationId: totp_setup_api_v1_auth_totp_setup_post
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TotpSetupResponse'
+      security:
+      - HTTPBearer: []
+  /api/v1/auth/totp/disable:
+    post:
+      tags:
+      - auth
+      summary: Totp Disable
+      description: 'Disable 2FA: clear TOTP secret.'
+      operationId: totp_disable_api_v1_auth_totp_disable_post
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+      security:
+      - HTTPBearer: []
+  /api/v1/log/frontend-error:
+    post:
+      tags:
+      - log
+      summary: Log Frontend Error
+      description: Accept frontend error reports; log at ERROR. No auth required (rate-limited
+        by global middleware).
+      operationId: log_frontend_error_api_v1_log_frontend_error_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FrontendErrorIn'
+        required: true
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/overview/dashboard_timeseries:
+    get:
+      tags:
+      - overview
+      summary: Get Dashboard Timeseries Endpoint
+      description: 'Timeseries for dashboard charts: cluster peers count and rx/tx
+        bytes. Empty when telemetry not available (e.g. agent mode).'
+      operationId: get_dashboard_timeseries_endpoint_api_v1_overview_dashboard_timeseries_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardTimeseriesOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/overview:
+    get:
+      tags:
+      - overview
+      summary: Get Overview
+      description: Aggregate counts for dashboard. Admin or bot auth. MRR = sum of
+        monthly value of active subs.
+      operationId: get_overview_api_v1_overview_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OverviewStats'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/audit:
+    get:
+      tags:
+      - audit
+      summary: List Audit Logs
+      operationId: list_audit_logs_api_v1_audit_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          default: 50
+          title: Limit
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+          title: Offset
+      - name: resource_type
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Filter by resource_type e.g. server, device
+          title: Resource Type
+        description: Filter by resource_type e.g. server, device
+      - name: resource_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Filter by resource_id (e.g. server_id)
+          title: Resource Id
+        description: Filter by resource_id (e.g. server_id)
+      - name: request_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Filter by request_id for traceability
+          title: Request Id
+        description: Filter by request_id for traceability
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditLogList'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/cluster/topology:
+    get:
+      tags:
+      - cluster
+      summary: Get Cluster Topology
+      description: Return current cluster topology (cached).
+      operationId: get_cluster_topology_api_v1_cluster_topology_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+      security:
+      - HTTPBearer: []
+  /api/v1/cluster/nodes:
+    get:
+      tags:
+      - cluster
+      summary: Get Cluster Nodes
+      description: List nodes (from topology). Filter by status and/or min_health.
+      operationId: get_cluster_nodes_api_v1_cluster_nodes_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Status
+      - name: min_health
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: number
+            maximum: 1
+            minimum: 0
+          - type: 'null'
+          title: Min Health
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/cluster/health:
+    get:
+      tags:
+      - cluster
+      summary: Get Cluster Health
+      description: 'Return aggregate cluster health from topology (spec: GET /cluster/health).'
+      operationId: get_cluster_health_api_v1_cluster_health_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+      security:
+      - HTTPBearer: []
+  /api/v1/cluster/nodes/{node_id}/drain:
+    post:
+      tags:
+      - cluster
+      summary: Drain Node
+      description: Mark node as draining (no new peers). Load balancer excludes draining
+        nodes.
+      operationId: drain_node_api_v1_cluster_nodes__node_id__drain_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: node_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Node Id
+      requestBody:
+        content:
+          application/json:
+            schema:
+              anyOf:
+              - $ref: '#/components/schemas/DrainBody'
+              - type: 'null'
+              title: Body
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/cluster/nodes/{node_id}/undrain:
+    post:
+      tags:
+      - cluster
+      summary: Undrain Node
+      description: Clear draining flag so the node can receive new peers again.
+      operationId: undrain_node_api_v1_cluster_nodes__node_id__undrain_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: node_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Node Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/cluster/scan:
+    post:
+      tags:
+      - cluster
+      summary: Cluster Scan
+      description: Trigger one discovery cycle and synchronize discovered nodes into
+        control-plane state.
+      operationId: cluster_scan_api_v1_cluster_scan_post
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+      security:
+      - HTTPBearer: []
+  /api/v1/cluster/resync:
+    post:
+      tags:
+      - cluster
+      summary: Cluster Resync
+      description: Trigger reconciliation once. Optional node_id to reconcile single
+        node.
+      operationId: cluster_resync_api_v1_cluster_resync_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              anyOf:
+              - $ref: '#/components/schemas/ResyncBody'
+              - type: 'null'
+              title: Body
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /api/v1/control-plane/topology/summary:
+    get:
+      tags:
+      - control-plane
+      summary: Topology Summary
+      operationId: topology_summary_api_v1_control_plane_topology_summary_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TopologySummaryOut'
+      security:
+      - HTTPBearer: []
+  /api/v1/control-plane/topology/graph:
+    get:
+      tags:
+      - control-plane
+      summary: Topology Graph
+      operationId: topology_graph_api_v1_control_plane_topology_graph_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TopologyGraphOut'
+      security:
+      - HTTPBearer: []
+  /api/v1/control-plane/placement/simulate:
+    post:
+      tags:
+      - control-plane
+      summary: Placement Simulate
+      operationId: placement_simulate_api_v1_control_plane_placement_simulate_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlacementSimulateRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlacementSimulationOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /api/v1/control-plane/latency-probes:
+    post:
+      tags:
+      - control-plane
+      summary: Ingest Probes
+      operationId: ingest_probes_api_v1_control_plane_latency_probes_post
+      security:
+      - HTTPBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LatencyProbeBatchIn'
+      responses:
+        '202':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LatencyProbeIngestOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    get:
+      tags:
+      - control-plane
+      summary: Get Latency Probes
+      operationId: get_latency_probes_api_v1_control_plane_latency_probes_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: source_region
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Source Region
+      - name: server_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Server Id
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 1000
+          minimum: 1
+          default: 100
+          title: Limit
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LatencyProbeListOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/control-plane/rebalance/plan:
+    post:
+      tags:
+      - control-plane
+      summary: Rebalance Plan
+      operationId: rebalance_plan_api_v1_control_plane_rebalance_plan_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RebalancePlanRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RebalancePlanOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /api/v1/control-plane/failover/evaluate:
+    post:
+      tags:
+      - control-plane
+      summary: Failover Evaluate
+      operationId: failover_evaluate_api_v1_control_plane_failover_evaluate_post
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FailoverEvaluateOut'
+      security:
+      - HTTPBearer: []
+  /api/v1/control-plane/ip-pools:
+    get:
+      tags:
+      - control-plane
+      summary: List Ip Pools
+      operationId: list_ip_pools_api_v1_control_plane_ip_pools_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          default: 50
+          title: Limit
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+          title: Offset
+      - name: server_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Server Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IpPoolListOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      tags:
+      - control-plane
+      summary: Create Ip Pool
+      operationId: create_ip_pool_api_v1_control_plane_ip_pools_post
+      security:
+      - HTTPBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IpPoolCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IpPoolOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/control-plane/ip-pools/{pool_id}:
+    patch:
+      tags:
+      - control-plane
+      summary: Update Ip Pool
+      operationId: update_ip_pool_api_v1_control_plane_ip_pools__pool_id__patch
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: pool_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Pool Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IpPoolUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IpPoolOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/control-plane/port-allocations:
+    get:
+      tags:
+      - control-plane
+      summary: List Port Allocations
+      operationId: list_port_allocations_api_v1_control_plane_port_allocations_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 500
+          minimum: 1
+          default: 100
+          title: Limit
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+          title: Offset
+      - name: server_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Server Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PortAllocationListOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      tags:
+      - control-plane
+      summary: Create Port Allocation
+      operationId: create_port_allocation_api_v1_control_plane_port_allocations_post
+      security:
+      - HTTPBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PortAllocationCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PortAllocationOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/control-plane/port-allocations/{allocation_id}:
+    patch:
+      tags:
+      - control-plane
+      summary: Update Port Allocation
+      operationId: update_port_allocation_api_v1_control_plane_port_allocations__allocation_id__patch
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: allocation_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Allocation Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PortAllocationUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PortAllocationOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/control-plane/throttling/policies:
+    get:
+      tags:
+      - control-plane
+      summary: Get Throttling Policies
+      operationId: get_throttling_policies_api_v1_control_plane_throttling_policies_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlanBandwidthPolicyListOut'
+      security:
+      - HTTPBearer: []
+  /api/v1/control-plane/throttling/policies/{plan_id}:
+    put:
+      tags:
+      - control-plane
+      summary: Upsert Throttling Policy
+      operationId: upsert_throttling_policy_api_v1_control_plane_throttling_policies__plan_id__put
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: plan_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Plan Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlanBandwidthPolicyUpsert'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlanBandwidthPolicyOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/control-plane/throttling/apply:
+    post:
+      tags:
+      - control-plane
+      summary: Apply Throttling Now
+      operationId: apply_throttling_now_api_v1_control_plane_throttling_apply_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              anyOf:
+              - $ref: '#/components/schemas/ThrottlingApplyRequest'
+              - type: 'null'
+              title: Body
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThrottlingApplyOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /api/v1/control-plane/metrics/business:
+    get:
+      tags:
+      - control-plane
+      summary: Get Business Metrics
+      operationId: get_business_metrics_api_v1_control_plane_metrics_business_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessMetricsOut'
+      security:
+      - HTTPBearer: []
+  /api/v1/control-plane/metrics/security:
+    get:
+      tags:
+      - control-plane
+      summary: Get Security Metrics
+      operationId: get_security_metrics_api_v1_control_plane_metrics_security_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SecurityMetricsOut'
+      security:
+      - HTTPBearer: []
+  /api/v1/control-plane/metrics/anomaly:
+    get:
+      tags:
+      - control-plane
+      summary: Get Anomaly Metrics
+      operationId: get_anomaly_metrics_api_v1_control_plane_metrics_anomaly_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnomalyMetricsOut'
+      security:
+      - HTTPBearer: []
+  /api/v1/control-plane/events:
+    get:
+      tags:
+      - control-plane
+      summary: Get Control Plane Events
+      operationId: get_control_plane_events_api_v1_control_plane_events_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 500
+          minimum: 1
+          default: 50
+          title: Limit
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ControlPlaneEventListOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/control-plane/automation/status:
+    get:
+      tags:
+      - control-plane
+      summary: Get Automation Status
+      operationId: get_automation_status_api_v1_control_plane_automation_status_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AutomationStatusOut'
+      security:
+      - HTTPBearer: []
+  /api/v1/control-plane/automation/run:
+    post:
+      tags:
+      - control-plane
+      summary: Run Automation Now
+      operationId: run_automation_now_api_v1_control_plane_automation_run_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              anyOf:
+              - $ref: '#/components/schemas/AutomationRunRequest'
+              - type: 'null'
+              title: Body
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AutomationRunOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /api/v1/peers:
+    get:
+      tags:
+      - peers
+      summary: List Peers
+      description: 'List peers (devices). peer_id = device.id, node_id = device.server_id.
+
+        Create peer: use POST /api/v1/devices/issue (with server_id or omit for load-balanced).
+
+        Remove peer: use POST /api/v1/devices/{id}/revoke or /reset.'
+      operationId: list_peers_api_v1_peers_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: node_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Filter by node (server) id
+          title: Node Id
+        description: Filter by node (server) id
+      - name: status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: active | revoked
+          title: Status
+        description: active | revoked
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          default: 50
+          title: Limit
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+          title: Offset
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/peers/{peer_id}:
+    get:
+      tags:
+      - peers
+      summary: Get Peer
+      description: Get one peer (device) by id.
+      operationId: get_peer_api_v1_peers__peer_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: peer_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Peer Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/peers/{peer_id}/migrate:
+    post:
+      tags:
+      - peers
+      summary: Migrate Peer Endpoint
+      description: Move peer to another node. Remove from current, add on target,
+        update device.server_id (spec 4.2).
+      operationId: migrate_peer_endpoint_api_v1_peers__peer_id__migrate_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: peer_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Peer Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MigrateBody'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/wg/peer:
+    post:
+      tags:
+      - wg
+      summary: Create Wg Peer
+      description: 'Provision a VPN peer (spec: POST /wg/peer). Delegates to issue_service
+        with load-balance when server_id omitted.'
+      operationId: create_wg_peer_api_v1_wg_peer_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WgPeerCreateBody'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /api/v1/wg/peer/{pubkey}:
+    delete:
+      tags:
+      - wg
+      summary: Delete Wg Peer
+      description: 'Remove peer by public key (spec: DELETE /wg/peer/{pubkey}). Revokes
+        device and removes peer from node.'
+      operationId: delete_wg_peer_api_v1_wg_peer__pubkey__delete
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: pubkey
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Pubkey
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/servers:
+    post:
+      tags:
+      - servers
+      summary: Create Server
+      operationId: create_server_api_v1_servers_post
+      security:
+      - HTTPBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServerCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    get:
+      tags:
+      - servers
+      summary: List Servers
+      description: List servers. Bot may use limit=1, is_active=true to get default
+        server for issue.
+      operationId: list_servers_api_v1_servers_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          default: 50
+          title: Limit
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+          title: Offset
+      - name: is_active
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Active
+      - name: region
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Filter by region
+          title: Region
+        description: Filter by region
+      - name: status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: 'Filter by status: online, offline, degraded, unknown'
+          title: Status
+        description: 'Filter by status: online, offline, degraded, unknown'
+      - name: search
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Search in name and api_endpoint
+          title: Search
+        description: Search in name and api_endpoint
+      - name: sort
+        in: query
+        required: false
+        schema:
+          type: string
+          description: 'Sort: created_at_desc, created_at_asc, name_asc, name_desc,
+            region_asc'
+          default: created_at_desc
+          title: Sort
+        description: 'Sort: created_at_desc, created_at_asc, name_asc, name_desc,
+          region_asc'
+      - name: page
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+            minimum: 1
+          - type: 'null'
+          description: Page number (1-based); overrides offset when set
+          title: Page
+        description: Page number (1-based); overrides offset when set
+      - name: page_size
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+            maximum: 200
+            minimum: 1
+          - type: 'null'
+          description: Page size; overrides limit when set
+          title: Page Size
+        description: Page size; overrides limit when set
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerList'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/servers/bulk:
+    patch:
+      tags:
+      - servers
+      summary: Bulk Update Servers
+      description: 'Bulk actions: mark_draining, unmark_draining, disable_provisioning,
+        enable_provisioning.'
+      operationId: bulk_update_servers_api_v1_servers_bulk_patch
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServerBulkRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /api/v1/servers/telemetry/summary:
+    get:
+      tags:
+      - servers
+      summary: Get Servers Telemetry Summary
+      description: 'Return telemetry summary per server (Prometheus: vpn_node_health,
+        vpn_node_peers).'
+      operationId: get_servers_telemetry_summary_api_v1_servers_telemetry_summary_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: region
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Region
+      - name: status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Status
+      - name: search
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Search
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServersTelemetrySummaryOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/servers/snapshots/summary:
+    get:
+      tags:
+      - servers
+      summary: Get Servers Snapshots Summary
+      description: Return per-server telemetry from last successful snapshot (authoritative).
+      operationId: get_servers_snapshots_summary_api_v1_servers_snapshots_summary_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServersSnapshotSummaryOut'
+      security:
+      - HTTPBearer: []
+  /api/v1/servers/device-counts:
+    get:
+      tags:
+      - servers
+      summary: Get Server Device Counts
+      description: Return device count per server_id for list views (avoids loading
+        full device list).
+      operationId: get_server_device_counts_api_v1_servers_device_counts_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerDeviceCountsOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/servers/{server_id}:
+    get:
+      tags:
+      - servers
+      summary: Get Server
+      operationId: get_server_api_v1_servers__server_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: server_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Server Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    patch:
+      tags:
+      - servers
+      summary: Update Server
+      operationId: update_server_api_v1_servers__server_id__patch
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: server_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Server Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServerUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/servers/{server_id}/status:
+    get:
+      tags:
+      - servers
+      summary: Get Server Status
+      operationId: get_server_status_api_v1_servers__server_id__status_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: server_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Server Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerStatusOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/servers/{server_id}/health:
+    get:
+      tags:
+      - servers
+      summary: Get Server Health
+      operationId: get_server_health_api_v1_servers__server_id__health_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: server_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Server Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerHealthOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/servers/{server_id}/sync:
+    post:
+      tags:
+      - servers
+      summary: Trigger Server Sync
+      description: 'Trigger manual sync: fetch snapshot from node, store, update Server.
+        Returns request_id and job_id.'
+      operationId: trigger_server_sync_api_v1_servers__server_id__sync_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: server_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Server Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServerSyncRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerSyncResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/servers/{server_id}/sync/{job_id}:
+    get:
+      tags:
+      - servers
+      summary: Get Server Sync Job
+      description: Return sync job progress and result.
+      operationId: get_server_sync_job_api_v1_servers__server_id__sync__job_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: server_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Server Id
+      - name: job_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Job Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerSyncJobStatus'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/servers/{server_id}/snapshot:
+    get:
+      tags:
+      - servers
+      summary: Get Server Last Snapshot
+      description: Return last successful snapshot payload for operator view. 404
+        if none.
+      operationId: get_server_last_snapshot_api_v1_servers__server_id__snapshot_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: server_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Server Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/servers/{server_id}/restart:
+    post:
+      tags:
+      - servers
+      summary: Restart Server
+      operationId: restart_server_api_v1_servers__server_id__restart_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: server_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Server Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RestartRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/servers/{server_id}/peers-sync:
+    get:
+      tags:
+      - servers
+      summary: Get Server Peers Sync
+      description: 'On-demand: fetch peers from node, compare with DB devices; return
+        diff counts (and log).'
+      operationId: get_server_peers_sync_api_v1_servers__server_id__peers_sync_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: server_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Server Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/servers/{server_id}/peers:
+    post:
+      tags:
+      - servers
+      summary: Create Server Peer
+      description: Create a peer on the chosen server; return one-time config_download_url
+        and qr_payload.
+      operationId: create_server_peer_api_v1_servers__server_id__peers_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: server_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Server Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminIssuePeerRequest'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminIssuePeerResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    get:
+      tags:
+      - servers
+      summary: Get Server Peers
+      description: Fetch peers from node with pubkey, handshake, rx/tx, status. Returns
+        empty when node unreachable.
+      operationId: get_server_peers_api_v1_servers__server_id__peers_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: server_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Server Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerPeersOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/servers/{server_id}/peers/{peer_id}/rotate:
+    post:
+      tags:
+      - servers
+      summary: Rotate Server Peer
+      description: Rotate keys for peer; returns new config_download_url and qr_payload.
+      operationId: rotate_server_peer_api_v1_servers__server_id__peers__peer_id__rotate_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: server_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Server Id
+      - name: peer_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Peer Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminRotatePeerResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/servers/{server_id}/peers/{peer_id}/revoke:
+    post:
+      tags:
+      - servers
+      summary: Revoke Server Peer
+      description: 'Revoke peer: remove from node and set revoked_at on device.'
+      operationId: revoke_server_peer_api_v1_servers__server_id__peers__peer_id__revoke_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: server_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Server Id
+      - name: peer_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Peer Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminRevokePeerResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/servers/{server_id}/telemetry:
+    get:
+      tags:
+      - servers
+      summary: Get Server Telemetry
+      description: Peers count, traffic summary from node. Cache first, live fallback.
+        Graceful N/A on failure.
+      operationId: get_server_telemetry_api_v1_servers__server_id__telemetry_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: server_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Server Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerTelemetryOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/servers/{server_id}/peers/block:
+    post:
+      tags:
+      - servers
+      summary: Block Server Peer
+      operationId: block_server_peer_api_v1_servers__server_id__peers_block_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: server_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Server Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BlockPeerRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/servers/{server_id}/peers/reset:
+    post:
+      tags:
+      - servers
+      summary: Reset Server Peer
+      operationId: reset_server_peer_api_v1_servers__server_id__peers_reset_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: server_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Server Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPeerRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/servers/{server_id}/capabilities:
+    get:
+      tags:
+      - servers
+      summary: Get Server Capabilities
+      operationId: get_server_capabilities_api_v1_servers__server_id__capabilities_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: server_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Server Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerCapabilitiesOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/servers/{server_id}/limits:
+    get:
+      tags:
+      - servers
+      summary: Get Server Limits
+      operationId: get_server_limits_api_v1_servers__server_id__limits_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: server_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Server Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerLimitsOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    patch:
+      tags:
+      - servers
+      summary: Update Server Limits
+      operationId: update_server_limits_api_v1_servers__server_id__limits_patch
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: server_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Server Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServerLimitsUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerLimitsOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/configs/{token}/download:
+    get:
+      tags:
+      - admin-configs
+      summary: Download Config
+      description: Return .conf as attachment; mark token consumed. One-time use.
+      operationId: download_config_api_v1_admin_configs__token__download_get
+      parameters:
+      - name: token
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Token
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/configs/{token}/qr:
+    get:
+      tags:
+      - admin-configs
+      summary: Get Config Qr
+      description: Return JSON with qr_payload (config text for frontend to render
+        QR). Optionally mark consumed.
+      operationId: get_config_qr_api_v1_admin_configs__token__qr_get
+      parameters:
+      - name: token
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Token
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/users:
+    post:
+      tags:
+      - users
+      summary: Create User
+      operationId: create_user_api_v1_users_post
+      security:
+      - HTTPBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    get:
+      tags:
+      - users
+      summary: List Users
+      operationId: list_users_api_v1_users_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          default: 50
+          title: Limit
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+          title: Offset
+      - name: tg_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Tg Id
+      - name: email
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Email
+      - name: phone
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Phone
+      - name: is_banned
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Banned
+      - name: plan_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Plan Id
+      - name: region
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Region
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserList'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/users/by-tg/{tg_id}:
+    get:
+      tags:
+      - users
+      summary: Get User By Tg Id
+      description: Resolve user by Telegram id. Allowed for bot (X-API-Key) or admin
+        (JWT).
+      operationId: get_user_by_tg_id_api_v1_users_by_tg__tg_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: tg_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Tg Id
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDetail'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/users/{user_id}:
+    get:
+      tags:
+      - users
+      summary: Get User
+      operationId: get_user_api_v1_users__user_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: User Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDetail'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    patch:
+      tags:
+      - users
+      summary: Update User
+      operationId: update_user_api_v1_users__user_id__patch
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: User Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/users/{user_id}/devices:
+    get:
+      tags:
+      - users
+      summary: List User Devices
+      description: List user devices. Allowed for bot (X-API-Key) or admin (JWT).
+        Bot must pass user_id from by-tg lookup.
+      operationId: list_user_devices_api_v1_users__user_id__devices_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: User Id
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          default: 50
+          title: Limit
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+          title: Offset
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceList'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/users/{user_id}/devices/issue:
+    post:
+      tags:
+      - users
+      summary: Issue User Device
+      operationId: issue_user_device_api_v1_users__user_id__devices_issue_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: User Id
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueRequest'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/devices/{device_id}/revoke:
+    post:
+      tags:
+      - devices
+      summary: Revoke Device
+      operationId: revoke_device_api_v1_devices__device_id__revoke_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: device_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Device Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RevokeRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/devices/{device_id}/reset:
+    post:
+      tags:
+      - devices
+      summary: Reset Device
+      description: 'Reset device: call node to remove peer, then revoke device in
+        DB. Allowed for bot (X-API-Key) or admin.'
+      operationId: reset_device_api_v1_devices__device_id__reset_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: device_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Device Id
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      requestBody:
+        content:
+          application/json:
+            schema:
+              anyOf:
+              - $ref: '#/components/schemas/ResetRequest'
+              - type: 'null'
+              title: Body
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/devices/{device_id}/block:
+    post:
+      tags:
+      - devices
+      summary: Block Device
+      operationId: block_device_api_v1_devices__device_id__block_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: device_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Device Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BlockRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/plans:
+    post:
+      tags:
+      - plans
+      summary: Create Plan
+      operationId: create_plan_api_v1_plans_post
+      security:
+      - HTTPBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlanCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlanOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    get:
+      tags:
+      - plans
+      summary: List Plans
+      description: List plans. Allowed for bot (X-API-Key) or admin (JWT).
+      operationId: list_plans_api_v1_plans_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          default: 50
+          title: Limit
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+          title: Offset
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlanList'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/plans/{plan_id}:
+    get:
+      tags:
+      - plans
+      summary: Get Plan
+      operationId: get_plan_api_v1_plans__plan_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: plan_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Plan Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlanOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    patch:
+      tags:
+      - plans
+      summary: Update Plan
+      operationId: update_plan_api_v1_plans__plan_id__patch
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: plan_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Plan Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlanUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlanOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/subscriptions:
+    post:
+      tags:
+      - subscriptions
+      summary: Create Subscription
+      operationId: create_subscription_api_v1_subscriptions_post
+      security:
+      - HTTPBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscriptionCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    get:
+      tags:
+      - subscriptions
+      summary: List Subscriptions
+      operationId: list_subscriptions_api_v1_subscriptions_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          default: 50
+          title: Limit
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+          title: Offset
+      - name: user_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: User Id
+      - name: plan_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Plan Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionList'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/subscriptions/{subscription_id}:
+    get:
+      tags:
+      - subscriptions
+      summary: Get Subscription
+      operationId: get_subscription_api_v1_subscriptions__subscription_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: subscription_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Subscription Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    patch:
+      tags:
+      - subscriptions
+      summary: Update Subscription
+      operationId: update_subscription_api_v1_subscriptions__subscription_id__patch
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: subscription_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Subscription Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscriptionUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/agent/heartbeat:
+    post:
+      tags:
+      - agent
+      summary: Agent Heartbeat
+      operationId: agent_heartbeat_api_v1_agent_heartbeat_post
+      parameters:
+      - name: X-Agent-Token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Agent-Token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentHeartbeatIn'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentAckOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/agent/desired-state:
+    get:
+      tags:
+      - agent
+      summary: Agent Desired State
+      operationId: agent_desired_state_api_v1_agent_desired_state_get
+      parameters:
+      - name: server_id
+        in: query
+        required: true
+        schema:
+          type: string
+          title: Server Id
+      - name: X-Agent-Token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Agent-Token
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentDesiredStateOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/telemetry/docker/hosts:
+    get:
+      tags:
+      - telemetry-docker
+      summary: Docker Hosts
+      operationId: docker_hosts_api_v1_telemetry_docker_hosts_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HostSummaryListOut'
+      security:
+      - HTTPBearer: []
+  /api/v1/telemetry/docker/containers:
+    get:
+      tags:
+      - telemetry-docker
+      summary: Docker Containers
+      operationId: docker_containers_api_v1_telemetry_docker_containers_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: host_id
+        in: query
+        required: false
+        schema:
+          type: string
+          default: local
+          title: Host Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContainerSummaryListOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/telemetry/docker/container/{container_id}/metrics:
+    get:
+      tags:
+      - telemetry-docker
+      summary: Docker Container Metrics
+      operationId: docker_container_metrics_api_v1_telemetry_docker_container__container_id__metrics_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: container_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Container Id
+      - name: host_id
+        in: query
+        required: false
+        schema:
+          type: string
+          default: local
+          title: Host Id
+      - name: range
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: 1h
+          title: Range
+      - name: step
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: 15s
+          title: Step
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContainerMetricsTimeseries'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/telemetry/docker/container/{container_id}/logs:
+    get:
+      tags:
+      - telemetry-docker
+      summary: Docker Container Logs
+      operationId: docker_container_logs_api_v1_telemetry_docker_container__container_id__logs_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: container_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Container Id
+      - name: host_id
+        in: query
+        required: false
+        schema:
+          type: string
+          default: local
+          title: Host Id
+      - name: tail
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 2000
+          minimum: 1
+          default: 200
+          title: Tail
+      - name: since
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Since
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContainerLogLineListOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/telemetry/docker/alerts:
+    get:
+      tags:
+      - telemetry-docker
+      summary: Docker Alerts
+      operationId: docker_alerts_api_v1_telemetry_docker_alerts_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: host_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Host Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertItemListOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/payments:
+    get:
+      tags:
+      - payments
+      summary: List Payments
+      operationId: list_payments_api_v1_payments_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          default: 50
+          title: Limit
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+          title: Offset
+      - name: user_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: User Id
+      - name: status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Status
+      - name: provider
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Provider
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentList'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /webhooks/payments/{provider}:
+    post:
+      tags:
+      - webhooks
+      summary: Payment Webhook
+      description: 'Idempotent: same external_id → 200, no duplicate charge. Telegram
+        Stars: verify secret if set.'
+      operationId: payment_webhook_webhooks_payments__provider__post
+      parameters:
+      - name: provider
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Provider
+      - name: X-Telegram-Bot-Api-Secret-Token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Telegram-Bot-Api-Secret-Token
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/bot/subscriptions/create-or-get:
+    post:
+      tags:
+      - bot
+      summary: Create Or Get Subscription
+      description: Find/create user; return active or pending subscription for plan.
+        Bot (X-API-Key) only.
+      operationId: create_or_get_subscription_api_v1_bot_subscriptions_create_or_get_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrGetSubscriptionRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateOrGetSubscriptionResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/bot/payments/{provider}/create-invoice:
+    post:
+      tags:
+      - bot
+      summary: Create Invoice
+      description: Create pending payment and return invoice payload for Telegram
+        Stars (stub). Bot only.
+      operationId: create_invoice_api_v1_bot_payments__provider__create_invoice_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: provider
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Provider
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateInvoiceRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateInvoiceResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/bot/payments/{payment_id}/invoice:
+    get:
+      tags:
+      - bot
+      summary: Get Payment Invoice
+      description: Return invoice payload for an existing pending payment (e.g. from
+        Mini App deep link). Bot only.
+      operationId: get_payment_invoice_api_v1_bot_payments__payment_id__invoice_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: payment_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Payment Id
+      - name: tg_id
+        in: query
+        required: true
+        schema:
+          type: integer
+          description: Telegram user id
+          title: Tg Id
+        description: Telegram user id
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateInvoiceResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/bot/devices/{device_id}/revoke:
+    post:
+      tags:
+      - bot
+      summary: Bot Revoke Device
+      description: 'Revoke own device: verify device belongs to user by tg_id, then
+        set revoked_at. Bot only.'
+      operationId: bot_revoke_device_api_v1_bot_devices__device_id__revoke_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: device_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Device Id
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BotRevokeDeviceRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/bot/events:
+    post:
+      tags:
+      - bot
+      summary: Bot Events
+      description: Log funnel event from bot/WebApp. Bot only.
+      operationId: bot_events_api_v1_bot_events_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BotEventRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/bot/referral/my-link:
+    get:
+      tags:
+      - bot
+      summary: Referral My Link
+      description: Return referral link for user (ref_<user_id>). Bot only.
+      operationId: referral_my_link_api_v1_bot_referral_my_link_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: tg_id
+        in: query
+        required: true
+        schema:
+          type: integer
+          description: Telegram user id
+          title: Tg Id
+        description: Telegram user id
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/bot/referral/attach:
+    post:
+      tags:
+      - bot
+      summary: Referral Attach
+      description: Attach referee (tg_id) to referrer (referral_code). Idempotent.
+        Bot only.
+      operationId: referral_attach_api_v1_bot_referral_attach_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReferralAttachRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/bot/promo/validate:
+    post:
+      tags:
+      - bot
+      summary: Promo Validate
+      description: Validate promo code for plan and user; return preview (discount/bonus).
+        Bot only.
+      operationId: promo_validate_api_v1_bot_promo_validate_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PromoValidateRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/bot/referral/stats:
+    get:
+      tags:
+      - bot
+      summary: Referral Stats
+      description: Return referral stats for user. Bot only.
+      operationId: referral_stats_api_v1_bot_referral_stats_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: tg_id
+        in: query
+        required: true
+        schema:
+          type: integer
+          description: Telegram user id
+          title: Tg Id
+        description: Telegram user id
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/webapp/auth:
+    post:
+      tags:
+      - webapp
+      summary: Webapp Auth
+      description: Validate Telegram WebApp initData; return short-lived session token.
+      operationId: webapp_auth_api_v1_webapp_auth_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebAppAuthRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/webapp/me:
+    get:
+      tags:
+      - webapp
+      summary: Webapp Me
+      description: Return user, subscriptions, devices for the session's tg_id. Requires
+        Bearer session token.
+      operationId: webapp_me_api_v1_webapp_me_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /api/v1/webapp/plans:
+    get:
+      tags:
+      - webapp
+      summary: Webapp List Plans
+      description: List active plans for Mini App. Bearer session token required.
+      operationId: webapp_list_plans_api_v1_webapp_plans_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /api/v1/webapp/devices/issue:
+    post:
+      tags:
+      - webapp
+      summary: Webapp Issue Device
+      description: Issue a new device for the current user. Bearer session required.
+        Returns one-time config.
+      operationId: webapp_issue_device_api_v1_webapp_devices_issue_post
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebAppIssueDeviceResponse'
+  /api/v1/webapp/devices/{device_id}/revoke:
+    post:
+      tags:
+      - webapp
+      summary: Webapp Revoke Device
+      description: Revoke own device. Bearer session token required.
+      operationId: webapp_revoke_device_api_v1_webapp_devices__device_id__revoke_post
+      parameters:
+      - name: device_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Device Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/webapp/referral/my-link:
+    get:
+      tags:
+      - webapp
+      summary: Webapp Referral My Link
+      operationId: webapp_referral_my_link_api_v1_webapp_referral_my_link_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /api/v1/webapp/referral/stats:
+    get:
+      tags:
+      - webapp
+      summary: Webapp Referral Stats
+      operationId: webapp_referral_stats_api_v1_webapp_referral_stats_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /api/v1/webapp/promo/validate:
+    post:
+      tags:
+      - webapp
+      summary: Webapp Promo Validate
+      operationId: webapp_promo_validate_api_v1_webapp_promo_validate_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PromoValidateBody'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/webapp/payments/create-invoice:
+    post:
+      tags:
+      - webapp
+      summary: Webapp Create Invoice
+      description: Create pending/active subscription payment invoice for Telegram
+        Stars. Bearer required.
+      operationId: webapp_create_invoice_api_v1_webapp_payments_create_invoice_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateInvoiceWebAppBody'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /metrics:
+    get:
+      summary: Metrics
+      description: Prometheus scrape endpoint. No auth (scrape from internal network).
+      operationId: metrics_metrics_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /health:
+    get:
+      summary: Health
+      description: 'Liveness: returns 200 when process is up. node_mode: mock (no
+        node call) or real.'
+      operationId: health_health_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /health/ready:
+    get:
+      summary: Health Ready
+      description: 'Readiness: 200 if DB and Redis reachable and cluster healthy (or
+        no nodes). 503 if cluster health < 0.5.'
+      operationId: health_ready_health_ready_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+components:
+  schemas:
+    AdminIssuePeerPeerOut:
+      properties:
+        id:
+          type: string
+          title: Id
+        server_id:
+          type: string
+          title: Server Id
+        device_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Device Name
+        public_key:
+          type: string
+          title: Public Key
+        issued_at:
+          type: string
+          format: date-time
+          title: Issued At
+      type: object
+      required:
+      - id
+      - server_id
+      - device_name
+      - public_key
+      - issued_at
+      title: AdminIssuePeerPeerOut
+    AdminIssuePeerRequest:
+      properties:
+        user_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: User Id
+        subscription_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Subscription Id
+        label:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Label
+        device_limit:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Device Limit
+        profile_type:
+          type: string
+          enum:
+          - awg
+          - wg
+          title: Profile Type
+          default: awg
+        expires_in_days:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Expires In Days
+        client_request_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Client Request Id
+      type: object
+      title: AdminIssuePeerRequest
+    AdminIssuePeerResponse:
+      properties:
+        peer:
+          $ref: '#/components/schemas/AdminIssuePeerPeerOut'
+        config_download_url:
+          type: string
+          title: Config Download Url
+        qr_payload:
+          type: string
+          title: Qr Payload
+        request_id:
+          type: string
+          title: Request Id
+        peer_created:
+          type: boolean
+          title: Peer Created
+          default: false
+      type: object
+      required:
+      - peer
+      - config_download_url
+      - qr_payload
+      - request_id
+      title: AdminIssuePeerResponse
+    AdminRevokePeerResponse:
+      properties:
+        request_id:
+          type: string
+          title: Request Id
+        message:
+          type: string
+          title: Message
+          default: Peer revoked
+      type: object
+      required:
+      - request_id
+      title: AdminRevokePeerResponse
+    AdminRotatePeerResponse:
+      properties:
+        config_download_url:
+          type: string
+          title: Config Download Url
+        qr_payload:
+          type: string
+          title: Qr Payload
+        request_id:
+          type: string
+          title: Request Id
+      type: object
+      required:
+      - config_download_url
+      - qr_payload
+      - request_id
+      title: AdminRotatePeerResponse
+    AgentAckOut:
+      properties:
+        ok:
+          type: boolean
+          title: Ok
+          default: true
+        server_time_utc:
+          type: string
+          format: date-time
+          title: Server Time Utc
+      type: object
+      required:
+      - server_time_utc
+      title: AgentAckOut
+    AgentDesiredPeer:
+      properties:
+        public_key:
+          type: string
+          title: Public Key
+        allowed_ips:
+          type: string
+          title: Allowed Ips
+          default: 0.0.0.0/0, ::/0
+        persistent_keepalive:
+          type: integer
+          title: Persistent Keepalive
+          default: 25
+      type: object
+      required:
+      - public_key
+      title: AgentDesiredPeer
+    AgentDesiredStateOut:
+      properties:
+        server_id:
+          type: string
+          title: Server Id
+        interface_name:
+          type: string
+          title: Interface Name
+          default: awg0
+        revision:
+          type: string
+          title: Revision
+          description: Opaque revision for idempotency/caching
+        peers:
+          items:
+            $ref: '#/components/schemas/AgentDesiredPeer'
+          type: array
+          title: Peers
+      type: object
+      required:
+      - server_id
+      - revision
+      - peers
+      title: AgentDesiredStateOut
+    AgentHeartbeatIn:
+      properties:
+        server_id:
+          type: string
+          title: Server Id
+          description: Control-plane server_id this agent manages
+        container_name:
+          type: string
+          title: Container Name
+          description: Local AmneziaWG container name (amnezia-awg*)
+        interface_name:
+          type: string
+          title: Interface Name
+          default: awg0
+        public_key:
+          type: string
+          title: Public Key
+          default: ''
+        listen_port:
+          type: integer
+          maximum: 65535.0
+          minimum: 0.0
+          title: Listen Port
+          default: 0
+        peer_count:
+          type: integer
+          minimum: 0.0
+          title: Peer Count
+          default: 0
+        total_rx_bytes:
+          type: integer
+          minimum: 0.0
+          title: Total Rx Bytes
+          default: 0
+        total_tx_bytes:
+          type: integer
+          minimum: 0.0
+          title: Total Tx Bytes
+          default: 0
+        health_score:
+          type: number
+          maximum: 1.0
+          minimum: 0.0
+          title: Health Score
+          default: 1.0
+        status:
+          type: string
+          title: Status
+          description: healthy|degraded|unhealthy|unknown
+          default: unknown
+        agent_version:
+          type: string
+          title: Agent Version
+          default: unknown
+        ts_utc:
+          type: string
+          format: date-time
+          title: Ts Utc
+          description: Agent timestamp UTC
+      type: object
+      required:
+      - server_id
+      - container_name
+      - ts_utc
+      title: AgentHeartbeatIn
+      description: Agent heartbeat payload (no secrets).
+    AlertItem:
+      properties:
+        id:
+          type: string
+          title: Id
+        severity:
+          type: string
+          enum:
+          - critical
+          - warning
+          - info
+          title: Severity
+        rule:
+          type: string
+          title: Rule
+        host_id:
+          type: string
+          title: Host Id
+        container_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Container Id
+        container_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Container Name
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        status:
+          type: string
+          enum:
+          - firing
+          - resolved
+          title: Status
+          default: firing
+        context:
+          additionalProperties: true
+          type: object
+          title: Context
+      type: object
+      required:
+      - id
+      - severity
+      - rule
+      - host_id
+      - created_at
+      title: AlertItem
+    AlertItemListOut:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/AlertItem'
+          type: array
+          title: Items
+        total:
+          type: integer
+          title: Total
+      type: object
+      required:
+      - items
+      - total
+      title: AlertItemListOut
+    AnomalyMetricsOut:
+      properties:
+        generated_at:
+          type: string
+          format: date-time
+          title: Generated At
+        model_version:
+          type: string
+          title: Model Version
+        users_scored:
+          type: integer
+          title: Users Scored
+        high_risk_users:
+          type: integer
+          title: High Risk Users
+        medium_risk_users:
+          type: integer
+          title: Medium Risk Users
+        avg_score:
+          type: number
+          title: Avg Score
+        top_users:
+          items:
+            $ref: '#/components/schemas/AnomalyUserScoreOut'
+          type: array
+          title: Top Users
+      type: object
+      required:
+      - generated_at
+      - model_version
+      - users_scored
+      - high_risk_users
+      - medium_risk_users
+      - avg_score
+      - top_users
+      title: AnomalyMetricsOut
+    AnomalyUserScoreOut:
+      properties:
+        user_id:
+          type: integer
+          title: User Id
+        score:
+          type: number
+          title: Score
+        risk_level:
+          type: string
+          title: Risk Level
+        features:
+          additionalProperties:
+            type: number
+          type: object
+          title: Features
+        z_scores:
+          additionalProperties:
+            type: number
+          type: object
+          title: Z Scores
+        reasons:
+          items:
+            type: string
+          type: array
+          title: Reasons
+      type: object
+      required:
+      - user_id
+      - score
+      - risk_level
+      - features
+      - z_scores
+      - reasons
+      title: AnomalyUserScoreOut
+    AuditLogList:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/AuditLogOut'
+          type: array
+          title: Items
+        total:
+          type: integer
+          title: Total
+      type: object
+      required:
+      - items
+      - total
+      title: AuditLogList
+    AuditLogOut:
+      properties:
+        id:
+          type: integer
+          title: Id
+        admin_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Admin Id
+        action:
+          type: string
+          title: Action
+        resource_type:
+          type: string
+          title: Resource Type
+        resource_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Resource Id
+        old_new:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Old New
+        request_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Request Id
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - admin_id
+      - action
+      - resource_type
+      - resource_id
+      - old_new
+      - created_at
+      title: AuditLogOut
+    AutomationRunOut:
+      properties:
+        generated_at:
+          type: string
+          format: date-time
+          title: Generated At
+        load_factor:
+          type: number
+          title: Load Factor
+        health_score:
+          type: number
+          title: Health Score
+        failed_nodes:
+          type: integer
+          title: Failed Nodes
+        rebalance_moves:
+          type: integer
+          title: Rebalance Moves
+        rebalance_peers_to_move:
+          type: integer
+          title: Rebalance Peers To Move
+        rebalance_execution_enabled:
+          type: boolean
+          title: Rebalance Execution Enabled
+          default: false
+        executed_migrations:
+          type: integer
+          title: Executed Migrations
+          default: 0
+        failed_migrations:
+          type: integer
+          title: Failed Migrations
+          default: 0
+        rollback_migrations:
+          type: integer
+          title: Rollback Migrations
+          default: 0
+        rollback_failures:
+          type: integer
+          title: Rollback Failures
+          default: 0
+        stop_reason:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Stop Reason
+        executions:
+          items:
+            $ref: '#/components/schemas/RebalanceExecutionOut'
+          type: array
+          title: Executions
+        paused_nodes:
+          type: integer
+          title: Paused Nodes
+        resumed_nodes:
+          type: integer
+          title: Resumed Nodes
+        event_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Event Id
+      type: object
+      required:
+      - generated_at
+      - load_factor
+      - health_score
+      - failed_nodes
+      - rebalance_moves
+      - rebalance_peers_to_move
+      - paused_nodes
+      - resumed_nodes
+      title: AutomationRunOut
+    AutomationRunRequest:
+      properties:
+        execute_rebalance:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Execute Rebalance
+        max_executions:
+          anyOf:
+          - type: integer
+            maximum: 2000.0
+            minimum: 1.0
+          - type: 'null'
+          title: Max Executions
+        batch_size:
+          anyOf:
+          - type: integer
+            maximum: 500.0
+            minimum: 1.0
+          - type: 'null'
+          title: Batch Size
+      type: object
+      title: AutomationRunRequest
+    AutomationStatusOut:
+      properties:
+        enabled:
+          type: boolean
+          title: Enabled
+        interval_seconds:
+          type: integer
+          title: Interval Seconds
+        unhealthy_health_threshold:
+          type: number
+          title: Unhealthy Health Threshold
+        enterprise_plan_keywords:
+          items:
+            type: string
+          type: array
+          title: Enterprise Plan Keywords
+        rebalance_high_watermark:
+          type: number
+          title: Rebalance High Watermark
+        rebalance_target_watermark:
+          type: number
+          title: Rebalance Target Watermark
+        rebalance_max_moves_per_node:
+          type: integer
+          title: Rebalance Max Moves Per Node
+        rebalance_execute_enabled:
+          type: boolean
+          title: Rebalance Execute Enabled
+        rebalance_batch_size:
+          type: integer
+          title: Rebalance Batch Size
+        rebalance_max_executions_per_cycle:
+          type: integer
+          title: Rebalance Max Executions Per Cycle
+        rebalance_qos_idle_handshake_seconds:
+          type: integer
+          title: Rebalance Qos Idle Handshake Seconds
+        rebalance_qos_hot_traffic_bytes:
+          type: integer
+          title: Rebalance Qos Hot Traffic Bytes
+        throttling_enabled:
+          type: boolean
+          title: Throttling Enabled
+        throttling_dry_run:
+          type: boolean
+          title: Throttling Dry Run
+        rebalance_stop_on_error:
+          type: boolean
+          title: Rebalance Stop On Error
+        rebalance_rollback_on_error:
+          type: boolean
+          title: Rebalance Rollback On Error
+        last_run_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Last Run At
+        last_run:
+          anyOf:
+          - $ref: '#/components/schemas/AutomationRunOut'
+          - type: 'null'
+      type: object
+      required:
+      - enabled
+      - interval_seconds
+      - unhealthy_health_threshold
+      - enterprise_plan_keywords
+      - rebalance_high_watermark
+      - rebalance_target_watermark
+      - rebalance_max_moves_per_node
+      - rebalance_execute_enabled
+      - rebalance_batch_size
+      - rebalance_max_executions_per_cycle
+      - rebalance_qos_idle_handshake_seconds
+      - rebalance_qos_hot_traffic_bytes
+      - throttling_enabled
+      - throttling_dry_run
+      - rebalance_stop_on_error
+      - rebalance_rollback_on_error
+      title: AutomationStatusOut
+    BlockPeerRequest:
+      properties:
+        public_key:
+          type: string
+          title: Public Key
+        confirm_token:
+          type: string
+          title: Confirm Token
+      type: object
+      required:
+      - public_key
+      - confirm_token
+      title: BlockPeerRequest
+    BlockRequest:
+      properties:
+        confirm_token:
+          type: string
+          title: Confirm Token
+      type: object
+      required:
+      - confirm_token
+      title: BlockRequest
+    BotEventRequest:
+      properties:
+        event_type:
+          type: string
+          title: Event Type
+        tg_id:
+          type: integer
+          title: Tg Id
+        payload:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Payload
+      type: object
+      required:
+      - event_type
+      - tg_id
+      title: BotEventRequest
+    BotRevokeDeviceRequest:
+      properties:
+        tg_id:
+          type: integer
+          title: Tg Id
+      type: object
+      required:
+      - tg_id
+      title: BotRevokeDeviceRequest
+    BusinessMetricsOut:
+      properties:
+        active_subscriptions:
+          type: integer
+          title: Active Subscriptions
+        mrr_estimate:
+          type: number
+          title: Mrr Estimate
+        trial_to_paid_rate_30d:
+          type: number
+          title: Trial To Paid Rate 30D
+        referral_conversion_rate:
+          type: number
+          title: Referral Conversion Rate
+        retention_d30:
+          type: number
+          title: Retention D30
+        revenue_by_region_30d:
+          additionalProperties:
+            type: number
+          type: object
+          title: Revenue By Region 30D
+      type: object
+      required:
+      - active_subscriptions
+      - mrr_estimate
+      - trial_to_paid_rate_30d
+      - referral_conversion_rate
+      - retention_d30
+      - revenue_by_region_30d
+      title: BusinessMetricsOut
+    ContainerLogLine:
+      properties:
+        ts:
+          type: string
+          format: date-time
+          title: Ts
+        stream:
+          type: string
+          enum:
+          - stdout
+          - stderr
+          title: Stream
+          default: stdout
+        severity:
+          type: string
+          enum:
+          - error
+          - warn
+          - info
+          title: Severity
+          default: info
+        message:
+          type: string
+          title: Message
+      type: object
+      required:
+      - ts
+      - message
+      title: ContainerLogLine
+    ContainerLogLineListOut:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/ContainerLogLine'
+          type: array
+          title: Items
+        total:
+          type: integer
+          title: Total
+      type: object
+      required:
+      - items
+      - total
+      title: ContainerLogLineListOut
+    ContainerMetricsPoint:
+      properties:
+        ts:
+          type: string
+          format: date-time
+          title: Ts
+        cpu_pct:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Cpu Pct
+        mem_bytes:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Mem Bytes
+        mem_pct:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Mem Pct
+        net_rx_bps:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Net Rx Bps
+        net_tx_bps:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Net Tx Bps
+        blk_read_bps:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Blk Read Bps
+        blk_write_bps:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Blk Write Bps
+      type: object
+      required:
+      - ts
+      title: ContainerMetricsPoint
+    ContainerMetricsTimeseries:
+      properties:
+        host_id:
+          type: string
+          title: Host Id
+        container_id:
+          type: string
+          title: Container Id
+        from:
+          type: string
+          format: date-time
+          title: From
+        to:
+          type: string
+          format: date-time
+          title: To
+        step_seconds:
+          type: integer
+          title: Step Seconds
+        points:
+          items:
+            $ref: '#/components/schemas/ContainerMetricsPoint'
+          type: array
+          title: Points
+      type: object
+      required:
+      - host_id
+      - container_id
+      - from
+      - to
+      - step_seconds
+      - points
+      title: ContainerMetricsTimeseries
+    ContainerPort:
+      properties:
+        ip:
+          type: string
+          title: Ip
+        private_port:
+          type: integer
+          title: Private Port
+        public_port:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Public Port
+        protocol:
+          type: string
+          enum:
+          - tcp
+          - udp
+          title: Protocol
+          default: tcp
+      type: object
+      required:
+      - ip
+      - private_port
+      title: ContainerPort
+    ContainerSummary:
+      properties:
+        host_id:
+          type: string
+          title: Host Id
+        container_id:
+          type: string
+          title: Container Id
+        name:
+          type: string
+          title: Name
+        compose_service:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Compose Service
+        compose_project:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Compose Project
+        image:
+          type: string
+          title: Image
+        image_tag:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Image Tag
+        state:
+          anyOf:
+          - type: string
+            enum:
+            - running
+            - exited
+            - paused
+            - restarting
+            - dead
+            - created
+          - type: string
+          title: State
+          default: created
+        health_status:
+          type: string
+          enum:
+          - healthy
+          - unhealthy
+          - starting
+          - none
+          title: Health Status
+          default: none
+        restart_count:
+          type: integer
+          title: Restart Count
+          default: 0
+        is_restart_loop:
+          type: boolean
+          title: Is Restart Loop
+          default: false
+        uptime_seconds:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Uptime Seconds
+        cpu_pct:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Cpu Pct
+        mem_bytes:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Mem Bytes
+        mem_limit_bytes:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Mem Limit Bytes
+        mem_pct:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Mem Pct
+        net_rx_bytes:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Net Rx Bytes
+        net_tx_bytes:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Net Tx Bytes
+        blk_read_bytes:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Blk Read Bytes
+        blk_write_bytes:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Blk Write Bytes
+        ports:
+          items:
+            $ref: '#/components/schemas/ContainerPort'
+          type: array
+          title: Ports
+        image_version:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Image Version
+        env_hash:
+          type: string
+          title: Env Hash
+        error_rate_5m:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Error Rate 5M
+        created_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Created At
+        started_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Started At
+      type: object
+      required:
+      - host_id
+      - container_id
+      - name
+      - image
+      - env_hash
+      title: ContainerSummary
+    ContainerSummaryListOut:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/ContainerSummary'
+          type: array
+          title: Items
+        total:
+          type: integer
+          title: Total
+      type: object
+      required:
+      - items
+      - total
+      title: ContainerSummaryListOut
+    ControlPlaneEventListOut:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/ControlPlaneEventOut'
+          type: array
+          title: Items
+        total:
+          type: integer
+          title: Total
+      type: object
+      required:
+      - items
+      - total
+      title: ControlPlaneEventListOut
+    ControlPlaneEventOut:
+      properties:
+        id:
+          type: string
+          title: Id
+        event_type:
+          type: string
+          title: Event Type
+        severity:
+          type: string
+          title: Severity
+        source:
+          type: string
+          title: Source
+        server_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Server Id
+        payload:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Payload
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - event_type
+      - severity
+      - source
+      - created_at
+      title: ControlPlaneEventOut
+    CreateInvoiceRequest:
+      properties:
+        tg_id:
+          type: integer
+          title: Tg Id
+        plan_id:
+          type: string
+          title: Plan Id
+        subscription_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Subscription Id
+        promo_code:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Promo Code
+      type: object
+      required:
+      - tg_id
+      - plan_id
+      title: CreateInvoiceRequest
+    CreateInvoiceResponse:
+      properties:
+        invoice_id:
+          type: string
+          title: Invoice Id
+        payment_id:
+          type: string
+          title: Payment Id
+        title:
+          type: string
+          title: Title
+        description:
+          type: string
+          title: Description
+        currency:
+          type: string
+          title: Currency
+          default: XTR
+        star_count:
+          type: integer
+          title: Star Count
+        payload:
+          type: string
+          title: Payload
+        server_id:
+          type: string
+          title: Server Id
+        subscription_id:
+          type: string
+          title: Subscription Id
+      type: object
+      required:
+      - invoice_id
+      - payment_id
+      - title
+      - description
+      - star_count
+      - payload
+      - server_id
+      - subscription_id
+      title: CreateInvoiceResponse
+    CreateInvoiceWebAppBody:
+      properties:
+        plan_id:
+          type: string
+          title: Plan Id
+        promo_code:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Promo Code
+      type: object
+      required:
+      - plan_id
+      title: CreateInvoiceWebAppBody
+    CreateOrGetSubscriptionRequest:
+      properties:
+        tg_id:
+          type: integer
+          title: Tg Id
+        plan_id:
+          type: string
+          title: Plan Id
+      type: object
+      required:
+      - tg_id
+      - plan_id
+      title: CreateOrGetSubscriptionRequest
+    CreateOrGetSubscriptionResponse:
+      properties:
+        user_id:
+          type: integer
+          title: User Id
+        user:
+          $ref: '#/components/schemas/UserOut'
+        subscription_id:
+          type: string
+          title: Subscription Id
+        subscription:
+          $ref: '#/components/schemas/SubscriptionOut'
+      type: object
+      required:
+      - user_id
+      - user
+      - subscription_id
+      - subscription
+      title: CreateOrGetSubscriptionResponse
+    DashboardTimeseriesOut:
+      properties:
+        points:
+          items:
+            $ref: '#/components/schemas/DashboardTimeseriesPoint'
+          type: array
+          title: Points
+      type: object
+      required:
+      - points
+      title: DashboardTimeseriesOut
+      description: Bandwidth (rx/tx bytes) and connections (peers) for last 24h from
+        cluster telemetry.
+    DashboardTimeseriesPoint:
+      properties:
+        ts:
+          type: integer
+          title: Ts
+        peers:
+          type: integer
+          title: Peers
+        rx:
+          type: integer
+          title: Rx
+        tx:
+          type: integer
+          title: Tx
+      type: object
+      required:
+      - ts
+      - peers
+      - rx
+      - tx
+      title: DashboardTimeseriesPoint
+    DeviceList:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/DeviceOut'
+          type: array
+          title: Items
+        total:
+          type: integer
+          title: Total
+      type: object
+      required:
+      - items
+      - total
+      title: DeviceList
+    DeviceOut:
+      properties:
+        id:
+          type: string
+          title: Id
+        user_id:
+          type: integer
+          title: User Id
+        subscription_id:
+          type: string
+          title: Subscription Id
+        server_id:
+          type: string
+          title: Server Id
+        device_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Device Name
+        public_key:
+          type: string
+          title: Public Key
+        issued_at:
+          type: string
+          format: date-time
+          title: Issued At
+        revoked_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Revoked At
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - user_id
+      - subscription_id
+      - server_id
+      - device_name
+      - public_key
+      - issued_at
+      - revoked_at
+      - created_at
+      title: DeviceOut
+    DrainBody:
+      properties:
+        reason:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Reason
+        migrate_peers:
+          type: boolean
+          title: Migrate Peers
+          default: false
+        deadline:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Deadline
+      type: object
+      title: DrainBody
+    FailoverEvaluateOut:
+      properties:
+        generated_at:
+          type: string
+          format: date-time
+          title: Generated At
+        failed_nodes:
+          items:
+            type: string
+          type: array
+          title: Failed Nodes
+        fallback_nodes:
+          items:
+            type: string
+          type: array
+          title: Fallback Nodes
+        mappings:
+          additionalProperties:
+            anyOf:
+            - type: string
+            - type: 'null'
+          type: object
+          title: Mappings
+        provisioning_paused_nodes:
+          items:
+            type: string
+          type: array
+          title: Provisioning Paused Nodes
+      type: object
+      required:
+      - generated_at
+      - failed_nodes
+      - fallback_nodes
+      - mappings
+      - provisioning_paused_nodes
+      title: FailoverEvaluateOut
+    FrontendErrorIn:
+      properties:
+        message:
+          type: string
+          title: Message
+        stack:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Stack
+        componentStack:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Componentstack
+      type: object
+      required:
+      - message
+      title: FrontendErrorIn
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    HostSummary:
+      properties:
+        host_id:
+          type: string
+          title: Host Id
+        name:
+          type: string
+          title: Name
+        endpoint_kind:
+          type: string
+          enum:
+          - unix
+          - tcp
+          - ssh
+          title: Endpoint Kind
+          default: unix
+        is_reachable:
+          type: boolean
+          title: Is Reachable
+        containers_total:
+          type: integer
+          title: Containers Total
+          default: 0
+        running:
+          type: integer
+          title: Running
+          default: 0
+        stopped:
+          type: integer
+          title: Stopped
+          default: 0
+        unhealthy:
+          type: integer
+          title: Unhealthy
+          default: 0
+        restart_loops:
+          type: integer
+          title: Restart Loops
+          default: 0
+        last_seen_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Last Seen At
+      type: object
+      required:
+      - host_id
+      - name
+      - is_reachable
+      title: HostSummary
+    HostSummaryListOut:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/HostSummary'
+          type: array
+          title: Items
+        total:
+          type: integer
+          title: Total
+      type: object
+      required:
+      - items
+      - total
+      title: HostSummaryListOut
+    IpPoolCreate:
+      properties:
+        server_id:
+          type: string
+          title: Server Id
+        cidr:
+          type: string
+          title: Cidr
+        gateway_ip:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Gateway Ip
+        total_ips:
+          type: integer
+          minimum: 0.0
+          title: Total Ips
+          default: 0
+        used_ips:
+          type: integer
+          minimum: 0.0
+          title: Used Ips
+          default: 0
+        is_active:
+          type: boolean
+          title: Is Active
+          default: true
+        metadata_json:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Metadata Json
+      type: object
+      required:
+      - server_id
+      - cidr
+      title: IpPoolCreate
+    IpPoolListOut:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/IpPoolOut'
+          type: array
+          title: Items
+        total:
+          type: integer
+          title: Total
+      type: object
+      required:
+      - items
+      - total
+      title: IpPoolListOut
+    IpPoolOut:
+      properties:
+        id:
+          type: string
+          title: Id
+        server_id:
+          type: string
+          title: Server Id
+        cidr:
+          type: string
+          title: Cidr
+        gateway_ip:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Gateway Ip
+        total_ips:
+          type: integer
+          title: Total Ips
+        used_ips:
+          type: integer
+          title: Used Ips
+        is_active:
+          type: boolean
+          title: Is Active
+        metadata_json:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Metadata Json
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - server_id
+      - cidr
+      - gateway_ip
+      - total_ips
+      - used_ips
+      - is_active
+      - metadata_json
+      - created_at
+      title: IpPoolOut
+    IpPoolUpdate:
+      properties:
+        gateway_ip:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Gateway Ip
+        total_ips:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+          - type: 'null'
+          title: Total Ips
+        used_ips:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+          - type: 'null'
+          title: Used Ips
+        is_active:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Active
+        metadata_json:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Metadata Json
+      type: object
+      title: IpPoolUpdate
+    IssueRequest:
+      properties:
+        subscription_id:
+          type: string
+          title: Subscription Id
+        server_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Server Id
+        device_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Device Name
+      type: object
+      required:
+      - subscription_id
+      title: IssueRequest
+    IssueResponse:
+      properties:
+        device_id:
+          type: string
+          title: Device Id
+        issued_at:
+          type: string
+          format: date-time
+          title: Issued At
+        config:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Config
+        server_id:
+          type: string
+          title: Server Id
+        subscription_id:
+          type: string
+          title: Subscription Id
+        node_mode:
+          type: string
+          title: Node Mode
+          default: mock
+        peer_created:
+          type: boolean
+          title: Peer Created
+          default: false
+      type: object
+      required:
+      - device_id
+      - issued_at
+      - config
+      - server_id
+      - subscription_id
+      title: IssueResponse
+    LatencyProbeBatchIn:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/LatencyProbeIn'
+          type: array
+          maxItems: 1000
+          minItems: 1
+          title: Items
+      type: object
+      required:
+      - items
+      title: LatencyProbeBatchIn
+    LatencyProbeIn:
+      properties:
+        agent_id:
+          type: string
+          maxLength: 64
+          minLength: 1
+          title: Agent Id
+        source_region:
+          type: string
+          maxLength: 64
+          minLength: 1
+          title: Source Region
+        server_id:
+          type: string
+          maxLength: 32
+          minLength: 1
+          title: Server Id
+        latency_ms:
+          type: number
+          maximum: 10000.0
+          minimum: 0.0
+          title: Latency Ms
+        jitter_ms:
+          anyOf:
+          - type: number
+            maximum: 10000.0
+            minimum: 0.0
+          - type: 'null'
+          title: Jitter Ms
+        packet_loss_pct:
+          anyOf:
+          - type: number
+            maximum: 100.0
+            minimum: 0.0
+          - type: 'null'
+          title: Packet Loss Pct
+        probe_ts:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Probe Ts
+      type: object
+      required:
+      - agent_id
+      - source_region
+      - server_id
+      - latency_ms
+      title: LatencyProbeIn
+    LatencyProbeIngestOut:
+      properties:
+        ingested:
+          type: integer
+          title: Ingested
+        generated_at:
+          type: string
+          format: date-time
+          title: Generated At
+      type: object
+      required:
+      - ingested
+      - generated_at
+      title: LatencyProbeIngestOut
+    LatencyProbeListOut:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/LatencyProbeOut'
+          type: array
+          title: Items
+        total:
+          type: integer
+          title: Total
+      type: object
+      required:
+      - items
+      - total
+      title: LatencyProbeListOut
+    LatencyProbeOut:
+      properties:
+        id:
+          type: integer
+          title: Id
+        agent_id:
+          type: string
+          title: Agent Id
+        source_region:
+          type: string
+          title: Source Region
+        server_id:
+          type: string
+          title: Server Id
+        latency_ms:
+          type: number
+          title: Latency Ms
+        jitter_ms:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Jitter Ms
+        packet_loss_pct:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Packet Loss Pct
+        probe_ts:
+          type: string
+          format: date-time
+          title: Probe Ts
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - agent_id
+      - source_region
+      - server_id
+      - latency_ms
+      - jitter_ms
+      - packet_loss_pct
+      - probe_ts
+      - created_at
+      title: LatencyProbeOut
+    LoginRequest:
+      properties:
+        email:
+          type: string
+          title: Email
+        password:
+          type: string
+          title: Password
+        totp_code:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Totp Code
+      type: object
+      required:
+      - email
+      - password
+      title: LoginRequest
+    LogoutRequest:
+      properties:
+        refresh_token:
+          type: string
+          title: Refresh Token
+      type: object
+      required:
+      - refresh_token
+      title: LogoutRequest
+    MigrateBody:
+      properties:
+        target_node_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Target Node Id
+      type: object
+      title: MigrateBody
+      description: Optional target node for migration; omit to use load balancer.
+    OverviewStats:
+      properties:
+        servers_total:
+          type: integer
+          title: Servers Total
+        servers_unhealthy:
+          type: integer
+          title: Servers Unhealthy
+        users_total:
+          type: integer
+          title: Users Total
+        subscriptions_active:
+          type: integer
+          title: Subscriptions Active
+        mrr:
+          type: number
+          title: Mrr
+      type: object
+      required:
+      - servers_total
+      - servers_unhealthy
+      - users_total
+      - subscriptions_active
+      - mrr
+      title: OverviewStats
+    PaymentList:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/PaymentOut'
+          type: array
+          title: Items
+        total:
+          type: integer
+          title: Total
+      type: object
+      required:
+      - items
+      - total
+      title: PaymentList
+    PaymentOut:
+      properties:
+        id:
+          type: string
+          title: Id
+        user_id:
+          type: integer
+          title: User Id
+        subscription_id:
+          type: string
+          title: Subscription Id
+        provider:
+          type: string
+          title: Provider
+        status:
+          type: string
+          title: Status
+        amount:
+          type: string
+          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          title: Amount
+        currency:
+          type: string
+          title: Currency
+        external_id:
+          type: string
+          title: External Id
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - user_id
+      - subscription_id
+      - provider
+      - status
+      - amount
+      - currency
+      - external_id
+      - created_at
+      title: PaymentOut
+    PeerOut:
+      properties:
+        public_key:
+          type: string
+          title: Public Key
+        allowed_ips:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Allowed Ips
+        last_handshake_ts:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Last Handshake Ts
+        rx_bytes:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Rx Bytes
+        tx_bytes:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Tx Bytes
+        traffic_bytes:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Traffic Bytes
+        status:
+          type: string
+          title: Status
+          default: unknown
+      type: object
+      required:
+      - public_key
+      title: PeerOut
+    PlacementCandidateOut:
+      properties:
+        node_id:
+          type: string
+          title: Node Id
+        container_name:
+          type: string
+          title: Container Name
+        region:
+          type: string
+          title: Region
+        status:
+          type: string
+          title: Status
+        health_score:
+          type: number
+          title: Health Score
+        peer_count:
+          type: integer
+          title: Peer Count
+        max_peers:
+          type: integer
+          title: Max Peers
+        free_slots:
+          type: integer
+          title: Free Slots
+        score:
+          type: number
+          title: Score
+        effective_latency_ms:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Effective Latency Ms
+        latency_source:
+          type: string
+          title: Latency Source
+          default: runtime
+      type: object
+      required:
+      - node_id
+      - container_name
+      - region
+      - status
+      - health_score
+      - peer_count
+      - max_peers
+      - free_slots
+      - score
+      title: PlacementCandidateOut
+    PlacementSimulateRequest:
+      properties:
+        preferred_region:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Preferred Region
+        source_region:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Source Region
+        use_latency_probes:
+          type: boolean
+          title: Use Latency Probes
+          default: true
+        required_capabilities:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Required Capabilities
+        top_k:
+          type: integer
+          maximum: 20.0
+          minimum: 1.0
+          title: Top K
+          default: 5
+      type: object
+      title: PlacementSimulateRequest
+    PlacementSimulationOut:
+      properties:
+        selected_node_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Selected Node Id
+        fallback_used:
+          type: boolean
+          title: Fallback Used
+        candidates:
+          items:
+            $ref: '#/components/schemas/PlacementCandidateOut'
+          type: array
+          title: Candidates
+      type: object
+      required:
+      - selected_node_id
+      - fallback_used
+      - candidates
+      title: PlacementSimulationOut
+    PlanBandwidthPolicyListOut:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/PlanBandwidthPolicyOut'
+          type: array
+          title: Items
+        total:
+          type: integer
+          title: Total
+      type: object
+      required:
+      - items
+      - total
+      title: PlanBandwidthPolicyListOut
+    PlanBandwidthPolicyOut:
+      properties:
+        id:
+          type: string
+          title: Id
+        plan_id:
+          type: string
+          title: Plan Id
+        plan_name:
+          type: string
+          title: Plan Name
+        rate_mbps:
+          type: integer
+          title: Rate Mbps
+        ceil_mbps:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Ceil Mbps
+        burst_kb:
+          type: integer
+          title: Burst Kb
+        priority:
+          type: integer
+          title: Priority
+        enabled:
+          type: boolean
+          title: Enabled
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+      type: object
+      required:
+      - id
+      - plan_id
+      - plan_name
+      - rate_mbps
+      - ceil_mbps
+      - burst_kb
+      - priority
+      - enabled
+      - created_at
+      - updated_at
+      title: PlanBandwidthPolicyOut
+    PlanBandwidthPolicyUpsert:
+      properties:
+        rate_mbps:
+          type: integer
+          maximum: 100000.0
+          minimum: 1.0
+          title: Rate Mbps
+        ceil_mbps:
+          anyOf:
+          - type: integer
+            maximum: 100000.0
+            minimum: 1.0
+          - type: 'null'
+          title: Ceil Mbps
+        burst_kb:
+          type: integer
+          maximum: 65535.0
+          minimum: 1.0
+          title: Burst Kb
+          default: 256
+        priority:
+          type: integer
+          maximum: 7.0
+          minimum: 0.0
+          title: Priority
+          default: 3
+        enabled:
+          type: boolean
+          title: Enabled
+          default: true
+      type: object
+      required:
+      - rate_mbps
+      title: PlanBandwidthPolicyUpsert
+    PlanCreate:
+      properties:
+        name:
+          type: string
+          title: Name
+        duration_days:
+          type: integer
+          title: Duration Days
+        price_currency:
+          type: string
+          title: Price Currency
+        price_amount:
+          anyOf:
+          - type: number
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          title: Price Amount
+      type: object
+      required:
+      - name
+      - duration_days
+      - price_currency
+      - price_amount
+      title: PlanCreate
+    PlanList:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/PlanOut'
+          type: array
+          title: Items
+        total:
+          type: integer
+          title: Total
+      type: object
+      required:
+      - items
+      - total
+      title: PlanList
+    PlanOut:
+      properties:
+        id:
+          type: string
+          title: Id
+        name:
+          type: string
+          title: Name
+        duration_days:
+          type: integer
+          title: Duration Days
+        price_currency:
+          type: string
+          title: Price Currency
+        price_amount:
+          type: string
+          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          title: Price Amount
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - name
+      - duration_days
+      - price_currency
+      - price_amount
+      - created_at
+      title: PlanOut
+    PlanUpdate:
+      properties:
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Name
+        duration_days:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Duration Days
+        price_currency:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Price Currency
+        price_amount:
+          anyOf:
+          - type: number
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          - type: 'null'
+          title: Price Amount
+      type: object
+      title: PlanUpdate
+    PortAllocationCreate:
+      properties:
+        server_id:
+          type: string
+          title: Server Id
+        port:
+          type: integer
+          maximum: 65535.0
+          minimum: 1.0
+          title: Port
+        protocol:
+          type: string
+          title: Protocol
+          default: udp
+        purpose:
+          type: string
+          title: Purpose
+          default: peer
+        device_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Device Id
+        is_reserved:
+          type: boolean
+          title: Is Reserved
+          default: true
+      type: object
+      required:
+      - server_id
+      - port
+      title: PortAllocationCreate
+    PortAllocationListOut:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/PortAllocationOut'
+          type: array
+          title: Items
+        total:
+          type: integer
+          title: Total
+      type: object
+      required:
+      - items
+      - total
+      title: PortAllocationListOut
+    PortAllocationOut:
+      properties:
+        id:
+          type: string
+          title: Id
+        server_id:
+          type: string
+          title: Server Id
+        port:
+          type: integer
+          title: Port
+        protocol:
+          type: string
+          title: Protocol
+        purpose:
+          type: string
+          title: Purpose
+        device_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Device Id
+        is_reserved:
+          type: boolean
+          title: Is Reserved
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - server_id
+      - port
+      - protocol
+      - purpose
+      - device_id
+      - is_reserved
+      - created_at
+      title: PortAllocationOut
+    PortAllocationUpdate:
+      properties:
+        purpose:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Purpose
+        device_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Device Id
+        is_reserved:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Reserved
+      type: object
+      title: PortAllocationUpdate
+    PromoValidateBody:
+      properties:
+        code:
+          type: string
+          title: Code
+        plan_id:
+          type: string
+          title: Plan Id
+      type: object
+      required:
+      - code
+      - plan_id
+      title: PromoValidateBody
+    PromoValidateRequest:
+      properties:
+        code:
+          type: string
+          title: Code
+        plan_id:
+          type: string
+          title: Plan Id
+        tg_id:
+          type: integer
+          title: Tg Id
+      type: object
+      required:
+      - code
+      - plan_id
+      - tg_id
+      title: PromoValidateRequest
+    RebalanceExecutionOut:
+      properties:
+        source_node_id:
+          type: string
+          title: Source Node Id
+        target_node_id:
+          type: string
+          title: Target Node Id
+        requested:
+          type: integer
+          title: Requested
+        attempted:
+          type: integer
+          title: Attempted
+        succeeded:
+          type: integer
+          title: Succeeded
+        failed:
+          type: integer
+          title: Failed
+        rolled_back:
+          type: integer
+          title: Rolled Back
+          default: 0
+        rollback_failed:
+          type: integer
+          title: Rollback Failed
+          default: 0
+        skipped_enterprise:
+          type: integer
+          title: Skipped Enterprise
+          default: 0
+        status:
+          type: string
+          title: Status
+      type: object
+      required:
+      - source_node_id
+      - target_node_id
+      - requested
+      - attempted
+      - succeeded
+      - failed
+      - status
+      title: RebalanceExecutionOut
+    RebalanceMoveOut:
+      properties:
+        source_node_id:
+          type: string
+          title: Source Node Id
+        target_node_id:
+          type: string
+          title: Target Node Id
+        peers_to_move:
+          type: integer
+          title: Peers To Move
+      type: object
+      required:
+      - source_node_id
+      - target_node_id
+      - peers_to_move
+      title: RebalanceMoveOut
+    RebalancePlanOut:
+      properties:
+        generated_at:
+          type: string
+          format: date-time
+          title: Generated At
+        overloaded_nodes:
+          items:
+            type: string
+          type: array
+          title: Overloaded Nodes
+        underloaded_nodes:
+          items:
+            type: string
+          type: array
+          title: Underloaded Nodes
+        total_peers_to_move:
+          type: integer
+          title: Total Peers To Move
+        moves:
+          items:
+            $ref: '#/components/schemas/RebalanceMoveOut'
+          type: array
+          title: Moves
+      type: object
+      required:
+      - generated_at
+      - overloaded_nodes
+      - underloaded_nodes
+      - total_peers_to_move
+      - moves
+      title: RebalancePlanOut
+    RebalancePlanRequest:
+      properties:
+        high_watermark:
+          type: number
+          maximum: 0.99
+          minimum: 0.5
+          title: High Watermark
+          default: 0.85
+        target_watermark:
+          type: number
+          maximum: 0.9
+          minimum: 0.2
+          title: Target Watermark
+          default: 0.65
+        max_moves_per_node:
+          type: integer
+          maximum: 5000.0
+          minimum: 1.0
+          title: Max Moves Per Node
+          default: 200
+      type: object
+      title: RebalancePlanRequest
+    ReferralAttachRequest:
+      properties:
+        tg_id:
+          type: integer
+          title: Tg Id
+        referral_code:
+          type: string
+          title: Referral Code
+      type: object
+      required:
+      - tg_id
+      - referral_code
+      title: ReferralAttachRequest
+    ResetPeerRequest:
+      properties:
+        public_key:
+          type: string
+          title: Public Key
+      type: object
+      required:
+      - public_key
+      title: ResetPeerRequest
+    ResetRequest:
+      properties:
+        force_revoke_db_only:
+          type: boolean
+          title: Force Revoke Db Only
+          default: false
+      type: object
+      title: ResetRequest
+    RestartRequest:
+      properties:
+        reason:
+          type: string
+          title: Reason
+        confirm_token:
+          type: string
+          title: Confirm Token
+      type: object
+      required:
+      - reason
+      - confirm_token
+      title: RestartRequest
+    ResyncBody:
+      properties:
+        node_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Node Id
+        force:
+          type: boolean
+          title: Force
+          default: false
+      type: object
+      title: ResyncBody
+    RevokeRequest:
+      properties:
+        confirm_token:
+          type: string
+          title: Confirm Token
+      type: object
+      required:
+      - confirm_token
+      title: RevokeRequest
+    SecurityMetricsOut:
+      properties:
+        key_reuse_count:
+          type: integer
+          title: Key Reuse Count
+        reconnect_burst_peers:
+          type: integer
+          title: Reconnect Burst Peers
+        stale_handshake_ratio:
+          type: number
+          title: Stale Handshake Ratio
+        user_region_anomalies:
+          type: integer
+          title: User Region Anomalies
+        suspicious_events_24h:
+          type: integer
+          title: Suspicious Events 24H
+      type: object
+      required:
+      - key_reuse_count
+      - reconnect_burst_peers
+      - stale_handshake_ratio
+      - user_region_anomalies
+      - suspicious_events_24h
+      title: SecurityMetricsOut
+    ServerBulkRequest:
+      properties:
+        server_ids:
+          items:
+            type: string
+          type: array
+          title: Server Ids
+        action:
+          type: string
+          enum:
+          - mark_draining
+          - unmark_draining
+          - disable_provisioning
+          - enable_provisioning
+          title: Action
+        confirm_token:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Confirm Token
+      type: object
+      required:
+      - server_ids
+      - action
+      title: ServerBulkRequest
+    ServerCapabilitiesOut:
+      properties:
+        profile_types:
+          items:
+            type: string
+          type: array
+          title: Profile Types
+          default:
+          - awg
+          - wg
+        supports_rotate:
+          type: boolean
+          title: Supports Rotate
+          default: true
+        max_connections:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Max Connections
+        is_draining:
+          type: boolean
+          title: Is Draining
+          default: false
+      type: object
+      title: ServerCapabilitiesOut
+    ServerCreate:
+      properties:
+        name:
+          type: string
+          title: Name
+        region:
+          type: string
+          title: Region
+        api_endpoint:
+          type: string
+          title: Api Endpoint
+        vpn_endpoint:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Vpn Endpoint
+        public_key:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Public Key
+      type: object
+      required:
+      - name
+      - region
+      - api_endpoint
+      title: ServerCreate
+    ServerDeviceCountsOut:
+      properties:
+        counts:
+          additionalProperties:
+            type: integer
+          type: object
+          title: Counts
+      type: object
+      required:
+      - counts
+      title: ServerDeviceCountsOut
+      description: Map server_id -> device count for list views.
+    ServerHealthOut:
+      properties:
+        status:
+          type: string
+          title: Status
+        latency_ms:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Latency Ms
+        handshake_ok:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Handshake Ok
+        ts:
+          type: string
+          format: date-time
+          title: Ts
+      type: object
+      required:
+      - status
+      - latency_ms
+      - handshake_ok
+      - ts
+      title: ServerHealthOut
+    ServerLimitsOut:
+      properties:
+        traffic_limit_gb:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Traffic Limit Gb
+        speed_limit_mbps:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Speed Limit Mbps
+        max_connections:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Max Connections
+      type: object
+      required:
+      - traffic_limit_gb
+      - speed_limit_mbps
+      - max_connections
+      title: ServerLimitsOut
+    ServerLimitsUpdate:
+      properties:
+        traffic_limit_gb:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Traffic Limit Gb
+        speed_limit_mbps:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Speed Limit Mbps
+        max_connections:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Max Connections
+      type: object
+      title: ServerLimitsUpdate
+    ServerList:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/ServerOut'
+          type: array
+          title: Items
+        total:
+          type: integer
+          title: Total
+      type: object
+      required:
+      - items
+      - total
+      title: ServerList
+    ServerOut:
+      properties:
+        id:
+          type: string
+          title: Id
+        name:
+          type: string
+          title: Name
+        region:
+          type: string
+          title: Region
+        api_endpoint:
+          type: string
+          title: Api Endpoint
+        vpn_endpoint:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Vpn Endpoint
+        public_key:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Public Key
+        status:
+          type: string
+          enum:
+          - online
+          - offline
+          - degraded
+          - unknown
+          title: Status
+        is_active:
+          type: boolean
+          title: Is Active
+        health_score:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Health Score
+        is_draining:
+          type: boolean
+          title: Is Draining
+          default: false
+        max_connections:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Max Connections
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        last_seen_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Last Seen At
+        last_snapshot_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Last Snapshot At
+        updated_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Updated At
+        provider:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Provider
+        tags:
+          anyOf:
+          - type: array
+            items:
+              type: string
+          - type: 'null'
+          title: Tags
+        request_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Request Id
+      type: object
+      required:
+      - id
+      - name
+      - region
+      - api_endpoint
+      - vpn_endpoint
+      - public_key
+      - status
+      - is_active
+      - created_at
+      title: ServerOut
+    ServerPeersOut:
+      properties:
+        peers:
+          items:
+            $ref: '#/components/schemas/PeerOut'
+          type: array
+          title: Peers
+        total:
+          type: integer
+          title: Total
+        node_reachable:
+          type: boolean
+          title: Node Reachable
+          default: true
+      type: object
+      required:
+      - peers
+      - total
+      title: ServerPeersOut
+    ServerSnapshotSummaryEntry:
+      properties:
+        cpu_pct:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Cpu Pct
+        ram_pct:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Ram Pct
+        ram_used_bytes:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Ram Used Bytes
+        ram_total_bytes:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Ram Total Bytes
+        active_peers:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Active Peers
+        total_peers:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Total Peers
+        used_ips:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Used Ips
+        total_ips:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Total Ips
+        free_ips:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Free Ips
+        health_score:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Health Score
+        last_snapshot_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Last Snapshot At
+        source:
+          type: string
+          title: Source
+          default: snapshot
+      type: object
+      title: ServerSnapshotSummaryEntry
+      description: Per-server summary from last successful snapshot (authoritative).
+    ServerStatusOut:
+      properties:
+        status:
+          type: string
+          title: Status
+        is_active:
+          type: boolean
+          title: Is Active
+      type: object
+      required:
+      - status
+      - is_active
+      title: ServerStatusOut
+    ServerSyncJobStatus:
+      properties:
+        job_id:
+          type: string
+          title: Job Id
+        server_id:
+          type: string
+          title: Server Id
+        status:
+          type: string
+          title: Status
+        started_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Started At
+        finished_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Finished At
+        request_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Request Id
+        error:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Error
+      type: object
+      required:
+      - job_id
+      - server_id
+      - status
+      - started_at
+      - finished_at
+      - request_id
+      title: ServerSyncJobStatus
+    ServerSyncRequest:
+      properties:
+        mode:
+          type: string
+          title: Mode
+          default: manual
+      type: object
+      title: ServerSyncRequest
+    ServerSyncResponse:
+      properties:
+        request_id:
+          type: string
+          title: Request Id
+        job_id:
+          type: string
+          title: Job Id
+      type: object
+      required:
+      - request_id
+      - job_id
+      title: ServerSyncResponse
+    ServerTelemetryEntry:
+      properties:
+        cpu_pct:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Cpu Pct
+        ram_pct:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Ram Pct
+        peers:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Peers
+        health_score:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Health Score
+        last_metrics_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Last Metrics At
+      type: object
+      title: ServerTelemetryEntry
+    ServerTelemetryOut:
+      properties:
+        peers_count:
+          type: integer
+          title: Peers Count
+        online_count:
+          type: integer
+          title: Online Count
+        total_rx_bytes:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Total Rx Bytes
+        total_tx_bytes:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Total Tx Bytes
+        last_updated:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Last Updated
+        source:
+          type: string
+          title: Source
+          default: api
+        node_reachable:
+          type: boolean
+          title: Node Reachable
+          default: true
+      type: object
+      required:
+      - peers_count
+      - online_count
+      title: ServerTelemetryOut
+    ServerUpdate:
+      properties:
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Name
+        region:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Region
+        api_endpoint:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Api Endpoint
+        vpn_endpoint:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Vpn Endpoint
+        public_key:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Public Key
+        is_active:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Active
+      type: object
+      title: ServerUpdate
+    ServersSnapshotSummaryOut:
+      properties:
+        servers:
+          additionalProperties:
+            $ref: '#/components/schemas/ServerSnapshotSummaryEntry'
+          type: object
+          title: Servers
+      type: object
+      required:
+      - servers
+      title: ServersSnapshotSummaryOut
+    ServersTelemetrySummaryOut:
+      properties:
+        servers:
+          additionalProperties:
+            $ref: '#/components/schemas/ServerTelemetryEntry'
+          type: object
+          title: Servers
+      type: object
+      required:
+      - servers
+      title: ServersTelemetrySummaryOut
+    SubscriptionCreate:
+      properties:
+        user_id:
+          type: integer
+          title: User Id
+        plan_id:
+          type: string
+          title: Plan Id
+        valid_from:
+          type: string
+          format: date-time
+          title: Valid From
+        valid_until:
+          type: string
+          format: date-time
+          title: Valid Until
+        device_limit:
+          type: integer
+          title: Device Limit
+          default: 1
+      type: object
+      required:
+      - user_id
+      - plan_id
+      - valid_from
+      - valid_until
+      title: SubscriptionCreate
+    SubscriptionList:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/SubscriptionOut'
+          type: array
+          title: Items
+        total:
+          type: integer
+          title: Total
+      type: object
+      required:
+      - items
+      - total
+      title: SubscriptionList
+    SubscriptionOut:
+      properties:
+        id:
+          type: string
+          title: Id
+        user_id:
+          type: integer
+          title: User Id
+        plan_id:
+          type: string
+          title: Plan Id
+        valid_from:
+          type: string
+          format: date-time
+          title: Valid From
+        valid_until:
+          type: string
+          format: date-time
+          title: Valid Until
+        device_limit:
+          type: integer
+          title: Device Limit
+        status:
+          type: string
+          title: Status
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        effective_status:
+          type: string
+          title: Effective Status
+          description: Expired when valid_until < now, else status. Use for display
+            so list shows correct state.
+          readOnly: true
+      type: object
+      required:
+      - id
+      - user_id
+      - plan_id
+      - valid_from
+      - valid_until
+      - device_limit
+      - status
+      - created_at
+      - effective_status
+      title: SubscriptionOut
+    SubscriptionUpdate:
+      properties:
+        valid_until:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Valid Until
+        device_limit:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Device Limit
+        status:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Status
+      type: object
+      title: SubscriptionUpdate
+    ThrottlingApplyOut:
+      properties:
+        applied_at:
+          type: string
+          format: date-time
+          title: Applied At
+        dry_run:
+          type: boolean
+          title: Dry Run
+        policies:
+          type: integer
+          title: Policies
+        total_nodes:
+          type: integer
+          title: Total Nodes
+        nodes:
+          items:
+            $ref: '#/components/schemas/ThrottlingNodeApplyOut'
+          type: array
+          title: Nodes
+      type: object
+      required:
+      - applied_at
+      - dry_run
+      - policies
+      - total_nodes
+      - nodes
+      title: ThrottlingApplyOut
+    ThrottlingApplyRequest:
+      properties:
+        server_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Server Id
+        dry_run:
+          type: boolean
+          title: Dry Run
+          default: false
+      type: object
+      title: ThrottlingApplyRequest
+    ThrottlingNodeApplyOut:
+      properties:
+        node_id:
+          type: string
+          title: Node Id
+        dry_run:
+          type: boolean
+          title: Dry Run
+        peers_considered:
+          type: integer
+          title: Peers Considered
+        peers_bound:
+          type: integer
+          title: Peers Bound
+        skipped_no_runtime_peer:
+          type: integer
+          title: Skipped No Runtime Peer
+        skipped_without_host_ip:
+          type: integer
+          title: Skipped Without Host Ip
+        result:
+          additionalProperties: true
+          type: object
+          title: Result
+      type: object
+      required:
+      - node_id
+      - dry_run
+      - peers_considered
+      - peers_bound
+      - skipped_no_runtime_peer
+      - skipped_without_host_ip
+      - result
+      title: ThrottlingNodeApplyOut
+    TokenResponse:
+      properties:
+        access_token:
+          type: string
+          title: Access Token
+        refresh_token:
+          type: string
+          title: Refresh Token
+        token_type:
+          type: string
+          title: Token Type
+          default: bearer
+      type: object
+      required:
+      - access_token
+      - refresh_token
+      title: TokenResponse
+    TopologyGraphEdgeOut:
+      properties:
+        source_node_id:
+          type: string
+          title: Source Node Id
+        target_node_id:
+          type: string
+          title: Target Node Id
+        edge_type:
+          type: string
+          title: Edge Type
+        weight:
+          type: number
+          title: Weight
+          default: 1.0
+        label:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Label
+      type: object
+      required:
+      - source_node_id
+      - target_node_id
+      - edge_type
+      title: TopologyGraphEdgeOut
+    TopologyGraphNodeOut:
+      properties:
+        node_id:
+          type: string
+          title: Node Id
+        container_name:
+          type: string
+          title: Container Name
+        region:
+          type: string
+          title: Region
+        status:
+          type: string
+          title: Status
+        health_score:
+          type: number
+          title: Health Score
+        peer_count:
+          type: integer
+          title: Peer Count
+        max_peers:
+          type: integer
+          title: Max Peers
+        load_ratio:
+          type: number
+          title: Load Ratio
+        is_draining:
+          type: boolean
+          title: Is Draining
+      type: object
+      required:
+      - node_id
+      - container_name
+      - region
+      - status
+      - health_score
+      - peer_count
+      - max_peers
+      - load_ratio
+      - is_draining
+      title: TopologyGraphNodeOut
+    TopologyGraphOut:
+      properties:
+        generated_at:
+          type: string
+          format: date-time
+          title: Generated At
+        nodes:
+          items:
+            $ref: '#/components/schemas/TopologyGraphNodeOut'
+          type: array
+          title: Nodes
+        edges:
+          items:
+            $ref: '#/components/schemas/TopologyGraphEdgeOut'
+          type: array
+          title: Edges
+        regions:
+          items:
+            type: string
+          type: array
+          title: Regions
+      type: object
+      required:
+      - generated_at
+      - nodes
+      - edges
+      - regions
+      title: TopologyGraphOut
+    TopologySummaryOut:
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          title: Timestamp
+        nodes_total:
+          type: integer
+          title: Nodes Total
+        healthy_nodes:
+          type: integer
+          title: Healthy Nodes
+        degraded_nodes:
+          type: integer
+          title: Degraded Nodes
+        unhealthy_nodes:
+          type: integer
+          title: Unhealthy Nodes
+        draining_nodes:
+          type: integer
+          title: Draining Nodes
+        overloaded_nodes:
+          type: integer
+          title: Overloaded Nodes
+        total_capacity:
+          type: integer
+          title: Total Capacity
+        current_load:
+          type: integer
+          title: Current Load
+        load_factor:
+          type: number
+          title: Load Factor
+        health_score:
+          type: number
+          title: Health Score
+        topology_version:
+          type: integer
+          title: Topology Version
+      type: object
+      required:
+      - timestamp
+      - nodes_total
+      - healthy_nodes
+      - degraded_nodes
+      - unhealthy_nodes
+      - draining_nodes
+      - overloaded_nodes
+      - total_capacity
+      - current_load
+      - load_factor
+      - health_score
+      - topology_version
+      title: TopologySummaryOut
+    TotpSetupResponse:
+      properties:
+        secret:
+          type: string
+          title: Secret
+        provisioning_uri:
+          type: string
+          title: Provisioning Uri
+      type: object
+      required:
+      - secret
+      - provisioning_uri
+      title: TotpSetupResponse
+    UserCreate:
+      properties:
+        tg_id:
+          type: integer
+          title: Tg Id
+        email:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Email
+        phone:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Phone
+        meta:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Meta
+      type: object
+      required:
+      - tg_id
+      title: UserCreate
+    UserDetail:
+      properties:
+        id:
+          type: integer
+          title: Id
+        tg_id:
+          type: integer
+          title: Tg Id
+        email:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Email
+        phone:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Phone
+        meta:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Meta
+        is_banned:
+          type: boolean
+          title: Is Banned
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        subscriptions:
+          items:
+            $ref: '#/components/schemas/SubscriptionOut'
+          type: array
+          title: Subscriptions
+          default: []
+      type: object
+      required:
+      - id
+      - tg_id
+      - email
+      - phone
+      - meta
+      - is_banned
+      - created_at
+      - updated_at
+      title: UserDetail
+    UserList:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/UserOut'
+          type: array
+          title: Items
+        total:
+          type: integer
+          title: Total
+      type: object
+      required:
+      - items
+      - total
+      title: UserList
+    UserOut:
+      properties:
+        id:
+          type: integer
+          title: Id
+        tg_id:
+          type: integer
+          title: Tg Id
+        email:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Email
+        phone:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Phone
+        meta:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Meta
+        is_banned:
+          type: boolean
+          title: Is Banned
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+      type: object
+      required:
+      - id
+      - tg_id
+      - email
+      - phone
+      - meta
+      - is_banned
+      - created_at
+      - updated_at
+      title: UserOut
+    UserUpdate:
+      properties:
+        email:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Email
+        phone:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Phone
+        meta:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Meta
+        is_banned:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Banned
+        confirm_token:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Confirm Token
+      type: object
+      title: UserUpdate
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+    WebAppAuthRequest:
+      properties:
+        init_data:
+          type: string
+          title: Init Data
+          default: ''
+      additionalProperties: true
+      type: object
+      title: WebAppAuthRequest
+      description: Accepts initData (Telegram) or init_data.
+    WebAppIssueDeviceResponse:
+      properties:
+        device_id:
+          type: string
+          title: Device Id
+        config:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Config
+        issued_at:
+          type: string
+          format: date-time
+          title: Issued At
+        node_mode:
+          type: string
+          title: Node Mode
+        peer_created:
+          type: boolean
+          title: Peer Created
+      type: object
+      required:
+      - device_id
+      - config
+      - issued_at
+      - node_mode
+      - peer_created
+      title: WebAppIssueDeviceResponse
+    WgPeerCreateBody:
+      properties:
+        user_id:
+          type: integer
+          title: User Id
+        subscription_id:
+          type: string
+          title: Subscription Id
+        device_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Device Name
+        server_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Server Id
+      type: object
+      required:
+      - user_id
+      - subscription_id
+      title: WgPeerCreateBody
+      description: Body for POST /wg/peer (provision peer = issue device).
+  securitySchemes:
+    HTTPBearer:
+      type: http
+      scheme: bearer

@@ -1,0 +1,37 @@
+import { Meta } from "@storybook/blocks";
+
+<Meta title="Primitives/Spinner" />
+
+# Spinner
+
+## Purpose
+Inline loading indicator for short operations.
+
+**When to use:** Inline or small loading states.
+
+**When not to use:** Page-level loading (use LoadingStates pattern).
+
+## API (Props)
+
+| Prop | Type |
+| --- | --- |
+| size? | `"sm" \| "md" \| "lg"` |
+| label? | `string` |
+| nativeProps | `HTMLAttributes<HTMLDivElement>` |
+
+## Examples
+
+```tsx
+<Spinner size="sm" label="Loading" />
+```
+
+## Design Tokens Used
+- Colors: `--color-*`
+- Spacing: `--spacing-*`
+
+## Anti-patterns
+- Inline styles or arbitrary pixel values.
+- Using spinners for long-running tasks without context.
+
+## Accessibility
+- Provide `label` for screen readers.

@@ -1,0 +1,303 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  lint-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: vpn_admin
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/vpn_admin
+      REDIS_URL: redis://localhost:6379/0
+      SECRET_KEY: ci-secret-key-min-32-chars-long
+      ADMIN_EMAIL: admin@ci
+      ADMIN_PASSWORD: ci-admin-password
+      RUN_E2E: "1"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Ruff check
+        run: ruff check .
+      - name: Ruff format
+        run: ruff format --check .
+
+      - name: Migrate
+        run: python -m alembic upgrade head
+
+      - name: Migration integrity (downgrade/upgrade)
+        run: |
+          python -m alembic downgrade -1
+          python -m alembic upgrade head
+
+      - name: Alembic check
+        run: python -m alembic check
+
+      - name: Seed admin
+        run: python scripts/seed_admin.py
+
+      - name: Pytest
+        run: pytest tests/ --cov=app --cov-report=term-missing -v
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build admin-api image
+        env:
+          # docker-compose.yml requires PUBLIC_DOMAIN during interpolation, even when building only admin-api.
+          PUBLIC_DOMAIN: ci.invalid
+        run: docker compose build admin-api
+
+  trivy-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build admin-api for scan
+        env:
+          PUBLIC_DOMAIN: ci.invalid
+        run: docker compose build admin-api
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: vpn-suite-admin-api
+          format: table
+          exit-code: 0
+          severity: CRITICAL,HIGH
+
+  frontend-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend deps
+        working-directory: frontend
+        run: npm ci
+
+      - name: npm audit
+        working-directory: frontend
+        run: npm audit --audit-level=high
+
+      - name: Lint
+        working-directory: frontend
+        run: npm run lint
+
+      - name: Typecheck
+        working-directory: frontend
+        run: npm run typecheck
+
+      - name: Unit tests (shared)
+        working-directory: frontend
+        run: npm test -- --run
+
+      - name: Production build (admin + miniapp)
+        working-directory: frontend
+        run: npm run build
+
+      - name: Storybook check
+        working-directory: frontend
+        run: npm run storybook:check -w shared
+
+      - name: Storybook build
+        working-directory: frontend
+        run: npm run build-storybook -w shared
+
+      - name: Token compliance (no raw hex)
+        run: bash scripts/check-tokens.sh
+
+  secret-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  frontend-e2e:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/vpn_admin
+      REDIS_URL: redis://localhost:6379/0
+      SECRET_KEY: ci-secret-key-min-32-chars-long
+      ADMIN_EMAIL: admin@ci
+      ADMIN_PASSWORD: ci-admin-password
+      PLAYWRIGHT_BASE_URL: http://localhost:5174/admin
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: vpn_admin
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Backend deps and migrate
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          python -m alembic upgrade head
+
+      - name: Seed admin
+        working-directory: backend
+        run: python scripts/seed_admin.py
+
+      - name: Start API
+        working-directory: backend
+        run: uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+        env:
+          DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/vpn_admin
+          REDIS_URL: redis://localhost:6379/0
+          SECRET_KEY: ci-secret-key-min-32-chars-long
+          ADMIN_EMAIL: admin@ci
+          ADMIN_PASSWORD: ci-admin-password
+
+      - name: Wait for API
+        run: |
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:8000/health && exit 0
+            sleep 1
+          done
+          echo "API did not become ready"
+          exit 1
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend deps
+        working-directory: frontend
+        run: npm ci
+
+      - name: Install Playwright browsers
+        working-directory: frontend/admin
+        run: npx playwright install chromium --with-deps
+
+      - name: Start admin dev server
+        working-directory: frontend
+        run: npm run dev:admin &
+        env:
+          CI: ""
+
+      - name: Wait for admin
+        run: |
+          for i in $(seq 1 60); do
+            curl -sf http://localhost:5174/admin/ && exit 0
+            sleep 1
+          done
+          echo "Admin dev server did not become ready"
+          exit 1
+
+      - name: API contract (happy path)
+        run: bash scripts/release_api_happy_path.sh
+        env:
+          BASE_URL: http://127.0.0.1:8000
+          ADMIN_EMAIL: admin@ci
+          ADMIN_PASSWORD: ci-admin-password
+
+      - name: Run E2E
+        working-directory: frontend
+        run: npm run test:e2e
+        env:
+          CI: "true"
+          ADMIN_EMAIL: admin@ci
+          ADMIN_PASSWORD: ci-admin-password
+
+  bot-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: bot
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+      - name: Pytest
+        run: pytest tests/ --cov=. --cov-report=term-missing -v

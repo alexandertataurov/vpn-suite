@@ -1,0 +1,72 @@
+{
+  "shadow": {
+    "none": "none",
+    "sm": "0 1px 0 0 oklch(0% 0 0 / 0.08)"
+  },
+  "legacyShadow": {
+    "xs": "0 1px 2px 0 oklch(0% 0 0 / 0.05)",
+    "sm": "0 1px 3px 0 oklch(0% 0 0 / 0.1), 0 1px 2px -1px oklch(0% 0 0 / 0.1)",
+    "md": "0 4px 6px -1px oklch(0% 0 0 / 0.1), 0 2px 4px -2px oklch(0% 0 0 / 0.1)",
+    "lg": "0 10px 15px -3px oklch(0% 0 0 / 0.1), 0 4px 6px -4px oklch(0% 0 0 / 0.1)",
+    "xl": "0 20px 25px -5px oklch(0% 0 0 / 0.1), 0 8px 10px -6px oklch(0% 0 0 / 0.1)",
+    "2xl": "0 25px 50px -12px oklch(0% 0 0 / 0.25)",
+    "inner": "inset 0 2px 4px 0 oklch(0% 0 0 / 0.05)"
+  },
+  "shadowDark": {
+    "md": "0 4px 6px -1px oklch(0% 0 0 / 0.3), 0 2px 4px -2px oklch(0% 0 0 / 0.2)",
+    "lg": "0 10px 15px -3px oklch(0% 0 0 / 0.3), 0 4px 6px -4px oklch(0% 0 0 / 0.2)"
+  },
+  "borderWidth": { "hairline": "1px" },
+  "radius": { "0": "0", "2": "2px", "4": "4px" },
+  "legacyRadius": {
+    "none": "0",
+    "sm": "2px",
+    "md": "4px",
+    "lg": "4px",
+    "xl": "4px",
+    "2xl": "4px",
+    "full": "9999px"
+  },
+  "radiusAliases": { "control": "4", "surface": "4" },
+  "opacity": {
+    "0": "0",
+    "5": "0.05",
+    "10": "0.1",
+    "20": "0.2",
+    "30": "0.3",
+    "40": "0.4",
+    "50": "0.5",
+    "60": "0.6",
+    "70": "0.7",
+    "80": "0.8",
+    "90": "0.9",
+    "100": "1"
+  },
+  "blur": { "none": "0", "sm": "4px", "md": "8px" },
+  "duration": { "instant": "0ms", "fast": "150ms", "normal": "250ms", "slow": "350ms" },
+  "ease": {
+    "linear": "linear",
+    "in": "cubic-bezier(0.4, 0, 1, 1)",
+    "out": "cubic-bezier(0, 0, 0.2, 1)",
+    "inOut": "cubic-bezier(0.4, 0, 0.2, 1)"
+  },
+  "easeAliases": { "standard": "inOut" },
+  "iconSize": { "sm": "16px", "md": "20px" },
+  "layout": {
+    "widthSidebar": "256px",
+    "sizeTouchTarget": "44px",
+    "maxWidthForm": "360px",
+    "maxWidthModal": "480px",
+    "maxWidthContainerMd": "720px",
+    "maxWidthContainerLg": "960px",
+    "gridMinCard": "200px",
+    "gridMinCol": "240px",
+    "gridMinColSm": "160px",
+    "gridMinCardLg": "280px",
+    "heightBtnSm": "28px",
+    "heightBtnMd": "36px",
+    "heightBtnLg": "44px"
+  },
+  "zIndex": { "dropdown": 100, "overlay": 200, "modal": 300, "toast": 400 },
+  "breakpoints": { "sm": "640px", "md": "768px", "lg": "1024px", "xl": "1280px" }
+}

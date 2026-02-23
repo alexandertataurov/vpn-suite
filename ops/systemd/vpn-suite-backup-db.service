@@ -1,0 +1,11 @@
+[Unit]
+Description=VPN Suite - Postgres backup (pg_dump)
+Wants=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/vpn-suite
+Environment=ENV_FILE=/opt/vpn-suite/.env
+ExecStart=/opt/vpn-suite/manage.sh backup-db
+

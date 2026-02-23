@@ -1,0 +1,47 @@
+groups:
+  - name: unified-observability
+    rules:
+      - alert: PrometheusTargetDown
+        expr: up == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Target down: {{ $labels.job }}"
+          description: "Prometheus target is down for 5 minutes."
+
+      - alert: HighNodeCpu
+        expr: (100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)) > 85
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU on {{ $labels.instance }}"
+          description: "CPU usage > 85% for 10 minutes."
+
+      - alert: HighNodeMemory
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 90
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory on {{ $labels.instance }}"
+          description: "Memory usage > 90% for 10 minutes."
+
+      - alert: VpnHandshakeAgeHigh
+        expr: agent_last_handshake_max_age_seconds > 1800
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "VPN handshake age high"
+          description: "Max handshake age > 30 minutes."
+
+      - alert: VpnPeersDrop
+        expr: (agent_peers_active == 0) and (agent_peers_runtime > 0)
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "VPN peers inactive"
+          description: "Peers exist but none active for 10 minutes."

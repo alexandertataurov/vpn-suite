@@ -1,0 +1,50 @@
+# Required Secrets
+
+**Single source of truth:** repo-root `.env`. Override with `ENV_FILE=...` if needed. `secrets/` holds only mTLS certs/keys (see `secrets/README.md`).
+
+## Always Required (docker-compose / core)
+
+| Variable | Purpose |
+|----------|---------|
+| PUBLIC_DOMAIN | Reverse-proxy hostname (e.g. localhost, vpn.example.com) |
+| POSTGRES_PASSWORD | Postgres password |
+| GRAFANA_ADMIN_PASSWORD | Grafana (monitoring profile) |
+
+## Required for Admin API (backend)
+
+| Variable | Purpose |
+|----------|---------|
+| VPN_DEFAULT_HOST | Optional. Host clients use for VPN (e.g. vpn.example.com). When set, Issue Config auto-derives endpoint as host:listen_port. Defaults to PUBLIC_DOMAIN when unset. |
+| DATABASE_URL | Async Postgres connection string |
+| REDIS_URL | Redis connection (use redis://:password@redis:6379/0 when REDIS_PASSWORD set) |
+| REDIS_PASSWORD | Optional; set in production to enable Redis requirepass |
+| SECRET_KEY | JWT/session signing (min 32 chars) |
+| ADMIN_EMAIL | Initial admin seed |
+| ADMIN_PASSWORD | Initial admin seed (min 12 chars in prod) |
+
+## Required for Bot
+
+| Variable | Purpose |
+|----------|---------|
+| BOT_USERNAME / VITE_TELEGRAM_BOT_USERNAME | Bot @username (docker-compose passes latter to BOT_USERNAME) |
+| SUPPORT_HANDLE | Support handle (e.g. @support) |
+
+## Required in Production (validate_production_secrets)
+
+| Variable | Min Length |
+|----------|------------|
+| SECRET_KEY | 32 |
+| ADMIN_PASSWORD | 12 |
+| BAN_CONFIRM_TOKEN | 16 |
+| BLOCK_CONFIRM_TOKEN | 16 |
+| RESTART_CONFIRM_TOKEN | 16 |
+| REVOKE_CONFIRM_TOKEN | 16 |
+| AGENT_SHARED_TOKEN | 32 (when NODE_MODE=agent or NODE_DISCOVERY=agent) |
+
+## Node-Agent (per-node env, e.g. amnezia/amnezia-awg2/secrets/node.env)
+
+| Variable | Purpose |
+|----------|---------|
+| CONTROL_PLANE_URL | https://$PUBLIC_DOMAIN:8443 |
+| SERVER_ID | Server ID from control-plane |
+| AGENT_SHARED_TOKEN | Must match control-plane |

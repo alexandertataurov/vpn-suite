@@ -1,0 +1,42 @@
+# Audit reverse proxy: plain HTTP only (host port 18080 -> container :80 via docker-compose.audit.yml).
+# Do not use PUBLIC_DOMAIN / ACME here; the audit stack must be isolated and deterministic.
+{
+  admin off
+  servers {
+    protocols h1 h2
+  }
+}
+
+:80 {
+  handle /health {
+    reverse_proxy admin-api:8000
+  }
+
+  handle /admin {
+    redir /admin /admin/ 308
+  }
+  handle /admin/* {
+    handle_path /admin/* {
+      root * /srv/admin
+      try_files {path} /index.html
+      file_server
+    }
+  }
+
+  handle /webapp {
+    redir /webapp /webapp/ 308
+  }
+  handle /webapp/* {
+    header Content-Security-Policy "frame-ancestors 'self' https://web.telegram.org https://*.telegram.org"
+    handle_path /webapp/* {
+      root * /srv/webapp
+      try_files {path} /index.html
+      file_server
+    }
+  }
+
+  handle {
+    reverse_proxy admin-api:8000
+  }
+}
+

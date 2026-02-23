@@ -1,0 +1,44 @@
+import { Meta } from "@storybook/blocks";
+
+<Meta title="Components/TimeSeriesPanel" />
+
+# TimeSeriesPanel
+
+## Purpose
+Panel for time-series charts with header, actions, and state handling.
+
+**When to use:** Telemetry charts and metric panels.
+
+**When not to use:** Simple stat tiles (use Stat/MetricTile).
+
+## API (Props)
+
+| Prop | Type |
+| --- | --- |
+| title | `string` |
+| subtitle? | `ReactNode` |
+| status? | `"live" \| "stale" \| "partial" \| "loading" \| "error" \| "empty"` |
+| actions? | `ReactNode` |
+| loading? | `boolean` |
+| error? | `string` |
+| empty? | `boolean` |
+
+## Examples
+
+```tsx
+<TimeSeriesPanel title="Latency" status="live">
+  <Chart />
+</TimeSeriesPanel>
+```
+
+## Design Tokens Used
+- Spacing: `--spacing-*`
+- Colors: `--color-*`
+- Radius: `--radius-*`
+
+## Anti-patterns
+- Inline styles or arbitrary pixel values.
+- Rendering network logic inside the panel.
+
+## Accessibility
+- Provide meaningful titles for assistive tech.

@@ -1,0 +1,40 @@
+import { Meta } from "@storybook/blocks";
+
+<Meta title="Patterns/OperatorHeader" />
+
+# OperatorHeader
+
+## Purpose
+Standard page header pattern for operator views.
+
+**When to use:** Admin pages with title, breadcrumbs, and actions.
+
+**When not to use:** Simple modal dialogs or embedded panels.
+
+## API (Props)
+
+Use `PageHeader` with `title`, `description`, `actions`, and optional `breadcrumbItems`.
+
+## Examples
+
+```tsx
+<PageHeader
+  title="Servers"
+  description="Fleet health and activity"
+  breadcrumbItems={[{ label: "Home", to: "/" }, { label: "Servers" }]}
+  actions={<Button variant="primary">Add server</Button>}
+/>
+```
+
+## Design Tokens Used
+- Spacing: `--spacing-*`
+- Colors: `--color-*`
+- Typography: `--text-*`
+
+## Anti-patterns
+- Duplicating page header markup in pages.
+- Using page header for small card headings.
+
+## Accessibility
+- Breadcrumbs must be keyboard accessible.
+- Ensure heading hierarchy is preserved.

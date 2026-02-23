@@ -1,0 +1,47 @@
+import { Meta } from "@storybook/blocks";
+import { Button } from "../../ui/buttons/Button";
+import { Panel } from "../../ui/display/Panel";
+
+<Meta title="Foundations/Tokens/Composition" />
+
+# Live Token Composition
+
+How semantic tokens compose real UI. Use the theme toggle (toolbar) to compare dark/light/dim.
+
+## Button with semantic tokens
+
+Primary button uses `--color-interactive-default`, `--color-on-primary`, `--radius-button`.
+
+<div className="sb-demo-row">
+  <Button variant="primary">Primary</Button>
+  <Button variant="secondary">Secondary</Button>
+</div>
+
+## Panel using surface tokens
+
+Panel uses `--color-background-secondary`, `--color-border-subtle`, `--radius-card`, `--shadow-md`.
+
+<Panel className="sb-demo-card">
+  <h3 className="sb-demo-heading">Panel Title</h3>
+  <p className="sb-demo-body">Panel body uses semantic text tokens.</p>
+</Panel>
+
+## Typography composition
+
+<div className="sb-demo-typography">
+  <div>
+    <span className="sb-demo-eyebrow">SECTION</span>
+    <h2 className="sb-demo-heading">Dashboard Overview</h2>
+    <p className="sb-demo-body">Stats use tabular numbers: 1,234.56 · 98,765.43</p>
+  </div>
+</div>
+
+## Stack layout
+
+<div className="sb-demo-stack">
+  {[1, 2, 3].map((i) => (
+    <div key={i} className="sb-demo-stack-item">
+      Form field {i}
+    </div>
+  ))}
+</div>

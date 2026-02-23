@@ -1,0 +1,74 @@
+[
+  {
+    "labels": {
+      "sd_job": "admin-api",
+      "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7"
+    },
+    "targets": [
+      "admin-api:8000"
+    ]
+  },
+  {
+    "labels": {
+      "sd_job": "node-exporter",
+      "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7"
+    },
+    "targets": [
+      "node-exporter:9100"
+    ]
+  },
+  {
+    "labels": {
+      "sd_job": "cadvisor",
+      "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7"
+    },
+    "targets": [
+      "cadvisor:8080"
+    ]
+  },
+  {
+    "labels": {
+      "sd_job": "node-agent",
+      "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7"
+    },
+    "targets": [
+      "node-agent:9105"
+    ]
+  },
+  {
+    "labels": {
+      "sd_job": "telegram-vpn-bot",
+      "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7"
+    },
+    "targets": [
+      "telegram-vpn-bot:8090"
+    ]
+  },
+  {
+    "labels": {
+      "sd_job": "outline-ss",
+      "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7"
+    },
+    "targets": [
+      "host.docker.internal:19092"
+    ]
+  },
+  {
+    "labels": {
+      "sd_job": "outline-poller",
+      "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7"
+    },
+    "targets": [
+      "outline-poller:9106"
+    ]
+  },
+  {
+    "labels": {
+      "sd_job": "wg-exporter",
+      "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7"
+    },
+    "targets": [
+      "host.docker.internal:9586"
+    ]
+  }
+]

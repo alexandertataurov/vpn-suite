@@ -1,0 +1,43 @@
+import { Meta } from "@storybook/blocks";
+
+<Meta title="Primitives/Textarea" />
+
+# Textarea
+
+## Purpose
+Multi-line text input for notes or descriptions.
+
+**When to use:** Free-form notes, long-form text.
+
+**When not to use:** Single-line input (use Input).
+
+## API (Props)
+
+| Prop | Type |
+| --- | --- |
+| label? | `string` |
+| error? | `string` |
+| rows? | `number` |
+| placeholder? | `string` |
+| disabled? | `boolean` |
+| nativeProps | `TextareaHTMLAttributes<HTMLTextAreaElement>` |
+
+## Examples
+
+```tsx
+<Textarea label="Notes" placeholder="Enter notes" rows={4} />
+```
+
+## Design Tokens Used
+- Typography: `--text-*`
+- Spacing: `--spacing-*`
+- Colors: `--color-*`
+- Radius: `--radius-*`
+
+## Anti-patterns
+- Inline styles or arbitrary pixel values.
+- Using textarea for short single-line content.
+
+## Accessibility
+- Provide a label for screen readers.
+- Use error text and `aria-invalid` for validation feedback.

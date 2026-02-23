@@ -1,0 +1,46 @@
+import { Meta } from "@storybook/blocks";
+
+<Meta title="Components/Modal/ConfigContentModal" />
+
+# ConfigContentModal
+
+## Purpose
+Modal for viewing and copying an issued VPN config.
+
+**When to use:** Viewing a generated config after issuance.
+
+**When not to use:** General confirmations (use Modal) or simple text previews.
+
+## API (Props)
+
+| Prop | Type |
+| --- | --- |
+| open | `boolean` |
+| onClose | `() => void` |
+| issuedConfigId | `string \| null` |
+| label? | `string` |
+
+## Examples
+
+```tsx
+<ConfigContentModal
+  open
+  onClose={() => setOpen(false)}
+  issuedConfigId="cfg-123"
+  label="edge-01"
+/>
+```
+
+## Design Tokens Used
+- Spacing: `--spacing-*`
+- Colors: `--color-*`
+- Radius: `--radius-*`
+- Typography: `--text-*`
+
+## Anti-patterns
+- Inline styles or arbitrary pixel values.
+- Rendering without an issued config id.
+
+## Accessibility
+- Modal provides focus trapping and aria labeling.
+- Provide clear close control and escape support.

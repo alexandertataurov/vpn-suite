@@ -1,0 +1,42 @@
+import { Meta } from "@storybook/blocks";
+
+<Meta title="Primitives/Stack" />
+
+# Stack
+
+## Purpose
+Flexbox stack layout for vertical or horizontal alignment with tokenized gaps.
+
+**When to use:** Simple vertical/horizontal layouts.
+
+**When not to use:** Complex grid layouts (use Grid).
+
+## API (Props)
+
+| Prop | Type |
+| --- | --- |
+| direction? | `"vertical" \| "horizontal"` |
+| gap? | `string` |
+| align? | `"start" \| "center" \| "end" \| "stretch"` |
+| justify? | `"start" \| "center" \| "end" \| "between"` |
+| wrap? | `boolean` |
+| nativeProps | `HTMLAttributes<HTMLDivElement>` |
+
+## Examples
+
+```tsx
+<Stack gap="3">
+  <Item />
+  <Item />
+</Stack>
+```
+
+## Design Tokens Used
+- Spacing: `--spacing-*`
+
+## Anti-patterns
+- Inline styles or arbitrary pixel values.
+- Mixing layout responsibilities in children.
+
+## Accessibility
+- Preserve DOM order for keyboard and screen readers.

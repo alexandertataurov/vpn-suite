@@ -1,0 +1,8 @@
+# Rotate vpn-suite cron logs. Install: sudo cp config/logrotate-vpn-suite /etc/logrotate.d/vpn-suite
+/var/log/vpn-suite-*.log {
+    weekly
+    rotate 4
+    missingok
+    notifempty
+    copytruncate
+}
