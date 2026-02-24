@@ -20,6 +20,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.v1.server_cache import invalidate_servers_list_cache
 from app.core.config import settings
 from app.core.constants import REDIS_KEY_AGENT_HB_PREFIX
 from app.core.database import async_session_factory, get_db
@@ -39,7 +40,6 @@ from app.schemas.agent import (
     AgentV1StatusOut,
     AgentV1TelemetryOut,
 )
-from app.api.v1.server_cache import invalidate_servers_list_cache
 from app.services.agent_action_service import (
     append_log,
     get_action,

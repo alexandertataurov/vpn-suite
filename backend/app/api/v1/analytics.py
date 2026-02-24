@@ -9,12 +9,11 @@ import logging
 import time
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
+from pydantic import BaseModel
 
 from app.core.constants import PERM_CLUSTER_READ
 from app.core.rbac import require_permission
-from pydantic import BaseModel
-
 from app.services.prometheus_query_service import PrometheusQueryService
 
 logger = logging.getLogger(__name__)
@@ -138,7 +137,7 @@ async def get_metrics_kpis(
     async def _fetch():
         rate_res = await prom.query("sum(rate(http_requests_total[5m]))")
         err_res = await prom.query(
-            "sum(rate(http_requests_total{status_class=\"5xx\"}[5m])) / sum(rate(http_requests_total[5m]))"
+            'sum(rate(http_requests_total{status_class="5xx"}[5m])) / sum(rate(http_requests_total[5m]))'
         )
         p95_res = await prom.query(
             "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))"

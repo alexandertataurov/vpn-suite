@@ -4,12 +4,12 @@ Date: 2026-02-21
 
 ## Phase 1 — Inventory & Audit (done)
 
-- `TABLE_UNIFICATION_AUDIT.md`
+- [table-unification-audit.md](table-unification-audit.md)
 
 ## Phase 2 — Architecture & API (done)
 
-- `ARCH_TABLE_SYSTEM.md`
-- `TABLE_STYLES_GUIDE.md`
+- [arch-table-system.md](arch-table-system.md)
+- [table-styles-guide.md](table-styles-guide.md)
 
 ## Phase 3 — Shared Component Upgrades
 
@@ -63,6 +63,6 @@ Date: 2026-02-21
 
 ## Phase 6 — QA Gates
 
-- `TABLE_QA_CHECKLIST.md`
+- [table-qa-checklist.md](table-qa-checklist.md)
 - Add lint rule / check to prevent raw `<table>` usage outside shared table components.
 

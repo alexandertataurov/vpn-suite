@@ -6,12 +6,11 @@ import asyncio
 import json
 import logging
 import time
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from typing import Any
 
 from sqlalchemy import func, select
 
-from app.core.config import settings
 from app.core.constants import REDIS_KEY_AGENT_HB_PREFIX
 from app.core.database import async_session_factory
 from app.core.logging_config import extra_for_event
@@ -35,7 +34,7 @@ def _scalar_from_result(rows: list[dict[str, Any]]) -> float | int | None:
     if not rows or not isinstance(rows[0], dict):
         return None
     val = rows[0].get("value")
-    if not isinstance(val, (list, tuple)) or len(val) < 2:
+    if not isinstance(val, list | tuple) or len(val) < 2:
         return None
     try:
         v = float(val[1])
@@ -48,7 +47,7 @@ def _ts_from_result(rows: list[dict[str, Any]]) -> float | None:
     if not rows or not isinstance(rows[0], dict):
         return None
     val = rows[0].get("value")
-    if not isinstance(val, (list, tuple)) or len(val) < 1:
+    if not isinstance(val, list | tuple) or len(val) < 1:
         return None
     try:
         return float(val[0])
@@ -160,12 +159,12 @@ async def fetch_operator_dashboard(time_range: str = "1h") -> dict[str, Any]:
             "agent_peers_active": "sum(agent_peers_active)",
             "agent_handshake_max_age": "max(agent_last_handshake_max_age_seconds)",
             "error_rate": (
-                "sum(rate(http_requests_total{job=\"admin-api\",status_class=\"5xx\"}[5m])) "
-                "/ (sum(rate(http_requests_total{job=\"admin-api\"}[5m])) + 1e-9) * 100"
+                'sum(rate(http_requests_total{job="admin-api",status_class="5xx"}[5m])) '
+                '/ (sum(rate(http_requests_total{job="admin-api"}[5m])) + 1e-9) * 100'
             ),
             "latency_p50": (
                 "histogram_quantile(0.5, "
-                "sum(rate(http_request_duration_seconds_bucket{job=\"admin-api\"}[5m])) by (le)) * 1000"
+                'sum(rate(http_request_duration_seconds_bucket{job="admin-api"}[5m])) by (le)) * 1000'
             ),
         }
         tasks = {k: prom.query(v) for k, v in queries.items()}
@@ -194,7 +193,14 @@ async def fetch_operator_dashboard(time_range: str = "1h") -> dict[str, Any]:
 
         if prom_failures > 0:
             data_status = "degraded"
-        core_query_names = ("api_up", "vpn_nodes_online", "vpn_cluster_load", "vpn_peers", "error_rate", "latency_p50")
+        core_query_names = (
+            "api_up",
+            "vpn_nodes_online",
+            "vpn_cluster_load",
+            "vpn_peers",
+            "error_rate",
+            "latency_p50",
+        )
         if not any(results.get(name) for name in core_query_names):
             data_status = "degraded"
             prom_failures += 1
@@ -222,9 +228,9 @@ async def fetch_operator_dashboard(time_range: str = "1h") -> dict[str, Any]:
         if vpn_online is not None:
             health_strip["online_nodes"] = int(vpn_online)
 
-        cluster_load = _scalar_from_result(results.get("vpn_cluster_load", [])) or _scalar_from_result(
-            results.get("vpn_peers", [])
-        )
+        cluster_load = _scalar_from_result(
+            results.get("vpn_cluster_load", [])
+        ) or _scalar_from_result(results.get("vpn_peers", []))
         if cluster_load is not None:
             health_strip["active_sessions"] = int(cluster_load)
             user_sessions["active_users"] = int(cluster_load)
@@ -251,28 +257,32 @@ async def fetch_operator_dashboard(time_range: str = "1h") -> dict[str, Any]:
 
         # Incidents
         if api_up == 0:
-            incidents.append({
-                "severity": "critical",
-                "entity": "admin-api",
-                "metric": "up",
-                "value": 0,
-                "timestamp": now.isoformat(),
-                "status": "open",
-                "affected_servers": len(servers),
-                "link": "/servers",
-            })
+            incidents.append(
+                {
+                    "severity": "critical",
+                    "entity": "admin-api",
+                    "metric": "up",
+                    "value": 0,
+                    "timestamp": now.isoformat(),
+                    "status": "open",
+                    "affected_servers": len(servers),
+                    "link": "/servers",
+                }
+            )
 
         if err is not None and float(err) > 5:
-            incidents.append({
-                "severity": "warning",
-                "entity": "cluster",
-                "metric": "error_rate_pct",
-                "value": float(err),
-                "timestamp": now.isoformat(),
-                "status": "open",
-                "affected_servers": len(servers),
-                "link": "/audit",
-            })
+            incidents.append(
+                {
+                    "severity": "warning",
+                    "entity": "cluster",
+                    "metric": "error_rate_pct",
+                    "value": float(err),
+                    "timestamp": now.isoformat(),
+                    "status": "open",
+                    "affected_servers": len(servers),
+                    "link": "/audit",
+                }
+            )
 
         # Per-server telemetry
         telemetry_map: dict[str, dict] = {}
@@ -327,7 +337,9 @@ async def fetch_operator_dashboard(time_range: str = "1h") -> dict[str, Any]:
                 except Exception:
                     prom_failures += 1
                     data_status = "degraded"
-                    prometheus_query_failures_total.labels(query_name="vpn_node_traffic_rx_bytes").inc()
+                    prometheus_query_failures_total.labels(
+                        query_name="vpn_node_traffic_rx_bytes"
+                    ).inc()
                     _log.warning(
                         "operator prometheus query failed",
                         extra=extra_for_event(
@@ -346,7 +358,9 @@ async def fetch_operator_dashboard(time_range: str = "1h") -> dict[str, Any]:
                 except Exception:
                     prom_failures += 1
                     data_status = "degraded"
-                    prometheus_query_failures_total.labels(query_name="vpn_node_traffic_tx_bytes").inc()
+                    prometheus_query_failures_total.labels(
+                        query_name="vpn_node_traffic_tx_bytes"
+                    ).inc()
                     _log.warning(
                         "operator prometheus query failed",
                         extra=extra_for_event(
@@ -393,12 +407,16 @@ async def fetch_operator_dashboard(time_range: str = "1h") -> dict[str, Any]:
                         hb = json.loads(raw)
                         if telemetry_map[sid]["health"] is None and "health_score" in hb:
                             hs = hb["health_score"]
-                            telemetry_map[sid]["health"] = float(hs) * 100 if float(hs) <= 1 else float(hs)
+                            telemetry_map[sid]["health"] = (
+                                float(hs) * 100 if float(hs) <= 1 else float(hs)
+                            )
                         if telemetry_map[sid]["peers"] is None and "peer_count" in hb:
                             telemetry_map[sid]["peers"] = int(hb["peer_count"])
                         if "ts_utc" in hb:
                             try:
-                                dt = datetime.fromisoformat(str(hb["ts_utc"]).replace("Z", "+00:00"))
+                                dt = datetime.fromisoformat(
+                                    str(hb["ts_utc"]).replace("Z", "+00:00")
+                                )
                                 telemetry_map[sid]["last_ts"] = dt.timestamp()
                             except (ValueError, TypeError):
                                 pass
@@ -447,77 +465,95 @@ async def fetch_operator_dashboard(time_range: str = "1h") -> dict[str, Any]:
             rx = tm.get("rx") or 0
             tx = tm.get("tx") or 0
             throughput = float(rx) + float(tx)
-            server_rows.append({
-                "id": sid,
-                "name": s.name or sid,
-                "region": s.region or "—",
-                "ip": (s.api_endpoint or "").split("//")[-1].split("/")[0].split(":")[0] if s.api_endpoint else "—",
-                "status": "online" if s.status in ("healthy", "ok") else ("degraded" if s.status == "degraded" else "offline"),
-                "cpu_pct": tm.get("cpu"),
-                "ram_pct": tm.get("ram"),
-                "users": int(tm.get("peers") or 0),
-                "throughput_bps": int(throughput),
-                "last_heartbeat": datetime.fromtimestamp(last_ts, tz=timezone.utc).isoformat() if last_ts else None,
-                "freshness": _freshness(age_s),
-                "to": f"/servers/{sid}",
-            })
+            server_rows.append(
+                {
+                    "id": sid,
+                    "name": s.name or sid,
+                    "region": s.region or "—",
+                    "ip": (s.api_endpoint or "").split("//")[-1].split("/")[0].split(":")[0]
+                    if s.api_endpoint
+                    else "—",
+                    "status": "online"
+                    if s.status in ("healthy", "ok")
+                    else ("degraded" if s.status == "degraded" else "offline"),
+                    "cpu_pct": tm.get("cpu"),
+                    "ram_pct": tm.get("ram"),
+                    "users": int(tm.get("peers") or 0),
+                    "throughput_bps": int(throughput),
+                    "last_heartbeat": datetime.fromtimestamp(last_ts, tz=timezone.utc).isoformat()
+                    if last_ts
+                    else None,
+                    "freshness": _freshness(age_s),
+                    "to": f"/servers/{sid}",
+                }
+            )
 
         # Stale nodes incident
         for row in server_rows:
             if row["freshness"] == "stale":
-                incidents.append({
-                    "severity": "warning",
-                    "entity": row["name"],
-                    "metric": "freshness",
-                    "value": "stale",
-                    "timestamp": now.isoformat(),
-                    "status": "open",
-                    "affected_servers": 1,
-                    "link": row["to"],
-                })
+                incidents.append(
+                    {
+                        "severity": "warning",
+                        "entity": row["name"],
+                        "metric": "freshness",
+                        "value": "stale",
+                        "timestamp": now.isoformat(),
+                        "status": "open",
+                        "affected_servers": 1,
+                        "link": row["to"],
+                    }
+                )
 
     else:
         data_status = "degraded"
         for s in servers:
-            server_rows.append({
-                "id": s.id,
-                "name": s.name or s.id,
-                "region": s.region or "—",
-                "ip": (s.api_endpoint or "").split("//")[-1].split("/")[0].split(":")[0] if s.api_endpoint else "—",
-                "status": "online" if s.status in ("healthy", "ok") else ("degraded" if s.status == "degraded" else "offline"),
-                "cpu_pct": None,
-                "ram_pct": None,
-                "users": 0,
-                "throughput_bps": 0,
-                "last_heartbeat": None,
-                "freshness": "unknown",
-                "to": f"/servers/{s.id}",
-            })
+            server_rows.append(
+                {
+                    "id": s.id,
+                    "name": s.name or s.id,
+                    "region": s.region or "—",
+                    "ip": (s.api_endpoint or "").split("//")[-1].split("/")[0].split(":")[0]
+                    if s.api_endpoint
+                    else "—",
+                    "status": "online"
+                    if s.status in ("healthy", "ok")
+                    else ("degraded" if s.status == "degraded" else "offline"),
+                    "cpu_pct": None,
+                    "ram_pct": None,
+                    "users": 0,
+                    "throughput_bps": 0,
+                    "last_heartbeat": None,
+                    "freshness": "unknown",
+                    "to": f"/servers/{s.id}",
+                }
+            )
 
     for region, counts in region_counts.items():
-        cluster_matrix.append({
-            "region": region,
-            "total_nodes": counts["total"],
-            "online": counts["online"],
-            "cpu_avg": None,
-            "ram_avg": None,
-            "users": sum(
-                r["users"] for r in server_rows
-                if (r.get("region") or "—") == region
-            ),
-            "throughput": sum(
-                r["throughput_bps"] for r in server_rows
-                if (r.get("region") or "—") == region
-            ),
-            "error_pct": health_strip["error_rate_pct"],
-            "latency_p95": None,
-            "health": "ok" if counts["online"] == counts["total"] else ("degraded" if counts["online"] > 0 else "down"),
-        })
+        cluster_matrix.append(
+            {
+                "region": region,
+                "total_nodes": counts["total"],
+                "online": counts["online"],
+                "cpu_avg": None,
+                "ram_avg": None,
+                "users": sum(r["users"] for r in server_rows if (r.get("region") or "—") == region),
+                "throughput": sum(
+                    r["throughput_bps"] for r in server_rows if (r.get("region") or "—") == region
+                ),
+                "error_pct": health_strip["error_rate_pct"],
+                "latency_p95": None,
+                "health": "ok"
+                if counts["online"] == counts["total"]
+                else ("degraded" if counts["online"] > 0 else "down"),
+            }
+        )
 
     # Timeseries from Redis
     window = TIME_RANGE_SECONDS.get(time_range, 3600)
     pts = await get_dashboard_timeseries(window)
-    timeseries_points = [{"ts": p["ts"], "peers": p["peers"], "rx": p["rx"], "tx": p["tx"]} for p in pts]
+    timeseries_points = [
+        {"ts": p["ts"], "peers": p["peers"], "rx": p["rx"], "tx": p["tx"]} for p in pts
+    ]
     last_ts = pts[-1]["ts"] if pts else None
     age_s = (now.timestamp() - last_ts) if last_ts else None
     health_strip["freshness"] = _freshness(age_s)

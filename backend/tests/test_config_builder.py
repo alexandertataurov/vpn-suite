@@ -6,7 +6,6 @@ import pytest
 
 from app.core.config_builder import (
     AWG_ASC_KEYS,
-    AWG_LEGACY_KEYS,
     ConfigProfile,
     ConfigValidationError,
     InterfaceFields,
@@ -89,7 +88,9 @@ def test_build_config_rejects_invalid_allowed_ips():
     with pytest.raises(ValueError, match="AllowedIPs"):
         build_config(
             interface=InterfaceFields(private_key=priv, address="10.8.1.2/32"),
-            peer=PeerFields(public_key=pub, endpoint="vpn.example.com:47604", allowed_ips="badcidr"),
+            peer=PeerFields(
+                public_key=pub, endpoint="vpn.example.com:47604", allowed_ips="badcidr"
+            ),
             profile=ConfigProfile.universal_safe,
         )
 
@@ -104,7 +105,9 @@ def test_build_config_rejects_invalid_base64():
         )
     with pytest.raises(ValueError, match="PublicKey"):
         build_config(
-            interface=InterfaceFields(private_key="YAnz5TF+lXXJte14tji3zlMNwF4OBgO8EnZu4PpwTYU=", address="10.8.1.2/32"),
+            interface=InterfaceFields(
+                private_key="YAnz5TF+lXXJte14tji3zlMNwF4OBgO8EnZu4PpwTYU=", address="10.8.1.2/32"
+            ),
             peer=PeerFields(public_key="short", endpoint="vpn.example.com:47604"),
             profile=ConfigProfile.universal_safe,
         )
@@ -151,7 +154,17 @@ def test_build_config_awg_2_0_allows_h3():
         interface=InterfaceFields(private_key=priv, address="10.8.1.2/32", dns="1.1.1.1"),
         peer=PeerFields(public_key=pub, endpoint="vpn.example.com:47604"),
         profile=ConfigProfile.awg_2_0_asc,
-        obfuscation={"Jc": 4, "Jmin": 64, "Jmax": 1024, "S1": 15, "S2": 20, "H1": 1020325451, "H2": 2147483647, "H3": 111, "H4": 2147483640},
+        obfuscation={
+            "Jc": 4,
+            "Jmin": 64,
+            "Jmax": 1024,
+            "S1": 15,
+            "S2": 20,
+            "H1": 1020325451,
+            "H2": 2147483647,
+            "H3": 111,
+            "H4": 2147483640,
+        },
     )
     assert "H3 = 111" in cfg
     assert "Jc = 4" in cfg
@@ -218,7 +231,10 @@ def test_build_config_rejects_s1_plus_56_equals_s2():
 
 def test_derive_address_from_profile():
     assert derive_address_from_profile(None) == "10.8.1.2/32"
-    assert derive_address_from_profile({"subnet_address": "10.9.0.0", "subnet_cidr": 24}) == "10.9.0.2/24"
+    assert (
+        derive_address_from_profile({"subnet_address": "10.9.0.0", "subnet_cidr": 24})
+        == "10.9.0.2/24"
+    )
 
 
 def test_allocate_next_address():
@@ -245,14 +261,24 @@ _GOLDEN_PRIV = "YAnz5TF+lXXJte14tji3zlMNwF4OBgO8EnZu4PpwTYU="
 _GOLDEN_PUB = "M1/n0lOh+G/r7Q3j0RkCBbPRBFeYRK+da2x9SczRPyA="
 
 _OBF_AWG = {
-    "Jc": 4, "Jmin": 64, "Jmax": 1024,
-    "S1": 15, "S2": 20,
-    "H1": 1020325451, "H2": 2147483647, "H4": 2147483640,
+    "Jc": 4,
+    "Jmin": 64,
+    "Jmax": 1024,
+    "S1": 15,
+    "S2": 20,
+    "H1": 1020325451,
+    "H2": 2147483647,
+    "H4": 2147483640,
 }
 _OBF_MOBILE = {
-    "Jc": 2, "Jmin": 64, "Jmax": 512,
-    "S1": 15, "S2": 20,
-    "H1": 1020325451, "H2": 2147483647, "H4": 2147483640,
+    "Jc": 2,
+    "Jmin": 64,
+    "Jmax": 512,
+    "S1": 15,
+    "S2": 20,
+    "H1": 1020325451,
+    "H2": 2147483647,
+    "H4": 2147483640,
 }
 
 

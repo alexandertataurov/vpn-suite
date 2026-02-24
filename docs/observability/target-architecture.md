@@ -97,7 +97,7 @@ Admin Dashboard **must not** scrape Prometheus from the browser. Backend exposes
 | Logs      | 365d      | 365d          | Loki `retention_period`, compact to object storage |
 | Traces    | 365d      | 365d          | Tempo local or object-storage backend |
 
-**Archive:** Move data older than 365 days to object storage (S3/GCS), then delete from hot store. Use compaction/export jobs (e.g., Loki `compactor`, Prometheus `tsdb retention` + export).
+**Archive:** See [archive-pipeline.md](archive-pipeline.md). Loki: S3 schema or sync job. Tempo: S3/GCS backend. Prometheus: document migration path (Thanos/VM/Mimir).
 
 ---
 

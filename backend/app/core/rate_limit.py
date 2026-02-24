@@ -175,5 +175,3 @@ async def rate_limit_config_download(request: Request, token: str) -> None:
         raise
     except Exception:
         logging.getLogger(__name__).debug("Config download rate limit check failed", exc_info=True)
-
-

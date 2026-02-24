@@ -28,7 +28,7 @@
 
 ## 3. Duplicate / Redundant Pipelines
 
-- **inventory** service: `INVENTORY_DISABLED=1` ([`docker-compose.observability.yml`](../../docker-compose.observability.yml) L59) — effectively disabled.
+- ~~**inventory** service~~ — removed; discovery-runner produces targets.json.
 
 ---
 

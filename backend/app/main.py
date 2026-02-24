@@ -5,14 +5,15 @@ import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from prometheus_client import REGISTRY, generate_latest
 
 from app.api.v1.actions import router as actions_router
-from app.api.v1.analytics import router as analytics_router
 from app.api.v1.admin_configs import router as admin_configs_router
 from app.api.v1.agent import router as agent_router
+from app.api.v1.analytics import router as analytics_router
 from app.api.v1.audit import router as audit_router
 from app.api.v1.auth import router as auth_router
 from app.api.v1.bot import router as bot_router
@@ -97,6 +98,23 @@ async def _generic_exception_handler(request: Request, exc: Exception) -> JSONRe
     return JSONResponse(status_code=500, content=body)
 
 
+async def _validation_exception_handler(
+    request: Request, exc: RequestValidationError
+) -> JSONResponse:
+    """Return unified 422 error shape for validation errors."""
+    rid = getattr(request.state, "request_id", None) or request_id_ctx.get()
+    path_tpl = path_template(request.url.path)
+    http_errors_total.labels(path_template=path_tpl, error_type="VALIDATION_ERROR").inc()
+    body = error_body(
+        code="VALIDATION_ERROR",
+        message="Validation error",
+        status_code=422,
+        details={"errors": exc.errors()},
+        request_id=rid,
+    )
+    return JSONResponse(status_code=422, content=body)
+
+
 def _create_node_runtime_adapter():
     """Create docker runtime adapter (control-plane execution channel)."""
     from app.core.config import settings
@@ -104,7 +122,9 @@ def _create_node_runtime_adapter():
     if settings.node_discovery == "docker":
         from app.services.node_runtime_docker import DockerNodeRuntimeAdapter
 
-        prefixes = getattr(settings, "docker_vpn_container_prefixes", "amnezia-awg") or "amnezia-awg"
+        prefixes = (
+            getattr(settings, "docker_vpn_container_prefixes", "amnezia-awg") or "amnezia-awg"
+        )
         return DockerNodeRuntimeAdapter(container_filter=prefixes, interface="awg0")
     if settings.node_discovery == "agent":
         from app.services.node_runtime_agent import AgentNodeRuntimeAdapter
@@ -207,6 +227,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 app.add_exception_handler(HTTPException, http_exception_to_error_response)
+app.add_exception_handler(RequestValidationError, _validation_exception_handler)
 app.add_exception_handler(Exception, _generic_exception_handler)
 # CORS: explicit origins from env; no * in prod (security)
 _origins = [o.strip() for o in settings.cors_allow_origins.split(",") if o.strip()]

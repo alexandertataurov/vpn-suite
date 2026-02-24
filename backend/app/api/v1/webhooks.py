@@ -178,4 +178,12 @@ async def payment_webhook(
                 entity_id=ext_id,
             ),
         )
-        return JSONResponse(status_code=400, content={"status": "rejected", "detail": str(e)})
+        rid = getattr(request.state, "request_id", None) or request_id_ctx.get()
+        body = error_body(
+            code="BAD_REQUEST",
+            message=str(e) or "Invalid webhook payload",
+            status_code=400,
+            request_id=rid,
+        )
+        body["status"] = "rejected"
+        return JSONResponse(status_code=400, content=body)

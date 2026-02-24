@@ -8,15 +8,14 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel
-
-from app.core.config import settings
-from app.core.constants import PERM_CLUSTER_READ
-from app.core.logging_config import extra_for_event
-from app.core.rbac import require_permission
 from sqlalchemy import func, select
 
 from app.core.bot_auth import get_admin_or_bot
+from app.core.config import settings
+from app.core.constants import PERM_CLUSTER_READ
 from app.core.database import get_db
+from app.core.logging_config import extra_for_event
+from app.core.rbac import require_permission
 from app.core.telemetry_polling_task import get_dashboard_timeseries
 from app.models import Device, Plan, Server, ServerSnapshot, Subscription, User
 
@@ -123,9 +122,7 @@ async def get_health_snapshot(
 
     points = await get_dashboard_timeseries(window_seconds=3600)
     last_ts = points[-1]["ts"] if points else None
-    telemetry_last_at = (
-        datetime.fromtimestamp(last_ts, tz=timezone.utc) if last_ts else None
-    )
+    telemetry_last_at = datetime.fromtimestamp(last_ts, tz=timezone.utc) if last_ts else None
 
     snap_last = (
         await db.execute(
@@ -143,10 +140,7 @@ async def get_health_snapshot(
         await db.execute(
             select(func.count())
             .select_from(Server)
-            .where(
-                (Server.status.is_(None))
-                | (~Server.status.in_(("ok", "healthy")))
-            )
+            .where((Server.status.is_(None)) | (~Server.status.in_(("ok", "healthy"))))
         )
     ).scalar_one_or_none() or 0
 
@@ -202,7 +196,9 @@ async def get_metrics_targets(
 
     prom = PrometheusQueryService()
     if not prom.enabled:
-        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Prometheus not configured")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Prometheus not configured"
+        )
     data = await prom.targets()
     logger.info(
         "metrics targets",
@@ -304,7 +300,9 @@ async def get_connection_nodes(
 
     servers = (
         await db.execute(
-            select(Server.id, Server.name, Server.region, Server.status).where(Server.is_active.is_(True))
+            select(Server.id, Server.name, Server.region, Server.status).where(
+                Server.is_active.is_(True)
+            )
         )
     ).all()
     for s in servers:

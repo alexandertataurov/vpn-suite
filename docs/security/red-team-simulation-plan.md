@@ -1,6 +1,6 @@
-# Red Team Simulation Plan v1
+# Red Team Simulation Plan
 
-**Purpose:** Adversarial testing of VPN Suite before enterprise claim.
+Adversarial testing scenarios for VPN Suite security validation.
 
 ---
 

@@ -120,6 +120,29 @@ async def run_once(out_dir: str) -> None:
     if wg_target:
         dynamic_targets.append({"labels": {"sd_job": "wg-exporter", "host_id": host_id}, "targets": [wg_target]})
 
+    # Remote wg-exporter targets (multi-host). Env DISCOVERY_REMOTE_WG_EXPORTERS: JSON array
+    # [{"host": "10.0.0.5", "port": 9586, "node_id": "vpn-1", "server_id": "srv-1"}, ...]
+    _remote_raw = os.environ.get("DISCOVERY_REMOTE_WG_EXPORTERS", "")
+    if _remote_raw:
+        try:
+            _remotes = __import__("json").loads(_remote_raw)
+            for r in _remotes if isinstance(_remotes, list) else []:
+                if not isinstance(r, dict):
+                    continue
+                h = (r.get("host") or "").strip()
+                port = int(r.get("port") or 9586)
+                if not h:
+                    continue
+                target_addr = f"{h}:{port}"
+                lbls = {"sd_job": "wg-exporter", "host_id": r.get("node_id") or h}
+                if r.get("node_id"):
+                    lbls["node_id"] = str(r["node_id"])
+                if r.get("server_id"):
+                    lbls["server_id"] = str(r["server_id"])
+                dynamic_targets.append({"labels": lbls, "targets": [target_addr]})
+        except Exception:
+            pass  # Skip malformed DISCOVERY_REMOTE_WG_EXPORTERS
+
     for n in node_dicts:
         if n.get("kind") != "awg":
             continue

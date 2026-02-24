@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.v1.server_utils import get_agent_heartbeat
 from app.core.config import settings
 from app.core.constants import PERM_SERVERS_READ, PERM_SERVERS_WRITE
 from app.core.database import get_db
@@ -23,7 +24,6 @@ from app.core.metrics import (
 from app.core.rate_limit import rate_limit_admin_issue
 from app.core.rbac import require_permission
 from app.core.redis_client import get_redis
-from app.api.v1.server_utils import get_agent_heartbeat
 from app.models import Device, Server
 from app.schemas.server import (
     AdminIssuePeerPeerOut,
@@ -201,9 +201,18 @@ async def create_server_peer(
             public_key=out.device.public_key,
             issued_at=out.device.issued_at,
         ),
-        config_awg={"download_url": out.config_awg.download_url, "qr_payload": out.config_awg.qr_payload},
-        config_wg_obf={"download_url": out.config_wg_obf.download_url, "qr_payload": out.config_wg_obf.qr_payload},
-        config_wg={"download_url": out.config_wg.download_url, "qr_payload": out.config_wg.qr_payload},
+        config_awg={
+            "download_url": out.config_awg.download_url,
+            "qr_payload": out.config_awg.qr_payload,
+        },
+        config_wg_obf={
+            "download_url": out.config_wg_obf.download_url,
+            "qr_payload": out.config_wg_obf.qr_payload,
+        },
+        config_wg={
+            "download_url": out.config_wg.download_url,
+            "qr_payload": out.config_wg.qr_payload,
+        },
         request_id=rid or "",
         peer_created=out.peer_created,
     )
@@ -249,9 +258,18 @@ async def rotate_server_peer(
     request.state.audit_resource_id = peer_id
     request.state.audit_old_new = {"rotate": {"server_id": server_id}}
     return AdminRotatePeerResponse(
-        config_awg={"download_url": out.config_awg.download_url, "qr_payload": out.config_awg.qr_payload},
-        config_wg_obf={"download_url": out.config_wg_obf.download_url, "qr_payload": out.config_wg_obf.qr_payload},
-        config_wg={"download_url": out.config_wg.download_url, "qr_payload": out.config_wg.qr_payload},
+        config_awg={
+            "download_url": out.config_awg.download_url,
+            "qr_payload": out.config_awg.qr_payload,
+        },
+        config_wg_obf={
+            "download_url": out.config_wg_obf.download_url,
+            "qr_payload": out.config_wg_obf.qr_payload,
+        },
+        config_wg={
+            "download_url": out.config_wg.download_url,
+            "qr_payload": out.config_wg.qr_payload,
+        },
         request_id=rid or "",
     )
 
@@ -333,7 +351,7 @@ async def get_server_peers(
                 age_sec = p.get("last_handshake_age_sec")
                 last_handshake_ts = None
                 peer_status = "unknown"
-                if isinstance(age_sec, (int, float)) and age_sec >= 0:
+                if isinstance(age_sec, int | float) and age_sec >= 0:
                     last_handshake_ts = datetime.fromtimestamp(
                         now_ts - int(age_sec), tz=timezone.utc
                     )

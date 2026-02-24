@@ -104,7 +104,7 @@
 | 4.2 | Remove inventory service (after parity verified) | Todo | docker-compose.observability.yml |
 | 4.3 | Remove or implement correlation_engine | Todo | mapping.json |
 | 4.4 | Remove INVENTORY_DISABLED env var | Todo | When inventory removed |
-| 4.5 | Consolidate/supersede obsolete observability docs | Todo | Mark deprecated |
+| 4.5 | Consolidate/supersede obsolete observability docs | Partial | system-map.md removed; others as needed |
 | 4.6 | CHANGELOG migration note | Todo | When legacy removed |
 | 4.7 | Grep proof: no references to old pipeline | Todo | Verification |
 

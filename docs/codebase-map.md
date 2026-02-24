@@ -9,7 +9,7 @@ Precise map of the repository structure, entry points, and responsibilities.
 
 | File / Dir           | Purpose                                                                                                                                                                                                               |
 | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `manage.sh`          | Single ops CLI: `up-core`, `up-api`, `up-monitoring`, `down-core`, `migrate`, `seed`, `seed-plans`, `seed-nodes`, `check`, `verify`, `smoke-staging`, `config`, `config-validate`, `build`, `build-bot`, `ps`, `logs` |
+| `manage.sh`          | Ops CLI: `up-core`, `up-api`, `up-monitoring`, `down-core`, `bootstrap`, `up-agent`, `migrate`, `seed`, `seed-plans`, `seed-nodes`, `seed-agent-server`, `seed-operator`, `check`, `verify`, `smoke-staging`, `smoke-ha`, `config`, `config-validate`, `build`, `build-bot`, `build-admin`, `build-webapp`, `openapi`, `backup-db`, `restore-db`, `node-sync`, `node-resync`, `node-list`, `ps`, `logs` |
 | `docker-compose.yml` | Services: admin-api, reverse-proxy, postgres, redis, telegram-vpn-bot; profile `monitoring`: prometheus, cadvisor, node-exporter, loki, promtail, grafana                                                             |
 | `.env.example`       | Env template; copy to `.env` (single source of truth); manage.sh uses `.env` unless `ENV_FILE` set                                                                                                                    |
 | `AGENTS.MD`          | Architecture, constraints, API contract, AmneziaWG/WireGuard control channel                                                                                                                                          |
@@ -174,7 +174,7 @@ Pydantic schemas for API: `auth`, `user`, `server`, `server_ip`, `device`, `plan
 ### 3.2 Admin app (`frontend/admin/`)
 
 - **Entry:** `main.tsx` → `App.tsx` (basename `/admin`)
-- **Routes:** `/login`; under layout: `/` (Dashboard), `/telemetry`, `/automation` (Control Plane), `/servers`, `/servers/new`, `/servers/:id`, `/servers/:id/edit`, `/users`, `/users/:id`, `/subscriptions`, `/devices`, `/payments`, `/audit`, `/settings`, `/styleguide`
+- **Routes:** `/login`; under layout: `/` (Dashboard), `/telemetry`, `/automation` (Control Plane), `/servers`, `/servers/new`, `/servers/:id`, `/servers/:id/edit`, `/users`, `/users/:id`, `/billing` (tabs: subscriptions, payments), `/subscriptions`→`/billing?tab=subscriptions`, `/payments`→`/billing?tab=payments`, `/devices`, `/audit`, `/settings`, `/styleguide`
 - **Pages:** `Dashboard`, `Telemetry`, `ControlPlane`, `Servers`, `ServerNew`, `ServerEdit`, `ServerDetail`, `Users`, `UserDetail`, `Subscriptions`, `Devices`, `Payments`, `Audit`, `Settings`, `Login`, `Styleguide`; telemetry: `LogsViewer`, `ContainerDetailsPanel`, `DockerServicesTab`, `VpnNodesTab`, `DockerOverviewTable`, `AlertsPanel`
 - **Layout:** `AdminLayout.tsx`
 - **Components:** `Toolbar`, `PageHeader`, `Breadcrumb`, `FormField`, `TableSection`, `ChartSection`, `MetricCard`, `StatusBadge`, `ServerRowDrawer`, `ErrorBoundary`, `ProtectedRoute`, `CommandPalette`, `IssueConfigModal`, `ChartFrame`, `EChart`, etc.
@@ -270,8 +270,11 @@ Pydantic schemas for API: `auth`, `user`, `server`, `server_ip`, `device`, `plan
 | Path                                            | Role                 |
 | ----------------------------------------------- | -------------------- |
 | `bootstrap-prod.sh`                             | Prod bootstrap       |
+| `harden-secrets.sh`, `ufw-remove-8000.sh`, `block-metadata-endpoints.sh` | Hardening |
+| `setup-fail2ban.sh`, `sysctl-hardening.conf`    | Host hardening       |
 | `db_dump.sh`, `db_restore.sh`                   | DB dump/restore      |
 | `rotate-agent-token.sh`                         | Agent token rotation |
+| `restart-core-stack.sh`                         | Restart stack        |
 | `systemd/vpn-suite-backup-db.service`, `.timer` | Backup systemd       |
 | `pki/agent-mtls.sh`                             | Agent mTLS PKI       |
 
@@ -284,7 +287,7 @@ Pydantic schemas for API: `auth`, `user`, `server`, `server_ip`, `device`, `plan
 | Path                     | Role                                  |
 | ------------------------ | ------------------------------------- |
 | `proto/node_agent.proto` | Node-agent protocol                   |
-| `openapi/openapi.json`   | Admin API OpenAPI spec (from backend) |
+| `openapi/openapi.yaml`, `openapi/openapi.json` | Admin API OpenAPI spec (`./manage.sh openapi`) |
 
 
 ---
@@ -304,7 +307,7 @@ Pydantic schemas for API: `auth`, `user`, `server`, `server_ip`, `device`, `plan
 | `docs/audits/release-readiness-report.md`                         | Audit, scores, commands       |
 | `docs/ops/runbook.md`                                             | Ops, troubleshooting, backups |
 | `docs/ops/quality-gates.md`                                       | Quality gates                 |
-| Plus: api/, ops/, security/, specs/, backlog/, audits/, frontend/ |                               |
+| api/, ops/, security/, specs/, backlog/, audits/, frontend/, guides/ | See docs/README.md |
 
 
 ---

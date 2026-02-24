@@ -17,6 +17,7 @@ const mockContent = `[Interface]\nPrivateKey = <redacted>\nAddress = 10.0.0.2/32
 function ApiMock({ mode, children }: { mode: "success" | "error"; children: React.ReactNode }) {
   useEffect(() => {
     const originalGet = api.get;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- mock signature
     api.get = async <T,>(_path: string, _init?: RequestInit): Promise<T> => {
       if (mode === "error") throw new Error("Failed to load config");
       return { content: mockContent } as T;

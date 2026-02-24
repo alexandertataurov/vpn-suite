@@ -1,6 +1,6 @@
 # Multi-Agent Workflow (Cursor / Codex)
 
-Extracted from [PROMPT.md](../PROMPT.md) for discoverability. Use the full multi-agent workflow for non-trivial changes.
+Extracted from [PROMPT.md](../PROMPT.md) for discoverability. Use this workflow for non-trivial changes. Keep in sync with PROMPT.md.
 
 ## 1. Skills to apply
 

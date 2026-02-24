@@ -58,4 +58,5 @@ Docker json-file, 10m×3 files (`[docker-compose.yml](../../../../amnezia/amnezi
 
 - wg-exporter runs on each VPN node host.
 - Prometheus scrapes `host.docker.internal:9586` (same host) or node IP (multi-host).
+- **Multi-host:** Set `DISCOVERY_REMOTE_WG_EXPORTERS` (JSON array) for remote wg-exporter targets: `[{"host":"10.0.0.5","port":9586,"node_id":"vpn-1","server_id":"srv-1"}]`.
 - **Env (wg-exporter):** `WG_CONTAINER` must match the container name. amnezia-awg2 compose uses `container_name: amnezia-awg` — set `WG_CONTAINER=amnezia-awg`. `WG_INTERFACE` defaults to `awg0` (matches `AWG_INTERFACE` in compose).

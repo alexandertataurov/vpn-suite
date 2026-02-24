@@ -1,6 +1,16 @@
 # VPN Suite Docs
 
-**Start here:** [README (this file)](#quick-reference) · API: [api/overview.md](api/overview.md) · Ops: [ops/runbook.md](ops/runbook.md) · Release: [ops/release-checklist.md](ops/release-checklist.md)
+**Start here:** [Guides](guides/README.md) (consolidated by role) · [Quick reference](#quick-reference)
+
+---
+
+## Consolidated guides (by persona)
+
+| Role | Guide | Contents |
+|------|-------|----------|
+| **Ops / SRE** | [guides/operations-guide.md](guides/operations-guide.md) | Runbook, infra, agent mode, secrets, troubleshooting |
+| **Ops / SRE** | [guides/observability-guide.md](guides/observability-guide.md) | Monitoring stack, metrics, logs, validation |
+| **Developer** | [guides/development-guide.md](guides/development-guide.md) | Codebase, API, quality gates, specs |
 
 ---
 
@@ -12,10 +22,14 @@
 | Domain model | [api/domain-model.md](api/domain-model.md) |
 | Secrets / env | [ops/required-secrets.md](ops/required-secrets.md) |
 | Runbook (prod, backups, agent) | [ops/runbook.md](ops/runbook.md) |
-| Release & quality gates | [ops/release-checklist.md](ops/release-checklist.md) · [ops/quality-gates.md](ops/quality-gates.md) · [security/hardening-checklist.md](security/hardening-checklist.md) |
+| Release & quality gates | [ops/release-checklist.md](ops/release-checklist.md) · [ops/quality-gates.md](ops/quality-gates.md) · [security/hardening.md](security/hardening.md) |
 | Codebase layout | [codebase-map.md](codebase-map.md) |
 | Agent mode setup | [ops/agent-mode-one-server.md](ops/agent-mode-one-server.md) |
 | DoD / MVP | [backlog/dod-mvp.md](backlog/dod-mvp.md) |
+
+## API & development
+
+→ **Consolidated:** [guides/development-guide.md](guides/development-guide.md)
 
 ## Specs & design
 
@@ -23,8 +37,11 @@
 |-------|-----|
 | Design system | [frontend/design/design-system.md](frontend/design/design-system.md) |
 | Typography | [frontend/design/typography-tokens.md](frontend/design/typography-tokens.md) |
+| Specs index | [specs/README.md](specs/README.md) |
 | Control-plane | [specs/ultra-spec-control-plane.md](specs/ultra-spec-control-plane.md) |
 | Telemetry | [specs/telemetry-spec.md](specs/telemetry-spec.md) |
+| Operator Dashboard | [specs/operator-dashboard-spec.md](specs/operator-dashboard-spec.md) |
+| Operator UI | [specs/operator-ui-spec.md](specs/operator-ui-spec.md) |
 | AmneziaWG | [ops/amneziawg-integration.md](ops/amneziawg-integration.md) · [ops/amneziawg-obfuscation-runbook.md](ops/amneziawg-obfuscation-runbook.md) |
 | Config generation contract | [specs/config-generation-contract.md](specs/config-generation-contract.md) |
 
@@ -45,8 +62,11 @@
 
 ## Observability (monitoring stack)
 
+→ **Consolidated:** [guides/observability-guide.md](guides/observability-guide.md)
+
 | Topic | Doc |
 |-------|-----|
+| Current state (services, ports, dataflow) | [observability/current-state.md](observability/current-state.md) |
 | Deploy/debug/rollback | [observability/runbook-observability.md](observability/runbook-observability.md) |
 | Validation (targets, queries) | [observability/validation.md](observability/validation.md) |
 | AWG data contract | [observability/data-contract.md](observability/data-contract.md) |
@@ -56,7 +76,7 @@
 | Topic | Doc |
 |-------|-----|
 | Audits (logs, perf, security, UI, release readiness) | [audits/](audits/) |
-| Hardening checklist | [security/hardening-action-plan.md](security/hardening-action-plan.md) · [security/hardening-checklist.md](security/hardening-checklist.md) |
+| Hardening | [security/hardening.md](security/hardening.md) |
 | Threat model | [security/threat-model.md](security/threat-model.md) |
 | Infrastructure map | [ops/infrastructure-map.md](ops/infrastructure-map.md) |
 
@@ -70,6 +90,8 @@
 | Storybook | [frontend/storybook/](frontend/storybook/) |
 
 ## Ops (runbooks, troubleshooting)
+
+→ **Consolidated:** [guides/operations-guide.md](guides/operations-guide.md)
 
 | Topic | Doc |
 |-------|-----|

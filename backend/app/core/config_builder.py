@@ -23,16 +23,40 @@ WG_KEY_B64_MIN_LEN = 43
 WG_KEY_B64_MAX_LEN = 44
 AWG_LEGACY_KEYS = ("I1", "I2", "I3", "I4", "I5", "S1", "S2", "Jc", "Jmin", "Jmax")
 AWG_ASC_KEYS = (
-    "I1", "I2", "I3", "I4", "I5",
-    "S1", "S2", "S3", "S4",
-    "Jc", "Jmin", "Jmax",
-    "H1", "H2", "H3", "H4",
+    "I1",
+    "I2",
+    "I3",
+    "I4",
+    "I5",
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "Jc",
+    "Jmin",
+    "Jmax",
+    "H1",
+    "H2",
+    "H3",
+    "H4",
 )
 AWG_EMIT_ORDER = (
-    "Jc", "Jmin", "Jmax",
-    "S1", "S2", "S3", "S4",
-    "H1", "H2", "H3", "H4",
-    "I1", "I2", "I3", "I4", "I5",
+    "Jc",
+    "Jmin",
+    "Jmax",
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "H1",
+    "H2",
+    "H3",
+    "H4",
+    "I1",
+    "I2",
+    "I3",
+    "I4",
+    "I5",
 )
 DEFAULT_ADDRESS = "10.8.1.2/32"
 DEFAULT_MTU_MOBILE = 1280
@@ -96,7 +120,9 @@ def _validate_key_b64(key_b64: str, name: str) -> str:
 
 def _validate_endpoint(endpoint: str | None) -> str:
     if not endpoint or not str(endpoint).strip():
-        raise ValueError("Endpoint (vpn_endpoint) required; set server.vpn_endpoint or client_endpoint")
+        raise ValueError(
+            "Endpoint (vpn_endpoint) required; set server.vpn_endpoint or client_endpoint"
+        )
     s = str(endpoint).strip()
     host = ""
     port = ""
@@ -377,7 +403,10 @@ def build_config(
         lines.append(f"MTU = {int(mtu)}")
 
     # AWG obfuscation (legacy or awg_2_0_asc)
-    if obfuscation and profile not in (ConfigProfile.wireguard_universal, ConfigProfile.universal_safe):
+    if obfuscation and profile not in (
+        ConfigProfile.wireguard_universal,
+        ConfigProfile.universal_safe,
+    ):
         try:
             if profile == ConfigProfile.awg_legacy_or_basic:
                 obf = _normalize_obfuscation_legacy(obfuscation)
@@ -418,7 +447,9 @@ def _is_valid_hostname(host: str) -> bool:
     return all(label_re.match(label) for label in labels)
 
 
-def derive_address_from_profile(request_params: dict | None, fallback: str = DEFAULT_ADDRESS) -> str:
+def derive_address_from_profile(
+    request_params: dict | None, fallback: str = DEFAULT_ADDRESS
+) -> str:
     """Derive client Address from profile subnet. Returns fallback if not configurable."""
     if not request_params:
         return fallback

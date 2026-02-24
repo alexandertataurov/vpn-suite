@@ -12,6 +12,8 @@ from app.core.config_builder import (
     PeerFields,
     build_config,
     derive_address_from_profile,
+)
+from app.core.config_builder import (
     generate_wg_keypair as _generate_wg_keypair,
 )
 from app.core.metrics import config_gen_failure_total, config_gen_success_total
@@ -43,7 +45,9 @@ def generate_wg_keypair() -> tuple[str, str]:
 def _validate_s1_s2_constraint(s1: int, s2: int) -> None:
     """Kernel rejects S1+56=S2. Raises ValueError if violated."""
     if s1 + 56 == s2:
-        raise ValueError(f"AmneziaWG kernel requires S1+56 ≠ S2; got S1={s1} S2={s2} (S1+56={s1 + 56})")
+        raise ValueError(
+            f"AmneziaWG kernel requires S1+56 ≠ S2; got S1={s1} S2={s2} (S1+56={s1 + 56})"
+        )
 
 
 def get_obfuscation_params(profile_request_params: dict[str, Any] | None) -> dict[str, int]:
@@ -74,13 +78,27 @@ def get_obfuscation_params(profile_request_params: dict[str, Any] | None) -> dic
         "H2": int(profile_request_params.get("amnezia_h2", 0)),
         "H3": int(profile_request_params.get("amnezia_h3", 0)),
         "H4": int(profile_request_params.get("amnezia_h4", 0)),
-        "S3": int(profile_request_params.get("amnezia_s3", 0)) if "amnezia_s3" in profile_request_params else 0,
-        "S4": int(profile_request_params.get("amnezia_s4", 0)) if "amnezia_s4" in profile_request_params else 0,
-        "I1": profile_request_params.get("amnezia_i1") if "amnezia_i1" in profile_request_params else None,
-        "I2": profile_request_params.get("amnezia_i2") if "amnezia_i2" in profile_request_params else None,
-        "I3": profile_request_params.get("amnezia_i3") if "amnezia_i3" in profile_request_params else None,
-        "I4": profile_request_params.get("amnezia_i4") if "amnezia_i4" in profile_request_params else None,
-        "I5": profile_request_params.get("amnezia_i5") if "amnezia_i5" in profile_request_params else None,
+        "S3": int(profile_request_params.get("amnezia_s3", 0))
+        if "amnezia_s3" in profile_request_params
+        else 0,
+        "S4": int(profile_request_params.get("amnezia_s4", 0))
+        if "amnezia_s4" in profile_request_params
+        else 0,
+        "I1": profile_request_params.get("amnezia_i1")
+        if "amnezia_i1" in profile_request_params
+        else None,
+        "I2": profile_request_params.get("amnezia_i2")
+        if "amnezia_i2" in profile_request_params
+        else None,
+        "I3": profile_request_params.get("amnezia_i3")
+        if "amnezia_i3" in profile_request_params
+        else None,
+        "I4": profile_request_params.get("amnezia_i4")
+        if "amnezia_i4" in profile_request_params
+        else None,
+        "I5": profile_request_params.get("amnezia_i5")
+        if "amnezia_i5" in profile_request_params
+        else None,
     }
 
 
@@ -136,7 +154,9 @@ def build_amnezia_client_config(
         config_gen_success_total.labels(profile=awg_profile.value).inc()
         return result
     except ConfigValidationError as e:
-        reason = "unsupported_key" if any("unsupported_key" in err for err in e.errors) else "validation"
+        reason = (
+            "unsupported_key" if any("unsupported_key" in err for err in e.errors) else "validation"
+        )
         config_gen_failure_total.labels(profile=awg_profile.value, reason=reason).inc()
         raise
 
@@ -172,8 +192,12 @@ def build_standard_wg_client_config(
         config_gen_success_total.labels(profile=ConfigProfile.wireguard_universal.value).inc()
         return result
     except ConfigValidationError as e:
-        reason = "unsupported_key" if any("unsupported_key" in err for err in e.errors) else "validation"
-        config_gen_failure_total.labels(profile=ConfigProfile.wireguard_universal.value, reason=reason).inc()
+        reason = (
+            "unsupported_key" if any("unsupported_key" in err for err in e.errors) else "validation"
+        )
+        config_gen_failure_total.labels(
+            profile=ConfigProfile.wireguard_universal.value, reason=reason
+        ).inc()
         raise
 
 
@@ -211,6 +235,8 @@ def build_wg_obfuscated_config(
         config_gen_success_total.labels(profile="wg_obf").inc()
         return result
     except ConfigValidationError as e:
-        reason = "unsupported_key" if any("unsupported_key" in err for err in e.errors) else "validation"
+        reason = (
+            "unsupported_key" if any("unsupported_key" in err for err in e.errors) else "validation"
+        )
         config_gen_failure_total.labels(profile="wg_obf", reason=reason).inc()
         raise

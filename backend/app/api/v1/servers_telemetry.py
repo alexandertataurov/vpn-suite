@@ -50,6 +50,7 @@ async def get_servers_telemetry_summary(
 ):
     """Return telemetry summary per server (Prometheus: vpn_node_health, vpn_node_peers)."""
     from app.services.prometheus_query_service import PrometheusQueryService
+
     started = time.perf_counter()
     now = datetime.now(timezone.utc)
     cache_key = f"servers:telemetry:summary:{hashlib.sha256(json.dumps([region, status_filter, search], sort_keys=True).encode()).hexdigest()}"
@@ -68,7 +69,12 @@ async def get_servers_telemetry_summary(
                     duration_ms=(time.perf_counter() - started) * 1000,
                     actor_id=str(getattr(request.state, "audit_admin_id", "")) or None,
                     result_count=len(out.servers),
-                    query_params={"region": region, "status": status_filter, "search": search, "cache": "hit"},
+                    query_params={
+                        "region": region,
+                        "status": status_filter,
+                        "search": search,
+                        "cache": "hit",
+                    },
                 ),
             )
             return out
@@ -197,8 +203,8 @@ async def get_servers_telemetry_summary(
             cpu_pct = res.get("cpu_pct")
             ram_pct = res.get("ram_pct")
             snapshot_map[snap.server_id] = (
-                float(cpu_pct) if isinstance(cpu_pct, (int, float)) else None,
-                float(ram_pct) if isinstance(ram_pct, (int, float)) else None,
+                float(cpu_pct) if isinstance(cpu_pct, int | float) else None,
+                float(ram_pct) if isinstance(ram_pct, int | float) else None,
                 snap.ts_utc,
             )
     for sid, (snap_cpu, snap_ram, snap_ts) in snapshot_map.items():
@@ -238,7 +244,12 @@ async def get_servers_telemetry_summary(
             duration_ms=(time.perf_counter() - started) * 1000,
             actor_id=str(getattr(request.state, "audit_admin_id", "")) or None,
             result_count=len(out.servers),
-            query_params={"region": region, "status": status_filter, "search": search, "cache": "miss"},
+            query_params={
+                "region": region,
+                "status": status_filter,
+                "search": search,
+                "cache": "miss",
+            },
         ),
     )
     try:
@@ -344,7 +355,7 @@ async def get_server_telemetry(
                         if not isinstance(p, dict):
                             continue
                         age = p.get("last_handshake_age_sec")
-                        if isinstance(age, (int, float)) and age >= 0 and int(age) <= 180:
+                        if isinstance(age, int | float) and age >= 0 and int(age) <= 180:
                             online_count += 1
                 return ServerTelemetryOut(
                     peers_count=int(hb.get("peer_count") or 0),

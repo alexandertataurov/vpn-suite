@@ -34,7 +34,6 @@ Sources: [`docker-compose.yml`](../../docker-compose.yml), [`docker-compose.obse
 | **promtail** | — | grafana/promtail | 9080 | — | — | Docker logs → Loki | None | monitoring |
 | **grafana** | — | grafana/grafana | 127.0.0.1:3000 | — | — | — | None | monitoring |
 | **discovery-runner** | ops/discovery/ | Python | — | — | — | stdout | None | monitoring (observability compose) |
-| **inventory** | monitoring/inventory/ | Python | — | — | — | stdout | None | monitoring (INVENTORY_DISABLED=1) |
 | **wg-exporter** | monitoring/wg-exporter/ | Python | 9586 | — | `GET /metrics` (L104) | — | None | monitoring (observability compose) |
 
 **File references:**

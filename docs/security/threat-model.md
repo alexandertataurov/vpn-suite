@@ -1,8 +1,7 @@
 # Threat Model
 
-**Audit Date:** 2025-02-21
-
 ---
+
 
 ## 1. Attack Tree Overview
 
@@ -136,7 +135,5 @@ flowchart TB
 
 ## 4. Residual Risks
 
-- **Redis no password**: If DB network is compromised, Redis is open. Add requirepass.
-- **Bot 8090**: Public if not firewalled. Restrict.
-- **Monitoring ports**: Grafana 3000, cAdvisor 8080, node-exporter 9100 can leak metrics. Bind localhost.
-- **Fail2ban absent**: SSH brute-force risk until installed.
+- **Fail2ban**: SSH brute-force risk until `./ops/setup-fail2ban.sh` is run in production.
+- **Backup encryption**: pg_dump and Redis dumps stored unencrypted — consider GPG or cloud KMS.

@@ -51,7 +51,8 @@ None identified. `/metrics-old`, `/stats` (standalone) not present. `referral/st
 
 | Doc | Action |
 |-----|--------|
-| Duplicate or superseded observability docs | After consolidation, mark deprecated or merge into current-state.md / target-architecture.md. |
+| ~~system-map.md~~ | **Removed** — superseded by current-state.md |
+| Other duplicate/superseded observability docs | After consolidation, mark deprecated or merge into current-state.md / target-architecture.md. |
 
 ---
 

@@ -1,7 +1,22 @@
 # Documentation Consolidation & Unimplemented Tasks Plan
 
 **Created:** 2026-02-23  
+**Updated:** 2026-02-24 (bot, codebase-map, consolidation-plan, naming-conventions, workflow aligned)
 **Purpose:** Single place for doc structure, consolidation, and unimplemented work.
+
+---
+
+## 0. Consolidated guides (2026-02-24)
+
+**Added:** `docs/guides/` — single entry points by persona.
+
+| Guide | Path | Audience |
+|-------|------|----------|
+| Operations | [guides/operations-guide.md](guides/operations-guide.md) | Ops, SRE |
+| Observability | [guides/observability-guide.md](guides/observability-guide.md) | Ops, SRE |
+| Development | [guides/development-guide.md](guides/development-guide.md) | Developers |
+
+Master index: [docs/README.md](README.md) — links to guides + full doc tree.
 
 ---
 
@@ -21,14 +36,14 @@
 | SERVER_LOGS_REPORT.md | Audit | → docs/audits/SERVER_LOGS_REPORT.md |
 | PERFORMANCE_BOTTLENECK_REPORT.md | Audit | → docs/audits/PERFORMANCE_BOTTLENECK_REPORT.md |
 | SECURITY_RISK_REPORT.md | Audit | → docs/audits/SECURITY_RISK_REPORT.md |
-| HARDENING_ACTION_PLAN.md | Security | → docs/security/HARDENING_ACTION_PLAN.md |
-| THREAT_MODEL.md | Security | → docs/security/THREAT_MODEL.md |
+| HARDENING_ACTION_PLAN.md | Security | → docs/security/hardening.md (done) |
+| THREAT_MODEL.md | Security | → docs/security/threat-model.md (done) |
 | INFRASTRUCTURE_MAP.md | Ops | → docs/INFRASTRUCTURE_MAP.md |
 | TABLE_*.md, MIGRATION_PLAN.md, ARCH_TABLE_SYSTEM.md | UI | → docs/frontend/ |
 
 ### 1.2 docs/ (primary)
 - README.md — index
-- api-audit/ (6 files)
+- api/audit/ — API audit, API-AUDIT.md
 - observability/ (10 files)
 - Specs, guides, runbooks, checklists — **keep structure**
 
@@ -67,11 +82,11 @@ docs/
 │   ├── data-contract.md (moved from root DATA_CONTRACT.md)
 │   └── ... (existing)
 ├── security/
-│   ├── HARDENING_ACTION_PLAN.md (moved)
-│   ├── THREAT_MODEL.md (moved)
-│   ├── INCIDENT_RESPONSE_RUNBOOK.md
-│   ├── RED_TEAM_SIMULATION_PLAN.md
-│   └── ALERT_POLICY.md
+│   ├── hardening.md
+│   ├── threat-model.md
+│   ├── incident-response-runbook.md
+│   ├── red-team-simulation-plan.md
+│   └── alert-policy.md
 ├── frontend/                 # Design system links + moved table docs
 │   └── (TABLE_*.md, MIGRATION_PLAN.md, etc.)
 ├── audits/                   # One-off reports
@@ -110,8 +125,8 @@ docs/
 |----|------|----------|-------|
 | SEC-1 | fail2ban for sshd | P1 | Ops |
 | SEC-2 | SSH key-only; disable root password | P1 | Ops |
-| SEC-3 | Refresh token rotation on use (backend) | P1 | Backend |
-| SEC-4 | Refresh token invalidation on logout | P1 | Backend |
+| SEC-3 | Refresh token rotation on use (backend) | P1 | Backend (done) |
+| SEC-4 | Refresh token invalidation on logout | P1 | Backend (done) |
 | SEC-5 | JWT blacklist / Redis revocation | P2 | Backend |
 | SEC-6 | Encrypted backups (pg_dump + gpg) | P1 | Ops |
 | SEC-7 | Key rotation policy document | P2 | Ops |
@@ -174,7 +189,7 @@ docs/
 - docs/README.md — docs index
 - docs/backlog/backlog.md — backlog
 - docs/backlog/execution-roadmap.md — 4-week hardening
-- docs/api/audit/06-pr-roadmap.md — 12 PRs
-- docs/frontend/admin-ui-gap-analysis.md — UI gaps
-- docs/security/hardening-action-plan.md — security checklist
+- docs/api/audit/API-AUDIT.md — API audit and backlog items
+- docs/frontend/audits/admin-ui-gap-analysis.md — UI gaps
+- docs/security/hardening.md — security checklist
 - docs/audits/release-readiness-report.md — scores, open risks

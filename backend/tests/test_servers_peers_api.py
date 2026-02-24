@@ -111,7 +111,9 @@ async def test_create_server_peer_route_exists(client: AsyncClient):
             issued_at=datetime.now(timezone.utc),
         ),
         config_awg=SimpleNamespace(download_url="http://download-awg", qr_payload="qr-awg"),
-        config_wg_obf=SimpleNamespace(download_url="http://download-wg-obf", qr_payload="qr-wg-obf"),
+        config_wg_obf=SimpleNamespace(
+            download_url="http://download-wg-obf", qr_payload="qr-wg-obf"
+        ),
         config_wg=SimpleNamespace(download_url="http://download-wg", qr_payload="qr-wg"),
         peer_created=True,
     )

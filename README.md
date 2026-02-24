@@ -34,9 +34,9 @@ cp .env.example .env
 
 ## Docs
 
+- [docs/guides/](docs/guides/README.md) — consolidated guides (ops, observability, development)
 - [AGENTS.MD](AGENTS.MD) — architecture, constraints, API
-- [docs/audits/release-readiness-report.md](docs/audits/release-readiness-report.md) — audit, scores, commands
-- [docs/ops/runbook.md](docs/ops/runbook.md) — ops, troubleshooting, backups
+- [docs/README.md](docs/README.md) — full doc index
 
 ## Stack
 

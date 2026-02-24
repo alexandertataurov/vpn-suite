@@ -43,6 +43,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -83,6 +86,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -104,6 +110,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         },
         "security": [
@@ -131,6 +140,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         },
         "security": [
@@ -156,6 +168,9 @@
                 "schema": {}
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         },
         "security": [
@@ -196,8 +211,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/api/v1/overview/dashboard_timeseries": {
@@ -251,8 +274,127 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
+      }
+    },
+    "/api/v1/overview/telemetry": {
+      "get": {
+        "tags": [
+          "overview"
+        ],
+        "summary": "Get Overview Telemetry Alias",
+        "description": "Alias for legacy clients: same as /overview/dashboard_timeseries.",
+        "operationId": "get_overview_telemetry_alias_api_v1_overview_telemetry_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardTimeseriesOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      }
+    },
+    "/api/v1/overview/health-snapshot": {
+      "get": {
+        "tags": [
+          "overview"
+        ],
+        "summary": "Get Health Snapshot",
+        "description": "Lightweight health snapshot for UI freshness indicators.",
+        "operationId": "get_health_snapshot_api_v1_overview_health_snapshot_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthSnapshotOut"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/_debug/metrics-targets": {
+      "get": {
+        "tags": [
+          "overview"
+        ],
+        "summary": "Get Metrics Targets",
+        "description": "Prometheus targets (auth-protected).",
+        "operationId": "get_metrics_targets_api_v1__debug_metrics_targets_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/api/v1/overview": {
@@ -306,8 +448,179 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
+      }
+    },
+    "/api/v1/overview/connection_nodes": {
+      "get": {
+        "tags": [
+          "overview"
+        ],
+        "summary": "Get Connection Nodes",
+        "description": "Unified connection nodes: servers (with peer count). For dashboard system view.",
+        "operationId": "get_connection_nodes_api_v1_overview_connection_nodes_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectionNodesOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      }
+    },
+    "/api/v1/overview/operator": {
+      "get": {
+        "tags": [
+          "overview"
+        ],
+        "summary": "Get Overview Operator",
+        "description": "Operator console: health strip, cluster matrix, incidents, servers, timeseries.",
+        "operationId": "get_overview_operator_api_v1_overview_operator_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "time_range",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "1h",
+              "title": "Time Range"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      }
+    },
+    "/api/v1/analytics/telemetry/services": {
+      "get": {
+        "tags": [
+          "analytics"
+        ],
+        "summary": "Get Telemetry Services",
+        "description": "Per-service scrape status for Admin Dashboard. Cached 30s. Graceful degradation when Prometheus unavailable.",
+        "operationId": "get_telemetry_services_api_v1_analytics_telemetry_services_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TelemetryServicesOut"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/analytics/metrics/kpis": {
+      "get": {
+        "tags": [
+          "analytics"
+        ],
+        "summary": "Get Metrics Kpis",
+        "description": "Aggregated KPIs: request rate, error rate, p95 latency. Cached 30s.",
+        "operationId": "get_metrics_kpis_api_v1_analytics_metrics_kpis_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetricsKpisOut"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/api/v1/audit": {
@@ -437,6 +750,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -457,6 +773,9 @@
                 "schema": {}
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         },
         "security": [
@@ -533,6 +852,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -553,6 +875,9 @@
                 "schema": {}
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         },
         "security": [
@@ -621,6 +946,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -667,6 +995,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -687,6 +1018,9 @@
                 "schema": {}
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         },
         "security": [
@@ -739,6 +1073,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         },
         "security": [
@@ -765,6 +1102,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         },
         "security": [
@@ -791,6 +1131,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         },
         "security": [
@@ -837,6 +1180,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         },
         "security": [
@@ -888,6 +1234,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       },
@@ -968,6 +1317,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -1009,6 +1361,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         },
         "security": [
@@ -1035,6 +1390,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         },
         "security": [
@@ -1117,6 +1475,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       },
@@ -1161,6 +1522,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -1218,6 +1582,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -1295,6 +1662,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       },
@@ -1339,6 +1709,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -1396,6 +1769,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -1417,6 +1793,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         },
         "security": [
@@ -1479,6 +1858,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -1527,6 +1909,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         },
         "security": [
@@ -1553,6 +1938,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         },
         "security": [
@@ -1579,6 +1967,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         },
         "security": [
@@ -1605,6 +1996,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         },
         "security": [
@@ -1660,6 +2054,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -1681,6 +2078,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         },
         "security": [
@@ -1734,6 +2134,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         },
         "security": [
@@ -1741,6 +2144,57 @@
             "HTTPBearer": []
           }
         ]
+      }
+    },
+    "/api/v1/dashboard/operator": {
+      "get": {
+        "tags": [
+          "dashboard"
+        ],
+        "summary": "Get Operator Dashboard",
+        "description": "Aggregated operator console data: health strip, cluster matrix, incidents, servers, timeseries.",
+        "operationId": "get_operator_dashboard_api_v1_dashboard_operator_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "time_range",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(5m|15m|1h|6h|24h)$",
+              "default": "1h",
+              "title": "Time Range"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
       }
     },
     "/api/v1/peers": {
@@ -1822,7 +2276,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/PeerListOut"
+                }
               }
             }
           },
@@ -1835,6 +2291,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -1868,7 +2327,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/PeerListItemOut"
+                }
               }
             }
           },
@@ -1881,6 +2342,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -1937,6 +2401,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -1979,6 +2446,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         },
         "security": [
@@ -2030,6 +2500,994 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      }
+    },
+    "/api/v1/servers/stream": {
+      "get": {
+        "tags": [
+          "servers"
+        ],
+        "summary": "Servers Stream",
+        "description": "SSE stream: server.status (and optional server.telemetry) events. One stream per page. Throttled ~3s.",
+        "operationId": "servers_stream_api_v1_servers_stream_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/servers/{server_id}": {
+      "get": {
+        "tags": [
+          "servers"
+        ],
+        "summary": "Get Server",
+        "operationId": "get_server_api_v1_servers__server_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "server_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Server Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "servers"
+        ],
+        "summary": "Delete Server",
+        "description": "Remove a server from inventory. Fails with 409 if devices reference it.",
+        "operationId": "delete_server_api_v1_servers__server_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "server_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Server Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "servers"
+        ],
+        "summary": "Update Server",
+        "operationId": "update_server_api_v1_servers__server_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "server_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Server Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServerUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      }
+    },
+    "/api/v1/servers/{server_id}/cert-status": {
+      "get": {
+        "tags": [
+          "servers"
+        ],
+        "summary": "Get Server Cert Status",
+        "description": "Return mTLS cert status for the server (from DB: fingerprint, expires_at).",
+        "operationId": "get_server_cert_status_api_v1_servers__server_id__cert_status_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "server_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Server Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerCertStatusOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      }
+    },
+    "/api/v1/servers/{server_id}/ips": {
+      "get": {
+        "tags": [
+          "servers"
+        ],
+        "summary": "List Server Ips",
+        "description": "List IP addresses for a server.",
+        "operationId": "list_server_ips_api_v1_servers__server_id__ips_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "server_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Server Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerIpListOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "servers"
+        ],
+        "summary": "Create Server Ip",
+        "description": "Add an IP address to a server.",
+        "operationId": "create_server_ip_api_v1_servers__server_id__ips_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "server_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Server Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServerIpCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerIpOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      }
+    },
+    "/api/v1/servers/{server_id}/ips/{ip_id}": {
+      "patch": {
+        "tags": [
+          "servers"
+        ],
+        "summary": "Update Server Ip",
+        "description": "Update role or state of a server IP.",
+        "operationId": "update_server_ip_api_v1_servers__server_id__ips__ip_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "server_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Server Id"
+            }
+          },
+          {
+            "name": "ip_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Ip Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServerIpUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerIpOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "servers"
+        ],
+        "summary": "Delete Server Ip",
+        "description": "Remove an IP address from a server.",
+        "operationId": "delete_server_ip_api_v1_servers__server_id__ips__ip_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "server_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Server Id"
+            }
+          },
+          {
+            "name": "ip_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Ip Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      }
+    },
+    "/api/v1/servers/{server_id}/sync": {
+      "post": {
+        "tags": [
+          "servers"
+        ],
+        "summary": "Trigger Server Sync",
+        "description": "Trigger manual sync: fetch snapshot from node, store, update Server. In agent mode, enqueue action and return action_id.",
+        "operationId": "trigger_server_sync_api_v1_servers__server_id__sync_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "server_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Server Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServerSyncRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerSyncResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      }
+    },
+    "/api/v1/servers/{server_id}/sync/{job_id}": {
+      "get": {
+        "tags": [
+          "servers"
+        ],
+        "summary": "Get Server Sync Job",
+        "description": "Return sync job progress and result.",
+        "operationId": "get_server_sync_job_api_v1_servers__server_id__sync__job_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "server_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Server Id"
+            }
+          },
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerSyncJobStatus"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      }
+    },
+    "/api/v1/servers/{server_id}/snapshot": {
+      "get": {
+        "tags": [
+          "servers"
+        ],
+        "summary": "Get Server Last Snapshot",
+        "description": "Return last successful snapshot payload for operator view. 404 if none.",
+        "operationId": "get_server_last_snapshot_api_v1_servers__server_id__snapshot_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "server_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Server Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      }
+    },
+    "/api/v1/servers/{server_id}/actions": {
+      "post": {
+        "tags": [
+          "servers"
+        ],
+        "summary": "Create Server Action",
+        "description": "Create a queued action for the server (sync, apply_peers, drain, undrain, etc.). Agent picks up via poll.",
+        "operationId": "create_server_action_api_v1_servers__server_id__actions_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "server_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Server Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActionCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionCreateOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "servers"
+        ],
+        "summary": "List Server Actions",
+        "description": "List actions for a server with optional status filter and pagination.",
+        "operationId": "list_server_actions_api_v1_servers__server_id__actions_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "server_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Server Id"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Comma-separated statuses: pending, running, completed, failed",
+              "title": "Status"
+            },
+            "description": "Comma-separated statuses: pending, running, completed, failed"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionListOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      }
+    },
+    "/api/v1/servers/telemetry/summary": {
+      "get": {
+        "tags": [
+          "servers"
+        ],
+        "summary": "Get Servers Telemetry Summary",
+        "description": "Return telemetry summary per server (Prometheus: vpn_node_health, vpn_node_peers).",
+        "operationId": "get_servers_telemetry_summary_api_v1_servers_telemetry_summary_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "region",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Region"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Search"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServersTelemetrySummaryOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      }
+    },
+    "/api/v1/servers/{server_id}/logs": {
+      "get": {
+        "tags": [
+          "servers"
+        ],
+        "summary": "Get Server Logs",
+        "description": "Recent action log lines for this server (from agent action logs). For container stdout use Docker Telemetry.",
+        "operationId": "get_server_logs_api_v1_servers__server_id__logs_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "server_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Server Id"
+            }
+          },
+          {
+            "name": "tail",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000,
+              "minimum": 1,
+              "default": 200,
+              "title": "Tail"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerLogsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      }
+    },
+    "/api/v1/servers/{server_id}/telemetry": {
+      "get": {
+        "tags": [
+          "servers"
+        ],
+        "summary": "Get Server Telemetry",
+        "description": "Peers count, traffic summary from node. Cache first, live fallback. Graceful N/A on failure.",
+        "operationId": "get_server_telemetry_api_v1_servers__server_id__telemetry_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "server_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Server Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerTelemetryOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -2076,6 +3534,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       },
@@ -2237,6 +3698,26 @@
             "description": "Page size; overrides limit when set"
           },
           {
+            "name": "last_seen_within_hours",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 8760,
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only servers with last_seen_at within this many hours (hides stale)",
+              "title": "Last Seen Within Hours"
+            },
+            "description": "Only servers with last_seen_at within this many hours (hides stale)"
+          },
+          {
             "name": "X-API-Key",
             "in": "header",
             "required": false,
@@ -2273,6 +3754,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -2313,6 +3797,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         },
         "security": [
@@ -2322,100 +3809,13 @@
         ]
       }
     },
-    "/api/v1/servers/telemetry/summary": {
-      "get": {
-        "tags": [
-          "servers"
-        ],
-        "summary": "Get Servers Telemetry Summary",
-        "description": "Return telemetry summary per server (Prometheus: vpn_node_health, vpn_node_peers).",
-        "operationId": "get_servers_telemetry_summary_api_v1_servers_telemetry_summary_get",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "region",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Region"
-            }
-          },
-          {
-            "name": "status",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Status"
-            }
-          },
-          {
-            "name": "search",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Search"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ServersTelemetrySummaryOut"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/v1/servers/snapshots/summary": {
       "get": {
         "tags": [
           "servers"
         ],
         "summary": "Get Servers Snapshots Summary",
-        "description": "Return per-server telemetry from last successful snapshot (authoritative).",
+        "description": "Return per-server telemetry from last successful snapshot (authoritative).\nUses distinct(ServerSnapshot.server_id) \u2014 PostgreSQL/SQLAlchemy dialect;\nnot supported on SQLite. Requires Postgres for production.",
         "operationId": "get_servers_snapshots_summary_api_v1_servers_snapshots_summary_get",
         "responses": {
           "200": {
@@ -2427,6 +3827,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         },
         "security": [
@@ -2487,108 +3890,9 @@
                 }
               }
             }
-          }
-        }
-      }
-    },
-    "/api/v1/servers/{server_id}": {
-      "get": {
-        "tags": [
-          "servers"
-        ],
-        "summary": "Get Server",
-        "operationId": "get_server_api_v1_servers__server_id__get",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "server_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Server Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ServerOut"
-                }
-              }
-            }
           },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "patch": {
-        "tags": [
-          "servers"
-        ],
-        "summary": "Update Server",
-        "operationId": "update_server_api_v1_servers__server_id__patch",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "server_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Server Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ServerUpdate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ServerOut"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -2636,6 +3940,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -2683,167 +3990,9 @@
                 }
               }
             }
-          }
-        }
-      }
-    },
-    "/api/v1/servers/{server_id}/sync": {
-      "post": {
-        "tags": [
-          "servers"
-        ],
-        "summary": "Trigger Server Sync",
-        "description": "Trigger manual sync: fetch snapshot from node, store, update Server. Returns request_id and job_id.",
-        "operationId": "trigger_server_sync_api_v1_servers__server_id__sync_post",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "server_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Server Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ServerSyncRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ServerSyncResponse"
-                }
-              }
-            }
           },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/servers/{server_id}/sync/{job_id}": {
-      "get": {
-        "tags": [
-          "servers"
-        ],
-        "summary": "Get Server Sync Job",
-        "description": "Return sync job progress and result.",
-        "operationId": "get_server_sync_job_api_v1_servers__server_id__sync__job_id__get",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "server_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Server Id"
-            }
-          },
-          {
-            "name": "job_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Job Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ServerSyncJobStatus"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/servers/{server_id}/snapshot": {
-      "get": {
-        "tags": [
-          "servers"
-        ],
-        "summary": "Get Server Last Snapshot",
-        "description": "Return last successful snapshot payload for operator view. 404 if none.",
-        "operationId": "get_server_last_snapshot_api_v1_servers__server_id__snapshot_get",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "server_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Server Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -2899,6 +4048,218 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      }
+    },
+    "/api/v1/servers/{server_id}/capabilities": {
+      "get": {
+        "tags": [
+          "servers"
+        ],
+        "summary": "Get Server Capabilities",
+        "operationId": "get_server_capabilities_api_v1_servers__server_id__capabilities_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "server_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Server Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerCapabilitiesOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      }
+    },
+    "/api/v1/servers/{server_id}/limits": {
+      "get": {
+        "tags": [
+          "servers"
+        ],
+        "summary": "Get Server Limits",
+        "operationId": "get_server_limits_api_v1_servers__server_id__limits_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "server_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Server Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerLimitsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "servers"
+        ],
+        "summary": "Update Server Limits",
+        "operationId": "update_server_limits_api_v1_servers__server_id__limits_patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "server_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Server Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServerLimitsUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerLimitsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      }
+    },
+    "/api/v1/actions/{action_id}": {
+      "get": {
+        "tags": [
+          "actions"
+        ],
+        "summary": "Get Action By Id",
+        "description": "Return action and recent logs (progress).",
+        "operationId": "get_action_by_id_api_v1_actions__action_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "action_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Action Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -2945,6 +4306,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -3003,6 +4367,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       },
@@ -3049,6 +4416,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -3106,6 +4476,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -3163,54 +4536,9 @@
                 }
               }
             }
-          }
-        }
-      }
-    },
-    "/api/v1/servers/{server_id}/telemetry": {
-      "get": {
-        "tags": [
-          "servers"
-        ],
-        "summary": "Get Server Telemetry",
-        "description": "Peers count, traffic summary from node. Cache first, live fallback. Graceful N/A on failure.",
-        "operationId": "get_server_telemetry_api_v1_servers__server_id__telemetry_get",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "server_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Server Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ServerTelemetryOut"
-                }
-              }
-            }
           },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -3266,6 +4594,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -3321,17 +4652,21 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
     },
-    "/api/v1/servers/{server_id}/capabilities": {
+    "/api/v1/admin/configs/issued/{issued_config_id}/content": {
       "get": {
         "tags": [
-          "servers"
+          "admin-configs"
         ],
-        "summary": "Get Server Capabilities",
-        "operationId": "get_server_capabilities_api_v1_servers__server_id__capabilities_get",
+        "summary": "Get Issued Config Content",
+        "description": "Return decrypted config content for an issued config. Admin JWT required. Does not consume token.",
+        "operationId": "get_issued_config_content_api_v1_admin_configs_issued__issued_config_id__content_get",
         "security": [
           {
             "HTTPBearer": []
@@ -3339,12 +4674,12 @@
         ],
         "parameters": [
           {
-            "name": "server_id",
+            "name": "issued_config_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Server Id"
+              "title": "Issued Config Id"
             }
           }
         ],
@@ -3353,9 +4688,7 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ServerCapabilitiesOut"
-                }
+                "schema": {}
               }
             }
           },
@@ -3368,108 +4701,9 @@
                 }
               }
             }
-          }
-        }
-      }
-    },
-    "/api/v1/servers/{server_id}/limits": {
-      "get": {
-        "tags": [
-          "servers"
-        ],
-        "summary": "Get Server Limits",
-        "operationId": "get_server_limits_api_v1_servers__server_id__limits_get",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "server_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Server Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ServerLimitsOut"
-                }
-              }
-            }
           },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "patch": {
-        "tags": [
-          "servers"
-        ],
-        "summary": "Update Server Limits",
-        "operationId": "update_server_limits_api_v1_servers__server_id__limits_patch",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "server_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Server Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ServerLimitsUpdate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ServerLimitsOut"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -3511,8 +4745,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/api/v1/admin/configs/{token}/qr": {
@@ -3552,8 +4794,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/api/v1/users": {
@@ -3598,6 +4848,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       },
@@ -3753,6 +5006,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -3817,6 +5073,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -3864,6 +5123,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       },
@@ -3919,6 +5181,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -4006,6 +5271,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -4095,6 +5363,172 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      }
+    },
+    "/api/v1/devices/bulk-revoke": {
+      "post": {
+        "tags": [
+          "devices"
+        ],
+        "summary": "Bulk Revoke Devices",
+        "description": "Revoke multiple devices. Requires confirm_token. Returns counts and any errors.",
+        "operationId": "bulk_revoke_devices_api_v1_devices_bulk_revoke_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkRevokeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkRevokeOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/devices": {
+      "get": {
+        "tags": [
+          "devices"
+        ],
+        "summary": "List Devices",
+        "description": "List all devices with optional filters. Admin only.",
+        "operationId": "list_devices_api_v1_devices_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "email",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Email"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -4152,6 +5586,172 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      }
+    },
+    "/api/v1/devices/{device_id}/suspend": {
+      "post": {
+        "tags": [
+          "devices"
+        ],
+        "summary": "Suspend Device",
+        "description": "Soft-disable device: set suspended_at. Desired-state will exclude it so agent removes peer traffic.",
+        "operationId": "suspend_device_api_v1_devices__device_id__suspend_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "device_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Device Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      }
+    },
+    "/api/v1/devices/{device_id}/limits": {
+      "patch": {
+        "tags": [
+          "devices"
+        ],
+        "summary": "Update Device Limits",
+        "description": "Set data limit and/or expiry for a device. Scheduler will revoke when expires_at is reached.",
+        "operationId": "update_device_limits_api_v1_devices__device_id__limits_patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "device_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Device Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceLimitUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      }
+    },
+    "/api/v1/devices/{device_id}/resume": {
+      "post": {
+        "tags": [
+          "devices"
+        ],
+        "summary": "Resume Device",
+        "description": "Clear suspended_at so device is included in desired-state again.",
+        "operationId": "resume_device_api_v1_devices__device_id__resume_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "device_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Device Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -4231,6 +5831,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -4286,6 +5889,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -4332,6 +5938,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       },
@@ -4408,6 +6017,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -4455,6 +6067,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       },
@@ -4510,6 +6125,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -4556,6 +6174,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       },
@@ -4647,6 +6268,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -4694,6 +6318,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       },
@@ -4749,6 +6376,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -4808,8 +6438,17 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
-        }
+        },
+        "security": [
+          {
+            "AgentToken": []
+          }
+        ],
+        "x-mtls-required": true
       }
     },
     "/api/v1/agent/desired-state": {
@@ -4866,8 +6505,429 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
-        }
+        },
+        "security": [
+          {
+            "AgentToken": []
+          }
+        ],
+        "x-mtls-required": true
+      }
+    },
+    "/api/v1/agent/v1/status": {
+      "get": {
+        "tags": [
+          "agent"
+        ],
+        "summary": "Agent V1 Status",
+        "operationId": "agent_v1_status_api_v1_agent_v1_status_get",
+        "parameters": [
+          {
+            "name": "server_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Server ID this agent manages",
+              "title": "Server Id"
+            },
+            "description": "Server ID this agent manages"
+          },
+          {
+            "name": "X-Agent-Token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Agent-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentV1StatusOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        },
+        "security": [
+          {
+            "AgentToken": []
+          }
+        ],
+        "x-mtls-required": true
+      }
+    },
+    "/api/v1/agent/v1/telemetry": {
+      "get": {
+        "tags": [
+          "agent"
+        ],
+        "summary": "Agent V1 Telemetry",
+        "operationId": "agent_v1_telemetry_api_v1_agent_v1_telemetry_get",
+        "parameters": [
+          {
+            "name": "server_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Server ID this agent manages",
+              "title": "Server Id"
+            },
+            "description": "Server ID this agent manages"
+          },
+          {
+            "name": "X-Agent-Token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Agent-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentV1TelemetryOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        },
+        "security": [
+          {
+            "AgentToken": []
+          }
+        ],
+        "x-mtls-required": true
+      }
+    },
+    "/api/v1/agent/v1/peers": {
+      "get": {
+        "tags": [
+          "agent"
+        ],
+        "summary": "Agent V1 Peers",
+        "operationId": "agent_v1_peers_api_v1_agent_v1_peers_get",
+        "parameters": [
+          {
+            "name": "server_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Server ID this agent manages",
+              "title": "Server Id"
+            },
+            "description": "Server ID this agent manages"
+          },
+          {
+            "name": "X-Agent-Token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Agent-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AgentV1PeerOut"
+                  },
+                  "title": "Response Agent V1 Peers Api V1 Agent V1 Peers Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        },
+        "security": [
+          {
+            "AgentToken": []
+          }
+        ],
+        "x-mtls-required": true
+      }
+    },
+    "/api/v1/agent/v1/actions/execute": {
+      "post": {
+        "tags": [
+          "agent"
+        ],
+        "summary": "Agent V1 Actions Execute",
+        "operationId": "agent_v1_actions_execute_api_v1_agent_v1_actions_execute_post",
+        "parameters": [
+          {
+            "name": "X-Agent-Token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Agent-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentV1ActionExecuteIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        },
+        "security": [
+          {
+            "AgentToken": []
+          }
+        ],
+        "x-mtls-required": true
+      }
+    },
+    "/api/v1/agent/v1/actions/poll": {
+      "get": {
+        "tags": [
+          "agent"
+        ],
+        "summary": "Agent V1 Actions Poll",
+        "operationId": "agent_v1_actions_poll_api_v1_agent_v1_actions_poll_get",
+        "parameters": [
+          {
+            "name": "server_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Server ID this agent manages",
+              "title": "Server Id"
+            },
+            "description": "Server ID this agent manages"
+          },
+          {
+            "name": "X-Agent-Token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Agent-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentV1ActionPollOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        },
+        "security": [
+          {
+            "AgentToken": []
+          }
+        ],
+        "x-mtls-required": true
+      }
+    },
+    "/api/v1/agent/v1/actions/report": {
+      "post": {
+        "tags": [
+          "agent"
+        ],
+        "summary": "Agent V1 Actions Report",
+        "operationId": "agent_v1_actions_report_api_v1_agent_v1_actions_report_post",
+        "parameters": [
+          {
+            "name": "X-Agent-Token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Agent-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentV1ActionReportIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        },
+        "security": [
+          {
+            "AgentToken": []
+          }
+        ],
+        "x-mtls-required": true
       }
     },
     "/api/v1/telemetry/docker/hosts": {
@@ -4887,6 +6947,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         },
         "security": [
@@ -4940,6 +7003,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -5031,6 +7097,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -5116,6 +7185,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -5170,6 +7242,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -5279,6 +7354,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -5289,7 +7367,7 @@
           "webhooks"
         ],
         "summary": "Payment Webhook",
-        "description": "Idempotent: same external_id → 200, no duplicate charge. Telegram Stars: verify secret if set.",
+        "description": "Idempotent: same external_id \u2192 200, no duplicate charge. Telegram Stars: verify secret if set.",
         "operationId": "payment_webhook_webhooks_payments__provider__post",
         "parameters": [
           {
@@ -5336,6 +7414,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -5401,6 +7482,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -5491,6 +7575,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -5566,6 +7653,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -5638,6 +7728,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -5701,6 +7794,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -5765,6 +7861,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -5828,6 +7927,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -5891,6 +7993,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -5955,6 +8060,9 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -5995,8 +8103,17 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "x-webapp-session": true
       }
     },
     "/api/v1/webapp/me": {
@@ -6015,8 +8132,17 @@
                 "schema": {}
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "x-webapp-session": true
       }
     },
     "/api/v1/webapp/plans": {
@@ -6035,8 +8161,17 @@
                 "schema": {}
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "x-webapp-session": true
       }
     },
     "/api/v1/webapp/devices/issue": {
@@ -6057,8 +8192,17 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "x-webapp-session": true
       }
     },
     "/api/v1/webapp/devices/{device_id}/revoke": {
@@ -6098,8 +8242,17 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "x-webapp-session": true
       }
     },
     "/api/v1/webapp/referral/my-link": {
@@ -6117,8 +8270,17 @@
                 "schema": {}
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "x-webapp-session": true
       }
     },
     "/api/v1/webapp/referral/stats": {
@@ -6136,8 +8298,17 @@
                 "schema": {}
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "x-webapp-session": true
       }
     },
     "/api/v1/webapp/promo/validate": {
@@ -6175,8 +8346,17 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "x-webapp-session": true
       }
     },
     "/api/v1/webapp/payments/create-invoice": {
@@ -6215,8 +8395,17 @@
                 }
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "x-webapp-session": true
       }
     },
     "/metrics": {
@@ -6232,6 +8421,9 @@
                 "schema": {}
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -6249,6 +8441,9 @@
                 "schema": {}
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
       }
@@ -6266,13 +8461,514 @@
                 "schema": {}
               }
             }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
           }
         }
+      }
+    },
+    "/api/telemetry/docker/hosts": {
+      "get": {
+        "tags": [
+          "telemetry-docker"
+        ],
+        "summary": "Docker Hosts",
+        "operationId": "docker_hosts_api_v1_telemetry_docker_hosts_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HostSummaryListOut"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "deprecated": true,
+        "x-compat-alias": "/api/v1/telemetry/docker/hosts"
+      }
+    },
+    "/api/telemetry/docker/containers": {
+      "get": {
+        "tags": [
+          "telemetry-docker"
+        ],
+        "summary": "Docker Containers",
+        "operationId": "docker_containers_api_v1_telemetry_docker_containers_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "host_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "local",
+              "title": "Host Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContainerSummaryListOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        },
+        "deprecated": true,
+        "x-compat-alias": "/api/v1/telemetry/docker/containers"
+      }
+    },
+    "/api/telemetry/docker/container/{container_id}/metrics": {
+      "get": {
+        "tags": [
+          "telemetry-docker"
+        ],
+        "summary": "Docker Container Metrics",
+        "operationId": "docker_container_metrics_api_v1_telemetry_docker_container__container_id__metrics_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "container_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Container Id"
+            }
+          },
+          {
+            "name": "host_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "local",
+              "title": "Host Id"
+            }
+          },
+          {
+            "name": "range",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": "1h",
+              "title": "Range"
+            }
+          },
+          {
+            "name": "step",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": "15s",
+              "title": "Step"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContainerMetricsTimeseries"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        },
+        "deprecated": true,
+        "x-compat-alias": "/api/v1/telemetry/docker/container/{container_id}/metrics"
+      }
+    },
+    "/api/telemetry/docker/container/{container_id}/logs": {
+      "get": {
+        "tags": [
+          "telemetry-docker"
+        ],
+        "summary": "Docker Container Logs",
+        "operationId": "docker_container_logs_api_v1_telemetry_docker_container__container_id__logs_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "container_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Container Id"
+            }
+          },
+          {
+            "name": "host_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "local",
+              "title": "Host Id"
+            }
+          },
+          {
+            "name": "tail",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 2000,
+              "minimum": 1,
+              "default": 200,
+              "title": "Tail"
+            }
+          },
+          {
+            "name": "since",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Since"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContainerLogLineListOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        },
+        "deprecated": true,
+        "x-compat-alias": "/api/v1/telemetry/docker/container/{container_id}/logs"
+      }
+    },
+    "/api/telemetry/docker/alerts": {
+      "get": {
+        "tags": [
+          "telemetry-docker"
+        ],
+        "summary": "Docker Alerts",
+        "operationId": "docker_alerts_api_v1_telemetry_docker_alerts_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "host_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Host Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertItemListOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        },
+        "deprecated": true,
+        "x-compat-alias": "/api/v1/telemetry/docker/alerts"
       }
     }
   },
   "components": {
     "schemas": {
+      "ActionCreate": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "title": "Type",
+            "description": "sync | apply_peers | drain | undrain | restart_service | rotate_keys | apply_profile | validate_profile | firewall_ports_check"
+          },
+          "payload": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payload"
+          }
+        },
+        "type": "object",
+        "required": [
+          "type"
+        ],
+        "title": "ActionCreate"
+      },
+      "ActionCreateOut": {
+        "properties": {
+          "action_id": {
+            "type": "string",
+            "title": "Action Id"
+          },
+          "correlation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Correlation Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "action_id"
+        ],
+        "title": "ActionCreateOut"
+      },
+      "ActionListOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ActionOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "ActionListOut"
+      },
+      "ActionOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "server_id": {
+            "type": "string",
+            "title": "Server Id"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "requested_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requested By"
+          },
+          "requested_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Requested At"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "correlation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Correlation Id"
+          },
+          "logs": {
+            "items": {
+              "$ref": "#/components/schemas/AgentActionLogOut"
+            },
+            "type": "array",
+            "title": "Logs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "server_id",
+          "type",
+          "status",
+          "requested_at"
+        ],
+        "title": "ActionOut"
+      },
       "AdminIssuePeerPeerOut": {
         "properties": {
           "id": {
@@ -6360,15 +9056,6 @@
             ],
             "title": "Device Limit"
           },
-          "profile_type": {
-            "type": "string",
-            "enum": [
-              "awg",
-              "wg"
-            ],
-            "title": "Profile Type",
-            "default": "awg"
-          },
           "expires_in_days": {
             "anyOf": [
               {
@@ -6390,6 +9077,17 @@
               }
             ],
             "title": "Client Request Id"
+          },
+          "client_endpoint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Endpoint"
           }
         },
         "type": "object",
@@ -6400,13 +9098,14 @@
           "peer": {
             "$ref": "#/components/schemas/AdminIssuePeerPeerOut"
           },
-          "config_download_url": {
-            "type": "string",
-            "title": "Config Download Url"
+          "config_awg": {
+            "$ref": "#/components/schemas/ConfigEntryOut"
           },
-          "qr_payload": {
-            "type": "string",
-            "title": "Qr Payload"
+          "config_wg_obf": {
+            "$ref": "#/components/schemas/ConfigEntryOut"
+          },
+          "config_wg": {
+            "$ref": "#/components/schemas/ConfigEntryOut"
           },
           "request_id": {
             "type": "string",
@@ -6421,8 +9120,9 @@
         "type": "object",
         "required": [
           "peer",
-          "config_download_url",
-          "qr_payload",
+          "config_awg",
+          "config_wg_obf",
+          "config_wg",
           "request_id"
         ],
         "title": "AdminIssuePeerResponse"
@@ -6447,13 +9147,14 @@
       },
       "AdminRotatePeerResponse": {
         "properties": {
-          "config_download_url": {
-            "type": "string",
-            "title": "Config Download Url"
+          "config_awg": {
+            "$ref": "#/components/schemas/ConfigEntryOut"
           },
-          "qr_payload": {
-            "type": "string",
-            "title": "Qr Payload"
+          "config_wg_obf": {
+            "$ref": "#/components/schemas/ConfigEntryOut"
+          },
+          "config_wg": {
+            "$ref": "#/components/schemas/ConfigEntryOut"
           },
           "request_id": {
             "type": "string",
@@ -6462,8 +9163,9 @@
         },
         "type": "object",
         "required": [
-          "config_download_url",
-          "qr_payload",
+          "config_awg",
+          "config_wg_obf",
+          "config_wg",
           "request_id"
         ],
         "title": "AdminRotatePeerResponse"
@@ -6486,6 +9188,42 @@
           "server_time_utc"
         ],
         "title": "AgentAckOut"
+      },
+      "AgentActionLogOut": {
+        "properties": {
+          "ts": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Ts"
+          },
+          "level": {
+            "type": "string",
+            "title": "Level"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "meta": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ts",
+          "level",
+          "message"
+        ],
+        "title": "AgentActionLogOut"
       },
       "AgentDesiredPeer": {
         "properties": {
@@ -6553,6 +9291,70 @@
             "type": "string",
             "title": "Container Name",
             "description": "Local AmneziaWG container name (amnezia-awg*)"
+          },
+          "host_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Host Id",
+            "description": "Stable host id"
+          },
+          "container_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Container Id",
+            "description": "Docker container id"
+          },
+          "classification": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Classification",
+            "description": "Discovery classification"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence",
+            "description": "Discovery confidence 0..1"
+          },
+          "evidence": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence",
+            "description": "Evidence strings"
           },
           "interface_name": {
             "type": "string",
@@ -6622,6 +9424,226 @@
         ],
         "title": "AgentHeartbeatIn",
         "description": "Agent heartbeat payload (no secrets)."
+      },
+      "AgentV1ActionExecuteIn": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "title": "Type",
+            "description": "Action type e.g. sync, apply_peers"
+          },
+          "payload": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payload"
+          }
+        },
+        "type": "object",
+        "required": [
+          "type"
+        ],
+        "title": "AgentV1ActionExecuteIn",
+        "description": "Stub: push-mode action request (prefer poll/report)."
+      },
+      "AgentV1ActionPollOut": {
+        "properties": {
+          "action_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Action Id"
+          },
+          "type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Type"
+          },
+          "payload": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payload"
+          }
+        },
+        "type": "object",
+        "title": "AgentV1ActionPollOut",
+        "description": "Pull-mode: next pending action for server_id; empty if none."
+      },
+      "AgentV1ActionReportIn": {
+        "properties": {
+          "action_id": {
+            "type": "string",
+            "title": "Action Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "completed | failed"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": ""
+          },
+          "meta": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "action_id",
+          "status"
+        ],
+        "title": "AgentV1ActionReportIn",
+        "description": "Agent reports action completion or failure."
+      },
+      "AgentV1PeerOut": {
+        "properties": {
+          "public_key": {
+            "type": "string",
+            "title": "Public Key"
+          },
+          "allowed_ips": {
+            "type": "string",
+            "title": "Allowed Ips",
+            "default": ""
+          },
+          "last_handshake_age_sec": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Handshake Age Sec"
+          },
+          "rx_bytes": {
+            "type": "integer",
+            "title": "Rx Bytes",
+            "default": 0
+          },
+          "tx_bytes": {
+            "type": "integer",
+            "title": "Tx Bytes",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "public_key"
+        ],
+        "title": "AgentV1PeerOut",
+        "description": "Single peer in agent v1 peers list (from heartbeat or snapshot)."
+      },
+      "AgentV1StatusOut": {
+        "properties": {
+          "server_id": {
+            "type": "string",
+            "title": "Server Id"
+          },
+          "agent_version": {
+            "type": "string",
+            "title": "Agent Version",
+            "default": "unknown"
+          },
+          "interface_name": {
+            "type": "string",
+            "title": "Interface Name",
+            "default": "awg0"
+          },
+          "last_heartbeat_ts": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Heartbeat Ts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "server_id"
+        ],
+        "title": "AgentV1StatusOut",
+        "description": "Agent v1 status from last heartbeat (Redis)."
+      },
+      "AgentV1TelemetryOut": {
+        "properties": {
+          "server_id": {
+            "type": "string",
+            "title": "Server Id"
+          },
+          "peer_count": {
+            "type": "integer",
+            "title": "Peer Count",
+            "default": 0
+          },
+          "total_rx_bytes": {
+            "type": "integer",
+            "title": "Total Rx Bytes",
+            "default": 0
+          },
+          "total_tx_bytes": {
+            "type": "integer",
+            "title": "Total Tx Bytes",
+            "default": 0
+          },
+          "health_score": {
+            "type": "number",
+            "title": "Health Score",
+            "default": 1.0
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "unknown"
+          }
+        },
+        "type": "object",
+        "required": [
+          "server_id"
+        ],
+        "title": "AgentV1TelemetryOut",
+        "description": "Agent v1 telemetry from last heartbeat (Redis)."
       },
       "AlertItem": {
         "properties": {
@@ -7244,6 +10266,53 @@
         ],
         "title": "BotRevokeDeviceRequest"
       },
+      "BulkRevokeOut": {
+        "properties": {
+          "revoked": {
+            "type": "integer",
+            "title": "Revoked"
+          },
+          "skipped": {
+            "type": "integer",
+            "title": "Skipped"
+          },
+          "errors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Errors"
+          }
+        },
+        "type": "object",
+        "required": [
+          "revoked",
+          "skipped",
+          "errors"
+        ],
+        "title": "BulkRevokeOut"
+      },
+      "BulkRevokeRequest": {
+        "properties": {
+          "device_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Device Ids"
+          },
+          "confirm_token": {
+            "type": "string",
+            "title": "Confirm Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "device_ids",
+          "confirm_token"
+        ],
+        "title": "BulkRevokeRequest"
+      },
       "BusinessMetricsOut": {
         "properties": {
           "active_subscriptions": {
@@ -7284,6 +10353,97 @@
           "revenue_by_region_30d"
         ],
         "title": "BusinessMetricsOut"
+      },
+      "ConfigEntryOut": {
+        "properties": {
+          "download_url": {
+            "type": "string",
+            "title": "Download Url"
+          },
+          "qr_payload": {
+            "type": "string",
+            "title": "Qr Payload"
+          }
+        },
+        "type": "object",
+        "required": [
+          "download_url",
+          "qr_payload"
+        ],
+        "title": "ConfigEntryOut",
+        "description": "Download URL and QR payload for a single config format."
+      },
+      "ConnectionNodeOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "region": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Region"
+          },
+          "peer_count": {
+            "type": "integer",
+            "title": "Peer Count",
+            "default": 0
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "to": {
+            "type": "string",
+            "title": "To"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "type",
+          "label",
+          "to"
+        ],
+        "title": "ConnectionNodeOut",
+        "description": "Single node in the unified dashboard: server (AWG)."
+      },
+      "ConnectionNodesOut": {
+        "properties": {
+          "nodes": {
+            "items": {
+              "$ref": "#/components/schemas/ConnectionNodeOut"
+            },
+            "type": "array",
+            "title": "Nodes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nodes"
+        ],
+        "title": "ConnectionNodesOut"
       },
       "ContainerLogLine": {
         "properties": {
@@ -8080,6 +11240,35 @@
         ],
         "title": "DashboardTimeseriesPoint"
       },
+      "DeviceLimitUpdate": {
+        "properties": {
+          "data_limit_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data Limit Bytes"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          }
+        },
+        "type": "object",
+        "title": "DeviceLimitUpdate"
+      },
       "DeviceList": {
         "properties": {
           "items": {
@@ -8151,10 +11340,53 @@
             ],
             "title": "Revoked At"
           },
+          "suspended_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suspended At"
+          },
+          "data_limit_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data Limit Bytes"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time",
             "title": "Created At"
+          },
+          "issued_configs": {
+            "items": {
+              "$ref": "#/components/schemas/IssuedConfigOut"
+            },
+            "type": "array",
+            "title": "Issued Configs",
+            "default": []
           }
         },
         "type": "object",
@@ -8284,6 +11516,39 @@
               }
             ],
             "title": "Componentstack"
+          },
+          "route": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Route"
+          },
+          "buildHash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Buildhash"
+          },
+          "userAgent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Useragent"
           }
         },
         "type": "object",
@@ -8304,6 +11569,79 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "HealthSnapshotOut": {
+        "properties": {
+          "telemetry_last_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Telemetry Last At"
+          },
+          "snapshot_last_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Snapshot Last At"
+          },
+          "operator_last_success_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Operator Last Success At"
+          },
+          "sessions_active": {
+            "type": "integer",
+            "title": "Sessions Active"
+          },
+          "incidents_count": {
+            "type": "integer",
+            "title": "Incidents Count"
+          },
+          "metrics_freshness": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Metrics Freshness"
+          },
+          "request_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Request Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sessions_active",
+          "incidents_count",
+          "metrics_freshness"
+        ],
+        "title": "HealthSnapshotOut"
       },
       "HostSummary": {
         "properties": {
@@ -8665,6 +12003,39 @@
             ],
             "title": "Config"
           },
+          "config_awg": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Config Awg"
+          },
+          "config_wg_obf": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Config Wg Obf"
+          },
+          "config_wg": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Config Wg"
+          },
           "server_id": {
             "type": "string",
             "title": "Server Id"
@@ -8693,6 +12064,62 @@
           "subscription_id"
         ],
         "title": "IssueResponse"
+      },
+      "IssuedConfigOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "server_id": {
+            "type": "string",
+            "title": "Server Id"
+          },
+          "profile_type": {
+            "type": "string",
+            "title": "Profile Type"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "consumed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Consumed At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "server_id",
+          "profile_type",
+          "expires_at",
+          "consumed_at",
+          "created_at"
+        ],
+        "title": "IssuedConfigOut",
+        "description": "Issued config metadata (per device) \u2014 no token or encrypted config."
       },
       "LatencyProbeBatchIn": {
         "properties": {
@@ -8937,6 +12364,66 @@
         ],
         "title": "LogoutRequest"
       },
+      "MetricsKpisOut": {
+        "properties": {
+          "request_rate_5m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Request Rate 5M"
+          },
+          "error_rate_5m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Rate 5M"
+          },
+          "latency_p95_seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latency P95 Seconds"
+          },
+          "prometheus_available": {
+            "type": "boolean",
+            "title": "Prometheus Available"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "request_rate_5m",
+          "error_rate_5m",
+          "latency_p95_seconds",
+          "prometheus_available"
+        ],
+        "title": "MetricsKpisOut"
+      },
       "MigrateBody": {
         "properties": {
           "target_node_id": {
@@ -8965,6 +12452,10 @@
             "type": "integer",
             "title": "Servers Unhealthy"
           },
+          "peers_total": {
+            "type": "integer",
+            "title": "Peers Total"
+          },
           "users_total": {
             "type": "integer",
             "title": "Users Total"
@@ -8982,6 +12473,7 @@
         "required": [
           "servers_total",
           "servers_unhealthy",
+          "peers_total",
           "users_total",
           "subscriptions_active",
           "mrr"
@@ -9064,11 +12556,114 @@
         ],
         "title": "PaymentOut"
       },
+      "PeerListItemOut": {
+        "properties": {
+          "peer_id": {
+            "type": "string",
+            "title": "Peer Id"
+          },
+          "node_id": {
+            "type": "string",
+            "title": "Node Id"
+          },
+          "user_id": {
+            "type": "integer",
+            "title": "User Id"
+          },
+          "subscription_id": {
+            "type": "string",
+            "title": "Subscription Id"
+          },
+          "public_key": {
+            "type": "string",
+            "title": "Public Key"
+          },
+          "client_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Name"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "issued_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Issued At"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "peer_id",
+          "node_id",
+          "user_id",
+          "subscription_id",
+          "public_key",
+          "client_name",
+          "status",
+          "issued_at",
+          "revoked_at"
+        ],
+        "title": "PeerListItemOut",
+        "description": "Single peer in list (device as peer)."
+      },
+      "PeerListOut": {
+        "properties": {
+          "peers": {
+            "items": {
+              "$ref": "#/components/schemas/PeerListItemOut"
+            },
+            "type": "array",
+            "title": "Peers"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "peers",
+          "total"
+        ],
+        "title": "PeerListOut",
+        "description": "Peers list response."
+      },
       "PeerOut": {
         "properties": {
           "public_key": {
             "type": "string",
             "title": "Public Key"
+          },
+          "peer_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Peer Id"
           },
           "allowed_ips": {
             "anyOf": [
@@ -9136,7 +12731,8 @@
         "required": [
           "public_key"
         ],
-        "title": "PeerOut"
+        "title": "PeerOut",
+        "description": "Node peer. peer_id present when mapped to a Device (for admin rotate/revoke)."
       },
       "PlacementCandidateOut": {
         "properties": {
@@ -10110,6 +13706,7 @@
             "title": "Profile Types",
             "default": [
               "awg",
+              "wg_obf",
               "wg"
             ]
           },
@@ -10138,8 +13735,61 @@
         "type": "object",
         "title": "ServerCapabilitiesOut"
       },
+      "ServerCertStatusOut": {
+        "properties": {
+          "fingerprint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fingerprint"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "last_rotation_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Rotation At"
+          }
+        },
+        "type": "object",
+        "title": "ServerCertStatusOut",
+        "description": "mTLS cert status for agent/server (from env or DB)."
+      },
       "ServerCreate": {
         "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
           "name": {
             "type": "string",
             "title": "Name"
@@ -10181,7 +13831,8 @@
           "region",
           "api_endpoint"
         ],
-        "title": "ServerCreate"
+        "title": "ServerCreate",
+        "description": "Create a server. Optional id: use for agent mode so node-agent can set SERVER_ID to match."
       },
       "ServerDeviceCountsOut": {
         "properties": {
@@ -10242,6 +13893,150 @@
           "ts"
         ],
         "title": "ServerHealthOut"
+      },
+      "ServerIpCreate": {
+        "properties": {
+          "ip": {
+            "type": "string",
+            "title": "Ip",
+            "description": "IPv4 or IPv6 address"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "primary",
+              "secondary"
+            ],
+            "title": "Role",
+            "default": "secondary"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "good",
+              "bad",
+              "blocked",
+              "suspected_dpi"
+            ],
+            "title": "State",
+            "default": "good"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ip"
+        ],
+        "title": "ServerIpCreate"
+      },
+      "ServerIpListOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ServerIpOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "ServerIpListOut"
+      },
+      "ServerIpOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "server_id": {
+            "type": "string",
+            "title": "Server Id"
+          },
+          "ip": {
+            "type": "string",
+            "title": "Ip"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role"
+          },
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "last_checked_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Checked At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "server_id",
+          "ip",
+          "role",
+          "state",
+          "created_at"
+        ],
+        "title": "ServerIpOut"
+      },
+      "ServerIpUpdate": {
+        "properties": {
+          "role": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "primary",
+                  "secondary"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role"
+          },
+          "state": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "good",
+                  "bad",
+                  "blocked",
+                  "suspected_dpi"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "State"
+          }
+        },
+        "type": "object",
+        "title": "ServerIpUpdate"
       },
       "ServerLimitsOut": {
         "properties": {
@@ -10338,6 +14133,11 @@
           "total": {
             "type": "integer",
             "title": "Total"
+          },
+          "agent_mode_no_heartbeat": {
+            "type": "boolean",
+            "title": "Agent Mode No Heartbeat",
+            "default": false
           }
         },
         "type": "object",
@@ -10346,6 +14146,62 @@
           "total"
         ],
         "title": "ServerList"
+      },
+      "ServerLogLineOut": {
+        "properties": {
+          "ts": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Ts"
+          },
+          "level": {
+            "type": "string",
+            "title": "Level"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "action_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Action Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ts",
+          "level",
+          "message"
+        ],
+        "title": "ServerLogLineOut"
+      },
+      "ServerLogsOut": {
+        "properties": {
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/ServerLogLineOut"
+            },
+            "type": "array",
+            "title": "Lines"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "lines",
+          "total"
+        ],
+        "title": "ServerLogsOut"
       },
       "ServerOut": {
         "properties": {
@@ -10467,6 +14323,110 @@
               }
             ],
             "title": "Request Id"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider"
+          },
+          "tags": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tags"
+          },
+          "auto_sync_enabled": {
+            "type": "boolean",
+            "title": "Auto Sync Enabled",
+            "default": false
+          },
+          "auto_sync_interval_sec": {
+            "type": "integer",
+            "title": "Auto Sync Interval Sec",
+            "default": 60
+          },
+          "ops_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ops Notes"
+          },
+          "ops_notes_updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ops Notes Updated At"
+          },
+          "ops_notes_updated_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ops Notes Updated By"
+          },
+          "cert_fingerprint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cert Fingerprint"
+          },
+          "cert_expires_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cert Expires At"
           }
         },
         "type": "object",
@@ -10720,6 +14680,36 @@
               }
             ],
             "title": "Error"
+          },
+          "progress_pct": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Progress Pct"
+          },
+          "logs_tail": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logs Tail"
+          },
+          "job_type": {
+            "type": "string",
+            "title": "Job Type",
+            "default": "sync"
           }
         },
         "type": "object",
@@ -10753,6 +14743,17 @@
           "job_id": {
             "type": "string",
             "title": "Job Id"
+          },
+          "action_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Action Id"
           }
         },
         "type": "object",
@@ -10819,6 +14820,35 @@
               }
             ],
             "title": "Last Metrics At"
+          },
+          "last_telemetry_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Telemetry At"
+          },
+          "telemetry_status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "ok",
+                  "stale",
+                  "missing",
+                  "error"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Telemetry Status"
           }
         },
         "type": "object",
@@ -10877,6 +14907,39 @@
             "type": "boolean",
             "title": "Node Reachable",
             "default": true
+          },
+          "container_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Container Name"
+          },
+          "agent_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agent Version"
+          },
+          "reported_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reported Status"
           }
         },
         "type": "object",
@@ -10943,6 +15006,17 @@
             ],
             "title": "Public Key"
           },
+          "ops_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ops Notes"
+          },
           "is_active": {
             "anyOf": [
               {
@@ -10953,6 +15027,28 @@
               }
             ],
             "title": "Is Active"
+          },
+          "auto_sync_enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Auto Sync Enabled"
+          },
+          "auto_sync_interval_sec": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Auto Sync Interval Sec"
           }
         },
         "type": "object",
@@ -10989,6 +15085,53 @@
           "servers"
         ],
         "title": "ServersTelemetrySummaryOut"
+      },
+      "ServiceScrapeStatus": {
+        "properties": {
+          "job": {
+            "type": "string",
+            "title": "Job"
+          },
+          "instance": {
+            "type": "string",
+            "title": "Instance"
+          },
+          "health": {
+            "type": "string",
+            "title": "Health"
+          },
+          "last_scrape": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Scrape"
+          },
+          "last_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "job",
+          "instance",
+          "health",
+          "last_scrape",
+          "last_error"
+        ],
+        "title": "ServiceScrapeStatus"
       },
       "SubscriptionCreate": {
         "properties": {
@@ -11143,6 +15286,38 @@
         },
         "type": "object",
         "title": "SubscriptionUpdate"
+      },
+      "TelemetryServicesOut": {
+        "properties": {
+          "services": {
+            "items": {
+              "$ref": "#/components/schemas/ServiceScrapeStatus"
+            },
+            "type": "array",
+            "title": "Services"
+          },
+          "prometheus_available": {
+            "type": "boolean",
+            "title": "Prometheus Available"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "services",
+          "prometheus_available"
+        ],
+        "title": "TelemetryServicesOut"
       },
       "ThrottlingApplyOut": {
         "properties": {
@@ -11832,6 +16007,39 @@
             ],
             "title": "Config"
           },
+          "config_awg": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Config Awg"
+          },
+          "config_wg_obf": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Config Wg Obf"
+          },
+          "config_wg": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Config Wg"
+          },
           "issued_at": {
             "type": "string",
             "format": "date-time",
@@ -11896,12 +16104,98 @@
         ],
         "title": "WgPeerCreateBody",
         "description": "Body for POST /wg/peer (provision peer = issue device)."
+      },
+      "ErrorInfo": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "details": {
+            "type": "object",
+            "nullable": true
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ]
+      },
+      "ErrorMeta": {
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "code": {
+            "type": "integer"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "timestamp",
+          "code"
+        ]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "object",
+            "nullable": true
+          },
+          "error": {
+            "$ref": "#/components/schemas/ErrorInfo"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ErrorMeta"
+          }
+        },
+        "required": [
+          "success",
+          "data",
+          "error",
+          "meta"
+        ]
       }
     },
     "securitySchemes": {
       "HTTPBearer": {
         "type": "http",
         "scheme": "bearer"
+      },
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key",
+        "description": "Bot API key (X-API-Key header)."
+      },
+      "AgentToken": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Agent-Token",
+        "description": "Node-agent shared token. mTLS required at reverse-proxy."
+      }
+    },
+    "responses": {
+      "ErrorResponse": {
+        "description": "Unified error response",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
       }
     }
   }

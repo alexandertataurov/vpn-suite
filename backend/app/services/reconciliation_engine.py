@@ -174,11 +174,7 @@ async def reconcile_all_nodes(
     """Reconcile every discovered healthy/degraded AWG node."""
     results: list[tuple[str, ReconciliationResult]] = []
     nodes = await adapter.discover_nodes()
-    node_ids = [
-        node.node_id
-        for node in nodes
-        if node.status in ("healthy", "degraded")
-    ]
+    node_ids = [node.node_id for node in nodes if node.status in ("healthy", "degraded")]
     for node_id in node_ids:
         try:
             result = await reconcile_node(node_id, adapter)

@@ -40,9 +40,7 @@ export function ScrapeStatusPanel() {
     return (
       <Panel as="section" variant="outline" aria-label="Scrape status">
         <h3 className="ref-settings-title">Scrape status</h3>
-        <InlineAlert variant="error" title="Failed to load scrape status">
-          {error instanceof Error ? error.message : "Unknown error"}
-        </InlineAlert>
+        <InlineAlert variant="error" title="Failed to load scrape status" message={error instanceof Error ? error.message : "Unknown error"} />
       </Panel>
     );
   }
@@ -51,9 +49,11 @@ export function ScrapeStatusPanel() {
     return (
       <Panel as="section" variant="outline" aria-label="Scrape status">
         <h3 className="ref-settings-title">Scrape status</h3>
-        <InlineAlert variant="warning" title="Prometheus not configured">
-          {data.message ?? "TELEMETRY_PROMETHEUS_URL is unset. Set it when monitoring profile is running."}
-        </InlineAlert>
+        <InlineAlert
+          variant="warning"
+          title="Prometheus not configured"
+          message={data.message ?? "TELEMETRY_PROMETHEUS_URL is unset. Set it when monitoring profile is running."}
+        />
       </Panel>
     );
   }

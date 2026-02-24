@@ -25,7 +25,9 @@ class Device(Base, TimestampMixin):
     )
     device_name: Mapped[str | None] = mapped_column(String(128), nullable=True)
     public_key: Mapped[str] = mapped_column(String(128), nullable=False)
-    allowed_ips: Mapped[str | None] = mapped_column(String(64), nullable=True)  # client tunnel address e.g. 10.8.1.2/32
+    allowed_ips: Mapped[str | None] = mapped_column(
+        String(64), nullable=True
+    )  # client tunnel address e.g. 10.8.1.2/32
     config_amnezia_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
     issued_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

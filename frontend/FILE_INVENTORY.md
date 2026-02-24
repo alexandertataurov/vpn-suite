@@ -92,6 +92,9 @@
 | admin/src/components/TableSection.tsx | component | yes | low | keep | none |
 | admin/src/components/telemetry/ClusterHealthCharts.tsx | component | yes | med | keep | none |
 | admin/src/components/telemetry/DataSourceHealthStrip.tsx | component | yes | low | keep | none |
+| admin/src/components/telemetry/ScrapeStatusPanel.tsx | component | yes | low | keep | none |
+| admin/src/components/GlobalDataIndicator.tsx | component | yes | med | keep | none |
+| admin/src/components/ResourceDebugPanel.tsx | component | yes | low | keep | none |
 | admin/src/components/TimeRangePicker.stories.tsx | story | no | low | keep | none |
 | admin/src/components/TimeRangePicker.tsx | component | yes | low | keep | none |
 | admin/src/components/TimeSeriesPanel.stories.tsx | story | no | low | keep | none |
@@ -104,6 +107,7 @@
 | admin/src/hooks/useDashboardSettings.ts | hook | yes | low | keep | none |
 | admin/src/hooks/useDockerTelemetry.backoff.test.ts | test | no | low | keep | unit |
 | admin/src/hooks/useDockerTelemetry.ts | hook | yes | med | keep | unit |
+| admin/src/hooks/useResource.ts | hook | yes | med | keep | none |
 | admin/src/hooks/useServerList.ts | hook | yes | med | keep | none |
 | admin/src/hooks/useServersStream.ts | hook | yes | med | keep | none |
 | admin/src/layouts/AdminLayout.tsx | component | yes | high | keep | none |
@@ -157,6 +161,8 @@
 | admin/src/utils/logFrontendError.ts | util | yes | low | keep | none |
 | admin/src/utils/queryPolicy.test.ts | test | no | low | keep | unit |
 | admin/src/utils/queryPolicy.ts | util | yes | low | keep | unit |
+| admin/src/utils/resourceDebug.ts | util | yes | low | keep | none |
+| admin/src/utils/resourceRegistry.ts | util | yes | low | keep | none |
 | admin/src/utils/savedViews.ts | util | yes | low | keep | none |
 | admin/src/utils/serversLogger.ts | util | yes | low | keep | none |
 | admin/src/utils/statusBadges.ts | util | yes | low | keep | none |

@@ -3,7 +3,7 @@
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.server_cache import invalidate_servers_list_cache
@@ -12,8 +12,6 @@ from app.core.constants import PERM_SERVERS_READ, PERM_SERVERS_WRITE
 from app.core.database import get_db
 from app.core.error_responses import not_found_404
 from app.core.rbac import require_permission
-from sqlalchemy import func
-
 from app.models import Device, Server, ServerIp
 from app.schemas.server import (
     ServerCertStatusOut,

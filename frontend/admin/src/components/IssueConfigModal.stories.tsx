@@ -38,6 +38,7 @@ const mockResponse = {
 function ApiMock({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const originalPost = api.post;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- mock signature
     api.post = async <T,>(_path: string, _body?: unknown) => mockResponse as T;
     return () => {
       api.post = originalPost;

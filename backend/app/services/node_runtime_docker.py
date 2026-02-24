@@ -11,8 +11,8 @@ import re
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from uuid import uuid4
 from typing import TYPE_CHECKING
+from uuid import uuid4
 
 from app.core.exceptions import NodeDiscoveryError, WireGuardCommandError
 
@@ -27,7 +27,12 @@ _PUBLIC_KEY_PATTERN = re.compile(r"^[A-Za-z0-9+/=]{32,64}$")
 _ALLOWED_IPS_PATTERN = re.compile(r"^[0-9A-Fa-f.,/: \t]+$")
 _CONTAINER_NAME_PATTERN = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}$")
 _INTERFACE_NAME_PATTERN = re.compile(r"^[a-zA-Z0-9_.:-]{1,32}$")
-_AMNEZIA_IMAGE_PATTERNS = [r"amnezia[wgvpn/\\-]*", r"amneziawg", r"metaligh/amneziawg", r"amneziavpn/amneziawg"]
+_AMNEZIA_IMAGE_PATTERNS = [
+    r"amnezia[wgvpn/\\-]*",
+    r"amneziawg",
+    r"metaligh/amneziawg",
+    r"amneziavpn/amneziawg",
+]
 
 
 def _ensure_host_id(path: str = "/etc/vpn-suite/node-id") -> str:
@@ -124,8 +129,9 @@ def _parse_docker_mem_bytes(s: str) -> int | None:
         return None
 
 
-def _get_docker_client() -> "docker.DockerClient":
+def _get_docker_client() -> docker.DockerClient:
     import docker
+
     return docker.from_env()
 
 
@@ -134,6 +140,7 @@ def _docker_exec_sync(
 ) -> tuple[int, str]:
     """Run command in container via Docker SDK. Sync, run in thread from async."""
     import docker
+
     client = docker.from_env()
     try:
         container = client.containers.get(container_name)
@@ -147,6 +154,7 @@ def _docker_exec_sync(
 
 def _docker_ps_sync(fmt: str | None) -> tuple[int, str]:
     import docker
+
     client = docker.from_env()
     names: list[str] = []
     ids: list[str] = []
@@ -290,13 +298,7 @@ def _parse_wg_show_obfuscation(output: str) -> dict | None:
         elif key in ("s1", "s2", "s3", "s4"):
             try:
                 result[
-                    "S1"
-                    if key == "s1"
-                    else "S2"
-                    if key == "s2"
-                    else "S3"
-                    if key == "s3"
-                    else "S4"
+                    "S1" if key == "s1" else "S2" if key == "s2" else "S3" if key == "s3" else "S4"
                 ] = int(val)
             except ValueError:
                 pass
@@ -304,11 +306,21 @@ def _parse_wg_show_obfuscation(output: str) -> dict | None:
             # H1-H4 may be numeric or range string (e.g. "0-255"); pass through when parseable.
             v = val.strip()
             if v.isdigit():
-                result["H1" if key == "h1" else "H2" if key == "h2" else "H3" if key == "h3" else "H4"] = int(v)
+                result[
+                    "H1" if key == "h1" else "H2" if key == "h2" else "H3" if key == "h3" else "H4"
+                ] = int(v)
             elif "-" in v:
                 left, _, right = v.partition("-")
                 if left.strip().isdigit() and right.strip().isdigit():
-                    result["H1" if key == "h1" else "H2" if key == "h2" else "H3" if key == "h3" else "H4"] = f"{left.strip()}-{right.strip()}"
+                    result[
+                        "H1"
+                        if key == "h1"
+                        else "H2"
+                        if key == "h2"
+                        else "H3"
+                        if key == "h3"
+                        else "H4"
+                    ] = f"{left.strip()}-{right.strip()}"
     return result if result else None
 
 
@@ -345,18 +357,17 @@ def _extract_entrypoint_cmd(inspect: dict) -> str:
     cfg = inspect.get("Config") or {}
     ep = cfg.get("Entrypoint") or []
     cmd = cfg.get("Cmd") or []
-    a = ep if isinstance(ep, (list, tuple)) else [ep]
-    b = cmd if isinstance(cmd, (list, tuple)) else [cmd]
+    a = ep if isinstance(ep, list | tuple) else [ep]
+    b = cmd if isinstance(cmd, list | tuple) else [cmd]
     return " ".join(str(x) for x in a + b).lower()
 
 
 def _classify_container_inspect(inspect: dict, image_refs: list[str]) -> dict:
     ports = _extract_ports(inspect)
     mounts = _extract_mounts(inspect)
-    env = _extract_env(inspect)
-    labels = _extract_labels(inspect)
+    _extract_env(inspect)  # reserved for future classification
+    _extract_labels(inspect)  # reserved for future classification
     entry = _extract_entrypoint_cmd(inspect)
-    network_mode = str((inspect.get("HostConfig") or {}).get("NetworkMode") or "").lower()
     caps = (inspect.get("HostConfig") or {}).get("CapAdd") or []
 
     evidence: list[str] = []
@@ -475,7 +486,9 @@ class DockerNodeRuntimeAdapter(NodeRuntimeAdapter):
 
     def __init__(self, container_filter: str = "amnezia-awg", interface: str = "awg0"):
         self._container_prefix = container_filter
-        self._container_prefixes: list[str] = [p.strip() for p in container_filter.split(",") if p.strip()]
+        self._container_prefixes: list[str] = [
+            p.strip() for p in container_filter.split(",") if p.strip()
+        ]
         if not self._container_prefixes:
             self._container_prefixes = ["amnezia-awg"]
         self._interface = _sanitize_interface_name(interface)
@@ -504,9 +517,7 @@ class DockerNodeRuntimeAdapter(NodeRuntimeAdapter):
         last_output = ""
 
         async def try_iface(iface: str) -> tuple[int, str]:
-            return await _docker_exec(
-                container_name, ["wg", "show", iface, "dump"], timeout=15.0
-            )
+            return await _docker_exec(container_name, ["wg", "show", iface, "dump"], timeout=15.0)
 
         for iface in self._candidate_interfaces():
             attempted.add(iface)
@@ -535,6 +546,7 @@ class DockerNodeRuntimeAdapter(NodeRuntimeAdapter):
     async def _discover_container_names(self) -> list[str]:
         def _list() -> list[str]:
             import docker
+
             client = docker.from_env()
             out: list[str] = []
             for c in client.containers.list():
@@ -548,6 +560,7 @@ class DockerNodeRuntimeAdapter(NodeRuntimeAdapter):
                 except WireGuardCommandError:
                     _log.debug("Skip container name (invalid): %r", name[:64])
             return out
+
         try:
             return await asyncio.to_thread(_list)
         except Exception as e:
@@ -556,6 +569,7 @@ class DockerNodeRuntimeAdapter(NodeRuntimeAdapter):
     async def _discover_containers(self) -> list[dict]:
         def _list() -> list[dict]:
             import docker
+
             client = docker.from_env()
             out: list[dict] = []
             for c in client.containers.list():
@@ -573,12 +587,15 @@ class DockerNodeRuntimeAdapter(NodeRuntimeAdapter):
                 except Exception:
                     pass
                 classification = _classify_container_inspect(attrs, [r for r in image_refs if r])
-                out.append({
-                    "container_id": cid,
-                    "container_name": name,
-                    "classification": classification,
-                })
+                out.append(
+                    {
+                        "container_id": cid,
+                        "container_name": name,
+                        "classification": classification,
+                    }
+                )
             return out
+
         try:
             return await asyncio.to_thread(_list)
         except Exception as e:
@@ -683,10 +700,14 @@ class DockerNodeRuntimeAdapter(NodeRuntimeAdapter):
                     continue
                 if kind != "awg" and confidence < 0.6:
                     continue
-                nodes.append(await self._discover_one(container_id, container_name, classification, host_id))
+                nodes.append(
+                    await self._discover_one(container_id, container_name, classification, host_id)
+                )
             except Exception as exc:  # keep discovery loop resilient
                 _log.warning(
-                    "Discovery failed for container=%s: %s", c.get("container_name"), type(exc).__name__
+                    "Discovery failed for container=%s: %s",
+                    c.get("container_name"),
+                    type(exc).__name__,
                 )
                 nodes.append(
                     NodeMetadata(
@@ -768,7 +789,17 @@ class DockerNodeRuntimeAdapter(NodeRuntimeAdapter):
             script = f"printf '%s\\n' '{key_b64}' | wg set {interface} peer {public_key} allowed-ips {allowed_ips} persistent-keepalive {keepalive} preshared-key /dev/stdin"
             cmd = ["sh", "-c", script]
         else:
-            cmd = ["wg", "set", interface, "peer", public_key, "allowed-ips", allowed_ips, "persistent-keepalive", str(keepalive)]
+            cmd = [
+                "wg",
+                "set",
+                interface,
+                "peer",
+                public_key,
+                "allowed-ips",
+                allowed_ips,
+                "persistent-keepalive",
+                str(keepalive),
+            ]
         code, output = await _docker_exec(container_name, cmd, timeout=15.0)
         if code != 0:
             raise WireGuardCommandError(
@@ -785,7 +816,8 @@ class DockerNodeRuntimeAdapter(NodeRuntimeAdapter):
         interface = _sanitize_interface_name(node.interface_name or self._interface)
         public_key = _sanitize_public_key(peer_public_key)
         code, output = await _docker_exec(
-            container_name, ["wg", "set", interface, "peer", public_key, "remove"],
+            container_name,
+            ["wg", "set", interface, "peer", public_key, "remove"],
             timeout=15.0,
         )
         if code != 0:
@@ -802,9 +834,7 @@ class DockerNodeRuntimeAdapter(NodeRuntimeAdapter):
             return None
         container_name = node.container_name
         interface = _sanitize_interface_name(node.interface_name or self._interface)
-        code, output = await _docker_exec(
-            container_name, ["wg", "show", interface], timeout=10.0
-        )
+        code, output = await _docker_exec(container_name, ["wg", "show", interface], timeout=10.0)
         if code != 0:
             return None
         return _parse_wg_show_obfuscation(output)
@@ -825,8 +855,10 @@ class DockerNodeRuntimeAdapter(NodeRuntimeAdapter):
 
     async def get_container_stats(self, container_name: str) -> dict | None:
         """Return CPU/RAM stats for a container via Docker SDK. Optional for snapshot."""
+
         def _stats() -> dict | None:
             import docker
+
             client = docker.from_env()
             try:
                 c = client.containers.get(container_name)
@@ -854,6 +886,7 @@ class DockerNodeRuntimeAdapter(NodeRuntimeAdapter):
                 }
             except (KeyError, TypeError, ZeroDivisionError):
                 return None
+
         try:
             return await asyncio.to_thread(_stats)
         except Exception:
@@ -1032,9 +1065,7 @@ class DockerNodeRuntimeAdapter(NodeRuntimeAdapter):
 
         executed = 0
         for command in commands:
-            code, output = await _docker_exec(
-                container_name, command, timeout=15.0
-            )
+            code, output = await _docker_exec(container_name, command, timeout=15.0)
             # Ignore cleanup failure when no previous filters exist.
             if command[:3] == ["tc", "filter", "del"] and code != 0:
                 continue

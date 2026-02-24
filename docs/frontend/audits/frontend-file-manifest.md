@@ -37,7 +37,7 @@
 
 ## Summary
 
-- **~285 source files** (admin, miniapp, shared)
+- **~331 source files** (admin, miniapp, shared)
 - **Runtime critical**: main.tsx, App.tsx, layouts, api/client, authStore, AuthGuard, ProtectedRoute, ErrorBoundary, ThemeProvider
 - **High risk**: auth, API clients, layouts, Login, Checkout
 - **Test coverage**: unit (5 admin + 1 shared Table), e2e (11 admin + 2 miniapp specs), none (most runtime)

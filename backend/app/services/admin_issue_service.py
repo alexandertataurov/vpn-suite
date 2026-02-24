@@ -13,7 +13,6 @@ from app.core.amnezia_config import (
     build_amnezia_client_config,
     build_standard_wg_client_config,
     build_wg_obfuscated_config,
-    derive_address_from_profile,
     generate_wg_keypair,
     get_obfuscation_params,
 )
@@ -507,7 +506,9 @@ async def admin_rotate_peer(
             cidr = request_params.get("subnet_cidr") or request_params.get("amnezia_cidr") or 32
             address = allowed_ips_val.replace("/32", f"/{cidr}")
     else:
-        address, allowed_ips_val = await allocate_address_for_device(session, server_id, request_params)
+        address, allowed_ips_val = await allocate_address_for_device(
+            session, server_id, request_params
+        )
     try:
         config_awg_snippet = build_amnezia_client_config(
             server_public_key=server.public_key,
