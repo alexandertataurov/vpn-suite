@@ -1,7 +1,7 @@
 # Security Risk Report
 
 **Audit Date:** 2025-02-21  
-**Scope:** VPN Suite, AmneziaWG, Outline, control plane
+**Scope:** VPN Suite, AmneziaWG, control plane
 
 ---
 
@@ -27,7 +27,6 @@
 | H4 | Monitoring ports exposed (3000, 8080, 9100) | docker-compose | Bind to 127.0.0.1 | **Fixed** |
 | H5 | Node-agent Docker socket not read-only | `docker-compose.yml` node-agent | Mount `/var/run/docker.sock:ro` if agent supports read-only |
 | H6 | Port 8000 allowed in UFW | UFW rules | admin-api binds 127.0.0.1:8000; remove UFW allow 8000 if unused |
-| H7 | Outline access.txt contains API URL/secret | `/opt/outline/access.txt` | Ensure not in version control; chmod 600 |
 
 ---
 

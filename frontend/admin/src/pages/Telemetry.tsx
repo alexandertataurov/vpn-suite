@@ -5,8 +5,16 @@ import { PrimitiveBadge, Tabs } from "@vpn-suite/shared/ui";
 import { PageHeader } from "../components/PageHeader";
 import { DockerServicesTab } from "./telemetry/DockerServicesTab";
 import { VpnNodesTab } from "./telemetry/VpnNodesTab";
-import { DOCKER_TELEMETRY_KEY, OPERATOR_DASHBOARD_KEY, SERVERS_LIST_KEY, TELEMETRY_TOPOLOGY_KEY } from "../api/query-keys";
+import { ScrapeStatusPanel } from "../components/telemetry/ScrapeStatusPanel";
+import {
+  ANALYTICS_TELEMETRY_SERVICES_KEY,
+  DOCKER_TELEMETRY_KEY,
+  OPERATOR_DASHBOARD_KEY,
+  SERVERS_LIST_KEY,
+  TELEMETRY_TOPOLOGY_KEY,
+} from "../api/query-keys";
 import { RefreshButton } from "../components/RefreshButton";
+import { refreshRegisteredResources } from "../utils/resourceRegistry";
 
 type TelemetryTab = "docker" | "vpn";
 const TELEMETRY_TAB_ITEMS = [
@@ -27,18 +35,23 @@ export function TelemetryPage() {
   };
 
   const handleRefreshNow = async () => {
-    const results = await Promise.all([
-      queryClient.refetchQueries({ queryKey: ["telemetry"] }),
-      queryClient.refetchQueries({ queryKey: DOCKER_TELEMETRY_KEY }),
-      queryClient.refetchQueries({ queryKey: OPERATOR_DASHBOARD_KEY }),
-      queryClient.refetchQueries({ queryKey: TELEMETRY_TOPOLOGY_KEY }),
-      queryClient.refetchQueries({ queryKey: SERVERS_LIST_KEY }),
+    const [results, registered] = await Promise.all([
+      Promise.all([
+        queryClient.refetchQueries({ queryKey: ["telemetry"] }),
+        queryClient.refetchQueries({ queryKey: DOCKER_TELEMETRY_KEY }),
+        queryClient.refetchQueries({ queryKey: OPERATOR_DASHBOARD_KEY }),
+        queryClient.refetchQueries({ queryKey: TELEMETRY_TOPOLOGY_KEY }),
+        queryClient.refetchQueries({ queryKey: SERVERS_LIST_KEY }),
+        queryClient.refetchQueries({ queryKey: ANALYTICS_TELEMETRY_SERVICES_KEY }),
+      ]),
+      refreshRegisteredResources(),
     ]);
     const hasResultError = results.some(
       (res) => Array.isArray(res) && res.some((r) => (r as { error?: unknown }).error)
     );
     const hasCacheError = [
       ["telemetry"],
+      ANALYTICS_TELEMETRY_SERVICES_KEY,
       DOCKER_TELEMETRY_KEY,
       OPERATOR_DASHBOARD_KEY,
       TELEMETRY_TOPOLOGY_KEY,
@@ -46,7 +59,8 @@ export function TelemetryPage() {
     ].some((key) =>
       queryClient.getQueryCache().findAll({ queryKey: key }).some((q) => q.state.status === "error")
     );
-    if (hasResultError || hasCacheError) {
+    const hasRegisteredError = registered.some((r) => !r.ok);
+    if (hasResultError || hasCacheError || hasRegisteredError) {
       throw new Error("refresh_failed");
     }
   };
@@ -71,6 +85,8 @@ export function TelemetryPage() {
         />
         {regionFilter !== "all" ? <PrimitiveBadge variant="info">Region: {regionFilter}</PrimitiveBadge> : null}
       </PageHeader>
+
+      <ScrapeStatusPanel />
 
       <Tabs
         items={TELEMETRY_TAB_ITEMS}

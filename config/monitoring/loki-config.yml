@@ -26,5 +26,13 @@ schema_config:
         prefix: loki_index_
         period: 24h
 
+limits_config:
+  retention_period: 8760h  # 365 days
+
+compactor:
+  working_directory: /tmp/loki/compactor
+  retention_enabled: true
+  retention_delete_delay: 2h
+
 analytics:
   reporting_enabled: false

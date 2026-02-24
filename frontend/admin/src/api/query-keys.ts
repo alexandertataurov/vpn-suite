@@ -54,12 +54,6 @@ export const PAYMENTS_KEY = ["payments"] as const;
 /** User detail (by id). */
 export const userKey = (id: string) => ["user", id] as const;
 
-/** Outline: status, keys, server, metrics. */
-export const OUTLINE_STATUS_KEY = ["outline", "status"] as const;
-export const OUTLINE_KEYS_KEY = ["outline", "keys"] as const;
-export const OUTLINE_SERVER_KEY = ["outline", "server"] as const;
-export const OUTLINE_METRICS_KEY = ["outline", "metrics"] as const;
-
 /** Control plane sub-keys. */
 export const CONTROL_PLANE_TOPOLOGY_SUMMARY_KEY = ["control-plane", "topology-summary"] as const;
 export const CONTROL_PLANE_TOPOLOGY_GRAPH_KEY = ["control-plane", "topology-graph"] as const;
@@ -92,3 +86,6 @@ export const telemetryServerKey = (serverId: string) =>
 
 /** Cluster health (dashboard). */
 export const CLUSTER_HEALTH_KEY = ["cluster", "health"] as const;
+
+/** Analytics: telemetry services (scrape status). */
+export const ANALYTICS_TELEMETRY_SERVICES_KEY = ["analytics", "telemetry", "services"] as const;

@@ -1,0 +1,86 @@
+{
+  "title": "VPN Overview",
+  "uid": "vpn-overview",
+  "schemaVersion": 38,
+  "version": 1,
+  "tags": ["vpn-suite", "vpn", "wireguard"],
+  "time": {"from": "now-1h", "to": "now"},
+  "refresh": "30s",
+  "panels": [
+    {
+      "type": "stat",
+      "title": "wg-exporter Nodes Up",
+      "gridPos": {"x": 0, "y": 0, "w": 4, "h": 4},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [{"expr": "sum(wireguard_up)", "refId": "A"}]
+    },
+    {
+      "type": "stat",
+      "title": "Total Peers",
+      "gridPos": {"x": 4, "y": 0, "w": 4, "h": 4},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [{"expr": "sum(wireguard_peers)", "refId": "A"}]
+    },
+    {
+      "type": "stat",
+      "title": "RX Rate (5m)",
+      "gridPos": {"x": 8, "y": 0, "w": 4, "h": 4},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "Bps"}},
+      "targets": [{"expr": "sum(rate(wireguard_received_bytes[5m]))", "refId": "A"}]
+    },
+    {
+      "type": "stat",
+      "title": "TX Rate (5m)",
+      "gridPos": {"x": 12, "y": 0, "w": 4, "h": 4},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "Bps"}},
+      "targets": [{"expr": "sum(rate(wireguard_sent_bytes[5m]))", "refId": "A"}]
+    },
+    {
+      "type": "stat",
+      "title": "Control-Plane Nodes",
+      "gridPos": {"x": 16, "y": 0, "w": 4, "h": 4},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [{"expr": "sum(vpn_nodes_total{status=~\"healthy|ok|degraded\"})", "refId": "A"}]
+    },
+    {
+      "type": "stat",
+      "title": "Active Sessions",
+      "gridPos": {"x": 20, "y": 0, "w": 4, "h": 4},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [{"expr": "vpn_cluster_load", "refId": "A"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "Peers by Node",
+      "gridPos": {"x": 0, "y": 4, "w": 12, "h": 8},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [{"expr": "sum(wireguard_peers) by (node_id, server_id)", "legendFormat": "{{node_id}} / {{server_id}}", "refId": "A"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "RX Rate by Node",
+      "gridPos": {"x": 12, "y": 4, "w": 12, "h": 8},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "Bps"}},
+      "targets": [{"expr": "sum(rate(wireguard_received_bytes[5m])) by (node_id, server_id)", "legendFormat": "{{node_id}}", "refId": "A"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "TX Rate by Node",
+      "gridPos": {"x": 0, "y": 12, "w": 12, "h": 8},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "Bps"}},
+      "targets": [{"expr": "sum(rate(wireguard_sent_bytes[5m])) by (node_id, server_id)", "legendFormat": "{{node_id}}", "refId": "A"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "Handshake Age (max per node)",
+      "gridPos": {"x": 12, "y": 12, "w": 12, "h": 8},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "s"}},
+      "targets": [{"expr": "max(wireguard_latest_handshake_seconds) by (node_id, server_id)", "legendFormat": "{{node_id}}", "refId": "A"}]
+    }
+  ]
+}

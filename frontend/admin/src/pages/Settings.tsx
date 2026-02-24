@@ -1,5 +1,4 @@
-import { Link } from "react-router-dom";
-import { Settings as SettingsIcon, Shield } from "lucide-react";
+import { Settings as SettingsIcon } from "lucide-react";
 import { Button, Panel } from "@vpn-suite/shared/ui";
 import { useTheme } from "@vpn-suite/shared/theme";
 import { useAuthStore } from "../store/authStore";
@@ -12,18 +11,6 @@ export function SettingsPage() {
   return (
     <div className="ref-page" data-testid="settings-page">
       <PageHeader icon={SettingsIcon} title="Settings" description="Appearance and account controls" />
-
-      <Panel as="section" variant="outline">
-        <h3 className="ref-settings-title">Integrations</h3>
-        <p className="ref-settings-text">Connect external services to the admin dashboard.</p>
-        <div className="ref-page-actions">
-          <Button variant="secondary" size="sm" asChild>
-            <Link to="/integrations/outline" className="inline-flex items-center gap-2">
-              <Shield aria-hidden /> Outline
-            </Link>
-          </Button>
-        </div>
-      </Panel>
 
       <Panel as="section" variant="outline">
         <h3 className="ref-settings-title">Appearance</h3>

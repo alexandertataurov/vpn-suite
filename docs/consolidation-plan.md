@@ -16,7 +16,7 @@
 | CHANGELOG.md | Version history | **Keep** |
 | RUNBOOK.md | Observability runbook | → docs/observability/runbook-observability.md |
 | VALIDATION.md | Observability validation | → docs/observability/validation.md |
-| DATA_CONTRACT.md | Outline+AWG unification | → docs/observability/data-contract.md |
+| DATA_CONTRACT.md | AWG data contract | → docs/observability/data-contract.md |
 | BASELINE.md | Runtime snapshot | → docs/audits/baseline-capture-2026-02-22.md |
 | SERVER_LOGS_REPORT.md | Audit | → docs/audits/SERVER_LOGS_REPORT.md |
 | PERFORMANCE_BOTTLENECK_REPORT.md | Audit | → docs/audits/PERFORMANCE_BOTTLENECK_REPORT.md |

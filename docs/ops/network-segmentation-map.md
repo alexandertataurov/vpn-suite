@@ -9,7 +9,7 @@
 ```
                     ┌─────────────────────────────────────────────────────────────┐
                     │                     PUBLIC EDGE (DMZ)                        │
-                    │  Caddy :80/:443  │  Outline API (proxied)  │  Admin UI      │
+                    │  Caddy :80/:443  │    │  Admin UI      │
                     └───────────────────────────┬─────────────────────────────────┘
                                                 │
                     ┌───────────────────────────▼─────────────────────────────────┐
@@ -43,7 +43,7 @@
 | 8090 | Bot | 127.0.0.1 | Application |
 | 5432 | Postgres | internal | Data |
 | 6379 | Redis | internal | Data |
-| 19090* | Prometheus | 127.0.0.1 | Monitoring |
+| 19090 | Prometheus (host port) | 127.0.0.1 | Monitoring; PROMETHEUS_HOST_PORT |
 | 3000 | Grafana | 127.0.0.1 | Monitoring |
 | 8080 | cAdvisor | 127.0.0.1 | Monitoring |
 | 9100 | node-exporter | 127.0.0.1 | Monitoring |
@@ -89,7 +89,6 @@ Block outbound to cloud metadata endpoints (prevents SSRF / instance credential 
 |--------|--------|------|
 | Internet | Admin UI | Caddy:443 → file_server /admin/* |
 | Internet | Admin API | Caddy:443 → reverse_proxy admin-api:8000 |
-| Internet | Outline API | Caddy:443 /outline-api/* → Outline :25432 |
 | Internet | Bot webhook | Caddy:443 → reverse_proxy bot:8090 (if exposed) |
 | Node-agents | Control-plane | Caddy:8443 (mTLS) → admin-api:8000 |
 | admin-api | Postgres/Redis | Docker network |

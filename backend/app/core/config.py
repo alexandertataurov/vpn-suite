@@ -74,6 +74,8 @@ class Settings(BaseSettings):
     # Empty = disabled (no Prometheus calls). Set when using monitoring profile (e.g. http://prometheus:9090).
     telemetry_prometheus_url: str = ""
     telemetry_loki_url: str = ""
+    # OTLP traces endpoint (e.g. http://otel-collector:4317). Empty = tracing disabled.
+    otel_traces_endpoint: str = ""
     # JSON array [{\"host_id\":\"local\",\"name\":\"Local\",\"base_url\":\"unix:///var/run/docker.sock\"}]
     docker_telemetry_hosts_json: str = ""
     docker_telemetry_cache_ttl_seconds: int = 10
@@ -150,13 +152,8 @@ class Settings(BaseSettings):
     # VPN endpoint fallback: when node reports only private IP, use this host + node listen_port.
     # Set to PUBLIC_DOMAIN or your VPN server hostname (e.g. vpn.example.com) so Issue Config can derive endpoint.
     vpn_default_host: str = ""
-    # Outline (Shadowbox): full URL including secret path; never sent to frontend. Empty = integration disabled.
-    # Comma-separated container name prefixes for VPN discovery (e.g. amnezia-awg,shadowbox)
-    docker_vpn_container_prefixes: str = "amnezia-awg,shadowbox"
-    outline_manager_url: str = ""
-    outline_integration_enabled: bool = True  # When False, outline routes return 503
-    outline_request_timeout_seconds: float = 15.0
-    outline_retry_count: int = 2
+    # Comma-separated container name prefixes for VPN discovery (e.g. amnezia-awg)
+    docker_vpn_container_prefixes: str = "amnezia-awg"
 
     @model_validator(mode="after")
     def check_node_mode(self) -> "Settings":

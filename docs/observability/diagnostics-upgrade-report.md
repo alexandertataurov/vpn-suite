@@ -35,9 +35,9 @@ Post-implementation report for the diagnostics logging and issue prevention upgr
 | provision.peer.revoked | admin-api | Peer revoked |
 | provision.config.downloaded | admin-api | Config downloaded |
 | rate_limit.hit | admin-api | 429 returned (API or login) |
-| external.call.start | admin-api | Outline/Prometheus request start |
-| external.call.end | admin-api | Outline/Prometheus request end |
-| external.call.failed | admin-api | Outline/Prometheus failure |
+| external.call.start | admin-api | /Prometheus request start |
+| external.call.end | admin-api | /Prometheus request end |
+| external.call.failed | admin-api | /Prometheus failure |
 | external.call.slow | admin-api | External call > 3000ms |
 | bot.user_action | bot | User interaction (DEBUG) |
 | bot.action.completed | bot | Handler completed (DEBUG) |

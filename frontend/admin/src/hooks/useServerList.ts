@@ -8,7 +8,15 @@ import { cooldownRemainingMs, isNetworkUnreachableError, shouldRetryQuery } from
 export interface ServersTelemetrySummaryOut {
   servers: Record<
     string,
-    { cpu_pct?: number; ram_pct?: number; peers?: number; health_score?: number; last_metrics_at?: string }
+    {
+      cpu_pct?: number;
+      ram_pct?: number;
+      peers?: number;
+      health_score?: number;
+      last_metrics_at?: string;
+      last_telemetry_at?: string;
+      telemetry_status?: "ok" | "stale" | "missing" | "error";
+    }
   >;
 }
 

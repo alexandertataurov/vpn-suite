@@ -12,6 +12,7 @@ if [ -z "${DOCKER_GID:-}" ]; then
   [ -n "$_gid" ] && export DOCKER_GID="$_gid"
 fi
 DC=(env ENV_FILE="$ENV_FILE" docker compose --env-file "$ENV_FILE")
+DC_OBS=(env ENV_FILE="$ENV_FILE" docker compose -f docker-compose.yml -f docker-compose.observability.yml --env-file "$ENV_FILE")
 
 cmd="${1:-}"
 case "$cmd" in
@@ -54,13 +55,13 @@ case "$cmd" in
         fi
       fi
     fi
-    "${DC[@]}" --profile monitoring up -d prometheus cadvisor node-exporter loki promtail grafana
+    "${DC_OBS[@]}" --profile monitoring up -d prometheus cadvisor node-exporter loki promtail grafana discovery-runner wg-exporter tempo otel-collector
     ;;
   down-core)
     "${DC[@]}" down --remove-orphans
     ;;
   down-monitoring)
-    "${DC[@]}" --profile monitoring stop prometheus cadvisor node-exporter loki promtail grafana
+    "${DC_OBS[@]}" --profile monitoring stop prometheus cadvisor node-exporter loki promtail grafana discovery-runner wg-exporter tempo otel-collector
     ;;
   ps)
     "${DC[@]}" ps
@@ -69,7 +70,7 @@ case "$cmd" in
     "${DC[@]}" logs -f "${2:-}"
     ;;
   logs-monitoring)
-    "${DC[@]}" --profile monitoring logs -f "${2:-prometheus}"
+    "${DC_OBS[@]}" --profile monitoring logs -f "${2:-prometheus}"
     ;;
   migrate)
     "${DC[@]}" run --rm admin-api python -m alembic upgrade head

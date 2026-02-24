@@ -56,7 +56,7 @@ Set in the node-agent environment (container env, systemd, or host):
 
 - **SERVER_ID** = the server id from step 2 (e.g. `vpn-node-1` or `amnezia-awg`).
 - **AGENT_SHARED_TOKEN** = same value as in control-plane `.env`.
-- **CONTROL_PLANE_URL** or equivalent so the agent can reach the control-plane API (e.g. `https://vpn.vega.llc`).
+- **CONTROL_PLANE_URL** = `https://$PUBLIC_DOMAIN:8443` (mTLS port; agent API).
 
 After the agent starts and sends heartbeats, only this server will appear in the Servers list and its telemetry will come from the heartbeat.
 

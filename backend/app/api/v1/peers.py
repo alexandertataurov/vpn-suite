@@ -1,6 +1,7 @@
 """Peers API: spec 4.2 alias over devices (peer_id = device id, node_id = server id)."""
 
 import logging
+import time
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel
 from sqlalchemy import func, select
@@ -12,6 +13,7 @@ from app.core.database import get_db
 from app.core.error_responses import not_found_404
 from app.core.exception_handling import raise_http_for_control_plane_exception
 from app.core.exceptions import LoadBalancerError, WireGuardCommandError
+from app.core.logging_config import extra_for_event
 from app.core.rbac import require_permission
 from app.models import Device
 from app.schemas.peer import PeerListItemOut, PeerListOut
@@ -30,6 +32,7 @@ class MigrateBody(BaseModel):
 
 @router.get("", response_model=PeerListOut)
 async def list_peers(
+    request: Request,
     db: AsyncSession = Depends(get_db),
     node_id: str | None = Query(None, description="Filter by node (server) id"),
     status_filter: str | None = Query(None, alias="status", description="active | revoked"),
@@ -42,6 +45,7 @@ async def list_peers(
     Create peer: use POST /api/v1/devices/issue (with server_id or omit for load-balanced).
     Remove peer: use POST /api/v1/devices/{id}/revoke or /reset.
     """
+    started = time.perf_counter()
     stmt = select(Device)
     count_stmt = select(func.count()).select_from(Device)
     if node_id:
@@ -71,6 +75,25 @@ async def list_peers(
         )
         for d in devices
     ]
+    duration_ms = (time.perf_counter() - started) * 1000
+    logger.info(
+        "peers list",
+        extra=extra_for_event(
+            event="peers.list",
+            route="/api/v1/peers",
+            method="GET",
+            status_code=200,
+            duration_ms=duration_ms,
+            actor_id=str(getattr(request.state, "audit_admin_id", "")) or None,
+            result_count=len(items),
+            query_params={
+                "node_id": node_id,
+                "status": status_filter,
+                "limit": limit,
+                "offset": offset,
+            },
+        ),
+    )
     if settings.environment != "production":
         logger.info(
             "peers list debug",

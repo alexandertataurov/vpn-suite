@@ -11,7 +11,7 @@
 - Auth (login, JWT, refresh)
 - Rate limits
 - Data layer (no direct access; test via API)
-- Outline / AmneziaWG config issuance
+- AmneziaWG config issuance
 
 ---
 

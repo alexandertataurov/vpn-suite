@@ -20,6 +20,8 @@ _EXTRA_KEYS = frozenset(
         "method",
         "status_code",
         "duration_ms",
+        "result_count",
+        "query_params",
         "actor_id",
         "entity_id",
         "ip",
@@ -104,6 +106,8 @@ def extra_for_event(
     actor_id: str | None = None,
     entity_id: str | None = None,
     ip: str | None = None,
+    result_count: int | None = None,
+    query_params: dict[str, Any] | None = None,
     error_code: str | None = None,
     error_kind: str | None = None,
     error_severity: str | None = None,
@@ -121,6 +125,10 @@ def extra_for_event(
         out["status_code"] = status_code
     if duration_ms is not None:
         out["duration_ms"] = round(duration_ms, 2)
+    if result_count is not None:
+        out["result_count"] = result_count
+    if query_params is not None:
+        out["query_params"] = query_params
     if actor_id is not None:
         out["actor_id"] = actor_id
     if entity_id is not None:

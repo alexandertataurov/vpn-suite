@@ -18,7 +18,7 @@ import json
 with open('$INV_BEFORE') as f:
     inv = json.load(f)
 for n in inv.get('nodes', []):
-    if n.get('kind') in ('outline','awg') and n.get('container_id'):
+    if n.get('kind') == 'awg' and n.get('container_id'):
         print(n['container_id'], n['kind'], n['node_id'])
 ")
 if [ -z "$NODES" ]; then
@@ -51,17 +51,17 @@ import json
 with open('$INV_AFTER') as f:
     inv = json.load(f)
 for n in inv.get('nodes', []):
-    if n.get('kind') in ('outline','awg') and n.get('container_id'):
+    if n.get('kind') == 'awg' and n.get('container_id'):
         node_id = n.get('node_id') or ''
         if not node_id.startswith('docker:'):
             raise SystemExit(f'Expected node_id docker:..., got {node_id}')
-        if n.get('kind') not in ('outline','awg'):
-            raise SystemExit(f'Expected kind outline|awg, got {n.get(\"kind\")}')
+        if n.get('kind') != 'awg':
+            raise SystemExit(f'Expected kind awg, got {n.get(\"kind\")}')
 print('OK: kind and node_id assertions passed')
 "
 
 echo "=== 6. No name-based classification ==="
-if rg -i 'amnezia-awg|shadowbox' ops/discovery/*.py 2>/dev/null | grep -v 'image\|#\|pattern' | grep -q .; then
+if rg -i 'amnezia-awg' ops/discovery/*.py 2>/dev/null | grep -v 'image\|#\|pattern' | grep -q .; then
   echo "WARN: Possible name-based logic found"
 else
   echo "OK: No classification by container name"

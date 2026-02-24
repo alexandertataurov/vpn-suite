@@ -15,9 +15,6 @@ ignore = ["E501", "UP017"]  # UP017: datetime.UTC is 3.11+; CI uses 3.10
 # Core/services: #region blocks put imports after region start
 "app/core/server_sync_loop.py" = ["E402"]
 "app/services/server_sync_service.py" = ["E402", "I001"]  # I001: single merged snapshot import block
-# Outline schemas: camelCase matches external Outline API
-"app/schemas/outline.py" = ["N815"]
-
 [tool.mypy]
 python_version = "3.12"
 warn_return_any = true

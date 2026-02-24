@@ -25,8 +25,7 @@
 | Location | Component/Class | Domain | Variant logic |
 |----------|-----------------|--------|---------------|
 | PaymentsTab, Payments | PrimitiveBadge | Payment status | completed→success, failed→danger, else→neutral |
-| SubscriptionsTab, Subscriptions | PrimitiveBadge | Subscription | status map |
-| OutlineIntegrations | PrimitiveBadge | Connection | connected→success, degraded→warning, offline→danger |
+| SubscriptionsTab, Subscriptions | PrimitiveBadge | Subscription | status map | PrimitiveBadge | Connection | connected→success, degraded→warning, offline→danger |
 | UserDetail | PrimitiveBadge | User banned | banned→danger else success |
 | Users | PrimitiveBadge | User status | banned→danger else success |
 | Servers | PrimitiveBadge | Stream state | live/degraded/offline |
@@ -74,7 +73,7 @@
 - `ProfileCard` maps status→variant inline
 - `TimeSeriesPanel` maps status→variant inline
 - `DockerOverviewTable` maps state→variant inline
-- `OutlineIntegrations` maps status→variant inline
+- Status maps status→variant inline
 - `AlertsPanel` maps severity→variant inline
 - No central `statusMap.ts`
 

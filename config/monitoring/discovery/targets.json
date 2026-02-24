@@ -46,24 +46,6 @@
   },
   {
     "labels": {
-      "sd_job": "outline-ss",
-      "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7"
-    },
-    "targets": [
-      "host.docker.internal:19092"
-    ]
-  },
-  {
-    "labels": {
-      "sd_job": "outline-poller",
-      "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7"
-    },
-    "targets": [
-      "outline-poller:9106"
-    ]
-  },
-  {
-    "labels": {
       "sd_job": "wg-exporter",
       "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7"
     },

@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { Activity, AlertTriangle, Grid3X3, RefreshCw, Server, Users } from "lucide-react";
-import { Button, InlineAlert, RelativeTime, Skeleton } from "@vpn-suite/shared/ui";
+import { Button, InlineAlert, RelativeTime, Skeleton, PrimitiveBadge } from "@vpn-suite/shared/ui";
 import type { OperatorDashboardOut } from "@vpn-suite/shared/types";
 import { ApiError } from "@vpn-suite/shared/types";
 import { api } from "../../api/client";
@@ -17,6 +17,7 @@ import {
 } from "../../components/operator";
 import { TimeRangePicker } from "../../components/TimeRangePicker";
 import { ChartFrame } from "../../charts/ChartFrame";
+import { deriveResource, useResourceFromQuery } from "../../hooks/useResource";
 import { EChart } from "../../charts/EChart";
 import { makeOpsSparklineOption } from "../../charts/presets/opsSparkline";
 import { getChartColors } from "../../charts/chartConfig";
@@ -39,7 +40,6 @@ const TIME_RANGE_OPTIONS = [
 ];
 
 export function OperatorDashboardContent() {
-  const queryClient = useQueryClient();
   const [timeRange, setTimeRange] = useState("1h");
   const [networkCooldownUntil, setNetworkCooldownUntil] = useState<number | null>(null);
   const [serverFilter, setServerFilter] = useState("");
@@ -58,6 +58,35 @@ export function OperatorDashboardContent() {
     retry: shouldRetryQuery,
   });
 
+  const operatorResource = useResourceFromQuery(
+    `GET /overview/operator?time_range=${timeRange}`,
+    [...OPERATOR_DASHBOARD_KEY, timeRange],
+    query,
+    15_000,
+    { isEmpty: (data) => !data }
+  );
+  const incidentsResource = deriveResource(
+    operatorResource,
+    "Incidents",
+    query.data?.incidents,
+    15_000,
+    (data) => !data || data.length === 0
+  );
+  const serversResource = deriveResource(
+    operatorResource,
+    "Servers",
+    query.data?.servers,
+    15_000,
+    (data) => !data || data.length === 0
+  );
+  const telemetryResource = deriveResource(
+    operatorResource,
+    "Telemetry",
+    query.data?.timeseries,
+    15_000,
+    (data) => !data || data.length === 0
+  );
+
   const isNetworkError = isNetworkUnreachableError(query.error);
   const cooldownMs = cooldownRemainingMs(networkCooldownUntil);
   useEffect(() => {
@@ -73,11 +102,11 @@ export function OperatorDashboardContent() {
     setIsRefreshing(true);
     setNetworkCooldownUntil(null);
     try {
-      await queryClient.refetchQueries({ queryKey: OPERATOR_DASHBOARD_KEY });
+      await operatorResource.refresh();
     } finally {
       setIsRefreshing(false);
     }
-  }, [queryClient, setNetworkCooldownUntil]);
+  }, [operatorResource, setNetworkCooldownUntil]);
 
   const handleSync = useCallback(
     async (id: string) => {
@@ -121,7 +150,7 @@ export function OperatorDashboardContent() {
     });
   }, [connections]);
 
-  if (query.isLoading || !query.data) {
+  if (operatorResource.status === "loading" || operatorResource.status === "idle" || !query.data) {
     return (
       <div className="operator-dashboard" data-testid="operator-dashboard">
         <div className="operator-grid-row">
@@ -154,7 +183,7 @@ export function OperatorDashboardContent() {
     );
   }
 
-  if (query.error) {
+  if (operatorResource.status === "error" && query.error) {
     const is404 = query.error instanceof ApiError && query.error.statusCode === 404;
     const requestId = query.error instanceof ApiError ? query.error.requestId : undefined;
     return (
@@ -243,7 +272,7 @@ export function OperatorDashboardContent() {
             <AlertTriangle className="operator-section-icon" aria-hidden size={14} strokeWidth={2} />
             Active Incidents
           </div>
-          <IncidentPanel incidents={d.incidents} />
+          <IncidentPanel resource={incidentsResource} onRetry={handleRefresh} />
         </div>
       </div>
 
@@ -280,50 +309,63 @@ export function OperatorDashboardContent() {
               </div>
             ) : null;
           })()}
+          <div className="operator-panel-meta">
+            <span>
+              Updated:{" "}
+              {telemetryResource.updatedAt ? <RelativeTime date={telemetryResource.updatedAt} updateInterval={5000} /> : "—"}
+            </span>
+            {telemetryResource.status === "stale" ? (
+              <PrimitiveBadge variant="warning" size="sm">Stale</PrimitiveBadge>
+            ) : null}
+          </div>
           <div className="operator-charts-grid">
             <div className="operator-chart-wrap">
-              {points.length > 0 ? (
-                <>
-                  <ChartFrame height={160} ariaLabel="Throughput rx/tx">
-                    <EChart className="ref-echart" option={bandwidthOption} />
-                  </ChartFrame>
-                  {(() => {
-                    const lastPoint = points[points.length - 1];
-                    if (!lastPoint) return null;
-                    return (
-                      <div className="operator-chart-last" aria-label="Last updated">
-                        <FreshnessBadge freshness={freshnessFromAgeMs(Date.now() - lastPoint.ts * 1000)}>
-                          <RelativeTime date={new Date(lastPoint.ts * 1000)} />
-                        </FreshnessBadge>
-                      </div>
-                    );
-                  })()}
-                </>
-              ) : (
-                <div className="operator-chart-placeholder" aria-hidden>—</div>
-              )}
+              <ChartFrame
+                height={160}
+                ariaLabel="Throughput rx/tx"
+                isLoading={telemetryResource.status === "loading" || telemetryResource.status === "idle"}
+                error={telemetryResource.status === "error" ? telemetryResource.error : undefined}
+                empty={telemetryResource.status === "empty"}
+                stale={telemetryResource.status === "stale"}
+                onRetry={handleRefresh}
+              >
+                <EChart className="ref-echart" option={bandwidthOption} />
+              </ChartFrame>
+              {(() => {
+                const lastPoint = points[points.length - 1];
+                if (!lastPoint) return null;
+                return (
+                  <div className="operator-chart-last" aria-label="Last updated">
+                    <FreshnessBadge freshness={freshnessFromAgeMs(Date.now() - lastPoint.ts * 1000)}>
+                      <RelativeTime date={new Date(lastPoint.ts * 1000)} />
+                    </FreshnessBadge>
+                  </div>
+                );
+              })()}
             </div>
             <div className="operator-chart-wrap">
-              {points.length > 0 ? (
-                <>
-                  <ChartFrame height={160} ariaLabel="Active connections">
-                    <EChart className="ref-echart" option={connectionsOption} />
-                  </ChartFrame>
-                  {(() => {
-                    const lastPoint = points[points.length - 1];
-                    if (!lastPoint) return null;
-                    return (
-                      <div className="operator-chart-last" aria-label="Last updated">
-                        <FreshnessBadge freshness={freshnessFromAgeMs(Date.now() - lastPoint.ts * 1000)}>
-                          <RelativeTime date={new Date(lastPoint.ts * 1000)} />
-                        </FreshnessBadge>
-                      </div>
-                    );
-                  })()}
-                </>
-              ) : (
-                <div className="operator-chart-placeholder" aria-hidden>—</div>
-              )}
+              <ChartFrame
+                height={160}
+                ariaLabel="Active connections"
+                isLoading={telemetryResource.status === "loading" || telemetryResource.status === "idle"}
+                error={telemetryResource.status === "error" ? telemetryResource.error : undefined}
+                empty={telemetryResource.status === "empty"}
+                stale={telemetryResource.status === "stale"}
+                onRetry={handleRefresh}
+              >
+                <EChart className="ref-echart" option={connectionsOption} />
+              </ChartFrame>
+              {(() => {
+                const lastPoint = points[points.length - 1];
+                if (!lastPoint) return null;
+                return (
+                  <div className="operator-chart-last" aria-label="Last updated">
+                    <FreshnessBadge freshness={freshnessFromAgeMs(Date.now() - lastPoint.ts * 1000)}>
+                      <RelativeTime date={new Date(lastPoint.ts * 1000)} />
+                    </FreshnessBadge>
+                  </div>
+                );
+              })()}
             </div>
           </div>
         </div>
@@ -341,7 +383,22 @@ export function OperatorDashboardContent() {
           <Server className="operator-section-icon" aria-hidden size={14} strokeWidth={2} />
           Server Table
         </div>
-        <OperatorServerTable rows={d.servers} onSync={handleSync} filter={serverFilter} onFilterChange={setServerFilter} />
+        <div className="operator-panel-meta">
+          <span>
+            Updated:{" "}
+            {serversResource.updatedAt ? <RelativeTime date={serversResource.updatedAt} updateInterval={5000} /> : "—"}
+          </span>
+          {serversResource.status === "stale" ? (
+            <PrimitiveBadge variant="warning" size="sm">Stale</PrimitiveBadge>
+          ) : null}
+        </div>
+        <OperatorServerTable
+          rows={d.servers}
+          onSync={handleSync}
+          loading={serversResource.status === "loading" || serversResource.status === "idle"}
+          filter={serverFilter}
+          onFilterChange={setServerFilter}
+        />
       </div>
     </div>
   );

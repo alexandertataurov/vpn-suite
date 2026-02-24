@@ -3,6 +3,7 @@
 import hashlib
 import json
 import logging
+import time
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, Query, Request
@@ -14,9 +15,10 @@ from app.core.config import settings
 from app.core.constants import PERM_SERVERS_READ, REDIS_KEY_AGENT_HB_PREFIX
 from app.core.database import get_db
 from app.core.error_responses import not_found_404
+from app.core.logging_config import extra_for_event
 from app.core.rbac import require_permission
 from app.core.redis_client import get_redis
-from app.models import AgentAction, AgentActionLog, Server
+from app.models import AgentAction, AgentActionLog, Server, ServerSnapshot
 from app.schemas.action import ServerLogLineOut, ServerLogsOut
 from app.schemas.server import (
     ServersTelemetrySummaryOut,
@@ -48,13 +50,28 @@ async def get_servers_telemetry_summary(
 ):
     """Return telemetry summary per server (Prometheus: vpn_node_health, vpn_node_peers)."""
     from app.services.prometheus_query_service import PrometheusQueryService
-
+    started = time.perf_counter()
+    now = datetime.now(timezone.utc)
     cache_key = f"servers:telemetry:summary:{hashlib.sha256(json.dumps([region, status_filter, search], sort_keys=True).encode()).hexdigest()}"
     try:
         redis = get_redis()
         cached = await redis.get(cache_key)
         if cached:
-            return ServersTelemetrySummaryOut.model_validate_json(cached)
+            out = ServersTelemetrySummaryOut.model_validate_json(cached)
+            logger.info(
+                "servers telemetry summary cache hit",
+                extra=extra_for_event(
+                    event="servers.telemetry_summary",
+                    route="/api/v1/servers/telemetry/summary",
+                    method="GET",
+                    status_code=200,
+                    duration_ms=(time.perf_counter() - started) * 1000,
+                    actor_id=str(getattr(request.state, "audit_admin_id", "")) or None,
+                    result_count=len(out.servers),
+                    query_params={"region": region, "status": status_filter, "search": search, "cache": "hit"},
+                ),
+            )
+            return out
     except Exception:
         logger.debug("Servers telemetry summary cache get failed", exc_info=True)
 
@@ -159,10 +176,71 @@ async def get_servers_telemetry_summary(
                 if c:
                     entry.cpu_pct = c.cpu_pct
                     entry.ram_pct = c.mem_pct
+                    if entry.last_metrics_at is None:
+                        entry.last_metrics_at = now
         except Exception:
             logger.debug("Docker telemetry CPU/RAM fallback failed", exc_info=True)
 
+    # Snapshot fallback: Prometheus CPU/RAM metrics are missing in some deployments.
+    snapshot_map: dict[str, tuple[float | None, float | None, datetime | None]] = {}
+    if server_ids:
+        r = await db.execute(
+            select(ServerSnapshot)
+            .where(ServerSnapshot.server_id.in_(server_ids))
+            .where(ServerSnapshot.status == "success")
+            .distinct(ServerSnapshot.server_id)
+            .order_by(ServerSnapshot.server_id, ServerSnapshot.ts_utc.desc())
+        )
+        snaps = r.scalars().all()
+        for snap in snaps:
+            res = (snap.payload_json or {}).get("resources") or {}
+            cpu_pct = res.get("cpu_pct")
+            ram_pct = res.get("ram_pct")
+            snapshot_map[snap.server_id] = (
+                float(cpu_pct) if isinstance(cpu_pct, (int, float)) else None,
+                float(ram_pct) if isinstance(ram_pct, (int, float)) else None,
+                snap.ts_utc,
+            )
+    for sid, (snap_cpu, snap_ram, snap_ts) in snapshot_map.items():
+        entry = servers_map.get(sid)
+        if entry is None:
+            continue
+        if entry.cpu_pct is None and snap_cpu is not None:
+            entry.cpu_pct = snap_cpu
+        if entry.ram_pct is None and snap_ram is not None:
+            entry.ram_pct = snap_ram
+        if entry.last_metrics_at is None and snap_ts is not None:
+            entry.last_metrics_at = snap_ts
+
+    stale_after_s = max(settings.node_telemetry_cache_ttl_seconds * 4, 600)
+    for entry in servers_map.values():
+        if entry.last_telemetry_at is None:
+            entry.last_telemetry_at = entry.last_metrics_at
+        telemetry_last = entry.last_telemetry_at or entry.last_metrics_at
+        if telemetry_last:
+            age_s = (now - telemetry_last).total_seconds()
+            entry.telemetry_status = "stale" if age_s > stale_after_s else "ok"
+        else:
+            has_any = any(
+                v is not None
+                for v in (entry.health_score, entry.peers, entry.cpu_pct, entry.ram_pct)
+            )
+            entry.telemetry_status = "missing" if not has_any else "ok"
+
     out = ServersTelemetrySummaryOut(servers=servers_map)
+    logger.info(
+        "servers telemetry summary",
+        extra=extra_for_event(
+            event="servers.telemetry_summary",
+            route="/api/v1/servers/telemetry/summary",
+            method="GET",
+            status_code=200,
+            duration_ms=(time.perf_counter() - started) * 1000,
+            actor_id=str(getattr(request.state, "audit_admin_id", "")) or None,
+            result_count=len(out.servers),
+            query_params={"region": region, "status": status_filter, "search": search, "cache": "miss"},
+        ),
+    )
     try:
         redis = get_redis()
         await redis.setex(cache_key, TELEMETRY_SUMMARY_CACHE_TTL, out.model_dump_json())

@@ -15,6 +15,31 @@ WG_CONTAINER = os.environ.get("WG_CONTAINER", "amnezia-awg2")
 WG_INTERFACE = os.environ.get("WG_INTERFACE", "awg0")
 LISTEN_ADDR = os.environ.get("WG_EXPORTER_ADDR", "0.0.0.0")
 LISTEN_PORT = int(os.environ.get("WG_EXPORTER_PORT", "9586"))
+NODE_ID = os.environ.get("NODE_ID", "")
+SERVER_ID = os.environ.get("SERVER_ID", "")
+
+
+def _extra_labels() -> str:
+    """Labels for correlation with control-plane topology."""
+    parts = []
+    if NODE_ID:
+        parts.append(f'node_id="{NODE_ID}"')
+    if SERVER_ID:
+        parts.append(f'server_id="{SERVER_ID}"')
+    return ",".join(parts) if parts else ""
+
+
+def _labels_suffix(extra: str) -> str:
+    """Prometheus labels string, e.g. {node_id=\"x\"} or empty."""
+    return "{" + extra + "}" if extra else ""
+
+
+def _peer_labels(peer: str, extra: str) -> str:
+    """Prometheus labels for peer metrics: {peer=\"x\",node_id=\"y\",...}."""
+    lbls = [f'peer="{peer}"']
+    if extra:
+        lbls.append(extra)
+    return "{" + ",".join(lbls) + "}"
 
 
 def _run(cmd: list[str]) -> tuple[int, str]:
@@ -62,10 +87,12 @@ def _parse_dump(raw: str) -> dict:
 def _format_metrics() -> str:
     ok, raw = _wg_dump()
     now = int(time.time())
+    extra = _extra_labels()
+    suffix = _labels_suffix(extra)
     metrics = []
     metrics.append("# HELP wireguard_up Whether wg dump succeeded")
     metrics.append("# TYPE wireguard_up gauge")
-    metrics.append(f"wireguard_up {1 if ok else 0}")
+    metrics.append(f"wireguard_up{suffix} {1 if ok else 0}")
     if not ok:
         return "\n".join(metrics) + "\n"
     data = _parse_dump(raw)
@@ -73,11 +100,11 @@ def _format_metrics() -> str:
 
     metrics.append("# HELP wireguard_peers Total number of peers")
     metrics.append("# TYPE wireguard_peers gauge")
-    metrics.append(f"wireguard_peers {len(peers)}")
+    metrics.append(f"wireguard_peers{suffix} {len(peers)}")
 
     metrics.append("# HELP wireguard_listen_port Listen port")
     metrics.append("# TYPE wireguard_listen_port gauge")
-    metrics.append(f"wireguard_listen_port {data.get('listen_port', 0)}")
+    metrics.append(f"wireguard_listen_port{suffix} {data.get('listen_port', 0)}")
 
     metrics.append("# HELP wireguard_received_bytes Received bytes per peer")
     metrics.append("# TYPE wireguard_received_bytes counter")
@@ -92,9 +119,10 @@ def _format_metrics() -> str:
         tx = int(p.get("tx") or 0)
         last = int(p.get("last_handshake") or 0)
         age = now - last if last > 0 else 0
-        metrics.append(f"wireguard_received_bytes{{peer=\"{peer}\"}} {rx}")
-        metrics.append(f"wireguard_sent_bytes{{peer=\"{peer}\"}} {tx}")
-        metrics.append(f"wireguard_latest_handshake_seconds{{peer=\"{peer}\"}} {age}")
+        pl = _peer_labels(peer, extra)
+        metrics.append(f"wireguard_received_bytes{pl} {rx}")
+        metrics.append(f"wireguard_sent_bytes{pl} {tx}")
+        metrics.append(f"wireguard_latest_handshake_seconds{pl} {age}")
 
     return "\n".join(metrics) + "\n"
 

@@ -26,7 +26,7 @@ async def _known_docker_node_ids() -> set[str]:
 def _fallback_adapter():
     from app.services.node_runtime_docker import DockerNodeRuntimeAdapter
 
-    prefixes = getattr(settings, "docker_vpn_container_prefixes", "amnezia-awg,shadowbox") or "amnezia-awg,shadowbox"
+    prefixes = getattr(settings, "docker_vpn_container_prefixes", "amnezia-awg") or "amnezia-awg"
     return DockerNodeRuntimeAdapter(container_filter=prefixes, interface="awg0")
 
 

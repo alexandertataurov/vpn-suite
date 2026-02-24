@@ -3,7 +3,7 @@
 ## Env & secrets
 
 - **Config:** repo-root `.env` (chmod 600). mTLS: `secrets/agent_ca.pem`, `secrets/pki/agent_ca.key`. Node: `amnezia-awg2/secrets/node.env` (0600).
-- **Bootstrap:** `cd /opt/vpn-suite && ./ops/bootstrap-prod.sh`
+- **Bootstrap:** `cd /opt/vpn-suite && ./ops/bootstrap-prod.sh` (creates agent CA, prod .env, node client cert)
 
 ## Start/stop
 
@@ -65,10 +65,6 @@ Node (per server): `cd /opt/amnezia/amnezia-awg2 && ./manage.sh up|down`
 1. Discover node: `NODE_MODE=real`, `NODE_DISCOVERY=docker`; `POST /api/v1/cluster/scan` (Bearer). Agent mode: heartbeat only.
 2. Set server `public_key` and `vpn_endpoint` (Admin or API).
 3. Issue config from bot or admin; add_peer does not drop existing peers.
-
-## Outline host (servers that run Outline only)
-
-If a Server row represents the Outline host (e.g. beautiful_austin), set **integration_type=outline** so it is excluded from VPN server counts and Connection nodes (Outline is shown separately). Edit server → Integration type → Outline. Or via API: `PATCH /servers/:id` with `{"integration_type": "outline"}`.
 
 ## Host isolation (production)
 

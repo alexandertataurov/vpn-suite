@@ -47,7 +47,7 @@ Loki runs as non-root; the `loki_data` volume is root-owned and Loki could not c
 
 ### Admin API
 - No errors; health checks and API calls return 200.
-- Dashboard and outline-api calls succeed (~440–700 ms).
+- Dashboard and API calls succeed (~440–700 ms).
 
 ---
 

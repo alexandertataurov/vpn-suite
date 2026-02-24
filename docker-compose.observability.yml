@@ -16,6 +16,14 @@ x-resource-medium: &resource_medium
   mem_limit: "${MEM_MEDIUM:-512m}"
 
 services:
+  admin-api:
+    environment:
+      - OTEL_TRACES_ENDPOINT=otel-collector:4317
+
+  telegram-vpn-bot:
+    environment:
+      - OTEL_TRACES_ENDPOINT=otel-collector:4317
+
   discovery-runner:
     <<: [*service_default, *resource_small]
     build:
@@ -26,7 +34,6 @@ services:
     environment:
       - DISCOVERY_INTERVAL_SECONDS=60
       - DISCOVERY_OUT_DIR=/work
-      - OUTLINE_MANAGER_URL=${OUTLINE_MANAGER_URL:-}
       - DISCOVERY_TARGET_TTL_SECONDS=180
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -38,6 +45,10 @@ services:
       - vpn-suite-app
     profiles:
       - monitoring
+
+  grafana:
+    depends_on:
+      - tempo
 
   prometheus:
     volumes:
@@ -55,7 +66,6 @@ services:
       - ${ENV_FILE:-.env}
     environment:
       - INVENTORY_INTERVAL_SECONDS=60
-      - OUTLINE_MANAGER_URL=${OUTLINE_MANAGER_URL:-}
       - INVENTORY_TARGETS_PATH=/work/targets.json
       - INVENTORY_MAPPING_PATH=/work/mapping.json
       - INVENTORY_OVERRIDES_PATH=/work/overrides.json
@@ -70,31 +80,6 @@ services:
     profiles:
       - monitoring
 
-  outline-poller:
-    <<: [*service_default, *resource_small]
-    build:
-      context: ./monitoring/outline-poller
-      dockerfile: Dockerfile
-    env_file:
-      - ${ENV_FILE:-.env}
-    environment:
-      - OUTLINE_MANAGER_URL=${OUTLINE_MANAGER_URL:-}
-      - OUTLINE_TIMEOUT_SECONDS=${OUTLINE_REQUEST_TIMEOUT_SECONDS:-15}
-      - POLL_INTERVAL_SECONDS=30
-      - HTTP_PORT=9106
-    networks:
-      - vpn-suite-app
-    profiles:
-      - monitoring
-
-  outline-ss-proxy:
-    <<: [*service_default, *resource_tiny]
-    image: alpine/socat
-    network_mode: host
-    command: ["-T", "15", "TCP-LISTEN:19092,fork,reuseaddr", "TCP:127.0.0.1:9092"]
-    profiles:
-      - monitoring
-
   wg-exporter:
     <<: [*service_default, *resource_small]
     build:
@@ -104,6 +89,8 @@ services:
       - WG_CONTAINER=${WG_CONTAINER:-amnezia-awg2}
       - WG_INTERFACE=${WG_INTERFACE:-awg0}
       - WG_EXPORTER_PORT=9586
+      - NODE_ID=${NODE_ID:-}
+      - SERVER_ID=${SERVER_ID:-}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     ports:
@@ -112,3 +99,36 @@ services:
       - vpn-suite-app
     profiles:
       - monitoring
+
+  tempo:
+    <<: [*service_default, *resource_medium]
+    image: grafana/tempo:2.3.1
+    command: ["-config.file=/etc/tempo/tempo.yaml"]
+    volumes:
+      - ./config/monitoring/tempo/tempo.yaml:/etc/tempo/tempo.yaml:ro
+      - tempo_data:/var/tempo
+    ports:
+      - "127.0.0.1:3200:3200"
+    networks:
+      - vpn-suite-app
+    profiles:
+      - monitoring
+
+  otel-collector:
+    <<: [*service_default, *resource_small]
+    image: otel/opentelemetry-collector-contrib:0.91.0
+    command: ["--config=/etc/otel-collector/config.yaml"]
+    volumes:
+      - ./config/monitoring/otel-collector/config.yaml:/etc/otel-collector/config.yaml:ro
+    ports:
+      - "127.0.0.1:4317:4317"
+      - "127.0.0.1:4318:4318"
+    depends_on:
+      - tempo
+    networks:
+      - vpn-suite-app
+    profiles:
+      - monitoring
+
+volumes:
+  tempo_data:

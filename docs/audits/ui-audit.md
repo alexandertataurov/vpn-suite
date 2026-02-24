@@ -36,7 +36,7 @@
 
 ### Per-Page Styling (style={{}})
 
-Files with inline styles: ServerRowDrawer (33), ControlPlane (66), ConnectionNodesSection (21), OutlineIntegrations (45), Users (50), ServerDetail (34), ServerRow (16), Servers (13), VpnNodesTab (30), DockerServicesTab (41), others.
+Files with inline styles: ServerRowDrawer (33), ControlPlane (66), ConnectionNodesSection (21),  (45), Users (50), ServerDetail (34), ServerRow (16), Servers (13), VpnNodesTab (30), DockerServicesTab (41), others.
 
 **Problems**: Layout (gap, flex) acceptable; avoid visual styling (colors, margins) in components.
 
@@ -56,7 +56,7 @@ Files with inline styles: ServerRowDrawer (33), ControlPlane (66), ConnectionNod
 ### File List for Migration
 
 **Phase 1**: form-stack → FormStack (ServerNew, ServerEdit, Users)
-**Phase 2**: ref-action-btn, ref-settings-card (ServerRowDrawer, IssueConfigModal, Settings, ServerNew, ServerEdit, Devices, Audit, ControlPlane, OutlineIntegrations, Login)
+**Phase 2**: ref-action-btn, ref-settings-card (ServerRowDrawer, IssueConfigModal, Settings, ServerNew, ServerEdit, Devices, Audit, ControlPlane, , Login)
 **Phase 3**: dashboard-muted, ref-stat-* (Dashboard, Styleguide, ConnectionNodesSection, ClusterAutomationSummary, PageHeader)
 **Phase 4**: admin.css cleanup, PageHeader
 **Phase 5**: UI_GUIDE.md, Styleguide expansion

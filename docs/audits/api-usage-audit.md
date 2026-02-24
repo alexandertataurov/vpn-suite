@@ -20,7 +20,6 @@
 | Users, UserDetail | /users, /users/:id, /devices/issue | GET/POST | ✓ | PageError, toast |
 | Devices | /devices, /devices/:id/revoke | GET/POST | ✓ | PageError, toast |
 | ControlPlane | /control-plane/topology/*, /metrics/* | GET/POST | ✓ | InlineAlert |
-| OutlineIntegrations | /integrations/outline/* | GET/POST | ✓ | toast |
 | useDockerTelemetry | /telemetry/docker/* | GET | ✓ | Backoff on failure |
 | useSession (miniapp) | /me | GET | ✓ | AuthGuard redirect |
 | Checkout | /invoices, /promo/validate | POST | ✓ | toast |

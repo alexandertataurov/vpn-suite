@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { Button, Skeleton } from "@vpn-suite/shared/ui";
 import { ApiError } from "@vpn-suite/shared/types";
 
@@ -32,7 +32,37 @@ export function ChartFrame({
   const frameStyle = {
     "--chart-frame-height": height != null ? `${height}px` : "var(--chart-frame-default-height)",
   } as CSSProperties;
+  const frameRef = useRef<HTMLDivElement | null>(null);
+  const [tooSmall, setTooSmall] = useState(false);
+  const isDev = Boolean((import.meta as { env?: { DEV?: boolean } }).env?.DEV);
+  useEffect(() => {
+    if (!isDev) return;
+    if (!frameRef.current) return;
+    const heightPx = frameRef.current.getBoundingClientRect().height;
+    if (heightPx > 0 && heightPx < 80) {
+      setTooSmall(true);
+      console.warn("ChartFrame: container height too small", { heightPx, ariaLabel });
+    } else {
+      setTooSmall(false);
+    }
+  }, [height, ariaLabel, isDev]);
 
+  if (isDev && tooSmall) {
+    return (
+      <div
+        className="ref-chart-frame ref-chart-frame-state ref-chart-frame-size"
+        style={frameStyle}
+        role="alert"
+        aria-label={ariaLabel}
+        ref={frameRef}
+      >
+        <div className="ref-chart-state">
+          <div className="ref-chart-state-title">Chart container too small</div>
+          <div className="ref-chart-state-body">Increase the panel height to render this chart.</div>
+        </div>
+      </div>
+    );
+  }
   if (isLoading) return <Skeleton height={height} />;
 
   if (error) {
@@ -45,7 +75,7 @@ export function ChartFrame({
           ? "Rate limited. Please wait before retrying."
           : "Check your connection or permissions and retry.";
     return (
-      <div className="ref-chart-frame ref-chart-frame-state ref-chart-frame-size" style={frameStyle} role="alert" aria-label={ariaLabel}>
+      <div className="ref-chart-frame ref-chart-frame-state ref-chart-frame-size" style={frameStyle} role="alert" aria-label={ariaLabel} ref={frameRef}>
         <div className="ref-chart-state">
           <div className="ref-chart-state-title">Failed to load telemetry.</div>
           <div className="ref-chart-state-body">{hint}</div>
@@ -66,7 +96,7 @@ export function ChartFrame({
 
   if (empty) {
     return (
-      <div className="ref-chart-frame ref-chart-frame-state ref-chart-frame-size" style={frameStyle} aria-label={ariaLabel}>
+      <div className="ref-chart-frame ref-chart-frame-state ref-chart-frame-size" style={frameStyle} aria-label={ariaLabel} ref={frameRef}>
         <div className="ref-chart-state">
           <div className="ref-chart-state-body">{emptyMessage}</div>
         </div>
@@ -75,7 +105,7 @@ export function ChartFrame({
   }
 
   return (
-    <div className="ref-chart-frame ref-chart-frame-size" style={frameStyle} aria-label={ariaLabel} tabIndex={0}>
+    <div className="ref-chart-frame ref-chart-frame-size" style={frameStyle} aria-label={ariaLabel} tabIndex={0} ref={frameRef}>
       {stale || partial ? (
         <div className={`ref-chart-banner ${stale ? "is-stale" : ""} ${partial ? "is-partial" : ""}`}>
           <div className="ref-chart-banner-title">

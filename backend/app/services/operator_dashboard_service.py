@@ -113,9 +113,6 @@ async def fetch_operator_dashboard(time_range: str = "1h") -> dict[str, Any]:
         "total_throughput_bps": 0,
         "avg_latency_ms": None,
         "error_rate_pct": 0.0,
-        "outline_keys_total": None,
-        "outline_traffic_bps": None,
-        "outline_status": "unknown",
         "last_updated": now.isoformat(),
         "refresh_mode": "polling",
         "freshness": "unknown",
@@ -170,10 +167,6 @@ async def fetch_operator_dashboard(time_range: str = "1h") -> dict[str, Any]:
                 "histogram_quantile(0.5, "
                 "sum(rate(http_request_duration_seconds_bucket{job=\"admin-api\"}[5m])) by (le)) * 1000"
             ),
-            "outline_keys_total": "outline_access_keys_total",
-            "outline_traffic_bps": "sum(rate(shadowsocks_data_bytes[5m]))",
-            "outline_ss_up": 'up{job="outline-ss"}',
-            "outline_poller_up": 'up{job="outline-poller"}',
         }
         tasks = {k: prom.query(v) for k, v in queries.items()}
         results: dict[str, list] = {}
@@ -256,21 +249,6 @@ async def fetch_operator_dashboard(time_range: str = "1h") -> dict[str, Any]:
         if hs_max is not None:
             health_strip["handshake_max_age_sec"] = int(hs_max)
 
-        outline_keys = _scalar_from_result(results.get("outline_keys_total", []))
-        if outline_keys is not None:
-            health_strip["outline_keys_total"] = int(outline_keys)
-
-        outline_traffic = _scalar_from_result(results.get("outline_traffic_bps", []))
-        if outline_traffic is not None:
-            health_strip["outline_traffic_bps"] = int(outline_traffic)
-
-        outline_ss_up = _scalar_from_result(results.get("outline_ss_up", []))
-        outline_poller_up = _scalar_from_result(results.get("outline_poller_up", []))
-        if outline_ss_up == 1 and outline_poller_up == 1:
-            health_strip["outline_status"] = "ok"
-        elif outline_ss_up == 0 or outline_poller_up == 0:
-            health_strip["outline_status"] = "down"
-
         # Incidents
         if api_up == 0:
             incidents.append({
@@ -294,18 +272,6 @@ async def fetch_operator_dashboard(time_range: str = "1h") -> dict[str, Any]:
                 "status": "open",
                 "affected_servers": len(servers),
                 "link": "/audit",
-            })
-
-        if outline_ss_up == 0 or outline_poller_up == 0:
-            incidents.append({
-                "severity": "warning",
-                "entity": "outline",
-                "metric": "outline_status",
-                "value": health_strip.get("outline_status"),
-                "timestamp": now.isoformat(),
-                "status": "open",
-                "affected_servers": 1,
-                "link": "/integrations/outline",
             })
 
         # Per-server telemetry
@@ -494,23 +460,6 @@ async def fetch_operator_dashboard(time_range: str = "1h") -> dict[str, Any]:
                 "last_heartbeat": datetime.fromtimestamp(last_ts, tz=timezone.utc).isoformat() if last_ts else None,
                 "freshness": _freshness(age_s),
                 "to": f"/servers/{sid}",
-            })
-
-        # Outline row (aggregated)
-        if health_strip.get("outline_keys_total") is not None:
-            server_rows.append({
-                "id": "outline",
-                "name": "Outline",
-                "region": "outline",
-                "ip": "—",
-                "status": "online" if health_strip.get("outline_status") == "ok" else "offline",
-                "cpu_pct": None,
-                "ram_pct": None,
-                "users": int(health_strip.get("outline_keys_total") or 0),
-                "throughput_bps": int(health_strip.get("outline_traffic_bps") or 0),
-                "last_heartbeat": None,
-                "freshness": "unknown",
-                "to": "/integrations/outline",
             })
 
         # Stale nodes incident

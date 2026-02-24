@@ -12,7 +12,6 @@ for f in \
   secrets/*.pem secrets/README.md \
   /opt/amnezia/amnezia-awg2/secrets/awg_private_key \
   /opt/amnezia/amnezia-awg2/secrets/node.env \
-  /opt/outline/access.txt \
   ; do
   [ -e "$f" ] || continue
   perms=$(stat -c '%a' "$f" 2>/dev/null || stat -f '%A' "$f" 2>/dev/null)

@@ -421,33 +421,6 @@
     },
     {
       "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
-      "node_id": "docker:ce945d850d7b",
-      "source": "docker",
-      "kind": "unknown",
-      "classification": {
-        "kind": "unknown",
-        "fingerprint_score": 0.0,
-        "network_score": 0.0,
-        "api_match_score": 0.0,
-        "temporal_score": 0.0,
-        "total_confidence": 0.0,
-        "evidence": [],
-        "type": "exporter"
-      },
-      "confidence": 0.9,
-      "evidence": [
-        "image_exporter"
-      ],
-      "container_id": "ce945d850d7b",
-      "image": "vpn-suite-outline-poller",
-      "created": "2026-02-22T17:06:52.376979103Z",
-      "ports": [],
-      "mounts": [],
-      "interface": null,
-      "public_key": null
-    },
-    {
-      "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
       "node_id": "docker:081753092afd",
       "source": "docker",
       "kind": "unknown",
@@ -645,45 +618,6 @@
     },
     {
       "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
-      "node_id": "docker:d123e1a28aaf",
-      "source": "docker",
-      "kind": "outline",
-      "classification": {
-        "kind": "outline",
-        "fingerprint_score": 1.0,
-        "network_score": 0.0,
-        "api_match_score": 0.0,
-        "temporal_score": 0.0,
-        "total_confidence": 0.4,
-        "evidence": [
-          "image_shadowbox",
-          "env_sb",
-          "label_outline",
-          "mount_outline",
-          "network_mode_host"
-        ],
-        "type": "outline-shadowbox"
-      },
-      "confidence": 0.85,
-      "evidence": [
-        "image_shadowbox",
-        "env_sb",
-        "label_outline",
-        "mount_outline",
-        "network_mode_host"
-      ],
-      "container_id": "d123e1a28aaf",
-      "image": "quay.io/outline/shadowbox:stable",
-      "created": "2026-02-21T14:35:53.897320333Z",
-      "ports": [],
-      "mounts": [
-        "/opt/outline/persisted-state"
-      ],
-      "interface": null,
-      "public_key": null
-    },
-    {
-      "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
       "node_id": "docker:f9573380dbc9",
       "source": "docker",
       "kind": "unknown",
@@ -766,6 +700,5 @@
       "interface": null,
       "public_key": null
     }
-  ],
-  "outline_info": null
+  ]
 }

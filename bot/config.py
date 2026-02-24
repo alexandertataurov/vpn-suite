@@ -41,3 +41,6 @@ _raw = int(get_env("BOT_POLLING_TIMEOUT", "30") or "30")
 BOT_POLLING_TIMEOUT = max(10, min(120, _raw))
 # Limit concurrent update handlers to avoid CPU spikes. 0 or empty = no limit.
 BOT_TASKS_CONCURRENCY_LIMIT = int(get_env("BOT_TASKS_CONCURRENCY_LIMIT", "5") or "0") or None
+
+# OTLP traces endpoint (e.g. otel-collector:4317). Empty = tracing disabled.
+OTEL_TRACES_ENDPOINT = get_env("OTEL_TRACES_ENDPOINT", "")

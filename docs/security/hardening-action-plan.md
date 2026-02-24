@@ -37,11 +37,9 @@
 - [ ] Node-agent docker socket :ro — not feasible (agent needs docker exec for wg)
 - [x] cAdvisor on internal network only (127.0.0.1:8080)
 
-### AmneziaWG / Outline
+### AmneziaWG
 
 - [x] secrets/awg_private_key chmod 600 — included in `./ops/harden-secrets.sh`
-- [x] Outline access.txt chmod 600 — included in `./ops/harden-secrets.sh`
-- [x] Run `./scripts/validate-outline-access.sh` before importing — rejects localhost/private (Outline-on-Mac incident prevention)
 
 ---
 

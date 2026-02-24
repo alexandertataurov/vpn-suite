@@ -8,6 +8,7 @@ from app.core.config_builder import (
     AWG_ASC_KEYS,
     AWG_LEGACY_KEYS,
     ConfigProfile,
+    ConfigValidationError,
     InterfaceFields,
     PeerFields,
     allocate_next_address,
@@ -150,7 +151,7 @@ def test_build_config_awg_2_0_allows_h3():
         interface=InterfaceFields(private_key=priv, address="10.8.1.2/32", dns="1.1.1.1"),
         peer=PeerFields(public_key=pub, endpoint="vpn.example.com:47604"),
         profile=ConfigProfile.awg_2_0_asc,
-        obfuscation={"Jc": 4, "Jmin": 64, "Jmax": 1024, "S1": 15, "S2": 20, "H1": 1020325451, "H2": 3288052141, "H3": 111, "H4": 2528465083},
+        obfuscation={"Jc": 4, "Jmin": 64, "Jmax": 1024, "S1": 15, "S2": 20, "H1": 1020325451, "H2": 2147483647, "H3": 111, "H4": 2147483640},
     )
     assert "H3 = 111" in cfg
     assert "Jc = 4" in cfg
@@ -195,7 +196,7 @@ def test_build_config_rejects_obfuscation_in_wireguard_universal():
 
 def test_build_config_rejects_jmin_gt_jmax():
     priv, pub = generate_wg_keypair()
-    with pytest.raises(ValueError, match="Jmin"):
+    with pytest.raises(ConfigValidationError, match="Jmin|Jmax"):
         build_config(
             interface=InterfaceFields(private_key=priv, address="10.8.1.2/32"),
             peer=PeerFields(public_key=pub, endpoint="vpn.example.com:47604"),
@@ -206,7 +207,7 @@ def test_build_config_rejects_jmin_gt_jmax():
 
 def test_build_config_rejects_s1_plus_56_equals_s2():
     priv, pub = generate_wg_keypair()
-    with pytest.raises(ValueError, match="S1"):
+    with pytest.raises(ConfigValidationError, match="S1|S2"):
         build_config(
             interface=InterfaceFields(private_key=priv, address="10.8.1.2/32"),
             peer=PeerFields(public_key=pub, endpoint="vpn.example.com:47604"),
@@ -246,12 +247,12 @@ _GOLDEN_PUB = "M1/n0lOh+G/r7Q3j0RkCBbPRBFeYRK+da2x9SczRPyA="
 _OBF_AWG = {
     "Jc": 4, "Jmin": 64, "Jmax": 1024,
     "S1": 15, "S2": 20,
-    "H1": 1020325451, "H2": 3288052141, "H4": 2528465083,
+    "H1": 1020325451, "H2": 2147483647, "H4": 2147483640,
 }
 _OBF_MOBILE = {
     "Jc": 2, "Jmin": 64, "Jmax": 512,
     "S1": 15, "S2": 20,
-    "H1": 1020325451, "H2": 3288052141, "H4": 2528465083,
+    "H1": 1020325451, "H2": 2147483647, "H4": 2147483640,
 }
 
 

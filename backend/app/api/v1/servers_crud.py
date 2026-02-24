@@ -69,7 +69,6 @@ async def get_server(
         "ops_notes_updated_by": getattr(server, "ops_notes_updated_by", None),
         "cert_fingerprint": getattr(server, "cert_fingerprint", None),
         "cert_expires_at": getattr(server, "cert_expires_at", None),
-        "integration_type": getattr(server, "integration_type", "awg"),
     }
     return ServerOut(**d)
 
@@ -167,7 +166,6 @@ async def update_server(
         ops_notes_updated_by=getattr(server, "ops_notes_updated_by", None),
         cert_fingerprint=getattr(server, "cert_fingerprint", None),
         cert_expires_at=getattr(server, "cert_expires_at", None),
-        integration_type=getattr(server, "integration_type", "awg"),
     )
 
 

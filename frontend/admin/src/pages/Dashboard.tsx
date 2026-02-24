@@ -9,7 +9,6 @@ import {
   Activity,
   Settings,
   RotateCw,
-  Shield,
 } from "lucide-react";
 import { Button, ConfirmModal } from "@vpn-suite/shared/ui";
 import { ApiError } from "@vpn-suite/shared/types";
@@ -22,6 +21,7 @@ import { PageHeader } from "../components/PageHeader";
 import { DashboardSettings } from "./dashboard/DashboardSettings";
 import { OperatorDashboardContent } from "./dashboard/OperatorDashboardContent";
 import { RefreshButton } from "../components/RefreshButton";
+import { refreshRegisteredResources } from "../utils/resourceRegistry";
 
 export function DashboardPage() {
   const queryClient = useQueryClient();
@@ -32,11 +32,14 @@ export function DashboardPage() {
   const { data: serversData } = useServerListFull();
 
   const handleRefresh = useCallback(async () => {
-    const results = await Promise.all([
-      queryClient.refetchQueries({ queryKey: OPERATOR_DASHBOARD_KEY }),
-      queryClient.refetchQueries({ queryKey: CONNECTION_NODES_KEY }),
-      queryClient.refetchQueries({ queryKey: AUDIT_KEY }),
-      queryClient.refetchQueries({ queryKey: SERVERS_LIST_DASHBOARD_KEY }),
+    const [results, registered] = await Promise.all([
+      Promise.all([
+        queryClient.refetchQueries({ queryKey: OPERATOR_DASHBOARD_KEY }),
+        queryClient.refetchQueries({ queryKey: CONNECTION_NODES_KEY }),
+        queryClient.refetchQueries({ queryKey: AUDIT_KEY }),
+        queryClient.refetchQueries({ queryKey: SERVERS_LIST_DASHBOARD_KEY }),
+      ]),
+      refreshRegisteredResources(),
     ]);
     const hasResultError = results.some(
       (res) => Array.isArray(res) && res.some((r) => (r as { error?: unknown }).error)
@@ -49,7 +52,8 @@ export function DashboardPage() {
     ].some((key) =>
       queryClient.getQueryCache().findAll({ queryKey: key }).some((q) => q.state.status === "error")
     );
-    if (hasResultError || hasCacheError) {
+    const hasRegisteredError = registered.some((r) => !r.ok);
+    if (hasResultError || hasCacheError || hasRegisteredError) {
       throw new Error("refresh_failed");
     }
   }, [queryClient]);
@@ -90,11 +94,6 @@ export function DashboardPage() {
         <Link to="/telemetry">
           <Button variant="secondary" size="sm" aria-label="Open telemetry">
             <Activity className="icon-sm" aria-hidden /> Telemetry
-          </Button>
-        </Link>
-        <Link to="/integrations/outline">
-          <Button variant="secondary" size="sm" aria-label="Outline">
-            <Shield className="icon-sm" aria-hidden /> Outline
           </Button>
         </Link>
         <Button

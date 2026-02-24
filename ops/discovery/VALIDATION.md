@@ -13,10 +13,9 @@ Discovery is correct only if:
 
 - [ ] Works with **renamed** containers (node_id stable via docker:{id})
 - [ ] Works with multiple hosts
-- [ ] Auto-discovers new Outline servers
 - [ ] Auto-discovers new AWG nodes
 - [ ] Produces deterministic mapping
-- [ ] Exposes targets for Prometheus file_sd (includes node-agent, outline-ss when present)
+- [ ] Exposes targets for Prometheus file_sd (includes node-agent when present)
 
 ## Validation steps
 
@@ -24,9 +23,8 @@ Discovery is correct only if:
 
 ```bash
 docker rename amnezia-awg2 xyz-random-123
-docker rename shadowbox foo-bar-456
 cd /opt/vpn-suite && python -m ops.discovery --out-dir /tmp/discovery
-# inventory.json must still list both with correct kind + confidence/evidence
+# inventory.json must still list with correct kind + confidence/evidence
 ```
 
 ### 2. Restart Docker
@@ -43,13 +41,13 @@ python -m ops.discovery --out-dir /tmp/discovery
 ```bash
 # Ensure Prometheus uses file_sd
 # targets.json written to --out-dir
-# /targets should show admin-api, node-exporter, outline-ss (if outline), etc.
+# /targets should show admin-api, node-exporter, etc.
 ```
 
 ### 4. No name-based detection
 
 ```bash
 # Grep for container name usage in classifier/discovery
-rg -i "amnezia-awg|shadowbox|container.*name" ops/discovery/ --type py
+rg -i "amnezia-awg|container.*name" ops/discovery/ --type py
 # Should find no classification logic using names
 ```

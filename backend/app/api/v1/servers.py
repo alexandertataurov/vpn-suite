@@ -122,7 +122,6 @@ async def create_server(
         auto_sync_interval_sec=getattr(server, "auto_sync_interval_sec", 60),
         ops_notes=getattr(server, "ops_notes", None),
         ops_notes_updated_at=getattr(server, "ops_notes_updated_at", None),
-        integration_type=getattr(server, "integration_type", "awg"),
         ops_notes_updated_by=getattr(server, "ops_notes_updated_by", None),
         cert_fingerprint=getattr(server, "cert_fingerprint", None),
         cert_expires_at=getattr(server, "cert_expires_at", None),
@@ -232,7 +231,6 @@ async def _fetch_servers_list_uncached(
             "ops_notes_updated_by": getattr(s, "ops_notes_updated_by", None),
             "cert_fingerprint": getattr(s, "cert_fingerprint", None),
             "cert_expires_at": getattr(s, "cert_expires_at", None),
-            "integration_type": getattr(s, "integration_type", "awg"),
         }
         items.append(ServerOut(**d))
     return ServerList(items=items, total=total, agent_mode_no_heartbeat=agent_mode_no_heartbeat)

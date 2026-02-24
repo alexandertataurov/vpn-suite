@@ -79,7 +79,6 @@ reverse-proxy:8443 {
 }
 
 # route block enforces order (Caddy otherwise sorts: handle before reverse_proxy, so / would win and file_server 404s /api/*)
-# Outline (opt/outline): one system — apiUrl https://PUBLIC_DOMAIN/outline-api (set OUTLINE_API_SECRET_PATH and OUTLINE_UPSTREAM from /opt/outline/access.txt)
 {$PUBLIC_DOMAIN} {
 	tls {
 		protocols tls1.2 tls1.3
@@ -93,20 +92,6 @@ reverse-proxy:8443 {
 	route {
 		handle /api/* {
 			reverse_proxy admin-api:8000
-		}
-		handle /outline-api {
-			redir /outline-api /outline-api/ 308
-		}
-		handle /outline-api/* {
-			uri replace /outline-api {$OUTLINE_API_SECRET_PATH}
-			reverse_proxy {$OUTLINE_UPSTREAM} {
-				transport http {
-					tls_insecure_skip_verify
-					dial_timeout 10s
-					response_header_timeout 30s
-					read_timeout 30s
-				}
-			}
 		}
 		handle / {
 			handle_path / {

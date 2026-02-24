@@ -72,7 +72,7 @@
 
 ## API Issues
 
-1. `**asChild` declared but NOT implemented** — Button passes props to `<button>`; child Link gets no styling. Usage in Settings, OutlineIntegrations renders `<button><Link>…</Link></button>` (invalid HTML). Should use ButtonLink.
+1. `**asChild` declared but NOT implemented** — Button passes props to `<button>`; child Link gets no styling. Usage in Settings, Settings renders `<button><Link>…</Link></button>` (invalid HTML). Should use ButtonLink.
 2. **No `forwardRef`** — Cannot pass ref to underlying button.
 3. **No `startIcon`/`endIcon`** — Inconsistent icon patterns.
 4. **No `iconOnly`** — No validation of aria-label.
@@ -120,7 +120,7 @@ These should be removed; design spec should define one canonical look.
 2. **Table action buttons** — `data-table-action-btn` is a custom ghost/icon style; could map to `Button variant="ghost" size="icon"`.
 3. **QrPanel download** — Raw `btn btn-ghost btn-sm`; should use `Button`.
 4. **AuthGuard** — Raw `btn btn-primary`; should use `Button`.
-5. **asChild usage** — Settings/OutlineIntegrations use `Button asChild`; broken. Replace with `ButtonLink`.
+5. **asChild usage** — Settings/Settings use `Button asChild`; broken. Replace with `ButtonLink`.
 
 ---
 

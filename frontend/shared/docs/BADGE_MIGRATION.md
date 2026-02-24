@@ -34,7 +34,6 @@ With:
 |------|--------|
 | PaymentsTab, Payments | `paymentStatusToVariant(r.status)` |
 | SubscriptionsTab, Subscriptions | `subscriptionStatusToVariant(r.effective_status)` |
-| OutlineIntegrations | `connectionStatusToVariant(statusQuery.data?.status)` |
 | UserDetail | `userStatusToVariant(!data.is_banned)` or inline |
 | DeviceCard | `deviceStatusToVariant(status)` |
 | ProfileCard | `subscriptionStatusToVariant(status)` |

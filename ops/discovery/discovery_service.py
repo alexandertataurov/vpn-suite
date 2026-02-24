@@ -143,7 +143,7 @@ def _parse_ss_listeners(out: str) -> list[dict[str, Any]]:
 
 
 async def host_ss_listeners() -> list[dict[str, Any]]:
-    """Run ss -lntup and ss -lnup; return listeners relevant to WG + outline metrics."""
+    """Run ss -lntup and ss -lnup; return listeners relevant to WG."""
     result: list[dict[str, Any]] = []
     for cmd in [["ss", "-lntup"], ["ss", "-lnup"]]:
         code, out = await _run_async(cmd, timeout=5.0)
@@ -233,9 +233,7 @@ async def host_wg_dump() -> list[dict[str, Any]]:
     return result
 
 
-async def discover_docker(
-    outline_info: dict[str, Any] | None = None,
-) -> list[DiscoveredNode]:
+async def discover_docker() -> list[DiscoveredNode]:
     nodes: list[DiscoveredNode] = []
     host_id = _ensure_host_id()
     for inspect in await docker_inspect_bulk():
@@ -251,7 +249,6 @@ async def discover_docker(
             "local",
             cid,
             inspect,
-            outline_info=outline_info,
             repo_digests=repo_digests,
             image_id=image_id,
         )
@@ -259,7 +256,6 @@ async def discover_docker(
             host_id,
             cid,
             inspect,
-            outline_info=outline_info,
             repo_digests=repo_digests,
             image_id=image_id,
         )
@@ -307,21 +303,6 @@ async def discover_docker(
     return nodes
 
 
-async def has_outline_ss_proxy() -> bool:
-    """Detect outline-ss proxy container via image + cmd fingerprint."""
-    for inspect in await docker_inspect_bulk():
-        state = inspect.get("State") or {}
-        if state.get("Status") != "running":
-            continue
-        image = (inspect.get("Config") or {}).get("Image") or inspect.get("Image") or ""
-        entry = (inspect.get("Config") or {}).get("Entrypoint") or []
-        cmd = (inspect.get("Config") or {}).get("Cmd") or []
-        combined = " ".join([str(x) for x in (entry if isinstance(entry, list) else [entry]) + (cmd if isinstance(cmd, list) else [cmd])]).lower()
-        if "alpine/socat" in image.lower() and "19092" in combined:
-            return True
-    return False
-
-
 async def discover_host_wg() -> list[DiscoveredNode]:
     nodes: list[DiscoveredNode] = []
     host_id = _ensure_host_id()
@@ -350,9 +331,7 @@ async def discover_host_wg() -> list[DiscoveredNode]:
     return nodes
 
 
-async def run_discovery(
-    outline_info: dict[str, Any] | None = None,
-) -> list[DiscoveredNode]:
-    docker_nodes = await discover_docker(outline_info=outline_info)
+async def run_discovery() -> list[DiscoveredNode]:
+    docker_nodes = await discover_docker()
     host_nodes = await discover_host_wg()
     return docker_nodes + host_nodes

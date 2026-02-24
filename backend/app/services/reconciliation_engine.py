@@ -171,14 +171,13 @@ async def reconcile_node(node_id: str, adapter: NodeRuntimeAdapter) -> Reconcili
 async def reconcile_all_nodes(
     adapter: NodeRuntimeAdapter,
 ) -> list[tuple[str, ReconciliationResult]]:
-    """Reconcile every discovered healthy/degraded AWG node. Skip Outline (uses API for keys)."""
+    """Reconcile every discovered healthy/degraded AWG node."""
     results: list[tuple[str, ReconciliationResult]] = []
     nodes = await adapter.discover_nodes()
     node_ids = [
         node.node_id
         for node in nodes
         if node.status in ("healthy", "degraded")
-        and (node.capabilities or {}).get("integration_type") != "outline"
     ]
     for node_id in node_ids:
         try:

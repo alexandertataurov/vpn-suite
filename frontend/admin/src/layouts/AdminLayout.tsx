@@ -28,6 +28,8 @@ import { CommandPalette } from "../components/CommandPalette";
 import type { CommandItem } from "../components/CommandPalette";
 import { useServerListFull } from "../hooks/useServerList";
 import { TopStatusBar } from "../components/operator/TopStatusBar";
+import { ResourceDebugPanel } from "../components/ResourceDebugPanel";
+import { GlobalDataIndicator } from "../components/GlobalDataIndicator";
 import { api } from "../api/client";
 import { OPERATOR_DASHBOARD_KEY } from "../api/query-keys";
 import type { OperatorDashboardOut } from "@vpn-suite/shared/types";
@@ -47,7 +49,6 @@ const allNavItems: NavItem[] = [
   { to: "/", label: "Incidents", short: "IN", section: "CONTROL", icon: AlertTriangle },
   { to: "/users", label: "Users", short: "US", section: "ACCESS", icon: Users },
   { to: "/devices", label: "Devices", short: "DV", section: "ACCESS", icon: Cpu },
-  { to: "/integrations/outline", label: "Outline", short: "OL", section: "NETWORK", icon: Shield },
   { to: "/automation", label: "Automation", short: "AT", section: "NETWORK", icon: Workflow },
   { to: "/billing", label: "Billing", short: "BL", section: "SYSTEM", icon: CreditCard },
   { to: "/audit", label: "Audit log", short: "AU", section: "SYSTEM", icon: FileText },
@@ -325,6 +326,7 @@ export function AdminLayout() {
               </span>
             )}
           </Link>
+          <GlobalDataIndicator />
           <div className="admin-mode-controls">
             <span className="admin-mode-label" title="Refresh mode">
               {operatorQuery.data?.health_strip?.refresh_mode ?? "Polling"} · 30s
@@ -422,6 +424,7 @@ export function AdminLayout() {
         ) : null}
         <main id="admin-main" className="admin-main" tabIndex={-1}>
           <Outlet />
+          {isDev ? <ResourceDebugPanel /> : null}
         </main>
       </div>
       <nav className="admin-bottom-nav" aria-label="Mobile">

@@ -87,7 +87,7 @@ Deep refinement of Top Status Bar, Sidebar Navigation, and Dashboard Layout. Tok
 **Types:**
 ```ts
 type OperatorRoute = "/" | "/servers" | "/telemetry" | "/users" | "/devices" 
-  | "/integrations/outline" | "/automation" | "/billing" | "/audit" | "/settings";
+  | "" | "/automation" | "/billing" | "/audit" | "/settings";
 ```
 
 ### 2.3 Shared Operator Components

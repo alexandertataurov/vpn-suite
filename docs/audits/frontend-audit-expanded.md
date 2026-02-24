@@ -42,10 +42,7 @@ This document expands the main audit plan with exhaustive detail. Use with [.cur
 | /payments | — | — | /billing?tab=payments |
 | /audit | AuditPage | ProtectedRoute | — |
 | /settings | SettingsPage | ProtectedRoute | — |
-| /integrations/outline | OutlineIntegrationsPage | ProtectedRoute | — |
-| /outline | — | — | /integrations/outline |
-| /settings/integrations/outline | — | — | /integrations/outline |
-| /styleguide | StyleguidePage | ProtectedRoute | — |
+ /styleguide | StyleguidePage | ProtectedRoute | — |
 | * | — | — | / |
 
 ### Query key inventory (every occurrence)
@@ -77,11 +74,7 @@ This document expands the main audit plan with exhaustive detail. Use with [.cur
 | ["control-plane", "events"] | ControlPlane | 76 | events |
 | ["subscriptions", offset, searchTrigger] | Subscriptions (dead), SubscriptionsTab | 21,19 | subscriptions |
 | ["payments", offset, searchTrigger] | Payments (dead), PaymentsTab | 21,19 | payments |
-| OUTLINE_STATUS_KEY | OutlineIntegrations | 58 | outline status |
-| OUTLINE_KEYS_KEY | OutlineIntegrations | 64,90,105,118,130,131,144,166,179 | keys |
-| OUTLINE_SERVER_KEY | OutlineIntegrations | 71,130,143,154 | server |
-| OUTLINE_METICS_KEY | OutlineIntegrations | 78,132,145,167,180 | metrics |
-| ["servers", serverId, "ips"] | ServerRowDrawer | 53 | server IPs |
+ ["servers", serverId, "ips"] | ServerRowDrawer | 53 | server IPs |
 | ["servers", serverId, "telemetry"] | ServerRowDrawer | 58 | server telemetry |
 | ["audit", "server", serverId] | ServerRowDrawer | 63 | server audit |
 | ["server-logs", serverId] | ServerLogsTab | 19 | logs |
@@ -126,7 +119,7 @@ Note: SERVERS_LIST_KEY vs ["servers", ...] — ServerRowDrawer uses ["servers", 
 
 **Admin-only**: StatusBadge, TableSection, FilterBar, PageHeader, Toolbar, Breadcrumb, CommandPalette, ServersCommandPalette, TimeRangePicker, MetricTile, ChartFrame, EChart, ConfigContentModal, IssueConfigModal, ServerRow, ServerRowDrawer, ServerLogsTab, ThresholdLegend, ServersBulkToolbar, ServersEmptyState, MiniSparkline.
 
-**Table usage**: Table (Devices, SubscriptionsTab, PaymentsTab, Audit, ServerDetail peers/actions, OutlineIntegrations, TopIssuesTable, RecentAuditTable); VirtualTable (Users, DockerOverviewTable); Servers uses custom useVirtualizer + ServerRow (VIRTUAL_THRESHOLD 200).
+**Table usage**: Table (Devices, SubscriptionsTab, PaymentsTab, Audit, ServerDetail peers/actions, TopIssuesTable, RecentAuditTable); VirtualTable (Users, DockerOverviewTable); Servers uses custom useVirtualizer + ServerRow (VIRTUAL_THRESHOLD 200).
 
 **Tab patterns**: shared Tabs.tsx exists; Telemetry.tsx and Billing.tsx use `.telemetry-tabs` (admin.css L1871) with manual aria-selected, onKeyDown (ArrowLeft/Right, Home/End).
 
@@ -136,10 +129,10 @@ Note: SERVERS_LIST_KEY vs ["servers", ...] — ServerRowDrawer uses ["servers", 
 
 - All admin API calls go through `api` from admin/api/client.ts
 - All miniapp API calls go through `webappApi` from miniapp/api/client.ts
-- Raw fetch: OutlineIntegrations L290–298 (QR blob), refresh-auth.ts (auth/refresh), logFrontendError (log/frontend-error), useServersStream L132 (SSE or fetch)
+- Raw fetch: refresh-auth.ts (auth/refresh), logFrontendError (log/frontend-error), useServersStream L132 (SSE or fetch)
 - useServersStream: custom fetch for stream; not using api client
 
-**Invalidation patterns**: ServerDetail has 10+ invalidateQueries calls; OutlineIntegrations has 15+; ServerRowDrawer invalidates SERVERS_LIST_KEY on auto-sync.
+**Invalidation patterns**: ServerDetail has 10+ invalidateQueries calls; ServerRowDrawer invalidates SERVERS_LIST_KEY on auto-sync.
 
 ### C) State — hooks with useEffect/useCallback/useMemo
 
@@ -218,16 +211,16 @@ Repeated 25+ times: `err instanceof ApiError ? err.message : "Generic message"`.
 
 | # | Sev | Finding | File:Line | Impact |
 |---|-----|---------|-----------|--------|
-| 1 | P1 | Raw fetch for QR | OutlineIntegrations:292 | No 401, retry, timeout |
-| 2 | P1 | Hardcoded /admin/login | authStore:55, api/client:11 | Deploy path break |
-| 3 | P2 | Dead SubscriptionsPage, PaymentsPage | Subscriptions.tsx, Payments.tsx | Dead code |
-| 4 | P2 | Miniapp token in memory | miniapp/api/client:3–9 | Lost on refresh |
-| 5 | P2 | No response validation | All api.get | Type mismatch runtime |
-| 6 | P2 | Single error boundary | App.tsx | Full app crash |
-| 7 | P2 | Servers custom useVirtualizer vs VirtualTable | Servers:280 | Two patterns |
-| 8 | P2 | Query key inconsistency | ["servers", serverId] vs SERVERS_LIST_KEY | Cache fragmentation |
-| 9 | P2 | CLUSTER_HEALTH_KEY, AUTOMATION_STATUS_KEY local to ClusterAutomationSummary | ClusterAutomationSummary:17–18 | Not in query-keys.ts |
-| 10 | P2 | ControlPlane keys ["control-plane", ...] inline | ControlPlane:44–76 | Not in query-keys.ts |
+| 1 | P1 | Hardcoded /admin/login | authStore:55, api/client:11 | Deploy path break |
+| 2 | P2 | Dead SubscriptionsPage, PaymentsPage | Subscriptions.tsx, Payments.tsx | Dead code |
+| 3 | P2 | Miniapp token in memory | miniapp/api/client:3–9 | Lost on refresh |
+| 4 | P2 | No response validation | All api.get | Type mismatch runtime |
+| 5 | P2 | Single error boundary | App.tsx | Full app crash |
+| 6 | P2 | Servers custom useVirtualizer vs VirtualTable | Servers:280 | Two patterns |
+| 7 | P2 | Query key inconsistency | ["servers", serverId] vs SERVERS_LIST_KEY | Cache fragmentation |
+| 8 | P2 | CLUSTER_HEALTH_KEY, AUTOMATION_STATUS_KEY local to ClusterAutomationSummary | ClusterAutomationSummary:17–18 | Not in query-keys.ts |
+| 9 | P2 | ControlPlane keys ["control-plane", ...] inline | ControlPlane:44–76 | Not in query-keys.ts |
+| 10 | P2 | useServersStream raw fetch | useServersStream:132 | Bypasses api client |
 | 11 | P2 | useServersStream raw fetch | useServersStream:132 | Bypasses api client |
 | 12 | P2 | Refresh on 401 reloads page | api/client:17 | Poor UX |
 | 13 | P3 | telemetry-tabs duplicate | Telemetry, Billing | Divergence |
@@ -241,9 +234,8 @@ Repeated 25+ times: `err instanceof ApiError ? err.message : "Generic message"`.
 | 21 | P3 | LogsViewer permission message hardcoded | LogsViewer:63 | "telemetry:logs:read" |
 | 22 | P3 | Dashboard L111 formatDateTime with lastTs — points[].ts may be undefined | Dashboard:111 | Needs null check |
 | 23 | P3 | ControlPlane L105,128 sort by created_at — optional chaining | ControlPlane:105,128 | (b?.created_at) ?? 0 |
-| 24 | P3 | OutlineIntegrations L485 lastTrafficSeen * 1000 | OutlineIntegrations:485 | Unix seconds assumption |
-| 25 | P3 | No useMemo on ServerRow in Servers | Servers | Re-render all rows |
-| 26 | P3 | deviceCountsQuery skipDeviceCounts404 | Servers:233 | 404 skips device counts |
+| 24 | P3 | No useMemo on ServerRow in Servers | Servers | Re-render all rows |
+| 25 | P3 | deviceCountsQuery skipDeviceCounts404 | Servers:233 | 404 skips device counts |
 | 27 | P3 | DataTable class data-table-wrap vs .data-table-wrap | DataTable.tsx:30 | Verify CSS exists |
 | 28 | P3 | chartConfig, theme in admin/charts | ChartFrame, EChart | Admin-coupled |
 | 29 | P3 | useServerList canShareFullCache logic | useServerList:151 | Cache sharing edge cases |
@@ -284,15 +276,13 @@ Repeated 25+ times: `err instanceof ApiError ? err.message : "Generic message"`.
 ### PR 2: Add getBlob to api client
 
 - create-client.ts: Add `getBlob(path, init?)` that returns `Promise<Blob>`; same URL/auth/timeout; parseResponse → res.blob() for 200
-- OutlineIntegrations: Replace fetch block L286–302 with `const blob = await api.getBlob(\`/outline/keys/${r.id}/qr\`); setQrBlobUrl(URL.createObjectURL(blob));`
-- Test: Outline page, click QR button
 
 ### PR 3: getErrorMessage util
 
 - shared/src/utils/error.ts: `export function getErrorMessage(err: unknown, fallback = "An error occurred"): string { return err instanceof ApiError ? err.message : err instanceof Error ? err.message : fallback; }`
 - shared index: export getErrorMessage
 - Replace 25+ `err instanceof ApiError ? err.message : "…"` with `getErrorMessage(err, "…")`
-- Files: ServerNew, ServerEdit, ServerDetail, Devices, Servers, Users, UserDetail, ControlPlane, OutlineIntegrations, ConfigContentModal, IssueConfigModal, ServerRowDrawer, CopyButton, miniapp Devices
+- Files: ServerNew, ServerEdit, ServerDetail, Devices, Servers, Users, UserDetail, ControlPlane, ConfigContentModal, IssueConfigModal, ServerRowDrawer, CopyButton, miniapp Devices
 
 ### PR 4: Centralize basename
 
@@ -329,9 +319,9 @@ Repeated 25+ times: `err instanceof ApiError ? err.message : "Generic message"`.
 
 1. Delete Subscriptions.tsx, Payments.tsx
 2. Add getErrorMessage, replace 25+ occurrences
-3. Add api.getBlob, fix OutlineIntegrations QR
+3. Add api.getBlob for binary responses
 4. Add admin/src/config.ts with ADMIN_BASE
 5. Extract table cell helpers to cellUtils
 6. Audit numeric columns: add `numeric: true` where missing (Audit created_at, Devices created_at, Users created_at, Payments amount, etc.)
 
-**Verification**: `npm run build && npm run typecheck && npm run lint && npm test`; manual Outline QR, login/logout.
+**Verification**: `npm run build && npm run typecheck && npm run lint && npm test`; manual login/logout.

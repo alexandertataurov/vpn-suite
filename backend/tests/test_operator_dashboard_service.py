@@ -7,15 +7,19 @@ from app.services import operator_dashboard_service as svc
 
 
 class _FakeResult:
-    def __init__(self, *, rows=None, scalar=None):
+    def __init__(self, *, rows=None, scalar=None, scalars_rows=None):
         self._rows = rows or []
         self._scalar = scalar
+        self._scalars_rows = scalars_rows if scalars_rows is not None else []
 
     def all(self):
         return self._rows
 
     def scalar_one_or_none(self):
         return self._scalar
+
+    def scalars(self):
+        return SimpleNamespace(all=lambda: self._scalars_rows)
 
 
 class _FakeSession:
@@ -55,6 +59,7 @@ async def test_fetch_operator_dashboard_handles_row_objects(monkeypatch):
         [
             _FakeSession([_FakeResult(rows=servers_rows)]),
             _FakeSession([_FakeResult(scalar=7)]),
+            _FakeSession([_FakeResult(scalars_rows=[])]),
         ]
     )
     monkeypatch.setattr(svc, "async_session_factory", factory)
@@ -119,6 +124,7 @@ async def test_fetch_operator_dashboard_prometheus_failure_returns_degraded(monk
         [
             _FakeSession([_FakeResult(rows=servers_rows)]),
             _FakeSession([_FakeResult(scalar=1)]),
+            _FakeSession([_FakeResult(scalars_rows=[])]),
         ]
     )
     monkeypatch.setattr(svc, "async_session_factory", factory)
@@ -158,6 +164,7 @@ async def test_fetch_operator_dashboard_empty_timeseries_does_not_force_degraded
         [
             _FakeSession([_FakeResult(rows=servers_rows)]),
             _FakeSession([_FakeResult(scalar=1)]),
+            _FakeSession([_FakeResult(scalars_rows=[])]),
         ]
     )
     monkeypatch.setattr(svc, "async_session_factory", factory)

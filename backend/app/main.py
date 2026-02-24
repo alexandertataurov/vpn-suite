@@ -10,6 +10,7 @@ from fastapi.responses import JSONResponse, Response
 from prometheus_client import REGISTRY, generate_latest
 
 from app.api.v1.actions import router as actions_router
+from app.api.v1.analytics import router as analytics_router
 from app.api.v1.admin_configs import router as admin_configs_router
 from app.api.v1.agent import router as agent_router
 from app.api.v1.audit import router as audit_router
@@ -20,7 +21,6 @@ from app.api.v1.control_plane import router as control_plane_router
 from app.api.v1.dashboard import router as dashboard_router
 from app.api.v1.devices import router as devices_router
 from app.api.v1.log import router as log_router
-from app.api.v1.outline import router as outline_router
 from app.api.v1.overview import router as overview_router
 from app.api.v1.payments import router as payments_router
 from app.api.v1.peers import router as peers_router
@@ -50,6 +50,7 @@ from app.core.logging_config import (
 )
 from app.core.metrics import http_errors_total
 from app.core.node_scan_task import run_node_scan_loop, run_node_scan_once
+from app.core.otel_tracing import setup_otel_tracing
 from app.core.prometheus_middleware import PrometheusMiddleware, path_template
 from app.core.rate_limit import GlobalAPIRateLimitMiddleware
 from app.core.redaction import redact_for_log
@@ -103,7 +104,7 @@ def _create_node_runtime_adapter():
     if settings.node_discovery == "docker":
         from app.services.node_runtime_docker import DockerNodeRuntimeAdapter
 
-        prefixes = getattr(settings, "docker_vpn_container_prefixes", "amnezia-awg,shadowbox") or "amnezia-awg,shadowbox"
+        prefixes = getattr(settings, "docker_vpn_container_prefixes", "amnezia-awg") or "amnezia-awg"
         return DockerNodeRuntimeAdapter(container_filter=prefixes, interface="awg0")
     if settings.node_discovery == "agent":
         from app.services.node_runtime_agent import AgentNodeRuntimeAdapter
@@ -223,7 +224,7 @@ app.add_middleware(AuditMiddleware)
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(log_router, prefix="/api/v1")
 app.include_router(overview_router, prefix="/api/v1")
-app.include_router(outline_router, prefix="/api/v1")
+app.include_router(analytics_router, prefix="/api/v1")
 app.include_router(audit_router, prefix="/api/v1")
 app.include_router(cluster_router, prefix="/api/v1")
 app.include_router(control_plane_router, prefix="/api/v1")
@@ -248,6 +249,8 @@ app.include_router(bot_router, prefix="/api/v1")
 app.include_router(webapp_router, prefix="/api/v1")
 # Compatibility alias for exact /api/telemetry/docker/* contract.
 app.include_router(telemetry_docker_router, prefix="/api", include_in_schema=False)
+
+setup_otel_tracing(app, settings.otel_traces_endpoint)
 
 
 @app.get("/metrics")

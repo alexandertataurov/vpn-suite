@@ -14,6 +14,8 @@ export interface ServersToolbarProps {
   isFetching: boolean;
   onSync: () => void | Promise<void>;
   connectionState: StreamConnectionState;
+  isStale?: boolean;
+  hasError?: boolean;
   /** Polling/stream interval in seconds when live. Default 30. */
   liveIntervalSeconds?: number;
   /** Use neutral variant when live (muted, not saturated green). Default true. */
@@ -52,6 +54,8 @@ export function ServersToolbar({
   isFetching,
   onSync,
   connectionState,
+  isStale = false,
+  hasError = false,
   liveIntervalSeconds = 30,
   mutedWhenLive = true,
   children,
@@ -79,6 +83,11 @@ export function ServersToolbar({
             <span title="No successful fetch yet">Last: —</span>
           )}
         </span>
+        {hasError ? (
+          <PrimitiveBadge variant="danger" size="sm">Error</PrimitiveBadge>
+        ) : isStale ? (
+          <PrimitiveBadge variant="warning" size="sm">Stale</PrimitiveBadge>
+        ) : null}
         <Button
           variant="secondary"
           size="sm"

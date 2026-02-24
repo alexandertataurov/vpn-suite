@@ -1,45 +1,40 @@
 # Frontend Release TODO
 
-## Release Blockers (Must Fix)
+## Done (Phase 1)
 
-| ID | Title | Files | Root cause | Fix steps | Tests | Acceptance | Risk | Diff |
-|----|-------|-------|------------|-----------|-------|------------|------|------|
-| FE-001 | package-lock sync | frontend/package-lock.json | Lock out of sync with package.json | npm install in frontend | — | npm ci passes | Low | M |
+- FE-001: package-lock sync
+- FE-002–FE-018: Typecheck errors
+- FE-010: Storybook Loading/Error/Empty variants
+- PR1 (Gates): Lint, typecheck, tests, build, storybook, token check
 
-*FE-001 was fixed during Phase 1; npm ci now passes.*
+## Active Items
 
-## High-Risk Bugs
+### Release Blockers
 
-| ID | Title | Files | Root cause | Fix steps | Tests | Acceptance | Risk | Diff |
-|----|-------|-------|------------|-----------|-------|------------|------|------|
-| — | None identified | — | — | — | — | — | — | — |
+| ID | Title | Source |
+|----|-------|--------|
+| FE-20 | npm audit: 15 vulns (blocked by Storybook/react peer dep) | fe-security-audit |
+| FE-21 | Add miniapp E2E to CI | frontend-audit-expanded |
 
-*Typecheck errors (FE-002–FE-018) were fixed in Phase 1.*
+### Cleanup (Dead Code)
 
-## Consistency Improvements
+| ID | Title | Files | Source |
+|----|-------|-------|--------|
+| FE-22 | Remove SubscriptionsPage, PaymentsPage | Subscriptions.tsx, Payments.tsx | frontend-audit-expanded |
 
-| ID | Title | Files | Root cause | Fix steps | Tests | Acceptance | Risk | Diff |
-|----|-------|-------|------------|-----------|-------|------------|------|------|
-| FE-010 | Add Storybook Loading/Error/Empty variants | shared ui stories | Plan requires explicit variants | Add Loading/Error/Empty stories to Button, Input, Select | — | Storybook builds, variants render | Low | S |
+### Consistency
 
-*FE-010 fixed: Added Error story (Button); Error, Empty, Loading stories (Input); Error, Empty, Loading stories (Select).*
-
-## Cleanup (Dead Code)
-
-| ID | Title | Files | Root cause | Fix steps | Tests | Acceptance | Risk | Diff |
-|----|-------|-------|------------|-----------|-------|------------|------|------|
-| — | None identified | — | — | — | — | — | — | — |
+| ID | Title |
+|----|-------|
+| FE-23 | Centralize getErrorMessage (25+ call sites) |
+| FE-24 | Centralize basename (VITE_ADMIN_BASE) |
 
 ## PR Plan
 
-1. **PR1 (Gates)**: Lint, typecheck, tests, build, storybook, token check — done in Phase 1
-2. **PR2 (Tests)**: Add smoke/error E2E for uncovered routes (miniapp home/profile/help/referral; admin audit/settings)
-3. **PR3 (UI)**: Storybook Loading/Error/Empty variants
-4. **PR4 (Cleanup)**: Any dead code identified post-manifest
+1. **PR2 (Tests)**: Miniapp E2E in CI; smoke for audit/settings
+2. **PR3 (Cleanup)**: Delete Subscriptions.tsx, Payments.tsx
+3. **PR4 (Polish)**: getErrorMessage, basename
 
-## Done = Shipped
+## Acceptance
 
-- All release gates green
-- Manifest complete
-- RELEASE_TODO blockers resolved or deferred
-- E2E pass (requires backend)
+- All release gates green; E2E pass (requires backend)

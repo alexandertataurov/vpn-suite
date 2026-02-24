@@ -102,7 +102,6 @@ ACCESS
   Devices
 
 NETWORK
-  Outline
   Automation
 
 SYSTEM

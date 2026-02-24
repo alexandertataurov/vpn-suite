@@ -21,8 +21,8 @@
 
 | Topic | Doc |
 |-------|-----|
-| Design system | [frontend/design-system.md](frontend/design-system.md) |
-| Typography | [frontend/typography-tokens.md](frontend/typography-tokens.md) |
+| Design system | [frontend/design/design-system.md](frontend/design/design-system.md) |
+| Typography | [frontend/design/typography-tokens.md](frontend/design/typography-tokens.md) |
 | Control-plane | [specs/ultra-spec-control-plane.md](specs/ultra-spec-control-plane.md) |
 | Telemetry | [specs/telemetry-spec.md](specs/telemetry-spec.md) |
 | AmneziaWG | [ops/amneziawg-integration.md](ops/amneziawg-integration.md) · [ops/amneziawg-obfuscation-runbook.md](ops/amneziawg-obfuscation-runbook.md) |
@@ -40,7 +40,7 @@
 |-------|-----|
 | **Consolidation & unimplemented tasks** | [consolidation-plan.md](consolidation-plan.md) |
 | Backlog, PR plan, cleanup, target structure | [backlog/backlog.md](backlog/backlog.md) |
-| API PR roadmap (12 PRs) | [api/audit/06-pr-roadmap.md](api/audit/06-pr-roadmap.md) |
+| API PR roadmap | [backlog/backlog.md](backlog/backlog.md) |
 | Hardening (2–4 weeks) | [backlog/execution-roadmap.md](backlog/execution-roadmap.md) |
 
 ## Observability (monitoring stack)
@@ -49,7 +49,7 @@
 |-------|-----|
 | Deploy/debug/rollback | [observability/runbook-observability.md](observability/runbook-observability.md) |
 | Validation (targets, queries) | [observability/validation.md](observability/validation.md) |
-| Outline+AWG data contract | [observability/data-contract.md](observability/data-contract.md) |
+| AWG data contract | [observability/data-contract.md](observability/data-contract.md) |
 
 ## Audits & security
 
@@ -60,19 +60,20 @@
 | Threat model | [security/threat-model.md](security/threat-model.md) |
 | Infrastructure map | [ops/infrastructure-map.md](ops/infrastructure-map.md) |
 
-## Frontend (tables, Storybook, design system)
+## Frontend
 
 | Topic | Doc |
 |-------|-----|
-| Design system, typography, UI guide, component inventory | [frontend/](frontend/) |
-| Table guides, QA, migration | [frontend/](frontend/) |
+| **Index** (apps, routes, design, tables, testing) | [frontend/README.md](frontend/README.md) |
+| Design system, typography, UI guide | [frontend/design/](frontend/design/) |
+| Table guides, QA, migration | [frontend/tables/](frontend/tables/) |
 | Storybook | [frontend/storybook/](frontend/storybook/) |
 
 ## Ops (runbooks, troubleshooting)
 
 | Topic | Doc |
 |-------|-----|
-| Runbook, agent mode, Outline, AmneziaWG, no-traffic troubleshooting | [ops/](ops/) |
+| Runbook, agent mode, AmneziaWG, no-traffic troubleshooting | [ops/](ops/) |
 
 ## Workflow
 

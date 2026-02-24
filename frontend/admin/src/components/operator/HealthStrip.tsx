@@ -31,9 +31,6 @@ const TOOLTIPS: Record<string, string> = {
   Throughput: "Total cluster throughput",
   Latency: "Average latency (ms)",
   "Error %": "Error rate percentage",
-  Outline: "Outline service status (metrics + poller)",
-  "Outline Keys": "Outline access keys total",
-  "Outline Traffic": "Outline traffic (bytes/sec)",
   Updated: "Last data update",
   Mode: "Refresh mode (polling/stream)",
 };
@@ -101,19 +98,6 @@ export function HealthStrip({ data }: HealthStripProps) {
       <div className="operator-health-group">
         <Cell label="Latency" value={data.avg_latency_ms != null ? `${Math.round(data.avg_latency_ms)}ms` : "—"} />
         <Cell label="Error %" value={`${data.error_rate_pct.toFixed(2)}%`} state={errState} />
-        <Cell
-          label="Outline"
-          value={(data.outline_status || "unknown").toUpperCase()}
-          state={statusClass(data.outline_status || "unknown")}
-        />
-        <Cell
-          label="Outline Keys"
-          value={data.outline_keys_total != null ? String(data.outline_keys_total) : "—"}
-        />
-        <Cell
-          label="Outline Traffic"
-          value={data.outline_traffic_bps != null ? formatBytes(data.outline_traffic_bps) : "—"}
-        />
       </div>
       <div className="operator-health-group operator-health-group--last">
         <Cell label="Updated" value={new Date(data.last_updated).toLocaleTimeString("en-US", { hour12: false })} />

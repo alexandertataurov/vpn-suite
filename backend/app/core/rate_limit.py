@@ -105,7 +105,6 @@ async def rate_limit_login_failure(request: Request) -> None:
 KEY_PREFIX_ADMIN_ISSUE = "ratelimit:admin_issue:"
 KEY_PREFIX_CONFIG_DOWNLOAD = "ratelimit:config_dl:"
 KEY_PREFIX_SERVER_ACTIONS = "ratelimit:server_actions:"
-KEY_PREFIX_OUTLINE_KEYS = "ratelimit:outline_keys:"
 ADMIN_ISSUE_LIMIT = 30
 ADMIN_ISSUE_WINDOW = 60
 CONFIG_DOWNLOAD_IP_LIMIT = 60
@@ -113,8 +112,6 @@ CONFIG_DOWNLOAD_TOKEN_LIMIT = 5
 CONFIG_DOWNLOAD_WINDOW = 60
 SERVER_ACTIONS_PER_USER_PER_SERVER_LIMIT = 10
 SERVER_ACTIONS_WINDOW = 60
-OUTLINE_KEYS_MUTATE_LIMIT = 10
-OUTLINE_KEYS_MUTATE_WINDOW = 60
 
 
 async def rate_limit_admin_issue(request: Request) -> None:
@@ -180,20 +177,3 @@ async def rate_limit_config_download(request: Request, token: str) -> None:
         logging.getLogger(__name__).debug("Config download rate limit check failed", exc_info=True)
 
 
-async def rate_limit_outline_keys_mutate(request: Request, admin_id: str) -> None:
-    """Limit POST/DELETE outline keys per admin. Fail-open if Redis down."""
-    try:
-        r = get_redis()
-        key = f"{KEY_PREFIX_OUTLINE_KEYS}{admin_id}"
-        n = await r.incr(key)
-        if n == 1:
-            await r.expire(key, OUTLINE_KEYS_MUTATE_WINDOW)
-        if n > OUTLINE_KEYS_MUTATE_LIMIT:
-            raise HTTPException(
-                status_code=429,
-                detail="Too many Outline key create/revoke requests. Try again later.",
-            )
-    except HTTPException:
-        raise
-    except Exception as e:
-        _log.warning("Outline keys rate limit skipped: %s", type(e).__name__)

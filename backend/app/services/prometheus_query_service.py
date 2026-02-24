@@ -111,3 +111,7 @@ class PrometheusQueryService:
         data = await self._get("/api/v1/alerts", {})
         alerts = data.get("alerts") if data else None
         return alerts if isinstance(alerts, list) else []
+
+    async def targets(self) -> dict[str, Any]:
+        data = await self._get("/api/v1/targets", {})
+        return data if isinstance(data, dict) else {}

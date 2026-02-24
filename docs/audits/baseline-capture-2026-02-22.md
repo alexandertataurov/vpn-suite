@@ -13,20 +13,18 @@ d1f6c607ea17 redis vpn-suite-redis-1 Up 6379/tcp
 
 ## docker inspect (summarized)
 - amnezia-awg2: image `amnezia-awg2`, privileged, NET_ADMIN, exposes UDP 40498, network bridge.
-- shadowbox: image `quay.io/outline/shadowbox:stable`, network_mode=host, mounts `/opt/outline/persisted-state`, env `SB_API_PORT=25432`.
 - prometheus: binds `./config/monitoring/discovery/targets.json:/etc/prometheus/targets.json:ro`.
 - node-exporter: binds `/` to `/host`.
 - cadvisor: binds `/var/run`, `/var/lib/docker` etc.
-- node-agent: env includes `NODE_DISCOVERY=agent`, `OUTLINE_MANAGER_URL=...`.
+- node-agent: env includes `NODE_DISCOVERY=agent`.
 
 ## docker logs --tail=300
 - discovery service: not running (no container present).
-- telemetry/poller: not running (no `outline-poller` container present).
+- telemetry/poller: not running.
 - prometheus: normal startup.
 - node-exporter: normal startup.
 - cadvisor: docker API mismatch: `client version 1.41 is too old. Minimum supported API version is 1.44`.
 - amnezia-awg2: `docker logs` not available (`LogConfig.Type=none`).
-- shadowbox: Outline server up; outline-ss-server metrics at `127.0.0.1:9092`.
 
 ## Host signals
 ### ip link
@@ -36,14 +34,11 @@ lo, eth0, docker0, amn0, multiple docker bridges/veths (no wg/awg interfaces on 
 
 ### ss -lntup
 - UDP 40498 (AWG port) via docker-proxy.
-- TCP 25432 (Outline manager).
-- TCP 9092 (outline-ss metrics) bound to 127.0.0.1.
 
 ## Prometheus health
 ### /api/v1/targets
 - `admin-api`, `cadvisor`, `node-exporter` are up.
-- `outline-poller` target down (DNS lookup failure).
-- Missing targets: `node-agent`, `telegram-vpn-bot`, `outline-ss`, `wg-exporter`.
+- Missing targets: `node-agent`, `telegram-vpn-bot`, `wg-exporter`.
 
 ## Discovery outputs
 - `config/monitoring/discovery/inventory.json` has `nodes: []`.
@@ -54,8 +49,7 @@ lo, eth0, docker0, amn0, multiple docker bridges/veths (no wg/awg interfaces on 
 # Issue Classification (Evidence + Label)
 1. **Discovery gaps**: discovery-runner not running; inventory nodes empty; mapping unresolved.
 2. **Correlation failures**: mapping.json unresolved with `evidence: no_match`.
-3. **Telemetry gaps**: missing file_sd targets for node-agent/telegram/outline-ss.
-4. **Scrape failures**: outline-poller target down (DNS lookup failure).
-5. **Staleness**: targets.json static and missing dynamic targets; no TTL cleanup.
-6. **Data contract drift**: discovery output lacks `confidence`/`evidence` fields at top level.
-7. **Misclassification**: backend + node-agent use container name prefixes as primary signals.
+3. **Telemetry gaps**: missing file_sd targets for node-agent/telegram.
+4. **Staleness**: targets.json static and missing dynamic targets; no TTL cleanup.
+5. **Data contract drift**: discovery output lacks `confidence`/`evidence` fields at top level.
+6. **Misclassification**: backend + node-agent use container name prefixes as primary signals.

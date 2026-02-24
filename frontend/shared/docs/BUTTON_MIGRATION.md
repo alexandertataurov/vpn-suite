@@ -11,7 +11,7 @@
 
 ### Fix asChild (now implemented)
 
-Settings and OutlineIntegrations use `Button asChild` with `Link`. The Button now supports `asChild` via Radix Slot — no change needed; it should work.
+Settings uses `Button asChild` with `Link`. The Button now supports `asChild` via Radix Slot — no change needed; it should work.
 
 ### Per-page CSS overrides (remove after validation)
 

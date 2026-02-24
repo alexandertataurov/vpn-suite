@@ -4,6 +4,8 @@
 global:
   scrape_interval: 15s
   evaluation_interval: 15s
+  external_labels:
+    env: 'default'  # Override per deployment (prod/stage/dev)
 
 rule_files:
   - /etc/prometheus/alert_rules.yml
@@ -19,6 +21,12 @@ scrape_configs:
       - source_labels: ["sd_job"]
         regex: admin-api
         action: keep
+      - target_label: service_name
+        replacement: admin-api
+      - source_labels: [__meta_file_sd_label_host_id]
+        target_label: node_id
+        regex: (.+)
+        replacement: ${1}
 
   - job_name: "cadvisor"
     metrics_path: /metrics
@@ -29,6 +37,12 @@ scrape_configs:
       - source_labels: ["sd_job"]
         regex: cadvisor
         action: keep
+      - target_label: service_name
+        replacement: cadvisor
+      - source_labels: [__meta_file_sd_label_host_id]
+        target_label: node_id
+        regex: (.+)
+        replacement: ${1}
 
   - job_name: "node-exporter"
     metrics_path: /metrics
@@ -39,6 +53,12 @@ scrape_configs:
       - source_labels: ["sd_job"]
         regex: node-exporter
         action: keep
+      - target_label: service_name
+        replacement: node-exporter
+      - source_labels: [__meta_file_sd_label_host_id]
+        target_label: node_id
+        regex: (.+)
+        replacement: ${1}
 
   - job_name: "node-agent"
     metrics_path: /metrics
@@ -49,6 +69,12 @@ scrape_configs:
       - source_labels: ["sd_job"]
         regex: node-agent
         action: keep
+      - target_label: service_name
+        replacement: node-agent
+      - source_labels: [__meta_file_sd_label_host_id]
+        target_label: node_id
+        regex: (.+)
+        replacement: ${1}
 
   - job_name: "telegram-vpn-bot"
     metrics_path: /metrics
@@ -59,26 +85,12 @@ scrape_configs:
       - source_labels: ["sd_job"]
         regex: telegram-vpn-bot
         action: keep
-
-  - job_name: "outline-ss"
-    metrics_path: /metrics
-    scheme: http
-    file_sd_configs:
-      - files: ["/etc/prometheus/file_sd/targets.json"]
-    relabel_configs:
-      - source_labels: ["sd_job"]
-        regex: outline-ss
-        action: keep
-
-  - job_name: "outline-poller"
-    metrics_path: /metrics
-    scheme: http
-    file_sd_configs:
-      - files: ["/etc/prometheus/file_sd/targets.json"]
-    relabel_configs:
-      - source_labels: ["sd_job"]
-        regex: outline-poller
-        action: keep
+      - target_label: service_name
+        replacement: telegram-vpn-bot
+      - source_labels: [__meta_file_sd_label_host_id]
+        target_label: node_id
+        regex: (.+)
+        replacement: ${1}
 
   - job_name: "wg-exporter"
     metrics_path: /metrics
@@ -89,3 +101,9 @@ scrape_configs:
       - source_labels: ["sd_job"]
         regex: wg-exporter
         action: keep
+      - target_label: service_name
+        replacement: wg-exporter
+      - source_labels: [__meta_file_sd_label_host_id]
+        target_label: node_id
+        regex: (.+)
+        replacement: ${1}

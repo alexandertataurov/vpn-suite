@@ -41,7 +41,7 @@ When monitoring profile is up (Loki + Prometheus):
 | 8 | Server sync backoff in-memory | _backoff dict in server_sync_loop | After restart, failed servers retry immediately | Document; optional Redis persistence | Documented |
 | 9 | Reconciliation backoff | Similar to server sync | Metrics vpn_reconciliation_runs_total sufficient | Alerts VpnReconciliationFailures / Stalled | Already in alert_rules |
 | 10 | Docker telemetry circuit breaker | docker_telemetry_service has circuit + docker_telemetry_upstream_failures_total | — | Ensure metric on dashboard | Add panel when building dashboards |
-| 11 | Outline client timeout/retry | outline_client.py has timeout and retry_count | — | No change unless evidence | — |
+| 11 | External client timeout/retry | external_client.py has timeout and retry_count | — | No change unless evidence | — |
 | 12 | Rate limit login fail-open | login_rate_limit_fail_closed=False when Redis down | Document | Document in runbook | Documented |
 | 13 | Caddy/reverse-proxy no metrics | P2 | — | Consider Caddy metrics later | P2 |
 | 14 | Loki/Promtail positions | promtail-config positions file + backoff | Prevents re-ingest storm | Document | Documented |
@@ -63,5 +63,5 @@ When monitoring profile is up (Loki + Prometheus):
 4. **Node-agent down:** When profile agent: check `up{job="node-agent"}`, agent logs, network to admin-api.
 5. **Loki re-ingest:** promtail positions file and backoff configured; see config/monitoring/promtail-config.yml.
 6. **SSE context canceled:** Caddy logs "context canceled" on /api/v1/servers/stream when client disconnects (navigate away, tab close). Expected; no fix needed.
-7. **Outline metrics 502:** Upstream `/experimental/server/metrics` returns 400 when metrics not supported. Fixed: API returns empty metrics (200) for 400/404/501.
+7. **External metrics 502:** Upstream `/experimental/server/metrics` returns 400 when metrics not supported. Fixed: API returns empty metrics (200) for 400/404/501.
 8. **Control-plane anomaly/security 409:** In agent mode, these endpoints return 409 (AGENT_MODE_UNSUPPORTED). Fixed: frontend stops retry/refetch on 409 and shows "N/A (agent mode)".

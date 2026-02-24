@@ -69,11 +69,6 @@ class TopologyEngine:
                     server = existing.get(node_id)
                     vpn_endpoint = _derive_vpn_endpoint(node)
                     api_endpoint = f"docker://{node.container_name}"
-                    integration_type = (
-                        "outline"
-                        if (node.capabilities or {}).get("integration_type") == "outline"
-                        else "awg"
-                    )
                     if server is None:
                         session.add(
                             Server(
@@ -88,7 +83,6 @@ class TopologyEngine:
                                 max_connections=node.max_peers,
                                 health_score=node.health_score,
                                 is_draining=False,
-                                integration_type=integration_type,
                             )
                         )
                         continue
@@ -99,7 +93,6 @@ class TopologyEngine:
                         server.max_connections = node.max_peers
                     server.name = node.container_name
                     server.api_endpoint = api_endpoint
-                    server.integration_type = integration_type
                     if vpn_endpoint:
                         server.vpn_endpoint = vpn_endpoint
                     if node.public_key:

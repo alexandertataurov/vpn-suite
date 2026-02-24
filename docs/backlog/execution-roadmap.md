@@ -1,6 +1,7 @@
 # Hardening Execution Roadmap (2–4 Weeks)
 
-**Target:** Enterprise-hardened commercial VPN; 10× growth ready.
+**Target:** Enterprise-hardened commercial VPN; 10× growth ready.  
+**See:** `backlog.md` for API/security/observability items from audits (2026-02).
 
 ---
 

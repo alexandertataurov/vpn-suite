@@ -42,9 +42,6 @@ class Server(Base, TimestampMixin):
     )
     cert_fingerprint: Mapped[str | None] = mapped_column(String(64), nullable=True)
     cert_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    integration_type: Mapped[str] = mapped_column(
-        String(16), default="awg", nullable=False
-    )  # awg | outline — outline hosts excluded from VPN server counts and connection_nodes
 
     profiles: Mapped[list["ServerProfile"]] = relationship(
         "ServerProfile", back_populates="server", cascade="all, delete-orphan"

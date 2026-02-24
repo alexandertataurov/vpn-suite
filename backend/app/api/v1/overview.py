@@ -2,20 +2,25 @@
 
 from __future__ import annotations
 
+import logging
+import time
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel
 
+from app.core.config import settings
 from app.core.constants import PERM_CLUSTER_READ
+from app.core.logging_config import extra_for_event
 from app.core.rbac import require_permission
 from sqlalchemy import func, select
 
 from app.core.bot_auth import get_admin_or_bot
-from app.core.config import settings
 from app.core.database import get_db
 from app.core.telemetry_polling_task import get_dashboard_timeseries
-from app.models import Device, Plan, Server, Subscription, User
+from app.models import Device, Plan, Server, ServerSnapshot, Subscription, User
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["overview"])
 
@@ -27,15 +32,13 @@ class OverviewStats(BaseModel):
     users_total: int
     subscriptions_active: int
     mrr: float
-    outline_keys_total: int | None = None
-    outline_traffic_bps: int | None = None
 
 
 class ConnectionNodeOut(BaseModel):
-    """Single node in the unified dashboard: server (AWG) or outline."""
+    """Single node in the unified dashboard: server (AWG)."""
 
     id: str
-    type: str  # "server" | "outline"
+    type: str  # "server"
     label: str
     region: str | None = None
     peer_count: int = 0
@@ -58,6 +61,26 @@ class DashboardTimeseriesOut(BaseModel):
     """Bandwidth (rx/tx bytes) and connections (peers) for last 24h from cluster telemetry."""
 
     points: list[DashboardTimeseriesPoint]
+
+
+class HealthSnapshotOut(BaseModel):
+    telemetry_last_at: datetime | None = None
+    snapshot_last_at: datetime | None = None
+    operator_last_success_at: datetime | None = None
+    sessions_active: int
+    incidents_count: int
+    metrics_freshness: dict[str, str]
+    request_id: str | None = None
+
+
+def _freshness(age_s: float | None, fresh_s: int, degraded_s: int) -> str:
+    if age_s is None:
+        return "missing"
+    if age_s <= fresh_s:
+        return "fresh"
+    if age_s <= degraded_s:
+        return "degraded"
+    return "stale"
 
 
 @router.get("/overview/dashboard_timeseries", response_model=DashboardTimeseriesOut)
@@ -88,6 +111,114 @@ async def get_overview_telemetry_alias(
     )
 
 
+@router.get("/overview/health-snapshot", response_model=HealthSnapshotOut)
+async def get_health_snapshot(
+    request: Request,
+    db=Depends(get_db),
+    _admin=Depends(require_permission(PERM_CLUSTER_READ)),
+):
+    """Lightweight health snapshot for UI freshness indicators."""
+    started = time.perf_counter()
+    now = datetime.now(timezone.utc)
+
+    points = await get_dashboard_timeseries(window_seconds=3600)
+    last_ts = points[-1]["ts"] if points else None
+    telemetry_last_at = (
+        datetime.fromtimestamp(last_ts, tz=timezone.utc) if last_ts else None
+    )
+
+    snap_last = (
+        await db.execute(
+            select(func.max(ServerSnapshot.ts_utc)).where(ServerSnapshot.status == "success")
+        )
+    ).scalar_one_or_none()
+
+    sessions_active = (
+        await db.execute(
+            select(func.count()).select_from(Device).where(Device.revoked_at.is_(None))
+        )
+    ).scalar_one_or_none() or 0
+
+    unhealthy_count = (
+        await db.execute(
+            select(func.count())
+            .select_from(Server)
+            .where(
+                (Server.status.is_(None))
+                | (~Server.status.in_(("ok", "healthy")))
+            )
+        )
+    ).scalar_one_or_none() or 0
+
+    telemetry_age = (now - telemetry_last_at).total_seconds() if telemetry_last_at else None
+    snapshot_age = (now - snap_last).total_seconds() if snap_last else None
+
+    telemetry_fresh = _freshness(telemetry_age, fresh_s=30, degraded_s=120)
+    snapshot_fresh = _freshness(
+        snapshot_age,
+        fresh_s=max(settings.server_sync_interval_seconds * 2, 120),
+        degraded_s=max(settings.server_sync_interval_seconds * 6, 600),
+    )
+    incidents_fresh = telemetry_fresh if telemetry_fresh != "missing" else "unknown"
+
+    out = HealthSnapshotOut(
+        telemetry_last_at=telemetry_last_at,
+        snapshot_last_at=snap_last,
+        operator_last_success_at=telemetry_last_at,
+        sessions_active=int(sessions_active),
+        incidents_count=int(unhealthy_count),
+        metrics_freshness={
+            "telemetry": telemetry_fresh,
+            "snapshots": snapshot_fresh,
+            "sessions": "fresh",
+            "incidents": incidents_fresh,
+        },
+        request_id=getattr(request.state, "request_id", None),
+    )
+
+    logger.info(
+        "health snapshot",
+        extra=extra_for_event(
+            event="overview.health_snapshot",
+            route="/api/v1/overview/health-snapshot",
+            method="GET",
+            status_code=200,
+            duration_ms=(time.perf_counter() - started) * 1000,
+            actor_id=str(getattr(request.state, "audit_admin_id", "")) or None,
+            result_count=1,
+        ),
+    )
+    return out
+
+
+@router.get("/_debug/metrics-targets")
+async def get_metrics_targets(
+    request: Request,
+    _admin=Depends(require_permission(PERM_CLUSTER_READ)),
+):
+    """Prometheus targets (auth-protected)."""
+    started = time.perf_counter()
+    from app.services.prometheus_query_service import PrometheusQueryService
+
+    prom = PrometheusQueryService()
+    if not prom.enabled:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Prometheus not configured")
+    data = await prom.targets()
+    logger.info(
+        "metrics targets",
+        extra=extra_for_event(
+            event="metrics.targets",
+            route="/api/v1/_debug/metrics-targets",
+            method="GET",
+            status_code=200,
+            duration_ms=(time.perf_counter() - started) * 1000,
+            actor_id=str(getattr(request.state, "audit_admin_id", "")) or None,
+            result_count=len(data.get("activeTargets", []) if isinstance(data, dict) else []),
+        ),
+    )
+    return data
+
+
 @router.get("/overview", response_model=OverviewStats)
 async def get_overview(
     db=Depends(get_db),
@@ -96,7 +227,7 @@ async def get_overview(
     """Aggregate counts for dashboard. Admin or bot auth. MRR = sum of monthly value of active subs."""
     now = datetime.now(timezone.utc)
 
-    # Count all servers (AWG and Outline/Shadowsocks)
+    # Count all servers (AWG)
     servers_total = (await db.execute(select(func.count()).select_from(Server))).scalar() or 0
     _healthy_statuses = ("ok", "healthy")
     servers_unhealthy = (
@@ -143,29 +274,6 @@ async def get_overview(
         if price is not None and days and days > 0:
             mrr += float(price) * 30.0 / days
 
-    outline_keys_total: int | None = None
-    outline_traffic_bps: int | None = None
-    try:
-        from app.services.prometheus_query_service import PrometheusQueryService
-
-        prom = PrometheusQueryService()
-        if prom.enabled:
-            keys_rows = await prom.query("outline_access_keys_total")
-            traffic_rows = await prom.query("sum(rate(shadowsocks_data_bytes[5m]))")
-            try:
-                if keys_rows and keys_rows[0].get("value"):
-                    outline_keys_total = int(float(keys_rows[0]["value"][1]))
-            except Exception:
-                outline_keys_total = None
-            try:
-                if traffic_rows and traffic_rows[0].get("value"):
-                    outline_traffic_bps = int(float(traffic_rows[0]["value"][1]))
-            except Exception:
-                outline_traffic_bps = None
-    except Exception:
-        outline_keys_total = None
-        outline_traffic_bps = None
-
     return OverviewStats(
         servers_total=servers_total,
         servers_unhealthy=servers_unhealthy,
@@ -173,8 +281,6 @@ async def get_overview(
         users_total=users_total,
         subscriptions_active=subs_active,
         mrr=round(mrr, 2),
-        outline_keys_total=outline_keys_total,
-        outline_traffic_bps=outline_traffic_bps,
     )
 
 
@@ -183,7 +289,7 @@ async def get_connection_nodes(
     db=Depends(get_db),
     _principal=Depends(get_admin_or_bot),
 ):
-    """Unified connection nodes: servers (with peer count) + Outline. For dashboard system view."""
+    """Unified connection nodes: servers (with peer count). For dashboard system view."""
     nodes: list[ConnectionNodeOut] = []
 
     # Servers with active peer count
@@ -198,78 +304,19 @@ async def get_connection_nodes(
 
     servers = (
         await db.execute(
-            select(
-                Server.id, Server.name, Server.region, Server.status, Server.integration_type
-            ).where(Server.is_active.is_(True))
+            select(Server.id, Server.name, Server.region, Server.status).where(Server.is_active.is_(True))
         )
     ).all()
     for s in servers:
-        is_outline = getattr(s, "integration_type", "awg") == "outline"
         nodes.append(
             ConnectionNodeOut(
                 id=s.id,
-                type="outline" if is_outline else "server",
+                type="server",
                 label=s.name or s.id,
                 region=s.region or None,
                 peer_count=peer_by_server.get(s.id, 0),
                 status=s.status if s.status != "unknown" else None,
                 to=f"/servers/{s.id}",
-            )
-        )
-
-    # Outline as a connection node (if enabled)
-    if settings.outline_integration_enabled and settings.outline_manager_url:
-        outline_peer_count: int | None = None
-        outline_status: str | None = None
-        try:
-            from app.services.prometheus_query_service import PrometheusQueryService
-
-            prom = PrometheusQueryService()
-            if prom.enabled:
-                keys_rows = await prom.query("outline_access_keys_total")
-                up_rows = await prom.query('up{job="outline-ss"}')
-                poller_rows = await prom.query('up{job="outline-poller"}')
-                try:
-                    if keys_rows and keys_rows[0].get("value"):
-                        outline_peer_count = int(float(keys_rows[0]["value"][1]))
-                except Exception:
-                    outline_peer_count = None
-                try:
-                    ss_up = int(float(up_rows[0]["value"][1])) if up_rows else None
-                    poller_up = int(float(poller_rows[0]["value"][1])) if poller_rows else None
-                    if ss_up == 1 and poller_up == 1:
-                        outline_status = "connected"
-                    elif ss_up == 0 or poller_up == 0:
-                        outline_status = "offline"
-                except Exception:
-                    outline_status = None
-        except Exception:
-            outline_peer_count = None
-            outline_status = None
-
-        try:
-            from app.services.outline_client import OutlineShadowboxClient
-
-            client = OutlineShadowboxClient(
-                settings.outline_manager_url,
-                verify_ssl=True,
-                timeout=min(5.0, getattr(settings, "outline_request_timeout_seconds", 15)),
-                retry_count=0,
-            )
-            keys = await client.list_access_keys()
-            status_val = outline_status or "connected"
-        except Exception:
-            keys = []
-            status_val = outline_status or "offline"
-        nodes.append(
-            ConnectionNodeOut(
-                id="outline",
-                type="outline",
-                label="Outline",
-                region=None,
-                peer_count=outline_peer_count if outline_peer_count is not None else len(keys),
-                status=status_val,
-                to="/integrations/outline",
             )
         )
 

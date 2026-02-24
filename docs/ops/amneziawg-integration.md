@@ -1,9 +1,10 @@
-# AmneziaWG Runtime Integration (Docker Control Channel)
+# AmneziaWG Runtime Integration
 
 This document reflects the current control-plane model:
 
 - Execution nodes are AmneziaWG containers (`amnezia-awg*`).
-- Control channel is Docker runtime only (`docker exec ... wg ...`).
+- **NODE_MODE=real** (single-host/dev): control-plane uses Docker runtime (`docker exec ... wg ...`).
+- **NODE_MODE=agent** (production): node-agent applies desired state via Docker on each node; control-plane stores state in DB.
 - No HTTP management API is required or used inside AWG containers.
 
 ## Capability Matrix

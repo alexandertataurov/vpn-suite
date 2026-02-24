@@ -4,7 +4,7 @@ Source of truth for observability coverage. Criticality: **P0** = must never fai
 
 | Component | Responsibility | Inbound / Outbound | Tier | Telemetry (current) | Data stores / APIs |
 |-----------|----------------|--------------------|------|---------------------|--------------------|
-| **admin-api** | Control-plane API, auth, servers/peers/devices, cluster, agent, telemetry, background loops | In: Caddy, bot, frontend, agent. Out: Postgres, Redis, Docker, optional Prometheus/Outline | P0 | Logs: JSON + request_id. Metrics: /metrics. Health: /health, /health/ready. No trace_id. | Postgres, Redis, Docker API, Outline (opt), Prometheus (opt) |
+| **admin-api** | Control-plane API, auth, servers/peers/devices, cluster, agent, telemetry, background loops | In: Caddy, bot, frontend, agent. Out: Postgres, Redis, Docker, optional Prometheus | P0 | Logs: JSON + request_id. Metrics: /metrics. Health: /health, /health/ready. No trace_id. | Postgres, Redis, Docker API, Prometheus (opt) |
 | **reverse-proxy** | Caddy: TLS, static admin/webapp, proxy to admin-api, agent mTLS 8443 | In: public. Out: admin-api, agent | P0 | None (Caddy default logs). Health: /health → admin-api | — |
 | **postgres** | Primary DB | In: admin-api | P0 | Container healthcheck only | — |
 | **redis** | Cache, rate limit, bot FSM, agent heartbeat | In: admin-api, bot | P0 | Container healthcheck only | — |

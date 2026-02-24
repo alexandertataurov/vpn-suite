@@ -74,15 +74,17 @@ function renderTelemetryCell(
   const telemetry = telemetrySummary?.servers?.[server.id];
   const snapHasMetrics = snap && (snap.cpu_pct != null || snap.ram_pct != null);
   const t = snapHasMetrics ? snap : telemetry;
-  const lastMetricsAt = telemetry?.last_metrics_at ?? null;
-  const metricsFreshness = getFreshnessLevel(lastMetricsAt, snapshotStaleThresholdMs);
+  const telemetryLast = telemetry?.last_telemetry_at ?? telemetry?.last_metrics_at ?? null;
+  const telemetryStatus = telemetry?.telemetry_status;
+  const metricsFreshness = getFreshnessLevel(telemetryLast, snapshotStaleThresholdMs);
+  const showStale = telemetryStatus ? telemetryStatus === "stale" : metricsFreshness === "stale";
   if (t && (t.cpu_pct != null || t.ram_pct != null)) {
     return (
       <span className="ref-telemetry-mini" title={snap?.source === "snapshot" ? "From snapshot" : undefined}>
         {t.cpu_pct != null && `CPU ${Number(t.cpu_pct).toFixed(0)}%`}
         {t.cpu_pct != null && t.ram_pct != null && " · "}
         {t.ram_pct != null && `RAM ${Number(t.ram_pct).toFixed(0)}%`}
-        {lastMetricsAt && metricsFreshness === "stale" && (
+        {telemetryLast && showStale && (
           <span className="ref-telemetry-stale"> · Telemetry stale</span>
         )}
       </span>
@@ -96,10 +98,17 @@ function renderTelemetryCell(
       </span>
     );
   }
-  if (lastMetricsAt) {
+  if (telemetryStatus === "error") {
+    return (
+      <span className="table-cell-empty ref-telemetry-unavail" title="Telemetry error">
+        Telemetry error
+      </span>
+    );
+  }
+  if (telemetryLast) {
     return (
       <span className="table-cell-empty ref-telemetry-unavail" title="Telemetry unavailable">
-        No data (last metric: {new Date(lastMetricsAt).toLocaleTimeString(undefined, { hour12: false })})
+        No data (last metric: {new Date(telemetryLast).toLocaleTimeString(undefined, { hour12: false })})
       </span>
     );
   }
@@ -158,26 +167,36 @@ function ServerRowInner({
   const seenLevel = getFreshnessLevel(server.last_seen_at);
   const seenStale = isStale(server.last_seen_at);
   const snapStale = isSnapshotStale(server.last_snapshot_at, snapshotStaleThresholdMs);
-  const telemetryLast = telemetrySummary?.servers?.[server.id]?.last_metrics_at ?? null;
-  const telemetryStale = getFreshnessLevel(telemetryLast, snapshotStaleThresholdMs) === "stale";
+  const telemetry = telemetrySummary?.servers?.[server.id];
+  const telemetryLast = telemetry?.last_telemetry_at ?? telemetry?.last_metrics_at ?? null;
+  const telemetryStatus = telemetry?.telemetry_status;
+  const telemetryStale = telemetryStatus
+    ? telemetryStatus === "stale"
+    : getFreshnessLevel(telemetryLast, snapshotStaleThresholdMs) === "stale";
   const hasMetrics =
     snapshotSummary?.servers?.[server.id]?.cpu_pct != null ||
     snapshotSummary?.servers?.[server.id]?.ram_pct != null ||
-    telemetrySummary?.servers?.[server.id]?.cpu_pct != null ||
-    telemetrySummary?.servers?.[server.id]?.ram_pct != null;
+    telemetry?.cpu_pct != null ||
+    telemetry?.ram_pct != null;
   const reasonDisabled = !server.is_active;
   const reasonStale = snapStale || telemetryStale || seenStale;
-  const reasonNoTelemetry = !hasMetrics && !!telemetryLast;
+  const reasonNoTelemetry = telemetryStatus === "missing" || (!hasMetrics && !!telemetryLast);
+  const reasonTelemetryError = telemetryStatus === "error";
   const reasons: React.ReactNode[] = [];
   if (reasonDisabled) reasons.push("Disabled");
   if (reasonStale) reasons.push("Telemetry stale");
+  if (reasonTelemetryError) reasons.push("Telemetry error");
   if (reasonNoTelemetry) {
     reasons.push(
-      <>
-        No telemetry (last metric:{" "}
-        <RelativeTime date={telemetryLast!} updateInterval={5000} />
-        )
-      </>
+      telemetryLast ? (
+        <>
+          No telemetry (last metric:{" "}
+          <RelativeTime date={telemetryLast} updateInterval={5000} />
+          )
+        </>
+      ) : (
+        "No telemetry"
+      )
     );
   }
 

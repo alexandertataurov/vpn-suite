@@ -143,16 +143,6 @@ class ServerUpdate(BaseModel):
     is_active: bool | None = None
     auto_sync_enabled: bool | None = None
     auto_sync_interval_sec: int | None = None
-    integration_type: Literal["awg", "outline"] | None = None
-
-    @field_validator("integration_type")
-    @classmethod
-    def integration_type_values(cls, v: str | None) -> str | None:
-        if v is None:
-            return None
-        if v not in ("awg", "outline"):
-            raise ValueError("integration_type must be 'awg' or 'outline'")
-        return v
 
 
 class ServerOut(OrmSchema):
@@ -177,7 +167,6 @@ class ServerOut(OrmSchema):
     tags: list[str] | None = None
     auto_sync_enabled: bool = False
     auto_sync_interval_sec: int = 60
-    integration_type: str = "awg"
     ops_notes: str | None = None
     ops_notes_updated_at: datetime | None = None
     ops_notes_updated_by: str | None = None
@@ -301,6 +290,8 @@ class ServerTelemetryEntry(BaseModel):
     peers: int | None = None
     health_score: float | None = None
     last_metrics_at: datetime | None = None
+    last_telemetry_at: datetime | None = None
+    telemetry_status: Literal["ok", "stale", "missing", "error"] | None = None
 
 
 class ServersTelemetrySummaryOut(BaseModel):

@@ -1,12 +1,1 @@
-{
-  "entries": [
-    {
-      "outline_server_id": "40f1b4a3-1234-5678-abcd-ef1234567890",
-      "host_id": "local",
-      "container_id": "def789ghi012",
-      "node_id": "docker:def789ghi012",
-      "confidence": 0.92,
-      "evidence": ["kind_outline", "port_match", "image_shadowbox"]
-    }
-  ]
-}
+{"entries":[]}

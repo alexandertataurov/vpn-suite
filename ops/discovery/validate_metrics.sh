@@ -55,16 +55,10 @@ def health(job):
         if t.get("labels",{}).get("job")==job:
             return t.get("health")
     return None
-for job in ["outline-poller","outline-ss","wg-exporter"]:
+for job in ["wg-exporter"]:
     h=health(job)
     print(f"{job} health={h}")
 PY
-
-echo "Checking outline metrics..."
-outline=$(query "outline_access_keys_total")
-if [[ -z "${outline}" || "${outline}" == "[]" ]]; then
-  fail "outline_access_keys_total missing"
-fi
 
 echo "Checking wireguard metrics..."
 wg_up=$(query "wireguard_up")
@@ -77,4 +71,4 @@ if [[ -z "${wg_peers}" || "${wg_peers}" == "[]" ]]; then
   fail "wireguard_peers missing"
 fi
 
-echo "OK: outline + wireguard metrics present"
+echo "OK: wireguard metrics present"

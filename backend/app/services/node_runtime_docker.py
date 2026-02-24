@@ -27,7 +27,6 @@ _PUBLIC_KEY_PATTERN = re.compile(r"^[A-Za-z0-9+/=]{32,64}$")
 _ALLOWED_IPS_PATTERN = re.compile(r"^[0-9A-Fa-f.,/: \t]+$")
 _CONTAINER_NAME_PATTERN = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}$")
 _INTERFACE_NAME_PATTERN = re.compile(r"^[a-zA-Z0-9_.:-]{1,32}$")
-_SHADOWBOX_IMAGE_PATTERNS = [r"outline/shadowbox", r"quay\\.io/outline/shadowbox"]
 _AMNEZIA_IMAGE_PATTERNS = [r"amnezia[wgvpn/\\-]*", r"amneziawg", r"metaligh/amneziawg", r"amneziavpn/amneziawg"]
 
 
@@ -365,30 +364,6 @@ def _classify_container_inspect(inspect: dict, image_refs: list[str]) -> dict:
     kind = "unknown"
     ctype = "unknown"
 
-    if any(_match_any(r, _SHADOWBOX_IMAGE_PATTERNS) for r in image_refs if r):
-        conf = max(conf, 0.9)
-        evidence.append("image_shadowbox")
-        kind = "outline"
-        ctype = "outline-shadowbox"
-    if env.get("SB_STATE_DIR") or env.get("SB_API_PORT"):
-        conf = max(conf, 0.9)
-        evidence.append("env_sb")
-        kind = "outline"
-        ctype = "outline-shadowbox"
-    if labels.get("com.centurylinklabs.watchtower.scope") == "outline":
-        conf = max(conf, 0.8)
-        evidence.append("label_outline")
-        kind = "outline"
-        ctype = "outline-shadowbox"
-    if any(m and "/opt/outline" in m for m in mounts):
-        conf = max(conf, 0.7)
-        evidence.append("mount_outline")
-        kind = "outline"
-        ctype = "outline-shadowbox"
-    if network_mode == "host" and kind == "outline":
-        conf = max(conf, 0.75)
-        evidence.append("network_mode_host")
-
     if any(_match_any(r, _AMNEZIA_IMAGE_PATTERNS) for r in image_refs if r):
         conf = max(conf, 0.9)
         evidence.append("image_amnezia")
@@ -495,14 +470,8 @@ def _compute_health(peers: list[dict], latency_ms: float) -> float:
     return max(0.0, min(1.0, (0.7 * handshake_factor) + (0.3 * latency_factor)))
 
 
-def _is_shadowbox_container(name: str) -> bool:
-    """True if container name suggests Outline/Shadowsocks (shadowbox, outline-ss, etc.)."""
-    low = name.lower()
-    return "shadowbox" in low or "outline" in low
-
-
 class DockerNodeRuntimeAdapter(NodeRuntimeAdapter):
-    """Discover AmneziaWG and Outline (shadowbox) containers. AWG via docker exec wg; shadowbox via container presence."""
+    """Discover AmneziaWG containers via docker exec wg."""
 
     def __init__(self, container_filter: str = "amnezia-awg", interface: str = "awg0"):
         self._container_prefix = container_filter
@@ -615,33 +584,6 @@ class DockerNodeRuntimeAdapter(NodeRuntimeAdapter):
         except Exception as e:
             raise NodeDiscoveryError(str(e)[:200]) from e
 
-    async def _discover_shadowbox(self, container_id: str, container_name: str, classification: dict, host_id: str) -> NodeMetadata:
-        """Discover Outline/Shadowsocks container (no wg - uses API for keys)."""
-        now = datetime.now(timezone.utc)
-        return NodeMetadata(
-            node_id=f"docker:{container_id}",
-            container_name=container_name,
-            container_id=container_id,
-            host_id=host_id,
-            classification=classification,
-            confidence=classification.get("confidence"),
-            evidence=classification.get("evidence"),
-            interface_name="",
-            public_key="",
-            listen_port=0,
-            endpoint_ip="",
-            internal_ip="",
-            peer_count=0,
-            total_rx_bytes=0,
-            total_tx_bytes=0,
-            status="healthy",
-            last_seen=now,
-            capabilities={"obfuscation": False, "integration_type": "outline"},
-            health_score=1.0,
-            max_peers=1000,
-            is_draining=False,
-        )
-
     async def _discover_one(
         self,
         container_id: str,
@@ -739,12 +681,9 @@ class DockerNodeRuntimeAdapter(NodeRuntimeAdapter):
                 container_name = c.get("container_name") or container_id
                 if not container_id:
                     continue
-                if kind not in ("awg", "outline") and confidence < 0.6:
+                if kind != "awg" and confidence < 0.6:
                     continue
-                if kind == "outline":
-                    nodes.append(await self._discover_shadowbox(container_id, container_name, classification, host_id))
-                else:
-                    nodes.append(await self._discover_one(container_id, container_name, classification, host_id))
+                nodes.append(await self._discover_one(container_id, container_name, classification, host_id))
             except Exception as exc:  # keep discovery loop resilient
                 _log.warning(
                     "Discovery failed for container=%s: %s", c.get("container_name"), type(exc).__name__

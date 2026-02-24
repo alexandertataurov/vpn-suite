@@ -6,7 +6,7 @@
 
 | System | Location | Used By | Classes |
 |--------|----------|---------|---------|
-| Shared Table | `frontend/shared/src/ui/Table.tsx` | TopIssuesTable, RecentAuditTable, Devices, Subscriptions, Payments, Audit, OutlineIntegrations, ServerDetail, ControlPlane, VpnNodesTab | `table-wrap`, `table`, `table-empty`, `table-cell-*` |
+| Shared Table | `frontend/shared/src/ui/Table.tsx` | TopIssuesTable, RecentAuditTable, Devices, Subscriptions, Payments, Audit,  ServerDetail, ControlPlane, VpnNodesTab | `table-wrap`, `table`, `table-empty`, `table-cell-*` |
 | Raw HTML tables | Servers.tsx, Users.tsx | Servers page, Users page | `ref-users-table-wrap`, `ref-users-table`, `ref-server-row`, `ref-user-row` |
 | Docker div-grid | DockerOverviewTable.tsx | DockerServicesTab | `docker-table-shell`, `docker-table-row`, `docker-table-cell-*` |
 

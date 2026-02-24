@@ -19,9 +19,6 @@ const ServerNewPage = lazy(() => import("./pages/ServerNew").then((m) => ({ defa
 const ServerDetailPage = lazy(() => import("./pages/ServerDetail").then((m) => ({ default: m.ServerDetailPage })));
 const ServerEditPage = lazy(() => import("./pages/ServerEdit").then((m) => ({ default: m.ServerEditPage })));
 const SettingsPage = lazy(() => import("./pages/Settings").then((m) => ({ default: m.SettingsPage })));
-const OutlineIntegrationsPage = lazy(() =>
-  import("./pages/OutlineIntegrations").then((m) => ({ default: m.OutlineIntegrationsPage }))
-);
 const StyleguidePage = lazy(() => import("./pages/Styleguide").then((m) => ({ default: m.StyleguidePage })));
 
 function App() {
@@ -153,16 +150,6 @@ function App() {
                     </ErrorBoundary>
                   }
                 />
-                <Route
-                  path="integrations/outline"
-                  element={
-                    <ErrorBoundary>
-                      <OutlineIntegrationsPage />
-                    </ErrorBoundary>
-                  }
-                />
-                <Route path="outline" element={<Navigate to="/integrations/outline" replace />} />
-                <Route path="settings/integrations/outline" element={<Navigate to="/integrations/outline" replace />} />
                 <Route
                   path="styleguide"
                   element={

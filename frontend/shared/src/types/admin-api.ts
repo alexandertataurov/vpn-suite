@@ -7,13 +7,11 @@ export interface OverviewStats {
   users_total: number;
   subscriptions_active: number;
   mrr: number;
-  outline_keys_total?: number | null;
-  outline_traffic_bps?: number | null;
 }
 
 export interface ConnectionNodeOut {
   id: string;
-  type: "server" | "outline";
+  type: "server";
   label: string;
   region: string | null;
   peer_count: number;
@@ -49,9 +47,6 @@ export interface OperatorHealthStrip {
   total_throughput_bps: number;
   avg_latency_ms: number | null;
   error_rate_pct: number;
-  outline_keys_total?: number | null;
-  outline_traffic_bps?: number | null;
-  outline_status?: "ok" | "down" | "unknown";
   last_updated: string;
   refresh_mode: string;
   freshness: "fresh" | "degraded" | "stale" | "unknown";
@@ -79,6 +74,7 @@ export interface OperatorIncident {
   link: string;
   status?: "open" | "ack" | "resolved";
   affected_servers?: number;
+  acknowledged_by?: string | null;
 }
 
 export interface OperatorServerRow {
@@ -114,6 +110,19 @@ export interface OperatorDashboardOut {
   last_updated: string;
   data_status?: "ok" | "degraded";
   last_successful_sample_ts?: string | null;
+}
+
+export interface HealthSnapshotOut {
+  telemetry_last_at?: string | null;
+  snapshot_last_at?: string | null;
+  operator_last_success_at?: string | null;
+  sessions_active: number;
+  incidents_count: number;
+  metrics_freshness: Record<
+    string,
+    "fresh" | "degraded" | "stale" | "unknown" | "missing"
+  >;
+  request_id?: string | null;
 }
 
 export interface LoginRequest {
@@ -161,7 +170,6 @@ export interface ServerOut {
   ops_notes_updated_by?: string | null;
   cert_fingerprint?: string | null;
   cert_expires_at?: string | null;
-  integration_type?: "awg" | "outline";
 }
 
 /** Response of POST /servers/:id/sync. When agent mode, action_id is set and job_id may be empty; frontend can poll GET /actions/:id for progress. */
@@ -798,55 +806,4 @@ export interface ControlPlaneEventOut {
 export interface ControlPlaneEventListOut {
   items: ControlPlaneEventOut[];
   total: number;
-}
-
-export interface OutlineStatusOut {
-  status: "connected" | "degraded" | "offline";
-  version?: string | null;
-  name?: string | null;
-  lastCheckedAt: string;
-}
-
-export interface OutlineKeyOut {
-  id: string;
-  name: string | null;
-  port: number;
-  method: string;
-  dataLimit?: { bytes: number } | null;
-  bytesTransferred?: number | null;
-  linkedDeviceId?: string | null;
-}
-
-export interface OutlineKeyListOut {
-  keys: OutlineKeyOut[];
-}
-
-export interface OutlineDownloadTokenOut {
-  token: string;
-  downloadUrl: string;
-}
-
-export interface OutlineServerOut {
-  name?: string | null;
-  serverId?: string | null;
-  version?: string | null;
-  metricsEnabled: boolean;
-  portForNewAccessKeys?: number | null;
-  hostnameForAccessKeys?: string | null;
-  accessKeyDataLimit?: { bytes: number } | null;
-}
-
-export interface OutlineMetricsOut {
-  server?: {
-    tunnelTime?: { seconds?: number };
-    dataTransferred?: { bytes?: number };
-    bandwidth?: { current?: { data?: { bytes?: number }; timestamp?: number }; peak?: { data?: { bytes?: number }; timestamp?: number } };
-    locations?: Array<{ location?: string; dataTransferred?: { bytes?: number }; tunnelTime?: { seconds?: number } }>;
-  } | null;
-  accessKeys?: Array<{
-    accessKeyId?: number | string;
-    tunnelTime?: { seconds?: number };
-    dataTransferred?: { bytes?: number };
-    connection?: { lastTrafficSeen?: number; peakDeviceCount?: { data?: number; timestamp?: number } };
-  }> | null;
 }

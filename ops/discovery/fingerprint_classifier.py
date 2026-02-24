@@ -8,10 +8,6 @@ from dataclasses import dataclass, field
 from typing import Any
 
 # Known image patterns (digest or repo:tag). Never use container name.
-SHADOWBOX_IMAGE_PATTERNS = [
-    r"outline/shadowbox",
-    r"quay\.io/outline/shadowbox",
-]
 AMNEZIA_IMAGE_PATTERNS = [
     r"amnezia[wgvpn/\-]*",
     r"amneziawg",
@@ -28,14 +24,13 @@ EXPORTER_IMAGE_PATTERNS = [
     r"grafana/promtail",
     r"vpn-suite-node-agent",
     r"vpn-suite-telegram-vpn-bot",
-    r"outline-poller",
     r"wg-exporter",
 ]
 
 
 @dataclass
 class ClassificationResult:
-    kind: str  # awg | outline | host_wg | unknown
+    kind: str  # awg | host_wg | unknown
     fingerprint_score: float = 0.0
     network_score: float = 0.0
     api_match_score: float = 0.0
@@ -64,7 +59,7 @@ class ClassificationResult:
 
 @dataclass
 class CandidateClassification:
-    type: str  # awg-node | outline-shadowbox | exporter | prometheus | unknown
+    type: str  # awg-node | exporter | prometheus | unknown
     confidence: float
     evidence: list[str] = field(default_factory=list)
 
@@ -167,7 +162,6 @@ def classify_container(
     container_id: str,
     inspect: dict[str, Any],
     *,
-    outline_info: dict[str, Any] | None = None,
     repo_digests: list[str] | None = None,
     image_id: str | None = None,
 ) -> ClassificationResult:
@@ -187,29 +181,6 @@ def classify_container(
     fp, net, api, temporal = 0.0, 0.0, 0.0, 0.0
     evidence: list[str] = []
     kind = "unknown"
-
-    if any(_match(r, SHADOWBOX_IMAGE_PATTERNS) for r in all_image_refs if r):
-        fp, kind = 1.0, "outline"
-        evidence.append("image_shadowbox")
-    if env.get("SB_STATE_DIR") or env.get("SB_API_PORT"):
-        fp = max(fp, 0.95)
-        evidence.append("env_sb")
-        kind = "outline"
-    if labels.get("com.centurylinklabs.watchtower.scope") == "outline":
-        fp = max(fp, 0.85)
-        evidence.append("label_outline")
-        kind = "outline"
-    if any("/opt/outline" in m for m in mounts):
-        fp = max(fp, 0.8)
-        evidence.append("mount_outline")
-        if kind == "unknown":
-            kind = "outline"
-    if network_mode == "host" and kind == "outline":
-        fp = max(fp, 0.75)
-        evidence.append("network_mode_host")
-    if any(p[1] in (25432, int(env.get("SB_API_PORT", 0) or 0)) for p in ports if p[1]):
-        net = max(net, 0.9)
-        evidence.append("port_sb_api")
 
     if any(_match(r, AMNEZIA_IMAGE_PATTERNS) for r in all_image_refs if r):
         fp = max(fp, 1.0)
@@ -234,28 +205,8 @@ def classify_container(
         net = max(net, 0.9)
         evidence.append("port_wg_udp")
 
-    if outline_info and kind == "outline":
-        api = 0.8
-        evidence.append("outline_api_correlation")
-
-    created_ts = _parse_created_ts(inspect.get("Created"))
-    created_ms = None
-    if outline_info and isinstance(outline_info, dict):
-        cm = outline_info.get("createdTimestampMs") or outline_info.get("createdTimestamp")
-        if cm is not None:
-            try:
-                created_ms = float(cm)
-            except (TypeError, ValueError):
-                pass
-    if created_ts is not None and created_ms is not None:
-        api_ts = created_ms / 1000.0
-        diff_sec = abs(created_ts - api_ts)
-        if diff_sec < 3600:
-            temporal = 0.9
-            evidence.append("timestamp_proximity")
-
     if kind == "unknown" and (fp > 0 or net > 0):
-        kind = "awg" if any(p[0] == "udp" for p in ports) else "outline"
+        kind = "awg"
 
     return ClassificationResult(
         kind=kind,
@@ -272,7 +223,6 @@ def classify_candidate(
     container_id: str,
     inspect: dict[str, Any],
     *,
-    outline_info: dict[str, Any] | None = None,
     repo_digests: list[str] | None = None,
     image_id: str | None = None,
 ) -> CandidateClassification:
@@ -292,7 +242,6 @@ def classify_candidate(
         host_id,
         container_id,
         inspect,
-        outline_info=outline_info,
         repo_digests=repo_digests,
         image_id=image_id,
     )
@@ -303,15 +252,6 @@ def classify_candidate(
         return CandidateClassification(
             type="awg-node",
             confidence=awg_conf,
-            evidence=detailed.evidence,
-        )
-    if detailed.kind == "outline":
-        outline_conf = detailed.total_confidence
-        if {"image_shadowbox", "env_sb", "mount_outline"} & set(detailed.evidence):
-            outline_conf = max(outline_conf, 0.85)
-        return CandidateClassification(
-            type="outline-shadowbox",
-            confidence=outline_conf,
             evidence=detailed.evidence,
         )
     return CandidateClassification(

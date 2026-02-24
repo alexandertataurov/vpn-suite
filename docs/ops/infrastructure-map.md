@@ -1,7 +1,7 @@
 # VPN Infrastructure Map
 
-**Audit Date:** 2025-02-21  
-**Scope:** VPN Suite (control plane + AmneziaWG nodes) + Outline + monitoring
+**Audit Date:** 2026-02-24  
+**Scope:** VPN Suite (control plane + AmneziaWG nodes) + monitoring
 
 ---
 
@@ -39,15 +39,8 @@ flowchart TB
         Grafana[grafana :3000]
         Cadvisor[cadvisor :8080]
         NodeExporter[node-exporter :9100]
-    end
-
-    subgraph OutlineSys["Outline system"]
-        Shadowbox[shadowbox :25432]
-    end
-
-    subgraph AuditStack["audit stack"]
-        AuditProxy[audit-reverse-proxy :18080]
-        AuditAPI[audit-admin-api :18000]
+        Tempo[tempo :3200]
+        OtelCollector[otel-collector :4317]
     end
 
     Users --> UFW
@@ -57,8 +50,6 @@ flowchart TB
     UFW --> P8443
     P80 --> AdminAPI
     P443 --> AdminAPI
-    P443 --> Shadowbox
-    P443 --> AuditProxy
     P8443 --> AdminAPI
     P443 --> Bot
     AdminAPI --> Postgres
@@ -77,19 +68,13 @@ flowchart TB
 |------|---------|-----|-------|
 | 22 | SSH | ALLOW | Brute-force risk; no fail2ban |
 | 80 | Caddy HTTP | ALLOW | Redirect to HTTPS |
-| 443 | Caddy HTTPS | ALLOW | API, admin, webapp, outline-api |
+| 443 | Caddy HTTPS | ALLOW | API, admin, webapp |
 | 8443 | Caddy mTLS | ALLOW | Agent API only (client cert required) |
-| 8090 | Telegram bot | Not in UFW | Docker-published; reachable if Docker rules apply |
+| 8090 | Telegram bot | Not in UFW | 127.0.0.1 only; webhook via Caddy |
 | 3000 | Grafana | Not in UFW | Monitoring profile |
 | 8080 | cAdvisor | Not in UFW | Monitoring profile |
 | 9100 | node-exporter | Not in UFW | Monitoring profile |
-| 18080 | Audit Caddy | - | Audit stack |
-| 18000 | Audit admin-api | - | Audit stack (direct) |
-| 25432 | Outline API | ALLOW | Outline Manager |
-| 45790/udp | AmneziaWG | ALLOW | VPN traffic |
-| 47604/udp | WireGuard | ALLOW | (legacy) |
-| 58294 tcp/udp | Outline keys | ALLOW | Shadowsocks |
-| 1024-65535 tcp/udp | Outline key range | ALLOW | Dynamic Shadowsocks |
+| 45790/udp | AmneziaWG | ALLOW | VPN traffic (typical; port per server) |
 
 ### Internal only (127.0.0.1 / Docker internal network)
 
@@ -97,7 +82,7 @@ flowchart TB
 |------|---------|
 | 8000 | admin-api (localhost only) |
 | 9090 | Prometheus |
-| 6379 | redis-server (host), redis container |
+| 6379 | redis container (internal only) |
 | 5432 | Postgres containers |
 
 ---
@@ -154,16 +139,13 @@ flowchart LR
 |-----------|-------|-------|---------|
 | vpn-suite-reverse-proxy | vpn-suite-reverse-proxy:local | 80, 443, 8443 | vpn-suite-app |
 | vpn-suite-admin-api | vpn-suite-admin-api | 127.0.0.1:8000 | app, db |
-| vpn-suite-telegram-vpn-bot | vpn-suite-telegram-vpn-bot | 0.0.0.0:8090 | app, db |
+| vpn-suite-telegram-vpn-bot | vpn-suite-telegram-vpn-bot | 127.0.0.1:8090 | app, db |
 | vpn-suite-postgres | postgres | internal | vpn-suite-db |
 | vpn-suite-redis | redis | internal | vpn-suite-db |
 | vpn-suite-node-agent | vpn-suite-node-agent | 9105 | vpn-suite-app |
-| shadowbox | quay.io/outline/shadowbox | - | outline |
 | vpn-suite-grafana | grafana/grafana | 0.0.0.0:3000 | app |
 | vpn-suite-cadvisor | gcr.io/cadvisor/cadvisor | 0.0.0.0:8080 | app |
 | vpn-suite-node-exporter | prom/node-exporter | 0.0.0.0:9100 | app |
-| vpn-suite-audit-* | - | 18080, 18000 | audit stack |
-
 ---
 
 ## 5. System Configuration Snapshot
@@ -182,6 +164,7 @@ flowchart LR
 
 - docker, containerd
 - ssh (OpenSSH)
-- redis-server (host)
 - cron, rsyslog, systemd-timesyncd
 - unattended-upgrades
+
+**Note:** Redis runs in Docker container (`vpn-suite-redis`), not as a host service.

@@ -20,6 +20,7 @@ from config import (
     BOT_USERNAME,
     BOT_POLLING_TIMEOUT,
     BOT_TASKS_CONCURRENCY_LIMIT,
+    OTEL_TRACES_ENDPOINT,
     PORT,
     REDIS_URL,
     SUPPORT_HANDLE,
@@ -36,6 +37,7 @@ from handlers.devices import router as devices_router
 from handlers.install import router as install_router
 from handlers.help import router as help_router
 from handlers.support import router as support_router
+from otel_tracing import setup_otel_tracing
 
 _log = get_logger(__name__)
 
@@ -88,6 +90,7 @@ async def run_healthz_app():
 
 async def run_bot():
     validate_config()
+    setup_otel_tracing(OTEL_TRACES_ENDPOINT)
     await run_healthz_app()
     await init_api()
     try:

@@ -93,9 +93,6 @@ services:
     environment:
       - PUBLIC_DOMAIN=${PUBLIC_DOMAIN:?set PUBLIC_DOMAIN}
       - AGENT_ALLOW_CIDRS=${AGENT_ALLOW_CIDRS:-0.0.0.0/0 ::/0}
-      # Outline (opt/outline) as one system: proxy so apiUrl = https://PUBLIC_DOMAIN/outline-api (from /opt/outline/access.txt)
-      - OUTLINE_API_SECRET_PATH=${OUTLINE_API_SECRET_PATH:-}
-      - OUTLINE_UPSTREAM=${OUTLINE_UPSTREAM:-https://127.0.0.1:25432}
     volumes:
       - ./config/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - ./config/caddy/root:/srv/root:ro
@@ -221,6 +218,7 @@ services:
     image: prom/prometheus@sha256:f6639335d34a77d9d9db382b92eeb7fc00934be8eae81dbc03b31cfe90411a94
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.retention.time=365d"
     volumes:
       - ./config/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./config/monitoring/alert_rules.yml:/etc/prometheus/alert_rules.yml:ro

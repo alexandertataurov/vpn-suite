@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Server, Shield } from "lucide-react";
+import { Server } from "lucide-react";
 import { Panel, Skeleton, PrimitiveBadge } from "@vpn-suite/shared/ui";
 import type { ConnectionNodesOut } from "@vpn-suite/shared/types";
 import { api } from "../../api/client";
@@ -43,7 +43,7 @@ export function ConnectionNodesSection() {
   return (
     <Panel as="section" variant="outline" className="connection-nodes" aria-label="Connection nodes" data-testid="dashboard-connection-nodes">
       <h3 className="ref-settings-title">Connection nodes</h3>
-      <p className="ref-settings-text ref-muted">Servers and Outline — peers and keys at a glance.</p>
+      <p className="ref-settings-text ref-muted">Servers — peers at a glance.</p>
       <div className="connection-nodes-grid">
         {nodes.map((node) => (
           <Link
@@ -51,22 +51,18 @@ export function ConnectionNodesSection() {
             to={node.to}
             className="connection-node-card"
             data-type={node.type}
-            aria-label={`${node.label}, ${node.peer_count} ${node.type === "outline" ? "keys" : "peers"}`}
+            aria-label={`${node.label}, ${node.peer_count} peers`}
           >
             <div className="connection-node-header">
-              {node.type === "outline" ? (
-                <Shield className="connection-node-icon" aria-hidden />
-              ) : (
-                <Server className="connection-node-icon" aria-hidden />
-              )}
+              <Server className="connection-node-icon" aria-hidden />
               <span className="connection-node-label">{node.label}</span>
-              <PrimitiveBadge variant={node.type === "outline" ? "info" : "neutral"} className="connection-node-type">
-                {node.type === "outline" ? "Outline" : "Server"}
+              <PrimitiveBadge variant="neutral" className="connection-node-type">
+                Server
               </PrimitiveBadge>
             </div>
             <div className="connection-node-meta">
               <span className="connection-node-stat">
-                {node.type === "outline" ? "Keys" : "Peers"}: <strong>{node.peer_count}</strong>
+                Peers: <strong>{node.peer_count}</strong>
               </span>
               {node.region && <span className="ref-muted"> · {node.region}</span>}
               {node.status && (

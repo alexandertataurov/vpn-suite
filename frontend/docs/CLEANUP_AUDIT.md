@@ -31,13 +31,11 @@ Comprehensive audit of the frontend codebase: route map, dependency graph, unuse
 | `/servers`, `/servers/new`, `/servers/:id`, `/servers/:id/edit` | Servers, ServerNew, ServerDetail, ServerEdit | yes  |
 | `/users`, `/users/:id`                                          | Users, UserDetail                            | yes  |
 | `/billing`                                                      | Billing.tsx                                  | yes  |
-| `/subscriptions`, `/payments`                                   | Redirect → billing                           | —    |
+| `/subscriptions`, `/payments`                                   | Redirect → `/billing?tab=...`                | —    |
 | `/devices`                                                      | Devices.tsx                                  | yes  |
 | `/audit`                                                        | Audit.tsx                                    | yes  |
 | `/settings`                                                     | Settings.tsx                                 | yes  |
-| `/integrations/outline`                                         | OutlineIntegrations.tsx                      | yes  |
-| `/outline`, `/settings/integrations/outline`                    | Redirect → /integrations/outline             | —    |
-| `/styleguide`                                                   | Styleguide.tsx                               | yes  |
+| `/styleguide`                                                  | Styleguide.tsx                               | yes  |
 | `*`                                                             | Redirect → /                                 | —    |
 
 

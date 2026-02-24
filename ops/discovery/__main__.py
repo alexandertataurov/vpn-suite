@@ -23,7 +23,6 @@ try:
         host_ss_listeners,
         _has_listener,
         _ensure_host_id,
-        has_outline_ss_proxy,
     )
 except ImportError:
     from ops.discovery.correlation_engine import correlate
@@ -34,7 +33,6 @@ except ImportError:
         host_ss_listeners,
         _has_listener,
         _ensure_host_id,
-        has_outline_ss_proxy,
     )
 
 
@@ -64,21 +62,7 @@ def _atomic_write(path: Path, payload: dict | list) -> None:
     tmp.replace(path)
 
 
-async def _fetch_outline_info(url: str | None) -> dict | None:
-    if not url or not url.strip():
-        return None
-    try:
-        import httpx
-        async with httpx.AsyncClient(timeout=10.0) as c:
-            r = await c.get(url.strip().rstrip("/") + "/server")
-            if r.status_code == 200:
-                return r.json()
-    except Exception:
-        pass
-    return None
-
-
-async def _build_targets(nodes: list[dict], outline_url: str | None) -> list[dict]:
+async def _build_targets(nodes: list[dict]) -> list[dict]:
     async def _can_connect(host: str, port: int, timeout: float = 0.5) -> bool:
         try:
             reader, writer = await asyncio.wait_for(asyncio.open_connection(host, port), timeout=timeout)
@@ -114,20 +98,6 @@ async def _build_targets(nodes: list[dict], outline_url: str | None) -> list[dic
         targets.append({"labels": {"sd_job": "node-agent", "host_id": host_id}, "targets": ["node-agent:9105"]})
     if any((n.get("classification") or {}).get("type") == "exporter" and "telegram-vpn-bot" in (n.get("image") or "") for n in nodes):
         targets.append({"labels": {"sd_job": "telegram-vpn-bot", "host_id": host_id}, "targets": ["telegram-vpn-bot:8090"]})
-    if any((n.get("classification") or {}).get("type") == "exporter" and "outline-poller" in (n.get("image") or "") for n in nodes):
-        targets.append({"labels": {"sd_job": "outline-poller", "host_id": host_id}, "targets": ["outline-poller:9106"]})
-    outline_present = any((n.get("classification") or {}).get("type") == "outline-shadowbox" for n in nodes)
-    outline_proxy = await has_outline_ss_proxy()
-    outline_addr = os.environ.get("OUTLINE_SS_METRICS_ADDR", "").strip()
-    outline_target = None
-    if outline_present and outline_proxy and await _can_connect("host.docker.internal", 19092):
-        outline_target = "host.docker.internal:19092"
-    elif outline_present and outline_addr:
-        parsed = _parse_hostport(outline_addr)
-        if parsed and await _can_connect(parsed[0], parsed[1]):
-            outline_target = outline_addr
-    if outline_target:
-        targets.append({"labels": {"sd_job": "outline-ss", "host_id": host_id}, "targets": [outline_target]})
     wg_target = None
     for n in nodes:
         if (n.get("classification") or {}).get("type") != "exporter":
@@ -161,28 +131,24 @@ async def _build_targets(nodes: list[dict], outline_url: str | None) -> list[dic
 async def main() -> int:
     ap = argparse.ArgumentParser(description="Deterministic VPN discovery")
     ap.add_argument("--out-dir", default=".", help="Output directory for JSON files")
-    ap.add_argument("--outline-url", default=os.environ.get("OUTLINE_MANAGER_URL"), help="Outline API URL")
     args = ap.parse_args()
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    outline_info = await _fetch_outline_info(args.outline_url)
-    nodes = await run_discovery(outline_info=outline_info)
+    nodes = await run_discovery()
     node_dicts = [_node_to_dict(n) for n in nodes]
 
     inventory = {
         "timestamp": __import__("datetime").datetime.now(__import__("datetime").timezone.utc).isoformat(),
         "nodes": node_dicts,
-        "outline_info": outline_info,
     }
     _atomic_write(out_dir / "inventory.json", inventory)
 
-    outline_servers = [outline_info] if outline_info else []
     nic_ips = await host_nic_ips()
-    mapping = {"entries": correlate(outline_servers, node_dicts, host_nic_ips=nic_ips)}
+    mapping = {"entries": correlate(node_dicts, host_nic_ips=nic_ips)}
     _atomic_write(out_dir / "mapping.json", mapping)
 
-    targets = await _build_targets(node_dicts, args.outline_url)
+    targets = await _build_targets(node_dicts)
     _atomic_write(out_dir / "targets.json", targets)
 
     return 0

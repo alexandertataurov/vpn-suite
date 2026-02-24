@@ -80,4 +80,3 @@ Link alerts to runbooks:
 
 - `incident-response-runbook.md` — Compromise scenarios
 - `../ops/runbook.md` — Operational procedures
-- `docs/OUTLINE_RUSSIA_DPI_HARDENING.md` — DPI/blocking

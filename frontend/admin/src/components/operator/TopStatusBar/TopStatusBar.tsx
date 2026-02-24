@@ -80,23 +80,6 @@ export function TopStatusBar({ data }: TopStatusBarProps) {
           title="Total cluster throughput"
         />
       </StatusGroup>
-      <StatusGroup title="Outline" aria-label="Outline metrics">
-        <SubsystemStatus
-          name="Outline"
-          status={data.outline_status || "unknown"}
-          title="Outline service status"
-        />
-        <MetricCell
-          label="Keys"
-          value={data.outline_keys_total != null ? String(data.outline_keys_total) : "—"}
-          title="Outline access keys total"
-        />
-        <MetricCell
-          label="Traffic"
-          value={data.outline_traffic_bps != null ? formatBytes(data.outline_traffic_bps) : "—"}
-          title="Outline traffic (bytes/sec)"
-        />
-      </StatusGroup>
       <StatusGroup title="Sync" aria-label="Data sync" className="operator-status-group--sync">
         <div className="operator-health-cell" title="Last data update">
           <div className="operator-health-label">Updated</div>

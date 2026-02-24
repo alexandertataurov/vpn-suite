@@ -35,7 +35,6 @@ class Device(Base, TimestampMixin):
     suspended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     data_limit_bytes: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    outline_key_id: Mapped[str | None] = mapped_column(String(32), nullable=True)
 
     user: Mapped["User"] = relationship("User", back_populates="devices", foreign_keys=[user_id])
     subscription: Mapped["Subscription"] = relationship(

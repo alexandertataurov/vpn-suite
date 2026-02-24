@@ -29,18 +29,7 @@
 
 ---
 
-### Outline on Wrong Host (local Mac / dev machine)
-
-| Step | Action |
-|------|--------|
-| Detection | Outline "Test connection" fails; access.txt apiUrl contains localhost or private IP |
-| Isolate | Do not use that access.txt; disable Outline integration until fixed |
-| Recover | Run Outline installer on production server (SSH in); replace access.txt with server-generated file; run `./scripts/validate-outline-access.sh`; re-import |
-| Prevention | Always run `./scripts/validate-outline-access.sh` before importing; see outline-integration.md "Deployment Target" |
-
----
-
-### Key Leak (AmneziaWG / Outline)
+### Key Leak (AmneziaWG)
 
 | Step | Action |
 |------|--------|

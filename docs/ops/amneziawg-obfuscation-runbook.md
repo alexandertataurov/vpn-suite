@@ -47,13 +47,12 @@ For regions with aggressive DPI, set ServerProfile `request_params` so issued cl
 - After upgrading AmneziaWG image, re-verify `wg show` and update ServerProfile if needed.
 - Prefer per-server or per-region obfuscation in ServerProfile to reduce single fingerprint.
 
-## Outline as second protocol (Russia / high-DPI regions)
+## Russia / high-DPI regions
 
-Outline (Shadowsocks) is complementary to AmneziaWG: use it where WireGuard is blocked or heavily fingerprinted (e.g. Russia). Outline provides AEAD ciphers (mandatory), **replay protection (enabled by default in Outline Server)**, variable packet sizes, and (in the client) optional connection-prefix disguise for regions with active probing (see Outline Server docs/shadowsocks.md). Protection against replayed data is on by default in Outline; keep it enabled. Deploy via `outline/persisted-state/start_container.sh` or `amnezia/outline-server/install.sh`; control-plane integration: `backend/app/services/outline_client.py`. Treat Outline as an alternative protocol, not a replacement for AmneziaWG in the same control plane.
+Use AmneziaWG obfuscation (Jc, Jmin, Jmax, S1–H4) where WireGuard is blocked or heavily fingerprinted. See profiles and deployment in this runbook.
 
 ## References
 
-- **Config Generation Contract**: [../specs/config-generation-contract.md](../specs/config-generation-contract.md) — canonical builder, required fields, verified AWG keys.
+- **Config Generation Contract**: [config-generation-contract.md](../specs/config-generation-contract.md) — canonical builder, required fields, verified AWG keys.
 - `backend/app/services/issue_service.py` (issue_device: runtime obfuscation merge for user-issued configs).
 - `backend/app/services/node_runtime_docker.py` (get_obfuscation_from_node), `backend/app/core/amnezia_config.py` (get_obfuscation_params, build_amnezia_client_config).
-- `.cursor/skills/vpn-suite/troubleshooting.md` (handshake failure, obfuscation match).

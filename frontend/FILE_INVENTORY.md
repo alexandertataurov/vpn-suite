@@ -125,7 +125,6 @@
 | admin/src/pages/Dashboard.tsx | feature | yes | med | keep | none |
 | admin/src/pages/Devices.tsx | feature | yes | med | keep | none |
 | admin/src/pages/Login.tsx | feature | yes | high | keep | none |
-| admin/src/pages/OutlineIntegrations.tsx | feature | yes | med | keep | none |
 | admin/src/pages/ServerDetail.tsx | feature | yes | med | keep | none |
 | admin/src/pages/ServerEdit.tsx | feature | yes | med | keep | none |
 | admin/src/pages/ServerNew.tsx | feature | yes | med | keep | none |

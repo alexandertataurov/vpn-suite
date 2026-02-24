@@ -14,6 +14,7 @@ import {
 } from "../api/query-keys";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useServerList, useServersSnapshotSummary, useServersTelemetrySummary } from "../hooks/useServerList";
+import { useResourceFromQuery } from "../hooks/useResource";
 import { useServersStream } from "../hooks/useServersStream";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 import { FilterBar } from "../components/FilterBar";
@@ -219,6 +220,16 @@ export function ServersPage() {
   );
 
   const { connectionState, retry } = useServersStream(true);
+  const serverListQuery = useServerList({
+    region: regionFilter,
+    status: statusFilter,
+    search: searchTerm,
+    sort: sortParam,
+    page: regionFilter === "all" ? pageParam : undefined,
+    pageSize: LIMIT,
+    limit: LIMIT,
+    lastSeenWithinHours,
+  });
   const {
     data,
     isLoading,
@@ -229,16 +240,7 @@ export function ServersPage() {
     isNetworkCooldown,
     networkCooldownRemainingMs,
     clearNetworkCooldown,
-  } = useServerList({
-    region: regionFilter,
-    status: statusFilter,
-    search: searchTerm,
-    sort: sortParam,
-    page: regionFilter === "all" ? pageParam : undefined,
-    pageSize: LIMIT,
-    limit: LIMIT,
-    lastSeenWithinHours,
-  });
+  } = serverListQuery;
 
   useEffect(() => {
     if (connectionState !== "degraded") return;
@@ -249,12 +251,42 @@ export function ServersPage() {
     return () => clearInterval(id);
   }, [connectionState, queryClient]);
 
+  const serversResource = useResourceFromQuery(
+    "GET /servers",
+    SERVERS_LIST_KEY,
+    serverListQuery,
+    15_000,
+    { isEmpty: (payload) => !payload || payload.items.length === 0 }
+  );
+
   const telemetrySummary = useServersTelemetrySummary({
     region: regionFilter,
     status: statusFilter,
     search: searchTerm,
   });
+  const telemetryQueryKey = [
+    ...SERVERS_LIST_KEY,
+    "telemetry-summary",
+    regionFilter,
+    statusFilter,
+    searchTerm,
+  ] as const;
+  const telemetryResource = useResourceFromQuery(
+    "GET /servers/telemetry/summary",
+    telemetryQueryKey,
+    telemetrySummary,
+    15_000,
+    { isEmpty: (payload) => !payload || !Object.keys(payload.servers ?? {}).length }
+  );
+
   const snapshotSummary = useServersSnapshotSummary();
+  const snapshotResource = useResourceFromQuery(
+    "GET /servers/snapshots/summary",
+    SERVERS_SNAPSHOTS_SUMMARY_KEY,
+    snapshotSummary,
+    30_000,
+    { isEmpty: (payload) => !payload || !Object.keys(payload.servers ?? {}).length }
+  );
 
   const [skipDeviceCounts404, setSkipDeviceCounts404] = useState(
     () =>
@@ -522,7 +554,7 @@ export function ServersPage() {
   }
 
   const hasStaleCacheBanner = !!error && !!data;
-  const hasTelemetryError = telemetrySummary.isError || snapshotSummary.isError;
+  const hasTelemetryError = telemetryResource.status === "error" || snapshotResource.status === "error";
 
   return (
     <div className="ref-page" data-testid="servers-page">
@@ -540,9 +572,11 @@ export function ServersPage() {
         <ServersToolbar
           dataUpdatedAt={dataUpdatedAt}
           isFetching={isFetching}
+          isStale={serversResource.status === "stale"}
+          hasError={serversResource.status === "error"}
           onSync={async () => {
             try {
-              await refetch();
+              await serversResource.refresh();
               addToast("Servers list refreshed", "success");
             } catch (e) {
               addToast(errorToastMessage(e, "Sync failed"), "error");

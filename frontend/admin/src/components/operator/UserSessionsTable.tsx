@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { RelativeTime, Button, Skeleton } from "@vpn-suite/shared/ui";
+import { RelativeTime, Button, Skeleton, PrimitiveBadge } from "@vpn-suite/shared/ui";
 import type { PeerListOut, PeerListItem } from "@vpn-suite/shared/types";
 import { api } from "../../api/client";
+import { useResource } from "../../hooks/useResource";
 
 const TIME_OPTIONS = [
   { value: "15m", label: "15m" },
@@ -26,22 +26,23 @@ export function UserSessionsTable() {
   const [search, setSearch] = useState("");
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("24h");
 
-  const query = useQuery<PeerListOut>({
-    queryKey: ["operator-sessions", "active", 200, 0],
-    queryFn: async ({ signal }) => {
+  const sessions = useResource<PeerListOut>({
+    source: "GET /peers?status=active",
+    ttlMs: 15_000,
+    isEmpty: (data) => !data?.peers?.length,
+    fetcher: async ({ signal, requestId }) => {
       const started = Date.now();
       const data = await api.get<PeerListOut>("/peers?status=active&limit=200&offset=0", { signal });
       if (import.meta.env.DEV) {
         const ms = Date.now() - started;
-        console.info("operator sessions fetch", { ms, total: data.total, returned: data.peers.length });
+        console.info("operator sessions fetch", { requestId, ms, total: data.total, returned: data.peers.length });
       }
       return data;
     },
-    staleTime: 15_000,
   });
 
   const filtered = useMemo(() => {
-    const rows = query.data?.peers ?? [];
+    const rows = sessions.data?.peers ?? [];
     const q = search.trim().toLowerCase();
     const rangeMs = rangeToMs(timeFilter);
     const cutoff = rangeMs != null ? Date.now() - rangeMs : null;
@@ -63,9 +64,9 @@ export function UserSessionsTable() {
         .toLowerCase();
       return haystack.includes(q);
     });
-  }, [query.data?.peers, search, timeFilter]);
+  }, [sessions.data?.peers, search, timeFilter]);
 
-  if (query.isLoading) {
+  if (sessions.status === "loading" || sessions.status === "idle") {
     return (
       <div className="operator-sessions-wrap">
         <div className="operator-sessions-toolbar">
@@ -86,18 +87,20 @@ export function UserSessionsTable() {
     );
   }
 
-  if (query.isError) {
+  if (sessions.status === "error") {
     return (
       <div className="operator-sessions-wrap">
-        <p className="operator-sessions-empty" role="alert">Failed to load sessions</p>
-        <Button variant="ghost" size="sm" onClick={() => query.refetch()}>
+        <p className="operator-sessions-empty" role="alert">
+          Failed to load sessions{sessions.error?.message ? `: ${sessions.error.message}` : ""}
+        </p>
+        <Button variant="ghost" size="sm" onClick={() => sessions.refresh()}>
           Retry
         </Button>
       </div>
     );
   }
 
-  const rows = query.data?.peers ?? [];
+  const rows = sessions.data?.peers ?? [];
 
   if (rows.length === 0) {
     return <p className="operator-sessions-empty">No active sessions</p>;
@@ -152,7 +155,21 @@ export function UserSessionsTable() {
             <option key={opt.value} value={opt.value}>{opt.label}</option>
           ))}
         </select>
+        <div className="operator-sessions-meta">
+          <span className="operator-sessions-updated">
+            Updated:{" "}
+            {sessions.updatedAt ? <RelativeTime date={sessions.updatedAt} updateInterval={5000} /> : "—"}
+          </span>
+          {sessions.status === "stale" ? (
+            <PrimitiveBadge size="sm" variant="warning">Stale</PrimitiveBadge>
+          ) : null}
+        </div>
       </div>
+      {import.meta.env.DEV ? (
+        <div className="operator-sessions-debug">
+          DEBUG · total={rows.length} · filtered={filtered.length} · range={timeFilter} · search={search || "—"}
+        </div>
+      ) : null}
       <table className="operator-sessions-table" aria-label="Active sessions">
         <thead>
           <tr>

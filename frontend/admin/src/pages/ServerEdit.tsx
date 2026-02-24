@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Server } from "lucide-react";
-import { Input, Checkbox, Button, PageError, Skeleton, Field, Select, FormStack, Panel } from "@vpn-suite/shared/ui";
+import { Input, Checkbox, Button, PageError, Skeleton, Field, FormStack, Panel } from "@vpn-suite/shared/ui";
 import { PageHeader } from "../components/PageHeader";
 import type { ServerOut } from "@vpn-suite/shared/types";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -22,7 +22,6 @@ export function ServerEditPage() {
   const [apiEndpoint, setApiEndpoint] = useState("");
   const [publicKey, setPublicKey] = useState("");
   const [isActive, setIsActive] = useState(true);
-  const [integrationType, setIntegrationType] = useState<"awg" | "outline">("awg");
 
   const { data, isLoading, error, refetch } = useQuery<ServerOut>({
     queryKey: serverKey(id!),
@@ -37,12 +36,11 @@ export function ServerEditPage() {
       setApiEndpoint(data.api_endpoint ?? "");
       setPublicKey(data.public_key ?? "");
       setIsActive(data.is_active ?? true);
-      setIntegrationType(data.integration_type === "outline" ? "outline" : "awg");
     }
   }, [data]);
 
   const mutation = useMutation({
-    mutationFn: (body: { name?: string; region?: string; api_endpoint: string; public_key: string; is_active: boolean; integration_type?: "awg" | "outline" }) =>
+    mutationFn: (body: { name?: string; region?: string; api_endpoint: string; public_key: string; is_active: boolean }) =>
       api.patch<ServerOut>(`/servers/${id}`, body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: serverKey(id!) });
@@ -65,7 +63,6 @@ export function ServerEditPage() {
       api_endpoint: apiEndpoint,
       public_key: publicKey,
       is_active: isActive,
-      integration_type: integrationType,
     });
   };
 
@@ -117,17 +114,6 @@ export function ServerEditPage() {
           </Field>
           <Field id="edit-public-key" label="Public key">
             <Input id="edit-public-key" value={publicKey} onChange={(e) => setPublicKey(e.target.value)} required />
-          </Field>
-          <Field id="edit-integration-type" label="Integration type" description="Outline: host runs Outline only; excluded from VPN server counts.">
-            <Select
-              id="edit-integration-type"
-              options={[
-                { value: "awg", label: "AWG (AmneziaWG)" },
-                { value: "outline", label: "Outline" },
-              ]}
-              value={integrationType}
-              onChange={(v) => setIntegrationType(v as "awg" | "outline")}
-            />
           </Field>
           <Checkbox
             label="Active"
