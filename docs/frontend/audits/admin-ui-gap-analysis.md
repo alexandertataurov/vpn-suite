@@ -91,6 +91,11 @@ Utility: `cn()` at `frontend/shared/src/utils/cn.ts` — clsx only (no tailwind-
 | ButtonLink | `frontend/admin/src/components/ButtonLink.tsx` | Servers, ServerEdit, ServerNew, Users | Link styled as button |
 | FormField | `frontend/admin/src/components/FormField.tsx` | ServerEdit, ServerNew, etc. | Label + control + error (admin-specific) |
 | ErrorBoundary | `frontend/admin/src/components/ErrorBoundary.tsx` | App | Page-level error + retry |
+| GlobalDataIndicator | `frontend/admin/src/components/GlobalDataIndicator.tsx` | AdminLayout | Health snapshot in header |
+| ResourceDebugPanel | `frontend/admin/src/components/ResourceDebugPanel.tsx` | AdminLayout (dev only) | Resource debug overlay |
+| ScrapeStatusPanel | `frontend/admin/src/components/telemetry/ScrapeStatusPanel.tsx` | Telemetry | Prometheus scrape status |
+
+Hooks: useResource, useResourceFromQuery, deriveResource (see useResource.ts); utils: resourceRegistry, resourceDebug.
 
 Charts (admin): `ChartFrame`, `ChartCard` (deprecated), `EChart`, telemetry chart components under `frontend/admin/src/charts/`.
 

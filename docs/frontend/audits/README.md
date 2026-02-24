@@ -3,5 +3,7 @@
 | Doc | Purpose |
 |-----|---------|
 | [admin-ui-gap-analysis.md](admin-ui-gap-analysis.md) | Routes, primitives, gaps, migration plan |
-| [frontend-file-manifest.md](frontend-file-manifest.md) | File manifest, risk, coverage |
+| [frontend-file-manifest.md](frontend-file-manifest.md) | File manifest summary; full list in [frontend/FILE_INVENTORY.md](../../frontend/FILE_INVENTORY.md) |
 | [ui-inconsistencies.md](ui-inconsistencies.md) | UI inconsistency notes |
+
+**Last audit (2026-02):** Added resource/operator components (GlobalDataIndicator, ScrapeStatusPanel, ResourceDebugPanel, useResource, resourceRegistry, resourceDebug) to FILE_INVENTORY and admin-ui-gap-analysis.

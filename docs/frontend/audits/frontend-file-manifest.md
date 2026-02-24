@@ -33,7 +33,7 @@
 | shared/src/api-client/refresh-auth.ts | api | yes | admin/client | high | 0 | keep | none |
 | shared/src/theme/ThemeProvider.tsx | component | yes | main.tsx (both apps) | high | 0 | keep | none |
 
-*Full manifest: see this file for the complete table (~285 files).*
+*Full manifest: see [frontend/FILE_INVENTORY.md](../../../frontend/FILE_INVENTORY.md) (~331 files).*
 
 ## Summary
 
