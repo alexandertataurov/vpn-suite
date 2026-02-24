@@ -21,6 +21,7 @@ This audit maps **actual** auth enforcement in code + runtime config.
 4. **Agent API (mTLS + X-Agent-Token)**
    - mTLS enforced at reverse proxy for `/api/v1/agent/*`.
    - X-Agent-Token enforced in API handler via `_require_agent_token`.
+   - If `AGENT_SHARED_TOKEN` is empty, agent API returns 503 (disabled).
    - Evidence: `config/caddy/Caddyfile`, `backend/app/api/v1/agent.py`.
 
 5. **Webhook Secret (provider-specific)**

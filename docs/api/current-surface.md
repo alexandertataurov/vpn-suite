@@ -4,6 +4,8 @@ This table is generated from FastAPI routes, bot/node-agent HTTP handlers, and r
 
 **Legend:** `UNDOCUMENTED` = in code but not in canonical OpenAPI (`docs/api/openapi.yaml`). `STALE` = in OpenAPI but not in code.
 
+Note: The OpenAPI spec covers **admin-api** only. Bot and node-agent health/metrics endpoints are documented here but are not part of the admin-api OpenAPI.
+
 | Service | Method | Path | Auth Required | Request Type | Response Type | File Location |
 |---|---|---|---|---|---|---|
 | admin-api | GET | `/api/telemetry/docker/alerts` | JWT (admin) | — | AlertItemListOut | `backend/app/api/v1/telemetry_docker.py` |

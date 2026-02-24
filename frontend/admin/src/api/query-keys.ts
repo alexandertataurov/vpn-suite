@@ -89,3 +89,6 @@ export const CLUSTER_HEALTH_KEY = ["cluster", "health"] as const;
 
 /** Analytics: telemetry services (scrape status). */
 export const ANALYTICS_TELEMETRY_SERVICES_KEY = ["analytics", "telemetry", "services"] as const;
+
+/** Analytics: metrics KPIs (request rate, error rate, p95 latency). */
+export const ANALYTICS_METRICS_KPIS_KEY = ["analytics", "metrics", "kpis"] as const;

@@ -35,6 +35,30 @@ export interface DashboardTimeseriesOut {
   points: DashboardTimeseriesPoint[];
 }
 
+/** Analytics: GET /analytics/telemetry/services. */
+export interface ServiceScrapeStatus {
+  job: string;
+  instance: string;
+  health: string;
+  last_scrape: string | null;
+  last_error: string | null;
+}
+
+export interface TelemetryServicesOut {
+  services: ServiceScrapeStatus[];
+  prometheus_available: boolean;
+  message?: string | null;
+}
+
+/** Analytics: GET /analytics/metrics/kpis. */
+export interface MetricsKpisOut {
+  request_rate_5m: number | null;
+  error_rate_5m: number | null;
+  latency_p95_seconds: number | null;
+  prometheus_available: boolean;
+  message?: string | null;
+}
+
 /** Operator dashboard (GET /dashboard/operator). */
 export interface OperatorHealthStrip {
   api_status: "ok" | "degraded" | "down" | "unknown";

@@ -5,8 +5,10 @@ import { PrimitiveBadge, Tabs } from "@vpn-suite/shared/ui";
 import { PageHeader } from "../components/PageHeader";
 import { DockerServicesTab } from "./telemetry/DockerServicesTab";
 import { VpnNodesTab } from "./telemetry/VpnNodesTab";
+import { MetricsKpisPanel } from "../components/telemetry/MetricsKpisPanel";
 import { ScrapeStatusPanel } from "../components/telemetry/ScrapeStatusPanel";
 import {
+  ANALYTICS_METRICS_KPIS_KEY,
   ANALYTICS_TELEMETRY_SERVICES_KEY,
   DOCKER_TELEMETRY_KEY,
   OPERATOR_DASHBOARD_KEY,
@@ -43,6 +45,7 @@ export function TelemetryPage() {
         queryClient.refetchQueries({ queryKey: TELEMETRY_TOPOLOGY_KEY }),
         queryClient.refetchQueries({ queryKey: SERVERS_LIST_KEY }),
         queryClient.refetchQueries({ queryKey: ANALYTICS_TELEMETRY_SERVICES_KEY }),
+        queryClient.refetchQueries({ queryKey: ANALYTICS_METRICS_KPIS_KEY }),
       ]),
       refreshRegisteredResources(),
     ]);
@@ -52,6 +55,7 @@ export function TelemetryPage() {
     const hasCacheError = [
       ["telemetry"],
       ANALYTICS_TELEMETRY_SERVICES_KEY,
+      ANALYTICS_METRICS_KPIS_KEY,
       DOCKER_TELEMETRY_KEY,
       OPERATOR_DASHBOARD_KEY,
       TELEMETRY_TOPOLOGY_KEY,
@@ -87,6 +91,7 @@ export function TelemetryPage() {
       </PageHeader>
 
       <ScrapeStatusPanel />
+      <MetricsKpisPanel />
 
       <Tabs
         items={TELEMETRY_TAB_ITEMS}

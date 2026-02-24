@@ -51,6 +51,7 @@ This document is the **single source of truth** for the API contract. It is deri
 ### Agent API (mTLS + X-Agent-Token)
 - mTLS enforced at reverse proxy for `/api/v1/agent/*`.
 - Shared token enforced by API via `X-Agent-Token`.
+ - Agent API returns 503 if `AGENT_SHARED_TOKEN` is not configured.
 
 ### Webhooks
 - `/webhooks/payments/{provider}` is public but supports provider secret headers (Telegram Stars).

@@ -1,22 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
+import type { ServiceScrapeStatus, TelemetryServicesOut } from "../../api/analytics-types";
 import { Panel, PrimitiveBadge, InlineAlert, Skeleton } from "@vpn-suite/shared/ui";
 import { api } from "../../api/client";
 import { ANALYTICS_TELEMETRY_SERVICES_KEY } from "../../api/query-keys";
 import { shouldRetryQuery } from "../../utils/queryPolicy";
-
-interface ServiceScrapeStatus {
-  job: string;
-  instance: string;
-  health: string;
-  last_scrape: string | null;
-  last_error: string | null;
-}
-
-interface TelemetryServicesOut {
-  services: ServiceScrapeStatus[];
-  prometheus_available: boolean;
-  message?: string | null;
-}
 
 export function ScrapeStatusPanel() {
   const { data, isLoading, isError, error } = useQuery<TelemetryServicesOut>({
@@ -58,7 +45,7 @@ export function ScrapeStatusPanel() {
     );
   }
 
-  const upCount = data.services.filter((s) => s.health === "up").length;
+  const upCount = data.services.filter((s: ServiceScrapeStatus) => s.health === "up").length;
   const downCount = data.services.length - upCount;
 
   return (
@@ -68,7 +55,7 @@ export function ScrapeStatusPanel() {
         {upCount} up, {downCount} down
       </p>
       <div className="flex flex-wrap gap-2" role="list">
-        {data.services.map((s) => (
+        {data.services.map((s: ServiceScrapeStatus) => (
           <span key={`${s.job}-${s.instance}`} className="inline-flex items-center gap-1" role="listitem">
             <PrimitiveBadge
               size="sm"
