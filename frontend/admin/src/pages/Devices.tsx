@@ -450,14 +450,14 @@ export function DevicesPage() {
     addToast(`Bulk reconcile: ${succeeded} succeeded${failed > 0 ? `, ${failed} failed` : ""}`, failed > 0 ? "info" : "success");
   }, [selectedDeviceIds, queryClient, addToast]);
 
-  const toggleDeviceSelection = (id: string) => {
+  const toggleDeviceSelection = useCallback((id: string) => {
     setSelectedDeviceIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
     });
-  };
+  }, []);
 
   const applySavedView = (name: string) => {
     setSelectedViewName(name);
@@ -569,7 +569,7 @@ export function DevicesPage() {
     );
   }
 
-  const columns = [
+  const columns = useMemo(() => [
     {
       key: "select",
       header: "",
@@ -681,22 +681,22 @@ export function DevicesPage() {
               },
               ...(!r.revoked_at
                 ? [
-                    ...(reconcileDisabled
-                      ? []
-                      : [
-                          {
-                            id: "reconcile",
-                            label: "Reconcile peer",
-                            onClick: () => reconcileMutation.mutate(r.id),
-                          },
-                        ]),
-                    {
-                      id: "revoke",
-                      label: "Revoke",
-                      onClick: () => setRevokeDeviceId(r.id),
-                      danger: true,
-                    },
-                  ]
+                  ...(reconcileDisabled
+                    ? []
+                    : [
+                      {
+                        id: "reconcile",
+                        label: "Reconcile peer",
+                        onClick: () => reconcileMutation.mutate(r.id),
+                      },
+                    ]),
+                  {
+                    id: "revoke",
+                    label: "Revoke",
+                    onClick: () => setRevokeDeviceId(r.id),
+                    danger: true,
+                  },
+                ]
                 : []),
               {
                 id: "delete",
@@ -706,24 +706,33 @@ export function DevicesPage() {
               },
               ...((r.issued_configs?.length ?? 0) > 0
                 ? [
-                    {
-                      id: "view-configs",
-                      label: "View configs",
-                      onClick: () =>
-                        r.issued_configs?.[0] &&
-                        setConfigModal({
-                          id: r.issued_configs[0].id,
-                          label: configLabel(r.issued_configs[0]),
-                        }),
-                    },
-                  ]
+                  {
+                    id: "view-configs",
+                    label: "View configs",
+                    onClick: () =>
+                      r.issued_configs?.[0] &&
+                      setConfigModal({
+                        id: r.issued_configs[0].id,
+                        label: configLabel(r.issued_configs[0]),
+                      }),
+                  },
+                ]
                 : []),
             ]}
           />
         </span>
       ),
     },
-  ];
+  ], [
+    selectedDeviceIds,
+    serverNameMap,
+    toggleDeviceSelection,
+    reissueMutation.isPending,
+    reconcileDisabled,
+    reconcileMutation.isPending,
+    revokeMutation.isPending,
+    deleteMutation.isPending
+  ]);
 
   return (
     <div className="ref-page" data-testid="devices-page">

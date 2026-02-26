@@ -188,7 +188,7 @@ export function ServerDetailPage() {
       return p.status !== "online";
     }) ?? [];
 
-  const deviceColumns = [
+  const deviceColumns = useMemo(() => [
     {
       key: "client_name",
       header: "Label",
@@ -244,7 +244,7 @@ export function ServerDetailPage() {
           </span>
         ) : null,
     },
-  ];
+  ], [rotateMutation.isPending, revokeMutation.isPending]);
 
   const filteredDevices =
     devicesData?.peers?.filter((d) => {
@@ -259,7 +259,7 @@ export function ServerDetailPage() {
     wrong_allowed_ips: "Wrong allowed_ips",
   };
 
-  const columns = [
+  const columns = useMemo(() => [
     {
       key: "device_name",
       header: "Device",
@@ -346,7 +346,7 @@ export function ServerDetailPage() {
         </span>
       ),
     },
-  ];
+  ], [peerRates]);
 
   if (serverError || !id) {
     return (
@@ -433,185 +433,185 @@ export function ServerDetailPage() {
 
       {activeTab === "peers" && (
         <>
-      <Panel as="section" variant="outline" id="server-vpn-control" role="region" aria-label="VPN control">
-        <Heading level={3} className="ref-settings-title">VPN control</Heading>
-        <PrimitiveStack gap="2" className="ref-vpn-control-actions">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => createActionMutation.mutate("apply_peers")}
-            disabled={createActionMutation.isPending || peersData?.node_reachable === false}
-            title="Queue apply_peers for node-agent; peers will sync from desired-state"
-          >
-            {createActionMutation.isPending ? "Queuing…" : "Sync peers (apply desired-state)"}
-          </Button>
-          <Text as="span" variant="muted" className="text-sm">
-            Queues an action for the node to reconcile peers from admin-api. Refreshes after a few seconds.
-          </Text>
-        </PrimitiveStack>
-      </Panel>
-      <Panel as="section" variant="outline" id="server-tabpanel-peers" role="tabpanel" aria-labelledby="server-tab-peers">
-        <div className="ref-peers-head">
-          <Heading level={3} className="ref-settings-title">Peers</Heading>
-          <div className="ref-page-actions">
-            {peersData?.node_reachable === false ? (
-              <Text as="span" className="text-warning" role="alert">
-                Node unreachable
+          <Panel as="section" variant="outline" id="server-vpn-control" role="region" aria-label="VPN control">
+            <Heading level={3} className="ref-settings-title">VPN control</Heading>
+            <PrimitiveStack gap="2" className="ref-vpn-control-actions">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => createActionMutation.mutate("apply_peers")}
+                disabled={createActionMutation.isPending || peersData?.node_reachable === false}
+                title="Queue apply_peers for node-agent; peers will sync from desired-state"
+              >
+                {createActionMutation.isPending ? "Queuing…" : "Sync peers (apply desired-state)"}
+              </Button>
+              <Text as="span" variant="muted" className="text-sm">
+                Queues an action for the node to reconcile peers from admin-api. Refreshes after a few seconds.
               </Text>
-            ) : null}
-            <Select
-              label="Peer status"
-              options={[
-                { value: "all", label: "All" },
-                { value: "online", label: "Online" },
-                { value: "offline", label: "Offline" },
-              ]}
-              value={filter}
-              onChange={(v) => setFilter(v as "all" | "online" | "offline")}
-              aria-label="Filter peers by status"
-              className="w-auto"
-            />
-          </div>
-        </div>
+            </PrimitiveStack>
+          </Panel>
+          <Panel as="section" variant="outline" id="server-tabpanel-peers" role="tabpanel" aria-labelledby="server-tab-peers">
+            <div className="ref-peers-head">
+              <Heading level={3} className="ref-settings-title">Peers</Heading>
+              <div className="ref-page-actions">
+                {peersData?.node_reachable === false ? (
+                  <Text as="span" className="text-warning" role="alert">
+                    Node unreachable
+                  </Text>
+                ) : null}
+                <Select
+                  label="Peer status"
+                  options={[
+                    { value: "all", label: "All" },
+                    { value: "online", label: "Online" },
+                    { value: "offline", label: "Offline" },
+                  ]}
+                  value={filter}
+                  onChange={(v) => setFilter(v as "all" | "online" | "offline")}
+                  aria-label="Filter peers by status"
+                  className="w-auto"
+                />
+              </div>
+            </div>
 
-        {peersLoading ? (
-          <Skeleton height={200} />
-        ) : (
-          <Table<PeerOut>
-            columns={columns}
-            data={filteredPeers}
-            keyExtractor={(r) => r.public_key}
-            emptyMessage="No peers"
-          />
-        )}
-      </Panel>
+            {peersLoading ? (
+              <Skeleton height={200} />
+            ) : (
+              <Table<PeerOut>
+                columns={columns}
+                data={filteredPeers}
+                keyExtractor={(r) => r.public_key}
+                emptyMessage="No peers"
+              />
+            )}
+          </Panel>
 
-      <Panel as="section" variant="outline">
-        <div className="ref-peers-head">
-          <Heading level={3} className="ref-settings-title">Devices (issued)</Heading>
-          <div className="ref-page-actions">
-            <Select
-              label="Status"
-              options={[
-                { value: "all", label: "All" },
-                { value: "active", label: "Active" },
-                { value: "revoked", label: "Revoked" },
-              ]}
-              value={deviceFilter}
-              onChange={(v) => setDeviceFilter(v as "all" | "active" | "revoked")}
-              aria-label="Filter devices"
-              className="w-auto"
+          <Panel as="section" variant="outline">
+            <div className="ref-peers-head">
+              <Heading level={3} className="ref-settings-title">Devices (issued)</Heading>
+              <div className="ref-page-actions">
+                <Select
+                  label="Status"
+                  options={[
+                    { value: "all", label: "All" },
+                    { value: "active", label: "Active" },
+                    { value: "revoked", label: "Revoked" },
+                  ]}
+                  value={deviceFilter}
+                  onChange={(v) => setDeviceFilter(v as "all" | "active" | "revoked")}
+                  aria-label="Filter devices"
+                  className="w-auto"
+                />
+              </div>
+            </div>
+            <Table<PeerListItem>
+              columns={deviceColumns}
+              data={filteredDevices}
+              keyExtractor={(r) => r.peer_id}
+              emptyMessage="No devices"
             />
-          </div>
-        </div>
-        <Table<PeerListItem>
-          columns={deviceColumns}
-          data={filteredDevices}
-          keyExtractor={(r) => r.peer_id}
-          emptyMessage="No devices"
-        />
-      </Panel>
+          </Panel>
         </>
       )}
 
       {activeTab === "telemetry" && (
-      <Panel as="section" variant="outline" id="server-tabpanel-telemetry" role="tabpanel" aria-labelledby="server-tab-telemetry">
-        <Heading level={3} className="ref-settings-title">Telemetry</Heading>
-        {telemetry?.node_reachable === false ? (
-          <Text as="p" className="text-warning mb-md" role="alert">
-            Node unreachable. Data may be from cache or unavailable.
-          </Text>
-        ) : null}
-        {telemetryLoading ? (
-          <Skeleton height={60} />
-        ) : telemetry ? (
-          <div className="ref-stats-grid">
-            <MetricTile label="Peers" value={telemetry.peers_count} state="default" />
-            <MetricTile label="Online" value={telemetry.online_count} state="success" />
-            <MetricTile label="RX total" value={formatBytes(telemetry.total_rx_bytes ?? null)} state="default" />
-            <MetricTile label="TX total" value={formatBytes(telemetry.total_tx_bytes ?? null)} state="default" />
-            <MetricTile
-              label="Last updated"
-              value={telemetry.last_updated ? formatDateTime(telemetry.last_updated) : "—"}
-              state="default"
-            />
-          </div>
-        ) : (
-          <Text variant="muted" as="p">N/A</Text>
-        )}
-      </Panel>
+        <Panel as="section" variant="outline" id="server-tabpanel-telemetry" role="tabpanel" aria-labelledby="server-tab-telemetry">
+          <Heading level={3} className="ref-settings-title">Telemetry</Heading>
+          {telemetry?.node_reachable === false ? (
+            <Text as="p" className="text-warning mb-md" role="alert">
+              Node unreachable. Data may be from cache or unavailable.
+            </Text>
+          ) : null}
+          {telemetryLoading ? (
+            <Skeleton height={60} />
+          ) : telemetry ? (
+            <div className="ref-stats-grid">
+              <MetricTile label="Peers" value={telemetry.peers_count} state="default" />
+              <MetricTile label="Online" value={telemetry.online_count} state="success" />
+              <MetricTile label="RX total" value={formatBytes(telemetry.total_rx_bytes ?? null)} state="default" />
+              <MetricTile label="TX total" value={formatBytes(telemetry.total_tx_bytes ?? null)} state="default" />
+              <MetricTile
+                label="Last updated"
+                value={telemetry.last_updated ? formatDateTime(telemetry.last_updated) : "—"}
+                state="default"
+              />
+            </div>
+          ) : (
+            <Text variant="muted" as="p">N/A</Text>
+          )}
+        </Panel>
       )}
 
       {activeTab === "actions" && (
-      <Panel as="section" variant="outline" id="server-tabpanel-actions" role="tabpanel" aria-labelledby="server-tab-actions">
-        <div className="ref-peers-head">
-          <Heading level={3} className="ref-settings-title">Actions</Heading>
-          <div className="ref-page-actions">
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => createActionMutation.mutate("sync")}
-              disabled={createActionMutation.isPending}
-            >
-              Sync now
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => createActionMutation.mutate("apply_peers")}
-              disabled={createActionMutation.isPending}
-            >
-              Reconcile
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => createActionMutation.mutate(server.is_draining ? "undrain" : "drain")}
-              disabled={createActionMutation.isPending}
-            >
-              {server.is_draining ? "Undrain" : "Drain"}
-            </Button>
+        <Panel as="section" variant="outline" id="server-tabpanel-actions" role="tabpanel" aria-labelledby="server-tab-actions">
+          <div className="ref-peers-head">
+            <Heading level={3} className="ref-settings-title">Actions</Heading>
+            <div className="ref-page-actions">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => createActionMutation.mutate("sync")}
+                disabled={createActionMutation.isPending}
+              >
+                Sync now
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => createActionMutation.mutate("apply_peers")}
+                disabled={createActionMutation.isPending}
+              >
+                Reconcile
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => createActionMutation.mutate(server.is_draining ? "undrain" : "drain")}
+                disabled={createActionMutation.isPending}
+              >
+                {server.is_draining ? "Undrain" : "Drain"}
+              </Button>
+            </div>
           </div>
-        </div>
-        {actionsData?.items?.length ? (
-          <Table<ActionOut>
-            columns={[
-              { key: "type", header: "Type", render: (r) => r.type },
-              { key: "status", header: "Status", render: (r) => r.status },
-              {
-                key: "requested_at",
-                header: "Requested",
-                numeric: true,
-                render: (r) => formatDateTime(r.requested_at),
-              },
-              {
-                key: "finished_at",
-                header: "Finished",
-                numeric: true,
-                render: (r) => (r.finished_at ? formatDateTime(r.finished_at) : "—"),
-              },
-            ]}
-            data={actionsData.items}
-            keyExtractor={(r) => r.id}
-            emptyMessage="No actions"
-          />
-        ) : (
-          <Text variant="muted" as="p">No actions yet. Use Sync now or Reconcile to queue an action.</Text>
-        )}
-      </Panel>
+          {actionsData?.items?.length ? (
+            <Table<ActionOut>
+              columns={[
+                { key: "type", header: "Type", render: (r) => r.type },
+                { key: "status", header: "Status", render: (r) => r.status },
+                {
+                  key: "requested_at",
+                  header: "Requested",
+                  numeric: true,
+                  render: (r) => formatDateTime(r.requested_at),
+                },
+                {
+                  key: "finished_at",
+                  header: "Finished",
+                  numeric: true,
+                  render: (r) => (r.finished_at ? formatDateTime(r.finished_at) : "—"),
+                },
+              ]}
+              data={actionsData.items}
+              keyExtractor={(r) => r.id}
+              emptyMessage="No actions"
+            />
+          ) : (
+            <Text variant="muted" as="p">No actions yet. Use Sync now or Reconcile to queue an action.</Text>
+          )}
+        </Panel>
       )}
 
       {activeTab === "logs" && (
-      <Panel as="section" variant="outline" id="server-tabpanel-logs" role="tabpanel" aria-labelledby="server-tab-logs">
-        <ServerLogsTab serverId={id!} />
-      </Panel>
+        <Panel as="section" variant="outline" id="server-tabpanel-logs" role="tabpanel" aria-labelledby="server-tab-logs">
+          <ServerLogsTab serverId={id!} />
+        </Panel>
       )}
 
       {activeTab === "config" && (
-      <Panel as="section" variant="outline" id="server-tabpanel-config" role="tabpanel" aria-labelledby="server-tab-config">
-        <Heading level={3} className="ref-settings-title">Config / Profile</Heading>
-        <Text variant="muted" as="p">View and apply server profile from Edit server.</Text>
-      </Panel>
+        <Panel as="section" variant="outline" id="server-tabpanel-config" role="tabpanel" aria-labelledby="server-tab-config">
+          <Heading level={3} className="ref-settings-title">Config / Profile</Heading>
+          <Text variant="muted" as="p">View and apply server profile from Edit server.</Text>
+        </Panel>
       )}
 
       <ConfirmDanger
