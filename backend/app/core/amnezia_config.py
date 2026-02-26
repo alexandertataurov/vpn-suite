@@ -21,6 +21,7 @@ from app.core.config_builder import (
 from app.core.metrics import config_gen_failure_total, config_gen_success_total
 
 __all__ = [
+    "build_all_configs",
     "build_amnezia_client_config",
     "build_standard_wg_client_config",
     "build_wg_obfuscated_config",
@@ -142,6 +143,58 @@ def _select_awg_profile(obfuscation: dict[str, Any] | None) -> ConfigProfile:
             pass
         return ConfigProfile.awg_2_0_asc
     return ConfigProfile.awg_legacy_or_basic
+
+
+def build_all_configs(
+    *,
+    server_public_key: str,
+    client_private_key_b64: str,
+    endpoint: str | None,
+    allowed_ips: str = "0.0.0.0/0, ::/0",
+    dns: str | None = None,
+    persistent_keepalive: int = 25,
+    obfuscation: dict[str, int] | None = None,
+    mtu: int | None = None,
+    address: str | None = None,
+    preshared_key: str | None = None,
+) -> tuple[str, str, str]:
+    """Returns (awg_config, wg_obf_config, wg_config) generated safely."""
+    awg = build_amnezia_client_config(
+        server_public_key=server_public_key,
+        client_private_key_b64=client_private_key_b64,
+        endpoint=endpoint,
+        allowed_ips=allowed_ips,
+        dns=dns,
+        persistent_keepalive=persistent_keepalive,
+        obfuscation=obfuscation,
+        mtu=mtu,
+        address=address,
+        preshared_key=preshared_key,
+    )
+    wg_obf = build_wg_obfuscated_config(
+        server_public_key=server_public_key,
+        client_private_key_b64=client_private_key_b64,
+        endpoint=endpoint,
+        allowed_ips=allowed_ips,
+        dns=dns,
+        persistent_keepalive=persistent_keepalive,
+        obfuscation=obfuscation,
+        mtu=mtu,
+        address=address,
+        preshared_key=preshared_key,
+    )
+    wg = build_standard_wg_client_config(
+        server_public_key=server_public_key,
+        client_private_key_b64=client_private_key_b64,
+        endpoint=endpoint,
+        allowed_ips=allowed_ips,
+        dns=dns,
+        persistent_keepalive=persistent_keepalive,
+        mtu=mtu,
+        address=address,
+        preshared_key=preshared_key,
+    )
+    return awg, wg_obf, wg
 
 
 def build_amnezia_client_config(

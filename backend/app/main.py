@@ -312,6 +312,10 @@ def metrics():
 def health():
     """Liveness: returns 200 when process is up. node_mode: mock (no node call) or real."""
     return {"status": "ok", "node_mode": settings.node_mode}
+import time
+
+_ready_cache_ts = 0.0
+_ready_cache_score = 1.0
 
 
 @app.get("/health/ready")
@@ -326,11 +330,20 @@ async def health_ready(request: Request):
         try:
             adapter = getattr(request.app.state, "node_runtime_adapter", None)
             if adapter is not None:
-                from app.services.topology_engine import TopologyEngine
+                global _ready_cache_ts, _ready_cache_score
+                now = time.monotonic()
+                if now - _ready_cache_ts > 15.0:
+                    from app.services.topology_engine import TopologyEngine
+    
+                    engine = TopologyEngine(adapter)
+                    topo = await engine.get_topology()
+                    if topo.nodes:
+                        _ready_cache_score = topo.health_score or 0.0
+                    else:
+                        _ready_cache_score = 1.0
+                    _ready_cache_ts = now
 
-                engine = TopologyEngine(adapter)
-                topo = await engine.get_topology()
-                if topo.nodes and (topo.health_score or 0) < 0.5:
+                if _ready_cache_score < 0.5:
                     from app.core.error_responses import error_body
 
                     rid = request_id_ctx.get()
