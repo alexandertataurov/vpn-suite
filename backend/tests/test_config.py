@@ -104,6 +104,7 @@ def test_validate_production_secrets_passes_with_custom_secrets():
         block_confirm_token="custom-block-token-at-least-16",
         restart_confirm_token="custom-restart-token-at-least-16",
         revoke_confirm_token="custom-revoke-token-at-least-16",
+        cleanup_db_confirm_token="custom-cleanup-db-token-at-least-16",
         # Make test deterministic even when NODE_DISCOVERY/NODE_MODE are injected via env.
         node_discovery="docker",
         node_mode="mock",

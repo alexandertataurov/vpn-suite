@@ -126,6 +126,32 @@ def test_legacy_profile_allows_i1_string():
     assert "I1 = <b 0x1234>" in cfg
 
 
+def test_awg_config_emits_i1_i5_uppercase():
+    """I1–I5 must be emitted with correct case (I1 not i1) for AmneziaWG compatibility."""
+    priv, pub = generate_wg_keypair()
+    obf = {
+        "Jc": 3,
+        "Jmin": 64,
+        "Jmax": 256,
+        "S1": 10,
+        "S2": 20,
+        "I1": "val1",
+        "I2": "val2",
+        "I3": "val3",
+        "I4": "val4",
+        "I5": "val5",
+    }
+    cfg = build_config(
+        interface=InterfaceFields(private_key=priv, address="10.8.1.2/32"),
+        peer=PeerFields(public_key=pub, endpoint="vpn.example.com:47604"),
+        profile=ConfigProfile.awg_legacy_or_basic,
+        obfuscation=obf,
+    )
+    for key in ("I1", "I2", "I3", "I4", "I5"):
+        assert f"{key} = " in cfg, f"Config must contain '{key} = ' (uppercase)"
+        assert f"{key.lower()} = " not in cfg, f"Config must not contain lowercase '{key.lower()} = '"
+
+
 def test_legacy_profile_rejects_h_keys():
     priv, pub = generate_wg_keypair()
     with pytest.raises(ValueError, match="unsupported_key"):
@@ -334,10 +360,10 @@ _OBF_REFERENCE = {
     "Jmax": 50,
     "S1": 213,
     "S2": 237,
-    "H1": 1,
-    "H2": 2,
-    "H3": 3,
-    "H4": 4,
+    "H1": 10,
+    "H2": 20,
+    "H3": 30,
+    "H4": 40,
 }
 
 

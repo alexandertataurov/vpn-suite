@@ -35,7 +35,7 @@ async def test_servers_peers_agent_mode_uses_heartbeat(monkeypatch):
     monkeypatch.setattr(config.settings, "node_discovery", "agent")
 
     server = SimpleNamespace(id="srv-1")
-    devices = [("dev-1", "pk-1")]
+    devices = [("dev-1", "pk-1", None)]  # id, public_key, device_name
     db = _DB(server, devices)
 
     hb = {

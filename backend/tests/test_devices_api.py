@@ -25,6 +25,7 @@ def _make_db(device):
     return SimpleNamespace(
         execute=AsyncMock(return_value=SimpleNamespace(scalar_one_or_none=lambda: device)),
         commit=AsyncMock(),
+        flush=AsyncMock(),
         refresh=AsyncMock(),
     )
 

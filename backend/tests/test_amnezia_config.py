@@ -40,7 +40,7 @@ def test_get_obfuscation_params_defaults():
     params = get_obfuscation_params(None)
     assert params["Jc"] == 3 and params["Jmin"] == 10 and params["Jmax"] == 50
     assert params["S1"] == 213 and params["S2"] == 237
-    assert params["H1"], params["H2"], params["H3"], params["H4"] == (1, 2, 3, 4)
+    assert (params["H1"], params["H2"], params["H3"], params["H4"]) == (10, 20, 30, 40)
 
 
 def test_get_obfuscation_params_rejects_s1_plus_56_equals_s2():

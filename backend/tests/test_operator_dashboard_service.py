@@ -64,9 +64,13 @@ async def test_fetch_operator_dashboard_handles_row_objects(monkeypatch):
     )
     monkeypatch.setattr(svc, "async_session_factory", factory)
 
+    async def fake_snapshot_nodes():
+        return {"list": [{"id": "srv-1", "health": "ok", "peers": 7, "rx": 10, "tx": 20, "last_success_ts": 1000}]}
+
     async def fake_timeseries(window=3600):
         return [{"ts": 1000, "peers": 7, "rx": 10, "tx": 20}]
 
+    monkeypatch.setattr(svc, "get_snapshot_nodes", fake_snapshot_nodes)
     monkeypatch.setattr(svc, "get_dashboard_timeseries", fake_timeseries)
 
     class FakeProm:
@@ -92,9 +96,9 @@ async def test_fetch_operator_dashboard_handles_row_objects(monkeypatch):
             if "vpn_node_traffic_tx_bytes" in expr:
                 return [{"value": [1000, "20"]}]
             if "vpn_node_cpu_utilization" in expr:
-                return [{"value": [1000, "15.5"]}]
+                return [{"metric": {"node_id": "srv-1"}, "value": [1000, "15.5"]}]
             if "vpn_node_memory_utilization" in expr:
-                return [{"value": [1000, "42.2"]}]
+                return [{"metric": {"node_id": "srv-1"}, "value": [1000, "42.2"]}]
             return []
 
     monkeypatch.setattr(pqs, "PrometheusQueryService", FakeProm)
@@ -169,9 +173,13 @@ async def test_fetch_operator_dashboard_empty_timeseries_does_not_force_degraded
     )
     monkeypatch.setattr(svc, "async_session_factory", factory)
 
+    async def fake_snapshot_nodes():
+        return {"list": [{"id": "srv-1", "health": "ok", "peers": 0, "rx": 0, "tx": 0, "last_success_ts": 1000}]}
+
     async def fake_timeseries(window=3600):
         return []
 
+    monkeypatch.setattr(svc, "get_snapshot_nodes", fake_snapshot_nodes)
     monkeypatch.setattr(svc, "get_dashboard_timeseries", fake_timeseries)
 
     class HealthyProm:

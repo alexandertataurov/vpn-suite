@@ -5,12 +5,23 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+import pytest
 import yaml
 from fastapi.routing import APIRoute
 
 from app.main import app
 
-ROOT = Path(__file__).resolve().parents[2]
+# Backend root (parent of tests/); openapi may live in backend/docs or repo root docs/
+_BACKEND_ROOT = Path(__file__).resolve().parents[1]
+ROOT = _BACKEND_ROOT.parent
+
+
+def _openapi_spec_path() -> Path | None:
+    for base in (ROOT / "docs", _BACKEND_ROOT / "docs"):
+        p = base / "api" / "openapi.yaml"
+        if p.exists():
+            return p
+    return None
 
 
 def _norm_path(path: str) -> str:
@@ -18,7 +29,10 @@ def _norm_path(path: str) -> str:
 
 
 def _spec_paths() -> set[tuple[str, str]]:
-    spec = yaml.safe_load((ROOT / "docs" / "api" / "openapi.yaml").read_text())
+    path = _openapi_spec_path()
+    if not path:
+        pytest.skip("docs/api/openapi.yaml not found (run from repo root or set backend/docs)")
+    spec = yaml.safe_load(path.read_text())
     out: set[tuple[str, str]] = set()
     for path, ops in (spec.get("paths") or {}).items():
         for method in ops.keys():

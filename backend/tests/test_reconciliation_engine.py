@@ -14,7 +14,7 @@ from app.services.reconciliation_engine import (
 @pytest.mark.asyncio
 async def test_compute_diff_add_and_remove():
     """DB has A,B with valid /32; WG has B,C -> to_add A, to_remove C."""
-    db_peers = [("pkA", "10.8.1.2/32"), ("pkB", "10.8.1.3/32")]
+    db_peers = [("pkA", "10.8.1.2/32", None), ("pkB", "10.8.1.3/32", None)]
     wg_peers = [
         {"public_key": "pkB", "allowed_ips": "10.8.1.3/32"},
         {"public_key": "pkC", "allowed_ips": "10.8.1.4/32"},
@@ -30,7 +30,7 @@ async def test_compute_diff_add_and_remove():
 @pytest.mark.asyncio
 async def test_compute_diff_skips_invalid_allowed_ips():
     """Peers with no or 0.0.0.0/0 allowed_ips are skipped for add/update."""
-    db_peers = [("pkA", ""), ("pkB", "0.0.0.0/0, ::/0"), ("pkC", "10.8.1.5/32")]
+    db_peers = [("pkA", "", None), ("pkB", "0.0.0.0/0, ::/0", None), ("pkC", "10.8.1.5/32", None)]
     wg_peers = []
     diff = await compute_diff("node1", db_peers, wg_peers)
     assert len(diff.peers_to_add) == 1
@@ -52,5 +52,6 @@ async def test_apply_diff_calls_adapter():
     result = await apply_diff(adapter, "node1", diff)
     assert result.peers_added == 1
     assert result.peers_removed == 1
+    assert result.peers_added_pubkeys == ["pk1"]
     adapter.add_peer.assert_called_once()
     adapter.remove_peer.assert_called_once()
