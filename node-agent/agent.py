@@ -170,6 +170,8 @@ METRIC_LAST_SUCCESS_TS = Gauge(
 METRIC_PEERS_DESIRED = Gauge("agent_peers_desired", "Desired peers count")
 METRIC_PEERS_RUNTIME = Gauge("agent_peers_runtime", "Runtime peers count")
 METRIC_PEERS_ACTIVE = Gauge("agent_peers_active", "Active peers count (handshake <= threshold)")
+METRIC_ORPHAN_PEERS = Gauge("agent_orphan_peers", "Peers in runtime but not in desired state")
+METRIC_DRIFT_PEERS = Gauge("agent_drift_peers", "Peers in runtime needing update")
 METRIC_HANDSHAKE_MAX_AGE = Gauge("agent_last_handshake_max_age_seconds", "Max handshake age across peers")
 METRIC_HANDSHAKE_AGE = Histogram(
     "agent_peer_handshake_age_seconds",
@@ -207,6 +209,7 @@ class _State:
         self.last_runtime_peers: int = 0
         self.last_desired_peers: int = 0
         self.last_peer_endpoints: dict[str, str] = {}
+        self.network_check_cache: dict[str, tuple[float, list[str]]] = {}
 
 
 STATE = _State()
@@ -548,6 +551,31 @@ def _runtime_state(
             max_age = age if max_age is None else max(max_age, age)
             if age <= active_age_sec:
                 active += 1
+                
+    warnings = []
+    # Network checks via cache (60s TTL)
+    now = time.perf_counter()
+    with STATE.lock:
+        cache_ts, cache_warn = STATE.network_check_cache.get(container, (0.0, []))
+        do_check = (now - cache_ts >= 60.0)
+        if not do_check:
+            warnings = list(cache_warn)
+
+    if do_check:
+        code, out, _ = _run(["docker", "exec", container, "sysctl", "net.ipv4.ip_forward"], timeout=docker_timeout)
+        if code == 0 and "1" not in out:
+            warnings.append("net.ipv4.ip_forward is not 1")
+        
+        code, out, _ = _run(["docker", "exec", container, "iptables", "-t", "nat", "-n", "-L", "POSTROUTING"], timeout=docker_timeout)
+        if code == 0 and "MASQUERADE" not in out:
+            warnings.append("missing MASQUERADE in iptables nat POSTROUTING")
+            
+        with STATE.lock:
+            STATE.network_check_cache[container] = (now, warnings)
+
+    error_msg = None
+    if warnings:
+        error_msg = " / ".join(warnings)
     return RuntimeState(
         ok=True,
         container_name=display_name or container,
@@ -560,12 +588,15 @@ def _runtime_state(
         last_handshake_max_age_sec=max_age,
         active_peers=active,
         latency_ms=latency_ms,
-        error=None,
+        error=error_msg,
     )
 
 
 def _health_score(rt: RuntimeState) -> tuple[str, float]:
     if not rt.ok:
+        return "unhealthy", 0.0
+    if rt.error:
+        # Network errors exist
         return "unhealthy", 0.0
     # If no peers, treat as healthy (idle node).
     if not rt.peers:
@@ -803,6 +834,7 @@ def _reconcile(
     runtime: list[Peer],
     docker_timeout: float,
     max_mutations: int,
+    read_only: bool = True,
 ) -> tuple[int, int, int]:
     """Return (added, removed, updated)."""
     iface = _sanitize_iface(iface)
@@ -832,6 +864,14 @@ def _reconcile(
         has_psk = bool(spec.get("preshared_key"))
         if allowed_changed or has_psk:
             to_update.append(pk)
+
+    METRIC_ORPHAN_PEERS.set(len(to_remove))
+    METRIC_DRIFT_PEERS.set(len(to_update))
+
+    if read_only:
+        if to_add or to_remove or to_update:
+            _log("reconcile_read_only", container=container, to_add=len(to_add), orphan=len(to_remove), drift=len(to_update))
+        return 0, 0, 0
 
     added = removed = updated = 0
     mutations_left = max(0, int(max_mutations))
@@ -911,6 +951,12 @@ def _reconcile(
         removed += 1
         mutations_left -= 1
 
+    if added or removed or updated:
+        try:
+            _run(["docker", "exec", container, "awg-quick", "save", iface], timeout=docker_timeout)
+        except Exception as e:
+            _log("reconcile_save_error", container=container, error=str(e))
+
     return added, removed, updated
 
 
@@ -975,6 +1021,7 @@ def main() -> int:
     reconcile_interval = float(os.getenv("RECONCILE_INTERVAL_SECONDS", "30"))
     docker_timeout = float(os.getenv("DOCKER_EXEC_TIMEOUT_SECONDS", "10"))
     max_mutations = _env_int("MAX_MUTATIONS_PER_CYCLE", 200)
+    read_only_mode = _env_int("RECONCILE_READ_ONLY", 1) == 1
     http_port = _env_int("HTTP_PORT", 9105)
 
     # HTTP server (metrics + healthz)
@@ -1151,8 +1198,9 @@ def main() -> int:
                 METRIC_HANDSHAKE_MAX_AGE.set(rt.last_handshake_max_age_sec)
 
             primary_sid = _server_id_from_container(primary_container.name)
+            desired_state_sid = server_id if server_id else primary_sid
             if now - last_desired >= desired_interval:
-                ds = _desired_state(session, primary_sid, cid)
+                ds = _desired_state(session, desired_state_sid, cid)
                 peers = ds.get("peers") or []
                 if not isinstance(peers, list):
                     peers = []
@@ -1181,6 +1229,7 @@ def main() -> int:
                         runtime=rt.peers,
                         docker_timeout=docker_timeout,
                         max_mutations=max_mutations,
+                        read_only=read_only_mode,
                     )
                 last_reconcile = now
                 if added or removed or updated:
@@ -1188,13 +1237,13 @@ def main() -> int:
 
             if now - last_actions_poll >= actions_poll_interval and rt.ok:
                 last_actions_poll = now
-                act = _actions_poll(session, primary_sid, cid)
+                act = _actions_poll(session, desired_state_sid, cid)
                 if act and act.get("action_id"):
                     action_id = act["action_id"]
                     act_type = act.get("type") or ""
                     try:
                         if act_type in ("sync", "apply_peers"):
-                            ds = _desired_state(session, primary_sid, cid)
+                            ds = _desired_state(session, desired_state_sid, cid)
                             peers = ds.get("peers") or []
                             desired_for_action = [p for p in peers if isinstance(p, dict)]
                             with METRIC_RECONCILE_DURATION.time():
@@ -1205,6 +1254,7 @@ def main() -> int:
                                     runtime=rt.peers,
                                     docker_timeout=docker_timeout,
                                     max_mutations=max_mutations,
+                                    read_only=read_only_mode,
                                 )
                             desired_peers = desired_for_action
                             _actions_report(session, action_id, "completed", "ok", correlation_id=cid)

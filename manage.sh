@@ -40,6 +40,7 @@ case "$cmd" in
     # Bootstrap idempotent seeds (admin user and optional plans from env).
     "${DC[@]}" run --rm admin-api python scripts/seed_admin.py
     "${DC[@]}" run --rm admin-api python scripts/seed_plans.py
+    "${DC[@]}" run --rm admin-api python scripts/seed_system_operator.py
     "${DC[@]}" up -d admin-api
     bash scripts/update_admin_api_ip.sh
     "${DC[@]}" up -d reverse-proxy telegram-vpn-bot
@@ -112,6 +113,7 @@ case "$cmd" in
     "${DC[@]}" run --rm admin-api python -m alembic upgrade head
     "${DC[@]}" run --rm admin-api python scripts/seed_admin.py
     "${DC[@]}" run --rm admin-api python scripts/seed_plans.py
+    "${DC[@]}" run --rm admin-api python scripts/seed_system_operator.py
     bash scripts/update_admin_api_ip.sh
     "${DC[@]}" up -d admin-api reverse-proxy telegram-vpn-bot
     echo "Seeding agent server (id=${AGENT_SERVER_ID:-vpn-node-1})..." >&2
@@ -183,6 +185,18 @@ case "$cmd" in
   node-kill-no-peers)
     bash "$(dirname "$0")/scripts/kill-amnezia-wg-no-peers.sh"
     ;;
+  install-nat-service)
+    # Install systemd unit so NAT (10.8.1.0/24, 10.66.66.0/24) is applied after reboot.
+    SVC=amnezia-nat-setup.service
+    if [ ! -f "ops/systemd/$SVC" ]; then
+      echo "ops/systemd/$SVC not found." >&2
+      exit 1
+    fi
+    sudo cp "ops/systemd/$SVC" /etc/systemd/system/ &&
+      sudo systemctl daemon-reload &&
+      sudo systemctl enable "$SVC" &&
+      echo "Enabled $SVC. Run: sudo systemctl start $SVC  # apply NAT now"
+    ;;
   smoke-staging)
     # Full staging validation (tests + build + e2e + authenticated API smoke).
     bash scripts/staging_full_validation.sh
@@ -209,7 +223,7 @@ case "$cmd" in
     bash scripts/verify.sh
     ;;
   *)
-    echo "Usage: $0 {config|config-validate|build|...|test-stand|check|verify|smoke-staging|smoke-ha|smoke-staging-ha}" >&2
+    echo "Usage: $0 {config|config-validate|build|...|install-nat-service|test-stand|check|verify|smoke-staging|smoke-ha|smoke-staging-ha}" >&2
     exit 1
     ;;
 esac
