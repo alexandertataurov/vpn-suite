@@ -77,7 +77,8 @@
 
 ## VPN: connected but no internet / no traffic
 
-- **Full checklist**: See [docs/NO_TRAFFIC_TROUBLESHOOTING.md](../docs/NO_TRAFFIC_TROUBLESHOOTING.md) — server peer AllowedIPs must be client tunnel address (/32), not 0.0.0.0/0.
+- **Full checklist**: See [docs/ops/no-traffic-troubleshooting.md](../../docs/ops/no-traffic-troubleshooting.md) — server peer AllowedIPs must be client tunnel address (/32), not 0.0.0.0/0.
+- **Deep debug (handshake OK, no traffic)**: Same doc, section **Deep debug (AmneziaWG in Docker)** — problem classification, mandatory diagnostics (wg show, ip_forward, NAT, Docker network mode, MTU, tcpdump), "request 3 things" for remote support, and minimal fix plan.
 - **Peers not on server**: With AmneziaWG, peers are added in the container via `awguser`/`awgstart`; panel Sync and `./scripts/sync-vpn-peers.sh` do not apply. If devices were synced from bot with `public_key='synced'`, get a new config from the bot (Install VPN / Get config) so the panel has a real key; then add that peer in the container. For add-vpn-peer.sh: it detects AmneziaWG and prints that peers must be added via the container.
 - **Firewall**: Host must allow **UDP 47604** for VPN. Run: `ufw allow 47604/udp` then `ufw status`.
 - **NAT/forward in container**: The AmneziaWG container (metaligh/amneziawg) handles forwarding; ensure `ip_forward=1` and NAT inside the container per image docs.
@@ -97,7 +98,7 @@ When one admin peer fails to connect (client may show ErrorCode 1200 / crash dur
 2. **NODE_MODE=agent**: With agent mode, control-plane does not add peers; node-agent manages them. Ensure the admin device was pushed to the node (check node-agent logs / desired-state).
 3. **Endpoint/port**: Server `vpn_endpoint` must match the actual exposed port (e.g. `vpn.example.com:45790`). Your amnezia-awg2 uses `AWG_PUBLIC_UDP_PORT=45790`; ensure firewall allows UDP 45790.
 4. **Obfuscation match**: AmneziaWG requires matching Jc/Jmin/Jmax/S1/S2/H1–H4. If the config was built from a profile with wrong/missing obfuscation params, handshake will fail. Use `get_obfuscation_from_node` or ensure ServerProfile `request_params` match the running container.
-5. **System operator seeded**: Admin "Issue config" (standalone) uses `system_operator_not_seeded` if User tg_id=0 and Plan "operator" subscription are missing. Run migrations and seed operator user/plan.
+5. **System operator seeded**: Admin "Issue config" (standalone) uses `system_operator_not_seeded` if User tg_id=0 and Plan "operator" subscription are missing. Fix: `./manage.sh seed-operator` (after migrations).
 
 ## Reviewing AmneziaWG instances
 

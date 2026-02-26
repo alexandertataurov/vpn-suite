@@ -29,9 +29,6 @@ def _run_once() -> int:
 
 
 def main() -> int:
-    if os.getenv("INVENTORY_DISABLED", "1").lower() in ("1", "true", "yes"):
-        print("inventory: disabled (INVENTORY_DISABLED=1)")
-        return 0
     if "--once" in sys.argv:
         return _run_once()
     interval = int(os.getenv("INVENTORY_INTERVAL_SECONDS", "60"))

@@ -53,6 +53,7 @@ services:
       - DATABASE_URL=${DATABASE_URL}
       - REDIS_URL=${REDIS_URL}
       - SECRET_KEY=${SECRET_KEY}
+      - OTEL_TRACES_ENDPOINT=${OTEL_TRACES_ENDPOINT:-}
       # VPN endpoint auto-derive: host clients use to reach AmneziaWG (e.g. vpn.example.com). Uses node listen_port.
       - VPN_DEFAULT_HOST=${VPN_DEFAULT_HOST:-${PUBLIC_DOMAIN}}
     depends_on:
@@ -197,6 +198,7 @@ services:
       - BOT_API_KEY=${BOT_API_KEY:-}
       - BOT_TOKEN=${BOT_TOKEN:-}
       - BOT_USERNAME=${VITE_TELEGRAM_BOT_USERNAME:-}
+      - OTEL_TRACES_ENDPOINT=${OTEL_TRACES_ENDPOINT:-}
       - PORT=8090
     depends_on:
       admin-api:
@@ -218,11 +220,14 @@ services:
     image: prom/prometheus@sha256:f6639335d34a77d9d9db382b92eeb7fc00934be8eae81dbc03b31cfe90411a94
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
       - "--storage.tsdb.retention.time=365d"
     volumes:
       - ./config/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./config/monitoring/alert_rules.yml:/etc/prometheus/alert_rules.yml:ro
+      - ./config/monitoring/recording_rules.yml:/etc/prometheus/recording_rules.yml:ro
       - ./config/monitoring/discovery:/etc/prometheus/file_sd:ro
+      - prometheus_data:/prometheus
     ports:
       - "127.0.0.1:${PROMETHEUS_HOST_PORT:-19090}:9090"
     depends_on:
@@ -230,6 +235,18 @@ services:
         condition: service_healthy
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    networks:
+      - vpn-suite-app
+
+  alertmanager:
+    <<: [*monitoring_default, *resource_small]
+    image: prom/alertmanager:latest
+    command:
+      - "--config.file=/etc/alertmanager/alertmanager.yml"
+    volumes:
+      - ./config/monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    ports:
+      - "127.0.0.1:${ALERTMANAGER_HOST_PORT:-19093}:9093"
     networks:
       - vpn-suite-app
 
@@ -354,6 +371,7 @@ volumes:
   caddy_data:
   grafana_data:
   loki_data:
+  prometheus_data:
   promtail_positions:
 
 networks:

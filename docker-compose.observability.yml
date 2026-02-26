@@ -40,6 +40,12 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /etc/vpn-suite/node-id:/etc/vpn-suite/node-id:rw
       - ./config/monitoring/discovery:/work
+    healthcheck:
+      test: ["CMD-SHELL", "test -s /work/targets.json"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:
@@ -50,13 +56,42 @@ services:
   grafana:
     depends_on:
       - tempo
+      - victoria-metrics
+
+  victoria-metrics:
+    <<: [*service_default, *resource_medium]
+    image: victoriametrics/victoria-metrics:latest
+    command:
+      - "-retentionPeriod=365d"
+      - "-storageDataPath=/storage"
+    volumes:
+      - victoria_metrics_data:/storage
+    ports:
+      - "127.0.0.1:8428:8428"
+    networks:
+      - vpn-suite-app
+    profiles:
+      - monitoring
 
   prometheus:
+    ports:
+      - "127.0.0.1:${PROMETHEUS_HOST_PORT:-19090}:9090"
+    depends_on:
+      admin-api:
+        condition: service_healthy
+      discovery-runner:
+        condition: service_healthy
     volumes:
+      - ./config/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./config/monitoring/alert_rules.yml:/etc/prometheus/alert_rules.yml:ro
       - ./config/monitoring/discovery:/etc/prometheus/file_sd:ro
       - ./ALERTS:/etc/prometheus/alerts:ro
+      - ./config/monitoring/recording_rules.yml:/etc/prometheus/recording_rules.yml:ro
+      - prometheus_data:/prometheus
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    profiles:
+      - monitoring
 
   wg-exporter:
     <<: [*service_default, *resource_small]
@@ -64,7 +99,7 @@ services:
       context: ./monitoring/wg-exporter
       dockerfile: Dockerfile
     environment:
-      - WG_CONTAINER=${WG_CONTAINER:-amnezia-awg2}
+      - WG_CONTAINER=${WG_CONTAINER:-amnezia-awg}
       - WG_INTERFACE=${WG_INTERFACE:-awg0}
       - WG_EXPORTER_PORT=9586
       - NODE_ID=${NODE_ID:-}
@@ -72,7 +107,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     ports:
-      - "9586:9586"
+      - "127.0.0.1:9586:9586"
     networks:
       - vpn-suite-app
     profiles:
@@ -108,5 +143,41 @@ services:
     profiles:
       - monitoring
 
+  prometheus-archive:
+    image: amazon/aws-cli:2
+    env_file:
+      - ${ENV_FILE:-.env}
+    command: ["sh", "-c", "/scripts/archive-prometheus-to-s3.sh"]
+    volumes:
+      - ./scripts:/scripts:ro
+      - prometheus_data:/prometheus:ro
+    profiles:
+      - archive
+
+  loki-archive:
+    image: amazon/aws-cli:2
+    env_file:
+      - ${ENV_FILE:-.env}
+    command: ["sh", "-c", "/scripts/archive-loki-to-s3.sh"]
+    volumes:
+      - ./scripts:/scripts:ro
+      - loki_data:/tmp/loki:ro
+    profiles:
+      - archive
+
+  tempo-archive:
+    image: amazon/aws-cli:2
+    env_file:
+      - ${ENV_FILE:-.env}
+    command: ["sh", "-c", "/scripts/archive-tempo-to-s3.sh"]
+    volumes:
+      - ./scripts:/scripts:ro
+      - tempo_data:/var/tempo:ro
+    profiles:
+      - archive
+
 volumes:
   tempo_data:
+  prometheus_data:
+  loki_data:
+  victoria_metrics_data:

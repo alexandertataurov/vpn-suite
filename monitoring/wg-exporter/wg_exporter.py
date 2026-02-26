@@ -6,6 +6,7 @@ Exposes basic Prometheus metrics on /metrics.
 """
 from __future__ import annotations
 
+import hashlib
 import os
 import time
 import subprocess
@@ -17,6 +18,11 @@ LISTEN_ADDR = os.environ.get("WG_EXPORTER_ADDR", "0.0.0.0")
 LISTEN_PORT = int(os.environ.get("WG_EXPORTER_PORT", "9586"))
 NODE_ID = os.environ.get("NODE_ID", "")
 SERVER_ID = os.environ.get("SERVER_ID", "")
+EXPOSE_PEER_META = os.environ.get("WG_EXPORTER_EXPOSE_PEER_META", "").strip().lower() in (
+    "1",
+    "true",
+    "yes",
+)
 
 
 def _extra_labels() -> str:
@@ -72,11 +78,15 @@ def _parse_dump(raw: str) -> dict:
         if len(parts) < 8:
             continue
         peer_pub = parts[0]
+        endpoint = parts[2]
+        allowed_ips = parts[3]
         last_handshake = int(parts[4]) if parts[4].isdigit() else 0
         rx = int(parts[5]) if parts[5].isdigit() else 0
         tx = int(parts[6]) if parts[6].isdigit() else 0
         peers.append({
             "peer": peer_pub,
+            "endpoint": endpoint,
+            "allowed_ips": allowed_ips,
             "last_handshake": last_handshake,
             "rx": rx,
             "tx": tx,
@@ -112,6 +122,13 @@ def _format_metrics() -> str:
     metrics.append("# TYPE wireguard_sent_bytes counter")
     metrics.append("# HELP wireguard_latest_handshake_seconds Seconds since last handshake per peer")
     metrics.append("# TYPE wireguard_latest_handshake_seconds gauge")
+    if EXPOSE_PEER_META:
+        metrics.append("# HELP wireguard_peer_allowed_ips_count Allowed IPs count per peer (best-effort)")
+        metrics.append("# TYPE wireguard_peer_allowed_ips_count gauge")
+        metrics.append("# HELP wireguard_peer_allowed_ips_hash_info Allowed IPs hash per peer (value is always 1)")
+        metrics.append("# TYPE wireguard_peer_allowed_ips_hash_info gauge")
+        metrics.append("# HELP wireguard_peer_endpoint_host_info Endpoint host per peer (value is always 1)")
+        metrics.append("# TYPE wireguard_peer_endpoint_host_info gauge")
 
     for p in peers:
         peer = p.get("peer", "unknown")
@@ -123,6 +140,28 @@ def _format_metrics() -> str:
         metrics.append(f"wireguard_received_bytes{pl} {rx}")
         metrics.append(f"wireguard_sent_bytes{pl} {tx}")
         metrics.append(f"wireguard_latest_handshake_seconds{pl} {age}")
+        if EXPOSE_PEER_META:
+            endpoint = str(p.get("endpoint") or "")
+            allowed_ips = str(p.get("allowed_ips") or "")
+            allowed_ips_count = len([x for x in allowed_ips.split(",") if x.strip()]) if allowed_ips else 0
+            allowed_ips_hash = hashlib.sha256(allowed_ips.encode("utf-8")).hexdigest()[:12] if allowed_ips else ""
+            # Endpoint label: best-effort host part only to reduce churn/cardinality.
+            endpoint_host = endpoint.rsplit(":", 1)[0] if ":" in endpoint else endpoint
+
+            # These are "info-style" metrics: value always 1, labels carry metadata.
+            if allowed_ips_hash:
+                metrics.append(
+                    f'wireguard_peer_allowed_ips_hash_info{{peer="{peer}",allowed_ips_hash="{allowed_ips_hash}"'
+                    + ("," + extra if extra else "")
+                    + "} 1"
+                )
+            if endpoint_host:
+                metrics.append(
+                    f'wireguard_peer_endpoint_host_info{{peer="{peer}",endpoint_host="{endpoint_host}"'
+                    + ("," + extra if extra else "")
+                    + "} 1"
+                )
+            metrics.append(f"wireguard_peer_allowed_ips_count{pl} {allowed_ips_count}")
 
     return "\n".join(metrics) + "\n"
 

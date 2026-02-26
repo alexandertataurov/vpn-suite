@@ -43,13 +43,9 @@ Deterministic VPN server discovery. **No container names used.** Classification 
 | evidence | string[] | Evidence strings for top-level classification. |
 | classification.total_confidence | float | 0–1. Evidence-based score. |
 
-## mapping.json
+## mapping.json (deprecated)
 
-```json
-{
-  "entries": []
-}
-```
+`mapping.json` is no longer emitted; correlation was a stub and `mapping.json` was unused by Prometheus and the admin UI.
 
 ## targets.json (Prometheus file_sd)
 

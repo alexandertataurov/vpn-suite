@@ -55,13 +55,17 @@ case "$cmd" in
         fi
       fi
     fi
-    "${DC_OBS[@]}" --profile monitoring up -d prometheus cadvisor node-exporter loki promtail grafana discovery-runner wg-exporter tempo otel-collector
+    if [ -z "${OTEL_TRACES_ENDPOINT:-}" ]; then
+      export OTEL_TRACES_ENDPOINT="otel-collector:4317"
+    fi
+    "${DC_OBS[@]}" --profile monitoring up -d admin-api telegram-vpn-bot
+    "${DC_OBS[@]}" --profile monitoring up -d victoria-metrics prometheus alertmanager cadvisor node-exporter loki promtail grafana discovery-runner wg-exporter tempo otel-collector
     ;;
   down-core)
     "${DC[@]}" down --remove-orphans
     ;;
   down-monitoring)
-    "${DC_OBS[@]}" --profile monitoring stop prometheus cadvisor node-exporter loki promtail grafana discovery-runner wg-exporter tempo otel-collector
+    "${DC_OBS[@]}" --profile monitoring stop victoria-metrics prometheus alertmanager cadvisor node-exporter loki promtail grafana discovery-runner wg-exporter tempo otel-collector
     ;;
   ps)
     "${DC[@]}" ps
@@ -191,6 +195,11 @@ case "$cmd" in
     # Full validation + HA/failover smoke.
     RUN_HA_FAILOVER_SMOKE=1 bash scripts/staging_full_validation.sh
     ;;
+  test-stand)
+    # VPN connection config test stand (debug logs). Optional: TEST_STAND_LOG=path, TEST_STAND_ISSUE=1 (issue check, needs DB).
+    "${DC[@]}" run --rm -e PYTHONPATH=/app admin-api python scripts/test_stand_vpn_config.py --no-env \
+      ${TEST_STAND_LOG:+--log-file "$TEST_STAND_LOG"} ${TEST_STAND_ISSUE:+--issue} 2>&1
+    ;;
   check)
     # Quick quality gate: ruff, pytest, frontend lint/typecheck/test/build (no migrate; use verify for full).
     bash scripts/quality_gate.sh
@@ -200,7 +209,7 @@ case "$cmd" in
     bash scripts/verify.sh
     ;;
   *)
-    echo "Usage: $0 {config|config-validate|build|build-bot|build-admin|build-webapp|build-storybook|up-api|up-core|bootstrap|up-agent|up-monitoring|down-core|down-monitoring|ps|logs [service]|logs-monitoring [service]|migrate|seed|seed-plans|seed-nodes|seed-agent-server|seed-operator|openapi|backup-db|restore-db --force <dump>|node-sync|node-resync|node-list|node-check <id>|node-restart <id>|node-telemetry <id>|node-limits-apply <id> [...]|node-undrain <id>|node-public-key <id> [key]|node-kill-no-peers|check|verify|smoke-staging|smoke-ha|smoke-staging-ha}" >&2
+    echo "Usage: $0 {config|config-validate|build|...|test-stand|check|verify|smoke-staging|smoke-ha|smoke-staging-ha}" >&2
     exit 1
     ;;
 esac

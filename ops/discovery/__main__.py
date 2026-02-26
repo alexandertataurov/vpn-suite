@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""CLI: run discovery and emit inventory.json, mapping.json, targets.json."""
+"""CLI: run discovery and emit inventory.json, targets.json."""
 
 from __future__ import annotations
 
@@ -15,20 +15,16 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 try:
-    from .correlation_engine import correlate
     from .discovery_service import (
         DiscoveredNode,
-        host_nic_ips,
         run_discovery,
         host_ss_listeners,
         _has_listener,
         _ensure_host_id,
     )
 except ImportError:
-    from ops.discovery.correlation_engine import correlate
     from ops.discovery.discovery_service import (
         DiscoveredNode,
-        host_nic_ips,
         run_discovery,
         host_ss_listeners,
         _has_listener,
@@ -93,6 +89,9 @@ async def _build_targets(nodes: list[dict]) -> list[dict]:
         {"labels": {"sd_job": "admin-api", "host_id": host_id}, "targets": ["admin-api:8000"]},
         {"labels": {"sd_job": "node-exporter", "host_id": host_id}, "targets": ["node-exporter:9100"]},
         {"labels": {"sd_job": "cadvisor", "host_id": host_id}, "targets": ["cadvisor:8080"]},
+        {"labels": {"sd_job": "alertmanager", "host_id": host_id}, "targets": ["alertmanager:9093"]},
+        {"labels": {"sd_job": "otel-collector", "host_id": host_id}, "targets": ["otel-collector:8888"]},
+        {"labels": {"sd_job": "tempo", "host_id": host_id}, "targets": ["tempo:3200"]},
     ]
     if any((n.get("classification") or {}).get("type") == "exporter" and "node-agent" in (n.get("image") or "") for n in nodes):
         targets.append({"labels": {"sd_job": "node-agent", "host_id": host_id}, "targets": ["node-agent:9105"]})
@@ -143,10 +142,6 @@ async def main() -> int:
         "nodes": node_dicts,
     }
     _atomic_write(out_dir / "inventory.json", inventory)
-
-    nic_ips = await host_nic_ips()
-    mapping = {"entries": correlate(node_dicts, host_nic_ips=nic_ips)}
-    _atomic_write(out_dir / "mapping.json", mapping)
 
     targets = await _build_targets(node_dicts)
     _atomic_write(out_dir / "targets.json", targets)

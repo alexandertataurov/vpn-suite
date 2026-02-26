@@ -6,8 +6,8 @@
 set -e
 
 BUCKET="${LOKI_ARCHIVE_S3_BUCKET:-}"
-# Loki path_prefix is /tmp/loki in container; host path = docker volume or bind mount
-LOKI_DATA="${LOKI_DATA_PATH:-}"
+# Loki path_prefix is /tmp/loki in container (docker volume mount).
+LOKI_DATA="${LOKI_DATA_PATH:-/tmp/loki}"
 
 if [ -z "$BUCKET" ]; then
   echo "LOKI_ARCHIVE_S3_BUCKET not set. Skipping archive." >&2
@@ -15,7 +15,7 @@ if [ -z "$BUCKET" ]; then
 fi
 
 if [ -z "$LOKI_DATA" ] || [ ! -d "$LOKI_DATA" ]; then
-  echo "LOKI_DATA_PATH not set or missing. Set to Loki host data dir (e.g. docker volume path)." >&2
+  echo "LOKI_DATA_PATH missing. Expected Loki data dir at $LOKI_DATA" >&2
   exit 1
 fi
 

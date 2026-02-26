@@ -185,6 +185,18 @@ METRIC_PEER_ROAMING = Counter(
     "Peer roaming events observed (best-effort)",
 )
 
+METRIC_HTTP_REQUESTS_TOTAL = Counter(
+    "agent_http_requests_total",
+    "HTTP requests from node-agent to control-plane",
+    ["endpoint", "method", "status_class"],
+)
+METRIC_HTTP_REQUEST_LATENCY_SECONDS = Histogram(
+    "agent_http_request_latency_seconds",
+    "Latency of node-agent HTTP requests to control-plane",
+    ["endpoint", "method"],
+    buckets=(0.05, 0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0),
+)
+
 
 class _State:
     def __init__(self) -> None:
@@ -611,21 +623,57 @@ def _control_plane_url(path: str) -> str:
     return urljoin(base, path.lstrip("/"))
 
 
+def _status_class(status_code: int | None) -> str:
+    if status_code is None:
+        return "error"
+    if status_code < 300:
+        return "2xx"
+    if status_code < 400:
+        return "3xx"
+    if status_code < 500:
+        return "4xx"
+    return "5xx"
+
+
 def _heartbeat(session: requests.Session, payload: dict[str, Any], correlation_id: str | None = None) -> None:
-    url = _control_plane_url("/api/v1/agent/heartbeat")
+    endpoint = "/api/v1/agent/heartbeat"
+    url = _control_plane_url(endpoint)
     headers = {"X-Request-ID": correlation_id} if correlation_id else {}
-    r = session.post(url, json=payload, headers=headers, **_request_kwargs())
-    if r.status_code >= 300:
-        raise RuntimeError(f"heartbeat failed status={r.status_code} body={r.text[:200]}")
+    start = time.perf_counter()
+    status_code: int | None = None
+    try:
+        r = session.post(url, json=payload, headers=headers, **_request_kwargs())
+        status_code = r.status_code
+        if r.status_code >= 300:
+            raise RuntimeError(f"heartbeat failed status={r.status_code} body={r.text[:200]}")
+    finally:
+        METRIC_HTTP_REQUESTS_TOTAL.labels(
+            endpoint=endpoint, method="POST", status_class=_status_class(status_code)
+        ).inc()
+        METRIC_HTTP_REQUEST_LATENCY_SECONDS.labels(endpoint=endpoint, method="POST").observe(
+            time.perf_counter() - start
+        )
 
 
 def _desired_state(session: requests.Session, server_id: str, correlation_id: str | None = None) -> dict[str, Any]:
-    url = _control_plane_url(f"/api/v1/agent/desired-state?server_id={server_id}")
+    endpoint = "/api/v1/agent/desired-state"
+    url = _control_plane_url(f"{endpoint}?server_id={server_id}")
     headers = {"X-Request-ID": correlation_id} if correlation_id else {}
-    r = session.get(url, headers=headers, **_request_kwargs())
-    if r.status_code >= 300:
-        raise RuntimeError(f"desired-state failed status={r.status_code} body={r.text[:200]}")
-    data = r.json()
+    start = time.perf_counter()
+    status_code: int | None = None
+    try:
+        r = session.get(url, headers=headers, **_request_kwargs())
+        status_code = r.status_code
+        if r.status_code >= 300:
+            raise RuntimeError(f"desired-state failed status={r.status_code} body={r.text[:200]}")
+        data = r.json()
+    finally:
+        METRIC_HTTP_REQUESTS_TOTAL.labels(
+            endpoint=endpoint, method="GET", status_class=_status_class(status_code)
+        ).inc()
+        METRIC_HTTP_REQUEST_LATENCY_SECONDS.labels(endpoint=endpoint, method="GET").observe(
+            time.perf_counter() - start
+        )
     if not isinstance(data, dict):
         raise RuntimeError("desired-state invalid response")
     return data
@@ -633,12 +681,24 @@ def _desired_state(session: requests.Session, server_id: str, correlation_id: st
 
 def _actions_poll(session: requests.Session, server_id: str, correlation_id: str | None = None) -> dict[str, Any] | None:
     """GET agent/v1/actions/poll. Returns {action_id, type, payload} or None if no pending action."""
-    url = _control_plane_url(f"/api/v1/agent/v1/actions/poll?server_id={server_id}")
+    endpoint = "/api/v1/agent/v1/actions/poll"
+    url = _control_plane_url(f"{endpoint}?server_id={server_id}")
     headers = {"X-Request-ID": correlation_id} if correlation_id else {}
-    r = session.get(url, headers=headers, **_request_kwargs())
-    if r.status_code >= 300:
-        return None
-    data = r.json()
+    start = time.perf_counter()
+    status_code: int | None = None
+    try:
+        r = session.get(url, headers=headers, **_request_kwargs())
+        status_code = r.status_code
+        if r.status_code >= 300:
+            return None
+        data = r.json()
+    finally:
+        METRIC_HTTP_REQUESTS_TOTAL.labels(
+            endpoint=endpoint, method="GET", status_class=_status_class(status_code)
+        ).inc()
+        METRIC_HTTP_REQUEST_LATENCY_SECONDS.labels(endpoint=endpoint, method="GET").observe(
+            time.perf_counter() - start
+        )
     if not isinstance(data, dict) or not data.get("action_id"):
         return None
     return data
@@ -653,12 +713,86 @@ def _actions_report(
     correlation_id: str | None = None,
 ) -> None:
     """POST agent/v1/actions/report (completed or failed)."""
-    url = _control_plane_url("/api/v1/agent/v1/actions/report")
+    endpoint = "/api/v1/agent/v1/actions/report"
+    url = _control_plane_url(endpoint)
     payload = {"action_id": action_id, "status": status, "message": message, "meta": meta or {}}
     headers = {"X-Request-ID": correlation_id} if correlation_id else {}
-    r = session.post(url, json=payload, headers=headers, **_request_kwargs())
-    if r.status_code >= 300:
-        raise RuntimeError(f"actions/report failed status={r.status_code} body={r.text[:200]}")
+    start = time.perf_counter()
+    status_code: int | None = None
+    try:
+        r = session.post(url, json=payload, headers=headers, **_request_kwargs())
+        status_code = r.status_code
+        if r.status_code >= 300:
+            raise RuntimeError(f"actions/report failed status={r.status_code} body={r.text[:200]}")
+    finally:
+        METRIC_HTTP_REQUESTS_TOTAL.labels(
+            endpoint=endpoint, method="POST", status_class=_status_class(status_code)
+        ).inc()
+        METRIC_HTTP_REQUEST_LATENCY_SECONDS.labels(endpoint=endpoint, method="POST").observe(
+            time.perf_counter() - start
+        )
+
+
+def _apply_obfuscation_full_to_env(
+    *,
+    env_path: str,
+    obf: dict[str, Any],
+    container_id: str,
+    docker_timeout: float,
+    correlation_id: str | None = None,
+) -> None:
+    """If obf (s1,s2,jc,jmin,jmax,h1–h4) differs from env, update file and restart container."""
+    want = {
+        "AWG_S1": int(obf.get("s1", 213)),
+        "AWG_S2": int(obf.get("s2", 237)),
+        "AWG_Jc": int(obf.get("jc", 3)),
+        "AWG_Jmin": int(obf.get("jmin", 10)),
+        "AWG_Jmax": int(obf.get("jmax", 50)),
+        "AWG_H1": int(obf.get("h1", 0)),
+        "AWG_H2": int(obf.get("h2", 0)),
+        "AWG_H3": int(obf.get("h3", 0)),
+        "AWG_H4": int(obf.get("h4", 0)),
+    }
+    try:
+        with open(env_path, "r") as f:
+            lines = f.readlines()
+    except OSError:
+        return
+    current: dict[str, int] = {}
+    for line in lines:
+        for key in want:
+            if line.startswith(f"{key}="):
+                try:
+                    current[key] = int(line.split("=", 1)[1].strip().split("#")[0].strip())
+                except (ValueError, IndexError):
+                    pass
+                break
+    if current == want:
+        return
+    out, seen = [], set(want)
+    for line in lines:
+        updated = False
+        for key in want:
+            if line.startswith(f"{key}="):
+                out.append(f"{key}={want[key]}\n")
+                seen.discard(key)
+                updated = True
+                break
+        if not updated:
+            out.append(line)
+    for key in seen:
+        out.append(f"{key}={want[key]}\n")
+    try:
+        with open(env_path, "w") as f:
+            f.writelines(out)
+    except OSError:
+        return
+    code, out, _ = _run(
+        ["docker", "restart", container_id],
+        timeout=docker_timeout,
+    )
+    if code == 0:
+        _log("obfuscation_full_synced", correlation_id=correlation_id, container=container_id)
 
 
 def _reconcile(
@@ -677,9 +811,12 @@ def _reconcile(
     desired_map: dict[str, dict[str, Any]] = {}
     for p in desired:
         pk = _sanitize_pubkey(str(p.get("public_key") or "").strip())
+        raw_psk = p.get("preshared_key") or ""
+        psk = (raw_psk.strip() or None) if isinstance(raw_psk, str) else None
         desired_map[pk] = {
             "allowed_ips": str(p.get("allowed_ips") or "0.0.0.0/0, ::/0").strip(),
             "keepalive": int(p.get("persistent_keepalive") or 25),
+            "preshared_key": psk,
         }
 
     runtime_map: dict[str, Peer] = {p.public_key: p for p in runtime if p.public_key}
@@ -689,18 +826,31 @@ def _reconcile(
     to_update = []
     for pk, spec in desired_map.items():
         rp = runtime_map.get(pk)
-        if rp and spec["allowed_ips"] and (spec["allowed_ips"] != (rp.allowed_ips or "").strip()):
+        if not rp:
+            continue
+        allowed_changed = spec["allowed_ips"] and (spec["allowed_ips"] != (rp.allowed_ips or "").strip())
+        has_psk = bool(spec.get("preshared_key"))
+        if allowed_changed or has_psk:
             to_update.append(pk)
 
     added = removed = updated = 0
     mutations_left = max(0, int(max_mutations))
 
-    # Adds
-    for pk in to_add:
-        if mutations_left <= 0:
-            break
-        spec = desired_map[pk]
-        code, out, latency_ms = _run(
+    def _run_set_peer(spec: dict[str, Any]) -> tuple[int, float]:
+        """Run wg/awg set peer; return (exit_code, latency_ms). Uses preshared_key via stdin when present."""
+        psk = spec.get("preshared_key")
+        if psk:
+            key_escaped = str(psk).replace("'", "'\"'\"'")
+            script = (
+                f"printf '%s\\n' '{key_escaped}' | wg set {iface} peer {pk} "
+                f"allowed-ips {spec['allowed_ips']} persistent-keepalive {spec['keepalive']} preshared-key /dev/stdin"
+            )
+            code, _, latency_ms = _run(
+                ["docker", "exec", container, "sh", "-c", script],
+                timeout=docker_timeout,
+            )
+            return code, latency_ms
+        code, _, latency_ms = _run(
             [
                 "docker",
                 "exec",
@@ -717,6 +867,14 @@ def _reconcile(
             ],
             timeout=docker_timeout,
         )
+        return code, latency_ms
+
+    # Adds
+    for pk in to_add:
+        if mutations_left <= 0:
+            break
+        spec = desired_map[pk]
+        code, latency_ms = _run_set_peer(spec)
         METRIC_DOCKER_EXEC_LATENCY.labels(op="awg_set_add").observe(latency_ms / 1000.0)
         if code != 0:
             METRIC_RECONCILE_ERRORS.labels(stage="add_peer").inc()
@@ -724,28 +882,12 @@ def _reconcile(
         added += 1
         mutations_left -= 1
 
-    # Updates (allowed-ips changes)
+    # Updates (allowed-ips and/or preshared_key changes)
     for pk in to_update:
         if mutations_left <= 0:
             break
         spec = desired_map[pk]
-        code, out, latency_ms = _run(
-            [
-                "docker",
-                "exec",
-                container,
-                "awg",
-                "set",
-                iface,
-                "peer",
-                pk,
-                "allowed-ips",
-                spec["allowed_ips"],
-                "persistent-keepalive",
-                str(spec["keepalive"]),
-            ],
-            timeout=docker_timeout,
-        )
+        code, latency_ms = _run_set_peer(spec)
         METRIC_DOCKER_EXEC_LATENCY.labels(op="awg_set_update").observe(latency_ms / 1000.0)
         if code != 0:
             METRIC_RECONCILE_ERRORS.labels(stage="update_peer").inc()
@@ -1018,8 +1160,19 @@ def main() -> int:
                 METRIC_PEERS_DESIRED.set(len(desired_peers))
                 last_desired = now
                 _log("desired_state", correlation_id=cid, peers=len(desired_peers), revision=ds.get("revision"))
+                # Sync obfuscation_full from admin (S1,S2,Jc,Jmin,Jmax,H1–H4) to node env so issued configs match
+                obf_full = ds.get("obfuscation_full") if isinstance(ds.get("obfuscation_full"), dict) else None
+                env_path = os.environ.get("AMNEZIA_NODE_ENV_PATH", "").strip()
+                if obf_full and env_path and rt.ok:
+                    _apply_obfuscation_full_to_env(
+                        env_path=env_path,
+                        obf=obf_full,
+                        container_id=primary_container.container_id,
+                        docker_timeout=docker_timeout,
+                        correlation_id=cid,
+                    )
 
-            if now - last_reconcile >= reconcile_interval and rt.ok:
+            if rt.ok and (last_reconcile == 0.0 or now - last_reconcile >= reconcile_interval):
                 with METRIC_RECONCILE_DURATION.time():
                     added, removed, updated = _reconcile(
                         container=primary_container.container_id,
@@ -1073,6 +1226,40 @@ def main() -> int:
                             # Stub: payload could contain AWG params; for now acknowledge.
                             _actions_report(session, action_id, "completed", "ok", correlation_id=cid)
                             _log("action_completed", correlation_id=cid, action_id=action_id, type=act_type)
+                        elif act_type == "apply_obfuscation_h":
+                            payload = act.get("payload") or {}
+                            h1, h2, h3, h4 = payload.get("h1"), payload.get("h2"), payload.get("h3"), payload.get("h4")
+                            env_path = os.environ.get("AMNEZIA_NODE_ENV_PATH", "").strip()
+                            if not all(isinstance(x, int) for x in (h1, h2, h3, h4)):
+                                _actions_report(session, action_id, "failed", "payload missing h1,h2,h3,h4", correlation_id=cid)
+                            elif not env_path:
+                                _actions_report(session, action_id, "failed", "AMNEZIA_NODE_ENV_PATH not set", correlation_id=cid)
+                            else:
+                                try:
+                                    with open(env_path, "r") as f:
+                                        lines = f.readlines()
+                                    out, seen = [], {"AWG_H1", "AWG_H2", "AWG_H3", "AWG_H4"}
+                                    for line in lines:
+                                        if line.startswith("AWG_H1="): out.append(f"AWG_H1={h1}\n"); seen.discard("AWG_H1")
+                                        elif line.startswith("AWG_H2="): out.append(f"AWG_H2={h2}\n"); seen.discard("AWG_H2")
+                                        elif line.startswith("AWG_H3="): out.append(f"AWG_H3={h3}\n"); seen.discard("AWG_H3")
+                                        elif line.startswith("AWG_H4="): out.append(f"AWG_H4={h4}\n"); seen.discard("AWG_H4")
+                                        else: out.append(line)
+                                    for k in ("AWG_H1", "AWG_H2", "AWG_H3", "AWG_H4"):
+                                        if k in seen:
+                                            out.append(f"{k}={payload[k.replace('AWG_', '').lower()]}\n")
+                                    with open(env_path, "w") as f:
+                                        f.writelines(out)
+                                    code, out, _ = _run(
+                                        ["docker", "restart", primary_container.container_id],
+                                        timeout=docker_timeout,
+                                    )
+                                    if code != 0:
+                                        raise RuntimeError(f"docker restart exited {code}: {out[:200]}")
+                                    _actions_report(session, action_id, "completed", "obfuscation_h applied, container restarted", correlation_id=cid)
+                                except Exception as e:
+                                    _actions_report(session, action_id, "failed", str(e)[:300], correlation_id=cid)
+                            _log("action_completed" if env_path else "action_failed", correlation_id=cid, action_id=action_id, type=act_type)
                         else:
                             _actions_report(session, action_id, "completed", "no-op", correlation_id=cid)
                             _log("action_completed", correlation_id=cid, action_id=action_id, type=act_type)

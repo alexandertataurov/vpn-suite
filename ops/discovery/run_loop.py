@@ -37,8 +37,7 @@ def _target_key(t: dict) -> str:
 
 
 async def run_once(out_dir: str) -> None:
-    from ops.discovery.discovery_service import run_discovery, host_nic_ips, host_ss_listeners, _has_listener, _ensure_host_id
-    from ops.discovery.correlation_engine import correlate
+    from ops.discovery.discovery_service import run_discovery, host_ss_listeners, _has_listener, _ensure_host_id
     import json
     from datetime import datetime, timezone
     from contextlib import asynccontextmanager
@@ -87,9 +86,6 @@ async def run_once(out_dir: str) -> None:
     Path(out_dir).mkdir(parents=True, exist_ok=True)
     inv = {"timestamp": datetime.now(timezone.utc).isoformat(), "nodes": node_dicts}
     _atomic_write(Path(out_dir) / "inventory.json", inv)
-    nic_ips = await host_nic_ips()
-    mapping = {"entries": correlate(node_dicts, host_nic_ips=nic_ips)}
-    _atomic_write(Path(out_dir) / "mapping.json", mapping)
 
     host_id = _ensure_host_id()
     listeners = await host_ss_listeners()
@@ -98,6 +94,9 @@ async def run_once(out_dir: str) -> None:
         {"labels": {"sd_job": "admin-api", "host_id": host_id}, "targets": ["admin-api:8000"]},
         {"labels": {"sd_job": "node-exporter", "host_id": host_id}, "targets": ["node-exporter:9100"]},
         {"labels": {"sd_job": "cadvisor", "host_id": host_id}, "targets": ["cadvisor:8080"]},
+        {"labels": {"sd_job": "alertmanager", "host_id": host_id}, "targets": ["alertmanager:9093"]},
+        {"labels": {"sd_job": "otel-collector", "host_id": host_id}, "targets": ["otel-collector:8888"]},
+        {"labels": {"sd_job": "tempo", "host_id": host_id}, "targets": ["tempo:3200"]},
     ]
     dynamic_targets: list[dict] = []
 
