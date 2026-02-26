@@ -191,6 +191,16 @@ async def _fetch_servers_list_uncached(
             agent_mode_no_heartbeat = True
             # Still return all servers so seeded/created servers show as offline until agent connects
 
+    # Docker discovery: only list servers whose name matches VPN container prefixes; one per name (best health).
+    docker_prefixes: list[str] = []
+    if settings.node_discovery == "docker":
+        raw = getattr(settings, "docker_vpn_container_prefixes", "amnezia-awg") or "amnezia-awg"
+        docker_prefixes = [p.strip() + "%" for p in raw.split(",") if p.strip()]
+        if docker_prefixes:
+            prefix_cond = or_(*(Server.name.like(p) for p in docker_prefixes))
+            stmt = stmt.where(prefix_cond)
+            count_stmt = count_stmt.where(prefix_cond)
+
     _sort_column = {
         "created_at_desc": Server.created_at.desc(),
         "created_at_asc": Server.created_at.asc(),
@@ -199,8 +209,6 @@ async def _fetch_servers_list_uncached(
         "region_asc": Server.region.asc(),
     }.get(sort, Server.created_at.desc())
 
-    total = (await db.execute(count_stmt)).scalar() or 0
-    # Single query: servers + last_seen via LEFT JOIN to aggregated health log (avoids 3rd query)
     last_seen_subq = (
         select(ServerHealthLog.server_id, func.max(ServerHealthLog.ts).label("last_ts"))
         .group_by(ServerHealthLog.server_id)
@@ -212,12 +220,55 @@ async def _fetch_servers_list_uncached(
     )
     if stmt.whereclause is not None:
         stmt_with_last = stmt_with_last.where(stmt.whereclause)
-    result = await db.execute(
-        stmt_with_last.order_by(_sort_column).limit(effective_limit).offset(effective_offset)
-    )
-    rows = result.all()
+
+    if docker_prefixes:
+        # Docker: fetch all matching, dedupe by name (keep best health), then paginate.
+        result = await db.execute(stmt_with_last.order_by(_sort_column))
+        all_rows = result.all()
+        by_name: dict[str, tuple[Server, datetime | None]] = {}
+        for row in all_rows:
+            s, last_ts = row[0], row[1]
+            name = s.name or s.id
+            existing = by_name.get(name)
+            s_active = getattr(s, "is_active", True)
+            s_health = getattr(s, "health_score") or 0.0
+            if existing is None:
+                by_name[name] = (s, last_ts)
+            else:
+                e_active = getattr(existing[0], "is_active", True)
+                e_health = getattr(existing[0], "health_score") or 0.0
+                if (s_active, s_health) >= (e_active, e_health):
+                    by_name[name] = (s, last_ts)
+        total = len(by_name)
+
+        def _row_sort_key(r: tuple) -> tuple:
+            s, _ = r
+            ts = (s.created_at or datetime.min.replace(tzinfo=timezone.utc)).timestamp()
+            if sort == "created_at_desc":
+                return (-ts,)
+            if sort == "created_at_asc":
+                return (ts,)
+            if sort == "name_asc":
+                return ((s.name or "").lower(),)
+            if sort == "name_desc":
+                return ((-(ord((s.name or " ")[0])), (s.name or "").lower()),)
+            if sort == "region_asc":
+                return ((s.region or "").lower(), (s.name or "").lower())
+            return (-ts,)
+
+        sorted_rows = sorted(
+            by_name.values(), key=_row_sort_key, reverse=(sort in ("created_at_desc", "name_desc"))
+        )
+        page_rows = sorted_rows[effective_offset : effective_offset + effective_limit]
+    else:
+        total = (await db.execute(count_stmt)).scalar() or 0
+        result = await db.execute(
+            stmt_with_last.order_by(_sort_column).limit(effective_limit).offset(effective_offset)
+        )
+        page_rows = result.all()
+
     items = []
-    for row in rows:
+    for row in page_rows:
         s, last_ts = row[0], row[1]
         d = {
             "id": s.id,

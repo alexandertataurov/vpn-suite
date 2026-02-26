@@ -11,6 +11,7 @@ from typing import Any
 
 from sqlalchemy import func, select
 
+from app.core.config import settings
 from app.core.constants import REDIS_KEY_AGENT_HB_PREFIX
 from app.core.database import async_session_factory
 from app.core.logging_config import extra_for_event
@@ -98,6 +99,39 @@ async def fetch_operator_dashboard(time_range: str = "1h") -> dict[str, Any]:
             ).where(Server.is_active.is_(True))
         )
         servers = list(result.all())
+
+    # Docker discovery mode: limit operator view to VPN containers and dedupe by name.
+    if getattr(settings, "node_discovery", "docker") == "docker":
+        raw = getattr(settings, "docker_vpn_container_prefixes", "amnezia-awg") or "amnezia-awg"
+        prefixes = [p.strip() for p in raw.split(",") if p.strip()]
+        if prefixes:
+            filtered: list[Any] = []
+            for s in servers:
+                name = (getattr(s, "name", "") or "").strip()
+                if not any(name.startswith(p) for p in prefixes):
+                    continue
+                filtered.append(s)
+            servers = filtered
+
+        by_name: dict[str, Any] = {}
+
+        def _status_score(row: Any) -> int:
+            status = (getattr(row, "status", "") or "").lower()
+            if status in ("healthy", "ok"):
+                return 3
+            if status == "degraded":
+                return 2
+            if status in ("offline", "unreachable", "down", "error"):
+                return 1
+            return 0
+
+        for s in servers:
+            name = (getattr(s, "name", "") or "").strip() or str(getattr(s, "id", ""))
+            existing = by_name.get(name)
+            if existing is None or _status_score(s) >= _status_score(existing):
+                by_name[name] = s
+
+        servers = list(by_name.values())
 
     server_ids = [str(s.id) for s in servers]
     server_by_id = {str(s.id): s for s in servers}
