@@ -35,6 +35,7 @@ __all__ = [
 WG_KEY_B64_MIN_LEN = 43
 WG_KEY_B64_MAX_LEN = 44
 # Jc/Jmin/Jmax/S1/S2 defaults; H1–H4 from profile/server or generate_h_params(); fallback for tests only
+# For restrictive networks (e.g. Russia): profile request_params mtu=1200, persistent_keepalive=15, optionally amnezia_jc=5, amnezia_jmin=20, amnezia_jmax=100
 DEFAULT_Jc = 3
 DEFAULT_Jmin = 10
 DEFAULT_Jmax = 50
@@ -204,7 +205,7 @@ def build_amnezia_client_config(
     endpoint: str | None,
     allowed_ips: str = "0.0.0.0/0, ::/0",
     dns: str | None = None,
-    persistent_keepalive: int = 25,
+    persistent_keepalive: int = 15,
     obfuscation: dict[str, int] | None = None,
     mtu: int | None = None,
     address: str | None = None,
@@ -217,7 +218,7 @@ def build_amnezia_client_config(
             interface=InterfaceFields(
                 private_key=client_private_key_b64,
                 address=address or derive_address_from_profile(None),
-                dns=dns or "1.1.1.1, 1.0.0.1",
+                dns=dns or "1.1.1.1, 1.0.0.1, 8.8.8.8, 8.8.4.4",
                 mtu=mtu,
             ),
             peer=PeerFields(
@@ -247,7 +248,7 @@ def build_standard_wg_client_config(
     endpoint: str | None,
     allowed_ips: str = "0.0.0.0/0, ::/0",
     dns: str | None = None,
-    persistent_keepalive: int = 25,
+    persistent_keepalive: int = 15,
     mtu: int | None = None,
     address: str | None = None,
     preshared_key: str | None = None,
@@ -258,7 +259,7 @@ def build_standard_wg_client_config(
             interface=InterfaceFields(
                 private_key=client_private_key_b64,
                 address=address or derive_address_from_profile(None),
-                dns=dns or "1.1.1.1, 1.0.0.1",
+                dns=dns or "1.1.1.1, 1.0.0.1, 8.8.8.8, 8.8.4.4",
                 mtu=mtu,
             ),
             peer=PeerFields(
