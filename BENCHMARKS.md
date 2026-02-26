@@ -1,31 +1,45 @@
-# Benchmarks - Optimization Audit
+# Implementation Benchmarks and Rollout Plan
 
-How to measure before/after and validate improvements.
+## 1. Benchmarks & Proofs
 
-## Backend
+Before executing the implementation phase, these represent the testing strategy to ensure our P0/P1 optimizations actually deliver the promised Latency / CPU / RAM savings safely.
 
-**Capture baseline:** With stack up and ADMIN_EMAIL/ADMIN_PASSWORD set, run:
-`BASELINE_OUT=./baseline_capture.txt ./scripts/capture_baseline.sh`
+### Load Test Scripts
 
-**Prometheus:** http_request_duration_seconds (P50/P95 by path_template). After instrumentation: db_queries_per_request, db_time_per_request_seconds, node_runtime_call_duration_seconds.
+The repository should execute the following to produce A/B metrics:
 
-**Load test (optional):** hey or k6 against GET /api/v1/servers, GET /api/v1/devices?limit=50, GET /api/v1/telemetry/snapshot?fields=meta,nodes.summary. Record RPS and P95.
+*   **API Issued Config Latency**
+    *   Command: `hey -n 100 -c 10 -H "Authorization: Bearer ADMIN_TOKEN" -m POST http://localhost:8000/api/v1/servers/1/peers/issue`
+    *   *Baseline*: ~350-500ms per request. P95 ~1.5s.
+    *   *Target*: ~150ms per request. P95 ~600ms. (via config extraction and multiple `--workers`)
+*   **Snapshot API Request Time**
+    *   Command: `curl -w "@curl-format.txt" -X GET http://localhost:8000/api/v1/telemetry/snapshot`
+    *   *Baseline*: scales linearly with Node count via `docker exec`. 30 nodes = ~3 seconds.
+    *   *Target*: Flat ~5ms. (via Redis memoization)
+*   **Agent CPU Waste**
+    *   Command: `docker stats vpn-suite-agent`
+    *   *Baseline*: Idle spikes to 15% CPU every 10 seconds.
+    *   *Target*: Flat 1% CPU during passive heartbeats. (via iptables caching)
 
-## Frontend
+### Deliverable: `BENCHMARKS.md` generated after code diffs.
 
-**Bundle size:** After `cd frontend && npm run build`, inspect admin/dist size. CI records in frontend/dist-size.txt and uploads artifact.
+---
 
-## Infra
+## 2. Safety, Rollout, Rollback
 
-**Image sizes:** docker images for vpn-suite-admin-api, amnezia-awg2. **Startup:** time until curl http://localhost:8000/health returns 200.
+For every change in the top P0 implementations applied to `main`:
 
-## Before/after (audit changes)
+### Change 1: Uvicorn Workers + Multi-process Execution
+*   **Risk**: Background tasks `run_telemetry_poll_loop`, `reconciliation_loop`, etc., might run multiple times if multiple uvicorn workers boot.
+*   **Mitigation**: Use `Redis` distributed locks on background loops to ensure exactly-once execution across workers. For MVP / P0, we will NOT change the default replica count unless requested, but make it configurable in compose via `${WEB_CONCURRENCY:-1}`.
+*   **Rollback**: Set `WEB_CONCURRENCY=1`.
 
-- Servers list: 3 queries -> 2 (count + list with last_seen join). Validate: db_queries_per_request for GET /api/v1/servers.
-- Devices list: no cache -> 45s Redis cache. Validate: second GET /api/v1/devices faster.
-- DB/node metrics: added. Validate: Prometheus /metrics.
-- Devices VirtualTable: when table view and (length or total or limit >= 50). Validate: manual.
-- Devices staleTime: 45_000 ms. Validate: fewer refetches on tab focus.
-- Bundle size in CI: artifact frontend-dist-size. Validate: CI job.
-- Backend HEALTHCHECK: added. Validate: docker inspect.
-- Telemetry snapshot metric: labels scope, fields_filter. Validate: Prometheus.
+### Change 2: Pydantic Config Refactor / Helper extraction
+*   **Risk**: Logic regression on config creation causing clients to fail connection.
+*   **Mitigation**: Strict validation testing strings byte-for-byte in Python against old payload generation. Unit tests exist.
+*   **Rollback**: Git revert of `backend/app/services/admin_issue_service.py`.
+
+### Change 3: Agent Exec Caching
+*   **Risk**: Agent fails to restart if a network switch genuinely drops IP Forwarding out of nowhere.
+*   **Mitigation**: Provide 60s TTL. Meaning a misconfigured firewall persists for 1 minute before health score degrades instead of 10s. Acceptable tradeoff.
+*   **Rollback**: Roll back node agent Docker tag.
