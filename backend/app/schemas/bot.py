@@ -41,6 +41,7 @@ class CreateInvoiceResponse(BaseModel):
     payload: str  # payment_id or opaque for Telegram
     server_id: str  # for subsequent issue call
     subscription_id: str
+    free_activation: bool = False  # True when plan price is 0; bot should skip invoice
 
 
 class BotRevokeDeviceRequest(BaseModel):

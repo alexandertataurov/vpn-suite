@@ -1,5 +1,7 @@
 """Tests for canonical config_builder: validation, normalization, profiles."""
 
+import configparser
+import io
 from pathlib import Path
 
 import pytest
@@ -323,3 +325,86 @@ def test_awg_keys_only_in_interface_section():
         obfuscation={"Jc": 4, "S1": 15, "S2": 20},
     )
     assert cfg.index("Jc = 4") < cfg.index("[Peer]")
+
+
+# Reference-like obfuscation (H1-H4 match amnezia-awg default when AWG_H* unset)
+_OBF_REFERENCE = {
+    "Jc": 3,
+    "Jmin": 10,
+    "Jmax": 50,
+    "S1": 213,
+    "S2": 237,
+    "H1": 1,
+    "H2": 2,
+    "H3": 3,
+    "H4": 4,
+}
+
+
+def test_awg_config_format_matches_reference_structure():
+    """AWG config has [Interface] then [Peer]; no comment lines; AmneziaWG keys in Interface."""
+    cfg = build_config(
+        interface=InterfaceFields(private_key=_GOLDEN_PRIV, address="10.8.1.17/32", dns="1.1.1.1"),
+        peer=PeerFields(
+            public_key=_GOLDEN_PUB,
+            endpoint="185.139.228.171:47604",
+            preshared_key="YAnz5TF+lXXJte14tji3zlMNwF4OBgO8EnZu4PpwTYU=",
+        ),
+        profile=ConfigProfile.awg_2_0_asc,
+        obfuscation=_OBF_REFERENCE,
+    )
+    lines = [ln.strip() for ln in cfg.splitlines() if ln.strip()]
+    sections = [ln for ln in lines if ln.startswith("[") and ln.endswith("]")]
+    assert sections == ["[Interface]", "[Peer]"]
+    assert not any(ln.startswith("#") or ln.startswith(";") for ln in lines)
+    interface_start = lines.index("[Interface]")
+    peer_start = lines.index("[Peer]")
+    interface_lines = lines[interface_start + 1 : peer_start]
+    peer_lines = lines[peer_start + 1 :]
+    interface_keys = {ln.split("=", 1)[0].strip() for ln in interface_lines if "=" in ln}
+    peer_keys = {ln.split("=", 1)[0].strip() for ln in peer_lines if "=" in ln}
+    for key in ("Jc", "Jmin", "Jmax", "S1", "S2", "H1", "H2", "H3", "H4"):
+        assert key in interface_keys, f"AmneziaWG key {key} must be in [Interface]"
+    for key in ("PublicKey", "Endpoint", "AllowedIPs", "PersistentKeepalive", "PresharedKey"):
+        assert key in peer_keys, f"Peer key {key} must be in [Peer]"
+
+
+def test_build_config_parses_as_ini_section_order():
+    """Built config parses as INI; sections are [Interface] then [Peer]; required keys present."""
+    cfg = build_config(
+        interface=InterfaceFields(private_key=_GOLDEN_PRIV, address="10.8.1.2/32", dns="1.1.1.1"),
+        peer=PeerFields(public_key=_GOLDEN_PUB, endpoint="vpn.example.com:47604"),
+        profile=ConfigProfile.awg_2_0_asc,
+        obfuscation=_OBF_REFERENCE,
+    )
+    parser = configparser.ConfigParser()
+    parser.read_file(io.StringIO(cfg))
+    assert list(parser.keys()) == ["DEFAULT", "Interface", "Peer"]
+    assert parser.has_section("Interface")
+    assert parser.has_section("Peer")
+    for key in ("PrivateKey", "Address", "DNS", "Jc", "Jmin", "Jmax", "S1", "S2", "H1", "H2", "H3", "H4"):
+        assert parser.has_option("Interface", key), f"Interface must have {key}"
+    for key in ("PublicKey", "Endpoint", "AllowedIPs", "PersistentKeepalive"):
+        assert parser.has_option("Peer", key), f"Peer must have {key}"
+
+
+# Contract: config output MUST NOT contain comments, timestamps, or year/date headers
+_NO_DATE_PATTERNS = ("2024", "2025", "2026", "Generated", "generated_at", "Created:")
+
+
+@pytest.mark.parametrize("profile,obfuscation", [
+    (ConfigProfile.universal_safe, None),
+    (ConfigProfile.awg_2_0_asc, _OBF_AWG),
+])
+def test_build_config_contains_no_year_or_date(profile, obfuscation):
+    kwargs = dict(
+        interface=InterfaceFields(private_key=_GOLDEN_PRIV, address="10.8.1.2/32", dns="1.1.1.1"),
+        peer=PeerFields(public_key=_GOLDEN_PUB, endpoint="vpn.example.com:47604"),
+        profile=profile,
+    )
+    if obfuscation is not None:
+        kwargs["obfuscation"] = obfuscation
+    cfg = build_config(**kwargs)
+    for pat in _NO_DATE_PATTERNS:
+        assert pat not in cfg, f"Config must not contain {pat!r}"
+    assert not any(line.strip().startswith("#") or line.strip().startswith(";") for line in cfg.splitlines())

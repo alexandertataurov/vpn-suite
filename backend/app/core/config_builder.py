@@ -11,6 +11,7 @@ Profiles:
 import base64
 import ipaddress
 import re
+import secrets
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any
@@ -62,7 +63,7 @@ DEFAULT_ADDRESS = "10.8.1.2/32"
 DEFAULT_MTU_MOBILE = 1280
 DEFAULT_MTU_DESKTOP = 1420
 DEFAULT_PERSISTENT_KEEPALIVE = 25
-DEFAULT_DNS = "1.1.1.1"
+DEFAULT_DNS = "1.1.1.1, 1.0.0.1"
 
 
 class ConfigProfile(str, Enum):
@@ -328,6 +329,12 @@ def _normalize_obfuscation_awg2(obf: dict[str, Any], mtu: int | None) -> dict[st
     return out
 
 
+def generate_preshared_key() -> str:
+    """Generate a WireGuard-compatible preshared key (32 bytes random, base64)."""
+    raw = secrets.token_bytes(32)
+    return base64.b64encode(raw).decode("ascii").strip()
+
+
 def generate_wg_keypair() -> tuple[str, str]:
     """Generate real WireGuard keypair (X25519). Returns (private_key_b64, public_key_b64)."""
     private_key = X25519PrivateKey.generate()
@@ -353,7 +360,10 @@ def build_config(
     profile: ConfigProfile = ConfigProfile.universal_safe,
     obfuscation: dict[str, Any] | None = None,
 ) -> str:
-    """Build normalized .conf. Raises ValueError on validation failure."""
+    """Build normalized .conf. Raises ValueError on validation failure.
+
+    Output MUST NOT contain comments, timestamps, or year/date headers.
+    """
     errors: list[str] = []
     priv = ""
     addr = ""

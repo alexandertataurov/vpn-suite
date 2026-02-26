@@ -17,6 +17,16 @@ def _is_private_ip(ip: str) -> bool:
         return True
 
 
+def is_endpoint_private(endpoint: str | None) -> bool:
+    """Return True if endpoint is host:port with a private IP (remote clients will fail)."""
+    if not endpoint or not isinstance(endpoint, str):
+        return False
+    host = endpoint.strip().split(":")[0]
+    if not host:
+        return False
+    return _is_private_ip(host)
+
+
 async def get_endpoint_from_runtime(
     adapter: NodeRuntimeAdapter,
     server_id: str,

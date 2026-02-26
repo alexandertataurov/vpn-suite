@@ -68,6 +68,7 @@ async def test_add_peer_uses_discovered_interface(monkeypatch):
         status="healthy",
     )
     captured = {}
+    list_peers_calls = []
 
     async def fake_run_command(cmd, *, timeout=30.0, stdin=None):
         captured["cmd"] = cmd
@@ -76,12 +77,31 @@ async def test_add_peer_uses_discovered_interface(monkeypatch):
     async def fake_discover_nodes():
         return [node]
 
+    async def fake_list_peers(nid):
+        list_peers_calls.append(nid)
+        if len(list_peers_calls) == 1:
+            return []
+        return [
+            {
+                "public_key": "TLeYYW7ud/7EPHoMlyYGFcxAHgiTHafCMHq02f6LbCQ=",
+                "allowed_ips": "10.8.1.2/32",
+                "last_handshake": 0,
+                "transfer_rx": 0,
+                "transfer_tx": 0,
+            }
+        ]
+
+    async def noop_ensure_route(*_args, **_kwargs):
+        pass
+
     monkeypatch.setattr("app.services.node_runtime_docker._run_command", fake_run_command)
+    monkeypatch.setattr("app.services.node_runtime_docker._ensure_client_subnet_routes", noop_ensure_route)
     adapter = DockerNodeRuntimeAdapter(container_filter="amnezia-awg", interface="awg0")
     monkeypatch.setattr(adapter, "discover_nodes", fake_discover_nodes)
+    monkeypatch.setattr(adapter, "list_peers", fake_list_peers)
     peer_cfg = SimpleNamespace(
         public_key="TLeYYW7ud/7EPHoMlyYGFcxAHgiTHafCMHq02f6LbCQ=",
-        allowed_ips="0.0.0.0/0, ::/0",
+        allowed_ips="10.8.1.2/32",
         persistent_keepalive=25,
         preshared_key=None,
     )
@@ -97,6 +117,47 @@ async def test_add_peer_uses_discovered_interface(monkeypatch):
         "wg0",
         "peer",
     ]
+    assert len(list_peers_calls) == 2
+
+
+@pytest.mark.asyncio
+async def test_add_peer_conflict_allowed_ips_raises(monkeypatch):
+    """If another peer already has the same allowed_ips /32, add_peer raises."""
+    from app.core.exceptions import WireGuardCommandError
+
+    node = NodeMetadata(
+        node_id="n1",
+        container_name="amnezia-awg",
+        interface_name="awg0",
+        status="healthy",
+    )
+
+    async def fake_list_peers(_nid):
+        return [
+            {
+                "public_key": "other_peer_public_key_xxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+                "allowed_ips": "10.8.1.2/32",
+                "last_handshake": 0,
+                "transfer_rx": 0,
+                "transfer_tx": 0,
+            }
+        ]
+
+    async def fake_discover_nodes():
+        return [node]
+
+    adapter = DockerNodeRuntimeAdapter(container_filter="amnezia-awg", interface="awg0")
+    monkeypatch.setattr(adapter, "discover_nodes", fake_discover_nodes)
+    monkeypatch.setattr(adapter, "list_peers", fake_list_peers)
+    peer_cfg = SimpleNamespace(
+        public_key="TLeYYW7ud/7EPHoMlyYGFcxAHgiTHafCMHq02f6LbCQ=",
+        allowed_ips="10.8.1.2/32",
+        persistent_keepalive=25,
+        preshared_key=None,
+    )
+
+    with pytest.raises(WireGuardCommandError, match="allowed_ips conflict"):
+        await adapter.add_peer("n1", peer_cfg)
 
 
 def test_parse_wg_show_obfuscation_h1_h4_range_string():

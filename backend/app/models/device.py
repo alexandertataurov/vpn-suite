@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import BigInteger, DateTime, ForeignKey, String
+from sqlalchemy import BigInteger, DateTime, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin, uuid4_hex
@@ -29,6 +29,7 @@ class Device(Base, TimestampMixin):
         String(64), nullable=True
     )  # client tunnel address e.g. 10.8.1.2/32
     config_amnezia_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    preshared_key: Mapped[str | None] = mapped_column(Text(), nullable=True)
     issued_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     issued_by_admin_id: Mapped[str | None] = mapped_column(

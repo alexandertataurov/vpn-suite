@@ -5,7 +5,7 @@ from ipaddress import ip_address, ip_network
 from typing import Literal
 from urllib.parse import urlparse
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 from app.schemas.base import OrmSchema
 
@@ -74,6 +74,11 @@ class ServerCreate(BaseModel):
     api_endpoint: str
     vpn_endpoint: str | None = None  # VPN host:port e.g. vpn.example.com:47604
     public_key: str | None = None
+    preshared_key: str | None = None
+    amnezia_h1: int | None = None
+    amnezia_h2: int | None = None
+    amnezia_h3: int | None = None
+    amnezia_h4: int | None = None
 
     @field_validator("id")
     @classmethod
@@ -117,6 +122,11 @@ class ServerUpdate(BaseModel):
     api_endpoint: str | None = None
     vpn_endpoint: str | None = None
     public_key: str | None = None
+    preshared_key: str | None = None
+    amnezia_h1: int | None = None
+    amnezia_h2: int | None = None
+    amnezia_h3: int | None = None
+    amnezia_h4: int | None = None
     ops_notes: str | None = None
 
     @field_validator("api_endpoint")
@@ -152,6 +162,11 @@ class ServerOut(OrmSchema):
     api_endpoint: str
     vpn_endpoint: str | None
     public_key: str | None
+    preshared_key: str | None = None
+    amnezia_h1: int | None = None
+    amnezia_h2: int | None = None
+    amnezia_h3: int | None = None
+    amnezia_h4: int | None = None
     status: ServerStatusEnum
     is_active: bool
     health_score: float | None = None
@@ -236,12 +251,14 @@ class PeerOut(BaseModel):
 
     public_key: str
     peer_id: str | None = None  # Device.id when known (enables rotate/revoke)
+    device_name: str | None = None  # Device.device_name when mapped
     allowed_ips: str | None = None
     last_handshake_ts: datetime | None = None
     rx_bytes: int | None = None
     tx_bytes: int | None = None
     traffic_bytes: int | None = None
     status: str = "unknown"  # online, offline, unknown
+    issues: list[str] = Field(default_factory=list)  # no_handshake, no_traffic, wrong_allowed_ips
 
 
 class ServerPeersOut(BaseModel):

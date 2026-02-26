@@ -1,6 +1,6 @@
 """Bot-facing API: create-or-get subscription, create-invoice (Stars stub), revoke own device, funnel events."""
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
 from sqlalchemy import select
@@ -216,11 +216,12 @@ async def create_invoice(
     external_id = (
         f"bot:{provider}:{user.id}:{sub.id}:{idempotency_key or request.state.request_id or 'none'}"
     )
+    is_free = plan.price_amount is not None and int(plan.price_amount) <= 0
     payment = Payment(
         user_id=user.id,
         subscription_id=sub.id,
         provider=provider,
-        status="pending",
+        status="completed" if is_free else "pending",
         amount=plan.price_amount,
         currency=plan.price_currency,
         external_id=external_id,
@@ -229,8 +230,14 @@ async def create_invoice(
     db.add(payment)
     try:
         await db.flush()
+        if is_free and sub.status != "active":
+            now = datetime.now(timezone.utc)
+            sub.status = "active"
+            sub.valid_from = now
+            sub.valid_until = now + timedelta(days=plan.duration_days)
         await db.commit()
         await db.refresh(payment)
+        await db.refresh(sub)
     except IntegrityError:
         # Idempotency-Key replay / duplicate external_id: return the existing pending payment.
         await db.rollback()
@@ -246,7 +253,10 @@ async def create_invoice(
         if not existing:
             raise
         payment = existing
-    star_count = max(1, int(plan.price_amount))
+        sub = existing.subscription
+        plan = sub.plan
+        is_free = existing.status == "completed" and int(existing.amount or 0) <= 0
+    star_count = 0 if is_free else max(1, int(plan.price_amount))
     return CreateInvoiceResponse(
         invoice_id=payment.id,
         payment_id=payment.id,
@@ -257,6 +267,7 @@ async def create_invoice(
         payload=payment.id,
         server_id=server.id,
         subscription_id=sub.id,
+        free_activation=is_free,
     )
 
 
@@ -287,16 +298,19 @@ async def get_payment_invoice(
     server_result = await db.execute(select(Server).where(Server.is_active.is_(True)).limit(1))
     server = server_result.scalar_one_or_none()
     server_id = server.id if server else ""
+    amount_int = int(payment.amount or 0)
+    free_activation = amount_int <= 0
     return CreateInvoiceResponse(
         invoice_id=payment.id,
         payment_id=payment.id,
         title=plan.name or "VPN",
         description=f"VPN plan, {plan.duration_days} days",
         currency="XTR",
-        star_count=max(1, int(payment.amount)),
+        star_count=0 if free_activation else max(1, amount_int),
         payload=payment.id,
         server_id=server_id,
         subscription_id=payment.subscription_id,
+        free_activation=free_activation,
     )
 
 

@@ -1,9 +1,11 @@
 """Server actions: POST /servers/{server_id}/actions (create queued action)."""
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.amnezia_config import generate_h_params
 from app.core.constants import PERM_SERVERS_READ, PERM_SERVERS_WRITE
 from app.core.database import get_db
 from app.core.error_responses import not_found_404
@@ -22,7 +24,60 @@ from app.schemas.action import (
 from app.services.agent_action_service import create_action, list_actions
 from app.services.audit_service import log_audit
 
+
+class RotateObfuscationHOut(BaseModel):
+    """New H1–H4 stored on server; node-agent will apply via action apply_obfuscation_h."""
+
+    h1: int
+    h2: int
+    h3: int
+    h4: int
+    action_id: str
+
 servers_actions_router = APIRouter()
+
+
+@servers_actions_router.post(
+    "/{server_id}/rotate-obfuscation-h",
+    response_model=RotateObfuscationHOut,
+    status_code=status.HTTP_200_OK,
+)
+async def rotate_server_obfuscation_h(
+    request: Request,
+    server_id: str,
+    db: AsyncSession = Depends(get_db),
+    admin=Depends(require_permission(PERM_SERVERS_WRITE)),
+):
+    """Generate new H1–H4, save to server, and enqueue apply_obfuscation_h for node-agent to sync to AmneziaWG container."""
+    result = await db.execute(select(Server).where(Server.id == server_id))
+    server = result.scalar_one_or_none()
+    if not server:
+        raise not_found_404("Server", server_id)
+    admin_id = str(admin.id) if hasattr(admin, "id") else ""
+    await rate_limit_server_actions(request, server_id, admin_id)
+    rid = getattr(request.state, "request_id", None) or request_id_ctx.get()
+    H1, H2, H3, H4 = generate_h_params()
+    server.amnezia_h1, server.amnezia_h2, server.amnezia_h3, server.amnezia_h4 = H1, H2, H3, H4
+    await db.flush()
+    action = await create_action(
+        db,
+        server_id=server_id,
+        type="apply_obfuscation_h",
+        payload={"h1": H1, "h2": H2, "h3": H3, "h4": H4},
+        requested_by=admin_id,
+        correlation_id=rid,
+    )
+    await log_audit(
+        db,
+        admin_id=admin_id,
+        action="server.rotate_obfuscation_h",
+        resource_type="server",
+        resource_id=server_id,
+        old_new={"h1": H1, "h2": H2, "h3": H3, "h4": H4, "action_id": action.id},
+        request_id=rid,
+    )
+    await db.commit()
+    return RotateObfuscationHOut(h1=H1, h2=H2, h3=H3, h4=H4, action_id=action.id)
 
 
 @servers_actions_router.post(

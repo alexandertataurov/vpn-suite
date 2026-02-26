@@ -6,9 +6,22 @@ import pytest
 
 from app.core.amnezia_config import (
     build_amnezia_client_config,
+    build_wg_obfuscated_config,
+    generate_h_params,
     generate_wg_keypair,
     get_obfuscation_params,
 )
+
+
+def test_generate_h_params_csprng():
+    """H1–H4 are distinct, non-zero, in uint32 range (CSPRNG)."""
+    H1, H2, H3, H4 = generate_h_params()
+    for h in (H1, H2, H3, H4):
+        assert isinstance(h, int) and 1 <= h <= 0xFFFFFFFF
+    assert len({H1, H2, H3, H4}) == 4
+    # Second call gives different values (with overwhelming probability)
+    H1b, H2b, H3b, H4b = generate_h_params()
+    assert (H1, H2, H3, H4) != (H1b, H2b, H3b, H4b)
 
 
 def test_generate_wg_keypair_returns_base64_32_bytes():
@@ -24,17 +37,10 @@ def test_generate_wg_keypair_returns_base64_32_bytes():
 
 
 def test_get_obfuscation_params_defaults():
-    assert get_obfuscation_params(None) == {
-        "Jc": 4,
-        "Jmin": 64,
-        "Jmax": 1024,
-        "S1": 15,
-        "S2": 20,
-        "H1": 0,
-        "H2": 0,
-        "H3": 0,
-        "H4": 0,
-    }
+    params = get_obfuscation_params(None)
+    assert params["Jc"] == 3 and params["Jmin"] == 10 and params["Jmax"] == 50
+    assert params["S1"] == 213 and params["S2"] == 237
+    assert params["H1"], params["H2"], params["H3"], params["H4"] == (1, 2, 3, 4)
 
 
 def test_get_obfuscation_params_rejects_s1_plus_56_equals_s2():
@@ -58,7 +64,7 @@ def test_get_obfuscation_params_from_profile():
     assert params["Jc"] == 8
     assert params["S1"] == 32
     assert params["H1"] == 100
-    assert params["Jmin"] == 64  # default
+    assert params["Jmin"] == 10  # default
 
 
 def test_build_amnezia_client_config_has_interface_and_peer():
@@ -169,4 +175,34 @@ def test_build_config_requires_endpoint():
             server_public_key=sk,
             client_private_key_b64=ck,
             endpoint="",
+        )
+
+
+# Contract: config output MUST NOT contain comments, timestamps, or year/date headers
+_NO_DATE_PATTERNS = ("2024", "2025", "2026", "Generated", "generated_at", "Created:")
+
+
+def test_amnezia_config_contains_no_year_or_date():
+    server_pub = "xTIBA5rboUvnH4htodjb6e697QjLERt1NAB4mZqp8Dg="
+    client_priv = "yAnz5TF+lXXJte14tji3zlMNq+hd2rYUIgJBgB3fBmk="
+    endpoint = "vpn.example.com:47604"
+    obf = get_obfuscation_params(None)
+    config_awg = build_amnezia_client_config(
+        server_public_key=server_pub,
+        client_private_key_b64=client_priv,
+        endpoint=endpoint,
+        obfuscation=obf,
+    )
+    config_wg_obf = build_wg_obfuscated_config(
+        server_public_key=server_pub,
+        client_private_key_b64=client_priv,
+        endpoint=endpoint,
+        obfuscation=obf,
+    )
+    for cfg in (config_awg, config_wg_obf):
+        for pat in _NO_DATE_PATTERNS:
+            assert pat not in cfg, f"Config must not contain {pat!r}"
+        assert not any(
+            line.strip().startswith("#") or line.strip().startswith(";")
+            for line in cfg.splitlines()
         )

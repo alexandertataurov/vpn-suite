@@ -13,17 +13,29 @@ from app.services.reconciliation_engine import (
 
 @pytest.mark.asyncio
 async def test_compute_diff_add_and_remove():
-    """DB has A,B; WG has B,C -> to_add A, to_remove C."""
-    db_peers = [("pkA", "0.0.0.0/0"), ("pkB", "0.0.0.0/0")]
+    """DB has A,B with valid /32; WG has B,C -> to_add A, to_remove C."""
+    db_peers = [("pkA", "10.8.1.2/32"), ("pkB", "10.8.1.3/32")]
     wg_peers = [
-        {"public_key": "pkB", "allowed_ips": "0.0.0.0/0"},
-        {"public_key": "pkC", "allowed_ips": "10.0.0.0/8"},
+        {"public_key": "pkB", "allowed_ips": "10.8.1.3/32"},
+        {"public_key": "pkC", "allowed_ips": "10.8.1.4/32"},
     ]
     diff = await compute_diff("node1", db_peers, wg_peers)
     assert len(diff.peers_to_add) == 1
     assert diff.peers_to_add[0].public_key == "pkA"
+    assert diff.peers_to_add[0].allowed_ips == "10.8.1.2/32"
     assert len(diff.peers_to_remove) == 1
     assert diff.peers_to_remove[0] == "pkC"
+
+
+@pytest.mark.asyncio
+async def test_compute_diff_skips_invalid_allowed_ips():
+    """Peers with no or 0.0.0.0/0 allowed_ips are skipped for add/update."""
+    db_peers = [("pkA", ""), ("pkB", "0.0.0.0/0, ::/0"), ("pkC", "10.8.1.5/32")]
+    wg_peers = []
+    diff = await compute_diff("node1", db_peers, wg_peers)
+    assert len(diff.peers_to_add) == 1
+    assert diff.peers_to_add[0].public_key == "pkC"
+    assert diff.peers_to_add[0].allowed_ips == "10.8.1.5/32"
 
 
 @pytest.mark.asyncio
@@ -33,7 +45,7 @@ async def test_apply_diff_calls_adapter():
 
     adapter = AsyncMock()
     diff = ReconciliationDiff(
-        peers_to_add=[PeerConfigLike(public_key="pk1", allowed_ips="0.0.0.0/0")],
+        peers_to_add=[PeerConfigLike(public_key="pk1", allowed_ips="10.8.1.2/32")],
         peers_to_remove=["pk2"],
         peers_to_update=[],
     )

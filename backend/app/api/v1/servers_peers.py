@@ -36,6 +36,7 @@ from app.schemas.server import (
     ResetPeerRequest,
     ServerPeersOut,
 )
+from app.api.v1.device_cache import invalidate_devices_summary_cache
 from app.services.admin_issue_service import admin_issue_peer, admin_rotate_peer
 from app.services.server_health_service import sync_peers_after_restart
 
@@ -161,6 +162,7 @@ async def create_server_peer(
         admin_issue_latency_seconds.labels(status="failure").observe(time.perf_counter() - t0)
         raise_http_for_control_plane_exception(e)
     await db.commit()
+    await invalidate_devices_summary_cache()
     request.state.audit_resource_id = out.device.id
     logger.info(
         "provision peer issued",
@@ -332,15 +334,32 @@ async def get_server_peers(
     server = result.scalar_one_or_none()
     if not server:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Server not found")
+    def _peer_issues(
+        allowed_ips: str | None,
+        last_handshake_ts: datetime | None,
+        rx: int,
+        tx: int,
+        now_ts: int,
+    ) -> list[str]:
+        issues = []
+        if not last_handshake_ts or (now_ts - int(last_handshake_ts.timestamp())) > 180:
+            issues.append("no_handshake")
+        if (rx or 0) + (tx or 0) == 0:
+            issues.append("no_traffic")
+        a = (allowed_ips or "").strip().lower()
+        if not a or a in ("(none)", "none", "0.0.0.0/0, ::/0"):
+            issues.append("wrong_allowed_ips")
+        return issues
+
     if settings.node_discovery == "agent":
         hb = await get_agent_heartbeat(server_id)
         now_ts = int(datetime.now(timezone.utc).timestamp())
         dev_result = await db.execute(
-            select(Device.id, Device.public_key).where(
+            select(Device.id, Device.public_key, Device.device_name).where(
                 Device.server_id == server_id, Device.revoked_at.is_(None)
             )
         )
-        pk_to_id = {row[1]: row[0] for row in dev_result.all()}
+        pk_to_dev = {row[1]: (row[0], (row[2] or "").strip() or None) for row in dev_result.all()}
         peers = []
         hb_peers = hb.get("peers") if isinstance(hb, dict) else None
         if isinstance(hb_peers, list):
@@ -351,21 +370,31 @@ async def get_server_peers(
                 age_sec = p.get("last_handshake_age_sec")
                 last_handshake_ts = None
                 peer_status = "unknown"
-                if isinstance(age_sec, int | float) and age_sec >= 0:
+                if isinstance(age_sec, (int, float)) and age_sec >= 0:
                     last_handshake_ts = datetime.fromtimestamp(
                         now_ts - int(age_sec), tz=timezone.utc
                     )
                     peer_status = "online" if int(age_sec) <= 180 else "offline"
-                peer_id = pk_to_id.get(pk)
+                rx = int(p.get("rx_bytes") or 0)
+                tx = int(p.get("tx_bytes") or 0)
+                allowed_ips_str = str(p.get("allowed_ips") or "")
+                dev = pk_to_dev.get(pk)
+                peer_id = dev[0] if dev else None
+                device_name = dev[1] if dev else None
+                issues = _peer_issues(
+                    allowed_ips_str, last_handshake_ts, rx, tx, now_ts
+                )
                 peers.append(
                     PeerOut(
                         public_key=pk,
                         peer_id=peer_id,
-                        allowed_ips=str(p.get("allowed_ips") or ""),
+                        device_name=device_name,
+                        allowed_ips=allowed_ips_str,
                         last_handshake_ts=last_handshake_ts,
-                        rx_bytes=int(p.get("rx_bytes") or 0),
-                        tx_bytes=int(p.get("tx_bytes") or 0),
+                        rx_bytes=rx,
+                        tx_bytes=tx,
                         status=peer_status,
+                        issues=issues,
                     )
                 )
         return ServerPeersOut(
@@ -378,11 +407,11 @@ async def get_server_peers(
         raw = await adapter.list_peers(server.id)
         now_ts = int(datetime.now(timezone.utc).timestamp())
         dev_result = await db.execute(
-            select(Device.id, Device.public_key).where(
+            select(Device.id, Device.public_key, Device.device_name).where(
                 Device.server_id == server_id, Device.revoked_at.is_(None)
             )
         )
-        pk_to_id = {row[1]: row[0] for row in dev_result.all()}
+        pk_to_dev = {row[1]: (row[0], (row[2] or "").strip() or None) for row in dev_result.all()}
         peers = []
         for p in raw:
             pk = str(p.get("public_key") or "")
@@ -392,16 +421,26 @@ async def get_server_peers(
             if last > 0:
                 last_handshake_ts = datetime.fromtimestamp(last, tz=timezone.utc)
                 peer_status = "online" if (now_ts - last) <= 180 else "offline"
-            peer_id = pk_to_id.get(pk)
+            rx = int(p.get("transfer_rx") or 0)
+            tx = int(p.get("transfer_tx") or 0)
+            allowed_ips_str = str(p.get("allowed_ips") or "")
+            dev = pk_to_dev.get(pk)
+            peer_id = dev[0] if dev else None
+            device_name = dev[1] if dev else None
+            issues = _peer_issues(
+                allowed_ips_str, last_handshake_ts, rx, tx, now_ts
+            )
             peers.append(
                 PeerOut(
                     public_key=pk,
                     peer_id=peer_id,
-                    allowed_ips=str(p.get("allowed_ips") or ""),
+                    device_name=device_name,
+                    allowed_ips=allowed_ips_str,
                     last_handshake_ts=last_handshake_ts,
-                    rx_bytes=int(p.get("transfer_rx") or 0),
-                    tx_bytes=int(p.get("transfer_tx") or 0),
+                    rx_bytes=rx,
+                    tx_bytes=tx,
                     status=peer_status,
+                    issues=issues,
                 )
             )
         return ServerPeersOut(peers=peers, total=len(peers), node_reachable=True)

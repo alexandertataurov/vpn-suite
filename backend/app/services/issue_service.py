@@ -21,14 +21,16 @@ from app.core.amnezia_config import (
     get_obfuscation_params,
 )
 from app.core.config import settings
-from app.core.config_builder import ConfigValidationError
+from app.core.config_builder import ConfigValidationError, generate_preshared_key
 from app.core.exceptions import WireGuardCommandError
 from app.core.redaction import redact_for_log
 from app.models import Device, ProfileIssue, Server, ServerProfile, Subscription, User
 from app.services.address_allocator import allocate_address_for_device
+from app.services.admin_issue_service import _ensure_device_peer_on_node
 from app.services.load_balancer import select_node as load_balancer_select_node
-from app.services.node_endpoint_utils import get_endpoint_from_runtime
+from app.services.node_endpoint_utils import get_endpoint_from_runtime, is_endpoint_private
 from app.services.node_runtime import NodeRuntimeAdapter, PeerConfigLike
+from app.services.server_obfuscation import request_params_with_server_h
 
 
 class IssueResult(NamedTuple):
@@ -132,10 +134,12 @@ async def issue_device(
             )
             if derived:
                 endpoint = derived
-                server.vpn_endpoint = derived
+                if not is_endpoint_private(derived):
+                    server.vpn_endpoint = derived
         except Exception:
             pass
-    obfuscation = get_obfuscation_params(request_params)
+    params_with_h = await request_params_with_server_h(session, server, request_params)
+    obfuscation = get_obfuscation_params(params_with_h)
     if runtime_adapter and hasattr(runtime_adapter, "get_obfuscation_from_node"):
         try:
             runtime_obf = await runtime_adapter.get_obfuscation_from_node(resolved_server_id)
@@ -162,6 +166,33 @@ async def issue_device(
                 pass
     if mtu is not None and mtu <= 0:
         mtu = None
+    preshared_key = None
+    if request_params:
+        preshared_key = request_params.get("preshared_key") or request_params.get(
+            "amnezia_preshared_key"
+        )
+    if not preshared_key and getattr(server, "preshared_key", None):
+        preshared_key = server.preshared_key
+    if preshared_key is not None and not isinstance(preshared_key, str):
+        preshared_key = None
+    elif preshared_key:
+        preshared_key = (preshared_key or "").strip() or None
+    if not preshared_key:
+        preshared_key = generate_preshared_key()
+    if endpoint and is_endpoint_private(endpoint):
+        default_host = (settings.vpn_default_host or "").strip()
+        if default_host:
+            port = endpoint.split(":")[-1].strip() if ":" in endpoint else "45790"
+            endpoint = f"{default_host}:{port}"
+            _config_log.info(
+                "Replaced private endpoint with VPN_DEFAULT_HOST for issued config",
+                extra={"event": "config.endpoint_override", "server_id": resolved_server_id, "endpoint": endpoint},
+            )
+        else:
+            _config_log.warning(
+                "Issuing config with private endpoint; set server.vpn_endpoint or VPN_DEFAULT_HOST to public IP:port.",
+                extra={"event": "config.private_endpoint", "server_id": resolved_server_id},
+            )
     address, allowed_ips_val = await allocate_address_for_device(
         session, resolved_server_id, request_params
     )
@@ -175,6 +206,7 @@ async def issue_device(
         public_key=public_key_b64,
         allowed_ips=allowed_ips_val,
         config_amnezia_hash=config_hash,
+        preshared_key=preshared_key,
         issued_at=now,
         revoked_at=None,
     )
@@ -183,7 +215,7 @@ async def issue_device(
     session.add(ProfileIssue(device_id=device.id, config_version="1"))
     await session.flush()
     peer_created = False
-    if settings.node_mode == "real":
+    if settings.node_mode == "real" and settings.node_discovery != "agent":
         if runtime_adapter is None:
             raise WireGuardCommandError(
                 "Runtime adapter is required for NODE_MODE=real",
@@ -197,7 +229,24 @@ async def issue_device(
                     public_key=public_key_b64,
                     allowed_ips=allowed_ips_val,
                     persistent_keepalive=25,
+                    preshared_key=preshared_key,
                 ),
+            )
+            peers_after = await runtime_adapter.list_peers(resolved_server_id)
+            if not any(
+                (p.get("public_key") or "").strip() == public_key_b64 for p in peers_after or []
+            ):
+                raise WireGuardCommandError(
+                    "Node peer creation verification failed (peer missing after add)",
+                    command="wg show",
+                    output=public_key_b64[:64],
+                )
+            await _ensure_device_peer_on_node(
+                runtime_adapter,
+                resolved_server_id,
+                public_key=public_key_b64,
+                allowed_ips=allowed_ips_val,
+                preshared_key=preshared_key,
             )
         except Exception as exc:
             session.delete(device)  # type: ignore[unused-coroutine]
@@ -220,6 +269,7 @@ async def issue_device(
             obfuscation=obfuscation,
             mtu=mtu,
             address=address,
+            preshared_key=preshared_key,
         )
         _config_log.info(
             "config generated",
@@ -254,6 +304,7 @@ async def issue_device(
             obfuscation=obfuscation,
             mtu=mtu,
             address=address,
+            preshared_key=preshared_key,
         )
         _config_log.info(
             "config generated",
@@ -282,6 +333,7 @@ async def issue_device(
     try:
         config_wg = build_standard_wg_client_config(
             server_public_key=server.public_key,
+            preshared_key=preshared_key,
             client_private_key_b64=private_key_b64,
             endpoint=endpoint,
             dns=dns,

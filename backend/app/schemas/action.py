@@ -13,6 +13,7 @@ ALLOWED_ACTION_TYPES = frozenset(
         "restart_service",
         "rotate_keys",
         "apply_profile",
+        "apply_obfuscation_h",
         "validate_profile",
         "firewall_ports_check",
     }
@@ -22,7 +23,7 @@ ALLOWED_ACTION_TYPES = frozenset(
 class ActionCreate(BaseModel):
     type: str = Field(
         ...,
-        description="sync | apply_peers | drain | undrain | restart_service | rotate_keys | apply_profile | validate_profile | firewall_ports_check",
+        description="sync | apply_peers | drain | undrain | restart_service | rotate_keys | apply_profile | apply_obfuscation_h | validate_profile | firewall_ports_check",
     )
     payload: dict | None = None
 

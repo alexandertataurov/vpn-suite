@@ -6,7 +6,7 @@ import secrets
 from datetime import datetime, timedelta, timezone
 from typing import NamedTuple
 
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.amnezia_config import (
@@ -17,7 +17,7 @@ from app.core.amnezia_config import (
     get_obfuscation_params,
 )
 from app.core.config import settings
-from app.core.config_builder import ConfigValidationError
+from app.core.config_builder import ConfigValidationError, generate_preshared_key
 from app.core.exceptions import WireGuardCommandError
 from app.core.redaction import redact_for_log
 from app.core.security import encrypt_config
@@ -32,8 +32,9 @@ from app.models import (
     User,
 )
 from app.services.address_allocator import allocate_address_for_device
-from app.services.node_endpoint_utils import get_endpoint_from_runtime
+from app.services.node_endpoint_utils import get_endpoint_from_runtime, is_endpoint_private
 from app.services.node_runtime import NodeRuntimeAdapter, PeerConfigLike
+from app.services.server_obfuscation import request_params_with_server_h
 
 # tg_id for system operator (standalone peers)
 SYSTEM_TG_ID = 0
@@ -57,6 +58,33 @@ class AdminIssueResult(NamedTuple):
 
 
 _config_log = logging.getLogger("app.config")
+
+
+async def _ensure_device_peer_on_node(
+    adapter: NodeRuntimeAdapter,
+    server_id: str,
+    *,
+    public_key: str,
+    allowed_ips: str,
+    preshared_key: str | None = None,
+) -> None:
+    """Ensure device peer is on the node (list_peers; if missing, add_peer). Then ensure reply routes."""
+    peers = await adapter.list_peers(server_id)
+    if any((p.get("public_key") or "").strip() == public_key.strip() for p in (peers or [])):
+        if hasattr(adapter, "ensure_reply_routes") and callable(adapter.ensure_reply_routes):
+            await adapter.ensure_reply_routes(server_id)
+        return
+    await adapter.add_peer(
+        server_id,
+        PeerConfigLike(
+            public_key=public_key.strip(),
+            allowed_ips=allowed_ips.strip(),
+            persistent_keepalive=25,
+            preshared_key=preshared_key,
+        ),
+    )
+    if hasattr(adapter, "ensure_reply_routes") and callable(adapter.ensure_reply_routes):
+        await adapter.ensure_reply_routes(server_id)
 
 
 def _config_hash(public_key: str, private_key: str) -> str:
@@ -113,6 +141,12 @@ async def admin_issue_peer(
         raise ValueError("server_draining")
     if not server.public_key:
         raise ValueError("server_public_key_required")
+    if settings.node_mode == "real" and settings.node_discovery != "agent" and not runtime_adapter:
+        raise WireGuardCommandError(
+            "Runtime adapter required for issue when NODE_MODE=real; peer would not be applied on node.",
+            command="issue",
+            output="node_runtime_adapter is None",
+        )
 
     if user_id is not None and subscription_id is not None:
         sub_result = await session.execute(
@@ -171,7 +205,8 @@ async def admin_issue_peer(
             )
             if derived:
                 endpoint = derived
-                server.vpn_endpoint = derived
+                if not is_endpoint_private(derived):
+                    server.vpn_endpoint = derived
         except Exception:
             pass
     dns = None
@@ -182,7 +217,7 @@ async def admin_issue_peer(
             else ",".join(request_params["dns"])
         )
     if not dns:
-        dns = "1.1.1.1"
+        dns = "1.1.1.1, 1.0.0.1"
     mtu = None
     if first_profile and getattr(first_profile, "mtu", None) is not None:
         mtu = int(first_profile.mtu)
@@ -200,7 +235,8 @@ async def admin_issue_peer(
     config_hash = _config_hash(public_key_b64, private_key_b64)
     now = datetime.now(timezone.utc)
 
-    obfuscation = get_obfuscation_params(request_params)
+    params_with_h = await request_params_with_server_h(session, server, request_params)
+    obfuscation = get_obfuscation_params(params_with_h)
     if runtime_adapter and hasattr(runtime_adapter, "get_obfuscation_from_node"):
         try:
             runtime_obf = await runtime_adapter.get_obfuscation_from_node(server_id)
@@ -208,6 +244,33 @@ async def admin_issue_peer(
                 obfuscation = {**obfuscation, **runtime_obf}
         except Exception:
             pass
+    preshared_key = None
+    if request_params:
+        preshared_key = request_params.get("preshared_key") or request_params.get(
+            "amnezia_preshared_key"
+        )
+    if not preshared_key and getattr(server, "preshared_key", None):
+        preshared_key = server.preshared_key
+    if preshared_key is not None and not isinstance(preshared_key, str):
+        preshared_key = None
+    elif preshared_key:
+        preshared_key = (preshared_key or "").strip() or None
+    if not preshared_key:
+        preshared_key = generate_preshared_key()
+    if endpoint and is_endpoint_private(endpoint):
+        default_host = (settings.vpn_default_host or "").strip()
+        if default_host:
+            port = endpoint.split(":")[-1].strip() if ":" in endpoint else "45790"
+            endpoint = f"{default_host}:{port}"
+            _config_log.info(
+                "Replaced private endpoint with VPN_DEFAULT_HOST for issued config",
+                extra={"event": "config.endpoint_override", "server_id": server_id, "endpoint": endpoint},
+            )
+        else:
+            _config_log.warning(
+                "Issuing config with private endpoint; set server.vpn_endpoint or VPN_DEFAULT_HOST to public IP:port.",
+                extra={"event": "config.private_endpoint", "server_id": server_id},
+            )
     address, allowed_ips_val = await allocate_address_for_device(session, server_id, request_params)
     try:
         config_awg_snippet = build_amnezia_client_config(
@@ -218,6 +281,7 @@ async def admin_issue_peer(
             obfuscation=obfuscation,
             mtu=mtu,
             address=address,
+            preshared_key=preshared_key,
         )
         _config_log.info(
             "config generated",
@@ -252,6 +316,7 @@ async def admin_issue_peer(
             obfuscation=obfuscation,
             mtu=mtu,
             address=address,
+            preshared_key=preshared_key,
         )
         _config_log.info(
             "config generated",
@@ -285,6 +350,7 @@ async def admin_issue_peer(
             dns=dns,
             mtu=mtu,
             address=address,
+            preshared_key=preshared_key,
         )
         _config_log.info(
             "config generated",
@@ -319,6 +385,7 @@ async def admin_issue_peer(
         public_key=public_key_b64,
         allowed_ips=allowed_ips_val,
         config_amnezia_hash=config_hash,
+        preshared_key=preshared_key,
         issued_at=now,
         revoked_at=None,
         issued_by_admin_id=issued_by_admin_id,
@@ -329,7 +396,7 @@ async def admin_issue_peer(
     await session.flush()
 
     peer_created = False
-    if settings.node_mode == "real" and runtime_adapter:
+    if settings.node_mode == "real" and settings.node_discovery != "agent" and runtime_adapter:
         try:
             # Server peer AllowedIPs must be client tunnel address (/32), not 0.0.0.0/0
             await runtime_adapter.add_peer(
@@ -338,9 +405,26 @@ async def admin_issue_peer(
                     public_key=public_key_b64,
                     allowed_ips=allowed_ips_val,
                     persistent_keepalive=25,
+                    preshared_key=preshared_key,
                 ),
             )
+            peers_after = await runtime_adapter.list_peers(server_id)
+            if not any(
+                (p.get("public_key") or "").strip() == public_key_b64 for p in peers_after or []
+            ):
+                raise WireGuardCommandError(
+                    "Node peer creation verification failed (peer missing after add)",
+                    command="wg show",
+                    output=public_key_b64[:64],
+                )
             peer_created = True
+            await _ensure_device_peer_on_node(
+                runtime_adapter,
+                server_id,
+                public_key=public_key_b64,
+                allowed_ips=allowed_ips_val,
+                preshared_key=preshared_key,
+            )
         except Exception as exc:
             await session.delete(device)
             await session.flush()
@@ -407,6 +491,33 @@ class AdminRotateResult(NamedTuple):
     request_id: str
 
 
+async def reissue_config_for_device(
+    session: AsyncSession,
+    *,
+    device_id: str,
+    expires_in_days: int | None = None,
+    issued_by_admin_id: str | None = None,
+    runtime_adapter: NodeRuntimeAdapter | None = None,
+    base_config_url: str = "/api/v1/admin/configs",
+) -> AdminRotateResult:
+    """Reissue config for an existing device (rotate keys, update peer, return new config URLs)."""
+    device_result = await session.execute(
+        select(Device).where(Device.id == device_id, Device.revoked_at.is_(None))
+    )
+    device = device_result.scalar_one_or_none()
+    if not device:
+        raise ValueError("device_not_found")
+    return await admin_rotate_peer(
+        session,
+        server_id=device.server_id,
+        peer_id=device.id,
+        expires_in_days=expires_in_days,
+        issued_by_admin_id=issued_by_admin_id,
+        runtime_adapter=runtime_adapter,
+        base_config_url=base_config_url,
+    )
+
+
 async def admin_rotate_peer(
     session: AsyncSession,
     *,
@@ -432,6 +543,12 @@ async def admin_rotate_peer(
         raise ValueError("server_not_available")
     if getattr(server, "is_draining", False):
         raise ValueError("server_draining")
+    if settings.node_mode == "real" and settings.node_discovery != "agent" and not runtime_adapter:
+        raise WireGuardCommandError(
+            "Runtime adapter required for reissue when NODE_MODE=real; peer would not be applied on node.",
+            command="reissue",
+            output="node_runtime_adapter is None",
+        )
 
     profile_result = await session.execute(
         select(ServerProfile)
@@ -452,7 +569,8 @@ async def admin_rotate_peer(
             )
             if derived:
                 endpoint = derived
-                server.vpn_endpoint = derived
+                if not is_endpoint_private(derived):
+                    server.vpn_endpoint = derived
         except Exception:
             pass
     dns = None
@@ -463,7 +581,7 @@ async def admin_rotate_peer(
             else ",".join(request_params["dns"])
         )
     if not dns:
-        dns = "1.1.1.1"
+        dns = "1.1.1.1, 1.0.0.1"
     mtu = None
     if first_profile and getattr(first_profile, "mtu", None) is not None:
         mtu = int(first_profile.mtu)
@@ -478,7 +596,8 @@ async def admin_rotate_peer(
         mtu = None
 
     old_public_key = device.public_key
-    if settings.node_mode == "real" and runtime_adapter:
+    old_preshared_key = getattr(device, "preshared_key", None)
+    if settings.node_mode == "real" and settings.node_discovery != "agent" and runtime_adapter:
         try:
             await runtime_adapter.remove_peer(server_id, old_public_key)
         except Exception as exc:
@@ -490,7 +609,8 @@ async def admin_rotate_peer(
 
     private_key_b64, public_key_b64 = generate_wg_keypair()
     config_hash = _config_hash(public_key_b64, private_key_b64)
-    obfuscation = get_obfuscation_params(request_params)
+    params_with_h = await request_params_with_server_h(session, server, request_params)
+    obfuscation = get_obfuscation_params(params_with_h)
     if runtime_adapter and hasattr(runtime_adapter, "get_obfuscation_from_node"):
         try:
             runtime_obf = await runtime_adapter.get_obfuscation_from_node(server_id)
@@ -498,12 +618,35 @@ async def admin_rotate_peer(
                 obfuscation = {**obfuscation, **runtime_obf}
         except Exception:
             pass
+    preshared_key = None
+    if request_params:
+        preshared_key = request_params.get("preshared_key") or request_params.get(
+            "amnezia_preshared_key"
+        )
+    if not preshared_key and getattr(server, "preshared_key", None):
+        preshared_key = server.preshared_key
+    if preshared_key is not None and not isinstance(preshared_key, str):
+        preshared_key = None
+    elif preshared_key:
+        preshared_key = (preshared_key or "").strip() or None
+    if not preshared_key:
+        preshared_key = generate_preshared_key()
+    if endpoint and is_endpoint_private(endpoint):
+        default_host = (settings.vpn_default_host or "").strip()
+        if default_host:
+            port = endpoint.split(":")[-1].strip() if ":" in endpoint else "45790"
+            endpoint = f"{default_host}:{port}"
+            _config_log.info(
+                "Replaced private endpoint with VPN_DEFAULT_HOST (rotate)",
+                extra={"event": "config.endpoint_override", "server_id": server_id, "endpoint": endpoint},
+            )
     # Rotate: keep existing tunnel IP (/32 for peer), widen to subnet CIDR for client Address
     if device.allowed_ips:
         allowed_ips_val = device.allowed_ips
         address = allowed_ips_val
         if "/32" in allowed_ips_val:
-            cidr = request_params.get("subnet_cidr") or request_params.get("amnezia_cidr") or 32
+            params = request_params or {}
+            cidr = params.get("subnet_cidr") or params.get("amnezia_cidr") or 32
             address = allowed_ips_val.replace("/32", f"/{cidr}")
     else:
         address, allowed_ips_val = await allocate_address_for_device(
@@ -518,6 +661,7 @@ async def admin_rotate_peer(
             obfuscation=obfuscation,
             mtu=mtu,
             address=address,
+            preshared_key=preshared_key,
         )
         _config_log.info(
             "config generated",
@@ -552,6 +696,7 @@ async def admin_rotate_peer(
             obfuscation=obfuscation,
             mtu=mtu,
             address=address,
+            preshared_key=preshared_key,
         )
         _config_log.info(
             "config generated",
@@ -585,6 +730,7 @@ async def admin_rotate_peer(
             dns=dns,
             mtu=mtu,
             address=address,
+            preshared_key=preshared_key,
         )
         _config_log.info(
             "config generated",
@@ -614,9 +760,10 @@ async def admin_rotate_peer(
     device.public_key = public_key_b64
     device.allowed_ips = allowed_ips_val
     device.config_amnezia_hash = config_hash
+    device.preshared_key = preshared_key
     await session.flush()
 
-    if settings.node_mode == "real" and runtime_adapter:
+    if settings.node_mode == "real" and settings.node_discovery != "agent" and runtime_adapter:
         try:
             await runtime_adapter.add_peer(
                 server_id,
@@ -624,10 +771,21 @@ async def admin_rotate_peer(
                     public_key=public_key_b64,
                     allowed_ips=allowed_ips_val,
                     persistent_keepalive=25,
+                    preshared_key=preshared_key,
                 ),
             )
+            peers_after = await runtime_adapter.list_peers(server_id)
+            if not any(
+                (p.get("public_key") or "").strip() == public_key_b64 for p in peers_after or []
+            ):
+                raise WireGuardCommandError(
+                    "Node peer creation verification failed after rotate (peer missing after add)",
+                    command="wg show",
+                    output=public_key_b64[:64],
+                )
         except Exception as exc:
             device.public_key = old_public_key
+            device.preshared_key = old_preshared_key
             device.config_amnezia_hash = hashlib.sha256(f"{old_public_key}:".encode()).hexdigest()[
                 :64
             ]
@@ -637,6 +795,13 @@ async def admin_rotate_peer(
                 command="wg set",
                 output=redact_for_log(str(exc)),
             )
+        await _ensure_device_peer_on_node(
+            runtime_adapter,
+            server_id,
+            public_key=public_key_b64,
+            allowed_ips=allowed_ips_val,
+            preshared_key=preshared_key,
+        )
 
     now = datetime.now(timezone.utc)
     expires_at = (
@@ -644,6 +809,15 @@ async def admin_rotate_peer(
         if (expires_in_days or DOWNLOAD_TOKEN_TTL_DAYS)
         else None
     )
+
+    # Remove old issued configs for this device so reissue replaces them (one current set per device).
+    await session.execute(
+        delete(IssuedConfig).where(
+            IssuedConfig.device_id == device.id,
+            IssuedConfig.server_id == server_id,
+        )
+    )
+    await session.flush()
 
     def _create_issued_config(profile_type: str, config_snippet: str) -> tuple[str, str]:
         token = secrets.token_hex(TOKEN_BYTES)

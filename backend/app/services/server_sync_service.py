@@ -98,6 +98,8 @@ async def build_snapshot_from_node(
     if node is None:
         nodes = await adapter.discover_nodes()
         node = next((n for n in nodes if n.node_id == server_id), None)
+        if node is None:
+            node = next((n for n in nodes if getattr(n, "container_name", None) == server_id), None)
     if not node:
         # #region agent log
         _agent_log(

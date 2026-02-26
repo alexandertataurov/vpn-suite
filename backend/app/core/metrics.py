@@ -2,6 +2,13 @@
 
 from prometheus_client import Counter, Gauge, Histogram
 
+# Build/version info (exposed on /metrics for correlation)
+vpn_suite_info = Gauge(
+    "vpn_suite_info",
+    "Build/version info (value 1); label version from API_VERSION.",
+    ["version"],
+)
+
 # HTTP errors and auth failures (observability)
 http_errors_total = Counter(
     "http_errors_total",
@@ -203,6 +210,40 @@ prometheus_query_failures_total = Counter(
     "prometheus_query_failures_total",
     "Prometheus query failures from operator dashboard aggregation",
     ["query_name"],
+)
+
+# Telemetry polling loop health
+telemetry_poll_runs_total = Counter(
+    "telemetry_poll_runs_total",
+    "Telemetry poll loop runs",
+    ["status"],  # ok|error|skipped
+)
+telemetry_poll_duration_seconds = Histogram(
+    "telemetry_poll_duration_seconds",
+    "Telemetry poll loop duration",
+    buckets=(0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0, 30.0),
+)
+telemetry_poll_server_failures_total = Counter(
+    "telemetry_poll_server_failures_total",
+    "Telemetry poll failures per server",
+    ["server_id", "reason"],
+)
+telemetry_poll_server_success_total = Counter(
+    "telemetry_poll_server_success_total",
+    "Telemetry poll successes per server",
+    ["server_id"],
+)
+telemetry_poll_last_success_timestamp = Gauge(
+    "telemetry_poll_last_success_timestamp",
+    "Unix timestamp of last successful telemetry poll per server",
+    ["server_id"],
+)
+
+# Telemetry snapshot API (cache-only fast path)
+telemetry_snapshot_request_duration_seconds = Histogram(
+    "telemetry_snapshot_request_duration_seconds",
+    "Latency of GET /telemetry/snapshot (cache read)",
+    buckets=(0.01, 0.025, 0.05, 0.1, 0.2, 0.5, 1.0),
 )
 
 

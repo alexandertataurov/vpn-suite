@@ -26,10 +26,6 @@ except Exception:
 
 _log = logging.getLogger(__name__)
 
-# Default allowed_ips when not stored on device (issue_service uses 0.0.0.0/0, ::/0)
-DEFAULT_ALLOWED_IPS = "0.0.0.0/0, ::/0"
-
-
 @dataclass
 class ReconciliationDiff:
     peers_to_add: list[PeerConfigLike] = field(default_factory=list)
@@ -54,35 +50,86 @@ def _peer_allowed_ips(peer: dict) -> str:
     return str(a).strip()
 
 
+def _is_valid_server_allowed_ips(allowed: str | None) -> bool:
+    """True if allowed_ips is a valid server-side peer value (client /32), not (none) or 0.0.0.0/0."""
+    if not allowed or not (a := str(allowed).strip()):
+        return False
+    if "0.0.0.0/0" in a:
+        return False
+    return "/32" in a or "/128" in a
+
+
 async def compute_diff(
     node_id: str,
-    db_public_keys: list[tuple[str, str]],
+    db_peers: list[tuple[str, str, str | None]],
     wg_peers: list[dict],
 ) -> ReconciliationDiff:
     """
-    db_public_keys: list of (public_key, allowed_ips).
-    wg_peers: list of dict with public_key, allowed_ips (from list_peers / get_peers_with_details).
+    db_peers: list of (public_key, allowed_ips, preshared_key). allowed_ips must be client /32.
+    wg_peers: list of dict with public_key, allowed_ips (from list_peers).
+    Only add/update peers that have valid allowed_ips (client /32); skip others and log.
     """
-    db_map = {pk: allowed for pk, allowed in db_public_keys}
+    db_map: dict[str, tuple[str, str | None]] = {}
+    for pk, allowed, psk in db_peers:
+        if not pk:
+            continue
+        allowed_norm = (allowed or "").strip()
+        psk_norm = (psk or "").strip() or None
+        db_map[pk] = (allowed_norm, psk_norm)
     wg_map = {p["public_key"]: _peer_allowed_ips(p) for p in wg_peers if p.get("public_key")}
 
     to_add: list[PeerConfigLike] = []
-    for pk, allowed in db_map.items():
+    for pk, (allowed, psk) in db_map.items():
         if pk not in wg_map:
-            to_add.append(PeerConfigLike(public_key=pk, allowed_ips=allowed or DEFAULT_ALLOWED_IPS))
+            if not _is_valid_server_allowed_ips(allowed):
+                _log.warning(
+                    "Reconciliation skip add peer (no valid allowed_ips): node_id=%s pubkey=%s",
+                    node_id,
+                    pk[:16] if pk else "",
+                )
+                continue
+            to_add.append(
+                PeerConfigLike(
+                    public_key=pk,
+                    allowed_ips=allowed,
+                    preshared_key=psk,
+                    persistent_keepalive=25,
+                )
+            )
 
     to_remove = [pk for pk in wg_map if pk not in db_map]
 
     to_update: list[PeerConfigLike] = []
-    for pk in db_map:
-        if pk in wg_map and (db_map[pk] or DEFAULT_ALLOWED_IPS) != (wg_map[pk] or ""):
-            to_update.append(
-                PeerConfigLike(public_key=pk, allowed_ips=db_map[pk] or DEFAULT_ALLOWED_IPS)
-            )
+    for pk, (allowed, psk) in db_map.items():
+        if not _is_valid_server_allowed_ips(allowed):
+            continue
+        if pk in wg_map:
+            wg_val = wg_map[pk] or ""
+            if wg_val != allowed and (not wg_val or "0.0.0.0/0" in wg_val):
+                to_update.append(
+                    PeerConfigLike(
+                        public_key=pk,
+                        allowed_ips=allowed,
+                        preshared_key=psk,
+                        persistent_keepalive=25,
+                    )
+                )
 
-    return ReconciliationDiff(
+    diff = ReconciliationDiff(
         peers_to_add=to_add, peers_to_remove=to_remove, peers_to_update=to_update
     )
+    if to_add or to_remove or to_update:
+        _log.info(
+            "reconciliation drift detected",
+            extra={
+                "event": "drift_detected",
+                "node_id": node_id,
+                "missing": len(to_add),
+                "extra": len(to_remove),
+                "mismatch": len(to_update),
+            },
+        )
+    return diff
 
 
 async def apply_diff(
@@ -98,6 +145,15 @@ async def apply_diff(
         try:
             await adapter.add_peer(node_id, peer)
             result.peers_added += 1
+            _log.info(
+                "peer added during reconciliation",
+                extra={
+                    "event": "peer_added",
+                    "node_id": node_id,
+                    "pubkey": peer.public_key[:32],
+                    "allowed_ips": peer.allowed_ips,
+                },
+            )
         except Exception as e:
             _log.exception(
                 "Reconciliation add_peer failed node_id=%s pubkey=%s", node_id, peer.public_key[:16]
@@ -117,27 +173,86 @@ async def apply_diff(
             await adapter.remove_peer(node_id, peer.public_key)
             await adapter.add_peer(node_id, peer)
             result.peers_updated += 1
+            _log.info(
+                "peer reapplied during reconciliation",
+                extra={
+                    "event": "peer_reapplied",
+                    "node_id": node_id,
+                    "pubkey": peer.public_key[:32],
+                    "allowed_ips": peer.allowed_ips,
+                    "reason": "mismatch",
+                },
+            )
         except Exception as e:
             _log.exception("Reconciliation update peer failed node_id=%s", node_id)
             result.errors.append(f"update {peer.public_key[:16]}: {e!s}")
 
     result.duration_ms = (time.perf_counter() - start) * 1000
+    if not result.errors:
+        _log.info(
+            "reconciliation success",
+            extra={
+                "event": "reconcile_success",
+                "node_id": node_id,
+                "peers_added": result.peers_added,
+                "peers_removed": result.peers_removed,
+                "peers_updated": result.peers_updated,
+                "duration_ms": result.duration_ms,
+            },
+        )
+    else:
+        _log.warning(
+            "reconciliation completed with errors",
+            extra={
+                "event": "reconcile_failed",
+                "node_id": node_id,
+                "peers_added": result.peers_added,
+                "peers_removed": result.peers_removed,
+                "peers_updated": result.peers_updated,
+                "errors": result.errors[:5],
+                "duration_ms": result.duration_ms,
+            },
+        )
     if vpn_reconciliation_duration_seconds is not None:
         vpn_reconciliation_duration_seconds.observe(result.duration_ms / 1000.0)
     return result
 
 
-async def reconcile_node(node_id: str, adapter: NodeRuntimeAdapter) -> ReconciliationResult:
-    """Reconcile one runtime node by node_id (desired from DB devices, actual from wg runtime)."""
+async def reconcile_node(
+    node_id: str, adapter: NodeRuntimeAdapter, server_ids: list[str] | None = None
+) -> ReconciliationResult:
+    """Reconcile one runtime node by node_id (desired from DB devices, actual from wg runtime).
+
+    server_ids: optional list of server_id values to match devices against (e.g. node_id and
+    container_name). When not provided, defaults to [node_id].
+    """
     async with async_session_factory() as session:
+        ids = [node_id]
+        if server_ids:
+            ids = [s for s in server_ids if s] or ids
         r = await session.execute(
-            select(Device).where(Device.server_id == node_id, Device.revoked_at.is_(None))
+            select(Device.public_key, Device.allowed_ips, Device.preshared_key).where(
+                Device.server_id.in_(ids),
+                Device.revoked_at.is_(None),
+                Device.suspended_at.is_(None),
+            )
         )
-        devices = r.scalars().all()
-        db_peers = [(d.public_key, DEFAULT_ALLOWED_IPS) for d in devices]
+        db_rows = r.all()
+        db_peers: list[tuple[str, str, str | None]] = []
+        for row in db_rows:
+            if not row or not row[0]:
+                continue
+            pk = row[0]
+            allowed = (row[1] or "").strip()
+            psk = (row[2] or "").strip() or None
+            db_peers.append((pk, allowed, psk))
 
         wg_peers = await adapter.list_peers(node_id)
         diff = await compute_diff(node_id, db_peers, wg_peers)
+
+        ensure_routes = getattr(adapter, "ensure_reply_routes", None)
+        if callable(ensure_routes):
+            await ensure_routes(node_id)
 
         if not diff.peers_to_add and not diff.peers_to_remove and not diff.peers_to_update:
             return ReconciliationResult(duration_ms=0.0)
@@ -174,10 +289,16 @@ async def reconcile_all_nodes(
     """Reconcile every discovered healthy/degraded AWG node."""
     results: list[tuple[str, ReconciliationResult]] = []
     nodes = await adapter.discover_nodes()
-    node_ids = [node.node_id for node in nodes if node.status in ("healthy", "degraded")]
-    for node_id in node_ids:
+    for node in nodes:
+        if node.status not in ("healthy", "degraded"):
+            continue
+        node_id = node.node_id
+        candidate_ids = [node_id]
+        container_name = getattr(node, "container_name", None)
+        if container_name and container_name not in candidate_ids:
+            candidate_ids.append(container_name)
         try:
-            result = await reconcile_node(node_id, adapter)
+            result = await reconcile_node(node_id, adapter, server_ids=candidate_ids)
             results.append((node_id, result))
         except Exception as e:
             _log.exception("Reconciliation failed for node %s: %s", node_id, redact_for_log(str(e)))
@@ -186,8 +307,14 @@ async def reconcile_all_nodes(
 
 
 async def run_reconciliation_loop(get_adapter) -> None:
-    """Background loop: reconcile all nodes every reconciliation_interval_seconds. Backoff on errors."""
+    """Background loop: reconcile all nodes every reconciliation_interval_seconds. Backoff on errors.
+    No-op when NODE_DISCOVERY=agent (node-agent applies desired state)."""
     from app.core.config import settings
+
+    if settings.node_discovery == "agent":
+        _log.info("Reconciliation loop skipped: NODE_DISCOVERY=agent (node-agent applies desired state)")
+        while True:
+            await asyncio.sleep(3600)
 
     interval = settings.reconciliation_interval_seconds
     consecutive_failures = 0

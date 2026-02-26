@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import BigInteger, Boolean, DateTime, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin, uuid4_hex
@@ -21,6 +21,11 @@ class Server(Base, TimestampMixin):
         String(256), nullable=True
     )  # VPN host:port e.g. vpn.example.com:47604
     public_key: Mapped[str | None] = mapped_column(Text, nullable=True)
+    preshared_key: Mapped[str | None] = mapped_column(Text, nullable=True)  # optional WG preshared key for issued configs
+    amnezia_h1: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    amnezia_h2: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    amnezia_h3: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    amnezia_h4: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     status: Mapped[str] = mapped_column(String(32), default="unknown", nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     traffic_limit_gb: Mapped[float | None] = mapped_column(Float, nullable=True)

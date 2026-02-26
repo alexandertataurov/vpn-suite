@@ -22,6 +22,7 @@ from app.models import (
     Subscription,
     User,
 )
+from app.api.v1.device_cache import invalidate_devices_summary_cache
 from app.services.issue_service import issue_device
 
 router = APIRouter(prefix="/webapp", tags=["webapp"])
@@ -219,6 +220,7 @@ async def webapp_issue_device(
             )
         raise
     await db.commit()
+    await invalidate_devices_summary_cache()
     await db.refresh(out.device)
     return WebAppIssueDeviceResponse(
         device_id=out.device.id,

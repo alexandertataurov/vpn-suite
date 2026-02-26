@@ -27,6 +27,8 @@ _PUBLIC_KEY_PATTERN = re.compile(r"^[A-Za-z0-9+/=]{32,64}$")
 _ALLOWED_IPS_PATTERN = re.compile(r"^[0-9A-Fa-f.,/: \t]+$")
 _CONTAINER_NAME_PATTERN = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}$")
 _INTERFACE_NAME_PATTERN = re.compile(r"^[a-zA-Z0-9_.:-]{1,32}$")
+# Reply traffic to client IPs must go via WG iface; we ensure one route per subnet (e.g. /24)
+_CLIENT_SUBNET_PREFIXLEN = 24
 _AMNEZIA_IMAGE_PATTERNS = [
     r"amnezia[wgvpn/\\-]*",
     r"amneziawg",
@@ -197,6 +199,30 @@ async def _docker_exec(
     return await _run_command(
         ["docker", "exec", container_name, *cmd], timeout=timeout, stdin=stdin
     )
+
+
+async def _ensure_client_subnet_routes(
+    container_name: str, interface: str, subnet_cidrs: list[str]
+) -> None:
+    """Ensure routes for client subnets via WG iface so reply traffic reaches all peers."""
+    for cidr in subnet_cidrs:
+        if not cidr:
+            continue
+        code, out = await _docker_exec(
+            container_name,
+            ["ip", "route", "add", cidr, "dev", interface],
+            timeout=10.0,
+        )
+        if code == 0 or "File exists" in out or "already exists" in out.lower():
+            continue
+        _log.warning(
+            "ip route add %s dev %s failed in %s: code=%s %s",
+            cidr,
+            interface,
+            container_name,
+            code,
+            out[:120],
+        )
 
 
 def _node_id(container_name: str) -> str:
@@ -438,6 +464,23 @@ def _extract_ipv4_host_cidrs(allowed_ips: str) -> list[str]:
         if net.version != 4 or net.prefixlen != 32:
             continue
         out.append(str(net))
+    return out
+
+
+def _subnets_for_allowed_ips(allowed_ips: str, prefixlen: int = _CLIENT_SUBNET_PREFIXLEN) -> list[str]:
+    """Return unique subnet CIDRs (e.g. /24) that cover each host in allowed_ips."""
+    seen: set[str] = set()
+    out: list[str] = []
+    for host_cidr in _extract_ipv4_host_cidrs(allowed_ips):
+        try:
+            addr = ipaddress.ip_address(host_cidr.split("/")[0])
+            net = ipaddress.ip_network(f"{addr}/{prefixlen}", strict=False)
+            cidr = str(net)
+            if cidr not in seen:
+                seen.add(cidr)
+                out.append(cidr)
+        except ValueError:
+            continue
     return out
 
 
@@ -741,6 +784,9 @@ class DockerNodeRuntimeAdapter(NodeRuntimeAdapter):
         for node in nodes:
             if node.node_id == node_id:
                 return node
+        for node in nodes:
+            if node.container_name == node_id:
+                return node
         return None
 
     async def health_check(self, node_id: str) -> dict:
@@ -782,7 +828,35 @@ class DockerNodeRuntimeAdapter(NodeRuntimeAdapter):
         container_name = node.container_name
         interface = _sanitize_interface_name(node.interface_name or self._interface)
         public_key = _sanitize_public_key(peer_config.public_key)
-        allowed_ips = _sanitize_allowed_ips(peer_config.allowed_ips or "0.0.0.0/0,::/0")
+        raw_allowed = peer_config.allowed_ips or ""
+        if not raw_allowed.strip() or "0.0.0.0/0" in raw_allowed:
+            raise WireGuardCommandError(
+                "Server peer AllowedIPs must be client tunnel /32 (e.g. 10.8.1.2/32), not 0.0.0.0/0",
+                command="add_peer",
+                output=raw_allowed[:32],
+            )
+        allowed_ips = _sanitize_allowed_ips(raw_allowed.strip())
+        target_cidrs = set(_extract_ipv4_host_cidrs(allowed_ips))
+
+        existing_peers = await self.list_peers(node_id)
+        allowed_before = ""
+        for p in existing_peers:
+            if p.get("public_key") == public_key:
+                allowed_before = (p.get("allowed_ips") or "").strip()
+                break
+        for p in existing_peers:
+            if p.get("public_key") == public_key:
+                continue
+            other_ips = (p.get("allowed_ips") or "").strip()
+            other_cidrs = set(_extract_ipv4_host_cidrs(other_ips))
+            if target_cidrs & other_cidrs:
+                conflict = ", ".join(target_cidrs & other_cidrs)
+                raise WireGuardCommandError(
+                    f"allowed_ips conflict: {conflict} already assigned to another peer",
+                    command="add_peer",
+                    output=conflict[:64],
+                )
+
         keepalive = _clamp_keepalive(peer_config.persistent_keepalive)
         if peer_config.preshared_key:
             key_b64 = peer_config.preshared_key.strip().replace("'", "'\"'\"'")
@@ -806,6 +880,33 @@ class DockerNodeRuntimeAdapter(NodeRuntimeAdapter):
                 "wg set failed", command="docker exec wg set", output=output[:400]
             )
 
+        peers_after = await self.list_peers(node_id)
+        applied = ""
+        for p in peers_after:
+            if p.get("public_key") == public_key:
+                applied = (p.get("allowed_ips") or "").strip()
+                break
+        expected_cidrs = set(_extract_ipv4_host_cidrs(allowed_ips))
+        applied_cidrs = set(_extract_ipv4_host_cidrs(applied))
+        if expected_cidrs != applied_cidrs:
+            raise WireGuardCommandError(
+                "Verification failed: allowed_ips not applied on node",
+                command="add_peer",
+                output=f"expected={allowed_ips[:48]} got={applied[:48]}",
+            )
+
+        _log.info(
+            "add_peer applied allowed_ips node_id=%s iface=%s pubkey=%s allowed_before=%s allowed_after=%s",
+            node_id,
+            interface,
+            public_key[:12] + "…" if len(public_key) > 12 else public_key,
+            allowed_before or "(none)",
+            allowed_ips,
+        )
+        subnets = _subnets_for_allowed_ips(allowed_ips)
+        if subnets:
+            await _ensure_client_subnet_routes(container_name, interface, subnets)
+
     async def remove_peer(self, node_id: str, peer_public_key: str) -> None:
         node = await self._resolve_node(node_id)
         if not node:
@@ -826,6 +927,25 @@ class DockerNodeRuntimeAdapter(NodeRuntimeAdapter):
                 command="docker exec wg set peer remove",
                 output=output[:400],
             )
+
+    async def ensure_reply_routes(self, node_id: str) -> None:
+        """Ensure reply routes for all current peers on the node (idempotent)."""
+        node = await self._resolve_node(node_id)
+        if not node:
+            return
+        container_name = node.container_name
+        interface = _sanitize_interface_name(node.interface_name or self._interface)
+        peers = await self.list_peers(node_id)
+        seen: set[str] = set()
+        subnets: list[str] = []
+        for p in peers or []:
+            allowed = (p.get("allowed_ips") or "").strip()
+            for cidr in _subnets_for_allowed_ips(allowed):
+                if cidr not in seen:
+                    seen.add(cidr)
+                    subnets.append(cidr)
+        if subnets:
+            await _ensure_client_subnet_routes(container_name, interface, subnets)
 
     async def get_obfuscation_from_node(self, node_id: str) -> dict | None:
         """Fetch AmneziaWG obfuscation params (Jc, Jmin, Jmax, S1, S2, H1-H4) from runtime. Returns None on failure."""

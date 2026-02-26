@@ -5,7 +5,7 @@ import re
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config_builder import allocate_next_address, derive_address_from_profile
+from app.core.config_builder import allocate_next_address
 from app.models import Device
 
 
@@ -50,17 +50,14 @@ async def allocate_address_for_device(
     Returns (address_for_config, allowed_ips_for_peer).
     - address_for_config: e.g. '10.8.0.6/24' (Address in client config)
     - allowed_ips_for_peer: e.g. '10.8.0.6/32' (server peer AllowedIPs, device.allowed_ips)
-    Falls back to derive_address_from_profile when subnet is not configured.
+    When profile has no subnet, uses default 10.8.1.0/24 and allocates next free IP from DB.
     """
     parsed = _subnet_base_and_cidr(request_params)
     if not parsed:
-        fallback = derive_address_from_profile(request_params)
-        # Fallback may be /24 or /32; normalize allowed_ips to /32 for peer
-        if "/32" in fallback:
-            return fallback, fallback
-        return fallback, re.sub(r"/\d+$", "/32", fallback)
+        subnet_base, cidr = "10.8.1", 24
+    else:
+        subnet_base, cidr = parsed
 
-    subnet_base, cidr = parsed
     rows = await session.execute(
         select(Device.allowed_ips).where(
             Device.server_id == server_id,

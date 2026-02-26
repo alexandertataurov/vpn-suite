@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import secrets as stdlib_secrets
 from datetime import datetime, timezone
 
@@ -27,12 +28,21 @@ from app.core.database import async_session_factory, get_db
 from app.core.logging_config import request_id_ctx
 from app.core.redaction import redact_for_log
 from app.core.redis_client import get_redis
-from app.models import Device, Server
+from app.core.amnezia_config import (
+    DEFAULT_Jc,
+    DEFAULT_Jmax,
+    DEFAULT_Jmin,
+    DEFAULT_S1,
+    DEFAULT_S2,
+)
+from app.models import Device, Server, ServerProfile
 from app.schemas.agent import (
     AgentAckOut,
     AgentDesiredPeer,
     AgentDesiredStateOut,
     AgentHeartbeatIn,
+    ObfuscationFullOut,
+    ObfuscationHOut,
     AgentV1ActionExecuteIn,
     AgentV1ActionPollOut,
     AgentV1ActionReportIn,
@@ -47,7 +57,12 @@ from app.services.agent_action_service import (
     set_status,
 )
 from app.services.audit_service import log_audit
+from app.services.device_telemetry_cache import (
+    _norm_public_key,
+    write_device_telemetry_from_heartbeat_peers,
+)
 
+_log = logging.getLogger(__name__)
 router = APIRouter(tags=["agent"])
 
 
@@ -75,6 +90,8 @@ def _rev_for(server_id: str, peers: list[AgentDesiredPeer]) -> str:
         h.update(p.public_key.encode("utf-8"))
         h.update(b"\x00")
         h.update(p.allowed_ips.encode("utf-8"))
+        h.update(b"\x00")
+        h.update((p.preshared_key or "").encode("utf-8"))
         h.update(b"\x00")
     return h.hexdigest()[:16]
 
@@ -124,11 +141,34 @@ async def agent_heartbeat(
     try:
         r = get_redis()
         key = f"{REDIS_KEY_AGENT_HB_PREFIX}{payload.server_id}"
-        await r.set(
-            key,
-            json.dumps(payload.model_dump(mode="json")),
-            ex=settings.agent_heartbeat_ttl_seconds,
-        )
+        dumped = payload.model_dump(mode="json")
+        await r.set(key, json.dumps(dumped), ex=settings.agent_heartbeat_ttl_seconds)
+        if dumped.get("peers"):
+            _log.info("Agent heartbeat stored server_id=%s peers=%s", payload.server_id, len(dumped["peers"]))
+            # Write device telemetry immediately so Devices page shows data without waiting for poll
+            try:
+                dev_r = await db.execute(
+                    select(Device.id, Device.public_key).where(
+                        Device.server_id == payload.server_id,
+                        Device.revoked_at.is_(None),
+                    )
+                )
+                pk_to_device_id = {}
+                for row in dev_r.all():
+                    dev_id, pubkey = row[0], row[1]
+                    if dev_id and pubkey:
+                        pk = _norm_public_key(pubkey)
+                        if pk:
+                            pk_to_device_id[pk] = dev_id
+                written = await write_device_telemetry_from_heartbeat_peers(
+                    payload.server_id,
+                    dumped["peers"],
+                    pk_to_device_id,
+                )
+                if written:
+                    _log.info("Agent heartbeat wrote telemetry for %s devices server_id=%s", written, payload.server_id)
+            except Exception as te:
+                _log.debug("Heartbeat telemetry write failed: %s", te)
     except Exception as exc:
         raise HTTPException(
             status_code=503,
@@ -151,10 +191,9 @@ async def agent_desired_state(
     x_agent_token: str | None = Header(default=None, alias="X-Agent-Token"),
 ):
     _require_agent_token(x_agent_token)
-    # Desired peers = non-revoked, non-suspended devices assigned to this server_id.
     async with async_session_factory() as session:
         r = await session.execute(
-            select(Device.public_key, Device.allowed_ips)
+            select(Device.public_key, Device.allowed_ips, Device.preshared_key)
             .where(
                 Device.server_id == server_id,
                 Device.revoked_at.is_(None),
@@ -166,13 +205,53 @@ async def agent_desired_state(
             AgentDesiredPeer(
                 public_key=row[0],
                 allowed_ips=(row[1] or "10.8.1.2/32").strip(),
+                preshared_key=(row[2] or "").strip() or None,
             )
             for row in r.all()
             if row and row[0]
         ]
+        server_r = await session.execute(select(Server).where(Server.id == server_id))
+        server = server_r.scalar_one_or_none()
+        obfuscation_h = None
+        obfuscation_full = None
+        if server and all(
+            getattr(server, k, None) is not None
+            for k in ("amnezia_h1", "amnezia_h2", "amnezia_h3", "amnezia_h4")
+        ):
+            obfuscation_h = ObfuscationHOut(
+                h1=server.amnezia_h1,
+                h2=server.amnezia_h2,
+                h3=server.amnezia_h3,
+                h4=server.amnezia_h4,
+            )
+            # Build full obfuscation from server H + first profile so node can sync S1,S2,Jc to env
+            profile_r = await session.execute(
+                select(ServerProfile.request_params)
+                .where(ServerProfile.server_id == server_id)
+                .order_by(ServerProfile.created_at.asc())
+                .limit(1)
+            )
+            params = (profile_r.scalar() or {}) if profile_r else {}
+            if isinstance(params, dict):
+                obfuscation_full = ObfuscationFullOut(
+                    s1=int(params.get("amnezia_s1", DEFAULT_S1)),
+                    s2=int(params.get("amnezia_s2", DEFAULT_S2)),
+                    jc=int(params.get("amnezia_jc", DEFAULT_Jc)),
+                    jmin=int(params.get("amnezia_jmin", DEFAULT_Jmin)),
+                    jmax=int(params.get("amnezia_jmax", DEFAULT_Jmax)),
+                    h1=server.amnezia_h1,
+                    h2=server.amnezia_h2,
+                    h3=server.amnezia_h3,
+                    h4=server.amnezia_h4,
+                )
     rev = _rev_for(server_id, peers)
     return AgentDesiredStateOut(
-        server_id=server_id, interface_name="awg0", revision=rev, peers=peers
+        server_id=server_id,
+        interface_name="awg0",
+        revision=rev,
+        peers=peers,
+        obfuscation_h=obfuscation_h,
+        obfuscation_full=obfuscation_full,
     )
 
 

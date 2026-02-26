@@ -22,6 +22,7 @@ from app.core.metrics import (
 from app.core.redis_client import get_redis
 from app.core.telemetry_polling_task import get_dashboard_timeseries
 from app.models import Device, Server, ServerSnapshot
+from app.services.snapshot_cache import get_snapshot_nodes
 
 _log = logging.getLogger(__name__)
 
@@ -284,118 +285,120 @@ async def fetch_operator_dashboard(time_range: str = "1h") -> dict[str, Any]:
                 }
             )
 
-        # Per-server telemetry
+        # Per-server telemetry: prefer snapshot cache (no N×Prometheus); else fallback
         telemetry_map: dict[str, dict] = {}
-        if server_ids:
-            for sid in server_ids:
-                h_rows = []
-                p_rows = []
-                cpu_rows = []
-                ram_rows = []
-                rx_rows = []
-                tx_rows = []
-                try:
-                    h_rows = await prom.query(f'vpn_node_health{{node_id="{sid}"}}')
-                except Exception:
-                    prom_failures += 1
-                    data_status = "degraded"
-                    prometheus_query_failures_total.labels(query_name="vpn_node_health").inc()
-                    _log.warning(
-                        "operator prometheus query failed",
-                        extra=extra_for_event(
-                            event="prometheus_query_failed",
-                            route="/api/v1/overview/operator",
-                            method="GET",
-                            entity_id="vpn_node_health",
-                            error_kind="external",
-                            error_code="PROM_QUERY_FAILED",
-                            error_severity="warning",
-                            error_retryable=True,
-                        ),
-                    )
-                try:
-                    p_rows = await prom.query(f'vpn_node_peers{{node_id="{sid}"}}')
-                except Exception:
-                    prom_failures += 1
-                    data_status = "degraded"
-                    prometheus_query_failures_total.labels(query_name="vpn_node_peers").inc()
-                    _log.warning(
-                        "operator prometheus query failed",
-                        extra=extra_for_event(
-                            event="prometheus_query_failed",
-                            route="/api/v1/overview/operator",
-                            method="GET",
-                            entity_id="vpn_node_peers",
-                            error_kind="external",
-                            error_code="PROM_QUERY_FAILED",
-                            error_severity="warning",
-                            error_retryable=True,
-                        ),
-                    )
-                try:
-                    rx_rows = await prom.query(f'vpn_node_traffic_rx_bytes{{server_id="{sid}"}}')
-                except Exception:
-                    prom_failures += 1
-                    data_status = "degraded"
-                    prometheus_query_failures_total.labels(
-                        query_name="vpn_node_traffic_rx_bytes"
-                    ).inc()
-                    _log.warning(
-                        "operator prometheus query failed",
-                        extra=extra_for_event(
-                            event="prometheus_query_failed",
-                            route="/api/v1/overview/operator",
-                            method="GET",
-                            entity_id="vpn_node_traffic_rx_bytes",
-                            error_kind="external",
-                            error_code="PROM_QUERY_FAILED",
-                            error_severity="warning",
-                            error_retryable=True,
-                        ),
-                    )
-                try:
-                    tx_rows = await prom.query(f'vpn_node_traffic_tx_bytes{{server_id="{sid}"}}')
-                except Exception:
-                    prom_failures += 1
-                    data_status = "degraded"
-                    prometheus_query_failures_total.labels(
-                        query_name="vpn_node_traffic_tx_bytes"
-                    ).inc()
-                    _log.warning(
-                        "operator prometheus query failed",
-                        extra=extra_for_event(
-                            event="prometheus_query_failed",
-                            route="/api/v1/overview/operator",
-                            method="GET",
-                            entity_id="vpn_node_traffic_tx_bytes",
-                            error_kind="external",
-                            error_code="PROM_QUERY_FAILED",
-                            error_severity="warning",
-                            error_retryable=True,
-                        ),
-                    )
-                try:
-                    cpu_rows = await prom.query(f'vpn_node_cpu_utilization{{node_id="{sid}"}}')
-                except Exception:
-                    prom_failures += 1
-                    data_status = "degraded"
-                    prometheus_query_failures_total.labels(query_name="vpn_node_cpu").inc()
-                try:
-                    ram_rows = await prom.query(f'vpn_node_memory_utilization{{node_id="{sid}"}}')
-                except Exception:
-                    prom_failures += 1
-                    data_status = "degraded"
-                    prometheus_query_failures_total.labels(query_name="vpn_node_ram").inc()
-
+        snapshot_nodes_data = await get_snapshot_nodes()
+        if snapshot_nodes_data and (snapshot_nodes_data.get("list")):
+            node_list = snapshot_nodes_data.get("list") or []
+            for n in node_list:
+                sid = n.get("id")
+                if not sid:
+                    continue
+                health_val = 1.0 if n.get("health") == "ok" else (0.5 if n.get("health") == "degraded" else 0.0)
                 telemetry_map[sid] = {
-                    "health": _scalar_from_result(h_rows),
-                    "peers": _scalar_from_result(p_rows),
-                    "cpu": _scalar_from_result(cpu_rows),
-                    "ram": _scalar_from_result(ram_rows),
-                    "rx": _scalar_from_result(rx_rows),
-                    "tx": _scalar_from_result(tx_rows),
-                    "last_ts": _ts_from_result(h_rows) or _ts_from_result(p_rows),
+                    "health": health_val,
+                    "peers": int(n.get("peers") or 0),
+                    "cpu": None,
+                    "ram": None,
+                    "rx": int(n.get("rx") or 0),
+                    "tx": int(n.get("tx") or 0),
+                    "last_ts": n.get("last_success_ts"),
                 }
+            if prom.enabled:
+                try:
+                    cpu_results = await prom.query("vpn_node_cpu_utilization")
+                    for r in cpu_results or []:
+                        if isinstance(r, dict):
+                            node_id = (r.get("metric") or {}).get("node_id")
+                            if node_id and node_id in telemetry_map:
+                                val = r.get("value")
+                                if isinstance(val, list | tuple) and len(val) >= 2:
+                                    try:
+                                        telemetry_map[node_id]["cpu"] = float(val[1])
+                                    except (TypeError, ValueError):
+                                        pass
+                except Exception:
+                    prom_failures += 1
+                    prometheus_query_failures_total.labels(query_name="vpn_node_cpu_batch").inc()
+                try:
+                    ram_results = await prom.query("vpn_node_memory_utilization")
+                    for r in ram_results or []:
+                        if isinstance(r, dict):
+                            node_id = (r.get("metric") or {}).get("node_id")
+                            if node_id and node_id in telemetry_map:
+                                val = r.get("value")
+                                if isinstance(val, list | tuple) and len(val) >= 2:
+                                    try:
+                                        telemetry_map[node_id]["ram"] = float(val[1])
+                                    except (TypeError, ValueError):
+                                        pass
+                except Exception:
+                    prom_failures += 1
+                    prometheus_query_failures_total.labels(query_name="vpn_node_ram_batch").inc()
+        elif server_ids:
+            for sid in server_ids:
+                telemetry_map[sid] = {
+                    "health": None,
+                    "peers": None,
+                    "cpu": None,
+                    "ram": None,
+                    "rx": None,
+                    "tx": None,
+                    "last_ts": None,
+                }
+            if prom.enabled:
+                try:
+                    cpu_results = await prom.query("vpn_node_cpu_utilization")
+                    for r in cpu_results or []:
+                        if isinstance(r, dict):
+                            node_id = (r.get("metric") or {}).get("node_id")
+                            if node_id and node_id in telemetry_map:
+                                val = r.get("value")
+                                if isinstance(val, list | tuple) and len(val) >= 2:
+                                    try:
+                                        telemetry_map[node_id]["cpu"] = float(val[1])
+                                    except (TypeError, ValueError):
+                                        pass
+                except Exception:
+                    prom_failures += 1
+                    prometheus_query_failures_total.labels(query_name="vpn_node_cpu_batch").inc()
+                try:
+                    ram_results = await prom.query("vpn_node_memory_utilization")
+                    for r in ram_results or []:
+                        if isinstance(r, dict):
+                            node_id = (r.get("metric") or {}).get("node_id")
+                            if node_id and node_id in telemetry_map:
+                                val = r.get("value")
+                                if isinstance(val, list | tuple) and len(val) >= 2:
+                                    try:
+                                        telemetry_map[node_id]["ram"] = float(val[1])
+                                    except (TypeError, ValueError):
+                                        pass
+                except Exception:
+                    prom_failures += 1
+                    prometheus_query_failures_total.labels(query_name="vpn_node_ram_batch").inc()
+            try:
+                redis = get_redis()
+                for sid in server_ids:
+                    raw = await redis.get(f"telemetry:server:{sid}")
+                    if raw:
+                        try:
+                            data = json.loads(raw)
+                            if isinstance(data, dict) and sid in telemetry_map:
+                                telemetry_map[sid]["peers"] = data.get("peers_count")
+                                telemetry_map[sid]["rx"] = data.get("total_rx_bytes")
+                                telemetry_map[sid]["tx"] = data.get("total_tx_bytes")
+                                lu = data.get("last_updated")
+                                if lu:
+                                    try:
+                                        dt = datetime.fromisoformat(str(lu).replace("Z", "+00:00"))
+                                        telemetry_map[sid]["last_ts"] = dt.timestamp()
+                                    except (ValueError, TypeError):
+                                        pass
+                        except json.JSONDecodeError:
+                            pass
+            except Exception:
+                pass
 
         # Agent heartbeat fallback
         try:
@@ -529,17 +532,20 @@ async def fetch_operator_dashboard(time_range: str = "1h") -> dict[str, Any]:
             )
 
     for region, counts in region_counts.items():
+        region_servers = [r for r in server_rows if (r.get("region") or "—") == region]
+        cpu_vals = [r["cpu_pct"] for r in region_servers if r.get("cpu_pct") is not None]
+        ram_vals = [r["ram_pct"] for r in region_servers if r.get("ram_pct") is not None]
+        cpu_avg = round(sum(cpu_vals) / len(cpu_vals), 1) if cpu_vals else None
+        ram_avg = round(sum(ram_vals) / len(ram_vals), 1) if ram_vals else None
         cluster_matrix.append(
             {
                 "region": region,
                 "total_nodes": counts["total"],
                 "online": counts["online"],
-                "cpu_avg": None,
-                "ram_avg": None,
-                "users": sum(r["users"] for r in server_rows if (r.get("region") or "—") == region),
-                "throughput": sum(
-                    r["throughput_bps"] for r in server_rows if (r.get("region") or "—") == region
-                ),
+                "cpu_avg": cpu_avg,
+                "ram_avg": ram_avg,
+                "users": sum(r["users"] for r in region_servers),
+                "throughput": sum(r["throughput_bps"] for r in region_servers),
                 "error_pct": health_strip["error_rate_pct"],
                 "latency_p95": None,
                 "health": "ok"

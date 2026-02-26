@@ -11,6 +11,7 @@ from fastapi.responses import JSONResponse, Response
 from prometheus_client import REGISTRY, generate_latest
 
 from app.api.v1.actions import router as actions_router
+from app.api.v1.app_settings import router as app_settings_router
 from app.api.v1.admin_configs import router as admin_configs_router
 from app.api.v1.agent import router as agent_router
 from app.api.v1.analytics import router as analytics_router
@@ -30,6 +31,7 @@ from app.api.v1.servers import router as servers_router
 from app.api.v1.servers_peers import router as servers_peers_router
 from app.api.v1.servers_stream import router as servers_stream_router
 from app.api.v1.subscriptions import router as subscriptions_router
+from app.api.v1.telemetry_snapshot import router as telemetry_snapshot_router
 from app.api.v1.telemetry_docker import router as telemetry_docker_router
 from app.api.v1.users import router as users_router
 from app.api.v1.webapp import router as webapp_router
@@ -49,7 +51,7 @@ from app.core.logging_config import (
     request_id_ctx,
     set_log_context,
 )
-from app.core.metrics import http_errors_total
+from app.core.metrics import http_errors_total, vpn_suite_info
 from app.core.node_scan_task import run_node_scan_loop, run_node_scan_once
 from app.core.otel_tracing import setup_otel_tracing
 from app.core.prometheus_middleware import PrometheusMiddleware, path_template
@@ -60,7 +62,7 @@ from app.core.request_logging_middleware import RequestLoggingMiddleware
 from app.core.server_sync_loop import run_server_sync_loop
 from app.core.telemetry_polling_task import run_telemetry_poll_loop
 from app.services.docker_telemetry_service import DockerTelemetryService
-from app.services.reconciliation_engine import run_reconciliation_loop
+from app.services.reconciliation_engine import reconcile_all_nodes, run_reconciliation_loop
 
 _log = logging.getLogger(__name__)
 # Single source of truth for API version (RC: 0.1.0-rc.1; traceability with CHANGELOG and release-checklist)
@@ -72,6 +74,7 @@ configure_logging(
     env=settings.environment,
 )
 set_log_context(service="admin-api", env=settings.environment, version=API_VERSION)
+vpn_suite_info.labels(version=API_VERSION).set(1)
 
 
 async def _generic_exception_handler(request: Request, exc: Exception) -> JSONResponse:
@@ -184,9 +187,20 @@ async def lifespan(app: FastAPI):
             await run_node_scan_once(lambda: app.state.node_runtime_adapter)
         except Exception as exc:
             _log.warning("Initial node scan failed: %s", redact_for_log(str(exc)))
+        # One-off reconciliation at startup so peers are applied promptly after restart.
+        try:
+            await reconcile_all_nodes(app.state.node_runtime_adapter)
+        except Exception as exc:
+            _log.warning("Initial reconciliation failed: %s", redact_for_log(str(exc)))
         scan_task = asyncio.create_task(run_node_scan_loop(lambda: app.state.node_runtime_adapter))
     else:
         # Agent mode: still refresh topology + metrics periodically from heartbeat data.
+        telemetry_task = asyncio.create_task(
+            run_telemetry_poll_loop(lambda: app.state.node_runtime_adapter)
+        )
+        recon_task = asyncio.create_task(
+            run_reconciliation_loop(lambda: app.state.node_runtime_adapter)
+        )
         try:
             await run_node_scan_once(lambda: app.state.node_runtime_adapter)
         except Exception as exc:
@@ -242,6 +256,7 @@ app.add_middleware(GlobalAPIRateLimitMiddleware)
 app.add_middleware(PrometheusMiddleware)
 app.add_middleware(RequestLoggingMiddleware)
 app.add_middleware(AuditMiddleware)
+app.include_router(app_settings_router, prefix="/api/v1")
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(log_router, prefix="/api/v1")
 app.include_router(overview_router, prefix="/api/v1")
@@ -264,6 +279,7 @@ app.include_router(plans_router, prefix="/api/v1")
 app.include_router(subscriptions_router, prefix="/api/v1")
 app.include_router(agent_router, prefix="/api/v1")
 app.include_router(telemetry_docker_router, prefix="/api/v1")
+app.include_router(telemetry_snapshot_router, prefix="/api/v1")
 app.include_router(payments_router, prefix="/api/v1")
 app.include_router(webhooks_router)  # /webhooks/payments/{provider} — no JWT
 app.include_router(bot_router, prefix="/api/v1")

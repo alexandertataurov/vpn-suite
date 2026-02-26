@@ -22,9 +22,10 @@ from app.core.exceptions import LoadBalancerError, WireGuardCommandError
 from app.core.rbac import require_permission
 from app.core.redis_client import get_redis
 from app.models import Device, Server, Subscription, User
-from app.schemas.device import DeviceList, DeviceOut, IssueRequest, IssueResponse
+from app.schemas.device import DeviceListItemOut, IssueRequest, IssueResponse, UserDeviceList
 from app.schemas.subscription import SubscriptionOut
 from app.schemas.user import UserCreate, UserDetail, UserList, UserOut, UserUpdate
+from app.api.v1.device_cache import invalidate_devices_summary_cache
 from app.services.funnel_service import log_funnel_event
 from app.services.issue_service import issue_device
 from app.services.topology_engine import TopologyEngine
@@ -187,7 +188,7 @@ async def update_user(
     return user
 
 
-@router.get("/{user_id}/devices", response_model=DeviceList)
+@router.get("/{user_id}/devices", response_model=UserDeviceList)
 async def list_user_devices(
     user_id: int,
     db: AsyncSession = Depends(get_db),
@@ -195,7 +196,7 @@ async def list_user_devices(
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
 ):
-    """List user devices. Allowed for bot (X-API-Key) or admin (JWT). Bot must pass user_id from by-tg lookup."""
+    """List user devices. Allowed for bot (X-API-Key) or admin (JWT). Uses DeviceListItemOut to avoid loading issued_configs."""
     result = await db.execute(select(User).where(User.id == user_id))
     if result.scalar_one_or_none() is None:
         raise not_found_404("User", user_id)
@@ -209,7 +210,7 @@ async def list_user_devices(
         .offset(offset)
     )
     rows = result.scalars().all()
-    return DeviceList(items=[DeviceOut.model_validate(r) for r in rows], total=total)
+    return UserDeviceList(items=[DeviceListItemOut.model_validate(r) for r in rows], total=total)
 
 
 @router.post(
@@ -293,6 +294,7 @@ async def issue_user_device(
     except (LoadBalancerError, WireGuardCommandError) as e:
         raise_http_for_control_plane_exception(e)
     await db.commit()
+    await invalidate_devices_summary_cache()
     await db.refresh(out.device)
     if idempotency_key:
         try:

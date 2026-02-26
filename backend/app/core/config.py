@@ -60,6 +60,7 @@ class Settings(BaseSettings):
     node_verify_ssl: bool = True
     restart_confirm_token: str = "confirm_restart"
     block_confirm_token: str = "confirm_block"
+    cleanup_db_confirm_token: str = "confirm_cleanup_db"
     # Telegram Stars webhook: secret for X-Telegram-Bot-Api-Secret-Token (empty = skip verify in dev)
     telegram_stars_webhook_secret: str = ""
     # Bot API: X-API-Key for /users/by-tg/{tg_id}, issue, reset (empty = only JWT)
@@ -71,6 +72,8 @@ class Settings(BaseSettings):
     limits_auto_block_enabled: bool = True
     node_telemetry_interval_seconds: int = 30
     node_telemetry_cache_ttl_seconds: int = 60
+    node_telemetry_concurrency: int = 10  # 0 = sequential; >0 = max concurrent polls per cycle
+    node_telemetry_interval_idle_seconds: int = 0  # when > 0 and no recent snapshot read, use this interval (e.g. 60)
     # Empty = disabled (no Prometheus calls). Set when using monitoring profile (e.g. http://prometheus:9090).
     telemetry_prometheus_url: str = ""
     telemetry_loki_url: str = ""
@@ -276,6 +279,15 @@ class Settings(BaseSettings):
             raise ValueError(
                 "Refusing to start: ENVIRONMENT=production but REVOKE_CONFIRM_TOKEN is still the default. "
                 "Set REVOKE_CONFIRM_TOKEN in .env."
+            )
+        if (
+            (not self.cleanup_db_confirm_token)
+            or self.cleanup_db_confirm_token == "confirm_cleanup_db"
+            or len(self.cleanup_db_confirm_token) < 16
+        ):
+            raise ValueError(
+                "Refusing to start: ENVIRONMENT=production but CLEANUP_DB_CONFIRM_TOKEN is still the default. "
+                "Set CLEANUP_DB_CONFIRM_TOKEN in .env."
             )
         if self.node_discovery == "agent" or self.node_mode == "agent":
             if not self.agent_shared_token or len(self.agent_shared_token) < 32:

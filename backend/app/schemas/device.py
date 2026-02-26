@@ -1,10 +1,15 @@
 """Device request/response schemas."""
 
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel
 
 from app.schemas.base import OrmSchema, StrictSchema
+
+ReconciliationStatus = Literal["ok", "needs_reconcile", "broken"]
+NodeHealthStatus = Literal["online", "offline", "unknown"]
+ConfigStateStatus = Literal["issued", "used", "pending"]
 
 
 class IssuedConfigOut(OrmSchema):
@@ -37,6 +42,24 @@ class IssueResponse(StrictSchema):
     peer_created: bool = False  # True when peer was created on VPN node (NODE_MODE=real)
 
 
+class DeviceTelemetryOut(BaseModel):
+    """Per-device telemetry from cache (handshake, rx/tx, reconciliation)."""
+
+    device_id: str
+    handshake_latest_at: datetime | None = None
+    handshake_age_sec: int | None = None
+    transfer_rx_bytes: int | None = None
+    transfer_tx_bytes: int | None = None
+    endpoint: str | None = None
+    allowed_ips_on_node: str | None = None
+    peer_present: bool = False
+    node_health: NodeHealthStatus = "unknown"
+    config_state: ConfigStateStatus = "issued"
+    reconciliation_status: ReconciliationStatus = "ok"
+    telemetry_reason: str | None = None
+    last_updated: datetime | None = None
+
+
 class DeviceOut(OrmSchema):
     id: str
     user_id: int
@@ -44,6 +67,7 @@ class DeviceOut(OrmSchema):
     server_id: str
     device_name: str | None
     public_key: str
+    allowed_ips: str | None = None
     issued_at: datetime
     revoked_at: datetime | None
     suspended_at: datetime | None = None
@@ -51,6 +75,26 @@ class DeviceOut(OrmSchema):
     expires_at: datetime | None = None
     created_at: datetime
     issued_configs: list[IssuedConfigOut] = []
+    user_email: str | None = None  # Populated when listing with User join
+    telemetry: DeviceTelemetryOut | None = None  # From cache when available
+
+
+class DeviceListItemOut(OrmSchema):
+    """Device fields for list; no issued_configs to avoid lazy-load 500s."""
+
+    id: str
+    user_id: int
+    subscription_id: str
+    server_id: str
+    device_name: str | None
+    public_key: str
+    allowed_ips: str | None = None
+    issued_at: datetime
+    revoked_at: datetime | None
+    suspended_at: datetime | None = None
+    data_limit_bytes: int | None = None
+    expires_at: datetime | None = None
+    created_at: datetime
 
 
 class DeviceLimitUpdate(BaseModel):
@@ -63,7 +107,32 @@ class DeviceList(OrmSchema):
     total: int
 
 
+class UserDeviceList(BaseModel):
+    """List of devices for GET /users/{id}/devices; uses DeviceListItemOut to avoid loading issued_configs."""
+
+    items: list[DeviceListItemOut]
+    total: int
+
+
+class DeviceSummaryOut(BaseModel):
+    """Aggregate counts for devices dashboard."""
+
+    total: int
+    active: int
+    revoked: int
+    unused_configs: int  # issued_configs where consumed_at is null
+    no_allowed_ips: int  # devices where allowed_ips null/empty/invalid
+    handshake_ok_count: int = 0  # from telemetry cache: handshake in last 2m
+    no_handshake_count: int = 0  # from telemetry cache: no handshake or stale
+    traffic_zero_count: int = 0  # from telemetry cache: rx+tx == 0
+    telemetry_last_updated: datetime | None = None  # global cache freshness
+
+
 class RevokeRequest(BaseModel):
+    confirm_token: str
+
+
+class DeleteRequest(BaseModel):
     confirm_token: str
 
 

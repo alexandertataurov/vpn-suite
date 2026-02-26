@@ -158,6 +158,14 @@ async def migrate_peer_endpoint(
                 "message": "Live peer migration is not supported in NODE_MODE=agent. Re-issue config on target node instead.",
             },
         )
+    if settings.node_discovery == "agent":
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "code": "AGENT_DISCOVERY_UNSUPPORTED",
+                "message": "add_peer is not supported in NODE_DISCOVERY=agent. Migration requires NODE_DISCOVERY=docker. Re-issue config on target node instead.",
+            },
+        )
     engine = TopologyEngine(adapter)
     get_topology = engine.get_topology
     try:

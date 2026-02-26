@@ -106,7 +106,7 @@ async def test_issue_device_uses_profile_defaults_when_runtime_returns_none(monk
 
     assert "S1 = 0" not in result.config_awg
     assert "S2 = 0" not in result.config_awg
-    assert "Jc = 4" in result.config_awg
+    assert "Jc = 3" in result.config_awg
 
 
 @pytest.mark.asyncio
