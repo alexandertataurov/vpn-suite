@@ -165,7 +165,15 @@ async def issue_device(
     if mtu is not None and mtu <= 0:
         mtu = None
     if mtu is None:
-        mtu = 1280
+        mtu = 1200
+    persistent_keepalive = 15
+    if request_params:
+        raw = request_params.get("persistent_keepalive") or request_params.get("amnezia_keepalive")
+        if raw is not None:
+            try:
+                persistent_keepalive = max(10, min(60, int(raw)))
+            except (TypeError, ValueError):
+                pass
     preshared_key = None
     if request_params:
         preshared_key = request_params.get("preshared_key") or request_params.get(
@@ -228,7 +236,7 @@ async def issue_device(
                 PeerConfigLike(
                     public_key=public_key_b64,
                     allowed_ips=allowed_ips_val,
-                    persistent_keepalive=25,
+                    persistent_keepalive=persistent_keepalive,
                     preshared_key=preshared_key,
                 ),
             )
@@ -272,6 +280,7 @@ async def issue_device(
             mtu=mtu,
             address=allowed_ips_val,
             preshared_key=preshared_key,
+            persistent_keepalive=persistent_keepalive,
         )
         _config_log.info(
             "configs generated",

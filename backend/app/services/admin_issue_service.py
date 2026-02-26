@@ -84,7 +84,7 @@ async def _ensure_device_peer_on_node(
         PeerConfigLike(
             public_key=public_key.strip(),
             allowed_ips=allowed_ips.strip(),
-            persistent_keepalive=25,
+            persistent_keepalive=15,
             preshared_key=preshared_key,
         ),
     )
@@ -237,7 +237,15 @@ async def admin_issue_peer(
         mtu = None
     # Default MTU 1280 for full-tunnel to reduce fragmentation (no-traffic troubleshooting)
     if mtu is None:
-        mtu = 1280
+        mtu = 1200
+    persistent_keepalive = 15
+    if request_params:
+        raw = request_params.get("persistent_keepalive") or request_params.get("amnezia_keepalive")
+        if raw is not None:
+            try:
+                persistent_keepalive = max(10, min(60, int(raw)))
+            except (TypeError, ValueError):
+                pass
 
     private_key_b64, public_key_b64 = generate_wg_keypair()
     config_hash = _config_hash(public_key_b64, private_key_b64)
@@ -298,6 +306,7 @@ async def admin_issue_peer(
             mtu=mtu,
             address=allowed_ips_val,
             preshared_key=preshared_key,
+            persistent_keepalive=persistent_keepalive,
         )
         _config_log.info(
             "configs generated",
@@ -581,7 +590,15 @@ async def admin_rotate_peer(
     if mtu is not None and mtu <= 0:
         mtu = None
     if mtu is None:
-        mtu = 1280
+        mtu = 1200
+    persistent_keepalive = 15
+    if request_params:
+        raw = request_params.get("persistent_keepalive") or request_params.get("amnezia_keepalive")
+        if raw is not None:
+            try:
+                persistent_keepalive = max(10, min(60, int(raw)))
+            except (TypeError, ValueError):
+                pass
 
     old_public_key = device.public_key
     old_preshared_key = getattr(device, "preshared_key", None)
@@ -650,6 +667,7 @@ async def admin_rotate_peer(
             mtu=mtu,
             address=allowed_ips_val,
             preshared_key=preshared_key,
+            persistent_keepalive=persistent_keepalive,
         )
         _config_log.info(
             "configs generated",
@@ -685,7 +703,7 @@ async def admin_rotate_peer(
                 PeerConfigLike(
                     public_key=public_key_b64,
                     allowed_ips=allowed_ips_val,
-                    persistent_keepalive=25,
+                    persistent_keepalive=persistent_keepalive,
                     preshared_key=preshared_key,
                 ),
             )
