@@ -32,6 +32,11 @@ TEXTS = {
         "error_config_exists": "Конфиг для этого устройства уже есть.",
         "error_server": "Временная ошибка сервера. Попробуйте позже.",
         "configs_intro": "Конфиг выдаётся при добавлении устройства. Ниже — ваши устройства (сброс = отзыв конфига).",
+        "devices": "Устройства",
+        "choose_config_format": "Выберите формат конфига:",
+        "config_awg": "AmneziaWG",
+        "config_wg_obf": "WireGuard (обфускация)",
+        "config_wg": "WireGuard (стандарт)",
     },
     "en": {
         "welcome": "Welcome! Get VPN in under a minute.",
@@ -64,6 +69,11 @@ TEXTS = {
         "error_config_exists": "Config already exists for this device.",
         "error_server": "Temporary server error. Try again later.",
         "configs_intro": "Config is issued when you add a device. Below are your devices (reset = revoke config).",
+        "devices": "Devices",
+        "choose_config_format": "Choose config format:",
+        "config_awg": "AmneziaWG",
+        "config_wg_obf": "WireGuard (obfuscated)",
+        "config_wg": "WireGuard (standard)",
     },
 }
 

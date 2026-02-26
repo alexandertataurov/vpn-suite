@@ -4,7 +4,7 @@ Callback format: action:param1:param2 (no spaces, : separator).
 Examples: plan:abc, device_config:123, device_reset:456, menu:main, menu:devices.
 """
 
-from aiogram.types import InlineKeyboardButton
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 
@@ -42,3 +42,26 @@ def nav_row_buttons(
     if show_home:
         row.append(InlineKeyboardButton(text=HOME_TEXT, callback_data="menu:main"))
     return row
+
+
+def error_nav_markup() -> InlineKeyboardMarkup:
+    """Inline Home for error / dead-end messages."""
+    return InlineKeyboardMarkup(inline_keyboard=[nav_row_buttons(back_callback="menu:main")])
+
+
+def connect_nav_markup(locale: str = "en") -> InlineKeyboardMarkup:
+    """Inline [Connect] [Home] for no_subscription / device_limit so user can open plan list."""
+    connect_text = "Connect" if locale == "en" else "Подключить"
+    return InlineKeyboardMarkup(inline_keyboard=[[
+        InlineKeyboardButton(text=connect_text, callback_data="show_tariffs"),
+        InlineKeyboardButton(text=HOME_TEXT, callback_data="menu:main"),
+    ]])
+
+
+def instruction_nav_markup(locale: str = "en") -> InlineKeyboardMarkup:
+    """Inline [Open Connect menu] [Home] after instruction text."""
+    open_connect = "Open Connect menu" if locale == "en" else "Открыть меню Подключить"
+    return InlineKeyboardMarkup(inline_keyboard=[[
+        InlineKeyboardButton(text=open_connect, callback_data="show_tariffs"),
+        InlineKeyboardButton(text=HOME_TEXT, callback_data="menu:main"),
+    ]])

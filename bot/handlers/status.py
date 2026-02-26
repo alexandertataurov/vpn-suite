@@ -38,7 +38,7 @@ async def cmd_status(message: Message, state):
         await message.answer(t(locale, "no_subscription"))
         return
 
-    dev_result = await get_user_devices(user_data["id"])
+    dev_result = await get_user_devices(int(user_data["id"]))
     devices_used = len(dev_result.data) if dev_result.success and dev_result.data else 0
     blocks = []
     for s in active:

@@ -166,3 +166,4 @@ yarl==1.22.0
     # via aiohttp
 zipp==3.23.0
     # via importlib-metadata
+qrcode[pil]==7.4.2

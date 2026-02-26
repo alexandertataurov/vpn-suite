@@ -7,6 +7,7 @@ from aiogram.types import Message, CallbackQuery, LabeledPrice
 from aiogram.utils.deep_linking import decode_payload
 
 from i18n import t
+from utils.formatting import is_subscription_effectively_active
 
 router = Router()
 _log = structlog.get_logger(__name__)
@@ -54,6 +55,9 @@ async def cmd_start(message: Message, state):
         inv_result = await get_payment_invoice(payment_id, message.from_user.id)
         if inv_result.success and inv_result.data:
             inv = inv_result.data
+            if inv.get("free_activation") or int(inv.get("star_count", 1)) == 0:
+                await message.answer("Subscription is active. Use the menu to add a device and get your config.")
+                return
             title = inv.get("title", "VPN")
             description = inv.get("description", "VPN plan")
             payload = inv.get("payload", inv.get("payment_id", ""))
@@ -68,8 +72,36 @@ async def cmd_start(message: Message, state):
             )
             return
     ref_code = _get_ref_code_from_start(message.text)
+    data = await state.get_data()
+    locale = data.get("locale")
+    if locale and message.from_user:
+        has_sub = await _user_has_active_sub(message.from_user.id)
+        if has_sub:
+            await state.set_state(None)
+            await state.update_data(
+                add_device_sub_id=None,
+                add_device_user_id=None,
+                add_device_servers=None,
+                add_device_name=None,
+                add_device_type=None,
+                add_device_default_name=None,
+                issued_config_awg=None,
+                issued_config_wg_obf=None,
+                issued_config_wg=None,
+                issued_device_name=None,
+            )
+            welcome = t(locale, "welcome")
+            if ref_code:
+                welcome += "\n\n" + t(locale, "ref_invited")
+                await state.update_data(referral_code=ref_code)
+            await message.answer(welcome)
+            await _send_main_keyboard(message, locale, is_existing=True)
+            if message.from_user:
+                from api_client import post_event
+                await post_event("start", message.from_user.id, {"ref": ref_code[:32] if ref_code else None})
+            return
     await state.clear()
-    if ref_code:
+    if ref_code and message.from_user:
         await state.update_data(referral_code=ref_code)
         _log.info("user_action", telegram_id=message.from_user.id, action="start_ref", ref=ref_code[:8])
     if message.from_user:
@@ -130,29 +162,70 @@ async def set_lang(callback: CallbackQuery, state):
     await _send_main_keyboard(callback.message, lang)
 
 
-def _main_keyboard(locale: str):
+def _main_keyboard(locale: str, is_existing: bool):
+    """New clients: Connect, Instruction, Support. Existing: Profile, Add device, Devices, etc."""
     from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
-    return ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text=t(locale, "connect_cta")), KeyboardButton(text=t(locale, "plans"))],
-            [KeyboardButton(text=t(locale, "profile")), KeyboardButton(text=t(locale, "add_device"))],
+    if is_existing:
+        keyboard = [
+            [KeyboardButton(text=t(locale, "my_cabinet")), KeyboardButton(text=t(locale, "add_device"))],
+            [KeyboardButton(text=t(locale, "devices")), KeyboardButton(text=t(locale, "reset_device"))],
             [KeyboardButton(text=t(locale, "invite_friend")), KeyboardButton(text=t(locale, "promo_code"))],
-            [KeyboardButton(text=t(locale, "reset_device")), KeyboardButton(text=t(locale, "instruction"))],
-            [KeyboardButton(text=t(locale, "support"))],
-        ],
-        resize_keyboard=True,
-    )
+            [KeyboardButton(text=t(locale, "connect_cta"))],
+            [KeyboardButton(text=t(locale, "instruction")), KeyboardButton(text=t(locale, "support"))],
+        ]
+    else:
+        keyboard = [
+            [KeyboardButton(text=t(locale, "connect_cta"))],
+            [KeyboardButton(text=t(locale, "instruction")), KeyboardButton(text=t(locale, "support"))],
+        ]
+    return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
 
-async def _send_main_keyboard(message: Message, locale: str):
-    await message.answer("OK", reply_markup=_main_keyboard(locale))
+async def _user_has_active_sub(tg_id: int) -> bool:
+    from api_client import get_user_by_tg
+    result = await get_user_by_tg(tg_id)
+    if not result.success or not result.data:
+        return False
+    for sub in result.data.get("subscriptions") or []:
+        if is_subscription_effectively_active(sub):
+            return True
+    return False
+
+
+async def _send_main_keyboard(message: Message, locale: str, is_existing: bool | None = None, text: str | None = None):
+    if is_existing is None and message.from_user:
+        is_existing = await _user_has_active_sub(message.from_user.id)
+    await message.answer(text or "—", reply_markup=_main_keyboard(locale, is_existing))
+
+
+def get_main_keyboard(locale: str, is_existing: bool):
+    """Return ReplyKeyboardMarkup for new (False) or existing (True) client. For use by other handlers."""
+    return _main_keyboard(locale, is_existing)
+
+
+async def send_main_keyboard_for(message: Message, locale: str, is_existing: bool, text: str | None = None):
+    """Send the main menu keyboard. Pass text to attach keyboard to content; else sends minimal placeholder."""
+    await message.answer(text or "—", reply_markup=_main_keyboard(locale, is_existing))
 
 
 @router.callback_query(F.data == "menu:main")
 async def menu_main(callback: CallbackQuery, state):
-    """Global handler: show main ReplyKeyboard from any inline keyboard (Back/Home)."""
+    """Show main ReplyKeyboard (new vs existing based on API). Clear add_device/issued_config state to avoid stuck FSM."""
     await callback.answer()
+    await state.set_state(None)
+    await state.update_data(
+        add_device_sub_id=None,
+        add_device_user_id=None,
+        add_device_servers=None,
+        add_device_name=None,
+        add_device_type=None,
+        add_device_default_name=None,
+        issued_config_awg=None,
+        issued_config_wg_obf=None,
+        issued_config_wg=None,
+        issued_device_name=None,
+    )
     data = await state.get_data()
     locale = data.get("locale", "en")
-    await _send_main_keyboard(callback.message, locale)
+    await _send_main_keyboard(callback.message, locale, is_existing=None)

@@ -29,10 +29,7 @@ def setup_otel_tracing(endpoint: str) -> bool:
         provider.add_span_processor(BatchSpanProcessor(exporter))
         trace.set_tracer_provider(provider)
         HTTPXClientInstrumentor().instrument()
-        from opentelemetry.instrumentation.aiohttp_server import AioHttpServerInstrumentor
-
-        AioHttpServerInstrumentor().instrument()
-        _log.info("OTEL tracing enabled: endpoint=%s (httpx, aiohttp server instrumented)", endpoint)
+        _log.info("OTEL tracing enabled: endpoint=%s (httpx instrumented)", endpoint)
         return True
     except Exception as e:
         _log.warning("OTEL tracing setup failed (tracing disabled): %s", e)

@@ -189,7 +189,7 @@ class ApiClient:
                     telegram_id=telegram_id,
                 )
                 last_response = r
-                record_request(r.status_code)
+                record_request(r.status_code, latency_ms / 1000.0)
                 if r.status_code < 500:
                     # 2xx, 4xx: no retry
                     if r.status_code >= 400:
@@ -224,7 +224,7 @@ class ApiClient:
                     delay = BACKOFF_BASE * (2**attempt)
                     await asyncio.sleep(delay)
                     continue
-                record_request(None)
+                record_request(None, latency_ms / 1000.0)
                 return (None, "error_timeout")
         return (
             last_response,

@@ -40,6 +40,7 @@ from handlers.support import router as support_router
 from otel_tracing import setup_otel_tracing
 
 _log = get_logger(__name__)
+TRACING_ENABLED = False
 
 
 async def _ensure_redis(redis_url: str, max_attempts: int = 5):
@@ -59,6 +60,12 @@ async def _ensure_redis(redis_url: str, max_attempts: int = 5):
 
 
 async def healthz_handler(_):
+    if TRACING_ENABLED:
+        from opentelemetry import trace
+
+        tracer = trace.get_tracer(__name__)
+        with tracer.start_as_current_span("healthz"):
+            pass
     return web.Response(text="ok", status=200)
 
 
@@ -77,8 +84,12 @@ async def bad_request_middleware(request, handler):
         return web.Response(status=400, text="Bad Request")
 
 
-async def run_healthz_app():
+async def run_healthz_app(tracing_enabled: bool):
     app = web.Application(middlewares=[bad_request_middleware])
+    if tracing_enabled:
+        from opentelemetry.instrumentation.aiohttp_server import AioHttpServerInstrumentor
+
+        AioHttpServerInstrumentor().instrument()
     app.router.add_get("/healthz", healthz_handler)
     app.router.add_get("/metrics", metrics_handler)
     runner = web.AppRunner(app)
@@ -90,8 +101,10 @@ async def run_healthz_app():
 
 async def run_bot():
     validate_config()
-    setup_otel_tracing(OTEL_TRACES_ENDPOINT)
-    await run_healthz_app()
+    tracing_enabled = setup_otel_tracing(OTEL_TRACES_ENDPOINT)
+    global TRACING_ENABLED
+    TRACING_ENABLED = tracing_enabled
+    await run_healthz_app(tracing_enabled)
     await init_api()
     try:
         bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))

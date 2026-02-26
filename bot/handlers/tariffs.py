@@ -9,7 +9,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import Message, CallbackQuery, LabeledPrice, InlineKeyboardButton, InlineKeyboardMarkup
 
 from config import BOT_USERNAME, SUPPORT_LINK, SUPPORT_HANDLE, INSTALL_GUIDE_URL
-from keyboards.common import nav_row_buttons
+from keyboards.common import nav_row_buttons, error_nav_markup, connect_nav_markup, instruction_nav_markup
 from api_client import (
     get_plans,
     create_or_get_subscription,
@@ -76,6 +76,7 @@ def _menu_texts(locale: str) -> dict[str, set[str]]:
         "instruction": {t(locale, "instruction"), "Instruction", "Инструкция"},
         "invite_friend": {t(locale, "invite_friend"), "Invite friend", "Пригласить друга"},
         "promo_code": {t(locale, "promo_code"), "Promo code", "Промокод"},
+        "devices": {t(locale, "devices"), "Devices", "Устройства"},
     }
 
 
@@ -114,7 +115,7 @@ async def message_handler(message: Message, state):
                 await state.update_data(promo_code=text.strip())
                 await message.answer("OK" if locale == "en" else "Промокод принят. Выберите тариф для оплаты.")
         else:
-            await message.answer(get_error_message("error_api", locale))
+            await message.answer(get_error_message("error_api", locale), reply_markup=error_nav_markup())
         return
     texts = _menu_texts(locale)
     if text in texts["tariffs"] or text in texts["connect"]:
@@ -129,11 +130,16 @@ async def message_handler(message: Message, state):
     if text in texts["add_device"]:
         await add_device_flow(message, locale, state)
         return
+    if text in texts["devices"]:
+        from handlers.devices import show_devices_list
+        await show_devices_list(message, state)
+        return
     if text in texts["reset_device"]:
         await reset_device_flow(message, locale, state)
         return
     if text in texts["instruction"]:
         await message.answer(t(locale, "instruction_text"))
+        await message.answer("—", reply_markup=instruction_nav_markup(locale))
         return
     if text in texts["invite_friend"]:
         await invite_friend_flow(message, locale)
@@ -144,16 +150,24 @@ async def message_handler(message: Message, state):
         return
 
 
+@router.callback_query(F.data == "show_tariffs")
+async def on_show_tariffs_callback(callback: CallbackQuery, state: FSMContext):
+    """Open plan list from inline [Connect] (no_sub / device_limit)."""
+    await callback.answer()
+    locale = (await state.get_data()).get("locale", "en")
+    await show_tariffs(callback.message, locale)
+
+
 async def show_tariffs(message: Message, locale: str):
     if message.from_user:
         await post_event("view_tariff", message.from_user.id, {})
     plans_result = await get_plans()
     if not plans_result.success:
-        await message.answer(get_error_message(plans_result.error or "error_api", locale))
+        await message.answer(get_error_message(plans_result.error or "error_api", locale), reply_markup=error_nav_markup())
         return
     plans = plans_result.data or []
     if not plans:
-        await message.answer("No plans available." if locale == "en" else "Тарифы пока недоступны.")
+        await message.answer("No plans available." if locale == "en" else "Тарифы пока недоступны.", reply_markup=error_nav_markup())
         return
     from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
@@ -201,6 +215,22 @@ async def on_plan_selected(callback: CallbackQuery, state):
     inv = inv_result.data or {}
     if promo_code:
         await state.update_data(promo_code=None)
+    free_activation = inv.get("free_activation") or int(inv.get("star_count", 1)) == 0
+    if free_activation:
+        from handlers.start import get_main_keyboard
+        add_now = "Add device now" if locale == "en" else "Добавить устройство"
+        kb = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text=add_now, callback_data="add_device:from_free")],
+            nav_row_buttons(back_callback="menu:main"),
+        ])
+        await callback.message.answer(
+            get_success_message("payment_success", locale)
+            + (" Add device from menu or tap below." if locale == "en" else " Добавьте устройство в меню или нажмите ниже."),
+            reply_markup=kb,
+        )
+        await callback.message.answer("—", reply_markup=get_main_keyboard(locale, True))
+        await callback.answer()
+        return
     title = inv.get("title", "VPN")
     description = inv.get("description", "VPN plan")
     payload = inv.get("payload", inv.get("payment_id", ""))
@@ -216,7 +246,7 @@ async def on_plan_selected(callback: CallbackQuery, state):
         )
     except Exception as e:
         _log.warning("api_error", action="answer_invoice", error=str(e))
-        await callback.message.answer(get_error_message("error_api", locale))
+        await callback.message.answer(get_error_message("error_api", locale), reply_markup=error_nav_markup())
     await callback.answer()
 
 
@@ -230,38 +260,46 @@ async def on_successful_payment(message: Message, state):
         return
     is_confirmed = await _wait_for_active_subscription(user.id)
     if is_confirmed:
-        await message.answer(get_success_message("payment_success", locale))
+        from handlers.start import get_main_keyboard
+        await message.answer(
+            get_success_message("payment_success", locale),
+            reply_markup=get_main_keyboard(locale, True),
+        )
     else:
-        await message.answer(get_success_message("payment_pending_activation", locale))
+        from handlers.start import get_main_keyboard
+        await message.answer(
+            get_success_message("payment_pending_activation", locale),
+            reply_markup=get_main_keyboard(locale, True),
+        )
 
 
-async def add_device_flow(message: Message, locale: str, state: FSMContext):
-    user = message.from_user
+async def add_device_flow(message: Message, locale: str, state: FSMContext, user=None):
+    user = user or message.from_user
     if not user:
-        await message.answer(get_error_message("error_api", locale))
+        await message.answer(get_error_message("error_api", locale), reply_markup=error_nav_markup())
         return
     result = await get_user_by_tg(user.id)
     if not result.success:
-        await message.answer(get_error_message(result.error or "error_api", locale))
+        await message.answer(get_error_message(result.error or "error_api", locale), reply_markup=error_nav_markup())
         return
     user_data = result.data
     if not user_data:
-        await message.answer(t(locale, "no_subscription"))
+        await message.answer(t(locale, "no_subscription"), reply_markup=connect_nav_markup(locale))
         return
     subs = [s for s in (user_data.get("subscriptions") or []) if is_subscription_effectively_active(s)]
     if not subs:
-        await message.answer(t(locale, "no_subscription"))
+        await message.answer(t(locale, "no_subscription"), reply_markup=connect_nav_markup(locale))
         return
     sub = subs[0]
     sub_id = sub.get("id")
     servers_result = await get_servers(limit=10, is_active=True)
     servers = servers_result.data if servers_result.success else []
     if not servers:
-        await message.answer("No server available." if locale == "en" else "Нет доступного сервера.")
+        await message.answer("No server available." if locale == "en" else "Нет доступного сервера.", reply_markup=error_nav_markup())
         return
     await state.update_data(
         add_device_sub_id=sub_id,
-        add_device_user_id=user_data["id"],
+        add_device_user_id=int(user_data["id"]),
         add_device_servers=servers[:10],
     )
     # Step 1: Choose device type
@@ -276,18 +314,33 @@ async def add_device_flow(message: Message, locale: str, state: FSMContext):
     )
 
 
+@router.callback_query(F.data == "add_device:from_free")
+async def on_add_device_from_free(callback: CallbackQuery, state: FSMContext):
+    await callback.answer()
+    locale = (await state.get_data()).get("locale", "en")
+    await add_device_flow(callback.message, locale, state, user=callback.from_user)
+
+
 @router.callback_query(F.data.startswith("device_type:"))
 async def on_device_type_selected(callback: CallbackQuery, state: FSMContext):
     device_type = callback.data.replace("device_type:", "", 1)
     if not device_type:
         await callback.answer()
         return
-    locale = (await state.get_data()).get("locale", "en")
+    data = await state.get_data()
+    locale = data.get("locale", "en")
     default_name = next((d[2] for d in DEVICE_TYPES if d[0] == device_type), "Device")
     await state.update_data(add_device_type=device_type, add_device_default_name=default_name)
     await callback.answer()
-    # Step 2: Name (skip or custom)
-    buttons = [
+    servers = data.get("add_device_servers") or []
+    # Step 2: Name (quick add when one server, or skip/custom)
+    buttons = []
+    if len(servers) == 1:
+        buttons.append([InlineKeyboardButton(
+            text=("Quick add (default name)" if locale == "en" else "Быстрое добавление (имя по умолчанию)"),
+            callback_data="add_device_quick",
+        )])
+    buttons += [
         [InlineKeyboardButton(text="Skip — use default" if locale == "en" else "Пропустить — по умолчанию", callback_data="add_device_skip_name")],
         [InlineKeyboardButton(text="Enter custom name" if locale == "en" else "Ввести своё имя", callback_data="add_device_custom_name")],
     ]
@@ -295,6 +348,29 @@ async def on_device_type_selected(callback: CallbackQuery, state: FSMContext):
     await callback.message.answer(
         "Name your device?" if locale == "en" else "Назвать устройство?",
         reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons),
+    )
+
+
+@router.callback_query(F.data == "add_device_quick")
+async def on_add_device_quick(callback: CallbackQuery, state: FSMContext):
+    """One-tap issue when single server: default name + that server."""
+    await callback.answer()
+    data = await state.get_data()
+    servers = data.get("add_device_servers") or []
+    if len(servers) != 1:
+        tg_id = callback.from_user.id if callback.from_user else 0
+        await state.update_data(add_device_name=data.get("add_device_default_name", "Device"))
+        await _add_device_server_step(callback.message, state, tg_id)
+        return
+    user_id = data.get("add_device_user_id")
+    sub_id = data.get("add_device_sub_id")
+    default_name = data.get("add_device_default_name", "Device")
+    if not user_id or not sub_id or not callback.from_user:
+        locale = data.get("locale", "en")
+        await callback.message.answer(get_error_message("error_api", locale), reply_markup=error_nav_markup())
+        return
+    await _do_issue_device(
+        callback.message, state, user_id, sub_id, servers[0]["id"], default_name, callback.from_user.id,
     )
 
 
@@ -354,7 +430,7 @@ async def _add_device_server_step(message: Message, state: FSMContext, tg_id: in
     sub_id = data.get("add_device_sub_id")
     user_id = data.get("add_device_user_id")
     if not sub_id or not user_id:
-        await message.answer(get_error_message("error_api", locale))
+        await message.answer(get_error_message("error_api", locale), reply_markup=error_nav_markup())
         return
     if len(servers) == 1:
         await _do_issue_device(message, state, user_id, sub_id, servers[0]["id"], data.get("add_device_name"), tg_id)
@@ -390,8 +466,34 @@ async def on_server_select_add_device(callback: CallbackQuery, state: FSMContext
     await callback.answer()
 
 
+CONFIG_KEYS = ("config_awg", "config_wg_obf", "config_wg")
+CONFIG_LABELS = {"config_awg": "AmneziaWG", "config_wg_obf": "WG Obfuscated", "config_wg": "WG Standard"}
+
+
+async def _send_one_config(target: Message, config: str, locale: str, device_name: str | None, label: str):
+    from aiogram.types import BufferedInputFile
+    await safe_send_message(target, f"<b>{label}</b>\n<pre>{config}</pre>")
+    try:
+        name = (device_name or "config").replace(" ", "_")[:28] + f"_{label.replace(' ', '-')}.conf"
+        await target.answer_document(BufferedInputFile(config.encode("utf-8"), filename=name))
+    except Exception:
+        pass
+    try:
+        import io
+        import qrcode
+        img = qrcode.make(config)
+        bio = io.BytesIO()
+        img.save(bio, format="PNG")
+        bio.seek(0)
+        await target.answer_photo(BufferedInputFile(bio.getvalue(), filename="config-qr.png"), caption="QR: scan to import" if locale == "en" else "QR: отсканируйте для импорта")
+    except Exception:
+        pass
+
+
 async def _do_issue_device(message: Message, state: FSMContext, user_id: int, sub_id: str, server_id: str, device_name: str | None, tg_id: int):
     locale = (await state.get_data()).get("locale", "en")
+    loading_text = "⏳ One moment…" if locale == "en" else "⏳ Один момент…"
+    status_msg = await message.answer(loading_text)
     await state.update_data(add_device_sub_id=None, add_device_user_id=None, add_device_servers=None, add_device_name=None, add_device_type=None, add_device_default_name=None)
     idempotency_key = f"issue_{tg_id}_{sub_id}_{uuid.uuid4().hex[:12]}"
     issue_result = await issue_device(
@@ -401,40 +503,64 @@ async def _do_issue_device(message: Message, state: FSMContext, user_id: int, su
         device_name=device_name or f"tg_{tg_id}",
         idempotency_key=idempotency_key,
     )
+    try:
+        await status_msg.delete()
+    except Exception:
+        pass
     if not issue_result.success:
-        await message.answer(get_error_message(issue_result.error or "error_api", locale))
+        markup = connect_nav_markup(locale) if (issue_result.error or "") == "error_device_limit" else error_nav_markup()
+        await message.answer(get_error_message(issue_result.error or "error_api", locale), reply_markup=markup)
         return
     data = issue_result.data or {}
-    config = data.get("config_awg") or data.get("config") or data.get("config_wg_obf")
-    if config:
+    configs = {k: data.get(k) for k in CONFIG_KEYS if data.get(k)}
+    if not configs:
+        from handlers.start import get_main_keyboard
+        await message.answer(get_success_message("device_added", locale), reply_markup=get_main_keyboard(locale, is_existing=True))
+        return
+    if len(configs) == 1:
+        (key, config), = configs.items()
         await message.answer(get_success_message("device_added", locale))
-        await safe_send_message(message, f"<pre>{config}</pre>")
-        await message.answer("Install: " + INSTALL_GUIDE_URL if locale == "en" else "Установка: " + INSTALL_GUIDE_URL)
-    else:
-        await message.answer(get_success_message("device_added", locale))
+        await _send_one_config(message, config, locale, device_name, CONFIG_LABELS.get(key, key))
+        from handlers.start import get_main_keyboard
+        await message.answer("Install: " + INSTALL_GUIDE_URL if locale == "en" else "Установка: " + INSTALL_GUIDE_URL, reply_markup=get_main_keyboard(locale, is_existing=True))
+        return
+    await message.answer(get_success_message("device_added", locale))
+    await message.answer(t(locale, "choose_config_format"), reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text=t(locale, k), callback_data=f"config_type:{k}")] for k in CONFIG_KEYS if data.get(k)
+    ] + [nav_row_buttons(back_callback="menu:main")]))
+    await state.update_data(
+        issued_config_awg=data.get("config_awg"),
+        issued_config_wg_obf=data.get("config_wg_obf"),
+        issued_config_wg=data.get("config_wg"),
+        issued_device_name=device_name,
+    )
 
 
 async def reset_device_flow(message: Message, locale: str, state):
     user = message.from_user
     if not user:
-        await message.answer(get_error_message("error_api", locale))
+        await message.answer(get_error_message("error_api", locale), reply_markup=error_nav_markup())
         return
     result = await get_user_by_tg(user.id)
     if not result.success:
-        await message.answer(get_error_message(result.error or "error_api", locale))
+        await message.answer(get_error_message(result.error or "error_api", locale), reply_markup=error_nav_markup())
         return
     user_data = result.data
     if not user_data:
-        await message.answer(t(locale, "no_subscription"))
+        await message.answer(t(locale, "no_subscription"), reply_markup=connect_nav_markup(locale))
         return
-    dev_result = await get_user_devices(user_data["id"])
+    dev_result = await get_user_devices(int(user_data["id"]))
     if not dev_result.success:
-        await message.answer(get_error_message(dev_result.error or "error_api", locale))
+        from handlers.devices import ERROR_DEVICE_NOT_FOUND
+        if dev_result.error == ERROR_DEVICE_NOT_FOUND:
+            await message.answer("No devices to reset. Add one from the menu first." if locale == "en" else "Нет устройств для сброса. Сначала добавьте устройство в меню.", reply_markup=error_nav_markup())
+            return
+        await message.answer(get_error_message(dev_result.error or "error_api", locale), reply_markup=error_nav_markup())
         return
     devices = dev_result.data or []
     active = [d for d in devices if not d.get("revoked_at")]
     if not active:
-        await message.answer("No devices to reset." if locale == "en" else "Нет устройств для сброса.")
+        await message.answer("No devices to reset. Add one from the menu first." if locale == "en" else "Нет устройств для сброса. Сначала добавьте устройство в меню.", reply_markup=error_nav_markup())
         return
     from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
@@ -455,7 +581,7 @@ async def invite_friend_flow(message: Message, locale: str):
         return
     data_result = await get_referral_my_link(user.id)
     if not data_result.success:
-        await message.answer(get_error_message(data_result.error or "error_api", locale))
+        await message.answer(get_error_message(data_result.error or "error_api", locale), reply_markup=error_nav_markup())
         return
     data = data_result.data or {}
     payload = data.get("payload", "ref_")
@@ -497,14 +623,51 @@ async def on_server_selected(callback: CallbackQuery, state):
         return
     await state.update_data(add_device_sub_id=None, add_device_user_id=None)
     data = issue_result.data or {}
-    config = data.get("config_awg") or data.get("config") or data.get("config_wg_obf")
-    if config:
+    configs = {k: data.get(k) for k in CONFIG_KEYS if data.get(k)}
+    device_name = data.get("device_name")
+    if not configs:
+        from handlers.start import get_main_keyboard
+        await callback.message.answer(get_success_message("device_added", locale), reply_markup=get_main_keyboard(locale, is_existing=True))
+    elif len(configs) == 1:
+        (key, config), = configs.items()
         await callback.message.answer(get_success_message("device_added", locale))
-        await safe_send_message(callback.message, f"<pre>{config}</pre>")
-        await callback.message.answer("Install: " + INSTALL_GUIDE_URL if locale == "en" else "Установка: " + INSTALL_GUIDE_URL)
+        await _send_one_config(callback.message, config, locale, device_name, CONFIG_LABELS.get(key, key))
+        from handlers.start import get_main_keyboard
+        await callback.message.answer("Install: " + INSTALL_GUIDE_URL if locale == "en" else "Установка: " + INSTALL_GUIDE_URL, reply_markup=get_main_keyboard(locale, is_existing=True))
     else:
         await callback.message.answer(get_success_message("device_added", locale))
+        await callback.message.answer(t(locale, "choose_config_format"), reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text=t(locale, k), callback_data=f"config_type:{k}")] for k in CONFIG_KEYS if data.get(k)
+        ] + [nav_row_buttons(back_callback="menu:main")]))
+        await state.update_data(
+            issued_config_awg=data.get("config_awg"),
+            issued_config_wg_obf=data.get("config_wg_obf"),
+            issued_config_wg=data.get("config_wg"),
+            issued_device_name=device_name,
+        )
     await callback.answer()
+
+
+@router.callback_query(F.data.startswith("config_type:"))
+async def on_config_type_chosen(callback: CallbackQuery, state: FSMContext):
+    key = callback.data.replace("config_type:", "", 1)
+    if key not in CONFIG_KEYS:
+        await callback.answer()
+        return
+    data = await state.get_data()
+    locale = data.get("locale", "en")
+    state_key = f"issued_{key}"
+    config = data.get(state_key)
+    await callback.answer()
+    if not config:
+        await callback.message.answer(get_error_message("error_api", locale), reply_markup=error_nav_markup())
+        return
+    device_name = data.get("issued_device_name")
+    label = CONFIG_LABELS.get(key, key)
+    await _send_one_config(callback.message, config, locale, device_name, label)
+    from handlers.start import get_main_keyboard
+    await callback.message.answer("Install: " + INSTALL_GUIDE_URL if locale == "en" else "Установка: " + INSTALL_GUIDE_URL, reply_markup=get_main_keyboard(locale, is_existing=True))
+    await state.update_data(issued_config_awg=None, issued_config_wg_obf=None, issued_config_wg=None, issued_device_name=None)
 
 
 # reset_* callbacks handled in handlers.devices
@@ -513,25 +676,25 @@ async def on_server_selected(callback: CallbackQuery, state):
 async def show_cabinet(message: Message, locale: str, state):
     user = message.from_user
     if not user:
-        await message.answer(get_error_message("error_api", locale))
+        await message.answer(get_error_message("error_api", locale), reply_markup=error_nav_markup())
         return
     tg_id = user.id
     from api_client import get_user_by_tg, get_user_devices
 
     result = await get_user_by_tg(tg_id)
     if not result.success:
-        await message.answer(get_error_message(result.error or "error_api", locale))
+        await message.answer(get_error_message(result.error or "error_api", locale), reply_markup=error_nav_markup())
         return
     user_data = result.data
     if not user_data:
-        await message.answer(t(locale, "no_subscription"))
+        await message.answer(t(locale, "no_subscription"), reply_markup=connect_nav_markup(locale))
         return
     subs = user_data.get("subscriptions") or []
     active = [s for s in subs if is_subscription_effectively_active(s)]
     if not active:
-        await message.answer(t(locale, "no_subscription"))
+        await message.answer(t(locale, "no_subscription"), reply_markup=connect_nav_markup(locale))
         return
-    dev_result = await get_user_devices(user_data["id"])
-    devices_used = len(dev_result.data) if dev_result.success and dev_result.data else 0
+    dev_result = await get_user_devices(int(user_data["id"]))
+    devices_used = len(dev_result.data) if dev_result.success and dev_result.data is not None else 0
     blocks = [format_subscription_status(s, locale, devices_used=devices_used) for s in active]
     await message.answer("\n\n".join(blocks) if blocks else t(locale, "no_subscription"))

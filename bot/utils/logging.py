@@ -33,6 +33,11 @@ def _resolve_log_level() -> int:
 
 def setup_logging():
     """Configure structured logging for production."""
+    root = logging.getLogger()
+    if not root.handlers:
+        handler = logging.StreamHandler()
+        handler.setFormatter(logging.Formatter("%(message)s"))
+        root.addHandler(handler)
     structlog.configure(
         processors=[
             structlog.stdlib.add_log_level,
@@ -49,7 +54,7 @@ def setup_logging():
         logger_factory=structlog.stdlib.LoggerFactory(),
         cache_logger_on_first_use=True,
     )
-    logging.getLogger().setLevel(_resolve_log_level())
+    root.setLevel(_resolve_log_level())
 
 
 def get_logger(name: str):

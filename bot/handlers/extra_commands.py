@@ -70,7 +70,7 @@ async def cmd_status(message: Message, state):
                 until_str = str(until)
             lines.append(t(locale, "subscription_until", date=until_str))
         lines.append(t(locale, "devices_count", count=s.get("device_limit", 0)))
-    dev_result = await get_user_devices(user_data["id"])
+    dev_result = await get_user_devices(int(user_data["id"]))
     if dev_result.success and dev_result.data is not None:
         lines.append("Devices: " + str(len(dev_result.data)) if locale == "en" else "Устройств: " + str(len(dev_result.data)))
     await message.answer("\n".join(lines) if lines else t(locale, "no_subscription"))
@@ -89,7 +89,7 @@ async def cmd_devices(message: Message, state):
     if not user_data:
         await message.answer(t(locale, "no_subscription"))
         return
-    dev_result = await get_user_devices(user_data["id"])
+    dev_result = await get_user_devices(int(user_data["id"]))
     if not dev_result.success:
         await message.answer(t(locale, "error_api"))
         return
@@ -123,7 +123,7 @@ async def cmd_configs(message: Message, state):
     if not user_data:
         await message.answer(t(locale, "no_subscription"))
         return
-    dev_result = await get_user_devices(user_data["id"])
+    dev_result = await get_user_devices(int(user_data["id"]))
     if not dev_result.success:
         await message.answer(t(locale, "error_api"))
         return
