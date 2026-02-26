@@ -1,6 +1,44 @@
 {
-  "timestamp": "2026-02-26T05:32:42.892671+00:00",
+  "timestamp": "2026-02-26T05:40:00.067382+00:00",
   "nodes": [
+    {
+      "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
+      "node_id": "docker:2cced4612ec7",
+      "source": "docker",
+      "kind": "unknown",
+      "classification": {
+        "kind": "unknown",
+        "fingerprint_score": 0.0,
+        "network_score": 0.0,
+        "api_match_score": 0.0,
+        "temporal_score": 0.0,
+        "total_confidence": 0.0,
+        "evidence": [],
+        "type": "exporter"
+      },
+      "confidence": 0.9,
+      "evidence": [
+        "image_exporter"
+      ],
+      "container_id": "2cced4612ec7",
+      "image": "vpn-suite-node-agent",
+      "created": "2026-02-26T05:36:09.144343117Z",
+      "ports": [
+        {
+          "port": 9105,
+          "protocol": "tcp"
+        }
+      ],
+      "mounts": [
+        "/app/secrets/agent_client_cert.pem",
+        "/app/secrets/agent_client_key.pem",
+        "/app/secrets/agent_ca.pem",
+        "/var/run/docker.sock",
+        "/etc/vpn-suite/node-id"
+      ],
+      "interface": null,
+      "public_key": null
+    },
     {
       "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
       "node_id": "docker:a471cbc0bc27",
@@ -59,44 +97,6 @@
       "created": "2026-02-26T04:41:39.551707853Z",
       "ports": [],
       "mounts": [],
-      "interface": null,
-      "public_key": null
-    },
-    {
-      "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
-      "node_id": "docker:d46469414ac5",
-      "source": "docker",
-      "kind": "unknown",
-      "classification": {
-        "kind": "unknown",
-        "fingerprint_score": 0.0,
-        "network_score": 0.0,
-        "api_match_score": 0.0,
-        "temporal_score": 0.0,
-        "total_confidence": 0.0,
-        "evidence": [],
-        "type": "exporter"
-      },
-      "confidence": 0.9,
-      "evidence": [
-        "image_exporter"
-      ],
-      "container_id": "d46469414ac5",
-      "image": "vpn-suite-node-agent",
-      "created": "2026-02-25T19:24:56.883702834Z",
-      "ports": [
-        {
-          "port": 9105,
-          "protocol": "tcp"
-        }
-      ],
-      "mounts": [
-        "/var/run/docker.sock",
-        "/etc/vpn-suite/node-id",
-        "/app/secrets/agent_client_cert.pem",
-        "/app/secrets/agent_client_key.pem",
-        "/app/secrets/agent_ca.pem"
-      ],
       "interface": null,
       "public_key": null
     },
@@ -257,9 +257,9 @@
       "created": "2026-02-25T14:52:51.772275652Z",
       "ports": [],
       "mounts": [
-        "/work/.env",
         "/var/run/docker.sock",
-        "/work/scripts"
+        "/work/scripts",
+        "/work/.env"
       ],
       "interface": null,
       "public_key": null
@@ -309,13 +309,13 @@
         }
       ],
       "mounts": [
-        "/data",
         "/etc/caddy/Caddyfile",
         "/srv/root",
         "/srv/webapp",
         "/srv/admin",
         "/srv/storybook",
-        "/etc/caddy/agent_ca.pem"
+        "/etc/caddy/agent_ca.pem",
+        "/data"
       ],
       "interface": null,
       "public_key": null
@@ -571,12 +571,12 @@
         }
       ],
       "mounts": [
-        "/prometheus",
-        "/etc/prometheus/alerts",
         "/etc/prometheus/prometheus.yml",
         "/etc/prometheus/alert_rules.yml",
         "/etc/prometheus/recording_rules.yml",
-        "/etc/prometheus/file_sd"
+        "/etc/prometheus/file_sd",
+        "/prometheus",
+        "/etc/prometheus/alerts"
       ],
       "interface": null,
       "public_key": null
@@ -892,11 +892,11 @@
         }
       ],
       "mounts": [
-        "/sys",
         "/var/lib/docker",
         "/dev/disk",
         "/rootfs",
-        "/var/run"
+        "/var/run",
+        "/sys"
       ],
       "interface": null,
       "public_key": null

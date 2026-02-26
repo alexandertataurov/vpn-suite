@@ -39,10 +39,12 @@ async def test_compute_diff_skips_invalid_allowed_ips():
 
 
 @pytest.mark.asyncio
-async def test_apply_diff_calls_adapter():
-    """apply_diff calls add_peer and remove_peer on adapter."""
+async def test_apply_diff_calls_adapter(mocker):
+    """apply_diff calls add_peer and remove_peer on adapter when read_only is False."""
     from app.services.node_runtime import PeerConfigLike
+    from app.core.config import settings
 
+    mocker.patch.object(settings, "reconciliation_read_only", False)
     adapter = AsyncMock()
     diff = ReconciliationDiff(
         peers_to_add=[PeerConfigLike(public_key="pk1", allowed_ips="10.8.1.2/32")],
@@ -55,3 +57,23 @@ async def test_apply_diff_calls_adapter():
     assert result.peers_added_pubkeys == ["pk1"]
     adapter.add_peer.assert_called_once()
     adapter.remove_peer.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_apply_diff_read_only(mocker):
+    """apply_diff does not modify peers when read_only is True."""
+    from app.services.node_runtime import PeerConfigLike
+    from app.core.config import settings
+
+    mocker.patch.object(settings, "reconciliation_read_only", True)
+    adapter = AsyncMock()
+    diff = ReconciliationDiff(
+        peers_to_add=[PeerConfigLike(public_key="pk1", allowed_ips="10.8.1.2/32")],
+        peers_to_remove=["pk2"],
+        peers_to_update=[],
+    )
+    result = await apply_diff(adapter, "node1", diff)
+    assert result.peers_added == 0
+    assert result.peers_removed == 0
+    adapter.add_peer.assert_not_called()
+    adapter.remove_peer.assert_not_called()

@@ -221,7 +221,7 @@ services:
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
       - "--storage.tsdb.path=/prometheus"
-      - "--storage.tsdb.retention.time=365d"
+      - "--storage.tsdb.retention.time=30d"
     volumes:
       - ./config/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./config/monitoring/alert_rules.yml:/etc/prometheus/alert_rules.yml:ro
