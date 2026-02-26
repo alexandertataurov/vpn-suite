@@ -31,8 +31,12 @@ from app.schemas.device import (
 from app.schemas.server import AdminRotatePeerResponse
 from app.services.admin_issue_service import reissue_config_for_device
 from app.api.v1.device_cache import (
+    devices_list_cache_key,
+    get_devices_list_cached,
     get_devices_summary_cached,
+    invalidate_devices_list_cache,
     invalidate_devices_summary_cache,
+    set_devices_list_cached,
     set_devices_summary_cached,
 )
 from app.services.device_telemetry_cache import (
@@ -83,6 +87,7 @@ async def bulk_revoke_devices(
     }
     await db.commit()
     await invalidate_devices_summary_cache()
+    await invalidate_devices_list_cache()
     return BulkRevokeOut(revoked=revoked, skipped=skipped, errors=errors)
 
 
@@ -101,6 +106,12 @@ async def list_devices(
 ):
     """List all devices with optional filters. Admin only. Attaches telemetry from cache when available."""
     try:
+        cache_key = devices_list_cache_key(
+            limit, offset, user_id, email, status_filter, search, sort, node_id
+        )
+        cached = await get_devices_list_cached(cache_key)
+        if cached is not None:
+            return cached
         stmt = (
             select(Device, User.email)
             .outerjoin(User, Device.user_id == User.id)
@@ -165,7 +176,9 @@ async def list_devices(
                 if merged:
                     d_out = d_out.model_copy(update={"telemetry": merged})
             items.append(d_out)
-        return DeviceList(items=items, total=total)
+        out = DeviceList(items=items, total=total)
+        await set_devices_list_cached(cache_key, out)
+        return out
     except HTTPException:
         raise
     except Exception as exc:
@@ -299,6 +312,7 @@ async def delete_device(
     await db.delete(device)
     await db.commit()
     await invalidate_devices_summary_cache()
+    await invalidate_devices_list_cache()
     return status.HTTP_204_NO_CONTENT
 
 
@@ -330,6 +344,7 @@ async def revoke_device(
     request.state.audit_old_new = {"revoked": {"user_id": device.user_id}}
     await db.commit()
     await invalidate_devices_summary_cache()
+    await invalidate_devices_list_cache()
     await db.refresh(device)
     return DeviceOut.model_validate(device)
 
@@ -634,6 +649,7 @@ async def block_device(
         device.revoked_at = datetime.now(timezone.utc)
         await db.commit()
         await invalidate_devices_summary_cache()
+        await invalidate_devices_list_cache()
         return {
             "status": "accepted",
             "message": "Device revoked in DB; block pending on node-agent",

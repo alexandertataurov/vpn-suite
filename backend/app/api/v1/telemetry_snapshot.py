@@ -155,7 +155,10 @@ async def get_telemetry_snapshot(
         sessions=sessions_out,
         meta=meta,
     )
-    telemetry_snapshot_request_duration_seconds.observe(time.perf_counter() - started)
+    fields_filter = "minimal" if requested_fields is not None else "full"
+    telemetry_snapshot_request_duration_seconds.labels(
+        scope=scope, fields_filter=fields_filter
+    ).observe(time.perf_counter() - started)
     try:
         redis = get_redis()
         await redis.set(REDIS_KEY_TELEMETRY_LAST_SNAPSHOT_REQUEST, str(now_ts), ex=300)

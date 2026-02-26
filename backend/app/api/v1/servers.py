@@ -200,22 +200,25 @@ async def _fetch_servers_list_uncached(
     }.get(sort, Server.created_at.desc())
 
     total = (await db.execute(count_stmt)).scalar() or 0
-    result = await db.execute(
-        stmt.order_by(_sort_column).limit(effective_limit).offset(effective_offset)
+    # Single query: servers + last_seen via LEFT JOIN to aggregated health log (avoids 3rd query)
+    last_seen_subq = (
+        select(ServerHealthLog.server_id, func.max(ServerHealthLog.ts).label("last_ts"))
+        .group_by(ServerHealthLog.server_id)
+        .subquery()
     )
-    rows = result.scalars().all()
-    last_seen_map: dict[str, object] = {}
-    if rows:
-        last_q = (
-            select(ServerHealthLog.server_id, func.max(ServerHealthLog.ts).label("last_ts"))
-            .where(ServerHealthLog.server_id.in_([s.id for s in rows]))
-            .group_by(ServerHealthLog.server_id)
-        )
-        for r in (await db.execute(last_q)).all():
-            last_seen_map[r.server_id] = r.last_ts
+    stmt_with_last = (
+        select(Server, last_seen_subq.c.last_ts)
+        .outerjoin(last_seen_subq, Server.id == last_seen_subq.c.server_id)
+    )
+    if stmt.whereclause is not None:
+        stmt_with_last = stmt_with_last.where(stmt.whereclause)
+    result = await db.execute(
+        stmt_with_last.order_by(_sort_column).limit(effective_limit).offset(effective_offset)
+    )
+    rows = result.all()
     items = []
-    for s in rows:
-        last_ts = last_seen_map.get(s.id)
+    for row in rows:
+        s, last_ts = row[0], row[1]
         d = {
             "id": s.id,
             "name": s.name,

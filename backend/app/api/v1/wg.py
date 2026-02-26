@@ -16,7 +16,7 @@ from app.core.exceptions import LoadBalancerError, WireGuardCommandError
 from app.core.rbac import require_permission
 from app.models import Device
 from app.schemas.device import IssueResponse
-from app.api.v1.device_cache import invalidate_devices_summary_cache
+from app.api.v1.device_cache import invalidate_devices_list_cache, invalidate_devices_summary_cache
 from app.services.issue_service import issue_device
 from app.services.topology_engine import TopologyEngine
 
@@ -65,6 +65,7 @@ async def create_wg_peer(
         )
     await db.commit()
     await invalidate_devices_summary_cache()
+    await invalidate_devices_list_cache()
     await db.refresh(out.device)
     return IssueResponse(
         device_id=out.device.id,

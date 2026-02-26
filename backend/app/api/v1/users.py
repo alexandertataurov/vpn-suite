@@ -25,7 +25,7 @@ from app.models import Device, Server, Subscription, User
 from app.schemas.device import DeviceListItemOut, IssueRequest, IssueResponse, UserDeviceList
 from app.schemas.subscription import SubscriptionOut
 from app.schemas.user import UserCreate, UserDetail, UserList, UserOut, UserUpdate
-from app.api.v1.device_cache import invalidate_devices_summary_cache
+from app.api.v1.device_cache import invalidate_devices_list_cache, invalidate_devices_summary_cache
 from app.services.funnel_service import log_funnel_event
 from app.services.issue_service import issue_device
 from app.services.topology_engine import TopologyEngine
@@ -295,6 +295,7 @@ async def issue_user_device(
         raise_http_for_control_plane_exception(e)
     await db.commit()
     await invalidate_devices_summary_cache()
+    await invalidate_devices_list_cache()
     await db.refresh(out.device)
     if idempotency_key:
         try:

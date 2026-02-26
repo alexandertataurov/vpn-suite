@@ -36,7 +36,7 @@ from app.schemas.server import (
     ResetPeerRequest,
     ServerPeersOut,
 )
-from app.api.v1.device_cache import invalidate_devices_summary_cache
+from app.api.v1.device_cache import invalidate_devices_list_cache, invalidate_devices_summary_cache
 from app.services.admin_issue_service import admin_issue_peer, admin_rotate_peer
 from app.services.server_health_service import sync_peers_after_restart
 
@@ -163,6 +163,7 @@ async def create_server_peer(
         raise_http_for_control_plane_exception(e)
     await db.commit()
     await invalidate_devices_summary_cache()
+    await invalidate_devices_list_cache()
     request.state.audit_resource_id = out.device.id
     logger.info(
         "provision peer issued",
