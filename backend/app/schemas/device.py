@@ -77,6 +77,12 @@ class DeviceOut(OrmSchema):
     issued_configs: list[IssuedConfigOut] = []
     user_email: str | None = None  # Populated when listing with User join
     telemetry: DeviceTelemetryOut | None = None  # From cache when available
+    # State reconciliation
+    apply_status: str | None = None  # PENDING_APPLY | APPLIED | FAILED_APPLY | NO_HANDSHAKE
+    last_applied_at: datetime | None = None
+    last_seen_handshake_at: datetime | None = None
+    last_error: str | None = None
+    protocol_version: str | None = None  # awg_legacy | awg_15 | awg_20
 
 
 class DeviceListItemOut(OrmSchema):
@@ -95,6 +101,11 @@ class DeviceListItemOut(OrmSchema):
     data_limit_bytes: int | None = None
     expires_at: datetime | None = None
     created_at: datetime
+    apply_status: str | None = None
+    last_applied_at: datetime | None = None
+    last_seen_handshake_at: datetime | None = None
+    last_error: str | None = None
+    protocol_version: str | None = None
 
 
 class DeviceLimitUpdate(BaseModel):

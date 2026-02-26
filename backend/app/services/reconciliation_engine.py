@@ -4,8 +4,9 @@ import asyncio
 import logging
 import time
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 
 from app.core.database import async_session_factory
 from app.core.redaction import redact_for_log
@@ -15,6 +16,8 @@ from app.services.node_runtime import NodeRuntimeAdapter, PeerConfigLike
 
 try:
     from app.core.metrics import (
+        vpn_peers_expected,
+        vpn_peers_present,
         vpn_reconciliation_drift,
         vpn_reconciliation_duration_seconds,
         vpn_reconciliation_runs_total,
@@ -23,6 +26,8 @@ except Exception:
     vpn_reconciliation_runs_total = None  # type: ignore[assignment]
     vpn_reconciliation_drift = None  # type: ignore[assignment]
     vpn_reconciliation_duration_seconds = None  # type: ignore[assignment]
+    vpn_peers_expected = None  # type: ignore[assignment]
+    vpn_peers_present = None  # type: ignore[assignment]
 
 _log = logging.getLogger(__name__)
 
@@ -38,6 +43,7 @@ class ReconciliationResult:
     peers_added: int = 0
     peers_removed: int = 0
     peers_updated: int = 0
+    peers_added_pubkeys: list[str] = field(default_factory=list)  # successfully added, for Device update
     errors: list[str] = field(default_factory=list)
     duration_ms: float = 0.0
 
@@ -145,10 +151,11 @@ async def apply_diff(
         try:
             await adapter.add_peer(node_id, peer)
             result.peers_added += 1
+            result.peers_added_pubkeys.append(peer.public_key)
             _log.info(
                 "peer added during reconciliation",
                 extra={
-                    "event": "peer_added",
+                    "event": "reconcile_add",
                     "node_id": node_id,
                     "pubkey": peer.public_key[:32],
                     "allowed_ips": peer.allowed_ips,
@@ -161,6 +168,10 @@ async def apply_diff(
             result.errors.append(f"add {peer.public_key[:16]}: {e!s}")
 
     for pubkey in diff.peers_to_remove:
+        _log.info(
+            "unknown peer on server, removing",
+            extra={"event": "reconcile_quarantine", "node_id": node_id, "pubkey": pubkey[:32]},
+        )
         try:
             await adapter.remove_peer(node_id, pubkey)
             result.peers_removed += 1
@@ -176,7 +187,7 @@ async def apply_diff(
             _log.info(
                 "peer reapplied during reconciliation",
                 extra={
-                    "event": "peer_reapplied",
+                    "event": "reconcile_fix",
                     "node_id": node_id,
                     "pubkey": peer.public_key[:32],
                     "allowed_ips": peer.allowed_ips,
@@ -231,7 +242,12 @@ async def reconcile_node(
         if server_ids:
             ids = [s for s in server_ids if s] or ids
         r = await session.execute(
-            select(Device.public_key, Device.allowed_ips, Device.preshared_key).where(
+            select(
+                Device.id,
+                Device.public_key,
+                Device.allowed_ips,
+                Device.preshared_key,
+            ).where(
                 Device.server_id.in_(ids),
                 Device.revoked_at.is_(None),
                 Device.suspended_at.is_(None),
@@ -239,15 +255,22 @@ async def reconcile_node(
         )
         db_rows = r.all()
         db_peers: list[tuple[str, str, str | None]] = []
+        pubkey_to_device_id: dict[str, str] = {}
         for row in db_rows:
-            if not row or not row[0]:
+            if not row or not row[1]:
                 continue
-            pk = row[0]
-            allowed = (row[1] or "").strip()
-            psk = (row[2] or "").strip() or None
+            device_id, pk, allowed, psk = row[0], row[1], row[2], row[3]
+            allowed = (allowed or "").strip()
+            psk = (psk or "").strip() or None
             db_peers.append((pk, allowed, psk))
+            pubkey_to_device_id[pk] = device_id
 
         wg_peers = await adapter.list_peers(node_id)
+        if vpn_peers_expected is not None:
+            vpn_peers_expected.labels(node_id=node_id).set(len(db_peers))
+        if vpn_peers_present is not None:
+            vpn_peers_present.labels(node_id=node_id).set(len(wg_peers))
+
         diff = await compute_diff(node_id, db_peers, wg_peers)
 
         ensure_routes = getattr(adapter, "ensure_reply_routes", None)
@@ -258,6 +281,23 @@ async def reconcile_node(
             return ReconciliationResult(duration_ms=0.0)
 
         result = await apply_diff(adapter, node_id, diff)
+
+        # Update Device for peers we re-added: apply_status=APPLIED, last_applied_at, clear last_error
+        if result.peers_added_pubkeys:
+            now_applied = datetime.now(timezone.utc)
+            for pubkey in result.peers_added_pubkeys:
+                did = pubkey_to_device_id.get(pubkey)
+                if did:
+                    await session.execute(
+                        update(Device)
+                        .where(Device.id == did)
+                        .values(
+                            apply_status="APPLIED",
+                            last_applied_at=now_applied,
+                            last_error=None,
+                        )
+                    )
+
         await log_audit(
             session,
             admin_id=None,

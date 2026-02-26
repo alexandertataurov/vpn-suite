@@ -1,12 +1,16 @@
-"""Admin-issue peer on a chosen server: Device + IssuedConfig, one-time download token."""
+"""Admin-issue peer on a chosen server: Device + IssuedConfig, one-time download token.
+
+Two-phase: Phase A = DB commit (Device PENDING_APPLY + IssuedConfig); Phase B = apply peer on node, then APPLIED.
+"""
 
 import hashlib
+import json
 import logging
 import secrets
 from datetime import datetime, timedelta, timezone
 from typing import NamedTuple
 
-from sqlalchemy import delete, func, select
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.amnezia_config import (
@@ -16,8 +20,9 @@ from app.core.amnezia_config import (
     generate_wg_keypair,
     get_obfuscation_params,
 )
+from app.core.amnezia_config import _select_awg_profile
 from app.core.config import settings
-from app.core.config_builder import ConfigValidationError, generate_preshared_key
+from app.core.config_builder import ConfigProfile, ConfigValidationError, generate_preshared_key
 from app.core.exceptions import WireGuardCommandError
 from app.core.redaction import redact_for_log
 from app.core.security import encrypt_config
@@ -272,6 +277,10 @@ async def admin_issue_peer(
                 extra={"event": "config.private_endpoint", "server_id": server_id},
             )
     address, allowed_ips_val = await allocate_address_for_device(session, server_id, request_params)
+    _config_log.info(
+        "reserve_ip",
+        extra={"event": "reserve_ip", "server_id": server_id, "allowed_ips": allowed_ips_val},
+    )
     try:
         config_awg_snippet = build_amnezia_client_config(
             server_public_key=server.public_key,
@@ -377,6 +386,17 @@ async def admin_issue_peer(
         )
         raise
 
+    awg_profile = _select_awg_profile(obfuscation)
+    protocol_version = (
+        "awg_20" if awg_profile == ConfigProfile.awg_2_0_asc else "awg_legacy"
+    )
+    obfuscation_profile_json: str | None = None
+    if obfuscation:
+        obfuscation_profile_json = json.dumps(
+            {k: v for k, v in obfuscation.items() if v is not None},
+            sort_keys=True,
+        )
+
     device = Device(
         user_id=user_id,
         subscription_id=subscription_id,
@@ -389,52 +409,23 @@ async def admin_issue_peer(
         issued_at=now,
         revoked_at=None,
         issued_by_admin_id=issued_by_admin_id,
+        apply_status="PENDING_APPLY",
+        protocol_version=protocol_version,
+        obfuscation_profile=obfuscation_profile_json,
     )
     session.add(device)
     await session.flush()
     session.add(ProfileIssue(device_id=device.id, config_version="1"))
     await session.flush()
-
-    peer_created = False
-    if settings.node_mode == "real" and settings.node_discovery != "agent" and runtime_adapter:
-        try:
-            # Server peer AllowedIPs must be client tunnel address (/32), not 0.0.0.0/0
-            await runtime_adapter.add_peer(
-                server_id,
-                PeerConfigLike(
-                    public_key=public_key_b64,
-                    allowed_ips=allowed_ips_val,
-                    persistent_keepalive=25,
-                    preshared_key=preshared_key,
-                ),
-            )
-            peers_after = await runtime_adapter.list_peers(server_id)
-            if not any(
-                (p.get("public_key") or "").strip() == public_key_b64 for p in peers_after or []
-            ):
-                raise WireGuardCommandError(
-                    "Node peer creation verification failed (peer missing after add)",
-                    command="wg show",
-                    output=public_key_b64[:64],
-                )
-            peer_created = True
-            await _ensure_device_peer_on_node(
-                runtime_adapter,
-                server_id,
-                public_key=public_key_b64,
-                allowed_ips=allowed_ips_val,
-                preshared_key=preshared_key,
-            )
-        except Exception as exc:
-            await session.delete(device)
-            await session.flush()
-            raise WireGuardCommandError(
-                "Node peer creation failed",
-                command="wg set",
-                output=redact_for_log(str(exc)),
-            )
-    elif settings.node_mode == "agent":
-        peer_created = False
+    _config_log.info(
+        "create_peer_db",
+        extra={
+            "event": "create_peer_db",
+            "device_id": device.id,
+            "server_id": server_id,
+            "apply_status": "PENDING_APPLY",
+        },
+    )
 
     expires_at = (
         (now + timedelta(days=expires_in_days or DOWNLOAD_TOKEN_TTL_DAYS))
@@ -463,6 +454,67 @@ async def admin_issue_peer(
     token_wg_obf, _ = _create_issued_config("wg_obf", config_wg_obf_snippet)
     token_wg, _ = _create_issued_config("wg", config_wg_snippet)
     await session.flush()
+
+    # Phase A complete: persist Device + IssuedConfig so config URLs are valid even if apply fails
+    await session.commit()
+
+    peer_created = False
+    if settings.node_mode == "real" and settings.node_discovery != "agent" and runtime_adapter:
+        try:
+            await _ensure_device_peer_on_node(
+                runtime_adapter,
+                server_id,
+                public_key=public_key_b64,
+                allowed_ips=allowed_ips_val,
+                preshared_key=preshared_key,
+            )
+            peers_after = await runtime_adapter.list_peers(server_id)
+            if not any(
+                (p.get("public_key") or "").strip() == public_key_b64 for p in peers_after or []
+            ):
+                raise WireGuardCommandError(
+                    "Node peer creation verification failed (peer missing after add)",
+                    command="wg show",
+                    output=public_key_b64[:64],
+                )
+            peer_created = True
+            _config_log.info(
+                "apply_peer",
+                extra={
+                    "event": "apply_peer",
+                    "device_id": device.id,
+                    "server_id": server_id,
+                },
+            )
+            now_applied = datetime.now(timezone.utc)
+            await session.execute(
+                update(Device)
+                .where(Device.id == device.id)
+                .values(
+                    apply_status="APPLIED",
+                    last_applied_at=now_applied,
+                    last_error=None,
+                )
+            )
+            await session.commit()
+        except Exception as exc:
+            err_msg = redact_for_log(str(exc))
+            await session.execute(
+                update(Device)
+                .where(Device.id == device.id)
+                .values(
+                    apply_status="FAILED_APPLY",
+                    last_error=err_msg[:1024] if len(err_msg) > 1024 else err_msg,
+                )
+            )
+            await session.commit()
+            raise WireGuardCommandError(
+                "Node peer creation failed",
+                command="wg set",
+                output=err_msg,
+            )
+    elif settings.node_mode == "agent":
+        pass  # node-agent applies from desired-state; apply_status stays PENDING_APPLY until sync
 
     base = base_config_url.rstrip("/")
     return AdminIssueResult(

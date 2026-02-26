@@ -257,6 +257,14 @@ async def run_telemetry_poll_loop(get_adapter) -> None:
                                 )
                                 if h_ok:
                                     h_ok_count += 1
+                                    _log.info(
+                                        "handshake seen",
+                                        extra={
+                                            "event": "handshake_seen",
+                                            "device_id": dev_id,
+                                            "server_id": server_id,
+                                        },
+                                    )
                                 if no_h:
                                     no_handshake_count += 1
                                 if tz:

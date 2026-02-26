@@ -114,6 +114,7 @@ class Settings(BaseSettings):
     # Control-plane: topology cache and reconciliation
     topology_cache_ttl_seconds: int = 30
     reconciliation_interval_seconds: int = 60
+    handshake_quality_gate_minutes: int = 5  # Mark NO_HANDSHAKE if no handshake within X min after apply
     node_discovery: str = "docker"  # docker | agent
     node_scan_interval_seconds: int = 300  # 0 = no periodic scan
     # Control-plane automation loop (failover/rebalance planner)

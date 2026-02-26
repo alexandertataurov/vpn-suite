@@ -92,6 +92,21 @@ vpn_reconciliation_duration_seconds = Histogram(
     "Reconciliation cycle duration",
     buckets=(0.5, 1.0, 2.0, 5.0, 10.0, 30.0),
 )
+vpn_peers_expected = Gauge(
+    "vpn_peers_expected",
+    "Number of peers expected on node (from DB)",
+    ["node_id"],
+)
+vpn_peers_present = Gauge(
+    "vpn_peers_present",
+    "Number of peers present on node (from wg show)",
+    ["node_id"],
+)
+vpn_devices_no_handshake = Gauge(
+    "vpn_devices_no_handshake",
+    "Number of devices with apply_status=NO_HANDSHAKE (no handshake within gate)",
+    [],
+)
 
 # Bot funnel (spec: bot_conversion_rate; use funnel_events_total + PromQL for rate)
 funnel_events_total = Counter(
@@ -239,10 +254,32 @@ telemetry_poll_last_success_timestamp = Gauge(
     ["server_id"],
 )
 
+# DB per request (optional; set by db_metrics middleware when enabled)
+db_queries_per_request = Histogram(
+    "db_queries_per_request",
+    "Number of DB queries per HTTP request",
+    ["method", "path_template"],
+    buckets=(1, 2, 3, 5, 10, 20, 50),
+)
+db_time_per_request_seconds = Histogram(
+    "db_time_per_request_seconds",
+    "Total DB time per HTTP request in seconds",
+    ["method", "path_template"],
+    buckets=(0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0),
+)
+# Node runtime call duration (list_peers, add_peer, remove_peer)
+node_runtime_call_duration_seconds = Histogram(
+    "node_runtime_call_duration_seconds",
+    "Node runtime adapter call duration in seconds",
+    ["operation", "adapter"],
+    buckets=(0.01, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0),
+)
+
 # Telemetry snapshot API (cache-only fast path)
 telemetry_snapshot_request_duration_seconds = Histogram(
     "telemetry_snapshot_request_duration_seconds",
     "Latency of GET /telemetry/snapshot (cache read)",
+    ["scope", "fields_filter"],
     buckets=(0.01, 0.025, 0.05, 0.1, 0.2, 0.5, 1.0),
 )
 

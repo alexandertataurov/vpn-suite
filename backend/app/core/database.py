@@ -2,7 +2,7 @@
 
 from collections.abc import AsyncGenerator
 
-from sqlalchemy import text
+from sqlalchemy import event, text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.core.config import settings
@@ -12,6 +12,25 @@ engine = create_async_engine(
     echo=False,
     pool_pre_ping=True,
 )
+
+
+def _before_cursor(conn, cursor, statement, parameters, context, executemany):
+    from app.core.db_metrics import before_cursor_execute
+
+    before_cursor_execute()
+
+
+def _after_cursor(conn, cursor, statement, parameters, context, executemany):
+    from app.core.db_metrics import after_cursor_execute
+
+    after_cursor_execute()
+
+
+try:
+    event.listen(engine.sync_engine, "before_cursor_execute", _before_cursor)
+    event.listen(engine.sync_engine, "after_cursor_execute", _after_cursor)
+except Exception:
+    pass  # sync_engine may not exist on all drivers
 
 async_session_factory = async_sessionmaker(
     engine,

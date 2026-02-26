@@ -1,5 +1,6 @@
 """Node runtime adapter abstraction — node-interface-agnostic control plane."""
 
+import time
 from abc import ABC, abstractmethod
 from typing import Any
 
@@ -66,3 +67,50 @@ class NodeRuntimeAdapter(ABC):
         raise NotImplementedError(
             "Bandwidth policy enforcement is not implemented for this runtime adapter"
         )
+
+
+class TimingNodeRuntimeAdapter(NodeRuntimeAdapter):
+    """Wraps an adapter and records list_peers / add_peer / remove_peer duration to Prometheus."""
+
+    def __init__(self, adapter: NodeRuntimeAdapter, adapter_name: str) -> None:
+        self._adapter = adapter
+        self._adapter_name = adapter_name
+
+    async def discover_nodes(self) -> list[NodeMetadata]:
+        return await self._adapter.discover_nodes()
+
+    async def health_check(self, node_id: str) -> dict[str, Any]:
+        return await self._adapter.health_check(node_id)
+
+    async def add_peer(self, node_id: str, peer_config: PeerConfigLike) -> None:
+        from app.core.metrics import node_runtime_call_duration_seconds
+
+        start = time.perf_counter()
+        try:
+            await self._adapter.add_peer(node_id, peer_config)
+        finally:
+            node_runtime_call_duration_seconds.labels(
+                operation="add_peer", adapter=self._adapter_name
+            ).observe(time.perf_counter() - start)
+
+    async def remove_peer(self, node_id: str, peer_public_key: str) -> None:
+        from app.core.metrics import node_runtime_call_duration_seconds
+
+        start = time.perf_counter()
+        try:
+            await self._adapter.remove_peer(node_id, peer_public_key)
+        finally:
+            node_runtime_call_duration_seconds.labels(
+                operation="remove_peer", adapter=self._adapter_name
+            ).observe(time.perf_counter() - start)
+
+    async def list_peers(self, node_id: str) -> list[dict[str, Any]]:
+        from app.core.metrics import node_runtime_call_duration_seconds
+
+        start = time.perf_counter()
+        try:
+            return await self._adapter.list_peers(node_id)
+        finally:
+            node_runtime_call_duration_seconds.labels(
+                operation="list_peers", adapter=self._adapter_name
+            ).observe(time.perf_counter() - start)

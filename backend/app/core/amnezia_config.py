@@ -39,7 +39,7 @@ DEFAULT_Jmin = 10
 DEFAULT_Jmax = 50
 DEFAULT_S1 = 213
 DEFAULT_S2 = 237
-_DEFAULT_H_FALLBACK = (1, 2, 3, 4)  # fallback when no profile/server H (e.g. tests)
+_DEFAULT_H_FALLBACK = (10, 20, 30, 40)  # fallback when no profile/server H; must be >=5 for awg_2_0
 
 
 def generate_h_params() -> tuple[int, int, int, int]:

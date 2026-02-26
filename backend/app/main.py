@@ -42,6 +42,7 @@ from app.core.config import settings
 from app.core.database import check_db
 from app.core.device_expiry_task import run_device_expiry_loop
 from app.core.docker_alert_polling_task import run_docker_alert_poll_loop
+from app.core.handshake_quality_gate_task import run_handshake_quality_gate_loop
 from app.core.error_responses import error_body, http_exception_to_error_response
 from app.core.health_check_task import run_health_check_loop
 from app.core.limits_check_task import run_limits_check_loop
@@ -54,6 +55,7 @@ from app.core.logging_config import (
 from app.core.metrics import http_errors_total, vpn_suite_info
 from app.core.node_scan_task import run_node_scan_loop, run_node_scan_once
 from app.core.otel_tracing import setup_otel_tracing
+from app.core.db_metrics_middleware import DbMetricsMiddleware
 from app.core.prometheus_middleware import PrometheusMiddleware, path_template
 from app.core.rate_limit import GlobalAPIRateLimitMiddleware
 from app.core.redaction import redact_for_log
@@ -62,6 +64,7 @@ from app.core.request_logging_middleware import RequestLoggingMiddleware
 from app.core.server_sync_loop import run_server_sync_loop
 from app.core.telemetry_polling_task import run_telemetry_poll_loop
 from app.services.docker_telemetry_service import DockerTelemetryService
+from app.services.node_runtime import TimingNodeRuntimeAdapter
 from app.services.reconciliation_engine import reconcile_all_nodes, run_reconciliation_loop
 
 _log = logging.getLogger(__name__)
@@ -143,7 +146,10 @@ async def lifespan(app: FastAPI):
         "config loaded",
         extra=extra_for_event(event="config.load"),
     )
-    app.state.node_runtime_adapter = _create_node_runtime_adapter()
+    _raw_adapter = _create_node_runtime_adapter()
+    app.state.node_runtime_adapter = TimingNodeRuntimeAdapter(
+        _raw_adapter, adapter_name=settings.node_discovery
+    )
     _log.info(
         "startup: node runtime adapter initialized",
         extra=extra_for_event(event="config.load", entity_id=settings.node_discovery),
@@ -168,6 +174,7 @@ async def lifespan(app: FastAPI):
         run_docker_alert_poll_loop(lambda: app.state.docker_telemetry_service)
     )
     device_expiry_task = asyncio.create_task(run_device_expiry_loop())
+    handshake_gate_task = asyncio.create_task(run_handshake_quality_gate_loop())
     sync_task = None
     scan_task = None
     # Server sync: fetch snapshots from nodes (works for both docker and agent discovery)
@@ -210,7 +217,7 @@ async def lifespan(app: FastAPI):
         yield
     finally:
         health_task.cancel()
-        for t in (limits_task, telemetry_task, recon_task, scan_task, sync_task):
+        for t in (limits_task, telemetry_task, recon_task, scan_task, sync_task, handshake_gate_task):
             if t is not None:
                 t.cancel()
         docker_alert_task.cancel()
@@ -224,6 +231,7 @@ async def lifespan(app: FastAPI):
             device_expiry_task,
             docker_alert_task,
             sync_task,
+            handshake_gate_task,
         ):
             if t is None:
                 continue
@@ -254,6 +262,7 @@ app.add_middleware(
 )
 app.add_middleware(GlobalAPIRateLimitMiddleware)
 app.add_middleware(PrometheusMiddleware)
+app.add_middleware(DbMetricsMiddleware)
 app.add_middleware(RequestLoggingMiddleware)
 app.add_middleware(AuditMiddleware)
 app.include_router(app_settings_router, prefix="/api/v1")

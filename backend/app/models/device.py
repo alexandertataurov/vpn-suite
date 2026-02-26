@@ -38,6 +38,23 @@ class Device(Base, TimestampMixin):
     suspended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     data_limit_bytes: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    # State reconciliation: apply on node and handshake quality gate
+    apply_status: Mapped[str | None] = mapped_column(
+        String(32), nullable=True, default="PENDING_APPLY"
+    )  # PENDING_APPLY | APPLIED | FAILED_APPLY | NO_HANDSHAKE
+    last_applied_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    last_seen_handshake_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    last_error: Mapped[str | None] = mapped_column(Text(), nullable=True)
+    protocol_version: Mapped[str | None] = mapped_column(
+        String(16), nullable=True
+    )  # awg_legacy | awg_15 | awg_20
+    obfuscation_profile: Mapped[str | None] = mapped_column(
+        Text(), nullable=True
+    )  # JSON: H1–H4, S1–S4, I1–I5, Jc/Jmin/Jmax
 
     user: Mapped["User"] = relationship("User", back_populates="devices", foreign_keys=[user_id])
     subscription: Mapped["Subscription"] = relationship(

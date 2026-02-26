@@ -8,6 +8,9 @@ REDIS_KEY_SERVERS_LIST = "servers:list:"
 REDIS_KEY_SERVERS_LIST_PATTERN = "servers:list:*"
 REDIS_KEY_DEVICES_SUMMARY = "devices:summary"
 DEVICES_SUMMARY_CACHE_TTL_SECONDS = 60
+REDIS_KEY_DEVICES_LIST = "devices:list:"
+REDIS_KEY_DEVICES_LIST_PATTERN = "devices:list:*"
+DEVICES_LIST_CACHE_TTL_SECONDS = 45
 REDIS_KEY_AGENT_HB_PREFIX = "agent:hb:"
 # Telemetry snapshot cache (fan-in aggregator writes; snapshot API reads)
 REDIS_KEY_TELEMETRY_SNAPSHOT_PREFIX = "telemetry:snapshot:"
