@@ -225,6 +225,24 @@ async def _ensure_client_subnet_routes(
         )
 
 
+async def _persist_wg_config(container_name: str, interface: str) -> None:
+    """Save current runtime configuration to the persistent file inside container."""
+    # We use /run/{interface}.conf as the standard persistence path for this environment.
+    # Note: AmneziaWG containers often expect this path for survival across restarts.
+    conf_path = f"/run/{interface}.conf"
+    script = f"wg showconf {interface} > {conf_path}"
+    code, output = await _docker_exec(container_name, ["sh", "-c", script], timeout=10.0)
+    if code != 0:
+        _log.warning(
+            "Failed to persist wg config to %s in %s: %s",
+            conf_path,
+            container_name,
+            output[:100],
+        )
+    else:
+        _log.debug("Persisted wg config to %s in %s", conf_path, container_name)
+
+
 def _node_id(container_name: str) -> str:
     """Stable node identifier derived only from container name."""
     return hashlib.sha256(container_name.encode("utf-8")).hexdigest()[:32]
@@ -787,6 +805,9 @@ class DockerNodeRuntimeAdapter(NodeRuntimeAdapter):
         for node in nodes:
             if node.container_name == node_id:
                 return node
+        # After container restart, server_id in DB (e.g. docker:e49771b3f10f) no longer matches node_id (new container id). If exactly one node, use it so reissue/remove_peer work.
+        if nodes and node_id.startswith("docker:") and len(nodes) == 1:
+            return nodes[0]
         return None
 
     async def health_check(self, node_id: str) -> dict:
@@ -907,6 +928,9 @@ class DockerNodeRuntimeAdapter(NodeRuntimeAdapter):
         if subnets:
             await _ensure_client_subnet_routes(container_name, interface, subnets)
 
+        # Persist config to disk so it survives container restarts.
+        await _persist_wg_config(container_name, interface)
+
     async def remove_peer(self, node_id: str, peer_public_key: str) -> None:
         node = await self._resolve_node(node_id)
         if not node:
@@ -927,6 +951,9 @@ class DockerNodeRuntimeAdapter(NodeRuntimeAdapter):
                 command="docker exec wg set peer remove",
                 output=output[:400],
             )
+
+        # Persist config to disk so it survives container restarts.
+        await _persist_wg_config(container_name, interface)
 
     async def ensure_reply_routes(self, node_id: str) -> None:
         """Ensure reply routes for all current peers on the node (idempotent)."""

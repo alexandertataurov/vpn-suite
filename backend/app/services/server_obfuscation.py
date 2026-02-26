@@ -1,4 +1,8 @@
-"""Server-scoped AmneziaWG H1–H4: use profile/server or CSPRNG-generate and persist."""
+"""Server-scoped AmneziaWG H1–H4: use profile/server or CSPRNG-generate and persist.
+
+At issue time callers merge runtime H from node (get_obfuscation_from_node) over this,
+so emitted config matches the running Amnezia server when runtime is available.
+"""
 
 from sqlalchemy.ext.asyncio import AsyncSession
 

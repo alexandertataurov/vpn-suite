@@ -235,6 +235,9 @@ async def admin_issue_peer(
                 pass
     if mtu is not None and mtu <= 0:
         mtu = None
+    # Default MTU 1280 for full-tunnel to reduce fragmentation (no-traffic troubleshooting)
+    if mtu is None:
+        mtu = 1280
 
     private_key_b64, public_key_b64 = generate_wg_keypair()
     config_hash = _config_hash(public_key_b64, private_key_b64)
@@ -281,107 +284,38 @@ async def admin_issue_peer(
         "reserve_ip",
         extra={"event": "reserve_ip", "server_id": server_id, "allowed_ips": allowed_ips_val},
     )
+    from app.core.amnezia_config import build_all_configs
+
+    # Client [Interface] Address: use /32 so config matches peer AllowedIPs on server
     try:
-        config_awg_snippet = build_amnezia_client_config(
+        config_awg_snippet, config_wg_obf_snippet, config_wg_snippet = build_all_configs(
             server_public_key=server.public_key,
             client_private_key_b64=private_key_b64,
             endpoint=endpoint,
+            allowed_ips=allowed_ips_val,
             dns=dns,
             obfuscation=obfuscation,
             mtu=mtu,
-            address=address,
+            address=allowed_ips_val,
             preshared_key=preshared_key,
         )
         _config_log.info(
-            "config generated",
+            "configs generated",
             extra={
-                "event": "config.gen",
-                "profile_mode": "awg_safe",
+                "event": "config.gen_all",
                 "server_id": server_id,
                 "user_id": str(user_id),
                 "validation_errors": [],
-                "emitted_bytes": len(config_awg_snippet.encode("utf-8")),
             },
         )
     except ConfigValidationError as e:
         _config_log.warning(
             "config generation failed",
             extra={
-                "event": "config.gen",
-                "profile_mode": "awg_safe",
+                "event": "config.gen_all",
                 "server_id": server_id,
                 "user_id": str(user_id),
                 "validation_errors": e.errors,
-                "emitted_bytes": 0,
-            },
-        )
-        raise
-    try:
-        config_wg_obf_snippet = build_wg_obfuscated_config(
-            server_public_key=server.public_key,
-            client_private_key_b64=private_key_b64,
-            endpoint=endpoint,
-            dns=dns,
-            obfuscation=obfuscation,
-            mtu=mtu,
-            address=address,
-            preshared_key=preshared_key,
-        )
-        _config_log.info(
-            "config generated",
-            extra={
-                "event": "config.gen",
-                "profile_mode": "wg_obf",
-                "server_id": server_id,
-                "user_id": str(user_id),
-                "validation_errors": [],
-                "emitted_bytes": len(config_wg_obf_snippet.encode("utf-8")),
-            },
-        )
-    except ConfigValidationError as e:
-        _config_log.warning(
-            "config generation failed",
-            extra={
-                "event": "config.gen",
-                "profile_mode": "wg_obf",
-                "server_id": server_id,
-                "user_id": str(user_id),
-                "validation_errors": e.errors,
-                "emitted_bytes": 0,
-            },
-        )
-        raise
-    try:
-        config_wg_snippet = build_standard_wg_client_config(
-            server_public_key=server.public_key,
-            client_private_key_b64=private_key_b64,
-            endpoint=endpoint,
-            dns=dns,
-            mtu=mtu,
-            address=address,
-            preshared_key=preshared_key,
-        )
-        _config_log.info(
-            "config generated",
-            extra={
-                "event": "config.gen",
-                "profile_mode": "universal_safe",
-                "server_id": server_id,
-                "user_id": str(user_id),
-                "validation_errors": [],
-                "emitted_bytes": len(config_wg_snippet.encode("utf-8")),
-            },
-        )
-    except ConfigValidationError as e:
-        _config_log.warning(
-            "config generation failed",
-            extra={
-                "event": "config.gen",
-                "profile_mode": "universal_safe",
-                "server_id": server_id,
-                "user_id": str(user_id),
-                "validation_errors": e.errors,
-                "emitted_bytes": 0,
             },
         )
         raise
@@ -646,6 +580,8 @@ async def admin_rotate_peer(
                 pass
     if mtu is not None and mtu <= 0:
         mtu = None
+    if mtu is None:
+        mtu = 1280
 
     old_public_key = device.public_key
     old_preshared_key = getattr(device, "preshared_key", None)
@@ -653,10 +589,12 @@ async def admin_rotate_peer(
         try:
             await runtime_adapter.remove_peer(server_id, old_public_key)
         except Exception as exc:
-            raise WireGuardCommandError(
-                "Node peer removal failed",
-                command="wg set peer remove",
-                output=redact_for_log(str(exc)),
+            # Best-effort: peer may already be gone (restart/reconcile). Continue reissue; new peer will be added; reconcile will drop orphan.
+            _config_log.warning(
+                "Reissue: node peer removal failed (continuing), server_id=%s pubkey=%s error=%s",
+                server_id,
+                (old_public_key[:16] + "…") if len(old_public_key or "") > 16 else (old_public_key or ""),
+                redact_for_log(str(exc)),
             )
 
     private_key_b64, public_key_b64 = generate_wg_keypair()
@@ -692,119 +630,44 @@ async def admin_rotate_peer(
                 "Replaced private endpoint with VPN_DEFAULT_HOST (rotate)",
                 extra={"event": "config.endpoint_override", "server_id": server_id, "endpoint": endpoint},
             )
-    # Rotate: keep existing tunnel IP (/32 for peer), widen to subnet CIDR for client Address
+    # Rotate: keep existing tunnel IP; client [Interface] Address = /32 to match peer on server
     if device.allowed_ips:
         allowed_ips_val = device.allowed_ips
-        address = allowed_ips_val
-        if "/32" in allowed_ips_val:
-            params = request_params or {}
-            cidr = params.get("subnet_cidr") or params.get("amnezia_cidr") or 32
-            address = allowed_ips_val.replace("/32", f"/{cidr}")
     else:
-        address, allowed_ips_val = await allocate_address_for_device(
+        _, allowed_ips_val = await allocate_address_for_device(
             session, server_id, request_params
         )
+    from app.core.amnezia_config import build_all_configs
+
     try:
-        config_awg_snippet = build_amnezia_client_config(
+        config_awg_snippet, config_wg_obf_snippet, config_wg_snippet = build_all_configs(
             server_public_key=server.public_key,
             client_private_key_b64=private_key_b64,
             endpoint=endpoint,
+            allowed_ips=allowed_ips_val,
             dns=dns,
             obfuscation=obfuscation,
             mtu=mtu,
-            address=address,
+            address=allowed_ips_val,
             preshared_key=preshared_key,
         )
         _config_log.info(
-            "config generated",
+            "configs generated",
             extra={
-                "event": "config.gen",
-                "profile_mode": "awg_safe",
+                "event": "config.gen_all",
                 "server_id": server_id,
                 "user_id": str(device.user_id),
                 "validation_errors": [],
-                "emitted_bytes": len(config_awg_snippet.encode("utf-8")),
             },
         )
     except ConfigValidationError as e:
         _config_log.warning(
             "config generation failed",
             extra={
-                "event": "config.gen",
-                "profile_mode": "awg_safe",
+                "event": "config.gen_all",
                 "server_id": server_id,
                 "user_id": str(device.user_id),
                 "validation_errors": e.errors,
-                "emitted_bytes": 0,
-            },
-        )
-        raise
-    try:
-        config_wg_obf_snippet = build_wg_obfuscated_config(
-            server_public_key=server.public_key,
-            client_private_key_b64=private_key_b64,
-            endpoint=endpoint,
-            dns=dns,
-            obfuscation=obfuscation,
-            mtu=mtu,
-            address=address,
-            preshared_key=preshared_key,
-        )
-        _config_log.info(
-            "config generated",
-            extra={
-                "event": "config.gen",
-                "profile_mode": "wg_obf",
-                "server_id": server_id,
-                "user_id": str(device.user_id),
-                "validation_errors": [],
-                "emitted_bytes": len(config_wg_obf_snippet.encode("utf-8")),
-            },
-        )
-    except ConfigValidationError as e:
-        _config_log.warning(
-            "config generation failed",
-            extra={
-                "event": "config.gen",
-                "profile_mode": "wg_obf",
-                "server_id": server_id,
-                "user_id": str(device.user_id),
-                "validation_errors": e.errors,
-                "emitted_bytes": 0,
-            },
-        )
-        raise
-    try:
-        config_wg_snippet = build_standard_wg_client_config(
-            server_public_key=server.public_key,
-            client_private_key_b64=private_key_b64,
-            endpoint=endpoint,
-            dns=dns,
-            mtu=mtu,
-            address=address,
-            preshared_key=preshared_key,
-        )
-        _config_log.info(
-            "config generated",
-            extra={
-                "event": "config.gen",
-                "profile_mode": "universal_safe",
-                "server_id": server_id,
-                "user_id": str(device.user_id),
-                "validation_errors": [],
-                "emitted_bytes": len(config_wg_snippet.encode("utf-8")),
-            },
-        )
-    except ConfigValidationError as e:
-        _config_log.warning(
-            "config generation failed",
-            extra={
-                "event": "config.gen",
-                "profile_mode": "universal_safe",
-                "server_id": server_id,
-                "user_id": str(device.user_id),
-                "validation_errors": e.errors,
-                "emitted_bytes": 0,
             },
         )
         raise

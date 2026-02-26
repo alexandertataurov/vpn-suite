@@ -1,4 +1,9 @@
-"""Allocate unique client tunnel addresses per server."""
+"""Allocate unique client tunnel addresses per subnet (across all servers).
+
+IPs are unique per subnet so that one physical node (e.g. one awg0) never gets
+two peers with the same address, even when devices are spread over multiple
+server_id records (e.g. amnezia-awg and node-01) that map to the same node.
+"""
 
 import re
 
@@ -45,12 +50,14 @@ async def allocate_address_for_device(
     server_id: str,
     request_params: dict | None,
 ) -> tuple[str, str]:
-    """Allocate next free address for a new device on the server.
+    """Allocate next free address for a new device.
+
+    Uniqueness is per subnet across ALL servers (not per server_id), so the same
+    physical node (one WireGuard interface) never gets duplicate client IPs.
 
     Returns (address_for_config, allowed_ips_for_peer).
     - address_for_config: e.g. '10.8.0.6/24' (Address in client config)
     - allowed_ips_for_peer: e.g. '10.8.0.6/32' (server peer AllowedIPs, device.allowed_ips)
-    When profile has no subnet, uses default 10.8.1.0/24 and allocates next free IP from DB.
     """
     parsed = _subnet_base_and_cidr(request_params)
     if not parsed:
@@ -58,11 +65,12 @@ async def allocate_address_for_device(
     else:
         subnet_base, cidr = parsed
 
+    prefix = f"{subnet_base}."
     rows = await session.execute(
         select(Device.allowed_ips).where(
-            Device.server_id == server_id,
             Device.revoked_at.is_(None),
             Device.allowed_ips.isnot(None),
+            Device.allowed_ips.startswith(prefix),
         )
     )
     used = set()

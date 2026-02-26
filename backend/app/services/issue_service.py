@@ -14,9 +14,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.amnezia_config import (
-    build_amnezia_client_config,
-    build_standard_wg_client_config,
-    build_wg_obfuscated_config,
+    build_all_configs,
     generate_wg_keypair,
     get_obfuscation_params,
 )
@@ -166,6 +164,8 @@ async def issue_device(
                 pass
     if mtu is not None and mtu <= 0:
         mtu = None
+    if mtu is None:
+        mtu = 1280
     preshared_key = None
     if request_params:
         preshared_key = request_params.get("preshared_key") or request_params.get(
@@ -260,22 +260,23 @@ async def issue_device(
     elif settings.node_mode == "agent":
         # DB-only: node-agent will add peer on next reconcile cycle.
         peer_created = False
+    # Client [Interface] Address: /32 to match peer AllowedIPs on server
     try:
-        config_awg = build_amnezia_client_config(
+        config_awg, config_wg_obf, config_wg = build_all_configs(
             server_public_key=server.public_key,
             client_private_key_b64=private_key_b64,
             endpoint=endpoint,
+            allowed_ips="0.0.0.0/0, ::/0",
             dns=dns,
             obfuscation=obfuscation,
             mtu=mtu,
-            address=address,
+            address=allowed_ips_val,
             preshared_key=preshared_key,
         )
         _config_log.info(
-            "config generated",
+            "configs generated",
             extra={
-                "event": "config.gen",
-                "profile_mode": "awg_safe",
+                "event": "config.gen_all",
                 "server_id": resolved_server_id,
                 "user_id": str(user_id),
                 "validation_errors": [],
@@ -286,77 +287,7 @@ async def issue_device(
         _config_log.warning(
             "config generation failed",
             extra={
-                "event": "config.gen",
-                "profile_mode": "awg_safe",
-                "server_id": resolved_server_id,
-                "user_id": str(user_id),
-                "validation_errors": e.errors,
-                "emitted_bytes": 0,
-            },
-        )
-        raise
-    try:
-        config_wg_obf = build_wg_obfuscated_config(
-            server_public_key=server.public_key,
-            client_private_key_b64=private_key_b64,
-            endpoint=endpoint,
-            dns=dns,
-            obfuscation=obfuscation,
-            mtu=mtu,
-            address=address,
-            preshared_key=preshared_key,
-        )
-        _config_log.info(
-            "config generated",
-            extra={
-                "event": "config.gen",
-                "profile_mode": "wg_obf",
-                "server_id": resolved_server_id,
-                "user_id": str(user_id),
-                "validation_errors": [],
-                "emitted_bytes": len(config_wg_obf.encode("utf-8")),
-            },
-        )
-    except ConfigValidationError as e:
-        _config_log.warning(
-            "config generation failed",
-            extra={
-                "event": "config.gen",
-                "profile_mode": "wg_obf",
-                "server_id": resolved_server_id,
-                "user_id": str(user_id),
-                "validation_errors": e.errors,
-                "emitted_bytes": 0,
-            },
-        )
-        raise
-    try:
-        config_wg = build_standard_wg_client_config(
-            server_public_key=server.public_key,
-            preshared_key=preshared_key,
-            client_private_key_b64=private_key_b64,
-            endpoint=endpoint,
-            dns=dns,
-            mtu=mtu,
-            address=address,
-        )
-        _config_log.info(
-            "config generated",
-            extra={
-                "event": "config.gen",
-                "profile_mode": "universal_safe",
-                "server_id": resolved_server_id,
-                "user_id": str(user_id),
-                "validation_errors": [],
-                "emitted_bytes": len(config_wg.encode("utf-8")),
-            },
-        )
-    except ConfigValidationError as e:
-        _config_log.warning(
-            "config generation failed",
-            extra={
-                "event": "config.gen",
-                "profile_mode": "universal_safe",
+                "event": "config.gen_all",
                 "server_id": resolved_server_id,
                 "user_id": str(user_id),
                 "validation_errors": e.errors,

@@ -144,8 +144,21 @@ async def apply_diff(
     diff: ReconciliationDiff,
 ) -> ReconciliationResult:
     """Apply diff idempotently: add, remove, update (remove+add)."""
+    from app.core.config import settings
+
     result = ReconciliationResult()
     start = time.perf_counter()
+
+    if settings.reconciliation_read_only:
+        for p in diff.peers_to_add:
+            _log.warning("Safe Reconcile (Read-Only): Peer found in DB but missing in runtime (Ghost): node_id=%s pubkey=%s", node_id, p.public_key[:16])
+        for p in diff.peers_to_remove:
+            _log.warning("Safe Reconcile (Read-Only): ORPHAN peer found in runtime but not in DB: node_id=%s pubkey=%s", node_id, p[:16])
+        for p in diff.peers_to_update:
+            _log.warning("Safe Reconcile (Read-Only): Peer drift detected (params mismatch): node_id=%s pubkey=%s", node_id, p.public_key[:16])
+        
+        if diff.peers_to_add or diff.peers_to_remove or diff.peers_to_update:
+            return result
 
     for peer in diff.peers_to_add:
         try:
@@ -285,18 +298,21 @@ async def reconcile_node(
         # Update Device for peers we re-added: apply_status=APPLIED, last_applied_at, clear last_error
         if result.peers_added_pubkeys:
             now_applied = datetime.now(timezone.utc)
-            for pubkey in result.peers_added_pubkeys:
-                did = pubkey_to_device_id.get(pubkey)
-                if did:
-                    await session.execute(
-                        update(Device)
-                        .where(Device.id == did)
-                        .values(
-                            apply_status="APPLIED",
-                            last_applied_at=now_applied,
-                            last_error=None,
-                        )
+            device_ids_to_update = [
+                pubkey_to_device_id[pk] 
+                for pk in result.peers_added_pubkeys 
+                if pk in pubkey_to_device_id
+            ]
+            if device_ids_to_update:
+                await session.execute(
+                    update(Device)
+                    .where(Device.id.in_(device_ids_to_update))
+                    .values(
+                        apply_status="APPLIED",
+                        last_applied_at=now_applied,
+                        last_error=None,
                     )
+                )
 
         await log_audit(
             session,
@@ -330,8 +346,8 @@ async def reconcile_all_nodes(
     results: list[tuple[str, ReconciliationResult]] = []
     nodes = await adapter.discover_nodes()
     for node in nodes:
-        if node.status not in ("healthy", "degraded"):
-            continue
+        # Attempt reconciliation for all discovered nodes to ensure self-healing
+        # even if a node was briefly unreachable or is reporting as unhealthy.
         node_id = node.node_id
         candidate_ids = [node_id]
         container_name = getattr(node, "container_name", None)
