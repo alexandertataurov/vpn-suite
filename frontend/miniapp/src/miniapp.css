@@ -34,7 +34,7 @@
   line-height: 1.25;
   font-weight: var(--font-medium);
   letter-spacing: var(--letter-spacing-tight);
-  color: var(--color-neutral-900);
+  color: var(--color-text);
 }
 .miniapp-main {
   flex: 1;
@@ -57,11 +57,11 @@
   line-height: 1.25;
   font-weight: var(--font-medium);
   letter-spacing: var(--letter-spacing-tight);
-  color: var(--color-neutral-900);
+  color: var(--color-text);
 }
 .miniapp-page-subtitle {
   margin: var(--spacing-1) 0 0;
-  color: var(--color-neutral-500);
+  color: var(--color-text-muted);
   font-size: var(--text-sm);
   line-height: var(--text-sm-line);
 }
@@ -82,7 +82,7 @@
   padding: var(--spacing-2) var(--spacing-3);
   text-align: center;
   font-size: var(--text-sm);
-  color: var(--color-neutral-600);
+  color: var(--color-text-muted);
   text-decoration: none;
   transition: color var(--duration-fast), background var(--duration-fast);
   min-height: var(--size-touch-target);
@@ -118,13 +118,13 @@
   color: var(--color-warning);
 }
 .miniapp-tab:hover {
-  color: var(--color-neutral-900);
-  background: var(--color-neutral-100);
+  color: var(--color-text);
+  background: var(--color-primary-subtle);
 }
 .miniapp-tab.active {
-  color: var(--surface-base);
+  color: var(--color-on-accent);
   font-weight: var(--font-medium);
-  background: var(--color-neutral-900);
+  background: var(--color-accent);
 }
 
 @media (prefers-reduced-motion: reduce) {

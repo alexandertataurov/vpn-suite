@@ -7,6 +7,8 @@ export interface CopyButtonProps {
   value: string;
   label?: string;
   copiedMessage?: string;
+  /** "icon" = clipboard icon only; "text" = label text only (e.g. "Copy"). */
+  variant?: "icon" | "text";
   className?: string;
   "data-testid"?: string;
   onCopy?: () => void;
@@ -16,6 +18,7 @@ export function CopyButton({
   value,
   label = "Copy",
   copiedMessage = "Copied",
+  variant = "icon",
   className,
   "data-testid": dataTestId,
   onCopy,
@@ -39,17 +42,26 @@ export function CopyButton({
     );
   }, [value, copiedMessage, addToast, onCopy]);
 
+  const content =
+    variant === "text" ? (
+      <span aria-hidden>{copied ? copiedMessage : label}</span>
+    ) : (
+      <>
+        <span aria-hidden>{copied ? "✓" : "📋"}</span>
+        <VisuallyHidden>{label}</VisuallyHidden>
+      </>
+    );
+
   return (
     <Button
       variant="ghost"
       size="sm"
       onClick={handleClick}
-      aria-label={label}
+      aria-label={variant === "icon" ? label : undefined}
       className={className}
       data-testid={dataTestId}
     >
-      <span aria-hidden>{copied ? "✓" : "📋"}</span>
-      <VisuallyHidden>{label}</VisuallyHidden>
+      {content}
     </Button>
   );
 }

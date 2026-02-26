@@ -18,7 +18,7 @@ const miniappPath = join(sharedRoot, "..", "miniapp", "src");
 // Components that must have stories (from ui/index.ts exports, excluding types/utils)
 // Components that must have stories; story file name matches (e.g. Button.stories.tsx)
 const REQUIRED_SHARED = [
-  "Button", "ButtonLink", "Field", "Input", "Checkbox", "Select", "SearchInput",
+  "Button", "ButtonLink", "Field", "Input", "Checkbox", "RadioGroup", "Select", "SearchInput",
   "Skeleton", "EmptyState", "ErrorState", "InlineError", "PageError",
   "DeviceCard", "ProfileCard", "Modal", "Drawer",
   "Table", "VirtualTable", "VisuallyHidden",

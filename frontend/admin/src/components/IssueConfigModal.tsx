@@ -8,6 +8,12 @@ import type {
 import { ApiError, getErrorMessage } from "@vpn-suite/shared";
 import { api } from "../api/client";
 
+/** QR level by payload size so full config fits (Level H has ~1.3KB capacity). */
+function issueConfigQrLevel(payload: string): "L" | "M" | "H" {
+  const bytes = new TextEncoder().encode(payload).length;
+  return bytes > 1200 ? "L" : bytes > 900 ? "M" : "H";
+}
+
 export interface IssueConfigModalProps {
   open: boolean;
   onClose: () => void;
@@ -63,7 +69,10 @@ export function IssueConfigModal({
       onSuccess?.();
       addToast("Config issued", "success");
     } catch (e) {
-      const msg = getErrorMessage(e, "Issue failed");
+      let msg = getErrorMessage(e, "Issue failed");
+      if (msg.toLowerCase().includes("system operator not seeded")) {
+        msg = "System operator not seeded. Run: ./manage.sh seed-operator";
+      }
       setError(msg);
       setRequestId(e instanceof ApiError ? e.requestId ?? null : null);
       addToast(msg, "error");
@@ -153,6 +162,9 @@ export function IssueConfigModal({
           <Text as="p" className="text-success">
             Peer created. Three configs issued — AmneziaWG, WG (obfuscated), and WG (standard).
           </Text>
+          <HelperText variant="hint" className="mb-3">
+            QR contains the full .conf (Interface + Peer). If scan fails, use Download .conf or copy the config below.
+          </HelperText>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
             <div>
               <Text as="p" variant="muted" className="mb-2">AmneziaWG (obfuscated)</Text>
@@ -160,9 +172,11 @@ export function IssueConfigModal({
                 <>
                   <QrPanel
                     value={result.config_awg.qr_payload}
-                    size={160}
+                    size={220}
+                    level={issueConfigQrLevel(result.config_awg.qr_payload)}
                     downloadLabel="Download .conf"
                     copyLabel="Copy"
+                    copyVariant="text"
                     onDownload={
                       result.config_awg.download_url
                         ? () => window.open(result.config_awg.download_url, "_blank")
@@ -171,9 +185,9 @@ export function IssueConfigModal({
                   />
                   <CodeBlock
                     value={result.config_awg.qr_payload}
-                    maxHeight={100}
+                    maxHeight={180}
                     wrap
-                    actions={<CopyButton value={result.config_awg.qr_payload} label="Copy" copiedMessage="Copied" />}
+                    actions={<CopyButton value={result.config_awg.qr_payload} label="Copy" copiedMessage="Copied" variant="text" />}
                   />
                 </>
               )}
@@ -184,9 +198,11 @@ export function IssueConfigModal({
                 <>
                   <QrPanel
                     value={result.config_wg_obf.qr_payload}
-                    size={160}
+                    size={220}
+                    level={issueConfigQrLevel(result.config_wg_obf.qr_payload)}
                     downloadLabel="Download .conf"
                     copyLabel="Copy"
+                    copyVariant="text"
                     onDownload={
                       result.config_wg_obf.download_url
                         ? () => window.open(result.config_wg_obf.download_url, "_blank")
@@ -195,9 +211,9 @@ export function IssueConfigModal({
                   />
                   <CodeBlock
                     value={result.config_wg_obf.qr_payload}
-                    maxHeight={100}
+                    maxHeight={180}
                     wrap
-                    actions={<CopyButton value={result.config_wg_obf.qr_payload} label="Copy" copiedMessage="Copied" />}
+                    actions={<CopyButton value={result.config_wg_obf.qr_payload} label="Copy" copiedMessage="Copied" variant="text" />}
                   />
                 </>
               )}
@@ -208,9 +224,11 @@ export function IssueConfigModal({
                 <>
                   <QrPanel
                     value={result.config_wg.qr_payload}
-                    size={160}
+                    size={220}
+                    level={issueConfigQrLevel(result.config_wg.qr_payload)}
                     downloadLabel="Download .conf"
                     copyLabel="Copy"
+                    copyVariant="text"
                     onDownload={
                       result.config_wg.download_url
                         ? () => window.open(result.config_wg.download_url, "_blank")
@@ -219,9 +237,9 @@ export function IssueConfigModal({
                   />
                   <CodeBlock
                     value={result.config_wg.qr_payload}
-                    maxHeight={100}
+                    maxHeight={180}
                     wrap
-                    actions={<CopyButton value={result.config_wg.qr_payload} label="Copy" copiedMessage="Copied" />}
+                    actions={<CopyButton value={result.config_wg.qr_payload} label="Copy" copiedMessage="Copied" variant="text" />}
                   />
                 </>
               )}

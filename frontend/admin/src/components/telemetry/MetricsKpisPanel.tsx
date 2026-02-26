@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import type { MetricsKpisOut } from "../../api/analytics-types";
+import type { MetricsKpisOut } from "@vpn-suite/shared/types";
 import { Panel, InlineAlert, Skeleton } from "@vpn-suite/shared/ui";
 import { api } from "../../api/client";
 import { ANALYTICS_METRICS_KPIS_KEY } from "../../api/query-keys";

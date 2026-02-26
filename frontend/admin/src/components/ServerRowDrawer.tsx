@@ -112,11 +112,11 @@ export function ServerRowDrawer({ server, onClose, peerCount = 0, onRestart, tel
             to={`/servers/${server.id}`}
             target="_blank"
             rel="noopener noreferrer"
-            variant="ghost"
+            variant="primary"
             size="sm"
           >
             <ExternalLink aria-hidden strokeWidth={1.5} className="server-drawer-icon-sm" />
-            Open in new tab
+            Open full detail
           </ButtonLink>
         </div>
         <div className="server-drawer-tabs" role="tablist">

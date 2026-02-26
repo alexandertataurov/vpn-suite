@@ -262,3 +262,9 @@
   padding: var(--spacing-2) 0;
   border-bottom: 1px solid var(--border-subtle);
 }
+
+.ref-peer-issues {
+  display: inline-flex;
+  gap: var(--spacing-1);
+  flex-wrap: wrap;
+}

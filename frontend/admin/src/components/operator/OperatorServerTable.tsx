@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
+import { RefreshCw } from "lucide-react";
 import { Button, RelativeTime, Skeleton } from "@vpn-suite/shared/ui";
 import type { OperatorServerRow } from "@vpn-suite/shared/types";
 import { formatBytes } from "@vpn-suite/shared";
@@ -148,9 +149,9 @@ export function OperatorServerTable({ rows, onSync, loading, filter = "", onFilt
               <Link to={r.to}>{r.name}</Link>
             </td>
             <td>{r.region}</td>
-            <td>{r.ip}</td>
+            <td className="operator-cell-mono">{r.ip}</td>
             <td>
-              <span className={`operator-freshness operator-freshness--${r.status === "online" ? "fresh" : r.status === "degraded" ? "degraded" : "stale"}`}>
+              <span className={`operator-server-status operator-server-status--${r.status === "online" ? "online" : r.status === "degraded" ? "degraded" : "offline"}`}>
                 {r.status}
               </span>
             </td>
@@ -166,14 +167,15 @@ export function OperatorServerTable({ rows, onSync, loading, filter = "", onFilt
               )}
             </td>
             <td>
-              <span className={`operator-freshness operator-freshness--muted operator-freshness--${r.freshness}`}>
-                {r.freshness}
+              <span className="operator-freshness-cell" title={r.freshness}>
+                <span className={`operator-freshness-dot operator-freshness-dot--${r.freshness}`} aria-hidden />
+                {r.freshness === "fresh" ? "Fresh" : r.freshness === "degraded" ? "Delayed" : "Stale"}
               </span>
             </td>
             {onSync && (
               <td>
                 <Button variant="ghost" size="sm" onClick={() => onSync(r.id)} aria-label={`Sync ${r.name}`}>
-                  Sync
+                  <RefreshCw size={14} strokeWidth={2} aria-hidden /> Sync
                 </Button>
               </td>
             )}

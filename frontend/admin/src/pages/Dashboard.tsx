@@ -13,7 +13,7 @@ import {
 import { Button, ConfirmModal } from "@vpn-suite/shared/ui";
 import { ApiError } from "@vpn-suite/shared/types";
 import { api } from "../api/client";
-import { AUDIT_KEY, CONNECTION_NODES_KEY, OPERATOR_DASHBOARD_KEY, SERVERS_LIST_DASHBOARD_KEY } from "../api/query-keys";
+import { AUDIT_KEY, CONNECTION_NODES_KEY, OPERATOR_DASHBOARD_KEY, PEERS_LIST_KEY, SERVERS_LIST_DASHBOARD_KEY } from "../api/query-keys";
 import { useDashboardSettings } from "../hooks/useDashboardSettings";
 import { useServerListFull } from "../hooks/useServerList";
 import { logFrontendError } from "../utils/logFrontendError";
@@ -35,6 +35,7 @@ export function DashboardPage() {
     const [results, registered] = await Promise.all([
       Promise.all([
         queryClient.refetchQueries({ queryKey: OPERATOR_DASHBOARD_KEY }),
+        queryClient.refetchQueries({ queryKey: PEERS_LIST_KEY }),
         queryClient.refetchQueries({ queryKey: CONNECTION_NODES_KEY }),
         queryClient.refetchQueries({ queryKey: AUDIT_KEY }),
         queryClient.refetchQueries({ queryKey: SERVERS_LIST_DASHBOARD_KEY }),
@@ -46,6 +47,7 @@ export function DashboardPage() {
     );
     const hasCacheError = [
       OPERATOR_DASHBOARD_KEY,
+      PEERS_LIST_KEY,
       CONNECTION_NODES_KEY,
       AUDIT_KEY,
       SERVERS_LIST_DASHBOARD_KEY,

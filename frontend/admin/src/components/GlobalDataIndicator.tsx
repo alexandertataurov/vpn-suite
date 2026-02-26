@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { PrimitiveBadge, RelativeTime } from "@vpn-suite/shared/ui";
 import { api } from "../api/client";
 import { useResource } from "../hooks/useResource";
@@ -31,11 +32,21 @@ function isMetricsDegraded(snapshot: HealthSnapshot | undefined): boolean {
   return values.some((v) => v === "stale" || v === "missing" || v === "unknown" || v === "degraded");
 }
 
-export function GlobalDataIndicator() {
+interface GlobalDataIndicatorProps {
+  compact?: boolean;
+}
+
+export function GlobalDataIndicator({ compact }: GlobalDataIndicatorProps) {
+  const fetchHealth = useCallback(
+    async ({ signal }: { signal: AbortSignal }) =>
+      api.get<HealthSnapshot>("/overview/health-snapshot", { signal }),
+    []
+  );
+
   const health = useResource<HealthSnapshot>({
     source: "GET /overview/health-snapshot",
     ttlMs: 30_000,
-    fetcher: ({ signal }) => api.get<HealthSnapshot>("/overview/health-snapshot", { signal }),
+    fetcher: fetchHealth,
   });
 
   const status = overallStatus(health.data, health.status);
@@ -44,16 +55,27 @@ export function GlobalDataIndicator() {
     status === "error"
       ? "Error"
       : metricsUnavailable
-        ? "Metrics unavailable"
+        ? "Metrics stale or missing"
         : status === "stale"
           ? "Stale"
           : "Fresh";
+  const shortLabel = status === "error" ? "Error" : status === "stale" ? "Stale" : "Fresh";
+  const title =
+    metricsUnavailable
+      ? "Telemetry or snapshot data is stale or missing (check Prometheus scrape and node telemetry)."
+      : "Global data freshness";
+
+  if (compact) {
+    return (
+      <div className="admin-data-indicator admin-data-indicator--compact" title={title}>
+        <span className={`admin-data-dot admin-data-dot--${status}`} aria-hidden />
+        <span className={`admin-data-label admin-data-label--${status}`}>{shortLabel}</span>
+      </div>
+    );
+  }
 
   return (
-    <div
-      className="admin-data-indicator"
-      title={metricsUnavailable ? "Prometheus/metrics unavailable or degraded" : "Global data freshness"}
-    >
+    <div className="admin-data-indicator" title={title}>
       <span className={`admin-data-dot admin-data-dot--${status}`} aria-hidden />
       <PrimitiveBadge size="sm" variant={status === "error" ? "danger" : status === "stale" ? "warning" : "success"}>
         {label}

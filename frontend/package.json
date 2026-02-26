@@ -19,7 +19,8 @@
     "test:e2e": "npm run test:e2e -w admin",
     "test:e2e:miniapp": "npm run test:e2e -w miniapp",
     "test:e2e:ui": "npm run test:e2e:ui -w admin",
-    "storybook": "npm run storybook -w shared"
+    "storybook": "npm run storybook -w shared",
+    "guardrails": "node shared/scripts/check-no-raw-colors.mjs && FOUNDATIONS_STRICT=1 npm run foundations:lint -w shared && npm run storybook:check -w shared"
   },
   "devDependencies": {
     "eslint-plugin-react": "^7.37.5",

@@ -142,21 +142,33 @@ function buildCss() {
   out.push('}');
   out.push('');
 
-  // ---------- Light
-  out.push('html[data-theme="light"] {');
-  out.push('  color-scheme: light;');
-  out.push(buildSemanticColors(primitives, colors.semantic.light));
-  out.push('  --surface-glass: oklch(from var(--color-surface) l c h / 0.9);');
-  out.push('  --surface-raised: var(--color-surface-2);');
-  out.push('  --surface-overlay: var(--color-overlay);');
-  out.push('  --color-primary-subtle: oklch(from var(--color-accent) l c h / 0.1);');
-  out.push('  --focus-ring: 0 0 0 3px oklch(from var(--color-accent) l c h / 0.3);');
-  out.push('  --border-glass: oklch(0 0 0 / 0.06);');
-  out.push('  --shadow-sm: 0 1px 2px oklch(0% 0 0 / 0.05);');
-  out.push('  --shadow-md: 0 4px 6px -1px oklch(0% 0 0 / 0.07), 0 2px 4px -2px oklch(0% 0 0 / 0.07);');
-  out.push('  --shadow-lg: 0 10px 15px -3px oklch(0% 0 0 / 0.08), 0 4px 6px -4px oklch(0% 0 0 / 0.05);');
-  out.push('}');
-  out.push('');
+  const isLightTheme = (name) => name === 'light' || name.endsWith('-light');
+
+  const buildThemeBlock = (themeName, semantic) => {
+    out.push(`html[data-theme="${themeName}"] {`);
+    out.push(`  color-scheme: ${isLightTheme(themeName) ? 'light' : 'dark'};`);
+    out.push(buildSemanticColors(primitives, semantic));
+    out.push('  --surface-glass: oklch(from var(--color-surface) l c h / 0.9);');
+    out.push('  --surface-raised: var(--color-surface-2);');
+    out.push('  --surface-overlay: var(--color-overlay);');
+    out.push('  --color-primary-subtle: oklch(from var(--color-accent) l c h / 0.1);');
+    out.push('  --focus-ring: 0 0 0 3px oklch(from var(--color-accent) l c h / 0.3);');
+    out.push(`  --border-glass: ${isLightTheme(themeName) ? 'oklch(0 0 0 / 0.06)' : 'oklch(1 0 0 / 0.08)'};`);
+    if (isLightTheme(themeName)) {
+      out.push('  --shadow-sm: 0 1px 2px oklch(0% 0 0 / 0.05);');
+      out.push('  --shadow-md: 0 4px 6px -1px oklch(0% 0 0 / 0.07), 0 2px 4px -2px oklch(0% 0 0 / 0.07);');
+      out.push('  --shadow-lg: 0 10px 15px -3px oklch(0% 0 0 / 0.08), 0 4px 6px -4px oklch(0% 0 0 / 0.05);');
+    }
+    out.push('}');
+    out.push('');
+  };
+
+  // ---------- Additional themes (semantic-only)
+  // NOTE: dark is handled above as default + primitives.
+  for (const [themeName, semantic] of Object.entries(colors.semantic)) {
+    if (themeName === 'dark') continue;
+    buildThemeBlock(themeName, semantic);
+  }
 
   // ---------- prefers-contrast
   out.push('@media (prefers-contrast: high) {');

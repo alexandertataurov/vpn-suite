@@ -357,9 +357,11 @@ export function ControlPlanePage() {
         />
       </div>
 
-      <section className="dashboard-section">
-        <Panel>
-          <h3 className="ref-settings-title">Automation Engine</h3>
+      <div className="ref-page-sections">
+        <Panel as="section" variant="outline" aria-label="Automation Engine">
+          <div className="ref-section-head">
+            <h3 className="ref-settings-title">Automation Engine</h3>
+          </div>
           <p className="text-muted">
             Mode: <strong>{automationStatusQuery.data?.enabled ? "enabled" : "disabled"}</strong> | interval {automationStatusQuery.data?.interval_seconds ?? 0}s | execute rebalance{" "}
             <strong>{automationStatusQuery.data?.rebalance_execute_enabled ? "on" : "off"}</strong> | enterprise pinning{" "}
@@ -471,11 +473,11 @@ export function ControlPlanePage() {
             </div>
           ) : null}
         </Panel>
-      </section>
 
-      <section className="dashboard-section">
-        <Panel>
-          <h3 className="ref-settings-title">Topology Graph</h3>
+        <Panel as="section" variant="outline" aria-label="Topology Graph">
+          <div className="ref-section-head">
+            <h3 className="ref-settings-title">Topology Graph</h3>
+          </div>
           {graphQuery.isLoading || !graphQuery.data || !graphLayout ? (
             <Skeleton height={180} />
           ) : (
@@ -531,11 +533,11 @@ export function ControlPlanePage() {
             </div>
           )}
         </Panel>
-      </section>
 
-      <section className="dashboard-section">
-        <Panel>
-          <h3 className="ref-settings-title">Recent Control-Plane Events</h3>
+        <Panel as="section" variant="outline" aria-label="Recent Control-Plane Events">
+          <div className="ref-section-head">
+            <h3 className="ref-settings-title">Recent Control-Plane Events</h3>
+          </div>
           <p className="text-muted">
             Live stream: <strong>{wsConnected ? "connected" : "polling fallback"}</strong>
           </p>
@@ -557,11 +559,11 @@ export function ControlPlanePage() {
             <p className="text-muted">No events yet</p>
           )}
         </Panel>
-      </section>
 
-      <section className="dashboard-section">
-        <Panel>
-          <h3 className="ref-settings-title">Business Metrics (30d)</h3>
+        <Panel as="section" variant="outline" aria-label="Business Metrics (30d)">
+          <div className="ref-section-head">
+            <h3 className="ref-settings-title">Business Metrics (30d)</h3>
+          </div>
           {businessQuery.isLoading || !businessQuery.data ? (
             <Skeleton height={80} />
           ) : (
@@ -575,11 +577,11 @@ export function ControlPlanePage() {
             </dl>
           )}
         </Panel>
-      </section>
 
-      <section className="dashboard-section">
-        <Panel>
-          <h3 className="ref-settings-title">Security Metrics</h3>
+        <Panel as="section" variant="outline" aria-label="Security Metrics">
+          <div className="ref-section-head">
+            <h3 className="ref-settings-title">Security Metrics</h3>
+          </div>
           {securityQuery.isLoading ? (
             <Skeleton height={80} />
           ) : securityQuery.error instanceof ApiError && securityQuery.error.statusCode === 409 ? (
@@ -599,11 +601,11 @@ export function ControlPlanePage() {
             <Skeleton height={80} />
           )}
         </Panel>
-      </section>
 
-      <section className="dashboard-section">
-        <Panel>
-          <h3 className="ref-settings-title">Anomaly Scoring (ML)</h3>
+        <Panel as="section" variant="outline" aria-label="Anomaly Scoring (ML)">
+          <div className="ref-section-head">
+            <h3 className="ref-settings-title">Anomaly Scoring (ML)</h3>
+          </div>
           {anomalyQuery.isLoading ? (
             <Skeleton height={120} />
           ) : anomalyQuery.error instanceof ApiError && anomalyQuery.error.statusCode === 409 ? (
@@ -632,7 +634,7 @@ export function ControlPlanePage() {
             <p className="text-muted">No anomalies scored yet</p>
           )}
         </Panel>
-      </section>
+      </div>
     </div>
   );
 }

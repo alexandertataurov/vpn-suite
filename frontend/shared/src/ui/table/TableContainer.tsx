@@ -27,7 +27,7 @@ export const TableContainer = forwardRef<HTMLElement, TableContainerProps>(funct
   return (
     <PrimitivePanel
       ref={ref}
-      className={cn("ds-table-wrap", className)}
+      className={cn("ds-table-wrap", "data-table-wrap", className)}
       style={style}
       data-testid={dataTestId}
     >

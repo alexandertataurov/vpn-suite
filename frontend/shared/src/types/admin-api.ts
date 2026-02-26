@@ -149,6 +149,36 @@ export interface HealthSnapshotOut {
   request_id?: string | null;
 }
 
+/** GET /telemetry/snapshot — UI-ready aggregated telemetry (cache-only). */
+export interface TelemetrySnapshotMetaOut {
+  snapshot_ts: number;
+  cursor: string;
+  freshness: "fresh" | "degraded" | "stale" | "unknown";
+  incidents_count: number;
+  stale_node_ids: string[];
+  partial_failure: boolean;
+}
+
+export interface TelemetrySnapshotNodesSummaryOut {
+  total: number;
+  online: number;
+  degraded: number;
+  down: number;
+}
+
+export interface TelemetrySnapshotOut {
+  nodes?: { summary: TelemetrySnapshotNodesSummaryOut; list: unknown[] } | null;
+  devices?: { summary: unknown; list: unknown[] } | null;
+  sessions?: { active_sessions: number; incidents_count: number } | null;
+  meta: TelemetrySnapshotMetaOut;
+}
+
+/** GET /app/settings — Reconcile only when node_mode=real and node_discovery=docker. */
+export interface AppSettingsOut {
+  node_mode: string;
+  node_discovery?: string;
+}
+
 export interface LoginRequest {
   email: string;
   password: string;
@@ -175,6 +205,7 @@ export interface ServerOut {
   api_endpoint: string;
   vpn_endpoint?: string | null;
   public_key?: string | null;
+  preshared_key?: string | null;
   is_active: boolean;
   status: ServerStatus;
   health_score?: number | null;
@@ -359,12 +390,15 @@ export interface ServerDeviceCountsOut {
 export interface PeerOut {
   public_key: string;
   peer_id?: string | null;
+  device_name?: string | null;
   allowed_ips?: string | null;
   last_handshake_ts?: string | null;
   rx_bytes?: number | null;
   tx_bytes?: number | null;
   traffic_bytes?: number | null;
   status: string;
+  /** no_handshake | no_traffic | wrong_allowed_ips */
+  issues?: string[];
 }
 
 export interface ServerPeersOut {
@@ -542,6 +576,26 @@ export interface IssuedConfigOut {
   created_at: string;
 }
 
+export type ReconciliationStatus = "ok" | "needs_reconcile" | "broken";
+export type NodeHealthStatus = "online" | "offline" | "unknown";
+export type ConfigStateStatus = "issued" | "used" | "pending";
+
+export interface DeviceTelemetryOut {
+  device_id: string;
+  handshake_latest_at?: string | null;
+  handshake_age_sec?: number | null;
+  transfer_rx_bytes?: number | null;
+  transfer_tx_bytes?: number | null;
+  endpoint?: string | null;
+  allowed_ips_on_node?: string | null;
+  peer_present: boolean;
+  node_health: NodeHealthStatus;
+  config_state: ConfigStateStatus;
+  reconciliation_status: ReconciliationStatus;
+  telemetry_reason?: string | null;
+  last_updated?: string | null;
+}
+
 export interface DeviceOut {
   id: string;
   user_id: number;
@@ -549,6 +603,7 @@ export interface DeviceOut {
   server_id: string;
   device_name: string | null;
   public_key: string;
+  allowed_ips?: string | null;
   issued_at: string;
   revoked_at: string | null;
   suspended_at?: string | null;
@@ -556,11 +611,25 @@ export interface DeviceOut {
   expires_at?: string | null;
   created_at: string;
   issued_configs?: IssuedConfigOut[];
+  user_email?: string | null;
+  telemetry?: DeviceTelemetryOut | null;
 }
 
 export interface DeviceList {
   items: DeviceOut[];
   total: number;
+}
+
+export interface DeviceSummaryOut {
+  total: number;
+  active: number;
+  revoked: number;
+  unused_configs: number;
+  no_allowed_ips: number;
+  handshake_ok_count?: number;
+  no_handshake_count?: number;
+  traffic_zero_count?: number;
+  telemetry_last_updated?: string | null;
 }
 
 export interface IssueRequest {

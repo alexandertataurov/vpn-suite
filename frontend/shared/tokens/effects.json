@@ -67,6 +67,6 @@
     "heightBtnMd": "36px",
     "heightBtnLg": "44px"
   },
-  "zIndex": { "dropdown": 100, "overlay": 200, "modal": 300, "toast": 400 },
+  "zIndex": { "sticky": 50, "header": 210, "dropdown": 100, "overlay": 200, "modal": 300, "toast": 400 },
   "breakpoints": { "sm": "640px", "md": "768px", "lg": "1024px", "xl": "1280px" }
 }

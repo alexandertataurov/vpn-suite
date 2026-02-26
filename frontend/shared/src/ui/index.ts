@@ -16,6 +16,8 @@ export { Input } from "./forms/Input";
 export { Textarea } from "./forms/Textarea";
 export type { TextareaProps } from "./forms/Textarea";
 export { Checkbox, type CheckboxProps } from "./forms/Checkbox";
+export { RadioGroup } from "./forms/RadioGroup";
+export type { RadioGroupProps, RadioOption, RadioGroupDirection } from "./forms/RadioGroup";
 export { Select, type SelectOption, type SelectProps } from "./forms/Select";
 export { SearchInput, type SearchInputProps } from "./forms/SearchInput";
 export { Label, type LabelProps } from "./forms/Label";

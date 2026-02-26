@@ -29,7 +29,7 @@ html[data-theme="light"] .admin-header {
   border-bottom: 1px solid var(--border-subtle);
   position: sticky;
   top: 0;
-  z-index: var(--z-sticky);
+  z-index: var(--z-header);
   backdrop-filter: blur(8px);
 }
 

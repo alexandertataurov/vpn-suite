@@ -21,6 +21,7 @@ export function ServerEditPage() {
   const [region, setRegion] = useState("");
   const [apiEndpoint, setApiEndpoint] = useState("");
   const [publicKey, setPublicKey] = useState("");
+  const [presharedKey, setPresharedKey] = useState("");
   const [isActive, setIsActive] = useState(true);
 
   const { data, isLoading, error, refetch } = useQuery<ServerOut>({
@@ -35,12 +36,13 @@ export function ServerEditPage() {
       setRegion(data.region ?? "");
       setApiEndpoint(data.api_endpoint ?? "");
       setPublicKey(data.public_key ?? "");
+      setPresharedKey(data.preshared_key ?? "");
       setIsActive(data.is_active ?? true);
     }
   }, [data]);
 
   const mutation = useMutation({
-    mutationFn: (body: { name?: string; region?: string; api_endpoint: string; public_key: string; is_active: boolean }) =>
+    mutationFn: (body: { name?: string; region?: string; api_endpoint: string; public_key: string; preshared_key?: string; is_active: boolean }) =>
       api.patch<ServerOut>(`/servers/${id}`, body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: serverKey(id!) });
@@ -62,6 +64,7 @@ export function ServerEditPage() {
       region: region || undefined,
       api_endpoint: apiEndpoint,
       public_key: publicKey,
+      preshared_key: presharedKey.trim() || undefined,
       is_active: isActive,
     });
   };
@@ -114,6 +117,9 @@ export function ServerEditPage() {
           </Field>
           <Field id="edit-public-key" label="Public key">
             <Input id="edit-public-key" value={publicKey} onChange={(e) => setPublicKey(e.target.value)} required />
+          </Field>
+          <Field id="edit-preshared-key" label="Preshared key (optional)" description="WireGuard preshared key for issued configs">
+            <Input id="edit-preshared-key" type="password" value={presharedKey} onChange={(e) => setPresharedKey(e.target.value)} placeholder="Base64 key" />
           </Field>
           <Checkbox
             label="Active"

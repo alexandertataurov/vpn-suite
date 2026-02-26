@@ -107,7 +107,7 @@ export function makeOpsTimeseriesOption(args: {
       fontSize: t.axisFontSize,
     },
     grid: {
-      left: 12,
+      left: 44,
       right: 12,
       top: args.showLegend ? 28 : 12,
       bottom: enableZoom ? 44 : 28,
@@ -138,9 +138,11 @@ export function makeOpsTimeseriesOption(args: {
       : undefined,
     xAxis: {
       type: "time",
+      show: true,
       axisLine: { show: false },
       axisTick: { show: false },
       axisLabel: {
+        show: true,
         color: t.faint,
         fontSize: t.axisFontSize,
         formatter: (v: string | number) =>
@@ -150,16 +152,27 @@ export function makeOpsTimeseriesOption(args: {
     },
     yAxis: {
       type: "value",
-      min: args.yMin,
+      min: args.yMin ?? 0,
       max: args.yMax,
+      show: true,
+      splitNumber: 4,
       axisLine: { show: false },
       axisTick: { show: false },
       axisLabel: {
+        show: true,
         color: t.faint,
         fontSize: t.axisFontSize,
         formatter: (v: number) => args.yAxisFormatter(v),
       },
-      splitLine: { show: true, lineStyle: { color: t.grid, width: 1 } },
+      splitLine: {
+        show: true,
+        lineStyle: {
+          color: t.grid || t.faint || "rgba(0,0,0,0.06)",
+          width: 1,
+          type: "solid",
+          opacity: 0.6,
+        },
+      },
     },
     dataZoom: enableZoom
       ? [
@@ -194,7 +207,7 @@ export function makeOpsTimeseriesOption(args: {
         lineStyle: isBar ? undefined : { color: s.color, width: 2, lineCap: "round", lineJoin: "round" },
         itemStyle: { color: s.color },
         areaStyle: !isBar && s.area ? { color: s.color, opacity: 0.12 } : undefined,
-        emphasis: { focus: "series" },
+        emphasis: { disabled: true },
       };
     }),
     // Helps tooltip show time with explicit TZ in the payload (used in HTML title).

@@ -15,10 +15,11 @@ import {
   Palette,
   Bell,
   Search,
-  RefreshCw,
   ChevronLeft,
   ChevronRight,
   AlertTriangle,
+  Sun,
+  Moon,
   type LucideIcon,
 } from "lucide-react";
 import { Button, Select, PrimitiveBadge } from "@vpn-suite/shared/ui";
@@ -28,8 +29,8 @@ import { CommandPalette } from "../components/CommandPalette";
 import type { CommandItem } from "../components/CommandPalette";
 import { useServerListFull } from "../hooks/useServerList";
 import { TopStatusBar } from "../components/operator/TopStatusBar";
+import { LiveStatusBlock } from "../components/operator/LiveStatusBlock";
 import { ResourceDebugPanel } from "../components/ResourceDebugPanel";
-import { GlobalDataIndicator } from "../components/GlobalDataIndicator";
 import { api } from "../api/client";
 import { OPERATOR_DASHBOARD_KEY } from "../api/query-keys";
 import type { OperatorDashboardOut } from "@vpn-suite/shared/types";
@@ -85,7 +86,7 @@ export function AdminLayout() {
     const fromUrl = new URLSearchParams(window.location.search).get("region");
     return fromUrl ?? localStorage.getItem(REGION_STORAGE_KEY) ?? "all";
   });
-  const { theme, setTheme } = useTheme();
+  const { theme, themes, setTheme } = useTheme();
   const logout = useAuthStore((s) => s.logout);
   const navigate = useNavigate();
   const location = useLocation();
@@ -128,9 +129,11 @@ export function AdminLayout() {
   );
 
   const toggleTheme = useCallback(() => {
-    setTheme(theme === "dark" ? "light" : "dark");
+    const idx = themes.indexOf(theme);
+    const next = idx >= 0 ? themes[(idx + 1) % themes.length] : themes[0];
+    if (next) setTheme(next);
     setCommandOpen(false);
-  }, [theme, setTheme]);
+  }, [theme, themes, setTheme]);
 
   const commandItems: CommandItem[] = useMemo(
     () => [
@@ -147,11 +150,11 @@ export function AdminLayout() {
       },
       {
         id: "theme",
-        label: `Switch to ${theme === "dark" ? "light" : "dark"} theme`,
+        label: "Switch theme",
         onSelect: toggleTheme,
       },
     ],
-    [navigateTo, toggleTheme, theme]
+    [navigateTo, toggleTheme]
   );
 
   useEffect(() => {
@@ -274,8 +277,8 @@ export function AdminLayout() {
       <a href="#admin-main" className="skip-link">
         Skip to main content
       </a>
-      <header className="admin-header admin-header--operator">
-        <div className="admin-header-start">
+      <div className="admin-top-bar" role="banner">
+        <div className="admin-top-bar-left">
           <button
             type="button"
             className="admin-menu-btn"
@@ -288,8 +291,6 @@ export function AdminLayout() {
             <Shield className="admin-brand-icon" aria-hidden strokeWidth={1.5} />
             <span className="admin-brand-text">AmneziaWG</span>
           </NavLink>
-        </div>
-        <div className="admin-header-context">
           <label className="admin-region-switch">
             <span className="admin-region-label">Region</span>
             <Select
@@ -300,19 +301,37 @@ export function AdminLayout() {
               className="admin-region-select"
             />
           </label>
-          <PrimitiveBadge variant="neutral" size="sm" title="Environment">Prod</PrimitiveBadge>
+          <span className="admin-env-badge" title="Environment">Prod</span>
         </div>
-        <div className="admin-header-controls">
-          <button
-            type="button"
-            className="admin-search-trigger"
-            onClick={() => setCommandOpen(true)}
-            aria-label="Search (Ctrl+K)"
-            title="Search (Ctrl+K)"
-          >
-            <Search className="admin-search-icon" aria-hidden size={14} strokeWidth={2} />
-            <span className="admin-search-label">Search… Ctrl+K</span>
-          </button>
+        <div className="admin-top-bar-center" role="region" aria-label="System health">
+          {operatorQuery.data?.health_strip ? (
+            <TopStatusBar data={operatorQuery.data.health_strip} />
+          ) : operatorQuery.isError ? (
+            <div className="operator-health-strip operator-top-bar-health">
+              <div className="operator-health-block operator-health-block--core operator-health-block--down">
+                <div className="operator-topbar-cell">
+                  <span className="operator-topbar-label">API</span>
+                  <span className="operator-topbar-value operator-topbar-value--down">Down</span>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="operator-health-strip operator-top-bar-health">
+              <div className="operator-health-block">
+                <div className="operator-topbar-cell">
+                  <span className="operator-topbar-label">Status</span>
+                  <span className="operator-topbar-value">…</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="admin-top-bar-right">
+          <LiveStatusBlock
+            last_updated={operatorQuery.data?.health_strip?.last_updated ?? new Date().toISOString()}
+            freshness={operatorQuery.data?.health_strip?.freshness ?? "unknown"}
+            onRefresh={handleRefresh}
+          />
           <Link
             to="/"
             className="admin-alerts-trigger"
@@ -326,52 +345,23 @@ export function AdminLayout() {
               </span>
             )}
           </Link>
-          <GlobalDataIndicator />
-          <div className="admin-mode-controls">
-            <span className="admin-mode-label" title="Refresh mode">
-              {operatorQuery.data?.health_strip?.refresh_mode ?? "Polling"} · 30s
-            </span>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleRefresh}
-              aria-label="Refresh"
-              className="admin-refresh-btn"
-            >
-              <RefreshCw size={14} strokeWidth={2} aria-hidden />
-            </Button>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
+          <button
+            type="button"
+            className="admin-search-trigger"
+            onClick={() => setCommandOpen(true)}
+            aria-label="Search (Ctrl+K)"
+            title="Search (Ctrl+K)"
           >
-            {theme === "dark" ? "Light" : "Dark"}
+            <Search className="admin-search-icon" aria-hidden size={14} strokeWidth={2} />
+            <span className="admin-search-label">Search</span>
+          </button>
+          <Button variant="ghost" size="sm" onClick={toggleTheme} aria-label="Switch theme" title="Switch theme">
+            {theme === "dark" ? <Sun size={14} strokeWidth={2} aria-hidden /> : <Moon size={14} strokeWidth={2} aria-hidden />}
           </Button>
-          <Button variant="ghost" size="sm" onClick={logout}>
+          <Button variant="ghost" size="sm" onClick={logout} className="admin-logout-btn" aria-label="Log out">
             Log out
           </Button>
         </div>
-      </header>
-      <div className="admin-status-strip" role="region" aria-label="Global health">
-        {operatorQuery.data?.health_strip ? (
-          <TopStatusBar data={operatorQuery.data.health_strip} />
-        ) : operatorQuery.isError ? (
-          <div className="operator-health-strip">
-            <div className="operator-health-cell">
-              <div className="operator-health-label">API</div>
-              <div className="operator-health-value operator-health-value--down">Down</div>
-            </div>
-          </div>
-        ) : (
-          <div className="operator-health-strip">
-            <div className="operator-health-cell">
-              <div className="operator-health-label">Status</div>
-              <div className="operator-health-value">…</div>
-            </div>
-          </div>
-        )}
       </div>
       <div className="admin-body">
         <aside className={`admin-sidebar ${sidebarOpen ? "open" : ""} ${sidebarCollapsed ? "collapsed" : ""}`} data-testid="admin-sidebar">

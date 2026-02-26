@@ -1,13 +1,11 @@
-/* Operator Dashboard — strict grid, 1px borders, tokens only */
+/* Operator Dashboard — 12-column grid, card-based sections */
 .operator-dashboard {
   display: grid;
-  grid-template-columns: 1fr;
-  grid-template-rows: auto auto 1fr auto;
-  gap: 0;
-  border: 1px solid color-mix(in oklab, var(--border-subtle) 60%, transparent);
-  background: var(--surface-raised);
-  border-radius: var(--radius-op);
-  overflow: hidden;
+  grid-template-columns: repeat(12, 1fr);
+  gap: var(--spacing-section-card);
+  padding: var(--spacing-op-4);
+  background: var(--color-bg);
+  min-height: 0;
 }
 
 .operator-health-strip--error {
@@ -40,6 +38,79 @@
   font-size: var(--text-op-sm);
 }
 
+/* Top bar health — 3 blocks, spacing only (no borders) */
+.operator-health-strip.operator-top-bar-health {
+  border-bottom: none;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--spacing-topbar-gap-groups);
+}
+
+.operator-health-block {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-topbar-block);
+  padding-inline: var(--spacing-topbar-bar);
+  transition: background-color 200ms ease-out;
+}
+
+.operator-health-block--down {
+  background: color-mix(in oklab, var(--color-danger-600) 5%, transparent);
+}
+
+.operator-topbar-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.operator-topbar-label {
+  font-size: var(--text-op-topbar-label);
+  color: var(--color-text-tertiary);
+  line-height: 1.2;
+}
+
+.operator-topbar-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  line-height: 1.2;
+  transition: color 200ms ease-out;
+}
+
+.operator-topbar-value--primary {
+  font-size: var(--text-op-topbar-value-primary);
+}
+
+.operator-topbar-value--secondary {
+  font-size: var(--text-op-topbar-value-secondary);
+  font-weight: 500;
+}
+
+.operator-topbar-value--ok {
+  color: var(--color-success-600);
+}
+
+.operator-topbar-value--degraded {
+  color: var(--color-warning-600);
+}
+
+.operator-topbar-value--down {
+  color: var(--color-danger-600);
+}
+
+.operator-topbar-value--unknown {
+  color: var(--color-text-tertiary);
+}
+
+@media (max-width: 1023px) {
+  .operator-health-block--activity .operator-topbar-cell:nth-child(2),
+  .operator-health-block--activity .operator-topbar-cell:nth-child(3),
+  .operator-health-block--performance .operator-topbar-cell:first-child {
+    display: none;
+  }
+}
+
 .operator-top-status-bar {
   padding: var(--spacing-op-2) var(--spacing-op-3);
   align-items: flex-end;
@@ -55,6 +126,30 @@
 .operator-status-group {
   border-inline-end: 1px solid var(--border-subtle);
   padding-block: var(--spacing-op-1);
+}
+
+.operator-status-group--primary .operator-health-value {
+  font-size: var(--text-op-base);
+  font-weight: 600;
+}
+
+.operator-status-group--primary .operator-health-label {
+  font-size: var(--text-op-nav-section);
+}
+
+.operator-status-group:not(.operator-status-group--primary) .operator-health-cell {
+  border-inline-end: none;
+}
+
+.operator-status-group:not(.operator-status-group--primary) .operator-health-label {
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--color-text-tertiary);
+}
+
+.operator-status-group:not(.operator-status-group--primary) .operator-health-value {
+  font-size: var(--text-op-sm);
+  font-weight: 500;
 }
 
 .operator-status-group--sync {
@@ -107,6 +202,10 @@
   transition: background 80ms ease-out;
 }
 
+.operator-status-group--primary .operator-health-cell:last-child {
+  border-inline-end: none;
+}
+
 .operator-health-cell:last-child {
   border-inline-end: none;
 }
@@ -124,8 +223,7 @@
 .operator-health-label {
   font-size: var(--text-op-nav-section);
   color: var(--color-text-tertiary);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
   line-height: 1.2;
 }
 
@@ -179,17 +277,37 @@
   }
 }
 
-.operator-grid-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0;
-  border-bottom: 1px solid color-mix(in oklab, var(--border-subtle) 60%, transparent);
-  min-height: 72px;
+.operator-grid-cell--span-8 {
+  grid-column: span 8;
+}
+
+.operator-grid-cell--span-4 {
+  grid-column: span 4;
+}
+
+.operator-grid-cell--span-12 {
+  grid-column: span 12;
+}
+
+.telemetry-health-widget-banner {
+  background: color-mix(in oklab, var(--color-warning-600) 12%, transparent);
+  border-bottom: 1px solid color-mix(in oklab, var(--color-warning-600) 30%, transparent);
+  color: var(--color-text-secondary);
+  font-size: var(--text-op-sm);
+  padding: var(--spacing-op-1) var(--spacing-op-2);
+  margin: calc(-1 * var(--spacing-op-4)) calc(-1 * var(--spacing-op-5)) var(--spacing-op-2) calc(-1 * var(--spacing-op-5));
+  border-radius: var(--radius-dashboard-card) var(--radius-dashboard-card) 0 0;
+}
+
+.telemetry-health-widget .telemetry-health-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-op-2);
+  margin-top: var(--spacing-op-2);
 }
 
 .operator-grid-cell {
-  border-right: 1px solid color-mix(in oklab, var(--border-subtle) 60%, transparent);
-  padding: var(--spacing-op-4);
   overflow: hidden;
 }
 
@@ -197,14 +315,32 @@
   border-right: none;
 }
 
+/* Card design system: surface, soft shadow, rounded, header divider */
+.operator-card {
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-card);
+  border-radius: var(--radius-dashboard-card);
+  padding: var(--spacing-op-4) var(--spacing-op-5);
+  overflow: hidden;
+  transition: box-shadow 80ms ease-out;
+}
+
+.operator-card:hover {
+  box-shadow: 0 2px 6px oklch(0 0 0 / 0.1);
+}
+
+.operator-card .operator-section-title {
+  margin-bottom: var(--spacing-op-3);
+  padding-bottom: var(--spacing-op-2);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
 .operator-section-title {
   display: flex;
   align-items: center;
   gap: var(--spacing-op-2);
-  font-size: var(--text-op-heading);
+  font-size: var(--text-op-section);
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
   color: var(--color-text-secondary);
   margin: 0 0 var(--spacing-op-4);
   padding-bottom: var(--spacing-op-2);
@@ -266,6 +402,7 @@ html[data-theme="dim"] .operator-server-table th {
 .operator-table tbody tr,
 .operator-server-table tbody tr {
   height: var(--table-row-height-op);
+  transition: background-color 80ms ease-out;
 }
 
 .operator-table .num,
@@ -288,8 +425,67 @@ html[data-theme="dim"] .operator-server-table th {
   text-decoration: underline;
 }
 
+.operator-server-table tbody tr:nth-child(even) {
+  background: color-mix(in oklab, var(--color-background-secondary) 40%, transparent);
+}
+
 .operator-server-table tbody tr:hover {
-  background: color-mix(in oklab, var(--color-background-secondary) 50%, transparent);
+  background: color-mix(in oklab, var(--color-background-secondary) 60%, transparent);
+}
+
+.operator-cell-mono {
+  font-family: var(--font-mono);
+  font-size: var(--text-op-sm);
+}
+
+.operator-server-status {
+  font-size: var(--text-op-sm);
+  font-weight: 500;
+  padding: var(--spacing-op-1) var(--spacing-op-2);
+  border-radius: var(--radius-op);
+  text-transform: capitalize;
+}
+
+.operator-server-status--online {
+  background: color-mix(in oklab, var(--color-success-600) 12%, transparent);
+  color: var(--color-success-600);
+}
+
+.operator-server-status--degraded {
+  background: color-mix(in oklab, var(--color-warning-600) 12%, transparent);
+  color: var(--color-warning-600);
+}
+
+.operator-server-status--offline {
+  background: color-mix(in oklab, var(--color-text-tertiary) 20%, transparent);
+  color: var(--color-text-tertiary);
+}
+
+.operator-freshness-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-op-1);
+  font-size: var(--text-op-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.operator-freshness-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.operator-freshness-dot--fresh {
+  background: var(--color-success-600);
+}
+
+.operator-freshness-dot--degraded {
+  background: var(--color-warning-600);
+}
+
+.operator-freshness-dot--stale {
+  background: var(--color-danger-600);
 }
 
 .operator-server-filter-wrap {
@@ -343,6 +539,10 @@ html[data-theme="dim"] .operator-server-table th {
   margin-bottom: var(--spacing-op-2);
 }
 
+.operator-panel-meta--minimal {
+  margin-bottom: var(--spacing-op-1);
+}
+
 .operator-incident-panel {
   display: flex;
   flex-direction: column;
@@ -394,6 +594,51 @@ html[data-theme="dim"] .operator-server-table th {
   color: var(--color-text-tertiary);
   padding: var(--spacing-op-6) 0;
   opacity: 0.8;
+}
+
+.operator-incident-count {
+  margin-left: var(--spacing-op-1);
+  font-variant-numeric: tabular-nums;
+}
+
+.operator-incident-count--zero {
+  color: var(--color-success-600);
+  font-weight: 500;
+}
+
+.operator-incident-count--active {
+  color: var(--color-danger-600);
+  font-weight: 600;
+}
+
+.operator-incident-empty-state {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-op-2);
+  font-size: var(--text-op-sm);
+  color: var(--color-success-600);
+  padding: var(--spacing-op-4) 0;
+}
+
+.operator-incident-empty-icon {
+  flex-shrink: 0;
+}
+
+.operator-incident-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-op-1);
+  font-size: var(--text-op-sm);
+  color: var(--color-text-secondary);
+  background: none;
+  border: none;
+  padding: var(--spacing-op-1) 0;
+  cursor: pointer;
+  margin-bottom: var(--spacing-op-2);
+}
+
+.operator-incident-toggle:hover {
+  color: var(--color-text-primary);
 }
 
 .operator-incident-severity {
@@ -481,6 +726,12 @@ html[data-theme="dim"] .operator-server-table th {
 .operator-freshness--muted {
   opacity: 0.9;
   background: color-mix(in oklab, var(--color-background-secondary) 60%, transparent);
+}
+
+.operator-freshness,
+.operator-server-status,
+.operator-freshness-dot {
+  transition: background-color 120ms ease-out, color 120ms ease-out, opacity 120ms ease-out;
 }
 
 /* Cluster matrix: threshold cells, micro-bars */
@@ -642,7 +893,7 @@ html[data-theme="dim"] .operator-server-table th {
 }
 
 .operator-chart-placeholder {
-  min-height: 160px;
+  min-height: 220px;
   display: flex;
   align-items: center;
   font-size: var(--text-op-sm);
@@ -654,7 +905,7 @@ html[data-theme="dim"] .operator-server-table th {
 }
 
 .operator-grid-cell--no-border {
-  border-bottom: none;
+  border: none;
 }
 
 /* Cluster health charts (Telemetry VPN tab) */
@@ -703,9 +954,18 @@ html[data-theme="dim"] .operator-server-table th {
   color: var(--color-text-tertiary);
 }
 
+.operator-chart-caption {
+  display: block;
+  font-size: var(--text-op-xs, 11px);
+  font-weight: 500;
+  color: var(--color-text-tertiary);
+  margin-bottom: 4px;
+  letter-spacing: 0.02em;
+}
+
 .operator-chart-wrap {
   position: relative;
-  min-height: 160px;
+  min-height: 220px;
   display: flex;
   flex-direction: column;
 }
@@ -792,8 +1052,7 @@ html[data-theme="dim"] .operator-server-table th {
 }
 
 .operator-sessions-table th {
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
   font-size: var(--text-op-sm);
   color: var(--color-text-tertiary);
 }
@@ -830,8 +1089,7 @@ html[data-theme="dim"] .operator-server-table th {
 .operator-session-label {
   font-size: var(--text-op-sm);
   color: var(--color-text-tertiary);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
 }
 
 .operator-session-value {

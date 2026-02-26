@@ -18,7 +18,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <BrowserRouter basename="/admin">
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
+        <ThemeProvider themes={["dark", "dim", "light"]} defaultTheme="dark" storageKey="vpn-suite-admin-theme">
           <App />
         </ThemeProvider>
       </QueryClientProvider>

@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
+import { Check, ChevronDown, ChevronRight } from "lucide-react";
 import { Button, PrimitiveBadge, RelativeTime } from "@vpn-suite/shared/ui";
 import type { OperatorIncident } from "@vpn-suite/shared/types";
 import type { ResourceState } from "../../hooks/useResource";
@@ -29,21 +31,37 @@ export function IncidentPanel({ resource, onRetry }: IncidentPanelProps) {
   }
 
   const incidents = resource.data ?? [];
+  const [expanded, setExpanded] = useState(true);
+
   if (incidents.length === 0) {
-    return <p className="operator-incident-empty">No incidents</p>;
+    return (
+      <div className="operator-incident-empty-state" role="status">
+        <Check className="operator-incident-empty-icon" aria-hidden size={20} strokeWidth={2} />
+        <span>No active incidents</span>
+      </div>
+    );
   }
 
   return (
     <div className="operator-incident-panel">
-      <div className="operator-panel-meta">
-        <span>
-          Updated:{" "}
-          {resource.updatedAt ? <RelativeTime date={resource.updatedAt} updateInterval={5000} /> : "—"}
-        </span>
-        {resource.status === "stale" ? (
-          <PrimitiveBadge variant="warning" size="sm">Stale</PrimitiveBadge>
-        ) : null}
-      </div>
+      {(resource.status === "stale" || resource.updatedAt) && (
+        <div className="operator-panel-meta operator-panel-meta--minimal">
+          {resource.status === "stale" ? (
+            <PrimitiveBadge variant="warning" size="sm">Stale</PrimitiveBadge>
+          ) : null}
+        </div>
+      )}
+      <button
+        type="button"
+        className="operator-incident-toggle"
+        onClick={() => setExpanded((e) => !e)}
+        aria-expanded={expanded}
+        aria-label={expanded ? "Collapse incidents" : "Expand incidents"}
+      >
+        {expanded ? <ChevronDown size={14} aria-hidden /> : <ChevronRight size={14} aria-hidden />}
+        <span>{incidents.length} active</span>
+      </button>
+      {expanded && (
       <ul className="operator-incident-list">
         {incidents.map((inc, i) => (
           <li key={`${inc.entity}-${inc.metric}-${i}`} className="operator-incident-item">
@@ -71,6 +89,7 @@ export function IncidentPanel({ resource, onRetry }: IncidentPanelProps) {
           </li>
         ))}
       </ul>
+      )}
     </div>
   );
 }

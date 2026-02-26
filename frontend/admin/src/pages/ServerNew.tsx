@@ -16,12 +16,13 @@ export function ServerNewPage() {
   const [region, setRegion] = useState("");
   const [apiEndpoint, setApiEndpoint] = useState("");
   const [publicKey, setPublicKey] = useState("");
+  const [presharedKey, setPresharedKey] = useState("");
   const [isActive, setIsActive] = useState(true);
   const navigate = useNavigate();
   const { addToast } = useToast();
 
   const mutation = useMutation({
-    mutationFn: (body: { id?: string; name?: string; region?: string; api_endpoint: string; public_key: string; is_active: boolean }) =>
+    mutationFn: (body: { id?: string; name?: string; region?: string; api_endpoint: string; public_key: string; preshared_key?: string; is_active: boolean }) =>
       api.post<ServerOut>("/servers", body),
     onSuccess: () => {
       addToast("Server added", "success");
@@ -40,6 +41,7 @@ export function ServerNewPage() {
       region: region || undefined,
       api_endpoint: apiEndpoint,
       public_key: publicKey,
+      preshared_key: presharedKey.trim() || undefined,
       is_active: isActive,
     });
   };
@@ -82,6 +84,19 @@ export function ServerNewPage() {
               onChange={(e) => setPublicKey(e.target.value)}
               placeholder="WireGuard public key"
               required
+            />
+          </Field>
+          <Field
+            id="server-preshared-key"
+            label="Preshared key (optional)"
+            description="WireGuard preshared key for issued configs"
+          >
+            <Input
+              id="server-preshared-key"
+              type="password"
+              value={presharedKey}
+              onChange={(e) => setPresharedKey(e.target.value)}
+              placeholder="Base64 key"
             />
           </Field>
           <Checkbox

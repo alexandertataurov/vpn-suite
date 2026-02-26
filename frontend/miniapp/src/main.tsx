@@ -16,7 +16,11 @@ const queryClient = new QueryClient({
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
+      <ThemeProvider
+        themes={["consumer-light", "consumer-dark"]}
+        defaultTheme="consumer-light"
+        storageKey="vpn-suite-miniapp-theme"
+      >
         <BrowserRouter basename="/webapp">
           <App />
         </BrowserRouter>

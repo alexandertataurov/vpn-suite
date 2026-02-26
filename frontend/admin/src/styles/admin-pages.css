@@ -5,6 +5,18 @@
   gap: var(--spacing-12);
   min-width: 0;
 }
+
+/* Vertical stack of section panels (Automation, Telemetry, etc.) */
+.ref-page-sections {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-8);
+}
+
+/* Section title inside a panel: space below so content is separated */
+.ref-page-sections .ref-section-head {
+  margin-bottom: var(--spacing-3);
+}
 .ref-page-header {
   display: flex;
   align-items: flex-start;

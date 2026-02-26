@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { formatDateTime, formatBytes, getErrorMessage } from "@vpn-suite/shared";
+import { formatDateTime, formatBytes, formatRate, getErrorMessage } from "@vpn-suite/shared";
 import { Server } from "lucide-react";
 import { Table, Button, Select, Skeleton, ConfirmDanger, useToast, PageError, RelativeTime, Tabs, Text, Heading, CodeText, InlineAlert, PrimitiveStack, Panel, PrimitiveBadge } from "@vpn-suite/shared/ui";
 import { ButtonLink } from "../components/ButtonLink";
@@ -61,7 +61,35 @@ export function ServerDetailPage() {
     queryKey: serverPeersKey(id!),
     queryFn: ({ signal }) => api.get<ServerPeersOut>(`/servers/${id}/peers`, { signal }),
     enabled: !!id,
+    refetchInterval: activeTab === "peers" ? 3000 : false,
   });
+
+  const peerPrevRef = useRef<Map<string, { ts: number; rx: number; tx: number }>>(new Map());
+  const [peerRates, setPeerRates] = useState<Map<string, { rxBps: number; txBps: number }>>(new Map());
+  useEffect(() => {
+    if (!peersData?.peers?.length) return;
+    const now = Date.now() / 1000;
+    const prev = peerPrevRef.current;
+    const nextRates = new Map<string, { rxBps: number; txBps: number }>();
+    for (const p of peersData.peers) {
+      const rx = p.rx_bytes ?? p.traffic_bytes ?? 0;
+      const tx = p.tx_bytes ?? 0;
+      const last = prev.get(p.public_key);
+      if (last && now > last.ts) {
+        const dt = now - last.ts;
+        if (dt > 0) {
+          nextRates.set(p.public_key, {
+            rxBps: (rx - last.rx) / dt,
+            txBps: (tx - last.tx) / dt,
+          });
+        }
+      }
+      prev.set(p.public_key, { ts: now, rx, tx });
+    }
+    const keys = new Set(peersData.peers.map((p) => p.public_key));
+    for (const key of prev.keys()) if (!keys.has(key)) prev.delete(key);
+    if (nextRates.size) setPeerRates((m) => new Map([...m, ...nextRates]));
+  }, [peersData]);
 
   const blockMutation = useMutation({
     mutationFn: ({ public_key: pk, confirm_token }: { public_key: string; confirm_token: string }) =>
@@ -110,6 +138,8 @@ export function ServerDetailPage() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: serverActionsKey(id!) });
       queryClient.invalidateQueries({ queryKey: serverKey(id!) });
+      queryClient.invalidateQueries({ queryKey: serverPeersKey(id!) });
+      queryClient.invalidateQueries({ queryKey: serverTelemetryKey(id!) });
       addToast(`Action ${data.action_id.slice(0, 8)}… queued`, "success");
       refetchActions();
     },
@@ -223,7 +253,19 @@ export function ServerDetailPage() {
       return d.status === "revoked";
     }) ?? [];
 
+  const issueLabels: Record<string, string> = {
+    no_handshake: "No handshake",
+    no_traffic: "No traffic",
+    wrong_allowed_ips: "Wrong allowed_ips",
+  };
+
   const columns = [
+    {
+      key: "device_name",
+      header: "Device",
+      truncate: true,
+      render: (r: PeerOut) => r.device_name || "—",
+    },
     {
       key: "pubkey",
       header: "Public key",
@@ -258,6 +300,36 @@ export function ServerDetailPage() {
       numeric: true,
       align: "right" as const,
       render: (r: PeerOut) => formatBytes(r.tx_bytes ?? null),
+    },
+    {
+      key: "rx_speed",
+      header: "RX/s",
+      numeric: true,
+      align: "right" as const,
+      render: (r: PeerOut) => formatRate(peerRates.get(r.public_key)?.rxBps),
+    },
+    {
+      key: "tx_speed",
+      header: "TX/s",
+      numeric: true,
+      align: "right" as const,
+      render: (r: PeerOut) => formatRate(peerRates.get(r.public_key)?.txBps),
+    },
+    {
+      key: "issues",
+      header: "Issues",
+      render: (r: PeerOut) =>
+        r.issues?.length ? (
+          <span className="ref-peer-issues">
+            {(r.issues as string[]).map((i) => (
+              <PrimitiveBadge key={i} variant="warning" title={issueLabels[i] ?? i}>
+                {issueLabels[i] ?? i}
+              </PrimitiveBadge>
+            ))}
+          </span>
+        ) : (
+          "—"
+        ),
     },
     {
       key: "actions",
@@ -361,6 +433,23 @@ export function ServerDetailPage() {
 
       {activeTab === "peers" && (
         <>
+      <Panel as="section" variant="outline" id="server-vpn-control" role="region" aria-label="VPN control">
+        <Heading level={3} className="ref-settings-title">VPN control</Heading>
+        <PrimitiveStack gap="2" className="ref-vpn-control-actions">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => createActionMutation.mutate("apply_peers")}
+            disabled={createActionMutation.isPending || peersData?.node_reachable === false}
+            title="Queue apply_peers for node-agent; peers will sync from desired-state"
+          >
+            {createActionMutation.isPending ? "Queuing…" : "Sync peers (apply desired-state)"}
+          </Button>
+          <Text as="span" variant="muted" className="text-sm">
+            Queues an action for the node to reconcile peers from admin-api. Refreshes after a few seconds.
+          </Text>
+        </PrimitiveStack>
+      </Panel>
       <Panel as="section" variant="outline" id="server-tabpanel-peers" role="tabpanel" aria-labelledby="server-tab-peers">
         <div className="ref-peers-head">
           <Heading level={3} className="ref-settings-title">Peers</Heading>

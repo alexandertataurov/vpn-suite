@@ -1,12 +1,14 @@
 import { useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { BarChart3, RefreshCw } from "lucide-react";
+import { BarChart3, ExternalLink, RefreshCw } from "lucide-react";
+import { getBaseUrl } from "@vpn-suite/shared/api-client";
 import { PrimitiveBadge, Tabs } from "@vpn-suite/shared/ui";
 import { PageHeader } from "../components/PageHeader";
 import { DockerServicesTab } from "./telemetry/DockerServicesTab";
 import { VpnNodesTab } from "./telemetry/VpnNodesTab";
 import { MetricsKpisPanel } from "../components/telemetry/MetricsKpisPanel";
 import { ScrapeStatusPanel } from "../components/telemetry/ScrapeStatusPanel";
+import { TraceValidationPanel } from "../components/telemetry/TraceValidationPanel";
 import {
   ANALYTICS_METRICS_KPIS_KEY,
   ANALYTICS_TELEMETRY_SERVICES_KEY,
@@ -90,8 +92,23 @@ export function TelemetryPage() {
         {regionFilter !== "all" ? <PrimitiveBadge variant="info">Region: {regionFilter}</PrimitiveBadge> : null}
       </PageHeader>
 
-      <ScrapeStatusPanel />
-      <MetricsKpisPanel />
+      <div className="ref-page-sections">
+        <ScrapeStatusPanel />
+        <MetricsKpisPanel />
+        <TraceValidationPanel />
+      </div>
+
+      <p className="text-muted text-sm mt-2">
+        <a
+          href={`${getBaseUrl().replace(/\/$/, "")}/api/v1/_debug/metrics-targets`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1"
+        >
+          <ExternalLink className="icon-sm" aria-hidden />
+          Debug: raw Prometheus targets
+        </a>
+      </p>
 
       <Tabs
         items={TELEMETRY_TAB_ITEMS}

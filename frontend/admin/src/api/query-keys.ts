@@ -16,13 +16,22 @@ export const DOCKER_TELEMETRY_KEY = ["telemetry", "docker"] as const;
 export const OVERVIEW_KEY = ["overview"] as const;
 export const DASHBOARD_TIMESERIES_KEY = ["overview", "dashboard_timeseries"] as const;
 export const OPERATOR_DASHBOARD_KEY = ["dashboard", "operator"] as const;
+/** Telemetry snapshot (cache-only fast path). */
+export const TELEMETRY_SNAPSHOT_KEY = ["telemetry", "snapshot"] as const;
+/** Peers list for dashboard User Sessions (active only). */
+export const PEERS_LIST_KEY = ["peers", "list"] as const;
 export const CONNECTION_NODES_KEY = ["overview", "connection_nodes"] as const;
+
+/** App settings (node_mode etc.) for admin UI. */
+export const APP_SETTINGS_KEY = ["app", "settings"] as const;
 
 /** Audit log list (prefix; append offset, resourceType, etc. for full key). */
 export const AUDIT_KEY = ["audit"] as const;
 
-/** Devices list (prefix; append offset, searchTrigger, etc. for full key). */
+/** Devices list (prefix; append offset, search, sort, etc. for full key). */
 export const DEVICES_KEY = ["devices"] as const;
+/** Devices summary (counts for control bar and metrics strip). */
+export const DEVICES_SUMMARY_KEY = [...DEVICES_KEY, "summary"] as const;
 
 /** Users list (prefix; append offset, filters, etc. for full key). */
 export const USERS_KEY = ["users"] as const;

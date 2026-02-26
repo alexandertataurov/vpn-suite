@@ -1,5 +1,7 @@
-import { forwardRef } from "react";
+import { forwardRef, type ReactNode } from "react";
 import type { InputHTMLAttributes } from "react";
+import { cn } from "../../utils/cn";
+import { Field } from "./Field";
 
 const SearchIcon = () => (
   <svg
@@ -20,41 +22,45 @@ const SearchIcon = () => (
 
 export interface SearchInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "type"> {
   label?: string;
+  description?: ReactNode;
   error?: string;
 }
 
 export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(function SearchInput(
-  { label, error, id: idProp, className = "", ...props },
+  { label, description, error, id: idProp, className = "", ...props },
   ref
 ) {
-  const id = idProp ?? label?.toLowerCase().replace(/\s/g, "-");
-  return (
-    <div className="input-wrap search-input-wrap">
-      {label ? (
-        <label htmlFor={id} className="input-label">
-          {label}
-        </label>
-      ) : null}
-      <span className="search-input-inner">
-        <span className="search-input-icon" aria-hidden>
-          <SearchIcon />
-        </span>
-        <input
-          ref={ref}
-          id={id}
-          type="search"
-          className={`input search-input ${error ? "input-error" : ""} ${className}`.trim()}
-          aria-invalid={!!error}
-          aria-describedby={error ? `${id}-error` : undefined}
-          autoComplete="off"
-          {...props}
-        />
+  const id = idProp ?? (typeof label === "string" ? label.toLowerCase().replace(/\s/g, "-") : undefined);
+
+  const control = (
+    <span className="search-input-inner">
+      <span className="search-input-icon" aria-hidden>
+        <SearchIcon />
       </span>
-      {error ? (
-        <span id={`${id}-error`} className="input-error-msg" role="alert">
-          {error}
-        </span>
-      ) : null}
+      <input
+        ref={ref}
+        id={id}
+        type="search"
+        className={cn("input", "search-input", error && "input-error", className)}
+        aria-invalid={!!error}
+        aria-describedby={error && id ? `${id}-error` : description && id ? `${id}-hint` : undefined}
+        autoComplete="off"
+        {...props}
+      />
+    </span>
+  );
+
+  if (label != null || description != null || error != null) {
+    return (
+      <Field id={id} label={label} description={description} error={error} className="search-input-wrap">
+        {control}
+      </Field>
+    );
+  }
+
+  return (
+    <div className="search-input-wrap">
+      {control}
     </div>
   );
 });

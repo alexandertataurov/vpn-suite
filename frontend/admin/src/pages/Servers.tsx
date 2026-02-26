@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Server } from "lucide-react";
-import { Panel, Button, InlineAlert, Checkbox, EmptyState, Input, ConfirmDanger, Modal, PageError, Pagination, Tabs, useToast } from "@vpn-suite/shared/ui";
+import { Panel, Button, InlineAlert, Checkbox, EmptyState, Input, ConfirmDanger, Modal, PageError, Pagination, Tabs, TableContainer, TableSkeleton, useToast, HelperText } from "@vpn-suite/shared/ui";
 import { getErrorMessage } from "@vpn-suite/shared";
 import type { ServerDeviceCountsOut, ServerOut, ServerSyncResponse } from "@vpn-suite/shared/types";
 import { ApiError } from "@vpn-suite/shared/types";
@@ -25,7 +25,6 @@ import { ServerRow } from "../components/ServerRow";
 import { ServerRowDrawer } from "../components/ServerRowDrawer";
 import { isSnapshotStale, isStale } from "../components/ServerRow";
 import { ButtonLink } from "../components/ButtonLink";
-import { TableContainer, TableSkeleton } from "@vpn-suite/shared/ui";
 import { serversLogger } from "../utils/serversLogger";
 
 function errorToastMessage(err: unknown, fallback: string): string {
@@ -676,6 +675,12 @@ export function ServersPage() {
         />
       )}
 
+      {!isLoading && visibleItems.length > 0 && selectedServerIds.size === 0 && (
+        <HelperText variant="hint" className="mb-2">
+          Select rows to bulk sync or change drain/provisioning.
+        </HelperText>
+      )}
+
       <ErrorBoundary>
       {isLoading ? (
         <TableSkeleton rows={4} columns={11} density={density === "compact" ? "compact" : "comfortable"} data-testid="servers-loading" />
@@ -736,7 +741,9 @@ export function ServersPage() {
                   <th className="servers-table-col-region">Region</th>
                   <th className="servers-table-col-lastseen">Last seen</th>
                   <th className="servers-table-col-lastsync">Last sync</th>
-                  <th className="servers-table-col-peers num" title={skipDeviceCounts404 ? "Device counts unavailable" : undefined}>Peers</th>
+                  <th className="servers-table-col-peers num" title={skipDeviceCounts404 ? "Device counts unavailable" : undefined}>
+                    Peers{skipDeviceCounts404 ? " (unavailable)" : ""}
+                  </th>
                   <th className="servers-table-col-ips num">IPs</th>
                   <th className="servers-table-col-telemetry">Telemetry</th>
                   <th className="servers-table-col-actions"></th>
@@ -921,6 +928,9 @@ export function ServersPage() {
             ? `This will ${bulkAction === "disable_provisioning" ? "disable" : "enable"} provisioning for ${selectedServerIds.size} server(s). Enter confirmation code.`
             : ""}
         </p>
+        <HelperText variant="hint" className="mb-2">
+          Use the value of RESTART_CONFIRM_TOKEN from your .env or runbook.
+        </HelperText>
         <Input
           type="password"
           autoComplete="one-time-code"

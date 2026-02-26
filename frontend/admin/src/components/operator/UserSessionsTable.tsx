@@ -1,8 +1,11 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { RelativeTime, Button, Skeleton, PrimitiveBadge } from "@vpn-suite/shared/ui";
 import type { PeerListOut, PeerListItem } from "@vpn-suite/shared/types";
 import { api } from "../../api/client";
-import { useResource } from "../../hooks/useResource";
+import { PEERS_LIST_KEY } from "../../api/query-keys";
+import { shouldRetryQuery } from "../../utils/queryPolicy";
+import { useResourceFromQuery } from "../../hooks/useResource";
 
 const TIME_OPTIONS = [
   { value: "15m", label: "15m" },
@@ -22,24 +25,30 @@ function rangeToMs(value: TimeFilter): number | null {
   return null;
 }
 
+const LOADING_STALE_MS = 15_000;
+const LOADING_HARD_TIMEOUT_MS = 55_000;
+
 export function UserSessionsTable() {
   const [search, setSearch] = useState("");
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("24h");
+  const [loadingSince, setLoadingSince] = useState<number | null>(null);
+  const [hardTimeoutHit, setHardTimeoutHit] = useState(false);
 
-  const sessions = useResource<PeerListOut>({
-    source: "GET /peers?status=active",
-    ttlMs: 15_000,
-    isEmpty: (data) => !data?.peers?.length,
-    fetcher: async ({ signal, requestId }) => {
-      const started = Date.now();
-      const data = await api.get<PeerListOut>("/peers?status=active&limit=200&offset=0", { signal });
-      if (import.meta.env.DEV) {
-        const ms = Date.now() - started;
-        console.info("operator sessions fetch", { requestId, ms, total: data.total, returned: data.peers.length });
-      }
-      return data;
-    },
+  const peersQuery = useQuery<PeerListOut>({
+    queryKey: [...PEERS_LIST_KEY, "active", 200, 0],
+    queryFn: ({ signal }) =>
+      api.get<PeerListOut>("/peers?status=active&limit=200&offset=0", { signal }),
+    staleTime: 15_000,
+    retry: shouldRetryQuery,
   });
+
+  const sessions = useResourceFromQuery<PeerListOut>(
+    "GET /peers?status=active",
+    [...PEERS_LIST_KEY, "active", 200, 0],
+    peersQuery,
+    15_000,
+    { isEmpty: (data) => !data?.peers?.length }
+  );
 
   const filtered = useMemo(() => {
     const rows = sessions.data?.peers ?? [];
@@ -66,7 +75,50 @@ export function UserSessionsTable() {
     });
   }, [sessions.data?.peers, search, timeFilter]);
 
-  if (sessions.status === "loading" || sessions.status === "idle") {
+  const isPending =
+    sessions.status === "loading" ||
+    sessions.status === "idle" ||
+    (sessions.status === "empty" && !sessions.updatedAt);
+
+  useEffect(() => {
+    if (isPending) setLoadingSince((t) => t ?? Date.now());
+    else setLoadingSince(null);
+  }, [isPending]);
+
+  useEffect(() => {
+    if (!isPending || loadingSince == null) return;
+    const t = setTimeout(() => setHardTimeoutHit(true), LOADING_HARD_TIMEOUT_MS);
+    return () => clearTimeout(t);
+  }, [isPending, loadingSince]);
+
+  useEffect(() => {
+    if (!isPending) setHardTimeoutHit(false);
+  }, [isPending]);
+
+  const loadingStale = loadingSince != null && Date.now() - loadingSince > LOADING_STALE_MS;
+  const loadingTimedOut = hardTimeoutHit;
+
+  if (loadingTimedOut) {
+    return (
+      <div className="operator-sessions-wrap">
+        <p className="operator-sessions-empty" role="alert">
+          Sessions request did not complete. The request may have timed out or the server may be unreachable.
+        </p>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => {
+            setHardTimeoutHit(false);
+            sessions.refresh();
+          }}
+        >
+          Retry
+        </Button>
+      </div>
+    );
+  }
+
+  if (isPending) {
     return (
       <div className="operator-sessions-wrap">
         <div className="operator-sessions-toolbar">
@@ -81,8 +133,18 @@ export function UserSessionsTable() {
               <option key={opt.value} value={opt.value}>{opt.label}</option>
             ))}
           </select>
+          {loadingStale ? (
+            <Button variant="ghost" size="sm" onClick={() => sessions.refresh()} aria-label="Retry loading sessions">
+              Retry
+            </Button>
+          ) : null}
         </div>
-        <Skeleton height={120} />
+        <Skeleton height={120} aria-busy="true" aria-label="Loading sessions" />
+        {loadingStale ? (
+          <p className="operator-sessions-empty" role="status">
+            Taking longer than expected. Check network or retry.
+          </p>
+        ) : null}
       </div>
     );
   }
@@ -160,6 +222,11 @@ export function UserSessionsTable() {
             Updated:{" "}
             {sessions.updatedAt ? <RelativeTime date={sessions.updatedAt} updateInterval={5000} /> : "—"}
           </span>
+          {sessions.data && sessions.data.total > rows.length ? (
+            <span className="operator-sessions-truncated">
+              Showing {rows.length} of {sessions.data.total} sessions
+            </span>
+          ) : null}
           {sessions.status === "stale" ? (
             <PrimitiveBadge size="sm" variant="warning">Stale</PrimitiveBadge>
           ) : null}

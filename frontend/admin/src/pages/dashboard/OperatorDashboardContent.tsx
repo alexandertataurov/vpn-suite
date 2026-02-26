@@ -5,6 +5,7 @@ import { Activity, AlertTriangle, Grid3X3, RefreshCw, Server, Users } from "luci
 import { Button, InlineAlert, RelativeTime, Skeleton, PrimitiveBadge } from "@vpn-suite/shared/ui";
 import type { OperatorDashboardOut } from "@vpn-suite/shared/types";
 import { ApiError } from "@vpn-suite/shared/types";
+import { formatBytes } from "@vpn-suite/shared";
 import { api } from "../../api/client";
 import { OPERATOR_DASHBOARD_KEY } from "../../api/query-keys";
 import { cooldownRemainingMs, isNetworkUnreachableError, shouldRetryQuery } from "../../utils/queryPolicy";
@@ -14,6 +15,7 @@ import {
   OperatorServerTable,
   UserSessionsTable,
   FreshnessBadge,
+  TelemetryHealthWidget,
 } from "../../components/operator";
 import { TimeRangePicker } from "../../components/TimeRangePicker";
 import { ChartFrame } from "../../charts/ChartFrame";
@@ -30,6 +32,8 @@ function freshnessFromAgeMs(ageMs: number): "fresh" | "degraded" | "stale" {
   if (ageMin > 2) return "degraded";
   return "fresh";
 }
+
+const CHART_HEIGHT = 220;
 
 const TIME_RANGE_OPTIONS = [
   { value: "5m", label: "5m" },
@@ -135,7 +139,7 @@ export function OperatorDashboardContent() {
         { name: "Download", data: bandwidthDownload, color: colors.primary.solid, area: true, areaColor: colors.primary.area },
         { name: "Upload", data: bandwidthUpload, color: theme.series.muted, area: false },
       ],
-      tooltipValue: (_name, v) => (v == null ? "—" : String(Math.round(v))),
+      tooltipValue: (_name, v) => (v == null ? "—" : `${Math.round(v)} B`),
     });
   }, [bandwidthDownload, bandwidthUpload]);
 
@@ -150,32 +154,38 @@ export function OperatorDashboardContent() {
     });
   }, [connections]);
 
+  const lastThroughputStr =
+    points.length > 0
+      ? formatBytes((points[points.length - 1]!.rx ?? 0) + (points[points.length - 1]!.tx ?? 0))
+      : "—";
+  const lastConnectionsStr = points.length > 0 && points[points.length - 1]?.peers != null ? String(points[points.length - 1]!.peers) : "—";
+
   if (operatorResource.status === "loading" || operatorResource.status === "idle" || !query.data) {
     return (
       <div className="operator-dashboard" data-testid="operator-dashboard">
-        <div className="operator-grid-row">
-          <div className="operator-grid-cell">
-            <div className="operator-section-title"><Grid3X3 className="operator-section-icon" aria-hidden size={14} strokeWidth={2} /> Cluster Health Matrix</div>
-            <div className="operator-table-loading">
-              <Skeleton height={120} />
-            </div>
-          </div>
-          <div className="operator-grid-cell">
-            <div className="operator-section-title"><AlertTriangle className="operator-section-icon" aria-hidden size={14} strokeWidth={2} /> Active Incidents</div>
-            <Skeleton height={80} />
+        <div className="operator-grid-cell operator-grid-cell--span-8 operator-card">
+          <div className="operator-section-title"><Grid3X3 className="operator-section-icon" aria-hidden size={14} strokeWidth={2} /> Cluster Health Matrix</div>
+          <div className="operator-table-loading">
+            <Skeleton height={120} />
           </div>
         </div>
-        <div className="operator-grid-row">
-          <div className="operator-grid-cell">
-            <div className="operator-section-title"><Activity className="operator-section-icon" aria-hidden size={14} strokeWidth={2} /> Traffic & Load</div>
-            <Skeleton height={160} />
-          </div>
-          <div className="operator-grid-cell">
-            <div className="operator-section-title"><Users className="operator-section-icon" aria-hidden size={14} strokeWidth={2} /> User Sessions</div>
-            <Skeleton height={100} />
-          </div>
+        <div className="operator-grid-cell operator-grid-cell--span-4 operator-card">
+          <div className="operator-section-title"><Activity className="operator-section-icon" aria-hidden size={14} strokeWidth={2} /> Telemetry health</div>
+          <Skeleton height={56} />
         </div>
-        <div className="operator-grid-cell operator-grid-cell--no-border">
+        <div className="operator-grid-cell operator-grid-cell--span-8 operator-card">
+          <div className="operator-section-title"><Activity className="operator-section-icon" aria-hidden size={14} strokeWidth={2} /> Traffic & Load</div>
+          <Skeleton height={CHART_HEIGHT} />
+        </div>
+        <div className="operator-grid-cell operator-grid-cell--span-4 operator-card">
+          <div className="operator-section-title"><AlertTriangle className="operator-section-icon" aria-hidden size={14} strokeWidth={2} /> Active Incidents</div>
+          <Skeleton height={80} />
+        </div>
+        <div className="operator-grid-cell operator-grid-cell--span-8 operator-card">
+          <div className="operator-section-title"><Users className="operator-section-icon" aria-hidden size={14} strokeWidth={2} /> User Sessions</div>
+          <Skeleton height={100} />
+        </div>
+        <div className="operator-grid-cell operator-grid-cell--span-12 operator-grid-cell--no-border operator-card">
           <div className="operator-section-title"><Server className="operator-section-icon" aria-hidden size={14} strokeWidth={2} /> Server Table</div>
           <OperatorServerTable rows={[]} onSync={handleSync} loading filter={serverFilter} onFilterChange={setServerFilter} />
         </div>
@@ -259,30 +269,25 @@ export function OperatorDashboardContent() {
   return (
     <div className="operator-dashboard" data-testid="operator-dashboard">
       {degradedBanner}
-      <div className="operator-grid-row">
-        <div className="operator-grid-cell">
-          <div className="operator-section-title">
-            <Grid3X3 className="operator-section-icon" aria-hidden size={14} strokeWidth={2} />
-            Cluster Health Matrix
-          </div>
-          <ClusterMatrix rows={d.cluster_matrix} />
+      {/* Row 1: Cluster Health (8) | Telemetry Health (4) */}
+      <div className="operator-grid-cell operator-grid-cell--span-8 operator-card">
+        <div className="operator-section-title">
+          <Grid3X3 className="operator-section-icon" aria-hidden size={14} strokeWidth={2} />
+          Cluster Health Matrix
         </div>
-        <div className="operator-grid-cell">
-          <div className="operator-section-title">
-            <AlertTriangle className="operator-section-icon" aria-hidden size={14} strokeWidth={2} />
-            Active Incidents
-          </div>
-          <IncidentPanel resource={incidentsResource} onRetry={handleRefresh} />
-        </div>
+        <ClusterMatrix rows={d.cluster_matrix} />
+      </div>
+      <div className="operator-grid-cell operator-grid-cell--span-4 operator-card">
+        <TelemetryHealthWidget />
       </div>
 
-      <div className="operator-grid-row">
-        <div className="operator-grid-cell">
-          <div className="operator-section-title">
-            <Activity className="operator-section-icon" aria-hidden size={14} strokeWidth={2} />
-            Traffic & Load
-          </div>
-          <div className="operator-traffic-toolbar">
+      {/* Row 2: Traffic & Load (8) | Active Incidents (4) */}
+      <div className="operator-grid-cell operator-grid-cell--span-8 operator-card">
+        <div className="operator-section-title">
+          <Activity className="operator-section-icon" aria-hidden size={14} strokeWidth={2} />
+          Traffic & Load
+        </div>
+        <div className="operator-traffic-toolbar">
             <TimeRangePicker
               value={timeRange}
               onChange={setTimeRange}
@@ -299,8 +304,8 @@ export function OperatorDashboardContent() {
             >
               <RefreshCw className={isRefreshing ? "animate-spin" : ""} size={14} strokeWidth={2} aria-hidden /> Refresh
             </Button>
-          </div>
-          {(d.data_status === "degraded" && d.last_successful_sample_ts) && (() => {
+        </div>
+        {(d.data_status === "degraded" && d.last_successful_sample_ts) && (() => {
             const ageMs = Date.now() - new Date(d.last_successful_sample_ts!).getTime();
             const isStale = ageMs > 2 * 60 * 1000;
             return isStale ? (
@@ -308,20 +313,19 @@ export function OperatorDashboardContent() {
                 Stale · Last: <RelativeTime date={d.last_successful_sample_ts!} />
               </div>
             ) : null;
-          })()}
-          <div className="operator-panel-meta">
-            <span>
-              Updated:{" "}
-              {telemetryResource.updatedAt ? <RelativeTime date={telemetryResource.updatedAt} updateInterval={5000} /> : "—"}
-            </span>
-            {telemetryResource.status === "stale" ? (
-              <PrimitiveBadge variant="warning" size="sm">Stale</PrimitiveBadge>
-            ) : null}
+        })()}
+        {points.length > 0 && telemetryResource.status === "stale" ? (
+          <div className="operator-panel-meta operator-panel-meta--minimal">
+            <FreshnessBadge freshness="stale">Stale</FreshnessBadge>
           </div>
-          <div className="operator-charts-grid">
+        ) : null}
+        <div className="operator-charts-grid">
             <div className="operator-chart-wrap">
+              <span className="operator-chart-caption" aria-hidden>
+                Throughput · {lastThroughputStr}
+              </span>
               <ChartFrame
-                height={160}
+                height={CHART_HEIGHT}
                 ariaLabel="Throughput rx/tx"
                 isLoading={telemetryResource.status === "loading" || telemetryResource.status === "idle"}
                 error={telemetryResource.status === "error" ? telemetryResource.error : undefined}
@@ -331,21 +335,13 @@ export function OperatorDashboardContent() {
               >
                 <EChart className="ref-echart" option={bandwidthOption} />
               </ChartFrame>
-              {(() => {
-                const lastPoint = points[points.length - 1];
-                if (!lastPoint) return null;
-                return (
-                  <div className="operator-chart-last" aria-label="Last updated">
-                    <FreshnessBadge freshness={freshnessFromAgeMs(Date.now() - lastPoint.ts * 1000)}>
-                      <RelativeTime date={new Date(lastPoint.ts * 1000)} />
-                    </FreshnessBadge>
-                  </div>
-                );
-              })()}
             </div>
             <div className="operator-chart-wrap">
+              <span className="operator-chart-caption" aria-hidden>
+                Connections · {lastConnectionsStr}
+              </span>
               <ChartFrame
-                height={160}
+                height={CHART_HEIGHT}
                 ariaLabel="Active connections"
                 isLoading={telemetryResource.status === "loading" || telemetryResource.status === "idle"}
                 error={telemetryResource.status === "error" ? telemetryResource.error : undefined}
@@ -355,43 +351,43 @@ export function OperatorDashboardContent() {
               >
                 <EChart className="ref-echart" option={connectionsOption} />
               </ChartFrame>
-              {(() => {
-                const lastPoint = points[points.length - 1];
-                if (!lastPoint) return null;
-                return (
-                  <div className="operator-chart-last" aria-label="Last updated">
-                    <FreshnessBadge freshness={freshnessFromAgeMs(Date.now() - lastPoint.ts * 1000)}>
-                      <RelativeTime date={new Date(lastPoint.ts * 1000)} />
-                    </FreshnessBadge>
-                  </div>
-                );
-              })()}
             </div>
-          </div>
-        </div>
-        <div className="operator-grid-cell">
-          <div className="operator-section-title">
-            <Users className="operator-section-icon" aria-hidden size={14} strokeWidth={2} />
-            User Sessions
-          </div>
-          <UserSessionsTable />
         </div>
       </div>
+      <div className="operator-grid-cell operator-grid-cell--span-4 operator-card">
+        <div className="operator-section-title operator-section-title--incidents">
+          <AlertTriangle className="operator-section-icon" aria-hidden size={14} strokeWidth={2} />
+          Active Incidents
+          <span
+            className={`operator-incident-count ${(incidentsResource.data?.length ?? 0) > 0 ? "operator-incident-count--active" : "operator-incident-count--zero"}`}
+            aria-label={`${incidentsResource.data?.length ?? 0} active incidents`}
+          >
+            ({incidentsResource.data?.length ?? 0})
+          </span>
+        </div>
+        <IncidentPanel resource={incidentsResource} onRetry={handleRefresh} />
+      </div>
 
-      <div className="operator-grid-cell operator-grid-cell--no-border">
+      {/* Row 3: User Sessions (8) */}
+      <div className="operator-grid-cell operator-grid-cell--span-8 operator-card">
+        <div className="operator-section-title">
+          <Users className="operator-section-icon" aria-hidden size={14} strokeWidth={2} />
+          User Sessions
+        </div>
+        <UserSessionsTable />
+      </div>
+
+      {/* Row 4: Server Table (12) */}
+      <div className="operator-grid-cell operator-grid-cell--span-12 operator-grid-cell--no-border operator-card">
         <div className="operator-section-title">
           <Server className="operator-section-icon" aria-hidden size={14} strokeWidth={2} />
           Server Table
         </div>
-        <div className="operator-panel-meta">
-          <span>
-            Updated:{" "}
-            {serversResource.updatedAt ? <RelativeTime date={serversResource.updatedAt} updateInterval={5000} /> : "—"}
-          </span>
-          {serversResource.status === "stale" ? (
+        {serversResource.status === "stale" ? (
+          <div className="operator-panel-meta operator-panel-meta--minimal">
             <PrimitiveBadge variant="warning" size="sm">Stale</PrimitiveBadge>
-          ) : null}
-        </div>
+          </div>
+        ) : null}
         <OperatorServerTable
           rows={d.servers}
           onSync={handleSync}

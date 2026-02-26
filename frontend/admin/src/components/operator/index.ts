@@ -6,3 +6,4 @@ export { IncidentPanel } from "./IncidentPanel";
 export { OperatorServerTable } from "./OperatorServerTable";
 export { UserSessionsBlock } from "./UserSessionsBlock";
 export { UserSessionsTable } from "./UserSessionsTable";
+export { TelemetryHealthWidget } from "./TelemetryHealthWidget";

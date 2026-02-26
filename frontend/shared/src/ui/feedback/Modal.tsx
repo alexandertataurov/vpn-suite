@@ -20,14 +20,21 @@ export interface ModalProps {
 
 export function Modal({ open, onClose, title, children, footer, className = "", "data-testid": dataTestId }: ModalProps) {
   const ref = useRef<HTMLDivElement>(null);
+  const didFocusRef = useRef(false);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      didFocusRef.current = false;
+      return;
+    }
     const el = ref.current;
     if (!el) return;
     const modal = el;
 
-    modal.focus();
+    if (!didFocusRef.current) {
+      didFocusRef.current = true;
+      modal.focus();
+    }
 
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") {

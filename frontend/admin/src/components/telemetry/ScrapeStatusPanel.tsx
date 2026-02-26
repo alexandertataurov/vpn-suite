@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import type { ServiceScrapeStatus, TelemetryServicesOut } from "../../api/analytics-types";
+import type { ServiceScrapeStatus, TelemetryServicesOut } from "@vpn-suite/shared/types";
 import { Panel, PrimitiveBadge, InlineAlert, Skeleton } from "@vpn-suite/shared/ui";
 import { api } from "../../api/client";
 import { ANALYTICS_TELEMETRY_SERVICES_KEY } from "../../api/query-keys";
@@ -55,17 +55,21 @@ export function ScrapeStatusPanel() {
         {upCount} up, {downCount} down
       </p>
       <div className="flex flex-wrap gap-2" role="list">
-        {data.services.map((s: ServiceScrapeStatus) => (
-          <span key={`${s.job}-${s.instance}`} className="inline-flex items-center gap-1" role="listitem">
-            <PrimitiveBadge
-              size="sm"
-              variant={s.health === "up" ? "success" : "danger"}
-              aria-label={`${s.job}: ${s.health}`}
-            >
-              {s.job}
-            </PrimitiveBadge>
-          </span>
-        ))}
+        {data.services.map((s: ServiceScrapeStatus) => {
+          const lastScrape = s.last_scrape ? new Date(s.last_scrape).toLocaleString() : "unknown";
+          return (
+            <span key={`${s.job}-${s.instance}`} className="inline-flex items-center gap-1" role="listitem">
+              <PrimitiveBadge
+                size="sm"
+                variant={s.health === "up" ? "success" : "danger"}
+                aria-label={`${s.job}: ${s.health}`}
+                title={`${s.job} (${s.instance}) · last scrape: ${lastScrape}`}
+              >
+                {s.job}
+              </PrimitiveBadge>
+            </span>
+          );
+        })}
       </div>
     </Panel>
   );
