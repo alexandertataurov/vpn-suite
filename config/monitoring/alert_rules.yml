@@ -4,6 +4,15 @@
 groups:
   - name: vpn-suite
     rules:
+      - alert: ScrapeTargetDown
+        expr: up == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Scrape target is down"
+          description: "Prometheus target is down for >5m (job={{ $labels.job }}, instance={{ $labels.instance }}). Check /api/v1/targets and service logs."
+
       - alert: AdminApiDown
         expr: up{job="admin-api"} == 0
         for: 1m

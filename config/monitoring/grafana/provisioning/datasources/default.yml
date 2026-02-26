@@ -6,6 +6,11 @@ datasources:
     url: http://prometheus:9090
     access: proxy
     isDefault: true
+  - name: VictoriaMetrics
+    type: prometheus
+    uid: victoria
+    url: http://victoria-metrics:8428
+    access: proxy
   - name: Loki
     type: loki
     uid: loki

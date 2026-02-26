@@ -10,6 +10,15 @@ global:
 rule_files:
   - /etc/prometheus/alert_rules.yml
   - /etc/prometheus/alerts/unified-alerts.yml
+  - /etc/prometheus/recording_rules.yml
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ["alertmanager:9093"]
+
+remote_write:
+  - url: http://victoria-metrics:8428/api/v1/write
 
 scrape_configs:
   - job_name: "admin-api"
@@ -92,6 +101,54 @@ scrape_configs:
         regex: (.+)
         replacement: ${1}
 
+  - job_name: "alertmanager"
+    metrics_path: /metrics
+    scheme: http
+    file_sd_configs:
+      - files: ["/etc/prometheus/file_sd/targets.json"]
+    relabel_configs:
+      - source_labels: ["sd_job"]
+        regex: alertmanager
+        action: keep
+      - target_label: service_name
+        replacement: alertmanager
+      - source_labels: [__meta_file_sd_label_host_id]
+        target_label: node_id
+        regex: (.+)
+        replacement: ${1}
+
+  - job_name: "otel-collector"
+    metrics_path: /metrics
+    scheme: http
+    file_sd_configs:
+      - files: ["/etc/prometheus/file_sd/targets.json"]
+    relabel_configs:
+      - source_labels: ["sd_job"]
+        regex: otel-collector
+        action: keep
+      - target_label: service_name
+        replacement: otel-collector
+      - source_labels: [__meta_file_sd_label_host_id]
+        target_label: node_id
+        regex: (.+)
+        replacement: ${1}
+
+  - job_name: "tempo"
+    metrics_path: /metrics
+    scheme: http
+    file_sd_configs:
+      - files: ["/etc/prometheus/file_sd/targets.json"]
+    relabel_configs:
+      - source_labels: ["sd_job"]
+        regex: tempo
+        action: keep
+      - target_label: service_name
+        replacement: tempo
+      - source_labels: [__meta_file_sd_label_host_id]
+        target_label: node_id
+        regex: (.+)
+        replacement: ${1}
+
   - job_name: "wg-exporter"
     metrics_path: /metrics
     scheme: http
@@ -105,5 +162,13 @@ scrape_configs:
         replacement: wg-exporter
       - source_labels: [__meta_file_sd_label_host_id]
         target_label: node_id
+        regex: (.+)
+        replacement: ${1}
+      - source_labels: [__meta_file_sd_label_node_id]
+        target_label: node_id
+        regex: (.+)
+        replacement: ${1}
+      - source_labels: [__meta_file_sd_label_server_id]
+        target_label: server_id
         regex: (.+)
         replacement: ${1}

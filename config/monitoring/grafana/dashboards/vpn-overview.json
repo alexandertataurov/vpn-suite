@@ -81,6 +81,20 @@
       "datasource": {"type": "prometheus", "uid": "prometheus"},
       "fieldConfig": {"defaults": {"unit": "s"}},
       "targets": [{"expr": "max(wireguard_latest_handshake_seconds) by (node_id, server_id)", "legendFormat": "{{node_id}}", "refId": "A"}]
+    },
+    {
+      "type": "stat",
+      "title": "Scrape targets up",
+      "gridPos": {"x": 0, "y": 20, "w": 4, "h": 4},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [{"expr": "sum(up)", "refId": "A"}]
+    },
+    {
+      "type": "stat",
+      "title": "Scrape targets down",
+      "gridPos": {"x": 4, "y": 20, "w": 4, "h": 4},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [{"expr": "count(up) - sum(up)", "refId": "A"}]
     }
   ]
 }

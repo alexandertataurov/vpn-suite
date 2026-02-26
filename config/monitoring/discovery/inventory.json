@@ -1,9 +1,70 @@
 {
-  "timestamp": "2026-02-22T19:41:42.960151+00:00",
+  "timestamp": "2026-02-26T04:44:54.669449+00:00",
   "nodes": [
     {
       "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
-      "node_id": "docker:543de8e52d52",
+      "node_id": "docker:6ee251a1078e",
+      "source": "docker",
+      "kind": "unknown",
+      "classification": {
+        "kind": "unknown",
+        "fingerprint_score": 0.0,
+        "network_score": 0.0,
+        "api_match_score": 0.0,
+        "temporal_score": 0.0,
+        "total_confidence": 0.0,
+        "evidence": [],
+        "type": "unknown"
+      },
+      "confidence": 0.1,
+      "evidence": [
+        "no_match"
+      ],
+      "container_id": "6ee251a1078e",
+      "image": "mcp/sequentialthinking",
+      "created": "2026-02-26T04:41:39.551707853Z",
+      "ports": [],
+      "mounts": [],
+      "interface": null,
+      "public_key": null
+    },
+    {
+      "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
+      "node_id": "docker:ca9cd19c33ba",
+      "source": "docker",
+      "kind": "unknown",
+      "classification": {
+        "kind": "unknown",
+        "fingerprint_score": 0.0,
+        "network_score": 0.0,
+        "api_match_score": 0.0,
+        "temporal_score": 0.0,
+        "total_confidence": 0.0,
+        "evidence": [],
+        "type": "unknown"
+      },
+      "confidence": 0.1,
+      "evidence": [
+        "no_match"
+      ],
+      "container_id": "ca9cd19c33ba",
+      "image": "vpn-suite-admin-api",
+      "created": "2026-02-25T20:29:34.25548286Z",
+      "ports": [
+        {
+          "port": 8000,
+          "protocol": "tcp"
+        }
+      ],
+      "mounts": [
+        "/var/run/docker.sock"
+      ],
+      "interface": null,
+      "public_key": null
+    },
+    {
+      "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
+      "node_id": "docker:d46469414ac5",
       "source": "docker",
       "kind": "unknown",
       "classification": {
@@ -20,9 +81,9 @@
       "evidence": [
         "image_exporter"
       ],
-      "container_id": "543de8e52d52",
+      "container_id": "d46469414ac5",
       "image": "vpn-suite-node-agent",
-      "created": "2026-02-22T19:40:00.809238804Z",
+      "created": "2026-02-25T19:24:56.883702834Z",
       "ports": [
         {
           "port": 9105,
@@ -30,18 +91,18 @@
         }
       ],
       "mounts": [
+        "/app/secrets/agent_ca.pem",
         "/var/run/docker.sock",
         "/etc/vpn-suite/node-id",
         "/app/secrets/agent_client_cert.pem",
-        "/app/secrets/agent_client_key.pem",
-        "/app/secrets/agent_ca.pem"
+        "/app/secrets/agent_client_key.pem"
       ],
       "interface": null,
       "public_key": null
     },
     {
       "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
-      "node_id": "docker:bcc12afe59b5",
+      "node_id": "docker:3c8fad470603",
       "source": "docker",
       "kind": "unknown",
       "classification": {
@@ -58,43 +119,9 @@
       "evidence": [
         "no_match"
       ],
-      "container_id": "bcc12afe59b5",
-      "image": "vpn-suite-admin-api",
-      "created": "2026-02-22T19:39:49.047233397Z",
-      "ports": [
-        {
-          "port": 8000,
-          "protocol": "tcp"
-        }
-      ],
-      "mounts": [
-        "/var/run/docker.sock"
-      ],
-      "interface": null,
-      "public_key": null
-    },
-    {
-      "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
-      "node_id": "docker:b37fdb305536",
-      "source": "docker",
-      "kind": "unknown",
-      "classification": {
-        "kind": "unknown",
-        "fingerprint_score": 0.0,
-        "network_score": 0.0,
-        "api_match_score": 0.0,
-        "temporal_score": 0.0,
-        "total_confidence": 0.0,
-        "evidence": [],
-        "type": "unknown"
-      },
-      "confidence": 0.1,
-      "evidence": [
-        "no_match"
-      ],
-      "container_id": "b37fdb305536",
+      "container_id": "3c8fad470603",
       "image": "postgres@sha256:468d34fefd6338031787c7b8e94078975b3aaf4d66c7ead25c39cd3ba46a15c6",
-      "created": "2026-02-22T19:39:45.53859847Z",
+      "created": "2026-02-25T18:51:56.258708906Z",
       "ports": [
         {
           "port": 5432,
@@ -109,7 +136,38 @@
     },
     {
       "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
-      "node_id": "docker:770614297e25",
+      "node_id": "docker:e49771b3f10f",
+      "source": "docker",
+      "kind": "awg",
+      "classification": {
+        "kind": "awg",
+        "fingerprint_score": 1.0,
+        "network_score": 0.0,
+        "api_match_score": 0.0,
+        "temporal_score": 0.0,
+        "total_confidence": 0.4,
+        "evidence": [
+          "image_amnezia"
+        ],
+        "type": "awg-node"
+      },
+      "confidence": 0.75,
+      "evidence": [
+        "image_amnezia"
+      ],
+      "container_id": "e49771b3f10f",
+      "image": "amnezia-awg2:latest",
+      "created": "2026-02-25T17:14:56.807307696Z",
+      "ports": [],
+      "mounts": [
+        "/run/secrets/awg_private_key"
+      ],
+      "interface": null,
+      "public_key": null
+    },
+    {
+      "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
+      "node_id": "docker:5262fb33655d",
       "source": "docker",
       "kind": "unknown",
       "classification": {
@@ -120,34 +178,64 @@
         "temporal_score": 0.0,
         "total_confidence": 0.0,
         "evidence": [],
-        "type": "prometheus"
+        "type": "exporter"
       },
       "confidence": 0.9,
       "evidence": [
-        "image_prometheus"
+        "image_exporter"
       ],
-      "container_id": "770614297e25",
-      "image": "prom/prometheus@sha256:f6639335d34a77d9d9db382b92eeb7fc00934be8eae81dbc03b31cfe90411a94",
-      "created": "2026-02-22T19:32:50.247815591Z",
+      "container_id": "5262fb33655d",
+      "image": "vpn-suite-telegram-vpn-bot",
+      "created": "2026-02-25T16:39:31.182400391Z",
       "ports": [
         {
-          "port": 9090,
+          "port": 8090,
+          "protocol": "tcp"
+        }
+      ],
+      "mounts": [],
+      "interface": null,
+      "public_key": null
+    },
+    {
+      "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
+      "node_id": "docker:9d3afb1e9f85",
+      "source": "docker",
+      "kind": "unknown",
+      "classification": {
+        "kind": "unknown",
+        "fingerprint_score": 0.0,
+        "network_score": 0.0,
+        "api_match_score": 0.0,
+        "temporal_score": 0.0,
+        "total_confidence": 0.0,
+        "evidence": [],
+        "type": "exporter"
+      },
+      "confidence": 0.9,
+      "evidence": [
+        "image_exporter"
+      ],
+      "container_id": "9d3afb1e9f85",
+      "image": "vpn-suite-node-agent:latest",
+      "created": "2026-02-25T16:02:37.036400461Z",
+      "ports": [
+        {
+          "port": 9105,
           "protocol": "tcp"
         }
       ],
       "mounts": [
-        "/etc/prometheus/alerts",
-        "/etc/prometheus/prometheus.yml",
-        "/etc/prometheus/alert_rules.yml",
-        "/etc/prometheus/file_sd",
-        "/prometheus"
+        "/var/run/docker.sock",
+        "/run/secrets/agent_client_cert",
+        "/run/secrets/agent_client_key"
       ],
       "interface": null,
       "public_key": null
     },
     {
       "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
-      "node_id": "docker:aec34c42abf1",
+      "node_id": "docker:f34c76e40af2",
       "source": "docker",
       "kind": "unknown",
       "classification": {
@@ -164,21 +252,21 @@
       "evidence": [
         "no_match"
       ],
-      "container_id": "aec34c42abf1",
-      "image": "vpn-suite-discovery-runner",
-      "created": "2026-02-22T19:32:46.259264606Z",
+      "container_id": "f34c76e40af2",
+      "image": "docker:24-cli",
+      "created": "2026-02-25T14:52:51.772275652Z",
       "ports": [],
       "mounts": [
         "/var/run/docker.sock",
-        "/etc/vpn-suite/node-id",
-        "/work"
+        "/work/scripts",
+        "/work/.env"
       ],
       "interface": null,
       "public_key": null
     },
     {
       "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
-      "node_id": "docker:ad0b74f49b11",
+      "node_id": "docker:fb7cfc8707ab",
       "source": "docker",
       "kind": "unknown",
       "classification": {
@@ -195,9 +283,251 @@
       "evidence": [
         "no_match"
       ],
-      "container_id": "ad0b74f49b11",
+      "container_id": "fb7cfc8707ab",
+      "image": "vpn-suite-reverse-proxy:local",
+      "created": "2026-02-25T11:54:54.927609126Z",
+      "ports": [
+        {
+          "port": 2019,
+          "protocol": "tcp"
+        },
+        {
+          "port": 443,
+          "protocol": "tcp"
+        },
+        {
+          "port": 443,
+          "protocol": "udp"
+        },
+        {
+          "port": 80,
+          "protocol": "tcp"
+        },
+        {
+          "port": 8443,
+          "protocol": "tcp"
+        }
+      ],
+      "mounts": [
+        "/srv/webapp",
+        "/srv/admin",
+        "/srv/storybook",
+        "/etc/caddy/agent_ca.pem",
+        "/data",
+        "/etc/caddy/Caddyfile",
+        "/srv/root"
+      ],
+      "interface": null,
+      "public_key": null
+    },
+    {
+      "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
+      "node_id": "docker:536e52fc17fb",
+      "source": "docker",
+      "kind": "unknown",
+      "classification": {
+        "kind": "unknown",
+        "fingerprint_score": 0.0,
+        "network_score": 0.0,
+        "api_match_score": 0.0,
+        "temporal_score": 0.0,
+        "total_confidence": 0.0,
+        "evidence": [],
+        "type": "unknown"
+      },
+      "confidence": 0.1,
+      "evidence": [
+        "no_match"
+      ],
+      "container_id": "536e52fc17fb",
+      "image": "redis@sha256:02f2cc4882f8bf87c79a220ac958f58c700bdec0dfb9b9ea61b62fb0e8f1bfcf",
+      "created": "2026-02-25T11:54:54.852728577Z",
+      "ports": [
+        {
+          "port": 6379,
+          "protocol": "tcp"
+        }
+      ],
+      "mounts": [
+        "/data"
+      ],
+      "interface": null,
+      "public_key": null
+    },
+    {
+      "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
+      "node_id": "docker:eb019fc6c643",
+      "source": "docker",
+      "kind": "unknown",
+      "classification": {
+        "kind": "unknown",
+        "fingerprint_score": 0.0,
+        "network_score": 0.0,
+        "api_match_score": 0.0,
+        "temporal_score": 0.0,
+        "total_confidence": 0.0,
+        "evidence": [],
+        "type": "unknown"
+      },
+      "confidence": 0.1,
+      "evidence": [
+        "no_match"
+      ],
+      "container_id": "eb019fc6c643",
+      "image": "caddy@sha256:4c6e91c6ed0e2fa03efd5b44747b625fec79bc9cd06ac5235a779726618e530d",
+      "created": "2026-02-25T11:54:39.122076377Z",
+      "ports": [
+        {
+          "port": 2019,
+          "protocol": "tcp"
+        },
+        {
+          "port": 443,
+          "protocol": "tcp"
+        },
+        {
+          "port": 443,
+          "protocol": "udp"
+        },
+        {
+          "port": 80,
+          "protocol": "tcp"
+        }
+      ],
+      "mounts": [
+        "/srv/root",
+        "/srv/webapp",
+        "/srv/admin",
+        "/data",
+        "/etc/caddy/Caddyfile"
+      ],
+      "interface": null,
+      "public_key": null
+    },
+    {
+      "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
+      "node_id": "docker:859d4981ba6f",
+      "source": "docker",
+      "kind": "unknown",
+      "classification": {
+        "kind": "unknown",
+        "fingerprint_score": 0.0,
+        "network_score": 0.0,
+        "api_match_score": 0.0,
+        "temporal_score": 0.0,
+        "total_confidence": 0.0,
+        "evidence": [],
+        "type": "unknown"
+      },
+      "confidence": 0.1,
+      "evidence": [
+        "no_match"
+      ],
+      "container_id": "859d4981ba6f",
+      "image": "vpn-suite-audit-admin-api",
+      "created": "2026-02-25T11:54:39.106106323Z",
+      "ports": [
+        {
+          "port": 8000,
+          "protocol": "tcp"
+        }
+      ],
+      "mounts": [
+        "/var/run/docker.sock"
+      ],
+      "interface": null,
+      "public_key": null
+    },
+    {
+      "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
+      "node_id": "docker:33df48b9fc3c",
+      "source": "docker",
+      "kind": "unknown",
+      "classification": {
+        "kind": "unknown",
+        "fingerprint_score": 0.0,
+        "network_score": 0.0,
+        "api_match_score": 0.0,
+        "temporal_score": 0.0,
+        "total_confidence": 0.0,
+        "evidence": [],
+        "type": "unknown"
+      },
+      "confidence": 0.1,
+      "evidence": [
+        "no_match"
+      ],
+      "container_id": "33df48b9fc3c",
+      "image": "postgres@sha256:468d34fefd6338031787c7b8e94078975b3aaf4d66c7ead25c39cd3ba46a15c6",
+      "created": "2026-02-25T11:54:39.08325997Z",
+      "ports": [
+        {
+          "port": 5432,
+          "protocol": "tcp"
+        }
+      ],
+      "mounts": [
+        "/var/lib/postgresql/data"
+      ],
+      "interface": null,
+      "public_key": null
+    },
+    {
+      "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
+      "node_id": "docker:cc7d3153af59",
+      "source": "docker",
+      "kind": "unknown",
+      "classification": {
+        "kind": "unknown",
+        "fingerprint_score": 0.0,
+        "network_score": 0.0,
+        "api_match_score": 0.0,
+        "temporal_score": 0.0,
+        "total_confidence": 0.0,
+        "evidence": [],
+        "type": "unknown"
+      },
+      "confidence": 0.1,
+      "evidence": [
+        "no_match"
+      ],
+      "container_id": "cc7d3153af59",
+      "image": "redis@sha256:02f2cc4882f8bf87c79a220ac958f58c700bdec0dfb9b9ea61b62fb0e8f1bfcf",
+      "created": "2026-02-25T11:54:39.083005885Z",
+      "ports": [
+        {
+          "port": 6379,
+          "protocol": "tcp"
+        }
+      ],
+      "mounts": [
+        "/data"
+      ],
+      "interface": null,
+      "public_key": null
+    },
+    {
+      "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
+      "node_id": "docker:fbacf34ab20e",
+      "source": "docker",
+      "kind": "unknown",
+      "classification": {
+        "kind": "unknown",
+        "fingerprint_score": 0.0,
+        "network_score": 0.0,
+        "api_match_score": 0.0,
+        "temporal_score": 0.0,
+        "total_confidence": 0.0,
+        "evidence": [],
+        "type": "unknown"
+      },
+      "confidence": 0.1,
+      "evidence": [
+        "no_match"
+      ],
+      "container_id": "fbacf34ab20e",
       "image": "grafana/grafana@sha256:d5133220d770aba5cb655147b619fa8770b90f41d8489a821d33b1cd34d16f89",
-      "created": "2026-02-22T19:24:45.241970291Z",
+      "created": "2026-02-25T11:54:05.774727408Z",
       "ports": [
         {
           "port": 3000,
@@ -214,7 +544,46 @@
     },
     {
       "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
-      "node_id": "docker:c7614e077bba",
+      "node_id": "docker:0608cd82ee27",
+      "source": "docker",
+      "kind": "unknown",
+      "classification": {
+        "kind": "unknown",
+        "fingerprint_score": 0.0,
+        "network_score": 0.0,
+        "api_match_score": 0.0,
+        "temporal_score": 0.0,
+        "total_confidence": 0.0,
+        "evidence": [],
+        "type": "prometheus"
+      },
+      "confidence": 0.9,
+      "evidence": [
+        "image_prometheus"
+      ],
+      "container_id": "0608cd82ee27",
+      "image": "prom/prometheus@sha256:f6639335d34a77d9d9db382b92eeb7fc00934be8eae81dbc03b31cfe90411a94",
+      "created": "2026-02-25T11:54:05.760225309Z",
+      "ports": [
+        {
+          "port": 9090,
+          "protocol": "tcp"
+        }
+      ],
+      "mounts": [
+        "/etc/prometheus/alert_rules.yml",
+        "/etc/prometheus/recording_rules.yml",
+        "/etc/prometheus/file_sd",
+        "/prometheus",
+        "/etc/prometheus/alerts",
+        "/etc/prometheus/prometheus.yml"
+      ],
+      "interface": null,
+      "public_key": null
+    },
+    {
+      "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
+      "node_id": "docker:a036780da3e8",
       "source": "docker",
       "kind": "unknown",
       "classification": {
@@ -231,22 +600,22 @@
       "evidence": [
         "image_exporter"
       ],
-      "container_id": "c7614e077bba",
+      "container_id": "a036780da3e8",
       "image": "grafana/promtail@sha256:bf617e9d67e80247a59f717f9c1ad388d7d32dc0a1d29abd5799516d15e0a9b5",
-      "created": "2026-02-22T19:24:45.109377562Z",
+      "created": "2026-02-25T11:54:05.750459699Z",
       "ports": [],
       "mounts": [
-        "/var/log",
-        "/var/lib/docker/containers",
         "/etc/promtail/config.yml",
-        "/promtail"
+        "/promtail",
+        "/var/log",
+        "/var/lib/docker/containers"
       ],
       "interface": null,
       "public_key": null
     },
     {
       "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
-      "node_id": "docker:2682b63951e3",
+      "node_id": "docker:6fda7a98bd26",
       "source": "docker",
       "kind": "unknown",
       "classification": {
@@ -257,34 +626,42 @@
         "temporal_score": 0.0,
         "total_confidence": 0.0,
         "evidence": [],
-        "type": "exporter"
+        "type": "unknown"
       },
-      "confidence": 0.9,
+      "confidence": 0.1,
       "evidence": [
-        "image_exporter"
+        "no_match"
       ],
-      "container_id": "2682b63951e3",
-      "image": "gcr.io/cadvisor/cadvisor:v0.52.0",
-      "created": "2026-02-22T19:24:32.522186463Z",
+      "container_id": "6fda7a98bd26",
+      "image": "otel/opentelemetry-collector-contrib:0.91.0",
+      "created": "2026-02-25T11:54:05.744246045Z",
       "ports": [
         {
-          "port": 8080,
+          "port": 4317,
+          "protocol": "tcp"
+        },
+        {
+          "port": 4318,
+          "protocol": "tcp"
+        },
+        {
+          "port": 55678,
+          "protocol": "tcp"
+        },
+        {
+          "port": 55679,
           "protocol": "tcp"
         }
       ],
       "mounts": [
-        "/rootfs",
-        "/var/run",
-        "/sys",
-        "/var/lib/docker",
-        "/dev/disk"
+        "/etc/otel-collector/config.yaml"
       ],
       "interface": null,
       "public_key": null
     },
     {
       "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
-      "node_id": "docker:7b88db1adc5a",
+      "node_id": "docker:af5138ece60b",
       "source": "docker",
       "kind": "unknown",
       "classification": {
@@ -301,78 +678,9 @@
       "evidence": [
         "image_exporter"
       ],
-      "container_id": "7b88db1adc5a",
-      "image": "grafana/loki@sha256:09a53b4a4ff81ffcd8f13886df19d33fac7a8d3aaf952e3c7e66cbade5b2fc31",
-      "created": "2026-02-22T19:24:32.241749242Z",
-      "ports": [
-        {
-          "port": 3100,
-          "protocol": "tcp"
-        }
-      ],
-      "mounts": [
-        "/tmp/loki",
-        "/etc/loki/config.yml"
-      ],
-      "interface": null,
-      "public_key": null
-    },
-    {
-      "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
-      "node_id": "docker:93bef7f80261",
-      "source": "docker",
-      "kind": "unknown",
-      "classification": {
-        "kind": "unknown",
-        "fingerprint_score": 0.0,
-        "network_score": 0.0,
-        "api_match_score": 0.0,
-        "temporal_score": 0.0,
-        "total_confidence": 0.0,
-        "evidence": [],
-        "type": "exporter"
-      },
-      "confidence": 0.9,
-      "evidence": [
-        "image_exporter"
-      ],
-      "container_id": "93bef7f80261",
-      "image": "prom/node-exporter@sha256:4032c6d5bfd752342c3e631c2f1de93ba6b86c41db6b167b9a35372c139e7706",
-      "created": "2026-02-22T19:24:31.52267426Z",
-      "ports": [
-        {
-          "port": 9100,
-          "protocol": "tcp"
-        }
-      ],
-      "mounts": [
-        "/host"
-      ],
-      "interface": null,
-      "public_key": null
-    },
-    {
-      "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
-      "node_id": "docker:4ea5023af858",
-      "source": "docker",
-      "kind": "unknown",
-      "classification": {
-        "kind": "unknown",
-        "fingerprint_score": 0.0,
-        "network_score": 0.0,
-        "api_match_score": 0.0,
-        "temporal_score": 0.0,
-        "total_confidence": 0.0,
-        "evidence": [],
-        "type": "exporter"
-      },
-      "confidence": 0.9,
-      "evidence": [
-        "image_exporter"
-      ],
-      "container_id": "4ea5023af858",
+      "container_id": "af5138ece60b",
       "image": "vpn-suite-wg-exporter",
-      "created": "2026-02-22T17:21:53.069562471Z",
+      "created": "2026-02-25T11:54:05.709525914Z",
       "ports": [
         {
           "port": 9586,
@@ -387,7 +695,7 @@
     },
     {
       "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
-      "node_id": "docker:5729f4673ae2",
+      "node_id": "docker:2cf6720ff0a6",
       "source": "docker",
       "kind": "unknown",
       "classification": {
@@ -404,51 +712,21 @@
       "evidence": [
         "no_match"
       ],
-      "container_id": "5729f4673ae2",
-      "image": "redis@sha256:02f2cc4882f8bf87c79a220ac958f58c700bdec0dfb9b9ea61b62fb0e8f1bfcf",
-      "created": "2026-02-22T17:14:04.067172034Z",
-      "ports": [
-        {
-          "port": 6379,
-          "protocol": "tcp"
-        }
-      ],
-      "mounts": [
-        "/data"
-      ],
-      "interface": null,
-      "public_key": null
-    },
-    {
-      "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
-      "node_id": "docker:081753092afd",
-      "source": "docker",
-      "kind": "unknown",
-      "classification": {
-        "kind": "unknown",
-        "fingerprint_score": 0.0,
-        "network_score": 0.0,
-        "api_match_score": 0.0,
-        "temporal_score": 0.0,
-        "total_confidence": 0.0,
-        "evidence": [],
-        "type": "unknown"
-      },
-      "confidence": 0.1,
-      "evidence": [
-        "no_match"
-      ],
-      "container_id": "081753092afd",
-      "image": "alpine/socat",
-      "created": "2026-02-22T16:25:42.728154422Z",
+      "container_id": "2cf6720ff0a6",
+      "image": "vpn-suite-discovery-runner",
+      "created": "2026-02-25T11:54:05.708366559Z",
       "ports": [],
-      "mounts": [],
+      "mounts": [
+        "/work",
+        "/var/run/docker.sock",
+        "/etc/vpn-suite/node-id"
+      ],
       "interface": null,
       "public_key": null
     },
     {
       "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
-      "node_id": "docker:43bd84e50009",
+      "node_id": "docker:00fe94e5800a",
       "source": "docker",
       "kind": "unknown",
       "classification": {
@@ -465,24 +743,25 @@
       "evidence": [
         "no_match"
       ],
-      "container_id": "43bd84e50009",
-      "image": "vpn-suite-audit-admin-api",
-      "created": "2026-02-22T13:40:37.7282728Z",
+      "container_id": "00fe94e5800a",
+      "image": "grafana/tempo:2.3.1",
+      "created": "2026-02-25T11:54:05.707755272Z",
       "ports": [
         {
-          "port": 8000,
+          "port": 3200,
           "protocol": "tcp"
         }
       ],
       "mounts": [
-        "/var/run/docker.sock"
+        "/etc/tempo/tempo.yaml",
+        "/var/tempo"
       ],
       "interface": null,
       "public_key": null
     },
     {
       "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
-      "node_id": "docker:bbf7ee1fdc4d",
+      "node_id": "docker:08d18f7b536e",
       "source": "docker",
       "kind": "unknown",
       "classification": {
@@ -493,55 +772,165 @@
         "temporal_score": 0.0,
         "total_confidence": 0.0,
         "evidence": [],
-        "type": "unknown"
+        "type": "exporter"
       },
-      "confidence": 0.1,
+      "confidence": 0.9,
       "evidence": [
-        "no_match"
+        "image_exporter"
       ],
-      "container_id": "bbf7ee1fdc4d",
-      "image": "vpn-suite-audit-telegram-vpn-bot",
-      "created": "2026-02-22T13:39:10.633258842Z",
+      "container_id": "08d18f7b536e",
+      "image": "grafana/loki@sha256:09a53b4a4ff81ffcd8f13886df19d33fac7a8d3aaf952e3c7e66cbade5b2fc31",
+      "created": "2026-02-25T11:54:05.706524005Z",
       "ports": [
         {
-          "port": 8090,
-          "protocol": "tcp"
-        }
-      ],
-      "mounts": [],
-      "interface": null,
-      "public_key": null
-    },
-    {
-      "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
-      "node_id": "docker:1c4ef5289385",
-      "source": "docker",
-      "kind": "unknown",
-      "classification": {
-        "kind": "unknown",
-        "fingerprint_score": 0.0,
-        "network_score": 0.0,
-        "api_match_score": 0.0,
-        "temporal_score": 0.0,
-        "total_confidence": 0.0,
-        "evidence": [],
-        "type": "unknown"
-      },
-      "confidence": 0.1,
-      "evidence": [
-        "no_match"
-      ],
-      "container_id": "1c4ef5289385",
-      "image": "postgres@sha256:468d34fefd6338031787c7b8e94078975b3aaf4d66c7ead25c39cd3ba46a15c6",
-      "created": "2026-02-22T13:39:10.480654688Z",
-      "ports": [
-        {
-          "port": 5432,
+          "port": 3100,
           "protocol": "tcp"
         }
       ],
       "mounts": [
-        "/var/lib/postgresql/data"
+        "/etc/loki/config.yml",
+        "/tmp/loki"
+      ],
+      "interface": null,
+      "public_key": null
+    },
+    {
+      "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
+      "node_id": "docker:301fdab45bf7",
+      "source": "docker",
+      "kind": "unknown",
+      "classification": {
+        "kind": "unknown",
+        "fingerprint_score": 0.0,
+        "network_score": 0.0,
+        "api_match_score": 0.0,
+        "temporal_score": 0.0,
+        "total_confidence": 0.0,
+        "evidence": [],
+        "type": "unknown"
+      },
+      "confidence": 0.1,
+      "evidence": [
+        "no_match"
+      ],
+      "container_id": "301fdab45bf7",
+      "image": "prom/alertmanager:latest",
+      "created": "2026-02-25T11:54:05.705908451Z",
+      "ports": [
+        {
+          "port": 9093,
+          "protocol": "tcp"
+        }
+      ],
+      "mounts": [
+        "/etc/alertmanager/alertmanager.yml",
+        "/alertmanager"
+      ],
+      "interface": null,
+      "public_key": null
+    },
+    {
+      "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
+      "node_id": "docker:c61fa5be458b",
+      "source": "docker",
+      "kind": "unknown",
+      "classification": {
+        "kind": "unknown",
+        "fingerprint_score": 0.0,
+        "network_score": 0.0,
+        "api_match_score": 0.0,
+        "temporal_score": 0.0,
+        "total_confidence": 0.0,
+        "evidence": [],
+        "type": "unknown"
+      },
+      "confidence": 0.1,
+      "evidence": [
+        "no_match"
+      ],
+      "container_id": "c61fa5be458b",
+      "image": "victoriametrics/victoria-metrics:latest",
+      "created": "2026-02-25T11:54:05.702649198Z",
+      "ports": [
+        {
+          "port": 8428,
+          "protocol": "tcp"
+        }
+      ],
+      "mounts": [
+        "/storage"
+      ],
+      "interface": null,
+      "public_key": null
+    },
+    {
+      "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
+      "node_id": "docker:521a17701c6c",
+      "source": "docker",
+      "kind": "unknown",
+      "classification": {
+        "kind": "unknown",
+        "fingerprint_score": 0.0,
+        "network_score": 0.0,
+        "api_match_score": 0.0,
+        "temporal_score": 0.0,
+        "total_confidence": 0.0,
+        "evidence": [],
+        "type": "exporter"
+      },
+      "confidence": 0.9,
+      "evidence": [
+        "image_exporter"
+      ],
+      "container_id": "521a17701c6c",
+      "image": "gcr.io/cadvisor/cadvisor:v0.52.0",
+      "created": "2026-02-25T11:54:05.689261179Z",
+      "ports": [
+        {
+          "port": 8080,
+          "protocol": "tcp"
+        }
+      ],
+      "mounts": [
+        "/var/lib/docker",
+        "/dev/disk",
+        "/rootfs",
+        "/var/run",
+        "/sys"
+      ],
+      "interface": null,
+      "public_key": null
+    },
+    {
+      "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
+      "node_id": "docker:cfe79cdbc9e2",
+      "source": "docker",
+      "kind": "unknown",
+      "classification": {
+        "kind": "unknown",
+        "fingerprint_score": 0.0,
+        "network_score": 0.0,
+        "api_match_score": 0.0,
+        "temporal_score": 0.0,
+        "total_confidence": 0.0,
+        "evidence": [],
+        "type": "exporter"
+      },
+      "confidence": 0.9,
+      "evidence": [
+        "image_exporter"
+      ],
+      "container_id": "cfe79cdbc9e2",
+      "image": "prom/node-exporter@sha256:4032c6d5bfd752342c3e631c2f1de93ba6b86c41db6b167b9a35372c139e7706",
+      "created": "2026-02-25T11:54:05.689092536Z",
+      "ports": [
+        {
+          "port": 9100,
+          "protocol": "tcp"
+        }
+      ],
+      "mounts": [
+        "/host"
       ],
       "interface": null,
       "public_key": null
@@ -576,126 +965,6 @@
       ],
       "mounts": [
         "/var/run/docker.sock"
-      ],
-      "interface": null,
-      "public_key": null
-    },
-    {
-      "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
-      "node_id": "docker:7cb517fcfebd",
-      "source": "docker",
-      "kind": "awg",
-      "classification": {
-        "kind": "awg",
-        "fingerprint_score": 1.0,
-        "network_score": 0.0,
-        "api_match_score": 0.0,
-        "temporal_score": 0.0,
-        "total_confidence": 0.4,
-        "evidence": [
-          "image_amnezia"
-        ],
-        "type": "awg-node"
-      },
-      "confidence": 0.75,
-      "evidence": [
-        "image_amnezia"
-      ],
-      "container_id": "7cb517fcfebd",
-      "image": "amnezia-awg2",
-      "created": "2026-02-21T14:48:03.306773933Z",
-      "ports": [
-        {
-          "port": 40498,
-          "protocol": "udp"
-        }
-      ],
-      "mounts": [
-        "/lib/modules"
-      ],
-      "interface": null,
-      "public_key": null
-    },
-    {
-      "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
-      "node_id": "docker:f9573380dbc9",
-      "source": "docker",
-      "kind": "unknown",
-      "classification": {
-        "kind": "unknown",
-        "fingerprint_score": 0.0,
-        "network_score": 0.0,
-        "api_match_score": 0.0,
-        "temporal_score": 0.0,
-        "total_confidence": 0.0,
-        "evidence": [],
-        "type": "unknown"
-      },
-      "confidence": 0.1,
-      "evidence": [
-        "no_match"
-      ],
-      "container_id": "f9573380dbc9",
-      "image": "caddy@sha256:4c6e91c6ed0e2fa03efd5b44747b625fec79bc9cd06ac5235a779726618e530d",
-      "created": "2026-02-15T15:39:16.275339553Z",
-      "ports": [
-        {
-          "port": 2019,
-          "protocol": "tcp"
-        },
-        {
-          "port": 443,
-          "protocol": "tcp"
-        },
-        {
-          "port": 443,
-          "protocol": "udp"
-        },
-        {
-          "port": 80,
-          "protocol": "tcp"
-        }
-      ],
-      "mounts": [
-        "/srv/admin",
-        "/srv/root",
-        "/srv/webapp",
-        "/data",
-        "/etc/caddy/Caddyfile"
-      ],
-      "interface": null,
-      "public_key": null
-    },
-    {
-      "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
-      "node_id": "docker:d6addede839c",
-      "source": "docker",
-      "kind": "unknown",
-      "classification": {
-        "kind": "unknown",
-        "fingerprint_score": 0.0,
-        "network_score": 0.0,
-        "api_match_score": 0.0,
-        "temporal_score": 0.0,
-        "total_confidence": 0.0,
-        "evidence": [],
-        "type": "unknown"
-      },
-      "confidence": 0.1,
-      "evidence": [
-        "no_match"
-      ],
-      "container_id": "d6addede839c",
-      "image": "redis@sha256:02f2cc4882f8bf87c79a220ac958f58c700bdec0dfb9b9ea61b62fb0e8f1bfcf",
-      "created": "2026-02-15T15:38:50.58954525Z",
-      "ports": [
-        {
-          "port": 6379,
-          "protocol": "tcp"
-        }
-      ],
-      "mounts": [
-        "/data"
       ],
       "interface": null,
       "public_key": null

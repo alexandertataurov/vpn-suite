@@ -46,11 +46,29 @@
   },
   {
     "labels": {
-      "sd_job": "wg-exporter",
+      "sd_job": "alertmanager",
       "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7"
     },
     "targets": [
-      "host.docker.internal:9586"
+      "alertmanager:9093"
+    ]
+  },
+  {
+    "labels": {
+      "sd_job": "otel-collector",
+      "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7"
+    },
+    "targets": [
+      "otel-collector:8888"
+    ]
+  },
+  {
+    "labels": {
+      "sd_job": "tempo",
+      "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7"
+    },
+    "targets": [
+      "tempo:3200"
     ]
   }
 ]
