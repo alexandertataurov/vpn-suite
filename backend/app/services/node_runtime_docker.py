@@ -639,6 +639,8 @@ class DockerNodeRuntimeAdapter(NodeRuntimeAdapter):
                 if state.get("Status") != "running":
                     continue
                 name = (c.name or "").lstrip("/")
+                if not any(name.startswith(p) for p in self._container_prefixes):
+                    continue
                 cid = (c.id or "")[:12]
                 image = (attrs.get("Config") or {}).get("Image") or attrs.get("Image") or ""
                 image_refs = [image, c.image.id if getattr(c, "image", None) else ""]
@@ -795,7 +797,14 @@ class DockerNodeRuntimeAdapter(NodeRuntimeAdapter):
                         is_draining=False,
                     )
                 )
-        return nodes
+        # Deduplicate by container_name: keep single node per name (best health)
+        by_name: dict[str, NodeMetadata] = {}
+        for node in nodes:
+            name = node.container_name or node.node_id
+            existing = by_name.get(name)
+            if existing is None or (node.health_score or 0) > (existing.health_score or 0):
+                by_name[name] = node
+        return list(by_name.values())
 
     async def _resolve_node(self, node_id: str) -> NodeMetadata | None:
         nodes = await self.discover_nodes()
