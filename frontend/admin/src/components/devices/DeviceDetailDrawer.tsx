@@ -50,6 +50,9 @@ export function DeviceDetailDrawer({
       server_id: device.server_id,
       allowed_ips: device.allowed_ips,
       revoked_at: device.revoked_at,
+      apply_status: device.apply_status,
+      last_applied_at: device.last_applied_at,
+      last_error: device.last_error,
       telemetry: device.telemetry,
       issued_configs: device.issued_configs?.map((c) => ({
         id: c.id,
@@ -79,6 +82,14 @@ export function DeviceDetailDrawer({
             <p className="text-sm">IP: {device.allowed_ips ?? "—"} {!device.allowed_ips?.trim() && <span className="text-amber-600">⚠</span>}</p>
             <p className="text-sm">Node: <span className="mono">{device.server_id}</span></p>
           </section>
+          {(device.apply_status || device.last_error) && (
+            <section>
+              <h3 className="text-xs font-semibold uppercase text-neutral-500 mb-1">Apply state</h3>
+              <p className="text-sm">Status: {device.apply_status ?? "—"}</p>
+              {device.last_applied_at && <p className="text-sm">Last applied: {formatDate(device.last_applied_at)}</p>}
+              {device.last_error && <p className="text-sm text-amber-600" title={device.last_error}>Error: {device.last_error}</p>}
+            </section>
+          )}
           {device.telemetry && (
             <section>
               <h3 className="text-xs font-semibold uppercase text-neutral-500 mb-1">Peer state (data plane)</h3>

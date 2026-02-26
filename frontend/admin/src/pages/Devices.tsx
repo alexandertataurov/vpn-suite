@@ -139,6 +139,20 @@ function DeviceStatusBadge({ device }: { device: DeviceOut }) {
       </span>
     );
   }
+  if (device.apply_status === "NO_HANDSHAKE") {
+    return (
+      <span className="devices-status-badge devices-status-degraded" title={device.last_error ?? "No handshake within gate"}>
+        No handshake
+      </span>
+    );
+  }
+  if (device.apply_status === "FAILED_APPLY") {
+    return (
+      <span className="devices-status-badge devices-status-degraded" title={device.last_error ?? "Apply failed"}>
+        Apply failed
+      </span>
+    );
+  }
   const hasPending = (device.issued_configs ?? []).some((c) => !c.consumed_at);
   if (hasPending) {
     return (
@@ -219,6 +233,7 @@ export function DevicesPage() {
 
   const { data, error, refetch } = useQuery<DeviceList>({
     queryKey: [...DEVICES_KEY, offset, debouncedSearch, regionFilter, statusFilter, sort],
+    staleTime: 45_000,
     refetchInterval: pollingPaused ? false : DEVICES_POLL_INTERVAL_MS,
     queryFn: ({ signal }) => {
       const params = new URLSearchParams({
@@ -923,7 +938,7 @@ export function DevicesPage() {
               );
             })}
           </ul>
-        ) : displayDevices.length > 50 ? (
+        ) : viewMode === "table" && (displayDevices.length >= 50 || (data?.total ?? 0) >= 50 || queryLimit >= 50) ? (
           <VirtualTable<DeviceOut>
             columns={columns}
             data={displayDevices}

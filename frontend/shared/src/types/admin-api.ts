@@ -613,6 +613,12 @@ export interface DeviceOut {
   issued_configs?: IssuedConfigOut[];
   user_email?: string | null;
   telemetry?: DeviceTelemetryOut | null;
+  /** State reconciliation: PENDING_APPLY | APPLIED | FAILED_APPLY | NO_HANDSHAKE */
+  apply_status?: string | null;
+  last_applied_at?: string | null;
+  last_seen_handshake_at?: string | null;
+  last_error?: string | null;
+  protocol_version?: string | null;
 }
 
 export interface DeviceList {
