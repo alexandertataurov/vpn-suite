@@ -32,7 +32,13 @@ async def get_issued_config_content(
     result = await db.execute(select(IssuedConfig).where(IssuedConfig.id == issued_config_id))
     issued = result.scalar_one_or_none()
     if not issued:
-        raise not_found_404("IssuedConfig", issued_config_id)
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "code": "NOT_FOUND",
+                "message": "Config not found. It may have been reissued or removed. Open the device and use the current config link.",
+            },
+        )
     if not issued.config_encrypted:
         raise not_found_404("Config", issued_config_id)
     try:
