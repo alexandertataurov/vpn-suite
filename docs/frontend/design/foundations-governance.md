@@ -36,7 +36,10 @@ See `tokens-map.ts` for the canonical mapping.
 
 ### 3. Theme Awareness
 
-All semantic tokens adapt to `data-theme` (dark, light, dim). Never hardcode theme-specific values.
+All semantic tokens adapt to `data-theme`. Never hardcode theme-specific values.
+
+- **Admin themes**: `dark`, `dim`, `light`
+- **Miniapp themes**: `consumer-light`, `consumer-dark`
 
 ### 4. Required Component Mapping
 
@@ -47,6 +50,18 @@ When adding a new component, document its token usage in `tokens-map.ts` → `CO
 - **tokens-map.ts** — single source of truth for primitive vs semantic classification
 - **storybook:check** — validates story coverage
 - **foundations:lint** — (optional) ESLint rule or script to detect primitive/hex usage in components
+- **guardrails** — `npm run guardrails` (from frontend root): raw-color check + `FOUNDATIONS_STRICT=1` foundations lint + storybook check
+
+## PR / review checklist (UI)
+
+Before merging changes that touch UI or design:
+
+- [ ] No new hex/rgb/hsl in components or pages (run `npm run guardrails` from frontend root).
+- [ ] New or changed components use semantic tokens only; Tailwind/classes use `var(--*)` where applicable.
+- [ ] Typography uses `--text-*` or `--font-size-*` / shared `Text` / `Heading`.
+- [ ] New shared components have a Storybook story with title and description.
+- [ ] No new page-level visual CSS unless justified (layout-only is acceptable).
+- [ ] Shared component preferred; app-local only when feature-specific.
 
 ## Token Layers
 

@@ -11,18 +11,19 @@ Every log line includes:
 | timestamp | Always | ISO8601 UTC |
 | level | Always | debug, info, warn, error |
 | service | Always | admin-api, telegram-vpn-bot, node-agent |
-| env | Always | dev, staging, production |
+| env | Always | development, staging, production |
 | version | When available | Git SHA or release |
 | request_id | HTTP scope | UUID from X-Request-ID or generated |
-| correlation_id | Request scope | Same as request_id when no OTel |
+| trace_id | Request scope | OTEL trace id when tracing is enabled |
+| correlation_id | Request scope | Same as request_id (or trace_id when no request_id) |
 | ip | Request scope | Client IP (X-Forwarded-For, X-Real-IP) |
 | event | Always | Stable event name (see taxonomy) |
 | route | HTTP scope | Path template |
 | method | HTTP scope | GET, POST, etc. |
 | status_code | HTTP scope | 200, 404, 500 |
 | duration_ms | Request scope | Duration in ms |
-| error_code | On error | E_* code |
-| error | On error | kind, code, severity, retryable, stack |
+| error | On error | kind, code, severity, retryable |
+| exception | On error | Stack trace (server-side only) |
 | entity_id | When relevant | server_id, order_id, etc. |
 
 ## Correlation-ID Flow

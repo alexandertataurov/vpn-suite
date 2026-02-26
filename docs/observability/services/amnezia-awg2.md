@@ -1,7 +1,7 @@
 # amnezia-awg2 — Observability
 
 **Service:** VPN data-plane (AmneziaWG)  
-**Path:** `[amnezia/amnezia-awg2/](../../../../amnezia/amnezia-awg2)`  
+**Path:** External repo at `/opt/amnezia/amnezia-awg2`  
 
 ## Metrics
 
@@ -48,15 +48,15 @@ wg-exporter runs `docker exec <WG_CONTAINER> wg show <WG_INTERFACE> dump` inside
 
 ## Health
 
-Docker healthcheck: `awg show ${AWG_INTERFACE:-awg0}` (`[docker-compose.yml](../../../../amnezia/amnezia-awg2/docker-compose.yml)` L44–49).
+Docker healthcheck: `awg show ${AWG_INTERFACE:-awg0}` (`/opt/amnezia/amnezia-awg2/docker-compose.yml` L44–49).
 
 ## Logs
 
-Docker json-file, 10m×3 files (`[docker-compose.yml](../../../../amnezia/amnezia-awg2/docker-compose.yml)` L52–56). Promtail can scrape if on same host.
+Docker json-file, 10m×3 files (`/opt/amnezia/amnezia-awg2/docker-compose.yml` L52–56). Promtail can scrape if on same host.
 
 ## Deployment
 
 - wg-exporter runs on each VPN node host.
 - Prometheus scrapes `host.docker.internal:9586` (same host) or node IP (multi-host).
-- **Multi-host:** Set `DISCOVERY_REMOTE_WG_EXPORTERS` (JSON array) for remote wg-exporter targets: `[{"host":"10.0.0.5","port":9586,"node_id":"vpn-1","server_id":"srv-1"}]`.
+- **Multi-host:** Set `DISCOVERY_REMOTE_WG_EXPORTERS` (JSON array) for remote wg-exporter targets: `[{"host":"10.0.0.5","port":9586,"node_id":"vpn-1","server_id":"srv-1"}]` (Prometheus relabels `node_id`/`server_id` onto scraped series).
 - **Env (wg-exporter):** `WG_CONTAINER` must match the container name. amnezia-awg2 compose uses `container_name: amnezia-awg` — set `WG_CONTAINER=amnezia-awg`. `WG_INTERFACE` defaults to `awg0` (matches `AWG_INTERFACE` in compose).

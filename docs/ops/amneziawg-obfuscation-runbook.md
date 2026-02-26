@@ -41,6 +41,38 @@ For regions with aggressive DPI, set ServerProfile `request_params` so issued cl
 - Optionally **amnezia_jc**, **amnezia_jmin**, **amnezia_jmax** (panel defaults 4, 64, 1024 are usually fine).
 - When the server uses `AWG_S1`, `AWG_S2`, `AWG_H1`–`AWG_H4` in amnezia-awg2, keep ServerProfile in sync so runtime sync or profile-based issue both emit the same values.
 
+## H1–H4 rotation and sync (admin-api ↔ AmneziaWG)
+
+When H keys need to be rotated, the control-plane is the source of truth; the AmneziaWG container must get the same values (AWG_H1–AWG_H4).
+
+**1. Rotate from Admin API**
+
+- **POST** `/api/v1/servers/{server_id}/rotate-obfuscation-h` (servers:write): generates new H1–H4 with CSPRNG, saves them on the Server row, and enqueues an action `apply_obfuscation_h` for the node-agent. Response: `{ "h1", "h2", "h3", "h4", "action_id" }`.
+
+**2. Desired-state (sync with admin-api at every step)**
+
+- **GET** `/api/v1/agent/desired-state?server_id=...` (X-Agent-Token) returns:
+  - **peers**: `public_key`, `allowed_ips`, `preshared_key` (from Device) so node-agent applies the correct peer and PSK when reconciling.
+  - **obfuscation_h**: `{ h1, h2, h3, h4 }` when the server has all four set.
+  - **obfuscation_full**: `{ s1, s2, jc, jmin, jmax, h1, h2, h3, h4 }` from Server + first ServerProfile `request_params`. When present, node-agent (if `AMNEZIA_NODE_ENV_PATH` is set) updates the node env file with AWG_S1, AWG_S2, AWG_Jc, AWG_Jmin, AWG_Jmax, AWG_H1–H4 and restarts AmneziaWG so issued configs always match the node.
+- Flow: **Admin issues config** → Device saved in DB (public_key, allowed_ips, preshared_key) → **node-agent** pulls desired-state → reconciles peers (add/update with preshared_key) → if obfuscation_full present, syncs to node env and restarts AWG. **AmneziaWG** entrypoint PostUp adds route `10.8.1.0/24 dev awg0` so reply traffic reaches clients. New configs work without manual steps.
+
+**3. Sync to node (pick one)**
+
+- **Option A — Host script (cron):** On the VPN host, run periodically:
+  ```bash
+  cd /opt/amnezia/amnezia-awg2
+  CONTROL_PLANE_URL=... SERVER_ID=... AGENT_SHARED_TOKEN=... \
+    bash /opt/vpn-suite/ops/sync-amnezia-h-from-control-plane.sh
+  ```
+  The script GETs desired-state, updates `secrets/node.env` with AWG_H1–H4 if different, and restarts the AmneziaWG stack. Use cron (e.g. every 5 min) for automatic sync after rotation.
+
+- **Option B — Node-agent action:** When node-agent polls and gets action `apply_obfuscation_h` (payload: h1, h2, h3, h4), it updates the file at `AMNEZIA_NODE_ENV_PATH` and restarts the AmneziaWG container. Mount the host’s node.env into the node-agent container and set `AMNEZIA_NODE_ENV_PATH` to that path (e.g. `/run/amnezia/node.env`).
+
+**4. Re-issue configs**
+
+After rotation, existing client configs have old H values. Re-issue configs from Admin (or bot) so new configs get the new H1–H4 from the Server row.
+
 ## Production checklist
 
 - Use AmneziaWG (profile_type=awg) as default, not plain WG.

@@ -30,13 +30,13 @@
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 2.1.1 | Add `service.name`, `env`, `node_id` to Prometheus relabel_configs | Todo | [prometheus.yml](../../config/monitoring/prometheus.yml) |
-| 2.1.2 | wg-exporter: add `node_id`, `server_id` labels (from env) | Todo | [wg_exporter.py](../../monitoring/wg-exporter/wg_exporter.py) |
+| 2.1.1 | Add `service.name`, `env`, `node_id` to Prometheus relabel_configs | Done | service_name, node_id, env in prometheus.yml |
+| 2.1.2 | wg-exporter: add `node_id`, `server_id` labels (from env) | Done | [wg_exporter.py](../../monitoring/wg-exporter/wg_exporter.py) NODE_ID, SERVER_ID |
 | 2.1.3 | wg-exporter: expose per-peer `endpoint`, `allowed_ips` (optional) | Todo | Parse full dump |
-| 2.1.4 | admin-api: add `version` label to /metrics | Todo | From API_VERSION |
+| 2.1.4 | admin-api: add `version` label to /metrics | Done | vpn_suite_info{version=API_VERSION} |
 | 2.1.5 | Add RED metrics to any HTTP service missing them | Todo | bot, node-agent |
-| 2.1.6 | Instrument admin-api with OpenTelemetry (OTLP traces) | Todo | opentelemetry-instrumentation-fastapi |
-| 2.1.7 | Instrument telegram-vpn-bot with OpenTelemetry | Todo | OTLP export to otel-collector |
+| 2.1.6 | Instrument admin-api with OpenTelemetry (OTLP traces) | Done | otel_tracing.py, OTEL_TRACES_ENDPOINT |
+| 2.1.7 | Instrument telegram-vpn-bot with OpenTelemetry | Done | bot/otel_tracing.py |
 | 2.1.8 | Add Caddy metrics (or Caddy Prometheus plugin) | Todo | Gap #5; optional |
 | 2.1.9 | postgres-exporter (optional) | Todo | Gap; low priority |
 | 2.1.10 | redis-exporter (optional) | Todo | Gap; low priority |
@@ -48,19 +48,19 @@
 | 2.2.1 | OTEL Collector config | Done | `config/monitoring/otel-collector/config.yaml` |
 | 2.2.2 | Tempo config | Done | `config/monitoring/tempo/tempo.yaml` |
 | 2.2.3 | Grafana Tempo datasource | Done | `grafana/provisioning/datasources/` |
-| 2.2.4 | Wire OTEL Collector to admin-api OTLP endpoint | Todo | When 2.1.6 done |
-| 2.2.5 | Validate trace flow end-to-end | Todo | admin-api → otel-collector → tempo → Grafana |
+| 2.2.4 | Wire OTEL Collector to admin-api OTLP endpoint | Done | Set via `OTEL_TRACES_ENDPOINT` in observability compose |
+| 2.2.5 | Validate trace flow end-to-end | Done | admin-api → otel-collector → tempo → Grafana |
 
 ### 2.3 Storage & Retention
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 2.3.1 | Prometheus: set `--storage.tsdb.retention.time=365d` | Todo | docker-compose |
-| 2.3.2 | Loki: set `retention_period: 8760h` (365d) | Todo | [loki-config.yml](../../config/monitoring/loki-config.yml) |
-| 2.3.3 | Tempo: set `block_retention: 8760h` | Todo | [tempo.yaml](../../config/monitoring/tempo/tempo.yaml) |
-| 2.3.4 | Add VictoriaMetrics (or Mimir) for 365d + counter-reset handling | Todo | Optional; replace or complement Prometheus |
+| 2.3.1 | Prometheus: set `--storage.tsdb.retention.time=365d` | Done | docker-compose |
+| 2.3.2 | Loki: set `retention_period: 8760h` (365d) | Done | [loki-config.yml](../../config/monitoring/loki-config.yml) |
+| 2.3.3 | Tempo: set `block_retention: 8760h` | Done | [tempo.yaml](../../config/monitoring/tempo/tempo.yaml) |
+| 2.3.4 | Add VictoriaMetrics (or Mimir) for 365d + counter-reset handling | Done | VictoriaMetrics in compose + Prometheus remote_write |
 | 2.3.5 | Archive pipeline: export >365d to S3/GCS | Todo | Cron job or compactor |
-| 2.3.6 | Recording rules for rx/tx `increase()` over 1d windows | Todo | For continuous metrics across restarts |
+| 2.3.6 | Recording rules for rx/tx `increase()` over 1d windows | Done | [recording_rules.yml](../../config/monitoring/recording_rules.yml) |
 
 ### 2.4 Compose & manage.sh
 
@@ -68,8 +68,8 @@
 |---|------|--------|-------|
 | 2.4.1 | Wire DC_OBS (observability compose) into manage.sh | Done | [manage.sh](../../manage.sh) |
 | 2.4.2 | Start discovery-runner, wg-exporter, tempo, otel-collector | Done | manage.sh up-monitoring |
-| 2.4.3 | TELEMETRY_PROMETHEUS_URL in .env.example with comment | Todo | Default empty; doc when to set |
-| 2.4.4 | Ensure discovery-runner writes targets before Prometheus scrape | Todo | Startup order / healthcheck |
+| 2.4.3 | TELEMETRY_PROMETHEUS_URL in .env.example with comment | Done | .env.example |
+| 2.4.4 | Ensure discovery-runner writes targets before Prometheus scrape | Done | Prometheus depends_on discovery-runner healthcheck |
 
 ### 2.5 Service docs
 
@@ -87,12 +87,12 @@
 | 3.1 | GET /api/v1/analytics/telemetry/services | Done | [analytics.py](../../backend/app/api/v1/analytics.py) |
 | 3.2 | Caching for heavy Prometheus queries (30s TTL) | Done | analytics.py |
 | 3.3 | Graceful degradation when Prometheus down | Done | analytics.py |
-| 3.4 | GET /api/v1/analytics/metrics/kpis | Todo | Request rate, error rate, latency |
-| 3.5 | Wire Admin UI to /analytics/telemetry/services | Todo | Show per-service up/down, last scrape |
-| 3.6 | UI: explicit "metrics unavailable" when degraded | Todo | [overview.py](../../backend/app/api/v1/overview.py) |
-| 3.7 | Add Grafana scrape-status dashboard panel | Todo | `up`, targets |
+| 3.4 | GET /api/v1/analytics/metrics/kpis | Done | Request rate, error rate, latency |
+| 3.5 | Wire Admin UI to /analytics/telemetry/services | Done | Show per-service up/down, last scrape |
+| 3.6 | UI: explicit "metrics unavailable" when degraded | Done | [overview.py](../../backend/app/api/v1/overview.py) |
+| 3.7 | Add Grafana scrape-status dashboard panel | Done | vpn-overview: Scrape targets up/down |
 | 3.8 | OpenAPI/TS types for analytics endpoints | Todo | [analytics-api.md](analytics-api.md) |
-| 3.9 | Expose /_debug/metrics-targets in Admin UI (optional) | Todo | For ops debugging |
+| 3.9 | Expose /_debug/metrics-targets in Admin UI (optional) | Done | Telemetry page link |
 
 ---
 
@@ -101,9 +101,9 @@
 | # | Task | Status | Notes |
 |---|------|--------|-------|
 | 4.1 | Legacy removal plan | Done | [legacy-removal-plan.md](legacy-removal-plan.md) |
-| 4.2 | Remove inventory service (after parity verified) | Todo | docker-compose.observability.yml |
-| 4.3 | Remove or implement correlation_engine | Todo | mapping.json |
-| 4.4 | Remove INVENTORY_DISABLED env var | Todo | When inventory removed |
+| 4.2 | Remove inventory service (after parity verified) | Done | docker-compose.observability.yml |
+| 4.3 | Remove or implement correlation_engine | Done | mapping.json removed |
+| 4.4 | Remove INVENTORY_DISABLED env var | Done | generate_inventory.py no longer checks it |
 | 4.5 | Consolidate/supersede obsolete observability docs | Partial | system-map.md removed; others as needed |
 | 4.6 | CHANGELOG migration note | Todo | When legacy removed |
 | 4.7 | Grep proof: no references to old pipeline | Todo | Verification |
@@ -131,6 +131,7 @@
 | 6.3 | Alertmanager: wire to notification channels | Todo | Slack/PagerDuty/email |
 | 6.4 | SLO dashboards (availability, latency) | Todo | [slos.md](slos.md) |
 | 6.5 | Trace drilldown from logs (Loki ↔ Tempo) | Todo | When traces instrumented |
+| 6.6 | Alertmanager: configure SMTP receiver (when server available) | Todo | Email notifications pending SMTP server |
 
 ---
 
@@ -178,12 +179,12 @@
 ## Todo Summary (Trackable)
 
 ```
-Phase 2.1: [ ] 2.1.1–2.1.10  (labels, wg-exporter, OTEL instrumentation)
-Phase 2.2: [x] 2.2.1–2.2.3   [ ] 2.2.4–2.2.5  (trace flow)
-Phase 2.3: [ ] 2.3.1–2.3.6   (365d retention, archive)
-Phase 2.4: [x] 2.4.1–2.4.2   [ ] 2.4.3–2.4.4
-Phase 3:   [x] 3.1–3.3       [ ] 3.4–3.9
-Phase 4:   [x] 4.1           [ ] 4.2–4.7
+Phase 2.1: [x] 2.1.1–2.1.4, 2.1.6–2.1.7  [ ] 2.1.3, 2.1.5, 2.1.8–2.1.10
+Phase 2.2: [x] 2.2.1–2.2.5
+Phase 2.3: [x] 2.3.1–2.3.4, 2.3.6  [ ] 2.3.5
+Phase 2.4: [x] 2.4.1–2.4.4
+Phase 3:   [x] 3.1–3.7, 3.9  [ ] 3.8
+Phase 4:   [x] 4.1–4.4       [ ] 4.5–4.7
 Phase 5:   [ ] 5.1–5.5       (multi-node)
 Phase 6:   [ ] 6.1–6.5       (dashboards, alerts)
 Phase 7:   [ ] 7.1–7.5       (security)

@@ -10,6 +10,8 @@
 | Component            | Responsibility                                            | Ports                         | Notes                                                                         |
 | -------------------- | --------------------------------------------------------- | ----------------------------- | ----------------------------------------------------------------------------- |
 | **Prometheus**       | Scrape metrics, evaluate alerts, store TSDB               | 9090                          | Primary metrics store. Scrapes via file_sd targets.                           |
+| **Alertmanager**     | Alert notifications                                        | 9093                          | Receives alerts from Prometheus; configure receivers per environment.         |
+| **VictoriaMetrics**  | Long-term metrics storage (remote_write target)           | 8428                          | Receives remote_write from Prometheus; optional query source in Grafana.      |
 | **Loki**             | Log aggregation, indexing, query                          | 3100                          | Existing. Receives from Promtail.                                             |
 | **Promtail**         | Ship Docker container logs → Loki                         | 9080                          | Existing.                                                                     |
 | **Tempo**            | Trace storage and query                                   | 3200 (HTTP), 4317 (OTLP gRPC) | New. Receives OTLP from OTEL Collector / instrumented services.               |
@@ -19,17 +21,17 @@
 | **wg-exporter**      | Expose WireGuard metrics via `wg show dump`               | 9586                          | Per VPN node (host-bound).                                                    |
 
 
-**Metrics flow:** Services expose `/metrics` → Prometheus scrapes (file_sd) → Grafana / Admin API.
+**Metrics flow:** Services expose `/metrics` → Prometheus scrapes (file_sd) → Grafana / Admin API; Prometheus remote_write → VictoriaMetrics (long-term store).
 
 **Logs flow:** Docker containers → Promtail → Loki → Grafana.
 
-**Traces flow (target):** admin-api, bot (OTLP) → OTEL Collector → Tempo → Grafana. *Not yet implemented.*
+**Traces flow (current, optional):** admin-api, bot (OTLP) → OTEL Collector → Tempo → Grafana. Enabled when `OTEL_TRACES_ENDPOINT` is set; end-to-end validation still required.
 
 ---
 
 ## 2. Metrics Strategy
 
-- **Storage:** Prometheus (no VictoriaMetrics/Mimir for now; add remote_write later if retention exceeds local disk).
+- **Storage:** Prometheus as primary; remote_write to VictoriaMetrics is configured in the monitoring profile for long-term retention. Mimir is still an optional future replacement.
 - **Scraping:** Prometheus scrapes Prometheus-format endpoints. OTEL Collector does **not** scrape metrics—Prometheus scrape is simpler and already working (`[prometheus.yml](../../config/monitoring/prometheus.yml)`).
 - **OTEL for metrics:** Deferred. Services use `prometheus_client`; adding OTLP metrics would require dual-write or migration. Documented as future work.
 
@@ -39,7 +41,7 @@
 
 - **Backend:** Grafana Tempo (OTLP-native, Docker Compose–friendly).
 - **Ingestion:** OTEL Collector receives OTLP gRPC/HTTP, exports to Tempo.
-- **Instrumentation:** admin-api and telegram-vpn-bot add OpenTelemetry Python SDK; export OTLP to OTEL Collector. node-agent and wg-exporter stay metrics-only (no tracing).
+- **Instrumentation:** admin-api and telegram-vpn-bot use OpenTelemetry Python SDK; export OTLP to OTEL Collector when `OTEL_TRACES_ENDPOINT` is set. node-agent and wg-exporter stay metrics-only (no tracing).
 - **Feasibility:** Python services can use `opentelemetry-instrumentation-fastapi`, `opentelemetry-exporter-otlp`. Caddy has no OTLP support—excluded from tracing.
 
 ---
@@ -78,11 +80,11 @@ Admin Dashboard **must not** scrape Prometheus from the browser. Backend exposes
 | `GET /api/v1/telemetry/docker/`*       | Container metrics, logs (when `DOCKER_TELEMETRY_HOSTS_JSON` set) | `[telemetry_docker.py](../../backend/app/api/v1/telemetry_docker.py)` |
 
 
-**Target additions (Phase 3):**
+**Implemented (Phase 3):**
 
-- `GET /admin/api/metrics/kpis` — normalized KPIs (request rate, error rate, latency).
-- `GET /admin/api/telemetry/services` — per-service up/down, last scrape, CPU/RAM.
-- Caching for heavy Prometheus queries (short TTL).
+- `GET /api/v1/analytics/metrics/kpis` — normalized KPIs (request rate, error rate, p95 latency).
+- `GET /api/v1/analytics/telemetry/services` — per-service up/down, last scrape.
+- Caching for heavy Prometheus queries (30s TTL).
 - Graceful degradation when `TELEMETRY_PROMETHEUS_URL` unset or Prometheus down.
 
 ---
@@ -93,9 +95,9 @@ Admin Dashboard **must not** scrape Prometheus from the browser. Backend exposes
 
 | Data type | Retention | Archive after | Notes |
 |-----------|-----------|---------------|-------|
-| Metrics   | 365d      | 365d          | Use VictoriaMetrics or Prometheus `remote_write` + long-term store |
-| Logs      | 365d      | 365d          | Loki `retention_period`, compact to object storage |
-| Traces    | 365d      | 365d          | Tempo local or object-storage backend |
+| Metrics   | 365d      | 365d          | Prometheus: `--storage.tsdb.retention.time=365d`. Remote write to VictoriaMetrics is enabled in `prometheus.yml`. |
+| Logs      | 365d      | 365d          | Loki `retention_period` (e.g. 8760h), compact to object storage |
+| Traces    | 365d      | 365d          | Tempo: `block_retention` in compaction/overrides. Local or object-storage backend. |
 
 **Archive:** See [archive-pipeline.md](archive-pipeline.md). Loki: S3 schema or sync job. Tempo: S3/GCS backend. Prometheus: document migration path (Thanos/VM/Mimir).
 
@@ -119,7 +121,7 @@ So we **cannot** derive a true "total bytes over 365 days" from raw `wireguard_r
 
 **wg-exporter:** Exposes counters as `# TYPE wireguard_received_bytes counter` / `wireguard_sent_bytes counter` ([`wg_exporter.py`](../../monitoring/wg-exporter/wg_exporter.py)). Do **not** change to gauge — counters allow correct `rate()`/`increase()` semantics.
 
-**Implementation:** For 365d metrics retention, add to Prometheus: `--storage.tsdb.retention.time=365d` (or use VictoriaMetrics `-retentionPeriod=12` for 12 months). For Loki: `retention_period: 8760h` (365 days) in config. For Tempo: `compactor.compaction.block_retention: 8760h`.
+**Implementation:** For 365d metrics retention, set Prometheus `--storage.tsdb.retention.time=365d` and VictoriaMetrics `-retentionPeriod=365d` in the monitoring profile. For Loki: `retention_period: 8760h` (365 days) in config. For Tempo: `compactor.compaction.block_retention: 8760h`.
 
 ---
 
@@ -128,15 +130,16 @@ So we **cannot** derive a true "total bytes over 365 days" from raw `wireguard_r
 
 | Label / Attribute       | Meaning                                                          | Example                                                      |
 | ----------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------ |
-| `service.name`          | Logical service name                                             | `admin-api`, `telegram-vpn-bot`, `node-agent`, `wg-exporter` |
-| `env`                   | Deployment environment                                           | `prod`, `stage`, `dev`                                       |
+| `service_name`          | Prometheus service label (metrics)                               | `admin-api`, `telegram-vpn-bot`, `node-agent`, `wg-exporter` |
+| `service.name`          | OpenTelemetry resource attribute (traces)                        | `admin-api`, `telegram-vpn-bot`                              |
+| `env`                   | Deployment environment                                           | `production`, `staging`, `development`                       |
 | `node_id`               | VPN node identifier (from `/etc/vpn-suite/node-id` or Server.id) | `vpn-node-1`                                                 |
 | `instance`              | Scrape target (host:port)                                        | `admin-api:8000`                                             |
 | `job`                   | Prometheus job name (maps to service)                            | `admin-api`, `wg-exporter`                                   |
 | `version` / `build_sha` | Application version                                              | From `API_VERSION` or CI `GITHUB_SHA`                        |
 
 
-**Application:** Add `service.name`, `env`, `node_id` via Prometheus `relabel_configs` or exporter instrumentation. wg-exporter to add `instance` and `node_id` (from env).
+**Application:** Prometheus uses `service_name` via relabels; OTEL uses `service.name` in tracing resources. Ensure `env` and `node_id` are consistently populated via relabels or exporter instrumentation.
 
 ---
 
@@ -148,7 +151,7 @@ So we **cannot** derive a true "total bytes over 365 days" from raw `wireguard_r
 | Prometheus                             | None (internal network)      | Binds 127.0.0.1:19090 on host (`[docker-compose.yml](../../docker-compose.yml)` L224) |
 | Loki                                   | None                         | 127.0.0.1:3100                                                                        |
 | Grafana                                | `GF_SECURITY_ADMIN_PASSWORD` | 127.0.0.1:3000                                                                        |
-| OTEL Collector (future)                | None for OTLP (internal)     | Listen on container network only                                                      |
+| OTEL Collector                          | None for OTLP (internal)     | Listen on container network only                                                      |
 | Metrics endpoints (`/metrics`)         | None                         | Scraped from internal Docker network only                                             |
 | Admin API (`TELEMETRY_PROMETHEUS_URL`) | Backend server-side only     | No browser CORS to Prometheus                                                         |
 
@@ -161,7 +164,6 @@ So we **cannot** derive a true "total bytes over 365 days" from raw `wireguard_r
 
 1. **Phase 2a:** Wire discovery-runner into manage.sh; ensure targets.json includes wg-exporter, node-agent.
 2. **Phase 2b:** Add standard labels (`service.name`, `env`) to Prometheus relabel_configs.
-3. **Phase 2c:** Add OTEL Collector + Tempo; instrument admin-api with OTLP traces.
+3. **Phase 2c:** Verify OTEL Collector + Tempo and enable OTLP traces by setting `OTEL_TRACES_ENDPOINT` on admin-api/bot.
 4. **Phase 3:** Implement Analytics Gateway endpoints; UI loading/error states.
 5. **Phase 4:** Legacy cleanup after parity verified.
-

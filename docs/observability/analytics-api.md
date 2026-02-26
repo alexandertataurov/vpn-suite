@@ -9,6 +9,7 @@ Stable endpoints for Admin Dashboard. Server-side queries to Prometheus; no brow
 | GET | `/api/v1/analytics/telemetry/services` | Per-service scrape status (up/down, lastScrape) |
 | GET | `/api/v1/overview/health-snapshot` | Telemetry freshness, incidents, sessions |
 | GET | `/api/v1/overview/operator` | Operator dashboard (KPIs, cluster matrix, timeseries) |
+| GET | `/api/v1/analytics/metrics/kpis` | Aggregated KPIs: request rate, error rate, p95 latency |
 | GET | `/api/v1/_debug/metrics-targets` | Raw Prometheus targets (debug) |
 
 ## Response: `/api/v1/analytics/telemetry/services`
@@ -40,3 +41,35 @@ When Prometheus is unavailable:
 ```
 
 **Caching:** 30s TTL for targets response.
+
+---
+
+## Response: `/api/v1/analytics/metrics/kpis`
+
+Aggregated KPIs from Prometheus (request rate over 5m, 5xx error rate, p95 latency). Cached 30s. Requires cluster-read permission.
+
+**Success (Prometheus available):**
+
+```json
+{
+  "request_rate_5m": 1.5,
+  "error_rate_5m": 0.01,
+  "latency_p95_seconds": 0.12
+}
+```
+
+- `request_rate_5m`: requests/sec (5m rate).
+- `error_rate_5m`: fraction of 5xx (0–1).
+- `latency_p95_seconds`: 95th percentile request duration in seconds.
+
+**Degraded (Prometheus unset or unreachable):**
+
+```json
+{
+  "request_rate_5m": null,
+  "error_rate_5m": null,
+  "latency_p95_seconds": null
+}
+```
+
+**Caching:** 30s TTL. On fetch failure, endpoint returns nulls (graceful degradation).

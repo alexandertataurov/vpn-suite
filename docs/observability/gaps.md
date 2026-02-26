@@ -8,13 +8,13 @@
 
 | # | Gap | Evidence |
 |---|-----|----------|
-| 1 | **manage.sh up-monitoring does NOT start discovery-runner** | [`manage.sh`](../../manage.sh) L56 runs `prometheus cadvisor node-exporter loki promtail grafana` only. discovery-runner lives in [`docker-compose.observability.yml`](../../docker-compose.observability.yml). Default `manage.sh` uses single [`docker-compose.yml`](../../docker-compose.yml); observability compose not wired. |
+| 1 | **manage.sh up-monitoring does NOT start discovery-runner** | **Status: fixed.** [`manage.sh`](../../manage.sh) now wires observability compose and includes `discovery-runner` (and tempo, otel-collector) in the monitoring profile. See [runbook-observability.md](runbook-observability.md). |
 | 2 | **TELEMETRY_PROMETHEUS_URL empty by default** | [`.env.example`](../../.env.example) L47: `TELEMETRY_PROMETHEUS_URL=`. Admin overview/operator and health-snapshot return degraded/missing when unset ([`config.py`](../../backend/app/core/config.py) L74). |
-| 3 | **No tracing** | No OTel, Tempo, or Jaeger. [`docs/observability/diagnostics-upgrade-report.md`](diagnostics-upgrade-report.md) L92: "OpenTelemetry \| Not integrated". |
+| 3 | **Tracing optional (verify per environment)** | OTEL tracing is present for admin-api and bot; enable with `OTEL_TRACES_ENDPOINT` and verify end-to-end (admin-api/bot → otel-collector → Tempo). See [`docker-compose.yml`](../../docker-compose.yml) and [`config/monitoring/otel-collector/config.yaml`](../../config/monitoring/otel-collector/config.yaml). |
 | 4 | **node-agent / wg-exporter conditional** | discovery-runner adds node-agent, telegram-vpn-bot, wg-exporter targets only when containers detected ([`ops/discovery/__main__.py`](../../ops/discovery/__main__.py) L95–114). Without discovery-runner, static targets.json may omit them. |
 | 5 | **reverse-proxy has no metrics** | Caddy exposes no Prometheus metrics. |
 | 6 | **Docker telemetry optional** | `DOCKER_TELEMETRY_HOSTS_JSON` empty = Telemetry > Docker Services disabled ([`telemetry_docker.py`](../../backend/app/api/v1/telemetry_docker.py)). |
-| 7 | **correlation_engine stub** | [`correlation_engine.py`](../../ops/discovery/correlation_engine.py): `correlate()` returns `[]`; mapping.json stays empty. |
+| 7 | **correlation_engine stub** | **Status: fixed.** `mapping.json` emission removed (correlation was a stub and unused). See [`ops/discovery/run_loop.py`](../../ops/discovery/run_loop.py) and [`ops/discovery/__main__.py`](../../ops/discovery/__main__.py). |
 
 ---
 
@@ -22,7 +22,7 @@
 
 - Prometheus jobs use `sd_job` and `host_id` from file_sd ([`prometheus.yml`](../../config/monitoring/prometheus.yml), [`__main__.py`](../../ops/discovery/__main__.py) L90–95).
 - Backend metrics use `path_template`, `status_class`, `method` ([`prometheus_middleware.py`](../../backend/app/core/prometheus_middleware.py) L12–18).
-- **Missing:** No standardized `service.name`, `env`, `node_id`, `version` labels across exporters.
+- **Missing:** `version` labels are not standardized across exporters (admin-api exposes version; others do not). `env` defaults to `external_labels.env` and should be set per deployment; Prometheus uses `service_name` (not `service.name`).
 
 ---
 
@@ -36,7 +36,7 @@
 
 | # | Gap | Evidence |
 |---|-----|----------|
-| 8 | **wg-exporter missing labels** | No `instance`, `node_id`, or `server_id` to correlate with control-plane topology. |
+| 8 | **wg-exporter labels depend on env** | `node_id`/`server_id` are supported but empty unless `NODE_ID`/`SERVER_ID` are set on the exporter. |
 | 9 | **Per-peer metadata not exported** | `awg show dump` has endpoint, allowed_ips; wg-exporter only exposes rx/tx/handshake ([`wg_exporter.py`](../../monitoring/wg-exporter/wg_exporter.py) L39–59). |
 | 10 | **wg-exporter host-bound** | Must run on each VPN node. Discovery adds `host.docker.internal:9586` when reachable ([`__main__.py`](../../ops/discovery/__main__.py) L110–114). Multi-node requires wg-exporter per host. |
 
@@ -46,7 +46,7 @@
 
 | Risk | Cause | Mitigation |
 |------|-------|------------|
-| Scrape failures invisible | Prometheus `up{job="..."}==0` exists in alert_rules but no dashboard for scrape status | Add scrape-status panel; expose `/_debug/metrics-targets` in Admin UI |
+| Scrape failures invisible | Prometheus `up{job="..."}==0` exists in alert_rules but no dashboard for scrape status | **Mitigated:** ScrapeStatusPanel in Admin Telemetry page; "Debug: raw Prometheus targets" link to `/_debug/metrics-targets`; Grafana VPN Overview has "Scrape targets up/down" panels. |
 | Admin dashboard degrades silently | `TELEMETRY_PROMETHEUS_URL` empty → overview/operator returns degraded; UI may not show explicit error | Ensure UI shows "metrics unavailable" when `metrics_freshness` is missing/degraded ([`overview.py`](../../backend/app/api/v1/overview.py)) |
 | discovery-runner not running | manage.sh up-monitoring never starts it; targets.json stale | Wire observability compose into manage.sh or document explicit compose command |
 

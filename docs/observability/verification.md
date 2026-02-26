@@ -72,6 +72,27 @@ curl -s http://localhost:3200/ready
 
 **Expected:** 200.
 
+Generate a few requests (to produce spans), then confirm Tempo ingestion counters increase:
+
+```bash
+curl -s http://localhost:8000/health >/dev/null
+curl -s http://localhost:8000/api/v1/overview/health-snapshot >/dev/null || true
+curl -s http://localhost:8090/healthz >/dev/null
+curl -s http://localhost:3200/metrics | rg -n 'tempo_distributor_spans_received_total|tempo_ingester_traces_created_total'
+```
+
+**Expected:** `tempo_distributor_spans_received_total{tenant="single-tenant"} > 0` and `tempo_ingester_traces_created_total > 0`.
+
+If the counters are zero, ensure `OTEL_TRACES_ENDPOINT=otel-collector:4317` is set for admin-api and bot (monitoring profile).
+
+Optional: confirm search returns recent traces:
+
+```bash
+curl -s 'http://localhost:3200/api/search?limit=5' | jq '.traces[0:3]'
+```
+
+**Expected:** `rootServiceName` and `rootTraceName` populated for recent requests.
+
 ---
 
 ## 6. Analytics gateway
@@ -79,9 +100,10 @@ curl -s http://localhost:3200/ready
 ```bash
 # Requires auth token
 curl -s -H "Authorization: Bearer <JWT>" http://localhost:8000/api/v1/analytics/telemetry/services | jq '.'
+curl -s -H "Authorization: Bearer <JWT>" http://localhost:8000/api/v1/analytics/metrics/kpis | jq '.'
 ```
 
-**Expected:** `{"services": [...], "prometheus_available": true}` or `"prometheus_available": false` with message when Prometheus unset.
+**Expected:** Telemetry services: `{"services": [...], "prometheus_available": true}` or `"prometheus_available": false` when Prometheus unset. KPIs: `{"request_rate_5m": <float|null>, "error_rate_5m": <float|null>, "latency_p95_seconds": <float|null>}`; nulls when Prometheus unavailable.
 
 ---
 
@@ -94,3 +116,13 @@ curl -s http://localhost:8090/healthz
 ```
 
 **Expected:** 200, JSON with `status: ok`.
+
+---
+
+## 8. Alertmanager (optional)
+
+```bash
+curl -s http://localhost:19093/-/ready
+```
+
+**Expected:** 200. Default config uses a no-op receiver; configure `config/monitoring/alertmanager.yml` for notifications.

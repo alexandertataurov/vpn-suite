@@ -99,19 +99,40 @@ Prometheus has no native S3 export. Options:
 
 ## 6. Cron / Runbook
 
-1. **Loki:** If using Option B, add cron:
+### 6.1 One-shot archive jobs (Docker Compose)
+
+For local/prod ops, you can run one-shot archive jobs (requires AWS creds + bucket env vars in `.env`):
+
+```bash
+cd /opt/vpn-suite
+
+# Metrics (Prometheus TSDB blocks) → S3
+docker compose -f docker-compose.yml -f docker-compose.observability.yml --profile archive run --rm prometheus-archive
+
+# Logs (Loki chunks) → S3
+docker compose -f docker-compose.yml -f docker-compose.observability.yml --profile archive run --rm loki-archive
+
+# Traces (Tempo blocks) → S3
+docker compose -f docker-compose.yml -f docker-compose.observability.yml --profile archive run --rm tempo-archive
+```
+
+### 6.2 Cron (optional)
+
+1. **Loki:** If using filesystem storage + sync, add cron:
    ```cron
    0 2 * * * /opt/vpn-suite/scripts/archive-loki-to-s3.sh
    ```
    Script: sync chunks older than 350d to S3, then let compactor delete.
 
-2. **Tempo:** Switch config to S3 backend; restart. No cron — Tempo writes directly to S3.
+2. **Tempo:** Either run `tempo-archive` (above) or switch config to S3 backend; restart. No cron — Tempo writes directly to S3.
 
-3. **Prometheus:** Defer until Thanos/VM/Mimir adopted.
+3. **Prometheus:** Either run `prometheus-archive` (above) to sync raw TSDB blocks, or migrate to Thanos/VM/Mimir for long-term archive/query.
 
 ---
 
 ## 7. Scripts Stub
 
-- `scripts/archive-loki-to-s3.sh` — Template for rclone/aws s3 sync of Loki chunks (create when S3 profile enabled).
+- `scripts/archive-loki-to-s3.sh` — Sync Loki chunks from `/tmp/loki/chunks` (docker volume) to S3.
+- `scripts/archive-tempo-to-s3.sh` — Sync Tempo blocks from `/var/tempo/blocks` (docker volume) to S3.
+- `scripts/archive-prometheus-to-s3.sh` — Sync Prometheus TSDB blocks from `/prometheus` (docker volume) to S3 (raw blocks; excludes WAL/head).
 - See `scripts/` for existing ops scripts.

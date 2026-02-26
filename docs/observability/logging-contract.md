@@ -11,15 +11,16 @@ All services should emit structured logs (JSON recommended) with:
 | message | Always | Human-readable message |
 | logger | Always | Logger name (e.g. module) |
 | service | When available | Service name (e.g. admin-api, telegram-vpn-bot) |
-| env | When available | Environment (e.g. production, development) |
+| env | When available | Environment (e.g. production, staging, development) |
 | version | When available | App version |
 | request_id | Request scope | Correlation ID for the request |
-| trace_id | Request scope | Same as request_id if no OpenTelemetry |
+| trace_id | Request scope | OTEL trace id when tracing is enabled |
+| correlation_id | Request scope | Same as request_id (or trace_id when no request_id) |
 | path / route | Request scope | Request path or path template |
 | duration_ms | Request scope | Request duration in milliseconds |
 | status_code | Request scope | HTTP status (e.g. 200, 500) |
-| error_type | On error | Code (e.g. INTERNAL_ERROR, UNAUTHORIZED) |
-| error_message | On error | Redacted error message |
+| error.kind | On error | Category (e.g. auth, db, external) |
+| error.code | On error | Code (e.g. E_AUTH_INVALID, E_DB_TIMEOUT) |
 | exception | On exception | Stack trace (server-side only) |
 
 ## Log levels

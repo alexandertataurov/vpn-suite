@@ -13,7 +13,8 @@ Structured logging standard for debuggability, auditability, and incident resist
 | timestamp | Always | ISO8601 (e.g. `2025-02-21T12:00:00.000Z`) |
 | level | Always | `debug`, `info`, `warn`, `error`, `fatal` |
 | service | Always | Service name (`admin-api`, `telegram-vpn-bot`, `node-agent`) |
-| env | Always | `dev`, `stage`, `prod` |
+| env | Always | `development`, `staging`, `production` |
+| request_id | Request scope | Request ID (UUID) when available |
 | version | When available | Git SHA or release version |
 | event | Always | Stable event name (see taxonomy below) |
 | message | Always | Human-readable message |
@@ -27,7 +28,7 @@ Structured logging standard for debuggability, auditability, and incident resist
 | entity_id | When relevant | `order_id`, `server_id`, `peer_id`, etc. |
 | error.kind | On error | Error category |
 | error.code | On error | Machine-readable code (e.g. `E_AUTH_INVALID`) |
-| error.stack | On error | Stack trace (server-side only, redacted) |
+| exception | On error | Stack trace (server-side only, redacted) |
 
 ---
 
@@ -123,7 +124,7 @@ Structured logging standard for debuggability, auditability, and incident resist
 | E_NOT_FOUND | not_found | warn | false | Resource not found |
 | E_CONFLICT | conflict | warn | false | Resource conflict |
 
-Each error log must include: `error.code`, `error.kind`, `error.severity`, `error.retryable`, `error.user_safe_message`.
+Each error log must include: `error.code`, `error.kind`, `error.severity`, `error.retryable` (and `exception` when available).
 
 ---
 

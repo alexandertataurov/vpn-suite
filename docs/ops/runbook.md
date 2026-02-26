@@ -39,6 +39,8 @@ Node (per server): `cd /opt/amnezia/amnezia-awg2 && ./manage.sh up|down`
 
 **OverviewOperatorHigh5xxRate:** Check logs for `/api/v1/overview/operator`; use request_id from UI banner; validate Prometheus availability and degraded payload (`data_status`).
 
+**VPN no traffic (handshake OK):** [no-traffic-troubleshooting.md](no-traffic-troubleshooting.md) § Deep debug (AmneziaWG in Docker) — classification, diagnostics (wg show, NAT, Docker network mode, MTU), request-3-things for remote support, minimal fix plan. **NAT:** Run `sudo ./ops/amnezia-nat-setup.sh` on the VPN host to add MASQUERADE for tunnel subnets.
+
 **DNS / ERR_NAME_NOT_RESOLVED triage (P0):**
 - Run `./ops/dns_synthetic_check.sh vpn.vega.llc 185.139.228.171`.
 - Verify resolver answers manually:

@@ -7,7 +7,7 @@
 ## Scope
 
 - **Primary stack:** vpn-suite ([`vpn-suite/`](../../vpn-suite))
-- **VPN data-plane:** amnezia-awg2 ([`amnezia/amnezia-awg2/`](../../amnezia/amnezia-awg2)) — critical, metrics-heavy
+- **VPN data-plane:** amnezia-awg2 (external repo at `/opt/amnezia/amnezia-awg2`) — critical, metrics-heavy
 - **Related:** openclaw, n8n
 
 ---
@@ -20,14 +20,16 @@ Sources: [`docker-compose.yml`](../../docker-compose.yml), [`docker-compose.obse
 
 | Service | Path | Lang/Runtime | Ports | Health | Metrics | Logs | Tracing | Profile |
 |---------|------|--------------|-------|--------|---------|------|---------|---------|
-| **admin-api** | backend/ | Python 3.12, FastAPI | 127.0.0.1:8000 | `GET /health`, `/health/ready` (L71–75) | `GET /metrics` prometheus_client (L251) | JSON + request_id | trace_id = request_id; no OTel | core |
+| **admin-api** | backend/ | Python 3.12, FastAPI | 127.0.0.1:8000 | `GET /health`, `/health/ready` (L71–75) | `GET /metrics` prometheus_client (L251) | JSON + request_id | OTEL optional (`OTEL_TRACES_ENDPOINT`); otherwise trace_id=request_id | core |
 | **reverse-proxy** | docker/reverse-proxy/ | Caddy | 80, 443, 8443 | curl `/health` → admin-api (L108–109) | None | Caddy stdout | None | core |
 | **postgres** | — | Postgres image | internal | pg_isready (L159) | None | Container only | None | core |
 | **redis** | — | Redis image | internal | redis-cli ping (L176) | None | Container only | None | core |
-| **telegram-vpn-bot** | bot/ | Python, aiohttp | 127.0.0.1:8090 | `/healthz` (L207) | `GET /metrics` bot_requests_total (L80–81) | structlog JSON | None | core |
+| **telegram-vpn-bot** | bot/ | Python, aiohttp | 127.0.0.1:8090 | `/healthz` (L207) | `GET /metrics` bot_requests_total (L80–81) | structlog JSON | OTEL optional (`OTEL_TRACES_ENDPOINT`) | core |
 | **admin-ip-watcher** | scripts/ | docker:24-cli | — | File-based (L138) | None | stdout | None | core |
 | **node-agent** | node-agent/ | Python | 9105 | `/healthz` (L777–806) | `GET /metrics` (L777) | minimal stdout | None | agent |
 | **prometheus** | — | prom/prometheus | 127.0.0.1:19090→9090 | — | self | — | None | monitoring |
+| **alertmanager** | — | prom/alertmanager | 127.0.0.1:19093→9093 | — | — | — | None | monitoring |
+| **victoria-metrics** | — | victoriametrics/victoria-metrics | 127.0.0.1:8428 | — | remote_write target | — | None | monitoring |
 | **cadvisor** | — | gcr.io/cadvisor | 127.0.0.1:8080 | — | job `cadvisor` `/metrics` | — | None | monitoring |
 | **node-exporter** | — | prom/node-exporter | 127.0.0.1:9100 | — | job `node-exporter` | — | None | monitoring |
 | **loki** | — | grafana/loki | 127.0.0.1:3100 | — | — | filesystem storage | None | monitoring |
@@ -46,11 +48,11 @@ Sources: [`docker-compose.yml`](../../docker-compose.yml), [`docker-compose.obse
 
 ### 1.2 amnezia-awg2 — VPN server (critical)
 
-**Path:** [`amnezia/amnezia-awg2/`](../../amnezia/amnezia-awg2). **Role:** VPN data-plane; AmneziaWG runs in container.
+**Path:** External repo at `/opt/amnezia/amnezia-awg2`. **Role:** VPN data-plane; AmneziaWG runs in container.
 
 | Component | Metrics source | Current state |
 |-----------|----------------|---------------|
-| **amnezia-awg** container | No native `/metrics` | Health: [`docker-compose.yml`](../../amnezia/amnezia-awg2/docker-compose.yml) L44–49 `awg show <iface>` probe |
+| **amnezia-awg** container | No native `/metrics` | Health: `/opt/amnezia/amnezia-awg2/docker-compose.yml` L44–49 `awg show <iface>` probe |
 | **wg-exporter** (host) | `docker exec <container> wg show <iface> dump` | [`wg_exporter.py`](../../monitoring/wg-exporter/wg_exporter.py) exposes Prometheus metrics |
 | **awg show dump** format | Context7: amnezia-vpn/amneziawg-tools | Tab-separated: peer-pubkey, handshake, rx, tx, listen-port, etc. |
 
@@ -62,7 +64,7 @@ Sources: [`docker-compose.yml`](../../docker-compose.yml), [`docker-compose.obse
 - `wireguard_sent_bytes{peer}` — per-peer TX
 - `wireguard_latest_handshake_seconds{peer}` — seconds since last handshake
 
-**Logs:** Docker json-file, 10m×3 ([`docker-compose.yml`](../../amnezia/amnezia-awg2/docker-compose.yml) L52–56).
+**Logs:** Docker json-file, 10m×3 (`/opt/amnezia/amnezia-awg2/docker-compose.yml` L52–56).
 
 ### 1.3 Other projects
 
@@ -85,6 +87,7 @@ METRICS:
   wg-exporter:9586 ◄──────┼── amnezia-awg (docker exec wg show dump) — VPN server
   (host.docker.internal)  │
                           └──► Prometheus scrapes (15s) ──► Grafana:3000
+                                             └── remote_write ──► VictoriaMetrics:8428
                                                                  │
   admin-api ──► PrometheusQueryService (TELEMETRY_PROMETHEUS_URL) ──► /overview/operator
                                                                       /_debug/metrics-targets
@@ -94,7 +97,8 @@ LOGS:
   Docker containers (*-json.log) ──► Promtail:9080 ──► Loki:3100 ──► Grafana (Loki datasource)
 
 TRACES:
-  None. trace_id = request_id (logging only). No OTel, Tempo, Jaeger.
+  admin-api + bot (OTLP when `OTEL_TRACES_ENDPOINT` set) ──► otel-collector:4317 ──► Tempo:3200 ──► Grafana
+  When disabled, trace_id = request_id (logging only).
 ```
 
 **Configs:**

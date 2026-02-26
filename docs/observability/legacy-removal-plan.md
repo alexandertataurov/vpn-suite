@@ -19,9 +19,9 @@
 
 | Item | Evidence | Action |
 |------|----------|--------|
-| **correlation_engine** | [`correlation_engine.py`](../../ops/discovery/correlation_engine.py): `correlate()` returns `[]` | Either implement or remove call from [`__main__.py`](../../ops/discovery/__main__.py) L147; mapping.json can be omitted. |
+| **correlation_engine** | Removed (stub + unused). | Done: discovery emits only `inventory.json` and `targets.json`. |
 
-**Verification:** discovery still produces targets.json; mapping.json unused by Prometheus.
+**Verification:** discovery still produces `targets.json` (Prometheus file_sd).
 
 ---
 
@@ -60,7 +60,7 @@ None identified. `/metrics-old`, `/stats` (standalone) not present. `referral/st
 
 1. Remove ALERTS volume if ./ALERTS missing (or create dir).
 2. Remove inventory service from docker-compose.observability.yml.
-3. Remove correlation_engine call if mapping.json unused.
+3. Remove correlation_engine call if mapping.json unused. (**Done**)
 4. Update manage.sh if it referenced inventory.
 5. Add CHANGELOG migration note.
 

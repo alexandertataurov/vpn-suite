@@ -30,7 +30,7 @@
 ### 1.3 manage.sh and discovery
 
 - **`./manage.sh up-monitoring`** starts: prometheus, cadvisor, node-exporter, loki, promtail, grafana, **discovery-runner**, wg-exporter, tempo, otel-collector.
-- **Gap (historical):** docs/observability/gaps.md #1 said discovery-runner was not started; **current** [manage.sh L58](manage.sh) includes `discovery-runner` in the list — **fixed**.
+- **Gap (historical):** docs/observability/gaps.md #1 said discovery-runner was not started; **current** [manage.sh](../../manage.sh) includes `discovery-runner` in the monitoring list — **fixed**.
 
 ---
 
@@ -42,7 +42,7 @@
 |-----------|-------------|-----------------|
 | **GlobalDataIndicator** | `GET /overview/health-snapshot` | Badge: "Fresh" / "Stale" / "Error"; shows "Metrics unavailable" when `metrics_freshness` indicates degraded/missing. Tooltip: "Prometheus/metrics unavailable or degraded". |
 
-**Location:** [AdminLayout.tsx](frontend/admin/src/layouts/AdminLayout.tsx) — header area.
+**Location:** [AdminLayout.tsx](../../frontend/admin/src/layouts/AdminLayout.tsx) — header area.
 
 ### 2.2 Telemetry page (`/telemetry`)
 
@@ -66,6 +66,20 @@
 - **Servers table:** Telemetry column uses `/servers/telemetry/summary` and snapshot data; not driven by Prometheus directly.
 - **Server drawer:** `/servers/:id/telemetry` for per-server telemetry.
 - **/_debug/metrics-targets:** Not linked from UI (optional per plan); auth-protected, returns raw targets.
+
+### 2.5 Frontend telemetry/metrics endpoints (single reference)
+
+| API path | Query key | Component | Type |
+|----------|-----------|-----------|------|
+| `GET /overview/health-snapshot` | overview/health-snapshot | GlobalDataIndicator | health |
+| `GET /overview/operator` | OPERATOR_DASHBOARD_KEY | OperatorDashboardContent, VpnNodesTab, TopStatusBar | telemetry / KPIs |
+| `GET /overview/connection_nodes` | CONNECTION_NODES_KEY | ConnectionNodesSection | topology |
+| `GET /analytics/telemetry/services` | ANALYTICS_TELEMETRY_SERVICES_KEY | ScrapeStatusPanel | scrape status |
+| `GET /analytics/metrics/kpis` | ANALYTICS_METRICS_KPIS_KEY | MetricsKpisPanel | metrics KPIs |
+| `GET /servers/telemetry/summary` | (servers list + summary) | useServersTelemetrySummary, Servers table | telemetry summary |
+| `GET /servers/snapshots/summary` | SERVERS_SNAPSHOTS_SUMMARY_KEY | useServersSnapshotSummary | snapshots |
+| `GET /servers/:id/telemetry` | serverTelemetryKey(id) / serversTelemetryKey(id) | ServerRowDrawer, ServerDetail, VpnNodesTab | per-server telemetry |
+| `GET /telemetry/docker/hosts`, `/telemetry/docker/containers`, `/telemetry/docker/container/:id/metrics` | DOCKER_TELEMETRY_KEY | useDockerTelemetry (Docker tab) | Docker metrics |
 
 ---
 

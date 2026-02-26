@@ -89,7 +89,7 @@ Post-implementation report for the diagnostics logging and issue prevention upgr
 | Caddy access logs | No structured correlation with app logs | Add X-Request-ID to Caddy log format; match on request_id |
 | Scripts (seed, node_ops) | Plain text, no event taxonomy | Low priority; run infrequently |
 | DB query slow logging | Not implemented | Add middleware or instrumentation if needed |
-| OpenTelemetry | Not integrated | Future: add OTel for distributed tracing |
+| OpenTelemetry | Partially integrated (admin-api + bot) | Validate end-to-end traces and add dashboards |
 
 ---
 

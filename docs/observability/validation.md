@@ -16,6 +16,3 @@
 - VPN traffic:
   - `vpn_node_traffic_rx_bytes`
   - `vpn_node_traffic_tx_bytes`
-
-## Mapping Check
-- `cat config/monitoring/discovery/mapping.json`

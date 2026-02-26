@@ -41,6 +41,12 @@ Config generation **rejects** (ValueError) if any is missing or invalid:
 - Trailing newline
 - Deterministic key ordering
 
+## No comments or dates in config
+
+- Config text **MUST NOT** include any comment lines, `# Generated`, `; …`, or date/year headers. The generator emits only `[Interface]`, key-value lines, `[Peer]`, and key-value lines.
+- Download filename for one-time config download **MUST** be `client.conf` (no year or date in the filename). Uniqueness is by one-time token only; no date/year in config content or attachment name.
+- Canonical structure (source of truth): `[Interface]` with PrivateKey, Address, DNS, optional MTU, optional AmneziaWG keys (Jc, Jmin, Jmax, S1, S2, H1–H4, …); then `[Peer]` with PublicKey, optional PresharedKey, Endpoint, AllowedIPs, PersistentKeepalive. No other lines.
+
 ## Endpoint Resolution (Priority Order)
 
 1. **client_endpoint** — Optional override in admin Issue Config modal or request body
