@@ -1,6 +1,40 @@
 {
-  "timestamp": "2026-02-26T04:45:57.081110+00:00",
+  "timestamp": "2026-02-26T05:32:42.892671+00:00",
   "nodes": [
+    {
+      "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
+      "node_id": "docker:a471cbc0bc27",
+      "source": "docker",
+      "kind": "unknown",
+      "classification": {
+        "kind": "unknown",
+        "fingerprint_score": 0.0,
+        "network_score": 0.0,
+        "api_match_score": 0.0,
+        "temporal_score": 0.0,
+        "total_confidence": 0.0,
+        "evidence": [],
+        "type": "unknown"
+      },
+      "confidence": 0.1,
+      "evidence": [
+        "no_match"
+      ],
+      "container_id": "a471cbc0bc27",
+      "image": "vpn-suite-admin-api",
+      "created": "2026-02-26T05:25:39.808836456Z",
+      "ports": [
+        {
+          "port": 8000,
+          "protocol": "tcp"
+        }
+      ],
+      "mounts": [
+        "/var/run/docker.sock"
+      ],
+      "interface": null,
+      "public_key": null
+    },
     {
       "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
       "node_id": "docker:6ee251a1078e",
@@ -25,40 +59,6 @@
       "created": "2026-02-26T04:41:39.551707853Z",
       "ports": [],
       "mounts": [],
-      "interface": null,
-      "public_key": null
-    },
-    {
-      "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
-      "node_id": "docker:ca9cd19c33ba",
-      "source": "docker",
-      "kind": "unknown",
-      "classification": {
-        "kind": "unknown",
-        "fingerprint_score": 0.0,
-        "network_score": 0.0,
-        "api_match_score": 0.0,
-        "temporal_score": 0.0,
-        "total_confidence": 0.0,
-        "evidence": [],
-        "type": "unknown"
-      },
-      "confidence": 0.1,
-      "evidence": [
-        "no_match"
-      ],
-      "container_id": "ca9cd19c33ba",
-      "image": "vpn-suite-admin-api",
-      "created": "2026-02-25T20:29:34.25548286Z",
-      "ports": [
-        {
-          "port": 8000,
-          "protocol": "tcp"
-        }
-      ],
-      "mounts": [
-        "/var/run/docker.sock"
-      ],
       "interface": null,
       "public_key": null
     },
@@ -91,11 +91,11 @@
         }
       ],
       "mounts": [
+        "/var/run/docker.sock",
         "/etc/vpn-suite/node-id",
         "/app/secrets/agent_client_cert.pem",
         "/app/secrets/agent_client_key.pem",
-        "/app/secrets/agent_ca.pem",
-        "/var/run/docker.sock"
+        "/app/secrets/agent_ca.pem"
       ],
       "interface": null,
       "public_key": null
@@ -309,13 +309,13 @@
         }
       ],
       "mounts": [
+        "/data",
         "/etc/caddy/Caddyfile",
         "/srv/root",
         "/srv/webapp",
         "/srv/admin",
         "/srv/storybook",
-        "/etc/caddy/agent_ca.pem",
-        "/data"
+        "/etc/caddy/agent_ca.pem"
       ],
       "interface": null,
       "public_key": null
@@ -571,12 +571,12 @@
         }
       ],
       "mounts": [
-        "/etc/prometheus/file_sd",
         "/prometheus",
         "/etc/prometheus/alerts",
         "/etc/prometheus/prometheus.yml",
         "/etc/prometheus/alert_rules.yml",
-        "/etc/prometheus/recording_rules.yml"
+        "/etc/prometheus/recording_rules.yml",
+        "/etc/prometheus/file_sd"
       ],
       "interface": null,
       "public_key": null
@@ -605,10 +605,10 @@
       "created": "2026-02-25T11:54:05.750459699Z",
       "ports": [],
       "mounts": [
+        "/etc/promtail/config.yml",
         "/promtail",
         "/var/log",
-        "/var/lib/docker/containers",
-        "/etc/promtail/config.yml"
+        "/var/lib/docker/containers"
       ],
       "interface": null,
       "public_key": null
@@ -823,8 +823,8 @@
         }
       ],
       "mounts": [
-        "/etc/alertmanager/alertmanager.yml",
-        "/alertmanager"
+        "/alertmanager",
+        "/etc/alertmanager/alertmanager.yml"
       ],
       "interface": null,
       "public_key": null
@@ -892,11 +892,11 @@
         }
       ],
       "mounts": [
+        "/sys",
+        "/var/lib/docker",
         "/dev/disk",
         "/rootfs",
-        "/var/run",
-        "/sys",
-        "/var/lib/docker"
+        "/var/run"
       ],
       "interface": null,
       "public_key": null

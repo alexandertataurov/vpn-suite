@@ -4,6 +4,27 @@ info:
   description: Control plane for commercial VPN (AmneziaWG).
   version: 0.1.0-rc.1
 paths:
+  /api/v1/app/settings:
+    get:
+      tags: [app]
+      summary: Get app settings
+      operationId: get_app_settings
+      responses:
+        '200':
+          description: OK
+  /api/v1/app/settings/cleanup-db:
+    post:
+      tags: [app]
+      summary: Cleanup DB
+      operationId: cleanup_db_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: OK
   /api/v1/auth/login:
     post:
       tags:
@@ -2462,6 +2483,22 @@ paths:
                 $ref: '#/components/schemas/HTTPValidationError'
         default:
           $ref: '#/components/responses/ErrorResponse'
+  /api/v1/servers/{server_id}/rotate-obfuscation-h:
+    post:
+      tags: [servers]
+      summary: Rotate obfuscation H params
+      operationId: rotate_obfuscation_h_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: server_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
   /api/v1/servers/{server_id}/capabilities:
     get:
       tags:
@@ -3352,6 +3389,80 @@ paths:
                 $ref: '#/components/schemas/HTTPValidationError'
         default:
           $ref: '#/components/responses/ErrorResponse'
+  /api/v1/devices/summary:
+    get:
+      tags: [devices]
+      summary: Devices summary
+      operationId: devices_summary_get
+      security:
+      - HTTPBearer: []
+      responses:
+        '200':
+          description: OK
+  /api/v1/devices/{device_id}:
+    get:
+      tags: [devices]
+      summary: Get device
+      operationId: get_device
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: device_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+  /api/v1/devices/{device_id}/reconcile:
+    post:
+      tags: [devices]
+      summary: Reconcile device peer
+      operationId: reconcile_device_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: device_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+  /api/v1/devices/{device_id}/reissue:
+    post:
+      tags: [devices]
+      summary: Reissue device
+      operationId: reissue_device_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: device_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+  /api/v1/devices/{device_id}/sync-peer:
+    post:
+      tags: [devices]
+      summary: Sync device peer
+      operationId: sync_peer_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: device_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
   /api/v1/devices/{device_id}/revoke:
     post:
       tags:
@@ -4185,6 +4296,22 @@ paths:
       security:
       - AgentToken: []
       x-mtls-required: true
+  /api/v1/telemetry/snapshot:
+    get:
+      tags: [telemetry]
+      summary: Telemetry snapshot
+      operationId: telemetry_snapshot_get
+      responses:
+        '200':
+          description: OK
+  /api/v1/telemetry/stream:
+    get:
+      tags: [telemetry]
+      summary: Telemetry stream
+      operationId: telemetry_stream_get
+      responses:
+        '200':
+          description: OK
   /api/v1/telemetry/docker/hosts:
     get:
       tags:

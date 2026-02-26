@@ -33,6 +33,7 @@ If S1, S2, H1–H4 differ between client config and server, the handshake can fa
 
 - Host firewall must allow UDP for the VPN port (e.g. 45790 or 47604).
 - NAT/forwarding must be enabled (e.g. `ip_forward=1`) and the AmneziaWG container configured for forwarding.
+- **Full checklist:** See [server-prerequisites-reconcile.md](server-prerequisites-reconcile.md) (port, forward, NAT, routes, MTU).
 
 ## 5. Endpoint / reachability
 

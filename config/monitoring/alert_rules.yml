@@ -149,6 +149,26 @@ groups:
           summary: "VPN node handshake max age > 1h (peers may appear offline)"
         # Note: only when node-agent /metrics is scraped by Prometheus.
 
+      # State reconciliation: peers expected (from DB) exceed peers present (from wg show)
+      - alert: VpnPeersDrift
+        expr: (vpn_peers_expected - vpn_peers_present) > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "VPN peers expected minus present > 0 on node (reconcile drift or failure)"
+          description: "Node {{ $labels.node_id }} has fewer peers on wireguard than in DB. Check reconcile loop and node reachability."
+
+      # Devices marked NO_HANDSHAKE (no handshake within quality gate after apply)
+      - alert: VpnDevicesNoHandshake
+        expr: vpn_devices_no_handshake > 0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "One or more devices have no handshake within gate (check endpoint, firewall, NAT)"
+          description: "{{ $value }} device(s) in NO_HANDSHAKE state. See docs/ops/no-traffic-troubleshooting.md"
+
   - name: admin-operator
     rules:
       - alert: AdminIssuanceFailuresRepeated
