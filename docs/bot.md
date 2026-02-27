@@ -2,7 +2,7 @@
 
 ## Architecture (aiogram 3.x)
 
-**Handlers:** `start.py` (start, language, main menu), `status.py`, `devices.py`, `install.py`, `help.py`, `support.py`, `tariffs.py` (plans, payment, referral), `extra_commands.py`.
+**Handlers:** `start.py` (start, language, main menu), `status.py`, `devices.py`, `install.py`, `help.py`, `support.py`, `tariffs.py` (plans, payment, referral), `nav.py` (inline menus), `menu_actions.py` (act:*), `fallback.py`.
 
 **API client:** `api_client.py` — single AsyncClient, 3× retry with backoff on 5xx/timeout; returns `Result(success, data, error)`.
 

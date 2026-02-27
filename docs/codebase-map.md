@@ -206,7 +206,7 @@ Pydantic schemas for API: `auth`, `user`, `server`, `server_ip`, `device`, `plan
 
 - **Entry:** `main.py` — aiogram app, /healthz on 8090, PANEL_URL → admin-api
 - **Config:** `config.py`
-- **Handlers:** `start.py`, `tariffs.py`, `status.py`, `install.py`, `devices.py`, `help.py`, `support.py`, `extra_commands.py`
+- **Handlers:** `start.py`, `tariffs.py`, `status.py`, `install.py`, `devices.py`, `help.py`, `support.py`, `nav.py`, `menu_actions.py`, `fallback.py`
 - **Keyboards:** `keyboards/common.py`
 - **Utils:** `messages.py`, `errors.py`, `formatting.py`, `logging.py`, `config_validator.py`, `safe_send.py`
 - **API:** `api_client.py` — calls admin-api (no WG direct)

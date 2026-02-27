@@ -27,6 +27,15 @@ update_and_restart() {
 # Initial sync on start
 update_and_restart
 
+# Keep healthcheck fresh even when no restarts happen
+# (healthcheck expects a recent timestamp in /tmp/admin_ip_watcher.ok)
+(
+  while true; do
+    date +%s > /tmp/admin_ip_watcher.ok
+    sleep 60
+  done
+) &
+
 # Watch admin-api container start events and re-pin
 docker events --filter "container=${ADMIN_CONTAINER}" --filter event=start --format '{{.Status}} {{.ID}}' | \
 while read -r _ _; do

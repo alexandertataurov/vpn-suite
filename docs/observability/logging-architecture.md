@@ -9,7 +9,7 @@ Every log line includes:
 | Field | When | Description |
 |-------|------|-------------|
 | timestamp | Always | ISO8601 UTC |
-| level | Always | debug, info, warn, error |
+| level | Always | DEBUG, INFO, WARN, ERROR, CRITICAL |
 | service | Always | admin-api, telegram-vpn-bot, node-agent |
 | env | Always | development, staging, production |
 | version | When available | Git SHA or release |
@@ -22,9 +22,13 @@ Every log line includes:
 | method | HTTP scope | GET, POST, etc. |
 | status_code | HTTP scope | 200, 404, 500 |
 | duration_ms | Request scope | Duration in ms |
-| error | On error | kind, code, severity, retryable |
+| error | On error | kind, code, severity, retryable; **error_code** in error object |
 | exception | On error | Stack trace (server-side only) |
 | entity_id | When relevant | server_id, order_id, etc. |
+| user_id | When in scope | User ID (if available) |
+| server_id | When in scope | Server/node ID |
+| subscription_id | When in scope | Subscription ID |
+| duration_ms | Request end | Duration in ms (required on request completion) |
 
 ## Correlation-ID Flow
 
