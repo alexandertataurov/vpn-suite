@@ -44,6 +44,15 @@ class CreateInvoiceResponse(BaseModel):
     free_activation: bool = False  # True when plan price is 0; bot should skip invoice
 
 
+class TelegramStarsConfirmRequest(BaseModel):
+    """Payload from bot when Telegram sends successful_payment (Stars)."""
+
+    tg_id: int
+    invoice_payload: str  # payment_id from create-invoice
+    telegram_payment_charge_id: str | None = None
+    total_amount: int | None = None  # Stars
+
+
 class BotRevokeDeviceRequest(BaseModel):
     tg_id: int
 
@@ -57,3 +66,33 @@ class PromoValidateRequest(BaseModel):
     code: str
     plan_id: str
     tg_id: int
+
+
+class TrialStartRequest(BaseModel):
+    tg_id: int
+
+
+class TrialStartResponse(BaseModel):
+    subscription_id: str
+    device_id: str
+    server_id: str
+    server_name: str
+    server_region: str
+    config_awg: str
+    config_wg_obf: str
+    config_wg: str
+    trial_ends_at: str  # ISO datetime
+    peer_created: bool
+
+
+class ChurnSurveyRequest(BaseModel):
+    tg_id: int
+    subscription_id: str | None = None
+    reason: str  # too_expensive | speed_issue | not_needed | other
+
+
+class ChurnSurveyResponse(BaseModel):
+    recorded: bool
+    retention_discount_offered: bool = False
+    pause_offered: bool = False
+    discount_percent: int | None = None

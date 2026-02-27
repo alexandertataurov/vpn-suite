@@ -11,16 +11,47 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.constants import PERM_CLUSTER_READ, PERM_CLUSTER_WRITE
+from app.core.database import get_db
 from app.core.rbac import require_permission
 from app.services.prometheus_query_service import PrometheusQueryService
+from app.services.revenue_analytics_service import get_revenue_snapshot, update_revenue_gauges
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
 
 _CACHE: dict[str, tuple[float, Any]] = {}
+_CACHE_TTL_REVENUE = 3600  # 1h
+
+
+class RevenueSnapshotOut(BaseModel):
+    subscriptions_active: int
+    mrr: float
+    churn_by_reason: dict[str, int]
+    trial_started_30d: int
+    referral_paid_30d: int
+
+
+@router.get("/revenue", response_model=RevenueSnapshotOut)
+async def get_revenue(
+    db: AsyncSession = Depends(get_db),
+    _admin=Depends(require_permission(PERM_CLUSTER_READ)),
+) -> RevenueSnapshotOut:
+    """Revenue KPIs for admin dashboard. Updates Prometheus gauges. Cached 1h."""
+    now = time.time()
+    if "analytics:revenue" in _CACHE:
+        cached_at, value = _CACHE["analytics:revenue"]
+        if now - cached_at < _CACHE_TTL_REVENUE:
+            return RevenueSnapshotOut(**value)
+    snapshot = await get_revenue_snapshot(db)
+    update_revenue_gauges(snapshot)
+    _CACHE["analytics:revenue"] = (now, snapshot)
+    return RevenueSnapshotOut(**snapshot)
+
+
 _CACHE_TTL_SECONDS = 30
 
 

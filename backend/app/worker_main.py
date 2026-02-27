@@ -19,8 +19,12 @@ from app.core.logging_config import configure_logging, extra_for_event, set_log_
 from app.core.node_scan_task import run_node_scan_loop, run_node_scan_once
 from app.core.redaction import redact_for_log
 from app.core.redis_client import check_redis, close_redis, init_redis
+from app.core.anomaly_metrics_task import run_anomaly_metrics_export_loop
+from app.core.revenue_metrics_task import run_revenue_metrics_loop
 from app.core.server_sync_loop import run_server_sync_loop
+from app.core.subscription_expiry_reminder_task import run_subscription_reminder_loop
 from app.core.telemetry_polling_task import run_telemetry_poll_loop
+from app.core.admin_control_center_task import run_admin_control_center_loops
 from app.services.docker_telemetry_service import DockerTelemetryService
 from app.services.node_runtime import TimingNodeRuntimeAdapter
 from app.services.reconciliation_engine import reconcile_all_nodes, run_reconciliation_loop
@@ -56,6 +60,9 @@ async def _run_worker_loops() -> None:
     adapter = TimingNodeRuntimeAdapter(raw_adapter, adapter_name=settings.node_discovery)
     docker_telemetry_service = DockerTelemetryService()
 
+    async def _get_adapter():
+        return adapter
+
     await init_redis()
     redis_ok = await check_redis()
     _log.info(
@@ -67,12 +74,18 @@ async def _run_worker_loops() -> None:
     )
 
     health_task = asyncio.create_task(run_health_check_loop(lambda: adapter))
+    revenue_metrics_task = asyncio.create_task(run_revenue_metrics_loop())
+    anomaly_metrics_task = asyncio.create_task(run_anomaly_metrics_export_loop(_get_adapter))
     docker_alert_task = asyncio.create_task(
         run_docker_alert_poll_loop(lambda: docker_telemetry_service)
     )
     device_expiry_task = asyncio.create_task(run_device_expiry_loop())
+    reminder_task = None
+    if getattr(settings, "telegram_bot_token", None):
+        reminder_task = asyncio.create_task(run_subscription_reminder_loop())
     handshake_gate_task = asyncio.create_task(run_handshake_quality_gate_loop())
     sync_task = asyncio.create_task(run_server_sync_loop(lambda: adapter))
+    admin_control_center_task = asyncio.create_task(run_admin_control_center_loops())
     limits_task = None
     telemetry_task = None
     recon_task = None
@@ -109,6 +122,11 @@ async def _run_worker_loops() -> None:
         await asyncio.Event().wait()
     finally:
         health_task.cancel()
+        revenue_metrics_task.cancel()
+        anomaly_metrics_task.cancel()
+        if reminder_task is not None:
+            reminder_task.cancel()
+        admin_control_center_task.cancel()
         for t in (limits_task, telemetry_task, recon_task, scan_task, sync_task, handshake_gate_task, live_metrics_task):
             if t is not None:
                 t.cancel()
@@ -116,15 +134,19 @@ async def _run_worker_loops() -> None:
         device_expiry_task.cancel()
         for t in (
             health_task,
+            revenue_metrics_task,
+            anomaly_metrics_task,
             limits_task,
             telemetry_task,
             recon_task,
             scan_task,
             device_expiry_task,
+            reminder_task,
             docker_alert_task,
             sync_task,
             handshake_gate_task,
             live_metrics_task,
+            admin_control_center_task,
         ):
             if t is None:
                 continue

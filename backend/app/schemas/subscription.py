@@ -30,6 +30,10 @@ class SubscriptionOut(OrmSchema):
     device_limit: int
     status: str
     created_at: datetime
+    is_trial: bool = False
+    trial_ends_at: datetime | None = None
+    paused_at: datetime | None = None
+    pause_reason: str | None = None
 
     @computed_field  # type: ignore[prop-decorator]
     @property

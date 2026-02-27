@@ -11,20 +11,30 @@ from sqlalchemy.orm import selectinload
 
 from app.core.bot_auth import BotPrincipal, get_admin_or_bot
 from app.core.database import get_db
-from app.models import Device, Payment, Plan, Referral, Server, Subscription, User
+from app.models import ChurnSurvey, Device, IssuedConfig, Payment, Plan, Referral, Server, Subscription, User
 from app.schemas.bot import (
     BotEventRequest,
     BotRevokeDeviceRequest,
+    ChurnSurveyRequest,
+    ChurnSurveyResponse,
     CreateInvoiceRequest,
     CreateInvoiceResponse,
     CreateOrGetSubscriptionRequest,
     CreateOrGetSubscriptionResponse,
     PromoValidateRequest,
     ReferralAttachRequest,
+    TelegramStarsConfirmRequest,
+    TrialStartRequest,
+    TrialStartResponse,
 )
 from app.schemas.subscription import SubscriptionOut
 from app.schemas.user import UserOut
+from app.core.metrics import vpn_revenue_churn_total
 from app.services.funnel_service import log_funnel_event
+from app.services.payment_webhook_service import complete_pending_payment_by_bot
+from app.services.retention_service import pause_subscription, retention_discount_percent
+from app.services.trial_service import start_trial
+from app.services.topology_engine import TopologyEngine
 
 router = APIRouter(prefix="/bot", tags=["bot"])
 
@@ -269,6 +279,29 @@ async def create_invoice(
         subscription_id=sub.id,
         free_activation=is_free,
     )
+
+
+@router.post("/payments/telegram-stars-confirm")
+async def telegram_stars_confirm(
+    body: TelegramStarsConfirmRequest,
+    db: AsyncSession = Depends(get_db),
+    principal=Depends(get_admin_or_bot),
+):
+    """Confirm payment when bot receives successful_payment from Telegram (Stars). Idempotent. Bot only."""
+    _require_bot(principal)
+    ok = await complete_pending_payment_by_bot(
+        db,
+        payment_id=body.invoice_payload,
+        tg_id=body.tg_id,
+        telegram_payment_charge_id=body.telegram_payment_charge_id,
+    )
+    if not ok:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"code": "PAYMENT_NOT_FOUND", "message": "Payment not found or already completed"},
+        )
+    await db.commit()
+    return {"status": "ok", "payment_id": body.invoice_payload}
 
 
 @router.get("/payments/{payment_id}/invoice", response_model=CreateInvoiceResponse)
@@ -531,4 +564,186 @@ async def referral_stats(
         .where(Referral.referrer_user_id == user.id, Referral.reward_applied_at.isnot(None))
     )
     rewarded = rewarded_result.scalar() or 0
-    return {"total_referrals": count, "rewards_applied": rewarded}
+    # Days earned this month (for "Earn Free VPN Days" screen)
+    start_of_month = datetime.now(timezone.utc).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    days_result = await db.execute(
+        select(func.coalesce(func.sum(Referral.reward_days), 0)).select_from(Referral).where(
+            Referral.referrer_user_id == user.id,
+            Referral.reward_applied_at.isnot(None),
+            Referral.reward_applied_at >= start_of_month,
+        )
+    )
+    days_earned_this_month = int(days_result.scalar() or 0)
+    return {
+        "total_referrals": count,
+        "rewards_applied": rewarded,
+        "days_earned_this_month": days_earned_this_month,
+    }
+
+
+@router.post("/trial/start", response_model=TrialStartResponse)
+async def bot_trial_start(
+    request: Request,
+    body: TrialStartRequest,
+    db: AsyncSession = Depends(get_db),
+    principal=Depends(get_admin_or_bot),
+):
+    """Start 24h trial: create user if needed, one trial sub + one device, return configs. Bot only."""
+    _require_bot(principal)
+    tg_id = body.tg_id
+    adapter = getattr(request.app.state, "node_runtime_adapter", None)
+    if adapter is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"code": "UNAVAILABLE", "message": "Trial service not configured"},
+        )
+    engine = TopologyEngine(adapter)
+    get_topology = engine.get_topology
+    try:
+        result = await start_trial(
+            db,
+            tg_id=tg_id,
+            get_topology=get_topology,
+            runtime_adapter=adapter,
+        )
+    except ValueError as e:
+        code = str(e).replace(" ", "_").lower()[:32]
+        if "trial_already_used" in code:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail={"code": "TRIAL_ALREADY_USED", "message": "Trial already used"},
+            ) from e
+        if "trial_plan_not_found" in code:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail={"code": "TRIAL_PLAN_NOT_FOUND", "message": "No trial plan configured"},
+            ) from e
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"code": "BAD_REQUEST", "message": str(e).replace("_", " ")},
+        ) from e
+    import hashlib
+    import secrets
+
+    from app.core.security import encrypt_config
+
+    for profile_type, config_text in [
+        ("awg", result.config_awg),
+        ("wg_obf", result.config_wg_obf),
+        ("wg", result.config_wg),
+    ]:
+        if not config_text:
+            continue
+        token = secrets.token_hex(32)
+        token_hash = hashlib.sha256(token.encode()).hexdigest()
+        db.add(
+            IssuedConfig(
+                device_id=result.device_id,
+                server_id=result.server_id,
+                profile_type=profile_type,
+                download_token_hash=token_hash,
+                config_encrypted=encrypt_config(config_text),
+                issued_by_admin_id=None,
+            )
+        )
+    await db.commit()
+    return TrialStartResponse(
+        subscription_id=result.subscription_id,
+        device_id=result.device_id,
+        server_id=result.server_id,
+        server_name=result.server_name,
+        server_region=result.server_region,
+        config_awg=result.config_awg,
+        config_wg_obf=result.config_wg_obf,
+        config_wg=result.config_wg,
+        trial_ends_at=result.trial_ends_at.isoformat(),
+        peer_created=result.peer_created,
+    )
+
+
+@router.post("/churn-survey", response_model=ChurnSurveyResponse)
+async def bot_churn_survey(
+    body: ChurnSurveyRequest,
+    db: AsyncSession = Depends(get_db),
+    principal=Depends(get_admin_or_bot),
+):
+    """Record churn reason; offer retention discount or pause. Bot only."""
+    _require_bot(principal)
+    user_result = await db.execute(select(User).where(User.tg_id == body.tg_id))
+    user = user_result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"code": "USER_NOT_FOUND", "message": "User not found"},
+        )
+    reason = (body.reason or "").strip().lower().replace(" ", "_")[:32] or "other"
+    if reason not in ("too_expensive", "speed_issue", "not_needed", "other"):
+        reason = "other"
+    subscription_id = body.subscription_id
+    if subscription_id:
+        sub_result = await db.execute(
+            select(Subscription).where(
+                Subscription.id == subscription_id,
+                Subscription.user_id == user.id,
+            )
+        )
+        if sub_result.scalar_one_or_none() is None:
+            subscription_id = None
+    discount_offered = reason == "too_expensive"
+    if discount_offered:
+        try:
+            vpn_revenue_churn_total.labels(reason=reason[:32]).inc()
+        except Exception:
+            pass
+        survey = ChurnSurvey(
+            user_id=user.id,
+            subscription_id=subscription_id,
+            reason=reason,
+            discount_offered=True,
+        )
+        db.add(survey)
+        await db.flush()
+        await db.commit()
+        return ChurnSurveyResponse(
+            recorded=True,
+            retention_discount_offered=True,
+            pause_offered=False,
+            discount_percent=retention_discount_percent(),
+        )
+    if reason == "not_needed" and subscription_id:
+        try:
+            vpn_revenue_churn_total.labels(reason=reason[:32]).inc()
+        except Exception:
+            pass
+        await pause_subscription(
+            db,
+            subscription_id=subscription_id,
+            user_id=user.id,
+            reason=reason,
+        )
+        survey = ChurnSurvey(
+            user_id=user.id,
+            subscription_id=subscription_id,
+            reason=reason,
+            discount_offered=False,
+        )
+        db.add(survey)
+        await db.commit()
+        return ChurnSurveyResponse(
+            recorded=True,
+            retention_discount_offered=False,
+            pause_offered=True,
+        )
+    survey = ChurnSurvey(
+        user_id=user.id,
+        subscription_id=subscription_id,
+        reason=reason,
+        discount_offered=False,
+    )
+    db.add(survey)
+    try:
+        vpn_revenue_churn_total.labels(reason=reason[:32]).inc()
+    except Exception:
+        pass
+    await db.commit()
+    return ChurnSurveyResponse(recorded=True, retention_discount_offered=False, pause_offered=False)

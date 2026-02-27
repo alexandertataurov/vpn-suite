@@ -11,6 +11,15 @@ from fastapi.responses import JSONResponse, Response
 from prometheus_client import REGISTRY, generate_latest
 
 from app.api.v1.actions import router as actions_router
+from app.api.v1.admin_abuse import router as admin_abuse_router
+from app.api.v1.admin_churn import router as admin_churn_router
+from app.api.v1.admin_cohorts import router as admin_cohorts_router
+from app.api.v1.admin_devops import router as admin_devops_router
+from app.api.v1.admin_payments_monitor import router as admin_payments_monitor_router
+from app.api.v1.admin_pricing import router as admin_pricing_router
+from app.api.v1.admin_promos import router as admin_promos_router
+from app.api.v1.admin_revenue import router as admin_revenue_router
+from app.api.v1.admin_retention import router as admin_retention_router
 from app.api.v1.app_settings import router as app_settings_router
 from app.api.v1.admin_configs import router as admin_configs_router
 from app.api.v1.agent import router as agent_router
@@ -212,6 +221,15 @@ app.include_router(auth_router, prefix="/api/v1")
 app.include_router(log_router, prefix="/api/v1")
 app.include_router(overview_router, prefix="/api/v1")
 app.include_router(analytics_router, prefix="/api/v1")
+app.include_router(admin_revenue_router, prefix="/api/v1")
+app.include_router(admin_abuse_router, prefix="/api/v1")
+app.include_router(admin_retention_router, prefix="/api/v1")
+app.include_router(admin_pricing_router, prefix="/api/v1")
+app.include_router(admin_promos_router, prefix="/api/v1")
+app.include_router(admin_payments_monitor_router, prefix="/api/v1")
+app.include_router(admin_churn_router, prefix="/api/v1")
+app.include_router(admin_devops_router, prefix="/api/v1")
+app.include_router(admin_cohorts_router, prefix="/api/v1")
 app.include_router(audit_router, prefix="/api/v1")
 app.include_router(cluster_router, prefix="/api/v1")
 app.include_router(control_plane_router, prefix="/api/v1")

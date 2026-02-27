@@ -213,6 +213,123 @@ payment_webhook_total = Counter(
     ["status"],  # received, processed, failed
 )
 
+# Revenue engine (trial, conversion, churn, referral)
+vpn_revenue_trial_started_total = Counter(
+    "vpn_revenue_trial_started_total",
+    "Trials started",
+)
+vpn_revenue_trial_converted_total = Counter(
+    "vpn_revenue_trial_converted_total",
+    "Trial users who paid",
+)
+vpn_revenue_subscriptions_active = Gauge(
+    "vpn_revenue_subscriptions_active",
+    "Current active (non-trial, non-expired) subscriptions",
+)
+vpn_revenue_mrr = Gauge(
+    "vpn_revenue_mrr",
+    "MRR from active paid subscriptions",
+)
+vpn_revenue_churn_total = Counter(
+    "vpn_revenue_churn_total",
+    "Churn survey submissions",
+    ["reason"],
+)
+vpn_revenue_renewal_total = Counter(
+    "vpn_revenue_renewal_total",
+    "Renewals (payment extending sub)",
+)
+vpn_revenue_referral_signup_total = Counter(
+    "vpn_revenue_referral_signup_total",
+    "Referral signups (referee attached)",
+)
+vpn_revenue_referral_paid_total = Counter(
+    "vpn_revenue_referral_paid_total",
+    "Referrals that converted to paid",
+)
+vpn_revenue_payment_total = Counter(
+    "vpn_revenue_payment_total",
+    "Payments completed",
+    ["plan_id"],
+)
+# Business gauges (updated by revenue metrics task every 5–15 min)
+vpn_revenue_arr = Gauge("vpn_revenue_arr", "ARR from active paid subscriptions")
+vpn_revenue_arpu = Gauge("vpn_revenue_arpu", "ARPU (MRR / active subscriptions)")
+vpn_revenue_conversion_rate = Gauge(
+    "vpn_revenue_conversion_rate",
+    "Trial-to-paid conversion rate (0–100)",
+)
+vpn_revenue_renewal_rate = Gauge(
+    "vpn_revenue_renewal_rate",
+    "Renewal rate (0–100) over window",
+)
+vpn_revenue_churn_rate = Gauge(
+    "vpn_revenue_churn_rate",
+    "Churn rate (0–100) over window",
+)
+vpn_revenue_expiry_forecast_30d = Gauge(
+    "vpn_revenue_expiry_forecast_30d",
+    "Subscriptions expiring in next 30 days",
+)
+vpn_revenue_per_server = Gauge(
+    "vpn_revenue_per_server",
+    "Revenue (MRR share or count) per server",
+    ["server_id"],
+)
+
+# Abuse/anomaly (updated by periodic task)
+vpn_abuse_high_risk_users = Gauge(
+    "vpn_abuse_high_risk_users",
+    "Number of users with high abuse risk score",
+)
+vpn_abuse_medium_risk_users = Gauge(
+    "vpn_abuse_medium_risk_users",
+    "Number of users with medium abuse risk score",
+)
+vpn_anomaly_high_risk_users = Gauge(
+    "vpn_anomaly_high_risk_users",
+    "Number of users with high anomaly risk score",
+)
+vpn_anomaly_score_max = Gauge(
+    "vpn_anomaly_score_max",
+    "Max user anomaly score (0–1)",
+)
+vpn_abuse_signals_total = Counter(
+    "vpn_abuse_signals_total",
+    "Abuse signals created per run",
+    ["severity"],
+)
+vpn_config_regen_cap_hits_total = Counter(
+    "vpn_config_regen_cap_hits_total",
+    "Config regeneration daily cap hit (user blocked)",
+)
+
+# Peer reconciliation: ghost (on node not in DB) and expired-but-active (in DB expired, still on node)
+vpn_peers_ghost_count = Gauge(
+    "vpn_peers_ghost_count",
+    "Peers on node not in DB (ghost/orphan)",
+    ["node_id"],
+)
+vpn_peers_expired_active_count = Gauge(
+    "vpn_peers_expired_active_count",
+    "Peers on node that are expired in DB but still present",
+    ["node_id"],
+)
+
+# Mini App events (dashboard_open, pricing_view, plan_selected)
+miniapp_events_total = Counter(
+    "miniapp_events_total",
+    "Mini App frontend events",
+    ["event"],
+)
+
+# Redis latency (optional; updated by periodic ping)
+redis_latency_seconds = Histogram(
+    "redis_latency_seconds",
+    "Redis ping latency",
+    buckets=(0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0),
+)
+
 provision_failures_total = Counter(
     "provision_failures_total",
     "Provisioning failures (issue, rotate, revoke)",

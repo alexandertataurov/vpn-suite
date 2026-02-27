@@ -9,7 +9,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.config import settings
+from app.core.constants import REDIS_KEY_RATELIMIT_ISSUE_PREFIX
 from app.core.database import get_db
+from app.core.metrics import miniapp_events_total
+from app.core.redis_client import get_redis
 from app.core.security import create_webapp_session_token, decode_token, validate_telegram_init_data
 from app.models import (
     Device,
@@ -21,11 +24,21 @@ from app.models import (
     Server,
     Subscription,
     User,
+    ChurnSurvey,
 )
 from app.api.v1.device_cache import invalidate_devices_list_cache, invalidate_devices_summary_cache
 from app.services.issue_service import issue_device
+from app.services.funnel_service import log_funnel_event
+from app.services.retention_service import (
+    pause_subscription,
+    resume_subscription,
+    retention_discount_percent,
+)
 
 router = APIRouter(prefix="/webapp", tags=["webapp"])
+
+_WEBAPP_SERVER_SELECT_LIMIT = 20
+_WEBAPP_SERVER_SELECT_WINDOW_SECONDS = 60
 
 
 class WebAppAuthRequest(BaseModel):
@@ -119,7 +132,82 @@ async def webapp_me(request: Request, db: AsyncSession = Depends(get_db)):
         }
         for d in user.devices
     ]
+    await log_funnel_event(
+        db,
+        event_type="dashboard_open",
+        user_id=user.id,
+        payload={"source": "webapp"},
+    )
+    miniapp_events_total.labels(event="dashboard_open").inc()
     return {"user": {"id": user.id, "tg_id": user.tg_id}, "subscriptions": subs, "devices": devs}
+
+
+class WebAppTelemetryBody(BaseModel):
+    """Frontend telemetry event."""
+
+    event_type: str
+    payload: dict | None = None
+
+
+class WebAppUsagePoint(BaseModel):
+    ts: datetime
+    bytes_in: int
+    bytes_out: int
+
+
+class WebAppUsageResponse(BaseModel):
+    points: list[WebAppUsagePoint]
+    sessions: int
+    peak_hours: list[int] | None = None
+
+
+@router.post("/telemetry")
+async def webapp_telemetry(
+    body: WebAppTelemetryBody,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    """Log a telemetry event (screen_open, cta_click, etc.). Requires Bearer session token."""
+    tg_id = _get_tg_id_from_bearer(request)
+    if not tg_id:
+        raise HTTPException(
+            status_code=401, detail={"code": "UNAUTHORIZED", "message": "Invalid session"}
+        )
+    result = await db.execute(select(User).where(User.tg_id == tg_id))
+    user = result.scalar_one_or_none()
+    await log_funnel_event(
+        db,
+        event_type=body.event_type,
+        user_id=user.id if user else None,
+        payload=body.payload or {},
+    )
+    await db.commit()
+    return {"ok": True}
+
+
+@router.get("/usage", response_model=WebAppUsageResponse)
+async def webapp_usage(
+    request: Request,
+    range: str = "7d",
+    db: AsyncSession = Depends(get_db),  # noqa: ARG001  (reserved for future aggregation)
+):
+    """Return simple usage summary for the current user (bytes over time, sessions).
+
+    For now, this returns an empty series; future iterations can aggregate from telemetry storage.
+    """
+    tg_id = _get_tg_id_from_bearer(request)
+    if not tg_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"code": "UNAUTHORIZED", "message": "Invalid session"},
+        )
+    if range not in ("7d", "30d"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"code": "BAD_RANGE", "message": "range must be '7d' or '30d'"},
+        )
+    # Placeholder: no per-user traffic aggregation yet.
+    return WebAppUsageResponse(points=[], sessions=0, peak_hours=[])
 
 
 @router.get("/plans")
@@ -132,6 +220,16 @@ async def webapp_list_plans(request: Request, db: AsyncSession = Depends(get_db)
         )
     result = await db.execute(select(Plan).order_by(Plan.id))
     plans = result.scalars().all()
+    user_result = await db.execute(select(User.id).where(User.tg_id == tg_id))
+    user = user_result.scalar_one_or_none()
+    if user:
+        await log_funnel_event(
+            db,
+            event_type="pricing_view",
+            user_id=user,
+            payload={"source": "webapp"},
+        )
+        miniapp_events_total.labels(event="pricing_view").inc()
     return {
         "items": [
             {
@@ -175,6 +273,26 @@ async def webapp_issue_device(
         raise HTTPException(
             status_code=404, detail={"code": "USER_NOT_FOUND", "message": "User not found"}
         )
+    if settings.issue_rate_limit_per_minute > 0:
+        try:
+            r = get_redis()
+            key = f"{REDIS_KEY_RATELIMIT_ISSUE_PREFIX}{user.id}"
+            n = await r.incr(key)
+            if n == 1:
+                await r.expire(key, settings.issue_rate_window_seconds)
+            if n > settings.issue_rate_limit_per_minute:
+                raise HTTPException(
+                    status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                    detail={
+                        "code": "RATE_LIMIT_EXCEEDED",
+                        "message": "Too many device issue requests. Try again later.",
+                    },
+                )
+        except HTTPException:
+            raise
+        except Exception:
+            # Fail-open if Redis unavailable; log at debug level in callers.
+            pass
     now = datetime.now(timezone.utc)
     sub_result = await db.execute(
         select(Subscription)
@@ -196,12 +314,18 @@ async def webapp_issue_device(
 
     engine = TopologyEngine(adapter)
     get_topology = engine.get_topology
+    preferred_server_id: str | None = None
+    meta = user.meta or {}
+    if not meta.get("server_auto_select", True):
+        raw_server_id = str(meta.get("preferred_server_id") or "").strip()
+        if raw_server_id:
+            preferred_server_id = raw_server_id
     try:
         out = await issue_device(
             db,
             user_id=user.id,
             subscription_id=sub.id,
-            server_id=None,
+            server_id=preferred_server_id,
             device_name=f"webapp_{tg_id}",
             get_topology=get_topology,
             runtime_adapter=adapter,
@@ -315,12 +439,38 @@ async def webapp_referral_stats(request: Request, db: AsyncSession = Depends(get
     )
     total = count_result.scalar() or 0
     rewarded_result = await db.execute(
-        select(func.count())
-        .select_from(Referral)
-        .where(Referral.referrer_user_id == user.id, Referral.reward_applied_at.isnot(None))
+        select(
+            func.count(),
+            func.coalesce(func.sum(Referral.reward_days), 0),
+        ).where(
+            Referral.referrer_user_id == user.id,
+            Referral.reward_applied_at.isnot(None),
+        )
     )
-    rewarded = rewarded_result.scalar() or 0
-    return {"total_referrals": total, "rewards_applied": rewarded}
+    rewarded_row = rewarded_result.first()
+    rewarded = rewarded_row[0] if rewarded_row is not None else 0
+    earned_days = int(rewarded_row[1]) if rewarded_row is not None else 0
+    pending_result = await db.execute(
+        select(func.count()).select_from(Referral).where(
+            Referral.referrer_user_id == user.id,
+            Referral.reward_applied_at.is_(None),
+        )
+    )
+    pending = pending_result.scalar() or 0
+    goal = 2
+    completed_cycles = total // goal
+    progress_in_cycle = total - completed_cycles * goal
+    remaining_to_next = goal - progress_in_cycle if progress_in_cycle > 0 else goal
+    return {
+        "total_referrals": total,
+        "rewards_applied": rewarded,
+        "earned_days": earned_days,
+        "active_referrals": rewarded,
+        "pending_rewards": pending,
+        "invite_goal": goal,
+        "invite_progress": progress_in_cycle,
+        "invite_remaining": remaining_to_next,
+    }
 
 
 class PromoValidateBody(BaseModel):
@@ -383,6 +533,13 @@ async def webapp_promo_validate(
 class CreateInvoiceWebAppBody(BaseModel):
     plan_id: str
     promo_code: str | None = None
+
+
+class WebAppPaymentStatusOut(BaseModel):
+    payment_id: str
+    status: str
+    plan_id: str | None = None
+    valid_until: datetime | None = None
 
 
 @router.post("/payments/create-invoice")
@@ -469,6 +626,13 @@ async def webapp_create_invoice(
     )
     db.add(payment)
     await db.flush()
+    await log_funnel_event(
+        db,
+        event_type="plan_selected",
+        user_id=user.id,
+        payload={"plan_id": plan.id},
+    )
+    miniapp_events_total.labels(event="plan_selected").inc()
     await db.commit()
     await db.refresh(payment)
     star_count = max(1, int(plan.price_amount))
@@ -483,3 +647,428 @@ async def webapp_create_invoice(
         "server_id": server.id,
         "subscription_id": sub.id,
     }
+
+
+@router.get("/payments/{payment_id}/status", response_model=WebAppPaymentStatusOut)
+async def webapp_payment_status(
+    payment_id: str,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    """Return payment status for a given payment owned by the current user."""
+    tg_id = _get_tg_id_from_bearer(request)
+    if not tg_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"code": "UNAUTHORIZED", "message": "Invalid session"},
+        )
+    result = await db.execute(
+        select(Payment, Subscription, User)
+        .join(User, Payment.user_id == User.id)
+        .join(Subscription, Payment.subscription_id == Subscription.id, isouter=True)
+        .where(Payment.id == payment_id, User.tg_id == tg_id)
+    )
+    row = result.first()
+    if not row:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"code": "PAYMENT_NOT_FOUND", "message": "Payment not found"},
+        )
+    payment, sub, _user = row
+    return WebAppPaymentStatusOut(
+        payment_id=payment.id,
+        status=payment.status,
+        plan_id=sub.plan_id if sub else None,
+        valid_until=sub.valid_until if sub and sub.valid_until else None,
+    )
+
+
+class WebAppServerOut(BaseModel):
+    id: str
+    name: str
+    region: str
+    load_percent: float | None = None
+    avg_ping_ms: float | None = None
+    is_recommended: bool = False
+    is_current: bool = False
+
+
+@router.get("/servers")
+async def webapp_servers(request: Request, db: AsyncSession = Depends(get_db)):
+    """List active VPN servers for selection in the Mini App."""
+    tg_id = _get_tg_id_from_bearer(request)
+    if not tg_id:
+        raise HTTPException(
+            status_code=401, detail={"code": "UNAUTHORIZED", "message": "Invalid session"}
+        )
+    user_result = await db.execute(select(User).where(User.tg_id == tg_id))
+    user = user_result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(
+            status_code=404, detail={"code": "USER_NOT_FOUND", "message": "User not found"}
+        )
+    meta = user.meta or {}
+    preferred_server_id = str(meta.get("preferred_server_id") or "").strip() or None
+    auto_select = bool(meta.get("server_auto_select", True))
+    servers_result = await db.execute(select(Server).where(Server.is_active.is_(True)))
+    servers = list(servers_result.scalars().all())
+    if not servers:
+        return {"items": [], "total": 0, "auto_select": auto_select}
+    counts_result = await db.execute(
+        select(Device.server_id, func.count())
+        .where(Device.revoked_at.is_(None))
+        .group_by(Device.server_id)
+    )
+    counts: dict[str, int] = {row[0]: int(row[1]) for row in counts_result.all()}
+    items: list[WebAppServerOut] = []
+    best_id: str | None = None
+    best_score: tuple[int, float] | None = None
+    for s in servers:
+        active_devices = counts.get(s.id, 0)
+        load_percent: float | None = None
+        if s.max_connections and s.max_connections > 0:
+            load_percent = min(100.0, active_devices * 100.0 / float(s.max_connections))
+        health = getattr(s, "health_score", None) or 0.0
+        score = (active_devices * -1, health)
+        if best_score is None or score > best_score:
+            best_score = score
+            best_id = s.id
+        items.append(
+            WebAppServerOut(
+                id=s.id,
+                name=s.name,
+                region=s.region,
+                load_percent=load_percent,
+                avg_ping_ms=None,
+                is_recommended=False,
+                is_current=preferred_server_id == s.id,
+            )
+        )
+    recommended_id = preferred_server_id or best_id
+    for item in items:
+        if recommended_id and item.id == recommended_id:
+            item.is_recommended = True
+    return {
+        "items": [item.model_dump() for item in items],
+        "total": len(items),
+        "auto_select": auto_select,
+    }
+
+
+class WebAppServerSelectBody(BaseModel):
+    server_id: str | None = None
+    mode: str | None = None  # "auto" | "manual"
+
+
+@router.post("/servers/select")
+async def webapp_select_server(
+    body: WebAppServerSelectBody, request: Request, db: AsyncSession = Depends(get_db)
+):
+    """Set preferred server or enable auto-selection for the current user."""
+    tg_id = _get_tg_id_from_bearer(request)
+    if not tg_id:
+        raise HTTPException(
+            status_code=401, detail={"code": "UNAUTHORIZED", "message": "Invalid session"}
+        )
+    user_result = await db.execute(select(User).where(User.tg_id == tg_id))
+    user = user_result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(
+            status_code=404, detail={"code": "USER_NOT_FOUND", "message": "User not found"}
+        )
+    try:
+        r = get_redis()
+        key = f"ratelimit:webapp_server_select:{user.id}"
+        n = await r.incr(key)
+        if n == 1:
+            await r.expire(key, _WEBAPP_SERVER_SELECT_WINDOW_SECONDS)
+        if n > _WEBAPP_SERVER_SELECT_LIMIT:
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail={
+                    "code": "RATE_LIMIT_EXCEEDED",
+                    "message": "Too many server changes. Try again later.",
+                },
+            )
+    except HTTPException:
+        raise
+    except Exception:
+        # Fail-open on Redis errors; global API rate limit still applies.
+        pass
+    mode = (body.mode or "").strip().lower()
+    meta = user.meta or {}
+    if mode == "auto" or not body.server_id:
+        meta["server_auto_select"] = True
+        meta.pop("preferred_server_id", None)
+        user.meta = meta
+        await log_funnel_event(
+            db,
+            event_type="server_change",
+            user_id=user.id,
+            payload={"mode": "auto"},
+        )
+        await db.commit()
+        return {"status": "ok", "mode": "auto"}
+    server_result = await db.execute(
+        select(Server).where(Server.id == body.server_id, Server.is_active.is_(True))
+    )
+    server = server_result.scalar_one_or_none()
+    if not server:
+        raise HTTPException(
+            status_code=404,
+            detail={"code": "SERVER_NOT_FOUND", "message": "Server not found"},
+        )
+    meta["server_auto_select"] = False
+    meta["preferred_server_id"] = server.id
+    user.meta = meta
+    await log_funnel_event(
+        db,
+        event_type="server_change",
+        user_id=user.id,
+        payload={"mode": "manual", "server_id": server.id},
+    )
+    await db.commit()
+    return {"status": "ok", "mode": "manual", "server_id": server.id}
+
+
+class WebAppSubscriptionOffersOut(BaseModel):
+    subscription_id: str | None
+    status: str | None
+    valid_until: str | None
+    discount_percent: int
+    can_pause: bool
+    can_resume: bool
+
+
+@router.get("/subscription/offers", response_model=WebAppSubscriptionOffersOut)
+async def webapp_subscription_offers(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    """Return simple retention offers (pause, discount) for the current user."""
+    tg_id = _get_tg_id_from_bearer(request)
+    if not tg_id:
+        raise HTTPException(
+            status_code=401, detail={"code": "UNAUTHORIZED", "message": "Invalid session"}
+        )
+    user_result = await db.execute(select(User).where(User.tg_id == tg_id))
+    user = user_result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(
+            status_code=404, detail={"code": "USER_NOT_FOUND", "message": "User not found"}
+        )
+    now = datetime.now(timezone.utc)
+    sub_result = await db.execute(
+        select(Subscription)
+        .where(
+            Subscription.user_id == user.id,
+        )
+        .order_by(Subscription.valid_until.desc())
+        .limit(1)
+    )
+    sub = sub_result.scalar_one_or_none()
+    if not sub:
+        return WebAppSubscriptionOffersOut(
+            subscription_id=None,
+            status=None,
+            valid_until=None,
+            discount_percent=retention_discount_percent(),
+            can_pause=False,
+            can_resume=False,
+        )
+    can_pause = sub.paused_at is None and sub.valid_until > now
+    can_resume = sub.paused_at is not None and sub.valid_until > now
+    await log_funnel_event(
+        db,
+        event_type="cancel_click",
+        user_id=user.id,
+        payload={"subscription_id": sub.id},
+    )
+    return WebAppSubscriptionOffersOut(
+        subscription_id=sub.id,
+        status=sub.status,
+        valid_until=sub.valid_until.isoformat(),
+        discount_percent=retention_discount_percent(),
+        can_pause=can_pause,
+        can_resume=can_resume,
+    )
+
+
+class WebAppSubscriptionPauseBody(BaseModel):
+    subscription_id: str | None = None
+
+
+@router.post("/subscription/pause")
+async def webapp_subscription_pause(
+    body: WebAppSubscriptionPauseBody,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    """Pause current subscription for the user (retention)."""
+    tg_id = _get_tg_id_from_bearer(request)
+    if not tg_id:
+        raise HTTPException(
+            status_code=401, detail={"code": "UNAUTHORIZED", "message": "Invalid session"}
+        )
+    user_result = await db.execute(select(User).where(User.tg_id == tg_id))
+    user = user_result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(
+            status_code=404, detail={"code": "USER_NOT_FOUND", "message": "User not found"}
+        )
+    sub_id = body.subscription_id
+    if not sub_id:
+        now = datetime.now(timezone.utc)
+        sub_result = await db.execute(
+            select(Subscription)
+            .where(
+                Subscription.user_id == user.id,
+                Subscription.valid_until > now,
+            )
+            .order_by(Subscription.valid_until.desc())
+            .limit(1)
+        )
+        sub = sub_result.scalar_one_or_none()
+        if not sub:
+            raise HTTPException(
+                status_code=400,
+                detail={"code": "NO_SUBSCRIPTION", "message": "No active subscription"},
+            )
+        sub_id = sub.id
+    ok = await pause_subscription(
+        db,
+        subscription_id=sub_id,
+        user_id=user.id,
+        reason="webapp_pause",
+    )
+    if not ok:
+        raise HTTPException(
+            status_code=400,
+            detail={"code": "PAUSE_FAILED", "message": "Could not pause subscription"},
+        )
+    await db.commit()
+    return {"status": "ok"}
+
+
+class WebAppSubscriptionResumeBody(BaseModel):
+    subscription_id: str | None = None
+
+
+@router.post("/subscription/resume")
+async def webapp_subscription_resume(
+    body: WebAppSubscriptionResumeBody,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    """Resume paused subscription for the user."""
+    tg_id = _get_tg_id_from_bearer(request)
+    if not tg_id:
+        raise HTTPException(
+            status_code=401, detail={"code": "UNAUTHORIZED", "message": "Invalid session"}
+        )
+    user_result = await db.execute(select(User).where(User.tg_id == tg_id))
+    user = user_result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(
+            status_code=404, detail={"code": "USER_NOT_FOUND", "message": "User not found"}
+        )
+    sub_id = body.subscription_id
+    if not sub_id:
+        sub_result = await db.execute(
+            select(Subscription)
+            .where(
+                Subscription.user_id == user.id,
+            )
+            .order_by(Subscription.valid_until.desc())
+            .limit(1)
+        )
+        sub = sub_result.scalar_one_or_none()
+        if not sub:
+            raise HTTPException(
+                status_code=400,
+                detail={"code": "NO_SUBSCRIPTION", "message": "No subscription"},
+            )
+        sub_id = sub.id
+    ok = await resume_subscription(
+        db,
+        subscription_id=sub_id,
+        user_id=user.id,
+    )
+    if not ok:
+        raise HTTPException(
+            status_code=400,
+            detail={"code": "RESUME_FAILED", "message": "Could not resume subscription"},
+        )
+    await db.commit()
+    return {"status": "ok"}
+
+
+class WebAppSubscriptionCancelBody(BaseModel):
+    subscription_id: str | None = None
+    reason_code: str
+    discount_accepted: bool | None = None
+
+
+@router.post("/subscription/cancel")
+async def webapp_subscription_cancel(
+    body: WebAppSubscriptionCancelBody,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    """Cancel subscription with a simple churn survey."""
+    tg_id = _get_tg_id_from_bearer(request)
+    if not tg_id:
+        raise HTTPException(
+            status_code=401, detail={"code": "UNAUTHORIZED", "message": "Invalid session"}
+        )
+    user_result = await db.execute(select(User).where(User.tg_id == tg_id))
+    user = user_result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(
+            status_code=404, detail={"code": "USER_NOT_FOUND", "message": "User not found"}
+        )
+    sub_id = body.subscription_id
+    if not sub_id:
+        sub_result = await db.execute(
+            select(Subscription)
+            .where(
+                Subscription.user_id == user.id,
+            )
+            .order_by(Subscription.valid_until.desc())
+            .limit(1)
+        )
+        sub = sub_result.scalar_one_or_none()
+        if not sub:
+            raise HTTPException(
+                status_code=400,
+                detail={"code": "NO_SUBSCRIPTION", "message": "No subscription"},
+            )
+        sub_id = sub.id
+    sub_result = await db.execute(
+        select(Subscription).where(
+            Subscription.id == sub_id,
+            Subscription.user_id == user.id,
+        )
+    )
+    sub = sub_result.scalar_one_or_none()
+    if not sub:
+        raise HTTPException(
+            status_code=404,
+            detail={"code": "SUBSCRIPTION_NOT_FOUND", "message": "Subscription not found"},
+        )
+    survey = ChurnSurvey(
+        user_id=user.id,
+        subscription_id=sub.id,
+        reason=body.reason_code[:32],
+        discount_offered=bool(body.discount_accepted),
+    )
+    db.add(survey)
+    sub.status = "cancelled"
+    await log_funnel_event(
+        db,
+        event_type="cancel_confirm",
+        user_id=user.id,
+        payload={"subscription_id": sub.id, "reason": body.reason_code},
+    )
+    await db.commit()
+    return {"status": "ok"}

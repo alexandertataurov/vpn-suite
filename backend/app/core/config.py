@@ -112,8 +112,14 @@ class Settings(BaseSettings):
     # Bot: rate limit on issue device per user (0 = disabled)
     issue_rate_limit_per_minute: int = 5
     issue_rate_window_seconds: int = 60
+    # Anti-abuse: max config issues per user per 24h (0 = disabled)
+    config_regen_daily_cap: int = 0
     # Referral: bonus days for referrer when referee pays first time
-    referral_reward_bonus_days: int = 3
+    referral_reward_bonus_days: int = 7
+    # Trial: duration in hours; plan id optional (else first plan with price_amount <= 0)
+    trial_duration_hours: int = 24
+    trial_plan_id: str = ""
+    retention_discount_percent: int = 20
     # Set ENVIRONMENT=production to enforce non-default secrets at startup
     environment: str = "development"
     # mock = issue profile does not call node.

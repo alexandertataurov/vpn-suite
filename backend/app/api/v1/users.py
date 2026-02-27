@@ -13,9 +13,11 @@ from app.core.bot_auth import get_admin_or_bot
 from app.core.security import encrypt_config
 from app.core.config import settings
 from app.core.constants import (
+    ISSUE_DAILY_TTL_SECONDS,
     PERM_USERS_READ,
     PERM_USERS_WRITE,
     REDIS_KEY_IDEMPOTENCY_ISSUE_PREFIX,
+    REDIS_KEY_ISSUE_DAILY_PREFIX,
     REDIS_KEY_RATELIMIT_ISSUE_PREFIX,
 )
 from app.core.database import get_db
@@ -31,6 +33,7 @@ from app.schemas.user import UserCreate, UserDetail, UserList, UserOut, UserUpda
 from app.api.v1.device_cache import invalidate_devices_list_cache, invalidate_devices_summary_cache
 from app.services.funnel_service import log_funnel_event
 from app.services.issue_service import issue_device
+from app.core.metrics import vpn_config_regen_cap_hits_total
 from app.services.server_live_key_service import ServerNotSyncedError
 from app.services.topology_engine import TopologyEngine
 
@@ -249,6 +252,25 @@ async def issue_user_device(
             raise
         except Exception:
             logger.debug("Issue device rate limit check failed", exc_info=True)
+    if getattr(settings, "config_regen_daily_cap", 0) > 0:
+        try:
+            r = get_redis()
+            daily_key = f"{REDIS_KEY_ISSUE_DAILY_PREFIX}{user_id}"
+            n = await r.get(daily_key)
+            n = int(n) if n else 0
+            if n >= settings.config_regen_daily_cap:
+                vpn_config_regen_cap_hits_total.inc()
+                raise HTTPException(
+                    status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                    detail={
+                        "code": "DAILY_ISSUE_CAP_EXCEEDED",
+                        "message": "Daily config limit reached. Try again tomorrow or contact support.",
+                    },
+                )
+        except HTTPException:
+            raise
+        except Exception:
+            logger.debug("Issue daily cap check failed", exc_info=True)
     if idempotency_key:
         try:
             r = get_redis()
@@ -346,6 +368,14 @@ async def issue_user_device(
             )
         except Exception:
             logger.debug("Issue device idempotency cache set failed", exc_info=True)
+    if getattr(settings, "config_regen_daily_cap", 0) > 0:
+        try:
+            r = get_redis()
+            daily_key = f"{REDIS_KEY_ISSUE_DAILY_PREFIX}{user_id}"
+            await r.incr(daily_key)
+            await r.expire(daily_key, ISSUE_DAILY_TTL_SECONDS)
+        except Exception:
+            logger.debug("Issue daily cap increment failed", exc_info=True)
     request.state.audit_resource_type = "device"
     request.state.audit_resource_id = out.device.id
     request.state.audit_old_new = {

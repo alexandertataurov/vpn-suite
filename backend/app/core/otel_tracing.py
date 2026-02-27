@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import socket
 
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
@@ -21,6 +22,23 @@ def setup_otel_tracing(app, endpoint: str) -> None:
     # gRPC endpoint: host:port or http://host:port (SDK accepts both)
     if endpoint.startswith("http://") or endpoint.startswith("https://"):
         endpoint = endpoint.replace("http://", "").replace("https://", "").rstrip("/")
+    # Avoid noisy exporter errors when collector isn't present.
+    # If the endpoint is unreachable at startup, disable tracing.
+    host = endpoint
+    port = 4317
+    if ":" in endpoint:
+        host_part, port_part = endpoint.rsplit(":", 1)
+        host = host_part or host
+        try:
+            port = int(port_part)
+        except Exception:
+            port = 4317
+    try:
+        sock = socket.create_connection((host, port), timeout=0.4)
+        sock.close()
+    except Exception as e:
+        _log.warning("OTEL collector unreachable (tracing disabled): %s", e)
+        return
     try:
         resource = Resource.create({"service.name": "admin-api"})
         provider = TracerProvider(resource=resource)
