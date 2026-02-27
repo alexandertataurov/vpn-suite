@@ -10,6 +10,11 @@ import { useServerListFull } from "../hooks/useServerList";
 import { useOperatorStrip } from "../domain/dashboard";
 import { error as reportTelemetryError } from "../telemetry";
 import { PageHeader } from "../components/PageHeader";
+import { RevenueStrip } from "../components/dashboard/RevenueStrip";
+import { SubscriptionHealthStrip } from "../components/dashboard/SubscriptionHealthStrip";
+import { ReferralStrip } from "../components/dashboard/ReferralStrip";
+import { AlertsPanel } from "../components/dashboard/AlertsPanel";
+import { ServerTelemetryStrip } from "../components/dashboard/ServerTelemetryStrip";
 import { DashboardSettings } from "./dashboard/DashboardSettings";
 import { OperatorDashboardContent } from "./dashboard/OperatorDashboardContent";
 import { RefreshButton } from "../components/RefreshButton";
@@ -90,6 +95,11 @@ export function DashboardPage() {
         </Button>
       </PageHeader>
 
+      <RevenueStrip />
+      <SubscriptionHealthStrip />
+      <ReferralStrip />
+      <AlertsPanel />
+      <ServerTelemetryStrip />
       <OperatorDashboardContent />
 
       <DashboardSettings

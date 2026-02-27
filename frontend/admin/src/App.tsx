@@ -14,6 +14,7 @@ const ServersPage = lazy(() => import("./pages/Servers").then((m) => ({ default:
 const UsersPage = lazy(() => import("./pages/Users").then((m) => ({ default: m.UsersPage })));
 const UserDetailPage = lazy(() => import("./pages/UserDetail").then((m) => ({ default: m.UserDetailPage })));
 const BillingPage = lazy(() => import("./pages/Billing").then((m) => ({ default: m.BillingPage })));
+const RevenuePage = lazy(() => import("./pages/Revenue").then((m) => ({ default: m.RevenuePage })));
 const DevicesPage = lazy(() => import("./pages/Devices").then((m) => ({ default: m.DevicesPage })));
 const AuditPage = lazy(() => import("./pages/Audit").then((m) => ({ default: m.AuditPage })));
 const ServerNewPage = lazy(() => import("./pages/ServerNew").then((m) => ({ default: m.ServerNewPage })));
@@ -21,6 +22,16 @@ const ServerDetailPage = lazy(() => import("./pages/ServerDetail").then((m) => (
 const ServerEditPage = lazy(() => import("./pages/ServerEdit").then((m) => ({ default: m.ServerEditPage })));
 const SettingsPage = lazy(() => import("./pages/Settings").then((m) => ({ default: m.SettingsPage })));
 const StyleguidePage = lazy(() => import("./pages/Styleguide").then((m) => ({ default: m.StyleguidePage })));
+const SubscriptionsHealthPage = lazy(() => import("./pages/SubscriptionsHealth").then((m) => ({ default: m.SubscriptionsHealthPage })));
+const PaymentsMonitorPage = lazy(() => import("./pages/PaymentsMonitor").then((m) => ({ default: m.PaymentsMonitorPage })));
+const ReferralsPage = lazy(() => import("./pages/Referrals").then((m) => ({ default: m.ReferralsPage })));
+const AbuseRiskPage = lazy(() => import("./pages/AbuseRisk").then((m) => ({ default: m.AbuseRiskPage })));
+const RetentionAutomationPage = lazy(() => import("./pages/RetentionAutomation").then((m) => ({ default: m.RetentionAutomationPage })));
+const PricingEnginePage = lazy(() => import("./pages/PricingEngine").then((m) => ({ default: m.PricingEnginePage })));
+const ChurnPredictionPage = lazy(() => import("./pages/ChurnPrediction").then((m) => ({ default: m.ChurnPredictionPage })));
+const DevOpsPage = lazy(() => import("./pages/DevOps").then((m) => ({ default: m.DevOpsPage })));
+const CohortAnalyticsPage = lazy(() => import("./pages/CohortAnalytics").then((m) => ({ default: m.CohortAnalyticsPage })));
+const PromoCampaignsPage = lazy(() => import("./pages/PromoCampaigns").then((m) => ({ default: m.PromoCampaignsPage })));
 
 function App() {
   return (
@@ -126,6 +137,24 @@ function App() {
                     </ErrorBoundary>
                   }
                 />
+                <Route
+                  path="revenue"
+                  element={
+                    <ErrorBoundary>
+                      <RevenuePage />
+                    </ErrorBoundary>
+                  }
+                />
+                <Route path="subscriptions-health" element={<ErrorBoundary><SubscriptionsHealthPage /></ErrorBoundary>} />
+                <Route path="payments-monitor" element={<ErrorBoundary><PaymentsMonitorPage /></ErrorBoundary>} />
+                <Route path="referrals" element={<ErrorBoundary><ReferralsPage /></ErrorBoundary>} />
+                <Route path="abuse" element={<ErrorBoundary><AbuseRiskPage /></ErrorBoundary>} />
+                <Route path="retention" element={<ErrorBoundary><RetentionAutomationPage /></ErrorBoundary>} />
+                <Route path="pricing" element={<ErrorBoundary><PricingEnginePage /></ErrorBoundary>} />
+                <Route path="churn" element={<ErrorBoundary><ChurnPredictionPage /></ErrorBoundary>} />
+                <Route path="devops" element={<ErrorBoundary><DevOpsPage /></ErrorBoundary>} />
+                <Route path="cohorts" element={<ErrorBoundary><CohortAnalyticsPage /></ErrorBoundary>} />
+                <Route path="promos" element={<ErrorBoundary><PromoCampaignsPage /></ErrorBoundary>} />
                 <Route path="subscriptions" element={<Navigate to="/billing?tab=subscriptions" replace />} />
                 <Route
                   path="devices"
