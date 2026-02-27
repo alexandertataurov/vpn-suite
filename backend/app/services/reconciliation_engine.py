@@ -18,6 +18,8 @@ try:
     from app.core.metrics import (
         vpn_peer_apply_failures_total,
         vpn_peers_expected,
+        vpn_peers_expired_active_count,
+        vpn_peers_ghost_count,
         vpn_peers_orphan_count,
         vpn_peers_present,
         vpn_peers_readded_total,
@@ -34,6 +36,8 @@ except Exception:
     vpn_peers_readded_total = None  # type: ignore[assignment]
     vpn_peer_apply_failures_total = None  # type: ignore[assignment]
     vpn_peers_orphan_count = None  # type: ignore[assignment]
+    vpn_peers_ghost_count = None  # type: ignore[assignment]
+    vpn_peers_expired_active_count = None  # type: ignore[assignment]
 
 _log = logging.getLogger(__name__)
 
@@ -323,7 +327,33 @@ async def reconcile_node(
         if vpn_peers_present is not None:
             vpn_peers_present.labels(node_id=node_id).set(len(wg_peers))
 
+        # Expired-but-active: revoked devices in DB still present on node
+        revoked_pubkeys = set()
+        rev = await session.execute(
+            select(Device.public_key).where(
+                Device.server_id.in_(ids),
+                Device.revoked_at.isnot(None),
+                Device.public_key.isnot(None),
+            )
+        )
+        for row in rev.all():
+            if row and row[0]:
+                revoked_pubkeys.add(row[0].strip())
+        wg_pubkeys = {str(p.get("public_key", "")).strip() for p in wg_peers if p.get("public_key")}
+        expired_active = len(revoked_pubkeys & wg_pubkeys)
+        if vpn_peers_expired_active_count is not None:
+            try:
+                vpn_peers_expired_active_count.labels(node_id=node_id).set(expired_active)
+            except Exception:
+                pass
+
         diff = await compute_diff(node_id, db_peers, wg_peers)
+
+        if vpn_peers_ghost_count is not None:
+            try:
+                vpn_peers_ghost_count.labels(node_id=node_id).set(len(diff.peers_to_remove))
+            except Exception:
+                pass
 
         ensure_routes = getattr(adapter, "ensure_reply_routes", None)
         if callable(ensure_routes):
