@@ -33,3 +33,6 @@ class User(Base, TimestampMixin):
     payments: Mapped[list["Payment"]] = relationship(
         "Payment", back_populates="user", foreign_keys="Payment.user_id"
     )
+    churn_surveys: Mapped[list["ChurnSurvey"]] = relationship(
+        "ChurnSurvey", back_populates="user", foreign_keys="ChurnSurvey.user_id"
+    )

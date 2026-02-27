@@ -1,8 +1,14 @@
 # SQLAlchemy models
+from app.models.abuse_signal import AbuseSignal
 from app.models.admin_user import AdminUser
 from app.models.agent_action import AgentAction, AgentActionLog
 from app.models.audit_log import AuditLog
+from app.models.churn_risk_score import ChurnRiskScore
+from app.models.price_history import PriceHistory
+from app.models.promo_campaign import PromoCampaign
+from app.models.retention_rule import RetentionRule
 from app.models.base import Base
+from app.models.churn_survey import ChurnSurvey
 from app.models.control_plane_event import ControlPlaneEvent
 from app.models.device import Device
 from app.models.docker_alert import DockerAlert
@@ -29,7 +35,12 @@ from app.models.sync_job import SyncJob
 from app.models.user import User
 
 __all__ = [
+    "AbuseSignal",
     "Base",
+    "ChurnRiskScore",
+    "PriceHistory",
+    "PromoCampaign",
+    "RetentionRule",
     "Role",
     "AdminUser",
     "AgentAction",
@@ -61,4 +72,5 @@ __all__ = [
     "Referral",
     "PromoCode",
     "PromoRedemption",
+    "ChurnSurvey",
 ]
