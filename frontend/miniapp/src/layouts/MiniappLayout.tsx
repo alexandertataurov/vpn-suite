@@ -1,20 +1,22 @@
 import { Outlet, NavLink } from "react-router-dom";
-import { Home, Shield, User, HelpCircle } from "lucide-react";
+import { Home, Globe, CreditCard, User } from "lucide-react";
 import { PrimitiveBadge } from "@vpn-suite/shared/ui";
 
 const tabs = [
-  { to: "/", label: "Status", end: true, icon: Home },
-  { to: "/devices", label: "Devices", end: false, icon: Shield },
-  { to: "/profile", label: "Profile", end: false, icon: User },
-  { to: "/help", label: "Help", end: false, icon: HelpCircle },
+  { to: "/", label: "Home", end: true, icon: Home },
+  { to: "/servers", label: "Servers", end: false, icon: Globe },
+  { to: "/plan", label: "Plan", end: false, icon: CreditCard },
+  { to: "/settings", label: "Account", end: false, icon: User },
 ];
+
+const isDev = typeof import.meta !== "undefined" && import.meta.env?.DEV;
 
 export function MiniappLayout() {
   return (
     <div className="miniapp-layout">
       <header className="miniapp-header">
-        <span className="miniapp-header-title">VPN Suite</span>
-        <PrimitiveBadge variant="info" size="sm">WebApp</PrimitiveBadge>
+        <span className="miniapp-header-title">VPN</span>
+        {isDev && <PrimitiveBadge variant="info" size="sm">WebApp</PrimitiveBadge>}
       </header>
       <main className="miniapp-main">
         <Outlet />

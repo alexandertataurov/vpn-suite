@@ -183,8 +183,36 @@ export interface TelemetrySnapshotOut {
 
 /** GET /app/settings — Reconcile only when node_mode=real and node_discovery=docker. */
 export interface AppSettingsOut {
+  /** Deployment environment, e.g. "development" or "production". */
+  environment?: string;
+  /** Control-plane mode: mock | real | agent. */
   node_mode: string;
+  /** Node discovery strategy: docker | agent. */
   node_discovery?: string;
+  /** Default VPN host used to derive client endpoints when nodes report private IPs only. */
+  vpn_default_host?: string;
+  /** Prometheus base URL for metrics (empty = disabled). */
+  telemetry_prometheus_url?: string;
+  /** Loki base URL for logs (empty = disabled). */
+  telemetry_loki_url?: string;
+  /** OTLP traces endpoint (empty = tracing disabled). */
+  otel_traces_endpoint?: string;
+  /** Raw Docker telemetry hosts JSON from env. */
+  docker_telemetry_hosts_json?: string;
+  /** True when Docker telemetry hosts are configured. */
+  docker_telemetry_enabled?: boolean;
+  /** True when live observability SSE is enabled. */
+  live_obs_enabled?: boolean;
+  /** Daily cap on config regenerations per user (0 = disabled). */
+  config_regen_daily_cap?: number;
+  /** Referral bonus days granted to referrer. */
+  referral_reward_bonus_days?: number;
+  /** Trial duration in hours for new users. */
+  trial_duration_hours?: number;
+  /** Retention discount percent offered to at-risk users. */
+  retention_discount_percent?: number;
+  /** Comma-separated CORS allowlist for admin API. */
+  cors_allow_origins?: string;
 }
 
 export interface LoginRequest {

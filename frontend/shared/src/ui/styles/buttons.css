@@ -17,7 +17,7 @@
   border: 1px solid var(--border-subtle);
   cursor: pointer;
   box-shadow: var(--shadow-sm, 0 1px 2px oklch(0% 0 0 / 0.05)), inset 0 1px 0 oklch(1 0 0 / 0.08);
-  transition: background-color 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease, transform 0.1s ease;
+  transition: background-color var(--duration-fast, 0.16s) ease, border-color var(--duration-fast, 0.16s) ease, box-shadow var(--duration-fast, 0.16s) ease, transform var(--duration-fast, 0.1s) ease;
   min-height: var(--height-btn-md);
   white-space: nowrap;
   user-select: none;
@@ -33,11 +33,11 @@
   z-index: -1;
 }
 .btn:hover:not(:disabled) { box-shadow: var(--shadow-md, 0 2px 8px oklch(0% 0 0 / 0.08)); transform: translateY(-1px); }
-.btn:active:not(:disabled) { transform: translateY(0); }
-.btn:disabled { cursor: not-allowed; opacity: 0.6; }
+.btn:active:not(:disabled) { transform: translateY(0) scale(0.98); }
+.btn:disabled { cursor: not-allowed; opacity: var(--opacity-disabled, 0.6); }
 .btn:focus-visible {
   outline: none;
-  box-shadow: var(--shadow-sm), var(--focus-ring);
+  box-shadow: var(--shadow-sm), var(--focus-ring-techspec, var(--focus-ring));
 }
 .btn-sm {
   padding: var(--spacing-xs) var(--spacing-sm);

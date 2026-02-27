@@ -13,6 +13,8 @@ export const webappApi = createApiClient({
   getToken: () => token,
   onUnauthorized: () => {
     setWebappToken(null);
-    window.location.reload();
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("webapp:unauthorized"));
+    }
   },
 });

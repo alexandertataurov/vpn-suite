@@ -3,6 +3,13 @@
   text-align: center;
 }
 
+.miniapp-stack {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: var(--spacing-3);
+  min-height: 100vh;
+}
+
 .miniapp-layout {
   display: flex;
   flex-direction: column;
@@ -11,6 +18,23 @@
   margin: 0 auto;
   padding-bottom: calc(var(--height-bottom-nav) + env(safe-area-inset-bottom, 0px));
   background: var(--surface-base);
+  /* Strong teal glow (200%) */
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--color-primary) 50%, transparent),
+    0 0 24px -4px color-mix(in oklch, var(--color-primary) 35%, transparent);
+  /* Local tokens */
+  --miniapp-glass-surface: var(--color-surface);
+  --miniapp-glass-strong: var(--color-surface-raised);
+  --miniapp-glass-border-soft: var(--color-border);
+  --miniapp-glass-shadow-subtle: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --miniapp-glass-shadow-soft: 0 4px 16px rgba(0, 0, 0, 0.4),
+    0 0 12px -2px color-mix(in oklch, var(--color-primary) 15%, transparent);
+  --miniapp-radius-sm: 8px;
+  --miniapp-radius-md: 12px;
+  --miniapp-radius-lg: 12px;
+  --miniapp-blur-xs: 8px;
+  --miniapp-blur-sm: 14px;
+  --miniapp-blur-md: 22px;
+  --miniapp-blur-lg: 30px;
 }
 
 .miniapp-loading {
@@ -23,28 +47,31 @@
   position: sticky;
   top: 0;
   z-index: var(--z-sticky);
-  padding: var(--spacing-4) var(--spacing-6);
-  border-bottom: 1px solid var(--border-subtle);
-  background: var(--surface-base);
-  backdrop-filter: blur(8px);
+  padding: var(--spacing-4) calc(var(--spacing-6) + env(safe-area-inset-right, 0)) var(--spacing-4) calc(var(--spacing-6) + env(safe-area-inset-left, 0));
+  border-bottom: 1px solid var(--miniapp-glass-border-soft);
+  background: var(--color-bg);
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 .miniapp-header-title {
-  font-size: var(--text-base);
+  font-size: var(--text-lg, 1.125rem);
   line-height: 1.25;
-  font-weight: var(--font-medium);
+  font-weight: 700;
   letter-spacing: var(--letter-spacing-tight);
-  color: var(--color-text);
+  color: var(--color-primary);
+  text-shadow: 0 0 12px color-mix(in oklch, var(--color-primary) 50%, transparent);
 }
 .miniapp-main {
   flex: 1;
   min-width: 0;
+  padding: var(--spacing-3) var(--spacing-3) calc(var(--height-bottom-nav) + var(--spacing-4));
 }
 .miniapp-main .card {
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
+  border-radius: var(--miniapp-radius-lg);
+  border: 1px solid var(--miniapp-glass-border-soft);
+  background: var(--color-surface-raised);
+  box-shadow: var(--miniapp-glass-shadow-subtle);
 }
 .miniapp-page-header {
   display: flex;
@@ -72,12 +99,14 @@
   bottom: 0;
   inset-inline: 0;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  background: var(--surface-base);
-  border-block-start: 1px solid var(--border-subtle);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  background: var(--color-bg);
+  border-block-start: 1px solid var(--miniapp-glass-border-soft);
   z-index: var(--z-sticky);
   min-height: var(--height-bottom-nav);
   padding-inline: var(--spacing-2);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.3);
 }
 .miniapp-tab {
   display: inline-flex;
@@ -89,10 +118,10 @@
   margin-inline: var(--spacing-1);
   text-align: center;
   font-size: var(--text-xs);
-  color: var(--color-neutral-500);
+  color: var(--color-text-muted);
   text-decoration: none;
-  min-height: var(--size-touch-target);
-  border-radius: var(--radius-lg);
+  min-height: max(var(--size-touch-target), 44px);
+  border-radius: var(--miniapp-radius-md);
   border: 1px solid transparent;
   transition:
     color var(--duration-fast),
@@ -117,9 +146,12 @@
 .config-block {
   margin: 0;
   padding: var(--spacing-md);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  background: var(--surface-raised);
+  border: 1px solid var(--miniapp-glass-border-soft);
+  border-radius: var(--miniapp-radius-lg);
+  background:
+    linear-gradient(180deg, color-mix(in oklab, var(--miniapp-glass-strong) 96%, transparent), color-mix(in oklab, var(--surface-base) 70%, transparent));
+  backdrop-filter: blur(var(--miniapp-blur-sm));
+  -webkit-backdrop-filter: blur(var(--miniapp-blur-sm));
   color: var(--color-text);
   font-size: var(--font-size-sm);
   line-height: var(--line-height-normal);
@@ -133,20 +165,28 @@
   color: var(--color-warning);
 }
 .miniapp-tab:hover {
-  color: var(--color-neutral-900);
-  border-color: color-mix(in oklab, var(--color-primary) 20%, transparent);
-  background: color-mix(in oklab, var(--color-primary-subtle) 40%, transparent);
+  color: var(--color-text);
+  background: color-mix(in oklab, var(--color-primary) 12%, transparent);
 }
 .miniapp-tab.active {
-  color: var(--surface-base);
-  font-weight: var(--font-medium);
-  background: linear-gradient(
-    130deg,
-    color-mix(in oklab, var(--color-primary) 84%, black 16%),
-    color-mix(in oklab, var(--color-primary) 66%, black 34%)
-  );
-  border-color: color-mix(in oklab, var(--color-primary) 66%, black 34%);
-  box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.18), 0 6px 14px -10px oklch(0 0 0 / 0.5);
+  color: var(--color-primary);
+  font-weight: 700;
+  background: color-mix(in oklab, var(--color-primary) 25%, transparent);
+  border: 1px solid color-mix(in oklab, var(--color-primary) 55%, transparent);
+  box-shadow: 0 0 12px -2px color-mix(in oklch, var(--color-primary) 30%, transparent);
+  position: relative;
+}
+.miniapp-tab.active::after {
+  content: "";
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  box-shadow: 0 0 8px var(--color-primary);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -155,28 +195,10 @@
   }
 }
 
-/* 2026 visual refresh: miniapp shell + card rhythm */
-.miniapp-layout {
-  background:
-    radial-gradient(520px 260px at 100% -8%, color-mix(in oklab, var(--color-primary) 12%, transparent), transparent 64%),
-    radial-gradient(420px 220px at -8% 0%, color-mix(in oklab, var(--color-success) 9%, transparent), transparent 58%),
-    var(--surface-base);
-}
-
-.miniapp-header {
-  border-bottom-color: color-mix(in oklab, var(--border-subtle) 80%, var(--color-border-default) 20%);
-  background: color-mix(in oklab, var(--surface-base) 88%, var(--surface-raised) 12%);
-  box-shadow: 0 1px 0 oklch(1 0 0 / 0.06), 0 10px 24px -22px oklch(0 0 0 / 0.45);
-}
-
 .miniapp-header-title {
   font-weight: 650;
 }
 
-
-.miniapp-main {
-  padding: var(--spacing-3) var(--spacing-3) calc(var(--height-bottom-nav) + var(--spacing-4));
-}
 
 .miniapp-main .page-content {
   margin-inline: 0;
@@ -186,14 +208,6 @@
 
 .miniapp-main .ref-page {
   gap: var(--spacing-8);
-}
-
-.miniapp-main .card {
-  border-radius: var(--radius-xl);
-  border-color: color-mix(in oklab, var(--color-border) 82%, transparent);
-  background:
-    linear-gradient(180deg, color-mix(in oklab, var(--surface-raised) 78%, var(--surface-base) 22%), var(--surface-base));
-  box-shadow: var(--shadow-sm), inset 0 1px 0 oklch(1 0 0 / 0.07);
 }
 
 .miniapp-page-header {
@@ -210,8 +224,10 @@
 
 .miniapp-main .table-empty {
   border: 1px dashed color-mix(in oklab, var(--color-border) 78%, transparent);
-  border-radius: var(--radius-lg);
-  background: color-mix(in oklab, var(--surface-raised) 70%, var(--surface-base) 30%);
+  border-radius: var(--miniapp-radius-md);
+  background: color-mix(in oklab, var(--miniapp-glass-surface) 88%, transparent);
+  backdrop-filter: blur(var(--miniapp-blur-sm));
+  -webkit-backdrop-filter: blur(var(--miniapp-blur-sm));
   padding: var(--spacing-6);
   margin: 0;
 }
@@ -227,9 +243,11 @@
   align-items: center;
   width: fit-content;
   padding: var(--spacing-2) var(--spacing-3);
-  border: 1px solid color-mix(in oklab, var(--color-border) 72%, transparent);
-  border-radius: var(--radius-lg);
-  background: color-mix(in oklab, var(--surface-raised) 75%, var(--surface-base) 25%);
+  border: 1px solid var(--miniapp-glass-border-soft);
+  border-radius: var(--miniapp-radius-md);
+  background: color-mix(in oklab, var(--miniapp-glass-surface) 96%, transparent);
+  backdrop-filter: blur(var(--miniapp-blur-xs));
+  -webkit-backdrop-filter: blur(var(--miniapp-blur-xs));
 }
 
 .miniapp-main .nav-links a:hover {
@@ -244,9 +262,11 @@
   width: fit-content;
   margin-bottom: var(--spacing-2);
   padding: var(--spacing-2) var(--spacing-3);
-  border: 1px solid color-mix(in oklab, var(--color-border) 72%, transparent);
-  border-radius: var(--radius-lg);
-  background: color-mix(in oklab, var(--surface-raised) 75%, var(--surface-base) 25%);
+  border: 1px solid var(--miniapp-glass-border-soft);
+  border-radius: var(--miniapp-radius-md);
+  background: color-mix(in oklab, var(--miniapp-glass-surface) 96%, transparent);
+  backdrop-filter: blur(var(--miniapp-blur-xs));
+  -webkit-backdrop-filter: blur(var(--miniapp-blur-xs));
 }
 
 .miniapp-back-link:hover {
@@ -264,17 +284,322 @@
   position: relative;
 }
 
-.miniapp-bottom-nav {
-  border-block-start-color: color-mix(in oklab, var(--border-subtle) 78%, var(--color-border-default) 22%);
-  background: color-mix(in oklab, var(--surface-base) 92%, var(--surface-raised) 8%);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
 .config-block {
-  border-radius: var(--radius-lg);
+  border-radius: var(--miniapp-radius-lg);
   border-color: color-mix(in oklab, var(--color-border) 82%, transparent);
   box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.06);
+}
+
+/* Connection status card */
+.connection-status-card {
+  padding: var(--spacing-5);
+  box-shadow: var(--miniapp-glass-shadow-soft), inset 0 1px 0 oklch(1 0 0 / 0.1);
+  position: relative;
+}
+.connection-status-card.is-connected {
+  border: 2px solid color-mix(in oklab, var(--color-success) 55%, transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--color-success) 35%, transparent),
+    0 0 16px -2px color-mix(in oklch, var(--color-success) 30%, transparent),
+    var(--miniapp-glass-shadow-soft);
+}
+.connection-status-card.is-connected::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  border: 1px solid color-mix(in oklab, var(--color-success) 18%, transparent);
+  opacity: 0.65;
+  pointer-events: none;
+}
+.connection-status-card.is-disconnected {
+  border-color: color-mix(in oklab, var(--color-border) 80%, transparent);
+}
+.connection-status-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  margin-bottom: var(--spacing-2);
+}
+.connection-status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.connection-status-dot.connected {
+  background: var(--color-success);
+}
+.connection-status-dot.disconnected {
+  background: color-mix(in oklab, var(--color-error) 70%, var(--color-border) 30%);
+}
+.connection-status-label {
+  font-weight: 600;
+  font-size: var(--text-base);
+}
+.connection-status-location {
+  margin-top: 0;
+}
+.connection-status-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: var(--spacing-4);
+  text-decoration: none;
+  min-height: 52px;
+  padding-inline: var(--spacing-6);
+  border-radius: var(--radius-full, 999px);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font-weight: 700;
+  font-size: var(--text-body, 1rem);
+  border: none;
+  box-shadow: 0 0 16px color-mix(in oklch, var(--color-primary) 55%, transparent),
+    inset 0 1px 0 color-mix(in oklch, white 25%, transparent);
+  transform-origin: center;
+}
+
+/* Subscription summary card */
+.subscription-summary-card {
+  padding: var(--spacing-4);
+}
+.subscription-summary-card.subscription-summary-card--status-active {
+  border-color: color-mix(in oklab, var(--color-success) 32%, transparent);
+}
+.subscription-summary-card.subscription-summary-card--status-expired {
+  border-color: color-mix(in oklab, var(--color-warning) 30%, transparent);
+}
+.subscription-summary-card.subscription-summary-card--status-none {
+  border-color: color-mix(in oklab, var(--color-border) 78%, transparent);
+}
+
+/* Plan card */
+.plan-card {
+  position: relative;
+  padding: var(--spacing-4);
+}
+.plan-card-best {
+  border: 2px solid color-mix(in oklab, var(--color-primary) 70%, transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in oklch, var(--color-primary) 45%, transparent),
+    0 0 20px -2px color-mix(in oklch, var(--color-primary) 40%, transparent);
+}
+.plan-card-badge {
+  position: absolute;
+  top: var(--spacing-2);
+  right: var(--spacing-2);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+.plan-card-name { margin: 0 0 var(--spacing-1); font-size: var(--text-lg); }
+.plan-card-duration { margin: 0 0 var(--spacing-2); }
+.plan-card-price { margin: 0 0 var(--spacing-3); font-weight: 600; }
+.plan-card-cta {
+  display: inline-block;
+  text-decoration: none;
+}
+
+/* Troubleshooter */
+.troubleshooter-step { padding: var(--spacing-4); }
+.troubleshooter-step-title { margin: 0 0 var(--spacing-2); font-size: var(--text-base); }
+.troubleshooter-step-body { margin: 0; font-size: var(--text-sm); }
+
+/* Danger zone */
+.danger-zone {
+  border-color: color-mix(in oklab, var(--color-error) 30%, transparent);
+  padding: var(--spacing-4);
+}
+.danger-zone-title { margin: 0 0 var(--spacing-1); font-size: var(--text-base); }
+.danger-zone-description { margin: 0 0 var(--spacing-3); }
+.miniapp-quick-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+.miniapp-quick-actions .button,
+.miniapp-quick-actions a[class*="button"] {
+  min-height: var(--size-touch-target, 44px);
+}
+.miniapp-section-title {
+  margin: 0 0 var(--spacing-3);
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+.miniapp-stats-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--spacing-6);
+  padding: var(--spacing-4) 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+.miniapp-stat { white-space: nowrap; }
+.miniapp-stat strong { color: var(--color-text); margin-right: 2px; }
+.miniapp-section-heading {
+  margin: var(--spacing-6) 0 var(--spacing-4);
+  font-size: var(--text-h2, 1.25rem);
+  font-weight: 600;
+  color: var(--color-text);
+}
+.miniapp-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-3);
+  margin-bottom: var(--spacing-6);
+}
+.miniapp-feature-card {
+  padding: var(--spacing-4);
+  text-align: center;
+}
+.miniapp-feature-icon { font-size: 1.5rem; display: block; margin-bottom: var(--spacing-2); }
+.miniapp-feature-title {
+  margin: 0 0 var(--spacing-1);
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--color-text);
+}
+.miniapp-feature-desc {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  line-height: 1.35;
+}
+
+/* Server selection: reference layout — code block, name, latency, load bar */
+.server-grid {
+  display: grid;
+  gap: var(--spacing-3);
+}
+.server-row-card {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  padding: var(--spacing-4);
+}
+.server-row-code {
+  flex-shrink: 0;
+  width: 48px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface-elevated);
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  color: var(--color-text);
+}
+.server-row-details {
+  flex: 1;
+  min-width: 0;
+}
+.server-row-name { font-weight: 600; color: var(--color-text); margin: 0 0 var(--spacing-1); }
+.server-row-meta { font-size: var(--text-sm); color: var(--color-text-muted); margin: 0; }
+.server-row-load {
+  flex-shrink: 0;
+  width: 80px;
+  text-align: right;
+}
+.server-row-load-value { font-size: var(--text-xs); color: var(--color-text-muted); margin: 0 0 2px; }
+.server-row-load-bar { height: 6px; border-radius: 999px; background: var(--neutral-300); overflow: hidden; }
+.server-row-load-fill { height: 100%; background: var(--color-primary); border-radius: 999px; transition: width 0.2s ease; }
+
+/* Device list and referral stats */
+.device-card-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: var(--spacing-3);
+}
+
+.referral-stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--spacing-3);
+}
+
+.usage-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+/* Usage analytics card and chart */
+.usage-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+.usage-card-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+.usage-chart {
+  position: relative;
+  border-radius: var(--miniapp-radius-md);
+  padding: var(--spacing-2);
+  background:
+    radial-gradient(120% 180% at 0% 0%, color-mix(in oklab, var(--color-primary) 8%, transparent), transparent),
+    color-mix(in oklab, var(--miniapp-glass-surface) 96%, transparent);
+  box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.12);
+  backdrop-filter: blur(var(--miniapp-blur-sm));
+  -webkit-backdrop-filter: blur(var(--miniapp-blur-sm));
+}
+.usage-chart-svg {
+  display: block;
+  width: 100%;
+  height: 120px;
+}
+.usage-chart-area {
+  fill: url(#usageArea);
+}
+.usage-chart-line {
+  fill: none;
+  stroke: color-mix(in oklab, var(--color-primary) 88%, white 12%);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.usage-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--spacing-3);
+}
+.usage-metric-label {
+  margin: 0 0 var(--spacing-1);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+.usage-metric-value {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+/* Micro-interactions: subtle, calm scale on press */
+.miniapp-tab,
+.connection-status-cta,
+.miniapp-main .button,
+.miniapp-main a[class*="button"],
+.miniapp-main .card {
+  transition:
+    transform var(--duration-fast),
+    box-shadow var(--duration-fast);
+}
+
+.miniapp-tab:active,
+.connection-status-cta:active,
+.miniapp-main .button:active,
+.miniapp-main a[class*="button"]:active,
+.miniapp-main .card:active {
+  transform: scale(0.98);
+  box-shadow: 0 8px 18px -14px oklch(0 0 0 / 0.7);
 }
 
 @media (min-width: 768px) {
@@ -304,4 +629,28 @@
   .miniapp-main .card {
     transition: none !important;
   }
+}
+
+/* Mini app–scoped glass toast: bottom, frosted, calm */
+.miniapp-layout .toast-container {
+  top: auto;
+  bottom: calc(var(--height-bottom-nav) + var(--spacing-4));
+  right: 50%;
+  left: auto;
+  transform: translateX(50%);
+  align-items: center;
+}
+
+.miniapp-layout .toast {
+  border-radius: var(--miniapp-radius-md);
+  backdrop-filter: blur(var(--miniapp-blur-xs));
+  -webkit-backdrop-filter: blur(var(--miniapp-blur-xs));
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--miniapp-glass-surface) 96%, transparent),
+      color-mix(in oklab, var(--surface-base) 72%, transparent)
+    );
+  border: 1px solid var(--miniapp-glass-border-soft);
+  box-shadow: var(--miniapp-glass-shadow-soft), inset 0 1px 0 oklch(1 0 0 / 0.1);
 }

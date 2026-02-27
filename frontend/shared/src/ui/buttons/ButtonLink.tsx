@@ -11,6 +11,7 @@ export interface ButtonLinkProps {
   style?: CSSProperties;
   target?: string;
   rel?: string;
+  onClick?: () => void;
   children: ReactNode;
 }
 
@@ -23,12 +24,20 @@ export function ButtonLink({
   style,
   target,
   rel,
+  onClick,
   children,
 }: ButtonLinkProps) {
   const effectiveSize = kind === "connect" ? "lg" : size;
   const extra = kind === "connect" ? `connect-button ${className}`.trim() : className;
   return (
-    <Link to={to} className={getButtonClassName(variant, effectiveSize, extra)} style={style} target={target} rel={rel}>
+    <Link
+      to={to}
+      className={getButtonClassName(variant, effectiveSize, extra)}
+      style={style}
+      target={target}
+      rel={rel}
+      onClick={onClick}
+    >
       {children}
     </Link>
   );

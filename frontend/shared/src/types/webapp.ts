@@ -39,6 +39,12 @@ export interface WebAppReferralMyLinkResponse {
 export interface WebAppReferralStatsResponse {
   total_referrals: number;
   rewards_applied: number;
+  earned_days: number;
+  active_referrals: number;
+  pending_rewards: number;
+  invite_goal: number;
+  invite_progress: number;
+  invite_remaining: number;
 }
 
 export interface WebAppPromoValidateResponse {
@@ -58,4 +64,41 @@ export interface WebAppCreateInvoiceResponse {
   payload: string;
   server_id: string;
   subscription_id: string;
+}
+
+export interface WebAppServerItem {
+  id: string;
+  name: string;
+  region: string;
+  load_percent: number | null;
+  avg_ping_ms: number | null;
+  is_recommended: boolean;
+  is_current: boolean;
+}
+
+export interface WebAppServersResponse {
+  items: WebAppServerItem[];
+  total: number;
+  auto_select: boolean;
+}
+
+export interface WebAppSubscriptionOffersResponse {
+  subscription_id: string | null;
+  status: string | null;
+  valid_until: string | null;
+  discount_percent: number;
+  can_pause: boolean;
+  can_resume: boolean;
+}
+
+export interface WebAppUsagePoint {
+  ts: string;
+  bytes_in: number;
+  bytes_out: number;
+}
+
+export interface WebAppUsageResponse {
+  points: WebAppUsagePoint[];
+  sessions: number;
+  peak_hours?: number[] | null;
 }

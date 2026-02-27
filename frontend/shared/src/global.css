@@ -1,4 +1,5 @@
 @import "./theme/tokens.css";
+@import "./theme/techspec-tokens.css";
 @import "./theme/breakpoints.css";
 @import "./base.css";
 @import "./layout.css";
@@ -11,8 +12,8 @@ body {
   background: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-sans);
-  font-size: var(--font-size-base);
-  line-height: var(--line-height-normal);
+  font-size: var(--text-body, var(--font-size-base));
+  line-height: var(--leading-body, var(--line-height-normal));
   font-feature-settings: "kern" 1, "liga" 1, "calt" 1, "tnum" 0;
   -webkit-font-smoothing: antialiased;
 }

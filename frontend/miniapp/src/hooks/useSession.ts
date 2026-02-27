@@ -8,5 +8,6 @@ export function useSession(enabled: boolean) {
     queryFn: () => webappApi.get<WebAppMeResponse>("/webapp/me"),
     enabled,
     retry: false,
+    staleTime: 60 * 1000,
   });
 }

@@ -21,13 +21,13 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--spacing-md);
-  padding: var(--spacing-md) var(--spacing-lg);
+  gap: var(--space-3, var(--spacing-md));
+  padding: var(--space-3, var(--spacing-md)) var(--space-4, var(--spacing-lg));
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-md);
-  background: var(--color-surface);
+  box-shadow: var(--shadow-toast, var(--shadow-md));
+  background: var(--color-surface-raised, var(--color-surface));
   border: 1px solid var(--color-border);
-  animation: toastIn var(--duration-normal) var(--ease-out);
+  animation: toastIn var(--duration-normal, 0.25s) var(--ease-out, ease);
 }
 .toast-success { border-inline-start: var(--spacing-xs) solid var(--color-success); }
 .toast-error { border-inline-start: var(--spacing-xs) solid var(--color-error); }
@@ -125,7 +125,7 @@
 .progress-bar-fill {
   height: 100%;
   width: var(--progress, 0%);
-  background: linear-gradient(90deg, var(--color-success), color-mix(in oklab, var(--color-success) 70%, white 30%));
+  background: var(--color-primary);
   border-radius: var(--radius-sm, 4px);
   transition: width 0.2s ease;
 }

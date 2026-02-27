@@ -32,6 +32,13 @@ export function AuthGuard({ children }: { children: ReactNode }) {
     attemptAuth();
   }, [attemptAuth]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handler = () => attemptAuth();
+    window.addEventListener("webapp:unauthorized", handler as EventListener);
+    return () => window.removeEventListener("webapp:unauthorized", handler as EventListener);
+  }, [attemptAuth]);
+
   if (!ready) return null;
 
   if (!initData) {

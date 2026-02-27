@@ -7,6 +7,8 @@ import { webappApi, getWebappToken } from "../api/client";
 import { useTelegramMainButton } from "../hooks/useTelegramMainButton";
 import { useTelegramBackButton } from "../hooks/useTelegramBackButton";
 import { useTelegramHaptics } from "../hooks/useTelegramHaptics";
+import { useTrackScreen } from "../hooks/useTrackScreen";
+import { useTelemetry } from "../hooks/useTelemetry";
 
 export function CheckoutPage() {
   const { planId } = useParams<{ planId: string }>();
@@ -17,6 +19,8 @@ export function CheckoutPage() {
   const [promoPreview, setPromoPreview] = useState<{ description: string } | null>(null);
   const [paymentStatus, setPaymentStatus] = useState<string>("");
   const { impact, notify } = useTelegramHaptics();
+  useTrackScreen("checkout", null);
+  const { track } = useTelemetry(null);
 
   const validatePromo = useMutation({
     mutationFn: async (): Promise<{ valid: boolean; description?: string }> => {
@@ -46,10 +50,12 @@ export function CheckoutPage() {
     onSuccess: () => {
       setPaymentStatus("waiting");
       notify("success");
+      track("payment_start", { plan_id: selectedPlanId });
     },
     onError: () => {
       setPaymentStatus("error");
       notify("error");
+      track("payment_fail", { plan_id: selectedPlanId });
     },
   });
 
@@ -58,6 +64,7 @@ export function CheckoutPage() {
   const canPay = !!selectedPlanId && hasToken;
   const handlePay = () => {
     impact("medium");
+    track("cta_click", { cta_name: "pay_with_telegram_stars", screen_name: "checkout", plan_id: selectedPlanId });
     createInvoice.mutate();
   };
 
@@ -81,7 +88,7 @@ export function CheckoutPage() {
           <p className="miniapp-page-subtitle">Plan {planId ?? "N/A"}</p>
         </div>
       </div>
-      <Link to="/plans" className="miniapp-back-link">Back to plans</Link>
+      <Link to="/plan" className="miniapp-back-link">Back to plan</Link>
       <Panel>
         {!hasToken && (
           <InlineAlert

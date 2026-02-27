@@ -5,21 +5,30 @@ import { useSession } from "../hooks/useSession";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { getWebappToken, webappApi } from "../api/client";
 import { useTelegramHaptics } from "../hooks/useTelegramHaptics";
+import { useTrackScreen } from "../hooks/useTrackScreen";
+import { useTelemetry } from "../hooks/useTelemetry";
+import { FallbackScreen } from "../components/FallbackScreen";
+import { SessionMissing } from "../components/SessionMissing";
 
 export function DevicesPage() {
   const hasToken = !!getWebappToken();
-  const { data, isLoading, error } = useSession(hasToken);
   const queryClient = useQueryClient();
+  const { data, isLoading, error } = useSession(hasToken);
   const { addToast } = useToast();
   const [issuedConfig, setIssuedConfig] = useState<WebAppIssueDeviceResponse | null>(null);
   const [revokeId, setRevokeId] = useState<string | null>(null);
   const { impact, notify } = useTelegramHaptics();
+  const activeSub = data?.subscriptions?.find((s) => s.status === "active");
+  const activeDevices = data?.devices?.filter((d) => !d.revoked_at) ?? [];
+  useTrackScreen("devices", activeSub?.plan_id ?? null);
+  const { track } = useTelemetry(activeSub?.plan_id ?? null);
 
   const issueMutation = useMutation({
     mutationFn: () => webappApi.post<WebAppIssueDeviceResponse>("/webapp/devices/issue", {}),
     onSuccess: (res) => {
       setIssuedConfig(res);
       queryClient.invalidateQueries({ queryKey: ["webapp", "me"] });
+      track("config_download", { screen_name: "devices" });
       if (res.peer_created) {
         addToast("Device added and activated", "success");
         notify("success");
@@ -30,8 +39,6 @@ export function DevicesPage() {
     onError: () => addToast("Failed to add device", "error"),
   });
 
-  const activeSub = data?.subscriptions?.find((s) => s.status === "active");
-  const activeDevices = data?.devices?.filter((d) => !d.revoked_at) ?? [];
   const deviceLimit = activeSub?.device_limit ?? null;
 
   const revokeMutation = useMutation({
@@ -41,7 +48,8 @@ export function DevicesPage() {
     },
     onSuccess: () => {
       addToast("Device revoked", "success");
-       notify("success");
+      notify("success");
+      track("device_removal", { screen_name: "devices" });
       setRevokeId(null);
       queryClient.invalidateQueries({ queryKey: ["webapp", "me"] });
     },
@@ -52,27 +60,15 @@ export function DevicesPage() {
   });
 
   if (!hasToken) {
-    return (
-      <div className="page-content">
-        <h1 className="miniapp-page-title">My devices</h1>
-        <InlineAlert
-          variant="warning"
-          title="Session missing"
-          message="Your Telegram session is not active. Close and reopen the mini app from the bot."
-        />
-      </div>
-    );
+    return <SessionMissing />;
   }
   if (error) {
     return (
-      <div className="page-content">
-        <h1 className="miniapp-page-title">My devices</h1>
-        <InlineAlert
-          variant="error"
-          title="Could not load devices"
-          message="We could not load your devices. Please try again or reopen from Telegram."
-        />
-      </div>
+      <FallbackScreen
+        title="Could not load devices"
+        message="We could not load your devices. Please try again or contact support."
+        onRetry={() => queryClient.invalidateQueries({ queryKey: ["webapp", "me"] })}
+      />
     );
   }
   if (isLoading) {
