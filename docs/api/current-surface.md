@@ -4,7 +4,7 @@ This table is generated from FastAPI routes, bot/node-agent HTTP handlers, and r
 
 **Legend:** `UNDOCUMENTED` = in code but not in canonical OpenAPI (`docs/api/openapi.yaml`). `STALE` = in OpenAPI but not in code.
 
-Note: The OpenAPI spec covers **admin-api** only. Bot and node-agent health/metrics endpoints are documented here but are not part of the admin-api OpenAPI.
+**Note:** `GET /api/v1/dashboard/operator` was removed; use `GET /api/v1/overview/operator` for operator dashboard data. The OpenAPI spec covers **admin-api** only. Bot and node-agent health/metrics endpoints are documented here but are not part of the admin-api OpenAPI.
 
 | Service | Method | Path | Auth Required | Request Type | Response Type | File Location |
 |---|---|---|---|---|---|---|
@@ -72,7 +72,6 @@ Note: The OpenAPI spec covers **admin-api** only. Bot and node-agent health/metr
 | admin-api | PUT | `/api/v1/control-plane/throttling/policies/{plan_id}` | JWT (admin) | PlanBandwidthPolicyUpsert | PlanBandwidthPolicyOut | `backend/app/api/v1/control_plane.py` |
 | admin-api | GET | `/api/v1/control-plane/topology/graph` | JWT (admin) | — | TopologyGraphOut | `backend/app/api/v1/control_plane.py` |
 | admin-api | GET | `/api/v1/control-plane/topology/summary` | JWT (admin) | — | TopologySummaryOut | `backend/app/api/v1/control_plane.py` |
-| admin-api | GET | `/api/v1/dashboard/operator` | JWT (admin) | — | raw JSON | `backend/app/api/v1/dashboard.py` |
 | admin-api | GET | `/api/v1/devices` | JWT (admin) | — | DeviceList | `backend/app/api/v1/devices.py` |
 | admin-api | POST | `/api/v1/devices/bulk-revoke` | JWT (admin) | BulkRevokeRequest | BulkRevokeOut | `backend/app/api/v1/devices.py` |
 | admin-api | POST | `/api/v1/devices/{device_id}/block` | JWT (admin) | BlockRequest | raw JSON | `backend/app/api/v1/devices.py` |

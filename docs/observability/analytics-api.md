@@ -2,14 +2,18 @@
 
 Stable endpoints for Admin Dashboard. Server-side queries to Prometheus; no browser CORS to Prometheus.
 
+**Note:** `GET /api/v1/dashboard/operator` was removed; use `GET /api/v1/overview/operator` for operator dashboard data.
+
 ## Endpoints
 
 | Method | Path | Purpose |
 |--------|------|---------|
 | GET | `/api/v1/analytics/telemetry/services` | Per-service scrape status (up/down, lastScrape) |
 | GET | `/api/v1/overview/health-snapshot` | Telemetry freshness, incidents, sessions |
-| GET | `/api/v1/overview/operator` | Operator dashboard (KPIs, cluster matrix, timeseries) |
+| GET | `/api/v1/overview/operator` | Operator dashboard (KPIs, cluster matrix, timeseries); primary timeseries source for UI |
 | GET | `/api/v1/analytics/metrics/kpis` | Aggregated KPIs: request rate, error rate, p95 latency |
+| GET | `/api/v1/telemetry/snapshot` | Cache-only telemetry snapshot (meta, nodes.summary); TelemetryHealthWidget |
+| GET | `/api/v1/servers/:id/telemetry` | Per-server telemetry; frontend uses query key `serverTelemetryKey(id)` |
 | GET | `/api/v1/_debug/metrics-targets` | Raw Prometheus targets (debug) |
 
 ## Response: `/api/v1/analytics/telemetry/services`

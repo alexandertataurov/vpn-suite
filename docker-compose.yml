@@ -215,6 +215,30 @@ services:
       - vpn-suite-app
       - vpn-suite-db
 
+  admin-worker:
+    <<: [*service_default, *secure_default, *resource_medium]
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: ["python", "-m", "app.worker_main"]
+    env_file: *env_file
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - SECRET_KEY=${SECRET_KEY}
+    group_add:
+      - "${DOCKER_GID:-119}"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - vpn-suite-app
+      - vpn-suite-db
+
   prometheus:
     <<: [*monitoring_default, *resource_large]
     image: prom/prometheus@sha256:f6639335d34a77d9d9db382b92eeb7fc00934be8eae81dbc03b31cfe90411a94

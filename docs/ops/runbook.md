@@ -29,7 +29,7 @@ Node (per server): `cd /opt/amnezia/amnezia-awg2 && ./manage.sh up|down`
 
 **Request ID:** UI error shows Request ID → search admin-api logs for `request_id=...`; logs have method, path, status, duration_ms; 5xx include stack trace.
 
-**502:** Caddy can’t reach admin-api → check `docker compose ps`, `docker compose logs admin-api`, Postgres/Redis.
+**502:** Caddy can’t reach admin-api → check `docker compose ps`, `docker compose logs admin-api`, Postgres/Redis. Caddyfile uses `health_uri /health`, `health_interval 10s`, and `lb_try_duration 5s` on admin-api upstreams so brief backend restarts may succeed on retry. For full stack start use `docker compose up -d --wait` so the CLI waits for healthy before returning.
 
 **500:** Use request ID in logs for stack trace. Typical: DB/Redis, missing config, route error.
 
@@ -38,6 +38,10 @@ Node (per server): `cd /opt/amnezia/amnezia-awg2 && ./manage.sh up|down`
 **ServersAPIHigh5xxRate:** Check logs for 5xx on `/api/v1/servers*`; verify Postgres/Redis.
 
 **OverviewOperatorHigh5xxRate:** Check logs for `/api/v1/overview/operator`; use request_id from UI banner; validate Prometheus availability and degraded payload (`data_status`).
+
+**Dashboard not loading when on VPN:** By design the dashboard is reachable from VPN clients; see [dashboard-access-when-on-vpn.md](dashboard-access-when-on-vpn.md) for flow and verification. If it fails only when connected, check host firewall and tunnel-subnet rules.
+
+**One network / client cannot reach dashboard (others can):** Server-side: `sudo ufw status` (80/443 allow Anywhere); `docker compose exec redis redis-cli KEYS "ratelimit:*"` (if client IP appears and is high, rate limit may be hitting — keys expire in 60s window); `docker compose logs reverse-proxy --since 30m` and `docker compose logs admin-api --since 30m` for 502/403/429 from that IP. No IP blocklist in Caddy or app. Client-side: from a device on that network run `curl -v https://vpn.vega.llc/admin` and `nslookup vpn.vega.llc` (or `dig vpn.vega.llc`); try mobile data vs Wi‑Fi to isolate ISP/router; check router firewall or parental controls.
 
 **VPN no traffic (handshake OK):** [no-traffic-troubleshooting.md](no-traffic-troubleshooting.md) § Deep debug (AmneziaWG in Docker) — classification, diagnostics (wg show, NAT, Docker network mode, MTU), request-3-things for remote support, minimal fix plan. **NAT:** Run `sudo ./ops/amnezia-nat-setup.sh` on the VPN host to add MASQUERADE for tunnel subnets.
 
@@ -64,9 +68,11 @@ Node (per server): `cd /opt/amnezia/amnezia-awg2 && ./manage.sh up|down`
 
 ## Control-plane checklist (zero downtime)
 
-1. Discover node: `NODE_MODE=real`, `NODE_DISCOVERY=docker`; `POST /api/v1/cluster/scan` (Bearer). Agent mode: heartbeat only.
-2. Set server `public_key` and `vpn_endpoint` (Admin or API).
-3. Issue config from bot or admin; add_peer does not drop existing peers.
+1. Discover node: `NODE_MODE=real`, `NODE_DISCOVERY=docker`; `POST /api/v1/cluster/scan` (Bearer). In this mode **node-agent MUST be off**; peers are managed only by docker runtime reconcile.
+2. Agent mode (production): `NODE_MODE=agent`, `NODE_DISCOVERY=agent`; bring up node-agent via `./manage.sh up-agent` (profile `agent`) on the node — **do not mount Docker socket into admin-api**.
+3. Run `./manage.sh sanity-check` after changing env to verify there is no mixed control-plane (e.g. node-agent running while `NODE_DISCOVERY=docker`).
+4. Set server `public_key` and `vpn_endpoint` (Admin or API).
+5. Issue config from bot or admin; add_peer does not drop existing peers.
 
 ## Host isolation (production)
 

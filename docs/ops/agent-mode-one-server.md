@@ -58,7 +58,9 @@ Set in the node-agent environment (container env, systemd, or host):
 - **AGENT_SHARED_TOKEN** = same value as in control-plane `.env`.
 - **CONTROL_PLANE_URL** = `https://$PUBLIC_DOMAIN:8443` (mTLS port; agent API).
 
-After the agent starts and sends heartbeats, only this server will appear in the Servers list and its telemetry will come from the heartbeat.
+The node-agent **must send the server’s WireGuard public key** in each heartbeat (`public_key` in the payload). The control-plane persists it on the Server row so that **issue/reissue** can verify the key (and so device creation works even when Redis TTL has expired, using the key from DB). If the agent does not send `public_key`, create device will fail with “Server key not verified” until the key is set (e.g. by running Sync once so the agent reports it, or by setting it manually in the DB).
+
+After the agent starts and sends heartbeats (with `public_key`), only this server will appear in the Servers list and its telemetry will come from the heartbeat.
 
 ## 4. Verify
 

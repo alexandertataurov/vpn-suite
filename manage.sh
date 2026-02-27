@@ -34,14 +34,14 @@ case "$cmd" in
     "${DC[@]}" up -d admin-api
     ;;
   up-core)
-    # admin-api, postgres, redis, reverse-proxy (Caddy for $PUBLIC_DOMAIN)
+    # admin-api, admin-worker (telemetry/snapshot), postgres, redis, reverse-proxy (Caddy for $PUBLIC_DOMAIN)
     "${DC[@]}" up -d postgres redis
     "${DC[@]}" run --rm admin-api python -m alembic upgrade head
     # Bootstrap idempotent seeds (admin user and optional plans from env).
     "${DC[@]}" run --rm admin-api python scripts/seed_admin.py
     "${DC[@]}" run --rm admin-api python scripts/seed_plans.py
     "${DC[@]}" run --rm admin-api python scripts/seed_system_operator.py
-    "${DC[@]}" up -d admin-api
+    "${DC[@]}" up -d admin-api admin-worker
     bash scripts/update_admin_api_ip.sh
     "${DC[@]}" up -d reverse-proxy telegram-vpn-bot
     ;;
@@ -67,6 +67,25 @@ case "$cmd" in
     ;;
   down-monitoring)
     "${DC_OBS[@]}" --profile monitoring stop victoria-metrics prometheus alertmanager cadvisor node-exporter loki promtail grafana discovery-runner wg-exporter tempo otel-collector
+    ;;
+  restart-metrics)
+    # Restart admin-worker (telemetry/snapshot), then full monitoring stack so Prometheus re-scrapes.
+    "${DC[@]}" restart admin-worker 2>/dev/null || "${DC[@]}" up -d admin-worker
+    "${DC_OBS[@]}" --profile monitoring stop victoria-metrics prometheus alertmanager cadvisor node-exporter loki promtail grafana discovery-runner wg-exporter tempo otel-collector 2>/dev/null || true
+    "${DC_OBS[@]}" --profile monitoring up -d admin-api telegram-vpn-bot
+    "${DC_OBS[@]}" --profile monitoring up -d victoria-metrics prometheus alertmanager cadvisor node-exporter loki promtail grafana discovery-runner wg-exporter tempo otel-collector
+    sleep 3
+    curl -sS -X POST "http://127.0.0.1:${PROMETHEUS_HOST_PORT:-19090}/-/reload" 2>/dev/null || true
+    echo "Metrics stack restarted. Admin UI metrics need admin-worker (telemetry) + Prometheus scraping admin-api."
+    ;;
+  restart-audit)
+    # Use only docker-compose.audit.yml so port 18001 is used (no merge with base 8000).
+    AUDIT_PROJECT="${AUDIT_PROJECT:-vpn-suite-audit}"
+    docker compose -p "$AUDIT_PROJECT" -f docker-compose.audit.yml --env-file "${ENV_FILE:-.env}" down --remove-orphans 2>/dev/null || true
+    docker compose -p "$AUDIT_PROJECT" -f docker-compose.audit.yml --env-file "${ENV_FILE:-.env}" up -d postgres redis
+    docker compose -p "$AUDIT_PROJECT" -f docker-compose.audit.yml --env-file "${ENV_FILE:-.env}" run --rm admin-api python -m alembic upgrade head 2>/dev/null || true
+    docker compose -p "$AUDIT_PROJECT" -f docker-compose.audit.yml --env-file "${ENV_FILE:-.env}" up -d admin-api reverse-proxy
+    echo "Audit stack restarted."
     ;;
   ps)
     "${DC[@]}" ps
@@ -182,6 +201,10 @@ case "$cmd" in
     [ -z "${2:-}" ] && echo "Usage: $0 node-public-key <server_id> [public_key]" >&2 && exit 1
     "${DC[@]}" run --rm -e PYTHONPATH=/app ${SERVER_PUBLIC_KEY:+-e SERVER_PUBLIC_KEY="$SERVER_PUBLIC_KEY"} admin-api python scripts/node_ops.py public-key "$2" "${3:-}"
     ;;
+  fix-server-public-key)
+    # Sync servers so DB gets correct Server.public_key from node; optional reissue all devices on a server.
+    "${DC[@]}" run --rm -e PYTHONPATH=/app admin-api python scripts/fix_server_public_key.py ${2:+$2}
+    ;;
   node-kill-no-peers)
     bash "$(dirname "$0")/scripts/kill-amnezia-wg-no-peers.sh"
     ;;
@@ -213,6 +236,31 @@ case "$cmd" in
     # VPN connection config test stand (debug logs). Optional: TEST_STAND_LOG=path, TEST_STAND_ISSUE=1 (issue check, needs DB).
     "${DC[@]}" run --rm -e PYTHONPATH=/app admin-api python scripts/test_stand_vpn_config.py --no-env \
       ${TEST_STAND_LOG:+--log-file "$TEST_STAND_LOG"} ${TEST_STAND_ISSUE:+--issue} 2>&1
+    ;;
+  sanity-check)
+    # Sanity-check control-plane mode vs running agents to avoid mixed ownership of peers.
+    source scripts/lib/env.sh
+    resolve_env_file
+    load_env_file "$ENV_FILE"
+    ERR=0
+    NODE_DISCOVERY_VAL="${NODE_DISCOVERY:-}"
+    NODE_MODE_VAL="${NODE_MODE:-}"
+    if [ "$NODE_DISCOVERY_VAL" = "docker" ] && docker ps --format '{{.Names}}' | grep -q '^node-agent'; then
+      echo "ERROR: node-agent container is running while NODE_DISCOVERY=docker. Stop node-agent or switch NODE_DISCOVERY=agent/NODE_MODE=agent." >&2
+      ERR=1
+    fi
+    if [ "$NODE_DISCOVERY_VAL" = "docker" ] && [ "$NODE_MODE_VAL" != "real" ]; then
+      echo "ERROR: NODE_DISCOVERY=docker requires NODE_MODE=real (single-host/dev mode)." >&2
+      ERR=1
+    fi
+    if [ "$NODE_DISCOVERY_VAL" = "agent" ] && [ "$NODE_MODE_VAL" != "agent" ]; then
+      echo "ERROR: NODE_DISCOVERY=agent requires NODE_MODE=agent." >&2
+      ERR=1
+    fi
+    if [ "$ERR" -ne 0 ]; then
+      exit 1
+    fi
+    echo "Sanity check OK: control-plane configuration is consistent."
     ;;
   check)
     # Quick quality gate: ruff, pytest, frontend lint/typecheck/test/build (no migrate; use verify for full).

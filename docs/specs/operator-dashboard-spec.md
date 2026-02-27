@@ -251,7 +251,7 @@ Each entry: Severity, Node/Region, Metric value, Timestamp, Link to server detai
 
 | PR | Scope |
 |----|-------|
-| **PR1** | Backend: `/api/v1/dashboard/operator` aggregate endpoint — Prometheus queries + DB/Redis fallbacks; returns health strip, cluster matrix, incident list, server table snapshot. Add freshness timestamps. |
+| **PR1** | Backend: `/api/v1/overview/operator` aggregate endpoint — Prometheus queries + DB/Redis fallbacks; returns health strip, cluster matrix, incident list, server table snapshot. Add freshness timestamps. |
 | **PR2** | Frontend: Bloomberg layout (grid, 1px borders, no cards). HealthStrip, MetricRow, IncidentPanel components. |
 | **PR3** | Frontend: Traffic & Load charts (query_range), User Sessions block, Server Table with virtualization. Time range sync (5m/15m/1h/6h/24h). |
 | **PR4** | Freshness badges, retry controls, debounce, exponential backoff, virtualized server table (>200 rows). |

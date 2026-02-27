@@ -15,6 +15,14 @@ x-secure-default: &secure_default
   tmpfs:
     - /tmp
 
+# Avoid duplicate security_opt when merging with base compose (base already sets it).
+x-secure-default-no-opt: &secure_default_no_opt
+  cap_drop:
+    - ALL
+  read_only: true
+  tmpfs:
+    - /tmp
+
 x-monitoring-default: &monitoring_default
   profiles:
     - monitoring

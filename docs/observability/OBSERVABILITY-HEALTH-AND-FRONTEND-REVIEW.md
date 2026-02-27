@@ -69,16 +69,19 @@
 
 ### 2.5 Frontend telemetry/metrics endpoints (single reference)
 
+`GET /api/v1/dashboard/operator` was removed; use `GET /api/v1/overview/operator` only.
+
 | API path | Query key | Component | Type |
 |----------|-----------|-----------|------|
 | `GET /overview/health-snapshot` | overview/health-snapshot | GlobalDataIndicator | health |
-| `GET /overview/operator` | OPERATOR_DASHBOARD_KEY | OperatorDashboardContent, VpnNodesTab, TopStatusBar | telemetry / KPIs |
+| `GET /overview/operator` | OPERATOR_DASHBOARD_KEY | OperatorDashboardContent, VpnNodesTab, TopStatusBar | telemetry / KPIs; primary timeseries for UI |
 | `GET /overview/connection_nodes` | CONNECTION_NODES_KEY | ConnectionNodesSection | topology |
 | `GET /analytics/telemetry/services` | ANALYTICS_TELEMETRY_SERVICES_KEY | ScrapeStatusPanel | scrape status |
 | `GET /analytics/metrics/kpis` | ANALYTICS_METRICS_KPIS_KEY | MetricsKpisPanel | metrics KPIs |
+| `GET /telemetry/snapshot` | TELEMETRY_SNAPSHOT_KEY | TelemetryHealthWidget | cache-only snapshot (meta, nodes.summary) |
 | `GET /servers/telemetry/summary` | (servers list + summary) | useServersTelemetrySummary, Servers table | telemetry summary |
 | `GET /servers/snapshots/summary` | SERVERS_SNAPSHOTS_SUMMARY_KEY | useServersSnapshotSummary | snapshots |
-| `GET /servers/:id/telemetry` | serverTelemetryKey(id) / serversTelemetryKey(id) | ServerRowDrawer, ServerDetail, VpnNodesTab | per-server telemetry |
+| `GET /servers/:id/telemetry` | serverTelemetryKey(id) | ServerRowDrawer, ServerDetail, VpnNodesTab | per-server telemetry |
 | `GET /telemetry/docker/hosts`, `/telemetry/docker/containers`, `/telemetry/docker/container/:id/metrics` | DOCKER_TELEMETRY_KEY | useDockerTelemetry (Docker tab) | Docker metrics |
 
 ---

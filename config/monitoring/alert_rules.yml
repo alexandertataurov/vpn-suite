@@ -159,6 +159,15 @@ groups:
           summary: "VPN peers expected minus present > 0 on node (reconcile drift or failure)"
           description: "Node {{ $labels.node_id }} has fewer peers on wireguard than in DB. Check reconcile loop and node reachability."
 
+      - alert: VpnPeersAllMissing
+        expr: vpn_peers_present == 0 and vpn_peers_expected > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "All peers disappeared from node (vpn_peers_present=0 but DB still expects peers)"
+          description: "Node {{ $labels.node_id }} has zero peers on wireguard while DB reports active devices. Investigate control-plane reconciliation or unexpected peer pruning."
+
       # Devices marked NO_HANDSHAKE (no handshake within quality gate after apply)
       - alert: VpnDevicesNoHandshake
         expr: vpn_devices_no_handshake > 0

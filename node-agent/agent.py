@@ -187,6 +187,17 @@ METRIC_PEER_ROAMING = Counter(
     "Peer roaming events observed (best-effort)",
 )
 
+METRIC_PEER_MUTATIONS = Counter(
+    "agent_peer_mutations_total",
+    "Peer mutations applied by node-agent",
+    ["type"],  # add|remove|update
+)
+METRIC_PEER_PRUNE_BLOCKED = Counter(
+    "agent_peer_prune_blocked_total",
+    "Peer prune operations blocked by safety checks",
+    ["reason"],
+)
+
 METRIC_HTTP_REQUESTS_TOTAL = Counter(
     "agent_http_requests_total",
     "HTTP requests from node-agent to control-plane",
@@ -868,9 +879,30 @@ def _reconcile(
     METRIC_ORPHAN_PEERS.set(len(to_remove))
     METRIC_DRIFT_PEERS.set(len(to_update))
 
+    allow_prune_empty = os.getenv("ALLOW_PRUNE_EMPTY_DESIRED", "").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+    )
+    if not desired_map and runtime_map and not allow_prune_empty:
+        METRIC_PEER_PRUNE_BLOCKED.labels(reason="empty_desired").inc(len(runtime_map))
+        _log(
+            "prune_blocked_empty_desired",
+            container=container,
+            iface=iface,
+            runtime=len(runtime_map),
+        )
+        return 0, 0, 0
+
     if read_only:
         if to_add or to_remove or to_update:
-            _log("reconcile_read_only", container=container, to_add=len(to_add), orphan=len(to_remove), drift=len(to_update))
+            _log(
+                "reconcile_read_only",
+                container=container,
+                to_add=len(to_add),
+                orphan=len(to_remove),
+                drift=len(to_update),
+            )
         return 0, 0, 0
 
     added = removed = updated = 0
@@ -957,6 +989,13 @@ def _reconcile(
         except Exception as e:
             _log("reconcile_save_error", container=container, error=str(e))
 
+    if added:
+        METRIC_PEER_MUTATIONS.labels(type="add").inc(added)
+    if removed:
+        METRIC_PEER_MUTATIONS.labels(type="remove").inc(removed)
+    if updated:
+        METRIC_PEER_MUTATIONS.labels(type="update").inc(updated)
+
     return added, removed, updated
 
 
@@ -1011,6 +1050,27 @@ def main() -> int:
         raise RuntimeError("SERVER_ID is required")
     if not os.getenv("AGENT_SHARED_TOKEN", "").strip():
         raise RuntimeError("AGENT_SHARED_TOKEN is required (or disable agent endpoints server-side)")
+
+    discovery_mode = (os.getenv("NODE_DISCOVERY", "") or "").strip().lower()
+    node_mode = (os.getenv("NODE_MODE", "") or "").strip().lower()
+    if discovery_mode and discovery_mode != "agent":
+        _log(
+            "startup_conflict",
+            discovery_mode=discovery_mode,
+            node_mode=node_mode or None,
+        )
+        raise RuntimeError(
+            f"Refusing to start node-agent: NODE_DISCOVERY must be 'agent' when node-agent runs, got {discovery_mode!r}."
+        )
+    if node_mode and node_mode not in ("agent", "mock"):
+        _log(
+            "startup_conflict",
+            discovery_mode=discovery_mode or None,
+            node_mode=node_mode,
+        )
+        raise RuntimeError(
+            f"Refusing to start node-agent: NODE_MODE must be 'agent' (or 'mock' in tests), got {node_mode!r}."
+        )
 
     container_filter = os.getenv("CONTAINER_FILTER", "auto").strip()
     explicit_container = os.getenv("CONTAINER_NAME", "").strip() or None

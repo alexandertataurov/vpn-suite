@@ -2146,57 +2146,6 @@
         ]
       }
     },
-    "/api/v1/dashboard/operator": {
-      "get": {
-        "tags": [
-          "dashboard"
-        ],
-        "summary": "Get Operator Dashboard",
-        "description": "Aggregated operator console data: health strip, cluster matrix, incidents, servers, timeseries.",
-        "operationId": "get_operator_dashboard_api_v1_dashboard_operator_get",
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "time_range",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "pattern": "^(5m|15m|1h|6h|24h)$",
-              "default": "1h",
-              "title": "Time Range"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          },
-          "default": {
-            "$ref": "#/components/responses/ErrorResponse"
-          }
-        }
-      }
-    },
     "/api/v1/peers": {
       "get": {
         "tags": [
