@@ -222,3 +222,69 @@ async def test_docker_logs_invalid_since_returns_400(client: AsyncClient):
         app.dependency_overrides.clear()
 
     assert r.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_docker_actions_require_auth(client: AsyncClient):
+    for path in (
+        "/api/v1/telemetry/docker/container/abc123/start",
+        "/api/v1/telemetry/docker/container/abc123/stop",
+        "/api/v1/telemetry/docker/container/abc123/restart",
+    ):
+        r = await client.post(path)
+        assert r.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_docker_start_allows_cluster_write_permission(client: AsyncClient):
+    calls: list[tuple[str, str]] = []
+
+    async def _start(host_id: str, container_id: str) -> None:
+        calls.append((host_id, container_id))
+
+    fake_service = SimpleNamespace(start_container=_start)
+    app.state.docker_telemetry_service = fake_service
+
+    fake_admin, fake_db = _fake_deps(["cluster:write"])
+    app.dependency_overrides[get_current_admin] = fake_admin
+    app.dependency_overrides[get_db] = fake_db
+    try:
+        r = await client.post("/api/v1/telemetry/docker/container/abc123/start")
+    finally:
+        app.dependency_overrides.clear()
+
+    assert r.status_code == 204
+    assert calls == [("local", "abc123")]
+
+
+@pytest.mark.asyncio
+async def test_docker_stop_and_restart_use_service(client: AsyncClient):
+    calls: list[tuple[str, str, str]] = []
+
+    async def _stop(host_id: str, container_id: str) -> None:
+        calls.append(("stop", host_id, container_id))
+
+    async def _restart(host_id: str, container_id: str) -> None:
+        calls.append(("restart", host_id, container_id))
+
+    fake_service = SimpleNamespace(
+        stop_container=_stop,
+        restart_container=_restart,
+    )
+    app.state.docker_telemetry_service = fake_service
+
+    fake_admin, fake_db = _fake_deps(["cluster:write"])
+    app.dependency_overrides[get_current_admin] = fake_admin
+    app.dependency_overrides[get_db] = fake_db
+    try:
+        r1 = await client.post("/api/v1/telemetry/docker/container/abc123/stop")
+        r2 = await client.post("/api/v1/telemetry/docker/container/abc123/restart")
+    finally:
+        app.dependency_overrides.clear()
+
+    assert r1.status_code == 204
+    assert r2.status_code == 204
+    assert calls == [
+        ("stop", "local", "abc123"),
+        ("restart", "local", "abc123"),
+    ]

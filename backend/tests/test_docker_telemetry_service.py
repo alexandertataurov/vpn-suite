@@ -23,10 +23,10 @@ def test_parse_docker_hosts_config_default_on_empty_in_development(monkeypatch):
 
 def test_parse_docker_hosts_config_empty_in_production_is_not_configured(monkeypatch):
     monkeypatch.setattr(docker_engine_client.settings, "environment", "production", raising=False)
-    # Empty/missing config defaults to local docker socket even in production (common single-host deployment).
+    # In production, empty/missing config must NOT implicitly trust the local docker socket.
+    # Operator must configure DOCKER_TELEMETRY_HOSTS_JSON explicitly or set it to [] to disable.
     hosts = parse_docker_hosts_config("")
-    assert len(hosts) == 1
-    assert hosts[0].host_id == "local"
+    assert hosts == []
 
     # Explicit opt-out.
     hosts = parse_docker_hosts_config("[]")
