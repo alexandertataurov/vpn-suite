@@ -9,6 +9,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.core.database import get_db
 from app.core.logging_config import extra_for_event, get_security_logger
 from app.core.metrics import auth_failures_total
@@ -154,8 +155,19 @@ async def refresh(
             )
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token revoked")
     except Exception:
-        logging.getLogger(__name__).debug(
-            "Refresh token blocklist check failed (fail-open if Redis down)", exc_info=True
+        logger = logging.getLogger(__name__)
+        if settings.refresh_blocklist_fail_closed:
+            logger.warning(
+                "Refresh token blocklist check failed; failing closed because REFRESH_BLOCKLIST_FAIL_CLOSED=1",
+                exc_info=True,
+            )
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Authentication temporarily unavailable",
+            )
+        logger.debug(
+            "Refresh token blocklist check failed (fail-open because REFRESH_BLOCKLIST_FAIL_CLOSED=0)",
+            exc_info=True,
         )
     payload = decode_token(token)
     if not payload or payload.get("type") != "refresh":

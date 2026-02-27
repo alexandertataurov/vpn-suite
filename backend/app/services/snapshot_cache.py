@@ -10,6 +10,7 @@ from app.core.redis_client import get_redis
 _log = logging.getLogger(__name__)
 
 SNAPSHOT_TTL_SECONDS = 60
+# Snapshot cache layer: stale after 90s. Operator dashboard uses 30s/120s for request-time freshness.
 SNAPSHOT_STALE_THRESHOLD_SECONDS = 90
 DEFAULT_ENV = "default"
 

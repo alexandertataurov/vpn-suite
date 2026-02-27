@@ -111,6 +111,10 @@ async def get_telemetry_snapshot(
     devices_data = await get_snapshot_devices(env) if include_devices else None
     sessions_data = await get_snapshot_sessions(env) if include_sessions else None
     meta_data = await get_snapshot_meta(env)
+    if not meta_data and (include_nodes or include_devices or include_sessions):
+        _log.debug(
+            "telemetry snapshot cache empty (meta_data missing); ensure telemetry_snapshot_aggregator and telemetry poll are running"
+        )
 
     meta = _build_meta_with_freshness(meta_data, now_ts)
 
@@ -118,6 +122,14 @@ async def get_telemetry_snapshot(
     if include_nodes and nodes_data:
         summary = nodes_data.get("summary") or {}
         list_raw = (nodes_data.get("list") or []) if include_nodes_list else []
+        list_entries = []
+        for e in list_raw:
+            if not isinstance(e, dict) or not e.get("id"):
+                continue
+            try:
+                list_entries.append(NodeEntryOut(**e))
+            except Exception:
+                continue
         nodes_out = NodesSnapshotOut(
             summary=NodeSummaryOut(
                 total=int(summary.get("total") or 0),
@@ -125,13 +137,21 @@ async def get_telemetry_snapshot(
                 degraded=int(summary.get("degraded") or 0),
                 down=int(summary.get("down") or 0),
             ),
-            list=[NodeEntryOut(**e) for e in list_raw],
+            list=list_entries,
         )
 
     devices_out = None
     if include_devices and devices_data:
         summary = devices_data.get("summary") or {}
         list_raw = (devices_data.get("list") or []) if include_devices_list else []
+        device_entries = []
+        for e in list_raw:
+            if not isinstance(e, dict) or not e.get("id"):
+                continue
+            try:
+                device_entries.append(DeviceEntryOut(**e))
+            except Exception:
+                continue
         devices_out = DevicesSnapshotOut(
             summary=DeviceSummaryOut(
                 total=int(summary.get("total") or 0),
@@ -139,7 +159,7 @@ async def get_telemetry_snapshot(
                 needs_reconcile=int(summary.get("needs_reconcile") or 0),
                 stale=int(summary.get("stale") or 0),
             ),
-            list=[DeviceEntryOut(**e) for e in list_raw],
+            list=device_entries,
         )
 
     sessions_out = None

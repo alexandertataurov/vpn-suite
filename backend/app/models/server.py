@@ -36,6 +36,10 @@ class Server(Base, TimestampMixin):
     last_snapshot_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    public_key_synced_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    key_status: Mapped[str | None] = mapped_column(String(32), nullable=True)  # verified | unverified | not_found
     auto_sync_enabled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     auto_sync_interval_sec: Mapped[int] = mapped_column(Integer, default=60, nullable=False)
     ops_notes: Mapped[str | None] = mapped_column(Text, nullable=True)

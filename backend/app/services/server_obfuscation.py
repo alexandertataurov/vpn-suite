@@ -1,33 +1,27 @@
-"""Server-scoped AmneziaWG H1–H4: use profile/server or CSPRNG-generate and persist.
+"""Server-scoped AmneziaWG H1–H4 helpers.
 
-At issue time callers merge runtime H from node (get_obfuscation_from_node) over this,
-so emitted config matches the running Amnezia server when runtime is available.
+For NODE_MODE=real the only source of truth for H1–H4 is the runtime node
+(`wg show awg0` via NodeRuntimeAdapter). This module no longer injects or
+generates H values for config issuance; callers must always layer runtime
+obfuscation over profile/server params.
 """
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.amnezia_config import generate_h_params
 from app.models import Server
 
 
 async def request_params_with_server_h(
-    session: AsyncSession,
-    server: Server,
+    session: AsyncSession,  # kept for signature compatibility
+    server: Server,  # kept for signature/type compatibility
     request_params: dict | None,
 ) -> dict:
-    """Return request_params with H1–H4 from profile, server, or CSPRNG-generated and persisted on server."""
+    """Return request_params with any explicit amnezia_h* keys stripped.
+
+    H1–H4 are now taken exclusively from the runtime node; profile/DB-defined H
+    values are ignored for config generation to avoid desync with awg0.
+    """
     params = dict(request_params) if request_params else {}
-    if all(params.get(k) is not None for k in ("amnezia_h1", "amnezia_h2", "amnezia_h3", "amnezia_h4")):
-        return params
-    h1 = getattr(server, "amnezia_h1", None)
-    h2 = getattr(server, "amnezia_h2", None)
-    h3 = getattr(server, "amnezia_h3", None)
-    h4 = getattr(server, "amnezia_h4", None)
-    if all(x is not None for x in (h1, h2, h3, h4)):
-        params["amnezia_h1"], params["amnezia_h2"], params["amnezia_h3"], params["amnezia_h4"] = h1, h2, h3, h4
-        return params
-    H1, H2, H3, H4 = generate_h_params()
-    server.amnezia_h1, server.amnezia_h2, server.amnezia_h3, server.amnezia_h4 = H1, H2, H3, H4
-    await session.flush()
-    params["amnezia_h1"], params["amnezia_h2"], params["amnezia_h3"], params["amnezia_h4"] = H1, H2, H3, H4
+    for key in ("amnezia_h1", "amnezia_h2", "amnezia_h3", "amnezia_h4"):
+        params.pop(key, None)
     return params

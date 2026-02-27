@@ -102,10 +102,42 @@ vpn_peers_present = Gauge(
     "Number of peers present on node (from wg show)",
     ["node_id"],
 )
+vpn_peers_readded_total = Counter(
+    "vpn_peers_readded_total",
+    "Peers re-added during reconciliation (per node)",
+    ["node_id"],
+)
+vpn_peer_apply_failures_total = Counter(
+    "vpn_peer_apply_failures_total",
+    "Peer apply failures during reconciliation",
+    ["node_id", "reason"],
+)
+vpn_peers_orphan_count = Gauge(
+    "vpn_peers_orphan_count",
+    "Peers on node not in DB (ORPHAN) when reconciliation_remove_orphans=false",
+    ["node_id"],
+)
+vpn_handshake_latency_seconds = Gauge(
+    "vpn_handshake_latency_seconds",
+    "Seconds from last_applied_at to first handshake (from telemetry when available).",
+    ["device_id", "server_id"],
+)
 vpn_devices_no_handshake = Gauge(
     "vpn_devices_no_handshake",
     "Number of devices with apply_status=NO_HANDSHAKE (no handshake within gate)",
     [],
+)
+
+# Per-device handshake diagnostics
+vpn_peer_last_handshake_age_seconds = Gauge(
+    "vpn_peer_last_handshake_age_seconds",
+    "Age of last handshake per device (seconds, from telemetry cache).",
+    ["device_id", "server_id"],
+)
+vpn_peer_unstable_events_total = Counter(
+    "vpn_peer_unstable_events_total",
+    "Unstable peer events detected by control-plane (e.g. no_handshake).",
+    ["reason"],
 )
 
 # Bot funnel (spec: bot_conversion_rate; use funnel_events_total + PromQL for rate)
@@ -185,6 +217,31 @@ provision_failures_total = Counter(
     "provision_failures_total",
     "Provisioning failures (issue, rotate, revoke)",
     ["server_id", "reason"],
+)
+config_issue_blocked_total = Counter(
+    "vpn_config_issue_blocked_total",
+    "Issue/reissue blocked (e.g. server key not verified)",
+    ["reason"],
+)
+server_key_sync_success_total = Counter(
+    "vpn_server_key_sync_success_total",
+    "Server public key fetched from node (live)",
+    ["server_id"],
+)
+server_key_sync_fail_total = Counter(
+    "vpn_server_key_sync_fail_total",
+    "Server key fetch/sync failure",
+    ["server_id", "reason"],
+)
+server_key_mismatch_total = Counter(
+    "vpn_server_key_mismatch_total",
+    "DB key differed from live key (corrected)",
+    ["server_id"],
+)
+discovery_not_found_total = Counter(
+    "vpn_discovery_not_found_total",
+    "Server not found in discovery",
+    ["server_id"],
 )
 
 # Docker telemetry internals
@@ -281,6 +338,47 @@ telemetry_snapshot_request_duration_seconds = Histogram(
     "Latency of GET /telemetry/snapshot (cache read)",
     ["scope", "fields_filter"],
     buckets=(0.01, 0.025, 0.05, 0.1, 0.2, 0.5, 1.0),
+)
+
+# Live observability pipeline (SSE + Redis hot state)
+live_connections = Gauge(
+    "live_connections",
+    "Current number of active live metrics SSE connections",
+)
+live_events_in_total = Counter(
+    "live_events_in_total",
+    "Total number of live snapshot updates written to Redis hot state",
+)
+live_events_out_total = Counter(
+    "live_events_out_total",
+    "Total number of live events emitted to SSE clients",
+)
+live_fanout_latency_seconds = Histogram(
+    "live_fanout_latency_seconds",
+    "Latency from reading hot-state snapshot to writing SSE event (seconds)",
+    buckets=(0.01, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5),
+)
+live_dropped_updates_total = Counter(
+    "live_dropped_updates_total",
+    "Number of live updates dropped due to backpressure, payload caps, or degraded mode",
+)
+live_redis_write_latency_seconds = Histogram(
+    "live_redis_write_latency_seconds",
+    "Latency of writes to Redis hot-state keys used by the live pipeline (seconds)",
+    buckets=(0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5),
+)
+live_reconnect_rate = Counter(
+    "live_reconnect_rate",
+    "Count of SSE reconnect attempts (client reconnects to /api/v1/live/metrics)",
+)
+live_queue_depth = Gauge(
+    "live_queue_depth",
+    "Approximate internal queue depth / coalesced update backlog for live metrics fanout",
+)
+live_node_staleness_seconds = Histogram(
+    "live_node_staleness_seconds",
+    "Distribution of node staleness (seconds) between snapshot_ts and last_success_ts in live view",
+    buckets=(1.0, 5.0, 10.0, 30.0, 60.0, 120.0, 300.0, 900.0),
 )
 
 

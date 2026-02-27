@@ -16,7 +16,10 @@ from app.core.metrics import config_download_total
 from app.core.rate_limit import rate_limit_config_download
 from app.core.rbac import require_permission
 from app.core.security import decrypt_config
-from app.models import IssuedConfig
+from app.models import Device, IssuedConfig
+
+# Config may only be delivered when peer is applied on server (no-drift invariant).
+APPLIED_OR_VERIFIED = ("APPLIED", "VERIFIED")
 
 router = APIRouter(prefix="/admin/configs", tags=["admin-configs"])
 _log = logging.getLogger(__name__)
@@ -36,7 +39,17 @@ async def get_issued_config_content(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={
                 "code": "NOT_FOUND",
-                "message": "Config not found. It may have been reissued or removed. Open the device and use the current config link.",
+                "message": "Config not found. It may have been reissued or removed. Refresh the device page and use the latest config link, or reissue the config.",
+            },
+        )
+    dev_result = await db.execute(select(Device).where(Device.id == issued.device_id))
+    device = dev_result.scalar_one_or_none()
+    if not device or (device.apply_status or "").strip() not in APPLIED_OR_VERIFIED:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={
+                "code": "PEER_NOT_APPLIED",
+                "message": "Peer not yet applied on server; try again shortly.",
             },
         )
     if not issued.config_encrypted:
@@ -65,6 +78,21 @@ async def _resolve_config(token: str, db: AsyncSession) -> IssuedConfig | None:
     return result.scalar_one_or_none()
 
 
+async def _require_peer_applied(issued: IssuedConfig, db: AsyncSession, endpoint: str) -> None:
+    """Raise 503 PEER_NOT_APPLIED if device apply_status not in APPLIED/VERIFIED."""
+    dev_result = await db.execute(select(Device).where(Device.id == issued.device_id))
+    device = dev_result.scalar_one_or_none()
+    if not device or (device.apply_status or "").strip() not in APPLIED_OR_VERIFIED:
+        config_download_total.labels(endpoint=endpoint, status="peer_not_applied").inc()
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={
+                "code": "PEER_NOT_APPLIED",
+                "message": "Peer not yet applied on server; try again shortly.",
+            },
+        )
+
+
 @router.get("/{token}/download")
 async def download_config(
     request: Request,
@@ -89,6 +117,7 @@ async def download_config(
             status_code=status.HTTP_410_GONE,
             detail="Token expired",
         )
+    await _require_peer_applied(issued, db, "download")
     if not issued.config_encrypted:
         config_download_total.labels(endpoint="download", status="not_found").inc()
         raise not_found_404("Config", None)
@@ -138,6 +167,7 @@ async def get_config_qr(
             status_code=status.HTTP_410_GONE,
             detail="Token expired",
         )
+    await _require_peer_applied(issued, db, "qr")
     if not issued.config_encrypted:
         config_download_total.labels(endpoint="qr", status="not_found").inc()
         raise not_found_404("Config", None)

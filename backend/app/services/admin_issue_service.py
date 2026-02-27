@@ -22,7 +22,12 @@ from app.core.amnezia_config import (
 )
 from app.core.amnezia_config import _select_awg_profile
 from app.core.config import settings
-from app.core.config_builder import ConfigProfile, ConfigValidationError, generate_preshared_key
+from app.core.config_builder import (
+    ConfigProfile,
+    ConfigValidationError,
+    DEFAULT_DNS,
+    generate_preshared_key,
+)
 from app.core.exceptions import WireGuardCommandError
 from app.core.redaction import redact_for_log
 from app.core.security import encrypt_config
@@ -39,11 +44,15 @@ from app.models import (
 from app.services.address_allocator import allocate_address_for_device
 from app.services.node_endpoint_utils import get_endpoint_from_runtime, is_endpoint_private
 from app.services.node_runtime import NodeRuntimeAdapter, PeerConfigLike
+from app.services.server_live_key_service import (
+    ServerNotSyncedError,
+    _heartbeat_container_id,
+    live_key_fetch,
+)
 from app.services.server_obfuscation import request_params_with_server_h
 
 # tg_id for system operator (standalone peers)
 SYSTEM_TG_ID = 0
-
 TOKEN_BYTES = 32
 DOWNLOAD_TOKEN_TTL_DAYS = 1
 
@@ -144,8 +153,22 @@ async def admin_issue_peer(
         raise ValueError("server_not_available")
     if getattr(server, "is_draining", False):
         raise ValueError("server_draining")
-    if not server.public_key:
-        raise ValueError("server_public_key_required")
+    fallback = _heartbeat_container_id(getattr(server, "api_endpoint", None), server_id)
+    db_key = (getattr(server, "public_key", None) or "").strip() or None
+    db_key_synced_at = getattr(server, "public_key_synced_at", None)
+    live = await live_key_fetch(
+        server_id,
+        runtime_adapter,
+        heartbeat_fallback_ids=[fallback] if fallback else None,
+        fallback_public_key=db_key,
+        fallback_public_key_synced_at=db_key_synced_at,
+    )
+    server_public_key = live.public_key
+    if server_public_key != (server.public_key or "").strip():
+        from app.core.metrics import server_key_mismatch_total
+        server_key_mismatch_total.labels(server_id=server_id).inc()
+        server.public_key = server_public_key
+        await session.flush()
     if settings.node_mode == "real" and settings.node_discovery != "agent" and not runtime_adapter:
         raise WireGuardCommandError(
             "Runtime adapter required for issue when NODE_MODE=real; peer would not be applied on node.",
@@ -222,7 +245,11 @@ async def admin_issue_peer(
             else ",".join(request_params["dns"])
         )
     if not dns:
-        dns = "1.1.1.1, 1.0.0.1"
+        dns = DEFAULT_DNS
+    else:
+        _dns_norm = (dns if isinstance(dns, str) else ",".join(dns)).replace(" ", "").strip()
+        if _dns_norm in ("1.1.1.1,1.0.0.1", "1.1.1.1, 1.0.0.1"):
+            dns = DEFAULT_DNS
     mtu = None
     if first_profile and getattr(first_profile, "mtu", None) is not None:
         mtu = int(first_profile.mtu)
@@ -235,31 +262,77 @@ async def admin_issue_peer(
                 pass
     if mtu is not None and mtu <= 0:
         mtu = None
-    # Default MTU 1280 for full-tunnel to reduce fragmentation (no-traffic troubleshooting)
+    # Default MTU 1200 for full-tunnel to reduce fragmentation (restrictive profile).
     if mtu is None:
         mtu = 1200
-    persistent_keepalive = 15
+    # Anti-NAT: клиентский PersistentKeepalive делаем более частым, чем серверный.
+    client_keepalive = 10
     if request_params:
         raw = request_params.get("persistent_keepalive") or request_params.get("amnezia_keepalive")
         if raw is not None:
             try:
-                persistent_keepalive = max(10, min(60, int(raw)))
+                client_keepalive = max(10, min(60, int(raw)))
             except (TypeError, ValueError):
                 pass
+    server_keepalive = 15
 
     private_key_b64, public_key_b64 = generate_wg_keypair()
     config_hash = _config_hash(public_key_b64, private_key_b64)
     now = datetime.now(timezone.utc)
 
-    params_with_h = await request_params_with_server_h(session, server, request_params)
-    obfuscation = get_obfuscation_params(params_with_h)
-    if runtime_adapter and hasattr(runtime_adapter, "get_obfuscation_from_node"):
+    params_no_h = await request_params_with_server_h(session, server, request_params)
+    obfuscation = get_obfuscation_params(params_no_h)
+    if settings.node_mode == "real" and settings.node_discovery != "agent":
+        if runtime_adapter is None or not hasattr(runtime_adapter, "get_obfuscation_from_node"):
+            raise WireGuardCommandError(
+                "Node obfuscation is required for NODE_MODE=real",
+                command="wg show",
+                output="node_not_synced",
+            )
         try:
             runtime_obf = await runtime_adapter.get_obfuscation_from_node(server_id)
-            if runtime_obf:
-                obfuscation = {**obfuscation, **runtime_obf}
-        except Exception:
-            pass
+        except Exception as exc:
+            raise WireGuardCommandError(
+                "Failed to fetch node obfuscation params",
+                command="wg show",
+                output="node_not_synced",
+            ) from exc
+        if not runtime_obf or not all(runtime_obf.get(k) is not None for k in ("H1", "H2", "H3", "H4")):
+            raise WireGuardCommandError(
+                "Node obfuscation params unavailable (H1–H4 missing)",
+                command="wg show",
+                output="node_not_synced",
+            )
+        h1 = int(runtime_obf.get("H1"))
+        h2 = int(runtime_obf.get("H2"))
+        h3 = int(runtime_obf.get("H3"))
+        h4 = int(runtime_obf.get("H4"))
+        changed = (
+            getattr(server, "amnezia_h1", None) != h1
+            or getattr(server, "amnezia_h2", None) != h2
+            or getattr(server, "amnezia_h3", None) != h3
+            or getattr(server, "amnezia_h4", None) != h4
+        )
+        if changed:
+            server.amnezia_h1, server.amnezia_h2, server.amnezia_h3, server.amnezia_h4 = (
+                h1,
+                h2,
+                h3,
+                h4,
+            )
+            await session.flush()
+            _config_log.info(
+                "Resynced H1–H4 from node",
+                extra={
+                    "event": "resync_h_params",
+                    "server_id": server_id,
+                    "H1": h1,
+                    "H2": h2,
+                    "H3": h3,
+                    "H4": h4,
+                },
+            )
+        obfuscation = {**obfuscation, **runtime_obf}
     preshared_key = None
     if request_params:
         preshared_key = request_params.get("preshared_key") or request_params.get(
@@ -294,19 +367,24 @@ async def admin_issue_peer(
     )
     from app.core.amnezia_config import build_all_configs
 
-    # Client [Interface] Address: use /32 so config matches peer AllowedIPs on server
+    # Client [Interface] Address: use /32 so config matches peer AllowedIPs on server.
+    # IPv6 fail-safe: for unstable routes / restrictive profiles we can emit IPv4-only
+    # full-tunnel config to avoid broken IPv6 paths.
+    allowed_ips_full_tunnel = "0.0.0.0/0, ::/0"
+    if first_profile and getattr(first_profile, "disable_ipv6_on_unstable_route", False):
+        allowed_ips_full_tunnel = "0.0.0.0/0"
     try:
         config_awg_snippet, config_wg_obf_snippet, config_wg_snippet = build_all_configs(
-            server_public_key=server.public_key,
+            server_public_key=server_public_key,
             client_private_key_b64=private_key_b64,
             endpoint=endpoint,
-            allowed_ips=allowed_ips_val,
+            allowed_ips=allowed_ips_full_tunnel,
             dns=dns,
             obfuscation=obfuscation,
             mtu=mtu,
             address=allowed_ips_val,
             preshared_key=preshared_key,
-            persistent_keepalive=persistent_keepalive,
+            persistent_keepalive=client_keepalive,
         )
         _config_log.info(
             "configs generated",
@@ -352,9 +430,10 @@ async def admin_issue_peer(
         issued_at=now,
         revoked_at=None,
         issued_by_admin_id=issued_by_admin_id,
-        apply_status="PENDING_APPLY",
+        apply_status="CREATED" if (settings.node_mode == "real" and settings.node_discovery != "agent") else "PENDING_APPLY",
         protocol_version=protocol_version,
         obfuscation_profile=obfuscation_profile_json,
+        connection_profile="restrictive" if first_profile and getattr(first_profile, "disable_ipv6_on_unstable_route", False) else "default",
     )
     session.add(device)
     await session.flush()
@@ -366,7 +445,7 @@ async def admin_issue_peer(
             "event": "create_peer_db",
             "device_id": device.id,
             "server_id": server_id,
-            "apply_status": "PENDING_APPLY",
+            "apply_status": device.apply_status or "PENDING_APPLY",
         },
     )
 
@@ -404,6 +483,10 @@ async def admin_issue_peer(
     peer_created = False
     if settings.node_mode == "real" and settings.node_discovery != "agent" and runtime_adapter:
         try:
+            await session.execute(
+                update(Device).where(Device.id == device.id).values(apply_status="APPLYING")
+            )
+            await session.commit()
             await _ensure_device_peer_on_node(
                 runtime_adapter,
                 server_id,
@@ -446,7 +529,7 @@ async def admin_issue_peer(
                 update(Device)
                 .where(Device.id == device.id)
                 .values(
-                    apply_status="FAILED_APPLY",
+                    apply_status="ERROR",
                     last_error=err_msg[:1024] if len(err_msg) > 1024 else err_msg,
                 )
             )
@@ -534,8 +617,24 @@ async def admin_rotate_peer(
         raise ValueError("peer_not_found")
     server_result = await session.execute(select(Server).where(Server.id == server_id))
     server = server_result.scalar_one_or_none()
-    if not server or not server.public_key:
+    if not server:
         raise ValueError("server_not_available")
+    fallback = _heartbeat_container_id(getattr(server, "api_endpoint", None), server_id)
+    db_key = (getattr(server, "public_key", None) or "").strip() or None
+    db_key_synced_at = getattr(server, "public_key_synced_at", None)
+    live = await live_key_fetch(
+        server_id,
+        runtime_adapter,
+        heartbeat_fallback_ids=[fallback] if fallback else None,
+        fallback_public_key=db_key,
+        fallback_public_key_synced_at=db_key_synced_at,
+    )
+    server_public_key = live.public_key
+    if server_public_key != (server.public_key or "").strip():
+        from app.core.metrics import server_key_mismatch_total
+        server_key_mismatch_total.labels(server_id=server_id).inc()
+        server.public_key = server_public_key
+        await session.flush()
     if getattr(server, "is_draining", False):
         raise ValueError("server_draining")
     if settings.node_mode == "real" and settings.node_discovery != "agent" and not runtime_adapter:
@@ -576,7 +675,11 @@ async def admin_rotate_peer(
             else ",".join(request_params["dns"])
         )
     if not dns:
-        dns = "1.1.1.1, 1.0.0.1"
+        dns = DEFAULT_DNS
+    else:
+        _dns_norm = (dns if isinstance(dns, str) else ",".join(dns)).replace(" ", "").strip()
+        if _dns_norm in ("1.1.1.1,1.0.0.1", "1.1.1.1, 1.0.0.1"):
+            dns = DEFAULT_DNS
     mtu = None
     if first_profile and getattr(first_profile, "mtu", None) is not None:
         mtu = int(first_profile.mtu)
@@ -591,14 +694,16 @@ async def admin_rotate_peer(
         mtu = None
     if mtu is None:
         mtu = 1200
-    persistent_keepalive = 15
+    # Anti-NAT: клиентский PersistentKeepalive делаем более частым, чем серверный.
+    client_keepalive = 10
     if request_params:
         raw = request_params.get("persistent_keepalive") or request_params.get("amnezia_keepalive")
         if raw is not None:
             try:
-                persistent_keepalive = max(10, min(60, int(raw)))
+                client_keepalive = max(10, min(60, int(raw)))
             except (TypeError, ValueError):
                 pass
+    server_keepalive = 15
 
     old_public_key = device.public_key
     old_preshared_key = getattr(device, "preshared_key", None)
@@ -615,16 +720,60 @@ async def admin_rotate_peer(
             )
 
     private_key_b64, public_key_b64 = generate_wg_keypair()
-    config_hash = _config_hash(public_key_b64, private_key_b64)
-    params_with_h = await request_params_with_server_h(session, server, request_params)
-    obfuscation = get_obfuscation_params(params_with_h)
-    if runtime_adapter and hasattr(runtime_adapter, "get_obfuscation_from_node"):
+    config_hash = _config_hash(public_key_b64, public_key_b64)
+    params_no_h = await request_params_with_server_h(session, server, request_params)
+    obfuscation = get_obfuscation_params(params_no_h)
+    if settings.node_mode == "real" and settings.node_discovery != "agent":
+        if runtime_adapter is None or not hasattr(runtime_adapter, "get_obfuscation_from_node"):
+            raise WireGuardCommandError(
+                "Node obfuscation is required for NODE_MODE=real",
+                command="wg show",
+                output="node_not_synced",
+            )
         try:
             runtime_obf = await runtime_adapter.get_obfuscation_from_node(server_id)
-            if runtime_obf:
-                obfuscation = {**obfuscation, **runtime_obf}
-        except Exception:
-            pass
+        except Exception as exc:
+            raise WireGuardCommandError(
+                "Failed to fetch node obfuscation params",
+                command="wg show",
+                output="node_not_synced",
+            ) from exc
+        if not runtime_obf or not all(runtime_obf.get(k) is not None for k in ("H1", "H2", "H3", "H4")):
+            raise WireGuardCommandError(
+                "Node obfuscation params unavailable (H1–H4 missing)",
+                command="wg show",
+                output="node_not_synced",
+            )
+        h1 = int(runtime_obf.get("H1"))
+        h2 = int(runtime_obf.get("H2"))
+        h3 = int(runtime_obf.get("H3"))
+        h4 = int(runtime_obf.get("H4"))
+        changed = (
+            getattr(server, "amnezia_h1", None) != h1
+            or getattr(server, "amnezia_h2", None) != h2
+            or getattr(server, "amnezia_h3", None) != h3
+            or getattr(server, "amnezia_h4", None) != h4
+        )
+        if changed:
+            server.amnezia_h1, server.amnezia_h2, server.amnezia_h3, server.amnezia_h4 = (
+                h1,
+                h2,
+                h3,
+                h4,
+            )
+            await session.flush()
+            _config_log.info(
+                "Resynced H1–H4 from node",
+                extra={
+                    "event": "resync_h_params",
+                    "server_id": server_id,
+                    "H1": h1,
+                    "H2": h2,
+                    "H3": h3,
+                    "H4": h4,
+                },
+            )
+        obfuscation = {**obfuscation, **runtime_obf}
     preshared_key = None
     if request_params:
         preshared_key = request_params.get("preshared_key") or request_params.get(
@@ -654,20 +803,25 @@ async def admin_rotate_peer(
         _, allowed_ips_val = await allocate_address_for_device(
             session, server_id, request_params
         )
+    if server_public_key != (server.public_key or "").strip():
+        from app.core.metrics import server_key_mismatch_total
+        server_key_mismatch_total.labels(server_id=server_id).inc()
+        server.public_key = server_public_key
+        await session.flush()
     from app.core.amnezia_config import build_all_configs
 
     try:
         config_awg_snippet, config_wg_obf_snippet, config_wg_snippet = build_all_configs(
-            server_public_key=server.public_key,
+            server_public_key=server_public_key,
             client_private_key_b64=private_key_b64,
             endpoint=endpoint,
-            allowed_ips=allowed_ips_val,
+            allowed_ips="0.0.0.0/0, ::/0",
             dns=dns,
             obfuscation=obfuscation,
             mtu=mtu,
             address=allowed_ips_val,
             preshared_key=preshared_key,
-            persistent_keepalive=persistent_keepalive,
+            persistent_keepalive=client_keepalive,
         )
         _config_log.info(
             "configs generated",
@@ -703,7 +857,7 @@ async def admin_rotate_peer(
                 PeerConfigLike(
                     public_key=public_key_b64,
                     allowed_ips=allowed_ips_val,
-                    persistent_keepalive=persistent_keepalive,
+                    persistent_keepalive=server_keepalive,
                     preshared_key=preshared_key,
                 ),
             )
@@ -735,6 +889,11 @@ async def admin_rotate_peer(
             allowed_ips=allowed_ips_val,
             preshared_key=preshared_key,
         )
+        now_applied = datetime.now(timezone.utc)
+        device.apply_status = "APPLIED"
+        device.last_applied_at = now_applied
+        device.last_error = None
+        await session.flush()
 
     now = datetime.now(timezone.utc)
     expires_at = (
@@ -743,13 +902,8 @@ async def admin_rotate_peer(
         else None
     )
 
-    # Remove old issued configs for this device so reissue replaces them (one current set per device).
-    await session.execute(
-        delete(IssuedConfig).where(
-            IssuedConfig.device_id == device.id,
-            IssuedConfig.server_id == server_id,
-        )
-    )
+    # Remove all issued configs for this device so reissue replaces them (one current set per device).
+    await session.execute(delete(IssuedConfig).where(IssuedConfig.device_id == device.id))
     await session.flush()
 
     def _create_issued_config(profile_type: str, config_snippet: str) -> tuple[str, str]:

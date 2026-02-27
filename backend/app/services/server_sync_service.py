@@ -10,28 +10,27 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 # #region agent log
-_DEBUG_LOG_PATHS = ("/opt/vpn-suite/.cursor/debug.log", "/tmp/vpn-suite-debug.log")
+_DEBUG_LOG_PATH = "/opt/.cursor/debug-a8eb6e.log"
 
 
 def _agent_log(location: str, message: str, data: dict, hypothesis_id: str) -> None:
-    for path in _DEBUG_LOG_PATHS:
-        try:
-            with open(path, "a") as f:
-                f.write(
-                    json.dumps(
-                        {
-                            "location": location,
-                            "message": message,
-                            "data": data,
-                            "timestamp": int(time.time() * 1000),
-                            "hypothesisId": hypothesis_id,
-                        }
-                    )
-                    + "\n"
+    try:
+        with open(_DEBUG_LOG_PATH, "a") as f:
+            f.write(
+                json.dumps(
+                    {
+                        "sessionId": "a8eb6e",
+                        "location": location,
+                        "message": message,
+                        "data": data,
+                        "timestamp": int(time.time() * 1000),
+                        "hypothesisId": hypothesis_id,
+                    }
                 )
-            break
-        except Exception:
-            continue
+                + "\n"
+            )
+    except Exception:
+        pass
 
 
 # #endregion
@@ -92,27 +91,69 @@ async def build_snapshot_from_node(
     Fetch node data and build canonical snapshot. Returns (snapshot, error).
     ip_pool_hint: optional { cidr, total_ips } from DB; used_ips from peers.
     """
+    # #region agent log
+    _agent_log(
+        "server_sync_service.py:build_snapshot_from_node:entry",
+        "sync started",
+        {"server_id": server_id, "adapter": type(adapter).__name__, "server_api_endpoint": (server.api_endpoint or "")[:80]},
+        "A",
+    )
+    # #endregion
     node = None
-    if hasattr(adapter, "get_node_for_sync"):
+    has_get_node = hasattr(adapter, "get_node_for_sync")
+    if has_get_node:
         node = await adapter.get_node_for_sync(server_id)
+    # #region agent log
+    _agent_log(
+        "server_sync_service.py:build_snapshot_from_node:after_get_node",
+        "get_node_for_sync result",
+        {"has_get_node_for_sync": has_get_node, "node_from_sync": node is not None},
+        "C",
+    )
+    # #endregion
     if node is None:
         nodes = await adapter.discover_nodes()
+        # #region agent log
+        _agent_log(
+            "server_sync_service.py:build_snapshot_from_node:after_discover",
+            "discover_nodes result",
+            {
+                "nodes_count": len(nodes),
+                "node_ids": [n.node_id for n in nodes],
+                "container_names": [getattr(n, "container_name", None) for n in nodes],
+            },
+            "B",
+        )
+        # #endregion
         node = next((n for n in nodes if n.node_id == server_id), None)
         if node is None:
             node = next((n for n in nodes if getattr(n, "container_name", None) == server_id), None)
+        if node is None and (server.api_endpoint or "").startswith("docker://"):
+            container_name = (server.api_endpoint or "")[9:].strip().split("/")[0]
+            if container_name:
+                node = next(
+                    (n for n in nodes if getattr(n, "container_name", None) == container_name),
+                    None,
+                )
+        if node is None and (server.name or "").strip():
+            node = next(
+                (n for n in nodes if getattr(n, "container_name", None) == (server.name or "").strip()),
+                None,
+            )
     if not node:
         # #region agent log
         _agent_log(
             "server_sync_service.py:build_snapshot_from_node",
             "node not in discovery",
-            {"server_id": server_id, "discovered_ids": [n.node_id for n in nodes]},
-            "C",
+            {"server_id": server_id, "discovered_ids": [n.node_id for n in nodes], "discovered_container_names": [getattr(n, "container_name", None) for n in nodes]},
+            "D",
         )
         # #endregion
         return None, "node not found in discovery"
 
+    node_id_for_peers = node.node_id or getattr(node, "container_name", None) or server_id
     try:
-        peers = await adapter.list_peers(server_id)
+        peers = await adapter.list_peers(node_id_for_peers)
     except Exception as e:
         _log.warning("list_peers failed server_id=%s: %s", server_id, e)
         peers = []
@@ -173,7 +214,8 @@ async def build_snapshot_from_node(
                 if node.endpoint_ip and node.listen_port and not _is_private_ip(node.endpoint_ip)
                 else None
             ),
-            public_key=server.public_key or node.public_key or None,
+            # Prefer node (runtime) key so sync corrects stale DB; configs then get correct server key.
+            public_key=getattr(node, "public_key", None) or server.public_key or None,
         ),
         resources=resources,
         users=SnapshotUsers(
@@ -234,6 +276,15 @@ async def run_sync_for_server(
         job.status = "failed"
         job.finished_at = datetime.now(timezone.utc)
         job.error = err or "empty snapshot"
+        if "not found" in (err or "").lower():
+            server.key_status = "not_found"
+        try:
+            from app.core.metrics import discovery_not_found_total, server_key_sync_fail_total
+            server_key_sync_fail_total.labels(server_id=server_id, reason=(err or "unknown")[:64]).inc()
+            if "not found" in (err or "").lower():
+                discovery_not_found_total.labels(server_id=server_id).inc()
+        except Exception:
+            pass
         _log.warning(
             "Sync failed server_id=%s job_id=%s: %s",
             server_id,
@@ -275,7 +326,13 @@ async def run_sync_for_server(
         server.vpn_endpoint = snapshot.endpoints.vpn_endpoint
     if snapshot.endpoints.public_key:
         server.public_key = snapshot.endpoints.public_key
-
+        server.public_key_synced_at = snapshot.ts_utc
+        server.key_status = "verified"
+        try:
+            from app.core.metrics import server_key_sync_success_total
+            server_key_sync_success_total.labels(server_id=server_id).inc()
+        except Exception:
+            pass
     if pool and snapshot.ip_pool.used_ips is not None:
         pool.used_ips = snapshot.ip_pool.used_ips
 

@@ -814,8 +814,8 @@ class DockerNodeRuntimeAdapter(NodeRuntimeAdapter):
         for node in nodes:
             if node.container_name == node_id:
                 return node
-        # After container restart, server_id in DB (e.g. docker:e49771b3f10f) no longer matches node_id (new container id). If exactly one node, use it so reissue/remove_peer work.
-        if nodes and node_id.startswith("docker:") and len(nodes) == 1:
+        # Single-node: use the only node so issue/reissue work regardless of server_id (e.g. vpn-node-1 from seed_agent_server).
+        if len(nodes) == 1:
             return nodes[0]
         return None
 

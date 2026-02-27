@@ -10,7 +10,7 @@ import logging
 from datetime import datetime, timezone
 from typing import NamedTuple
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.amnezia_config import (
@@ -19,13 +19,14 @@ from app.core.amnezia_config import (
     get_obfuscation_params,
 )
 from app.core.config import settings
-from app.core.config_builder import ConfigValidationError, generate_preshared_key
+from app.core.config_builder import ConfigValidationError, DEFAULT_DNS, generate_preshared_key
 from app.core.exceptions import WireGuardCommandError
 from app.core.redaction import redact_for_log
 from app.models import Device, ProfileIssue, Server, ServerProfile, Subscription, User
 from app.services.address_allocator import allocate_address_for_device
 from app.services.admin_issue_service import _ensure_device_peer_on_node
 from app.services.load_balancer import select_node as load_balancer_select_node
+from app.services.server_live_key_service import _heartbeat_container_id, live_key_fetch
 from app.services.node_endpoint_utils import get_endpoint_from_runtime, is_endpoint_private
 from app.services.node_runtime import NodeRuntimeAdapter, PeerConfigLike
 from app.services.server_obfuscation import request_params_with_server_h
@@ -108,8 +109,20 @@ async def issue_device(
     server = server_result.scalar_one_or_none()
     if not server:
         raise ValueError("server_not_available")
-    if not server.public_key:
-        raise ValueError("server_public_key_required")
+    fallback = _heartbeat_container_id(getattr(server, "api_endpoint", None), resolved_server_id)
+    db_key = (getattr(server, "public_key", None) or "").strip() or None
+    db_key_synced_at = getattr(server, "public_key_synced_at", None)
+    live = await live_key_fetch(
+        resolved_server_id,
+        runtime_adapter,
+        heartbeat_fallback_ids=[fallback] if fallback else None,
+        fallback_public_key=db_key,
+        fallback_public_key_synced_at=db_key_synced_at,
+    )
+    server_public_key = live.public_key
+    if server_public_key != (server.public_key or "").strip():
+        server.public_key = server_public_key
+        await session.flush()
     # Real WireGuard keypair (X25519, base64)
     private_key_b64, public_key_b64 = generate_wg_keypair()
     # Optional: first profile for obfuscation params and client_endpoint
@@ -136,15 +149,62 @@ async def issue_device(
                     server.vpn_endpoint = derived
         except Exception:
             pass
-    params_with_h = await request_params_with_server_h(session, server, request_params)
-    obfuscation = get_obfuscation_params(params_with_h)
-    if runtime_adapter and hasattr(runtime_adapter, "get_obfuscation_from_node"):
+    params_no_h = await request_params_with_server_h(session, server, request_params)
+    obfuscation = get_obfuscation_params(params_no_h)
+    # NODE_MODE=real: H1–H4 (и остальные obfuscation-параметры) всегда берём с ноды.
+    if settings.node_mode == "real" and settings.node_discovery != "agent":
+        if runtime_adapter is None or not hasattr(runtime_adapter, "get_obfuscation_from_node"):
+            raise WireGuardCommandError(
+                "Node obfuscation is required for NODE_MODE=real",
+                command="wg show",
+                output="node_not_synced",
+            )
         try:
             runtime_obf = await runtime_adapter.get_obfuscation_from_node(resolved_server_id)
-            if runtime_obf:
-                obfuscation = {**obfuscation, **runtime_obf}
-        except Exception:
-            pass
+        except Exception as exc:
+            raise WireGuardCommandError(
+                "Failed to fetch node obfuscation params",
+                command="wg show",
+                output="node_not_synced",
+            ) from exc
+        if not runtime_obf or not all(runtime_obf.get(k) is not None for k in ("H1", "H2", "H3", "H4")):
+            raise WireGuardCommandError(
+                "Node obfuscation params unavailable (H1–H4 missing)",
+                command="wg show",
+                output="node_not_synced",
+            )
+        # Resync DB cache of H1–H4 from runtime so control-plane and node stay aligned.
+        h1 = int(runtime_obf.get("H1"))
+        h2 = int(runtime_obf.get("H2"))
+        h3 = int(runtime_obf.get("H3"))
+        h4 = int(runtime_obf.get("H4"))
+        changed = (
+            getattr(server, "amnezia_h1", None) != h1
+            or getattr(server, "amnezia_h2", None) != h2
+            or getattr(server, "amnezia_h3", None) != h3
+            or getattr(server, "amnezia_h4", None) != h4
+        )
+        if changed:
+            server.amnezia_h1, server.amnezia_h2, server.amnezia_h3, server.amnezia_h4 = (
+                h1,
+                h2,
+                h3,
+                h4,
+            )
+            await session.flush()
+            _config_log.info(
+                "Resynced H1–H4 from node",
+                extra={
+                    "event": "resync_h_params",
+                    "server_id": resolved_server_id,
+                    "H1": h1,
+                    "H2": h2,
+                    "H3": h3,
+                    "H4": h4,
+                },
+            )
+        # Runtime obfuscation wins over profile/DB for all overlapping keys.
+        obfuscation = {**obfuscation, **runtime_obf}
     dns = None
     if request_params and request_params.get("dns"):
         dns = (
@@ -152,6 +212,12 @@ async def issue_device(
             if isinstance(request_params["dns"], str)
             else ",".join(request_params["dns"])
         )
+    if not dns:
+        dns = DEFAULT_DNS
+    else:
+        _dns_norm = (dns if isinstance(dns, str) else ",".join(dns)).replace(" ", "").strip()
+        if _dns_norm in ("1.1.1.1,1.0.0.1", "1.1.1.1, 1.0.0.1"):
+            dns = DEFAULT_DNS
     mtu = None
     if first_profile and getattr(first_profile, "mtu", None) is not None:
         mtu = int(first_profile.mtu)
@@ -166,14 +232,16 @@ async def issue_device(
         mtu = None
     if mtu is None:
         mtu = 1200
-    persistent_keepalive = 15
+    # Anti-NAT: клиентский PersistentKeepalive делаем более частым, чем серверный.
+    client_keepalive = 10
     if request_params:
         raw = request_params.get("persistent_keepalive") or request_params.get("amnezia_keepalive")
         if raw is not None:
             try:
-                persistent_keepalive = max(10, min(60, int(raw)))
+                client_keepalive = max(10, min(60, int(raw)))
             except (TypeError, ValueError):
                 pass
+    server_keepalive = 15
     preshared_key = None
     if request_params:
         preshared_key = request_params.get("preshared_key") or request_params.get(
@@ -217,6 +285,8 @@ async def issue_device(
         preshared_key=preshared_key,
         issued_at=now,
         revoked_at=None,
+        apply_status="CREATED" if (settings.node_mode == "real" and settings.node_discovery != "agent") else "PENDING_APPLY",
+        connection_profile="restrictive" if first_profile and getattr(first_profile, "disable_ipv6_on_unstable_route", False) else "default",
     )
     session.add(device)
     await session.flush()
@@ -231,12 +301,16 @@ async def issue_device(
                 output="missing runtime adapter",
             )
         try:
+            await session.execute(
+                update(Device).where(Device.id == device.id).values(apply_status="APPLYING")
+            )
+            await session.flush()
             await runtime_adapter.add_peer(
                 resolved_server_id,
                 PeerConfigLike(
                     public_key=public_key_b64,
                     allowed_ips=allowed_ips_val,
-                    persistent_keepalive=persistent_keepalive,
+                    persistent_keepalive=server_keepalive,
                     preshared_key=preshared_key,
                 ),
             )
@@ -256,6 +330,14 @@ async def issue_device(
                 allowed_ips=allowed_ips_val,
                 preshared_key=preshared_key,
             )
+            now_applied = datetime.now(timezone.utc)
+            await session.execute(
+                update(Device)
+                .where(Device.id == device.id)
+                .values(apply_status="APPLIED", last_applied_at=now_applied, last_error=None)
+            )
+            await session.flush()
+            await session.refresh(device)
         except Exception as exc:
             session.delete(device)  # type: ignore[unused-coroutine]
             await session.flush()
@@ -268,19 +350,24 @@ async def issue_device(
     elif settings.node_mode == "agent":
         # DB-only: node-agent will add peer on next reconcile cycle.
         peer_created = False
-    # Client [Interface] Address: /32 to match peer AllowedIPs on server
+    # Client [Interface] Address: /32 to match peer AllowedIPs on server.
+    # IPv6 fail-safe: for unstable routes / restrictive profiles we can emit IPv4-only
+    # full-tunnel config to avoid broken IPv6 paths.
+    allowed_ips_full_tunnel = "0.0.0.0/0, ::/0"
+    if first_profile and getattr(first_profile, "disable_ipv6_on_unstable_route", False):
+        allowed_ips_full_tunnel = "0.0.0.0/0"
     try:
         config_awg, config_wg_obf, config_wg = build_all_configs(
-            server_public_key=server.public_key,
+            server_public_key=server_public_key,
             client_private_key_b64=private_key_b64,
             endpoint=endpoint,
-            allowed_ips="0.0.0.0/0, ::/0",
+            allowed_ips=allowed_ips_full_tunnel,
             dns=dns,
             obfuscation=obfuscation,
             mtu=mtu,
             address=allowed_ips_val,
             preshared_key=preshared_key,
-            persistent_keepalive=persistent_keepalive,
+            persistent_keepalive=client_keepalive,
         )
         _config_log.info(
             "configs generated",

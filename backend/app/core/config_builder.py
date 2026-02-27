@@ -76,6 +76,17 @@ class ConfigProfile(str, Enum):
     awg_safe = "awg_2_0_asc"
 
 
+class MtuPolicy(str, Enum):
+    """MTU selection policy for clients.
+
+    - fixed: use profile/requested MTU as-is (or DEFAULT_MTU_* fallback).
+    - auto_restrictive: use operator-probed MTU (see scripts/mtu_probe.py) stored in profile.mtu.
+    """
+
+    fixed = "fixed"
+    auto_restrictive = "auto_restrictive"
+
+
 class ConfigValidationError(ValueError):
     def __init__(self, errors: list[str]):
         super().__init__("; ".join(errors))

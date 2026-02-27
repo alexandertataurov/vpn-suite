@@ -16,8 +16,11 @@ from app.services.node_runtime import NodeRuntimeAdapter, PeerConfigLike
 
 try:
     from app.core.metrics import (
+        vpn_peer_apply_failures_total,
         vpn_peers_expected,
+        vpn_peers_orphan_count,
         vpn_peers_present,
+        vpn_peers_readded_total,
         vpn_reconciliation_drift,
         vpn_reconciliation_duration_seconds,
         vpn_reconciliation_runs_total,
@@ -28,6 +31,9 @@ except Exception:
     vpn_reconciliation_duration_seconds = None  # type: ignore[assignment]
     vpn_peers_expected = None  # type: ignore[assignment]
     vpn_peers_present = None  # type: ignore[assignment]
+    vpn_peers_readded_total = None  # type: ignore[assignment]
+    vpn_peer_apply_failures_total = None  # type: ignore[assignment]
+    vpn_peers_orphan_count = None  # type: ignore[assignment]
 
 _log = logging.getLogger(__name__)
 
@@ -165,6 +171,11 @@ async def apply_diff(
             await adapter.add_peer(node_id, peer)
             result.peers_added += 1
             result.peers_added_pubkeys.append(peer.public_key)
+            if vpn_peers_readded_total is not None:
+                try:
+                    vpn_peers_readded_total.labels(node_id=node_id).inc()
+                except Exception:
+                    pass
             _log.info(
                 "peer added during reconciliation",
                 extra={
@@ -175,22 +186,45 @@ async def apply_diff(
                 },
             )
         except Exception as e:
+            if vpn_peer_apply_failures_total is not None:
+                try:
+                    vpn_peer_apply_failures_total.labels(node_id=node_id, reason="add").inc()
+                except Exception:
+                    pass
             _log.exception(
                 "Reconciliation add_peer failed node_id=%s pubkey=%s", node_id, peer.public_key[:16]
             )
             result.errors.append(f"add {peer.public_key[:16]}: {e!s}")
 
-    for pubkey in diff.peers_to_remove:
-        _log.info(
-            "unknown peer on server, removing",
-            extra={"event": "reconcile_quarantine", "node_id": node_id, "pubkey": pubkey[:32]},
-        )
+    if vpn_peers_orphan_count is not None:
         try:
-            await adapter.remove_peer(node_id, pubkey)
-            result.peers_removed += 1
-        except Exception as e:
-            _log.exception("Reconciliation remove_peer failed node_id=%s", node_id)
-            result.errors.append(f"remove {pubkey[:16]}: {e!s}")
+            vpn_peers_orphan_count.labels(node_id=node_id).set(len(diff.peers_to_remove))
+        except Exception:
+            pass
+
+    if settings.reconciliation_remove_orphans:
+        for pubkey in diff.peers_to_remove:
+            _log.info(
+                "unknown peer on server, removing",
+                extra={"event": "reconcile_quarantine", "node_id": node_id, "pubkey": pubkey[:32]},
+            )
+            try:
+                await adapter.remove_peer(node_id, pubkey)
+                result.peers_removed += 1
+            except Exception as e:
+                if vpn_peer_apply_failures_total is not None:
+                    try:
+                        vpn_peer_apply_failures_total.labels(node_id=node_id, reason="remove").inc()
+                    except Exception:
+                        pass
+                _log.exception("Reconciliation remove_peer failed node_id=%s", node_id)
+                result.errors.append(f"remove {pubkey[:16]}: {e!s}")
+    else:
+        for pubkey in diff.peers_to_remove:
+            _log.warning(
+                "ORPHAN peer on server (not in DB); not removing (reconciliation_remove_orphans=false)",
+                extra={"event": "reconcile_orphan", "node_id": node_id, "pubkey": pubkey[:32]},
+            )
 
     for peer in diff.peers_to_update:
         try:
@@ -208,6 +242,11 @@ async def apply_diff(
                 },
             )
         except Exception as e:
+            if vpn_peer_apply_failures_total is not None:
+                try:
+                    vpn_peer_apply_failures_total.labels(node_id=node_id, reason="update").inc()
+                except Exception:
+                    pass
             _log.exception("Reconciliation update peer failed node_id=%s", node_id)
             result.errors.append(f"update {peer.public_key[:16]}: {e!s}")
 

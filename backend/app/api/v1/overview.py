@@ -82,6 +82,8 @@ def _freshness(age_s: float | None, fresh_s: int, degraded_s: int) -> str:
     return "stale"
 
 
+# Primary source of timeseries for the UI is the timeseries field of GET /overview/operator.
+# The endpoints below are for legacy/bot clients; the admin dashboard uses /overview/operator only.
 @router.get("/overview/dashboard_timeseries", response_model=DashboardTimeseriesOut)
 async def get_dashboard_timeseries_endpoint(
     _principal=Depends(get_admin_or_bot),

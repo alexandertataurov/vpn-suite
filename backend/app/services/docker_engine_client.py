@@ -44,19 +44,34 @@ def _default_hosts() -> list[DockerHostDefinition]:
     ]
 
 
+def _default_hosts_for_env() -> list[DockerHostDefinition]:
+    """Return default docker hosts for the current environment.
+
+    In development, we default to the local docker socket for convenience.
+    In production, we *do not* implicitly trust /var/run/docker.sock; the operator
+    must configure DOCKER_TELEMETRY_HOSTS_JSON explicitly or set it to [] to
+    disable docker telemetry.
+    """
+    if settings.environment.lower() == "production":
+        return []
+    return _default_hosts()
+
+
 def parse_docker_hosts_config(raw: str | None) -> list[DockerHostDefinition]:
-    # Empty/missing config defaults to local docker socket (common single-host deployment).
     # Explicit opt-out: set DOCKER_TELEMETRY_HOSTS_JSON='[]' to disable docker telemetry.
+    # In development, empty/missing/invalid config defaults to the local docker socket
+    # for convenience. In production, empty/missing/invalid config *disables* docker
+    # telemetry to avoid implicitly trusting /var/run/docker.sock.
     if raw is None:
-        return _default_hosts()
+        return _default_hosts_for_env()
     if not str(raw).strip():
-        return _default_hosts()
+        return _default_hosts_for_env()
     try:
         data = json.loads(raw)
     except json.JSONDecodeError:
-        return _default_hosts()
+        return _default_hosts_for_env()
     if not isinstance(data, list):
-        return _default_hosts()
+        return _default_hosts_for_env()
     if not data:
         # Explicit disable.
         return []
@@ -80,7 +95,7 @@ def parse_docker_hosts_config(raw: str | None) -> list[DockerHostDefinition]:
         )
     if out:
         return out
-    return _default_hosts()
+    return _default_hosts_for_env()
 
 
 def parse_docker_timestamp(value: str | None) -> datetime | None:
@@ -206,3 +221,30 @@ class DockerEngineClient:
                 continue
             out.append((ts, msg))
         return out
+
+    async def start_container(self, host_id: str, container_id: str) -> None:
+        sdk, _ = await self._get_clients(host_id)
+
+        def _op() -> None:
+            container = sdk.containers.get(container_id)
+            container.start()
+
+        await asyncio.to_thread(_op)
+
+    async def stop_container(self, host_id: str, container_id: str) -> None:
+        sdk, _ = await self._get_clients(host_id)
+
+        def _op() -> None:
+            container = sdk.containers.get(container_id)
+            container.stop()
+
+        await asyncio.to_thread(_op)
+
+    async def restart_container(self, host_id: str, container_id: str) -> None:
+        sdk, _ = await self._get_clients(host_id)
+
+        def _op() -> None:
+            container = sdk.containers.get(container_id)
+            container.restart()
+
+        await asyncio.to_thread(_op)

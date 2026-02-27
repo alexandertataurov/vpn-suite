@@ -9,10 +9,10 @@ import logging
 import time
 from typing import Any
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel
 
-from app.core.constants import PERM_CLUSTER_READ
+from app.core.constants import PERM_CLUSTER_READ, PERM_CLUSTER_WRITE
 from app.core.rbac import require_permission
 from app.services.prometheus_query_service import PrometheusQueryService
 
@@ -111,6 +111,93 @@ async def get_telemetry_services(
     )
 
 
+async def _find_container_for_job(
+    docker_service,
+    job: str,
+    host_id: str = "local",
+):
+    """Best-effort mapping from Prometheus job -> Docker container."""
+    containers = await docker_service.list_containers(host_id, force_refresh=True)
+    job_norm = (job or "").strip().lower()
+    if not job_norm:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="job is required",
+        )
+
+    exact: list = []
+    fuzzy: list = []
+    for c in containers:
+        name = (getattr(c, "name", "") or "").lower()
+        service = (getattr(c, "compose_service", "") or "").lower()
+        if service == job_norm or name == job_norm:
+            exact.append(c)
+        elif job_norm in service or job_norm in name:
+            fuzzy.append(c)
+
+    candidates = exact or fuzzy
+    if not candidates:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No container found for scrape job {job!r}",
+        )
+
+    def _score(c) -> tuple[int, int]:
+        state = str(getattr(c, "state", "") or "").lower()
+        is_running = 1 if state == "running" else 0
+        is_loop = 1 if getattr(c, "is_restart_loop", False) else 0
+        return (is_running, -is_loop)
+
+    candidates.sort(key=_score, reverse=True)
+    return candidates[0]
+
+
+@router.post(
+    "/telemetry/services/{job}/{action}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def control_telemetry_service(
+    request: Request,
+    job: str,
+    action: str,
+    _admin=Depends(require_permission(PERM_CLUSTER_WRITE)),
+) -> Response:
+    """Start/stop/restart a scrape service by Prometheus job name.
+
+    Implementation detail: maps job -> Docker container (compose_service/name)
+    on the local Docker telemetry host and proxies to docker telemetry service.
+    """
+    docker_service = getattr(request.app.state, "docker_telemetry_service", None)
+    if docker_service is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="docker telemetry service unavailable",
+        )
+
+    action_norm = (action or "").strip().lower()
+    if action_norm not in ("start", "stop", "restart"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="action must be one of: start, stop, restart",
+        )
+
+    container = await _find_container_for_job(docker_service, job, host_id="local")
+    try:
+        if action_norm == "start":
+            await docker_service.start_container(container.host_id, container.container_id)
+        elif action_norm == "stop":
+            await docker_service.stop_container(container.host_id, container.container_id)
+        else:
+            await docker_service.restart_container(container.host_id, container.container_id)
+    except Exception as exc:  # pragma: no cover - defensive
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"scrape service {action_norm} failed: {exc}",
+        ) from exc
+
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
 class MetricsKpisOut(BaseModel):
     request_rate_5m: float | None  # requests/sec
     error_rate_5m: float | None  # 5xx fraction 0-1
@@ -168,6 +255,11 @@ async def get_metrics_kpis(
 
     rate = _first_value(data.get("rate", []))
     err = _first_value(data.get("err", []))
+    # When there have been no 5xx responses in the window, Prometheus returns an
+    # empty vector for the error-rate expression. Treat that as 0 instead of
+    # "missing" so the UI shows 0% rather than "—".
+    if err is None:
+        err = 0.0
     p95 = _first_value(data.get("p95", []))
 
     return MetricsKpisOut(

@@ -179,7 +179,7 @@ async def run_telemetry_poll_loop(get_adapter) -> None:
                             len((dev_rows[0][1] or "").strip()) if dev_rows else 0,
                         )
             redis = get_redis()
-            cluster_peers = 0
+            cluster_seen_pubkeys: set[str] = set()
             cluster_rx = 0
             cluster_tx = 0
             h_ok_count = 0
@@ -223,10 +223,8 @@ async def run_telemetry_poll_loop(get_adapter) -> None:
                     if data:
                         key = f"telemetry:server:{server_id}"
                         await redis.set(key, json.dumps(data), ex=TTL)
-                        peers = data.get("peers_count") or 0
                         rx = data.get("total_rx_bytes") or 0
                         tx = data.get("total_tx_bytes") or 0
-                        cluster_peers += peers
                         cluster_rx += rx
                         cluster_tx += tx
                         vpn_node_traffic_rx_bytes.labels(server_id=server_id).set(rx)
@@ -241,6 +239,7 @@ async def run_telemetry_poll_loop(get_adapter) -> None:
                             pubkey = raw_pk.replace("\n", "").replace("\r", "") if raw_pk else ""
                             if not pubkey:
                                 continue
+                            cluster_seen_pubkeys.add(pubkey)
                             composite = f"{server_id}:{pubkey}"
                             if composite in pk_to_device:
                                 matched_this_server += 1
@@ -288,6 +287,7 @@ async def run_telemetry_poll_loop(get_adapter) -> None:
                     telemetry_poll_server_failures_total.labels(
                         server_id=server_id, reason=type(e).__name__
                     ).inc()
+            cluster_peers = len(cluster_seen_pubkeys)
             if servers:
                 await _push_dashboard_timeseries(redis, cluster_peers, cluster_rx, cluster_tx)
             await set_telemetry_summary(h_ok_count, no_handshake_count, traffic_zero_count)

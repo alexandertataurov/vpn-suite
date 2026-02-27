@@ -66,8 +66,9 @@ async def webapp_auth(body: WebAppAuthRequest):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={"code": "INVALID_INIT_DATA", "message": "User id missing"},
         )
-    token = create_webapp_session_token(int(tg_user_id), expire_seconds=3600)
-    return {"session_token": token, "expires_in": 3600}
+    ttl = int(settings.webapp_session_expire_seconds)
+    token = create_webapp_session_token(int(tg_user_id), expire_seconds=ttl)
+    return {"session_token": token, "expires_in": ttl}
 
 
 def _get_tg_id_from_bearer(request: Request) -> int | None:
@@ -203,10 +204,21 @@ async def webapp_issue_device(
             server_id=None,
             device_name=f"webapp_{tg_id}",
             get_topology=get_topology,
+            runtime_adapter=adapter,
         )
     except Exception as e:
         from app.core.exceptions import LoadBalancerError, WireGuardCommandError
+        from app.services.server_live_key_service import ServerNotSyncedError
 
+        if isinstance(e, ServerNotSyncedError):
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "code": "SERVER_NOT_SYNCED",
+                    "message": "Server key not verified; run sync or fix discovery.",
+                    "details": {"server_id": getattr(e, "server_id", ""), "reason": getattr(e, "reason", "")},
+                },
+            ) from e
         if isinstance(e, LoadBalancerError):
             raise HTTPException(status_code=503, detail={"code": "NO_NODE", "message": str(e)})
         if isinstance(e, WireGuardCommandError):

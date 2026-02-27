@@ -65,6 +65,12 @@ _STATUS_TO_DB: dict[str, tuple[str, ...]] = {
 }
 
 
+def _group_server_name(name: str) -> str:
+    """Group servers by base name (strip trailing digits, e.g. amnezia-awg2 → amnezia-awg)."""
+    name = (name or "").strip()
+    return name.rstrip("0123456789")
+
+
 @router.post("", response_model=ServerOut, status_code=status.HTTP_201_CREATED)
 async def create_server(
     request: Request,
@@ -228,17 +234,18 @@ async def _fetch_servers_list_uncached(
         by_name: dict[str, tuple[Server, datetime | None]] = {}
         for row in all_rows:
             s, last_ts = row[0], row[1]
-            name = s.name or s.id
-            existing = by_name.get(name)
+            raw_name = s.name or s.id
+            group = _group_server_name(raw_name)
+            existing = by_name.get(group)
             s_active = getattr(s, "is_active", True)
             s_health = getattr(s, "health_score") or 0.0
             if existing is None:
-                by_name[name] = (s, last_ts)
+                by_name[group] = (s, last_ts)
             else:
                 e_active = getattr(existing[0], "is_active", True)
                 e_health = getattr(existing[0], "health_score") or 0.0
                 if (s_active, s_health) >= (e_active, e_health):
-                    by_name[name] = (s, last_ts)
+                    by_name[group] = (s, last_ts)
         total = len(by_name)
 
         def _row_sort_key(r: tuple) -> tuple:

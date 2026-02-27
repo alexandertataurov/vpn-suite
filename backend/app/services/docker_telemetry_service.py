@@ -396,6 +396,46 @@ class DockerTelemetryService:
             )
         return out
 
+    async def start_container(self, host_id: str, container_id: str) -> None:
+        if self._is_circuit_open(host_id):
+            raise RuntimeError(f"Docker host {host_id} is temporarily unavailable")
+        try:
+            await self._with_retries(
+                host_id,
+                "container_start",
+                lambda: self._docker.start_container(host_id, container_id),
+            )
+            self._record_success(host_id)
+        except Exception:
+            # _with_retries already records failures and metrics.
+            raise
+
+    async def stop_container(self, host_id: str, container_id: str) -> None:
+        if self._is_circuit_open(host_id):
+            raise RuntimeError(f"Docker host {host_id} is temporarily unavailable")
+        try:
+            await self._with_retries(
+                host_id,
+                "container_stop",
+                lambda: self._docker.stop_container(host_id, container_id),
+            )
+            self._record_success(host_id)
+        except Exception:
+            raise
+
+    async def restart_container(self, host_id: str, container_id: str) -> None:
+        if self._is_circuit_open(host_id):
+            raise RuntimeError(f"Docker host {host_id} is temporarily unavailable")
+        try:
+            await self._with_retries(
+                host_id,
+                "container_restart",
+                lambda: self._docker.restart_container(host_id, container_id),
+            )
+            self._record_success(host_id)
+        except Exception:
+            raise
+
     async def _cache_get_containers(self, key: str) -> list[ContainerSummary] | None:
         try:
             redis = get_redis()

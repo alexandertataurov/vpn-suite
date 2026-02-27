@@ -18,6 +18,7 @@ from app.models import Device
 from app.schemas.device import IssueResponse
 from app.api.v1.device_cache import invalidate_devices_list_cache, invalidate_devices_summary_cache
 from app.services.issue_service import issue_device
+from app.services.server_live_key_service import ServerNotSyncedError
 from app.services.topology_engine import TopologyEngine
 
 router = APIRouter(prefix="/wg", tags=["wg"])
@@ -56,6 +57,20 @@ async def create_wg_peer(
             get_topology=get_topology,
             runtime_adapter=runtime_adapter,
         )
+    except ServerNotSyncedError as e:
+        from app.core.metrics import config_issue_blocked_total, discovery_not_found_total
+
+        config_issue_blocked_total.labels(reason="server_not_synced").inc()
+        if e.server_id and "not found" in (e.reason or "").lower():
+            discovery_not_found_total.labels(server_id=e.server_id).inc()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "code": "SERVER_NOT_SYNCED",
+                "message": "Server key not verified; run sync or fix discovery.",
+                "details": {"server_id": e.server_id, "reason": e.reason},
+            },
+        ) from e
     except (LoadBalancerError, WireGuardCommandError) as e:
         raise_http_for_control_plane_exception(e)
     except ValueError as e:

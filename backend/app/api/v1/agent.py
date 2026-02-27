@@ -96,6 +96,12 @@ def _rev_for(server_id: str, peers: list[AgentDesiredPeer]) -> str:
     return h.hexdigest()[:16]
 
 
+def _heartbeat_public_key(payload: AgentHeartbeatIn) -> str | None:
+    """Valid server public_key from heartbeat (base64, min length) or None."""
+    pk = (payload.public_key or "").strip()
+    return pk if len(pk) >= 43 else None
+
+
 async def _ensure_server_from_heartbeat(db: AsyncSession, payload: AgentHeartbeatIn) -> None:
     """Ensure a Server row exists for this server_id; create from heartbeat if missing."""
     sid = (payload.server_id or "")[:32]
@@ -113,6 +119,8 @@ async def _ensure_server_from_heartbeat(db: AsyncSession, payload: AgentHeartbea
         if payload.container_name and payload.container_name != "(no container)"
         else f"docker://{sid}"
     )
+    now = datetime.now(timezone.utc)
+    pk = _heartbeat_public_key(payload)
     server = Server(
         id=sid,
         name=name,
@@ -120,6 +128,8 @@ async def _ensure_server_from_heartbeat(db: AsyncSession, payload: AgentHeartbea
         api_endpoint=api_endpoint[:512],
         status=payload.status or "unknown",
         is_active=True,
+        public_key=pk,
+        public_key_synced_at=now if pk else None,
     )
     db.add(server)
     try:
@@ -180,6 +190,16 @@ async def agent_heartbeat(
         )
     try:
         await _ensure_server_from_heartbeat(db, payload)
+        # Persist public_key from heartbeat so issue/reissue and DB fallback stay in sync
+        pk = _heartbeat_public_key(payload)
+        if pk:
+            srv_r = await db.execute(select(Server).where(Server.id == payload.server_id))
+            server = srv_r.scalar_one_or_none()
+            if server and (server.public_key or "").strip() != pk:
+                server.public_key = pk
+                server.public_key_synced_at = now
+                await db.commit()
+                await invalidate_servers_list_cache()
     except Exception:
         pass  # best-effort; list still works from Redis heartbeats
     return AgentAckOut(ok=True, server_time_utc=now)

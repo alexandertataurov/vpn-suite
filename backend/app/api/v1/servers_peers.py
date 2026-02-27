@@ -37,7 +37,9 @@ from app.schemas.server import (
     ServerPeersOut,
 )
 from app.api.v1.device_cache import invalidate_devices_list_cache, invalidate_devices_summary_cache
+from app.core.metrics import config_issue_blocked_total, discovery_not_found_total
 from app.services.admin_issue_service import admin_issue_peer, admin_rotate_peer
+from app.services.server_live_key_service import ServerNotSyncedError
 from app.services.server_health_service import sync_peers_after_restart
 
 router = APIRouter(prefix="/servers", tags=["servers"])
@@ -148,6 +150,20 @@ async def create_server_peer(
         )
         admin_issue_total.labels(status="success").inc()
         admin_issue_latency_seconds.labels(status="success").observe(time.perf_counter() - t0)
+    except ServerNotSyncedError as e:
+        admin_issue_total.labels(status="failure").inc()
+        config_issue_blocked_total.labels(reason="server_not_synced").inc()
+        if e.server_id and "not found" in (e.reason or "").lower():
+            discovery_not_found_total.labels(server_id=e.server_id).inc()
+        admin_issue_latency_seconds.labels(status="failure").observe(time.perf_counter() - t0)
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "code": "SERVER_NOT_SYNCED",
+                "message": "Server key not verified; run sync or fix discovery.",
+                "details": {"server_id": e.server_id, "reason": e.reason},
+            },
+        ) from e
     except ValueError as e:
         admin_issue_total.labels(status="failure").inc()
         provision_failures_total.labels(server_id=server_id, reason="validation").inc()

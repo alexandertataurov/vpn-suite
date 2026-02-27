@@ -78,7 +78,7 @@ class DeviceOut(OrmSchema):
     user_email: str | None = None  # Populated when listing with User join
     telemetry: DeviceTelemetryOut | None = None  # From cache when available
     # State reconciliation
-    apply_status: str | None = None  # PENDING_APPLY | APPLIED | FAILED_APPLY | NO_HANDSHAKE
+    apply_status: str | None = None  # CREATED | APPLYING | APPLIED | VERIFIED | ERROR | PENDING_APPLY | FAILED_APPLY | NO_HANDSHAKE
     last_applied_at: datetime | None = None
     last_seen_handshake_at: datetime | None = None
     last_error: str | None = None
@@ -111,6 +111,19 @@ class DeviceListItemOut(OrmSchema):
 class DeviceLimitUpdate(BaseModel):
     data_limit_bytes: int | None = None
     expires_at: datetime | None = None
+
+
+class DeviceUpdate(BaseModel):
+    """Partial update for device (admin edit). All fields optional."""
+
+    device_name: str | None = None
+    user_id: int | None = None
+    server_id: str | None = None
+    allowed_ips: str | None = None
+    suspended_at: datetime | None = None  # set to clear suspend (null) or keep
+    data_limit_bytes: int | None = None
+    expires_at: datetime | None = None
+    revoked_at: datetime | None = None  # set null to clear revoke (admin un-revoke)
 
 
 class DeviceList(OrmSchema):

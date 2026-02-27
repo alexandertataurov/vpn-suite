@@ -6,7 +6,7 @@ import asyncio
 import json
 import logging
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from sqlalchemy import func, select
@@ -27,6 +27,14 @@ from app.services.snapshot_cache import get_snapshot_nodes
 
 _log = logging.getLogger(__name__)
 
+
+def _group_server_name(name: str) -> str:
+    """Group servers by base name (strip trailing digits, e.g. amnezia-awg2 → amnezia-awg)."""
+    name = (name or "").strip()
+    return name.rstrip("0123456789")
+
+
+# Operator dashboard freshness: request-time aggregation. Aligns with frontend telemetry-freshness (30s/120s).
 FRESH_S = 30
 DEGRADED_S = 120
 TIME_RANGE_SECONDS = {"5m": 300, "15m": 900, "1h": 3600, "6h": 21600, "24h": 86400}
@@ -126,10 +134,11 @@ async def fetch_operator_dashboard(time_range: str = "1h") -> dict[str, Any]:
             return 0
 
         for s in servers:
-            name = (getattr(s, "name", "") or "").strip() or str(getattr(s, "id", ""))
-            existing = by_name.get(name)
+            raw_name = (getattr(s, "name", "") or "").strip() or str(getattr(s, "id", ""))
+            group = _group_server_name(raw_name)
+            existing = by_name.get(group)
             if existing is None or _status_score(s) >= _status_score(existing):
-                by_name[name] = s
+                by_name[group] = s
 
         servers = list(by_name.values())
 
@@ -411,26 +420,47 @@ async def fetch_operator_dashboard(time_range: str = "1h") -> dict[str, Any]:
                 except Exception:
                     prom_failures += 1
                     prometheus_query_failures_total.labels(query_name="vpn_node_ram_batch").inc()
+
+        # Redis telemetry overlay for all servers (peers, rx, tx, cpu, ram, last_ts)
+        if telemetry_map and server_ids:
             try:
                 redis = get_redis()
                 for sid in server_ids:
+                    if sid not in telemetry_map:
+                        continue
                     raw = await redis.get(f"telemetry:server:{sid}")
-                    if raw:
-                        try:
-                            data = json.loads(raw)
-                            if isinstance(data, dict) and sid in telemetry_map:
-                                telemetry_map[sid]["peers"] = data.get("peers_count")
-                                telemetry_map[sid]["rx"] = data.get("total_rx_bytes")
-                                telemetry_map[sid]["tx"] = data.get("total_tx_bytes")
-                                lu = data.get("last_updated")
-                                if lu:
-                                    try:
-                                        dt = datetime.fromisoformat(str(lu).replace("Z", "+00:00"))
-                                        telemetry_map[sid]["last_ts"] = dt.timestamp()
-                                    except (ValueError, TypeError):
-                                        pass
-                        except json.JSONDecodeError:
-                            pass
+                    if not raw:
+                        continue
+                    try:
+                        data = json.loads(raw)
+                        if not isinstance(data, dict):
+                            continue
+                        if telemetry_map[sid].get("peers") is None:
+                            telemetry_map[sid]["peers"] = data.get("peers_count")
+                        if telemetry_map[sid].get("rx") is None:
+                            telemetry_map[sid]["rx"] = data.get("total_rx_bytes")
+                        if telemetry_map[sid].get("tx") is None:
+                            telemetry_map[sid]["tx"] = data.get("total_tx_bytes")
+                        if telemetry_map[sid].get("cpu") is None and data.get("cpu_pct") is not None:
+                            try:
+                                telemetry_map[sid]["cpu"] = float(data["cpu_pct"])
+                            except (TypeError, ValueError):
+                                pass
+                        if telemetry_map[sid].get("ram") is None and data.get("ram_pct") is not None:
+                            try:
+                                telemetry_map[sid]["ram"] = float(data["ram_pct"])
+                            except (TypeError, ValueError):
+                                pass
+                        if telemetry_map[sid].get("last_ts") is None:
+                            lu = data.get("last_updated")
+                            if lu:
+                                try:
+                                    dt = datetime.fromisoformat(str(lu).replace("Z", "+00:00"))
+                                    telemetry_map[sid]["last_ts"] = dt.timestamp()
+                                except (ValueError, TypeError):
+                                    pass
+                    except json.JSONDecodeError:
+                        pass
             except Exception:
                 pass
 
@@ -475,7 +505,7 @@ async def fetch_operator_dashboard(time_range: str = "1h") -> dict[str, Any]:
                 rows = r.scalars().all()
                 for snap in rows:
                     res = (snap.payload_json or {}).get("resources") or {}
-                    snapshot_map[snap.server_id] = {
+                    snapshot_map[str(snap.server_id)] = {
                         "cpu": res.get("cpu_pct"),
                         "ram": res.get("ram_pct"),
                         "ts": snap.ts_utc.timestamp() if snap.ts_utc else None,
@@ -594,11 +624,55 @@ async def fetch_operator_dashboard(time_range: str = "1h") -> dict[str, Any]:
     timeseries_points = [
         {"ts": p["ts"], "peers": p["peers"], "rx": p["rx"], "tx": p["tx"]} for p in pts
     ]
+
+    # P95 latency over time (Prometheus range query) for continuous chart
+    latency_timeseries: list[dict[str, float]] = []
+    if prom.enabled and window > 0:
+        try:
+            end_dt = now
+            start_dt = now - timedelta(seconds=window)
+            step = max(15, min(60, window // 20))
+            p95_expr = (
+                "histogram_quantile(0.95, "
+                'sum(rate(http_request_duration_seconds_bucket{job="admin-api"}[5m])) by (le)) * 1000'
+            )
+            range_result = await prom.query_range(
+                p95_expr, start=start_dt, end=end_dt, step_seconds=step
+            )
+            if range_result and isinstance(range_result[0], dict):
+                values = range_result[0].get("values") or []
+                for item in values:
+                    if not isinstance(item, (list, tuple)) or len(item) < 2:
+                        continue
+                    try:
+                        ts_float = float(item[0])
+                        val_float = float(item[1])
+                        if ts_float and val_float >= 0:
+                            latency_timeseries.append(
+                                {"ts": int(ts_float), "latency_ms": round(val_float, 1)}
+                            )
+                    except (TypeError, ValueError):
+                        continue
+        except Exception as e:
+            _log.debug("latency range query failed: %s", e)
+
     last_ts = pts[-1]["ts"] if pts else None
     age_s = (now.timestamp() - last_ts) if last_ts else None
     health_strip["freshness"] = _freshness(age_s)
     if last_ts:
         last_successful_sample_ts = datetime.fromtimestamp(last_ts, tz=timezone.utc).isoformat()
+
+    # Populate strip from timeseries when Prometheus did not (peers_active, total_throughput_bps)
+    if pts:
+        last_pt = pts[-1]
+        if health_strip.get("peers_active") is None and last_pt.get("peers") is not None:
+            health_strip["peers_active"] = int(last_pt["peers"])
+        if len(pts) >= 2:
+            p1, p2 = pts[-2], pts[-1]
+            dt = max(0.001, float(p2["ts"] - p1["ts"]))
+            delta_rx = int(p2.get("rx") or 0) - int(p1.get("rx") or 0)
+            delta_tx = int(p2.get("tx") or 0) - int(p1.get("tx") or 0)
+            health_strip["total_throughput_bps"] = max(0, int((delta_rx + delta_tx) / dt))
 
     if data_status == "degraded":
         _log.warning(
@@ -625,6 +699,7 @@ async def fetch_operator_dashboard(time_range: str = "1h") -> dict[str, Any]:
         "incidents": incidents,
         "servers": server_rows,
         "timeseries": timeseries_points,
+        "latency_timeseries": latency_timeseries,
         "user_sessions": user_sessions,
         "last_updated": now.isoformat(),
         "data_status": data_status,

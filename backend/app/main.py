@@ -20,7 +20,6 @@ from app.api.v1.auth import router as auth_router
 from app.api.v1.bot import router as bot_router
 from app.api.v1.cluster import router as cluster_router
 from app.api.v1.control_plane import router as control_plane_router
-from app.api.v1.dashboard import router as dashboard_router
 from app.api.v1.devices import router as devices_router
 from app.api.v1.log import router as log_router
 from app.api.v1.overview import router as overview_router
@@ -30,6 +29,7 @@ from app.api.v1.plans import router as plans_router
 from app.api.v1.servers import router as servers_router
 from app.api.v1.servers_peers import router as servers_peers_router
 from app.api.v1.servers_stream import router as servers_stream_router
+from app.api.v1.live_metrics import router as live_metrics_router
 from app.api.v1.subscriptions import router as subscriptions_router
 from app.api.v1.telemetry_snapshot import router as telemetry_snapshot_router
 from app.api.v1.telemetry_docker import router as telemetry_docker_router
@@ -122,21 +122,26 @@ async def _validation_exception_handler(
 
 
 def _create_node_runtime_adapter():
-    """Create docker runtime adapter (control-plane execution channel)."""
-    from app.core.config import settings
+    """Create docker/agent runtime adapter (control-plane execution channel).
 
-    if settings.node_discovery == "docker":
+    NOTE: This adapter is used for light, read-heavy operations inside the API process.
+    Heavy reconciliation, telemetry, and server-sync loops run in a separate worker
+    process (see app.worker_main) to avoid coupling HTTP latency to background work.
+    """
+    from app.core.config import settings as _settings
+
+    if _settings.node_discovery == "docker":
         from app.services.node_runtime_docker import DockerNodeRuntimeAdapter
 
         prefixes = (
-            getattr(settings, "docker_vpn_container_prefixes", "amnezia-awg") or "amnezia-awg"
+            getattr(_settings, "docker_vpn_container_prefixes", "amnezia-awg") or "amnezia-awg"
         )
         return DockerNodeRuntimeAdapter(container_filter=prefixes, interface="awg0")
-    if settings.node_discovery == "agent":
+    if _settings.node_discovery == "agent":
         from app.services.node_runtime_agent import AgentNodeRuntimeAdapter
 
         return AgentNodeRuntimeAdapter()
-    raise ValueError(f"NODE_DISCOVERY={settings.node_discovery!r} not supported")
+    raise ValueError(f"NODE_DISCOVERY={_settings.node_discovery!r} not supported")
 
 
 @asynccontextmanager
@@ -165,80 +170,17 @@ async def lifespan(app: FastAPI):
             entity_id=f"db={'ok' if db_ok else 'fail'},redis={'ok' if redis_ok else 'fail'}",
         ),
     )
+    # Background loops moved to dedicated worker process (app.worker_main).
+    # The API process still performs light health checks for its own dependencies.
     health_task = asyncio.create_task(run_health_check_loop(lambda: app.state.node_runtime_adapter))
-    # Loops that require direct runtime access (`list_peers` / `wg set`) are docker-only.
-    limits_task = None
-    telemetry_task = None
-    recon_task = None
-    docker_alert_task = asyncio.create_task(
-        run_docker_alert_poll_loop(lambda: app.state.docker_telemetry_service)
-    )
-    device_expiry_task = asyncio.create_task(run_device_expiry_loop())
-    handshake_gate_task = asyncio.create_task(run_handshake_quality_gate_loop())
-    sync_task = None
-    scan_task = None
-    # Server sync: fetch snapshots from nodes (works for both docker and agent discovery)
-    sync_task = asyncio.create_task(run_server_sync_loop(lambda: app.state.node_runtime_adapter))
-    if settings.node_discovery == "docker":
-        limits_task = asyncio.create_task(
-            run_limits_check_loop(lambda: app.state.node_runtime_adapter)
-        )
-        telemetry_task = asyncio.create_task(
-            run_telemetry_poll_loop(lambda: app.state.node_runtime_adapter)
-        )
-        recon_task = asyncio.create_task(
-            run_reconciliation_loop(lambda: app.state.node_runtime_adapter)
-        )
-        # Run initial discovery before serving so admin dashboard shows nodes immediately
-        try:
-            await run_node_scan_once(lambda: app.state.node_runtime_adapter)
-        except Exception as exc:
-            _log.warning("Initial node scan failed: %s", redact_for_log(str(exc)))
-        # One-off reconciliation at startup so peers are applied promptly after restart.
-        try:
-            await reconcile_all_nodes(app.state.node_runtime_adapter)
-        except Exception as exc:
-            _log.warning("Initial reconciliation failed: %s", redact_for_log(str(exc)))
-        scan_task = asyncio.create_task(run_node_scan_loop(lambda: app.state.node_runtime_adapter))
-    else:
-        # Agent mode: still refresh topology + metrics periodically from heartbeat data.
-        telemetry_task = asyncio.create_task(
-            run_telemetry_poll_loop(lambda: app.state.node_runtime_adapter)
-        )
-        recon_task = asyncio.create_task(
-            run_reconciliation_loop(lambda: app.state.node_runtime_adapter)
-        )
-        try:
-            await run_node_scan_once(lambda: app.state.node_runtime_adapter)
-        except Exception as exc:
-            _log.warning("Initial topology refresh failed: %s", redact_for_log(str(exc)))
-        scan_task = asyncio.create_task(run_node_scan_loop(lambda: app.state.node_runtime_adapter))
     try:
         yield
     finally:
         health_task.cancel()
-        for t in (limits_task, telemetry_task, recon_task, scan_task, sync_task, handshake_gate_task):
-            if t is not None:
-                t.cancel()
-        docker_alert_task.cancel()
-        device_expiry_task.cancel()
-        for t in (
-            health_task,
-            limits_task,
-            telemetry_task,
-            recon_task,
-            scan_task,
-            device_expiry_task,
-            docker_alert_task,
-            sync_task,
-            handshake_gate_task,
-        ):
-            if t is None:
-                continue
-            try:
-                await t
-            except asyncio.CancelledError:
-                pass
+        try:
+            await health_task
+        except asyncio.CancelledError:
+            pass
         await close_redis()
 
 
@@ -273,7 +215,6 @@ app.include_router(analytics_router, prefix="/api/v1")
 app.include_router(audit_router, prefix="/api/v1")
 app.include_router(cluster_router, prefix="/api/v1")
 app.include_router(control_plane_router, prefix="/api/v1")
-app.include_router(dashboard_router, prefix="/api/v1")
 app.include_router(peers_router, prefix="/api/v1")
 app.include_router(wg_router, prefix="/api/v1")
 # Stream before servers_router so GET /servers/stream is not matched by GET /servers/{server_id}
@@ -289,6 +230,7 @@ app.include_router(subscriptions_router, prefix="/api/v1")
 app.include_router(agent_router, prefix="/api/v1")
 app.include_router(telemetry_docker_router, prefix="/api/v1")
 app.include_router(telemetry_snapshot_router, prefix="/api/v1")
+app.include_router(live_metrics_router, prefix="/api/v1")
 app.include_router(payments_router, prefix="/api/v1")
 app.include_router(webhooks_router)  # /webhooks/payments/{provider} — no JWT
 app.include_router(bot_router, prefix="/api/v1")

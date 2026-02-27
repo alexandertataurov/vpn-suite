@@ -21,6 +21,12 @@ TELEMETRY_SUMMARY_KEY = "device_telemetry:summary"
 TELEMETRY_SUMMARY_TTL = 300
 HANDSHAKE_OK_SEC = 120  # 2 min
 
+try:
+    # Optional Prometheus metrics for per-device handshake age.
+    from app.core.metrics import vpn_peer_last_handshake_age_seconds
+except Exception:  # pragma: no cover - metrics not critical for core logic
+    vpn_peer_last_handshake_age_seconds = None  # type: ignore[assignment]
+
 
 def _valid_allowed_ips(allowed_ips: str | None) -> bool:
     """True if allowed_ips is a valid server-side peer value (client /32), not (none) or 0.0.0.0/0."""
@@ -108,6 +114,18 @@ async def write_device_telemetry(
         await redis.set(TELEMETRY_LAST_UPDATED_KEY, str(now_ts), ex=DEVICE_TELEMETRY_TTL * 2)
     except Exception as e:
         _log.debug("Device telemetry write failed device_id=%s: %s", device_id[:8], e)
+    # Export handshake age to Prometheus (best-effort).
+    if vpn_peer_last_handshake_age_seconds is not None:
+        try:
+            # Use -1 to denote "no handshake yet" when age is unknown.
+            age_val = handshake_age_sec if handshake_age_sec is not None else -1
+            vpn_peer_last_handshake_age_seconds.labels(
+                device_id=device_id,
+                server_id=server_id,
+            ).set(age_val)
+        except Exception:
+            # Metrics must not break telemetry writes.
+            pass
     return (h_ok, no_h, tz)
 
 

@@ -4,11 +4,15 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.constants import PERM_TELEMETRY_LOGS_READ, PERM_TELEMETRY_READ
+from app.core.constants import (
+    PERM_CLUSTER_WRITE,
+    PERM_TELEMETRY_LOGS_READ,
+    PERM_TELEMETRY_READ,
+)
 from app.core.database import get_db
 from app.core.error_responses import not_found_404
 from app.core.rbac import require_permission
@@ -146,6 +150,90 @@ async def docker_container_logs(
             detail=f"docker telemetry logs failed: {msg}",
         ) from exc
     return ContainerLogLineListOut(items=items, total=len(items))
+
+
+@router.post(
+    "/container/{container_id}/start",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def docker_container_start(
+    request: Request,
+    container_id: str,
+    host_id: str = Query("local"),
+    _admin=Depends(require_permission(PERM_CLUSTER_WRITE)),
+) -> Response:
+    service = getattr(request.app.state, "docker_telemetry_service", None)
+    if service is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="docker telemetry service unavailable",
+        )
+    try:
+        await service.start_container(host_id, container_id)
+    except KeyError:
+        raise not_found_404("host", host_id) from None
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"docker telemetry start failed: {exc}",
+        ) from exc
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post(
+    "/container/{container_id}/stop",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def docker_container_stop(
+    request: Request,
+    container_id: str,
+    host_id: str = Query("local"),
+    _admin=Depends(require_permission(PERM_CLUSTER_WRITE)),
+) -> Response:
+    service = getattr(request.app.state, "docker_telemetry_service", None)
+    if service is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="docker telemetry service unavailable",
+        )
+    try:
+        await service.stop_container(host_id, container_id)
+    except KeyError:
+        raise not_found_404("host", host_id) from None
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"docker telemetry stop failed: {exc}",
+        ) from exc
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post(
+    "/container/{container_id}/restart",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def docker_container_restart(
+    request: Request,
+    container_id: str,
+    host_id: str = Query("local"),
+    _admin=Depends(require_permission(PERM_CLUSTER_WRITE)),
+) -> Response:
+    service = getattr(request.app.state, "docker_telemetry_service", None)
+    if service is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="docker telemetry service unavailable",
+        )
+    try:
+        await service.restart_container(host_id, container_id)
+    except KeyError:
+        raise not_found_404("host", host_id) from None
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"docker telemetry restart failed: {exc}",
+        ) from exc
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.get("/alerts", response_model=AlertItemListOut)

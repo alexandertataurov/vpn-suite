@@ -33,6 +33,8 @@ class Settings(BaseSettings):
     login_rate_window_seconds: int = 900
     # When True, reject login with 503 if Redis is down (fail-closed). Default False = fail-open.
     login_rate_limit_fail_closed: bool = False
+    # When True, reject refresh when Redis blocklist check fails (fail-closed). Default False = fail-open.
+    refresh_blocklist_fail_closed: bool = False
     # Global API rate limit (per IP): requests per window; 0 = disabled
     api_rate_limit_per_minute: int = 200
     api_rate_limit_window_seconds: int = 60
@@ -67,10 +69,12 @@ class Settings(BaseSettings):
     bot_api_key: str = ""
     # Telegram Bot token (for WebApp initData validation; empty = skip)
     telegram_bot_token: str = ""
+    # WebApp session: JWT lifetime (seconds) for miniapp Bearer token.
+    webapp_session_expire_seconds: int = 3600
     # S8-4: background limits check → auto-block when traffic exceeds server limit (interval sec; 0 = disabled)
     limits_check_interval_seconds: int = 300
     limits_auto_block_enabled: bool = True
-    node_telemetry_interval_seconds: int = 30
+    node_telemetry_interval_seconds: int = 10
     node_telemetry_cache_ttl_seconds: int = 60
     node_telemetry_concurrency: int = 10  # 0 = sequential; >0 = max concurrent polls per cycle
     node_telemetry_interval_idle_seconds: int = 0  # when > 0 and no recent snapshot read, use this interval (e.g. 60)
@@ -100,6 +104,11 @@ class Settings(BaseSettings):
     docker_alert_high_mem_warning_pct: float = 90.0
     docker_alert_high_mem_critical_pct: float = 97.0
     docker_alert_disk_pressure_pct: float = 85.0
+    # Live observability (SSE + Redis hot state)
+    live_obs_enabled: bool = False
+    live_obs_agg_interval_seconds: float = 1.0
+    live_obs_sse_max_connections: int = 2000
+    live_obs_max_event_bytes: int = 64_000
     # Bot: rate limit on issue device per user (0 = disabled)
     issue_rate_limit_per_minute: int = 5
     issue_rate_window_seconds: int = 60
@@ -115,7 +124,8 @@ class Settings(BaseSettings):
     topology_cache_ttl_seconds: int = 30
     reconciliation_interval_seconds: int = 60
     reconciliation_read_only: bool = False
-    handshake_quality_gate_minutes: int = 5  # Mark NO_HANDSHAKE if no handshake within X min after apply
+    reconciliation_remove_orphans: bool = False  # When False, do not remove peers missing from DB (log ORPHAN only)
+    handshake_quality_gate_minutes: int = 5  # Mark NO_HANDSHAKE/ERROR if no handshake within X min after apply
     node_discovery: str = "docker"  # docker | agent
     node_scan_interval_seconds: int = 300  # 0 = no periodic scan
     # Control-plane automation loop (failover/rebalance planner)

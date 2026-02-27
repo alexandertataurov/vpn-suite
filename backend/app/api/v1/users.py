@@ -31,6 +31,7 @@ from app.schemas.user import UserCreate, UserDetail, UserList, UserOut, UserUpda
 from app.api.v1.device_cache import invalidate_devices_list_cache, invalidate_devices_summary_cache
 from app.services.funnel_service import log_funnel_event
 from app.services.issue_service import issue_device
+from app.services.server_live_key_service import ServerNotSyncedError
 from app.services.topology_engine import TopologyEngine
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -289,6 +290,20 @@ async def issue_user_device(
             get_topology=get_topology,
             runtime_adapter=runtime_adapter,
         )
+    except ServerNotSyncedError as e:
+        from app.core.metrics import config_issue_blocked_total, discovery_not_found_total
+
+        config_issue_blocked_total.labels(reason="server_not_synced").inc()
+        if e.server_id and "not found" in (e.reason or "").lower():
+            discovery_not_found_total.labels(server_id=e.server_id).inc()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "code": "SERVER_NOT_SYNCED",
+                "message": "Server key not verified; run sync or fix discovery.",
+                "details": {"server_id": e.server_id, "reason": e.reason},
+            },
+        ) from e
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

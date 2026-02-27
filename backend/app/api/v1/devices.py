@@ -15,7 +15,7 @@ from app.core.database import get_db
 from app.core.exception_handling import raise_http_for_control_plane_exception
 from app.core.exceptions import WireGuardCommandError
 from app.core.rbac import require_permission
-from app.models import Device, IssuedConfig, User
+from app.models import Device, IssuedConfig, Server, User
 from app.schemas.device import (
     BlockRequest,
     BulkRevokeOut,
@@ -25,11 +25,15 @@ from app.schemas.device import (
     DeviceList,
     DeviceOut,
     DeviceSummaryOut,
+    DeviceUpdate,
     ResetRequest,
     RevokeRequest,
 )
+from app.core.metrics import config_issue_blocked_total, discovery_not_found_total
 from app.schemas.server import AdminRotatePeerResponse
 from app.services.admin_issue_service import reissue_config_for_device
+from app.services.agent_action_service import create_action
+from app.services.server_live_key_service import ServerNotSyncedError
 from app.api.v1.device_cache import (
     devices_list_cache_key,
     get_devices_list_cached,
@@ -378,6 +382,64 @@ async def suspend_device(
     return DeviceOut.model_validate(device)
 
 
+@router.patch("/{device_id}", response_model=DeviceOut)
+async def update_device(
+    request: Request,
+    device_id: str,
+    body: DeviceUpdate,
+    db: AsyncSession = Depends(get_db),
+    admin=Depends(require_permission(PERM_DEVICES_WRITE)),
+):
+    """Update device fields (name, user, node, IP, status, limits). Partial update; only set fields are applied."""
+    result = await db.execute(
+        select(Device).where(Device.id == device_id).options(selectinload(Device.issued_configs))
+    )
+    device = result.scalar_one_or_none()
+    if not device:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Device not found")
+    data = body.model_dump(exclude_unset=True)
+    if not data:
+        await db.refresh(device)
+        row = await db.execute(select(User.email).where(User.id == device.user_id))
+        user_email = row.scalar_one_or_none()
+        return DeviceOut.model_validate(device).model_copy(update={"user_email": user_email})
+    if "user_id" in data and data["user_id"] is not None:
+        u = await db.execute(select(User).where(User.id == data["user_id"]))
+        if not u.scalar_one_or_none():
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User not found")
+    if "server_id" in data and data["server_id"] is not None:
+        s = await db.execute(select(Server).where(Server.id == data["server_id"]))
+        if not s.scalar_one_or_none():
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Server not found")
+    for k, v in data.items():
+        setattr(device, k, v)
+    request.state.audit_resource_type = "device"
+    request.state.audit_resource_id = device.id
+    request.state.audit_old_new = {"update": data}
+    await db.commit()
+    await db.refresh(device)
+    await invalidate_devices_list_cache()
+    await invalidate_devices_summary_cache()
+    row = await db.execute(select(User.email).where(User.id == device.user_id))
+    user_email = row.scalar_one_or_none()
+    d_out = DeviceOut.model_validate(device).model_copy(update={"user_email": user_email})
+    telemetry_map = await get_device_telemetry_bulk([device_id])
+    configs = device.issued_configs or []
+    if telemetry_map.get(device_id):
+        merged = merge_telemetry_into_device(
+            {
+                "revoked_at": device.revoked_at,
+                "allowed_ips": device.allowed_ips,
+                "has_consumed_config": any(c.consumed_at for c in configs),
+                "has_pending_config": any(not c.consumed_at for c in configs),
+            },
+            telemetry_map[device_id],
+        )
+        if merged:
+            d_out = d_out.model_copy(update={"telemetry": merged})
+    return d_out
+
+
 @router.patch("/{device_id}/limits", response_model=DeviceOut)
 async def update_device_limits(
     request: Request,
@@ -599,6 +661,24 @@ async def reissue_device_config(
             runtime_adapter=request.app.state.node_runtime_adapter,
             base_config_url=base_config_url,
         )
+    except ServerNotSyncedError as e:
+        config_issue_blocked_total.labels(reason="server_not_synced").inc()
+        if e.server_id and "not found" in (e.reason or "").lower():
+            discovery_not_found_total.labels(server_id=e.server_id).inc()
+        if e.server_id and (settings.node_discovery == "agent" or settings.node_mode == "agent"):
+            try:
+                await create_action(db, server_id=e.server_id, type="sync", payload={"mode": "full"})
+                await db.commit()
+            except Exception:
+                pass
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "code": "SERVER_NOT_SYNCED",
+                "message": "Server key not verified; run sync or fix discovery.",
+                "details": {"server_id": e.server_id, "reason": e.reason},
+            },
+        ) from e
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -606,7 +686,15 @@ async def reissue_device_config(
         )
     except WireGuardCommandError as e:
         raise_http_for_control_plane_exception(e)
+    except Exception as exc:
+        _log.exception("Reissue failed for device_id=%s: %s", device_id, exc)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Reissue failed; check server logs.",
+        ) from exc
     await db.commit()
+    await invalidate_devices_summary_cache()
+    await invalidate_devices_list_cache()
     return AdminRotatePeerResponse(
         config_awg={"download_url": out.config_awg.download_url, "qr_payload": out.config_awg.qr_payload},
         config_wg_obf={"download_url": out.config_wg_obf.download_url, "qr_payload": out.config_wg_obf.qr_payload},
