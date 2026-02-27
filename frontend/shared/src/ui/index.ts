@@ -68,6 +68,7 @@ export {
   CellMuted,
   CellSecondary,
 } from "./table";
+export { EmptyTableState } from "./table/EmptyTableState";
 export type {
   TableSelection,
   Column,
@@ -187,6 +188,8 @@ export {
   type PrimitiveContainerPadding,
   type PrimitiveContainerSize,
 } from "./primitives/Container";
+export { PageContainer, type PageContainerProps } from "./primitives/PageContainer";
+export { SectionContainer, type SectionContainerProps } from "./primitives/SectionContainer";
 export {
   Stack as PrimitiveStack,
   type PrimitiveStackProps,

@@ -15,6 +15,7 @@ export {
   type FormatDateTimeOptions,
   type TimeZoneMode,
 } from "./utils/format";
+export { useApiErrorToast } from "./utils/useApiErrorToast";
 export * from "./ui/index";
 export * from "./statusMap";
 export * from "./api-client/index";

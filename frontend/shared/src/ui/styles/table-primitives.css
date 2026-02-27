@@ -43,14 +43,22 @@
   padding: var(--spacing-2) var(--spacing-3);
   border-bottom: var(--border-width-hairline) solid var(--color-border-subtle);
 }
-.ds-table tbody tr { transition: background-color var(--duration-fast) var(--ease-standard); }
+.ds-table tbody tr {
+  min-height: var(--table-row-height-md, 48px);
+  transition: background-color var(--duration-fast) var(--ease-standard);
+}
 .ds-table tbody tr:hover { background: var(--color-surface-2); }
 .ds-table tbody tr:last-child td { border-bottom: 0; }
 
 .ds-table-row-clickable { cursor: pointer; }
 .ds-table-row-clickable:hover { background: var(--color-surface-2); }
 
-.ds-table-density-compact tbody td { padding: var(--spacing-1) var(--spacing-3); }
+.ds-table-density-compact tbody td {
+  padding: var(--spacing-1) var(--spacing-3);
+}
+.ds-table-density-compact tbody tr {
+  min-height: var(--table-row-height-compact, 40px);
+}
 .ds-table-density-compact thead th { padding: var(--spacing-1) var(--spacing-3); }
 .table-density-compact .ds-table tbody td { padding: var(--spacing-1) var(--spacing-3); }
 .table-density-compact .ds-table thead th { padding: var(--spacing-1) var(--spacing-3); }

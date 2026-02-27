@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
-import { Button } from "@vpn-suite/shared/ui";
+import { Button, InlineAlert } from "@vpn-suite/shared/ui";
 import { useTelegramWebApp } from "../hooks/useTelegramWebApp";
 import { setWebappToken, webappApi } from "../api/client";
 import type { WebAppAuthResponse } from "@vpn-suite/shared/types";
 
 export function AuthGuard({ children }: { children: ReactNode }) {
-  const { initData } = useTelegramWebApp();
+  const { initData, isInsideTelegram } = useTelegramWebApp();
   const [ready, setReady] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
 
@@ -35,9 +35,24 @@ export function AuthGuard({ children }: { children: ReactNode }) {
   if (!ready) return null;
 
   if (!initData) {
+    if (isInsideTelegram) {
+      return (
+        <div className="page-content auth-guard-message">
+          <InlineAlert
+            variant="error"
+            title="Session could not be started"
+            message="Close and reopen the mini app from the Telegram bot."
+          />
+        </div>
+      );
+    }
     return (
       <div className="page-content auth-guard-message">
-        <p className="text-muted">Open this app from Telegram to use it.</p>
+        <InlineAlert
+          variant="warning"
+          title="Open from Telegram"
+          message="Open this app from the Telegram bot to use your VPN subscription."
+        />
       </div>
     );
   }
@@ -45,7 +60,11 @@ export function AuthGuard({ children }: { children: ReactNode }) {
   if (authError) {
     return (
       <div className="page-content auth-guard-message">
-        <p className="text-error">{authError}</p>
+        <InlineAlert
+          variant="error"
+          title="Session error"
+          message={authError}
+        />
         <Button className="mt-md" onClick={attemptAuth}>
           Retry
         </Button>

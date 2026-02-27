@@ -59,7 +59,7 @@ export interface MetricsKpisOut {
   message?: string | null;
 }
 
-/** Operator dashboard (GET /dashboard/operator). */
+/** Operator dashboard (GET /overview/operator). */
 export interface OperatorHealthStrip {
   api_status: "ok" | "degraded" | "down" | "unknown";
   prometheus_status: "ok" | "down";
@@ -124,12 +124,20 @@ export interface OperatorUserSessions {
   delta_24h: number | null;
 }
 
+/** P95 latency point from Prometheus range query (for continuous chart). */
+export interface LatencyTimeseriesPoint {
+  ts: number;
+  latency_ms: number;
+}
+
 export interface OperatorDashboardOut {
   health_strip: OperatorHealthStrip;
   cluster_matrix: OperatorClusterRow[];
   incidents: OperatorIncident[];
   servers: OperatorServerRow[];
   timeseries: DashboardTimeseriesPoint[];
+  /** P95 latency over time (when Prometheus available) for continuous chart. */
+  latency_timeseries?: LatencyTimeseriesPoint[];
   user_sessions: OperatorUserSessions;
   last_updated: string;
   data_status?: "ok" | "degraded";
@@ -619,6 +627,18 @@ export interface DeviceOut {
   last_seen_handshake_at?: string | null;
   last_error?: string | null;
   protocol_version?: string | null;
+}
+
+/** Partial update for device (admin edit). All fields optional. */
+export interface DeviceUpdate {
+  device_name?: string | null;
+  user_id?: number | null;
+  server_id?: string | null;
+  allowed_ips?: string | null;
+  suspended_at?: string | null;
+  data_limit_bytes?: number | null;
+  expires_at?: string | null;
+  revoked_at?: string | null;
 }
 
 export interface DeviceList {

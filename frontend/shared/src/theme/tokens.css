@@ -400,6 +400,9 @@ html {
   --height-btn-sm: 28px;
   --height-btn-md: 36px;
   --height-btn-lg: 44px;
+  /* Table layout contract (row heights are single source of truth for data tables) */
+  --table-row-height-md: 48px;
+  --table-row-height-compact: 40px;
   --z-sticky: 50;
   --z-header: 210;
   --z-dropdown: 100;

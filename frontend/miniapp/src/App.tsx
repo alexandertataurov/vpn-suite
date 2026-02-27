@@ -3,6 +3,7 @@ import { Routes, Route } from "react-router-dom";
 import { ToastContainer, Skeleton } from "@vpn-suite/shared/ui";
 import { AuthGuard } from "./components/AuthGuard";
 import { MiniappLayout } from "./layouts/MiniappLayout";
+import { TelegramThemeBridge } from "./components/TelegramThemeBridge";
 
 const HomePage = lazy(() => import("./pages/Home").then((m) => ({ default: m.HomePage })));
 const PlansPage = lazy(() => import("./pages/Plans").then((m) => ({ default: m.PlansPage })));
@@ -15,6 +16,7 @@ const HelpPage = lazy(() => import("./pages/Help").then((m) => ({ default: m.Hel
 function App() {
   return (
     <ToastContainer>
+      <TelegramThemeBridge />
       <AuthGuard>
         <Suspense fallback={<div className="miniapp-loading"><Skeleton height={24} /></div>}>
           <Routes>

@@ -1,4 +1,5 @@
 @import "./theme/tokens.css";
+@import "./theme/breakpoints.css";
 @import "./base.css";
 @import "./layout.css";
 @import "./ui/styles/index.css";

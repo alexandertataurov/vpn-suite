@@ -7,7 +7,9 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  padding-bottom: var(--height-bottom-nav);
+  max-width: 480px;
+  margin: 0 auto;
+  padding-bottom: calc(var(--height-bottom-nav) + env(safe-area-inset-bottom, 0px));
   background: var(--surface-base);
 }
 
@@ -69,29 +71,42 @@
   position: fixed;
   bottom: 0;
   inset-inline: 0;
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   background: var(--surface-base);
   border-block-start: 1px solid var(--border-subtle);
   z-index: var(--z-sticky);
-  padding: var(--spacing-2) 0;
   min-height: var(--height-bottom-nav);
-  align-items: center;
+  padding-inline: var(--spacing-2);
 }
 .miniapp-tab {
-  flex: 1;
-  padding: var(--spacing-2) var(--spacing-3);
-  text-align: center;
-  font-size: var(--text-sm);
-  color: var(--color-text-muted);
-  text-decoration: none;
-  transition: color var(--duration-fast), background var(--duration-fast);
-  min-height: var(--size-touch-target);
-  display: flex;
+  display: inline-flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: var(--spacing-1);
+  padding: var(--spacing-1) var(--spacing-2);
+  margin-inline: var(--spacing-1);
+  text-align: center;
+  font-size: var(--text-xs);
+  color: var(--color-neutral-500);
+  text-decoration: none;
+  min-height: var(--size-touch-target);
   border-radius: var(--radius-lg);
+  border: 1px solid transparent;
+  transition:
+    color var(--duration-fast),
+    background var(--duration-fast),
+    border-color var(--duration-fast),
+    transform var(--duration-fast);
+}
+.miniapp-tab-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.miniapp-tab-label {
+  line-height: 1;
 }
 
 .miniapp-cta {
@@ -118,13 +133,20 @@
   color: var(--color-warning);
 }
 .miniapp-tab:hover {
-  color: var(--color-text);
-  background: var(--color-primary-subtle);
+  color: var(--color-neutral-900);
+  border-color: color-mix(in oklab, var(--color-primary) 20%, transparent);
+  background: color-mix(in oklab, var(--color-primary-subtle) 40%, transparent);
 }
 .miniapp-tab.active {
-  color: var(--color-on-accent);
+  color: var(--surface-base);
   font-weight: var(--font-medium);
-  background: var(--color-accent);
+  background: linear-gradient(
+    130deg,
+    color-mix(in oklab, var(--color-primary) 84%, black 16%),
+    color-mix(in oklab, var(--color-primary) 66%, black 34%)
+  );
+  border-color: color-mix(in oklab, var(--color-primary) 66%, black 34%);
+  box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.18), 0 6px 14px -10px oklch(0 0 0 / 0.5);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -153,14 +175,13 @@
 
 
 .miniapp-main {
-  padding: var(--spacing-4) var(--spacing-4) var(--spacing-8);
+  padding: var(--spacing-3) var(--spacing-3) calc(var(--height-bottom-nav) + var(--spacing-4));
 }
 
 .miniapp-main .page-content {
-  max-width: 42rem;
-  margin-inline: auto;
+  margin-inline: 0;
   display: grid;
-  gap: var(--spacing-5);
+  gap: var(--spacing-4);
 }
 
 .miniapp-main .ref-page {
@@ -245,29 +266,9 @@
 
 .miniapp-bottom-nav {
   border-block-start-color: color-mix(in oklab, var(--border-subtle) 78%, var(--color-border-default) 22%);
-  background: color-mix(in oklab, var(--surface-base) 90%, var(--surface-raised) 10%);
+  background: color-mix(in oklab, var(--surface-base) 92%, var(--surface-raised) 8%);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-}
-
-.miniapp-tab {
-  margin-inline: var(--spacing-1);
-  border: 1px solid transparent;
-  transition: color var(--duration-fast), background var(--duration-fast), border-color var(--duration-fast), transform var(--duration-fast);
-}
-
-.miniapp-tab:hover {
-  border-color: color-mix(in oklab, var(--color-primary) 20%, transparent);
-}
-
-.miniapp-tab.active {
-  background: linear-gradient(
-    130deg,
-    color-mix(in oklab, var(--color-primary) 84%, black 16%),
-    color-mix(in oklab, var(--color-primary) 66%, black 34%)
-  );
-  border-color: color-mix(in oklab, var(--color-primary) 66%, black 34%);
-  box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.18), 0 6px 14px -10px oklch(0 0 0 / 0.5);
 }
 
 .config-block {
@@ -277,8 +278,24 @@
 }
 
 @media (min-width: 768px) {
-  .miniapp-main {
-    padding-inline: var(--spacing-8);
+  .miniapp-layout {
+    max-width: 520px;
+  }
+}
+
+@media (max-width: 399px) {
+  .miniapp-bottom-nav {
+    padding-inline: var(--spacing-1);
+  }
+  .miniapp-tab {
+    font-size: 10px;
+    padding-inline: var(--spacing-1);
+  }
+  .miniapp-main .page-content {
+    gap: var(--spacing-3);
+  }
+  .miniapp-page-header {
+    margin-bottom: var(--spacing-1);
   }
 }
 

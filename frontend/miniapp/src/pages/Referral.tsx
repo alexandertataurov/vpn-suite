@@ -1,18 +1,28 @@
 import { Link } from "react-router-dom";
 import type { WebAppReferralMyLinkResponse, WebAppReferralStatsResponse } from "@vpn-suite/shared/types";
-import { Panel, Button, Skeleton } from "@vpn-suite/shared/ui";
+import { Panel, Button, Skeleton, InlineAlert } from "@vpn-suite/shared/ui";
 import { useQuery } from "@tanstack/react-query";
-import { webappApi } from "../api/client";
+import { getWebappToken, webappApi } from "../api/client";
 
 export function ReferralPage() {
-  const { data: linkData, isFetching: linkFetching } = useQuery<WebAppReferralMyLinkResponse>({
+  const hasToken = !!getWebappToken();
+  const {
+    data: linkData,
+    isFetching: linkFetching,
+    error: linkError,
+  } = useQuery<WebAppReferralMyLinkResponse>({
     queryKey: ["webapp", "referral", "link"],
     queryFn: () => webappApi.get<WebAppReferralMyLinkResponse>("/webapp/referral/my-link"),
+    enabled: hasToken,
   });
   const linkLoading = linkFetching;
-  const { data: statsData } = useQuery<WebAppReferralStatsResponse>({
+  const {
+    data: statsData,
+    error: statsError,
+  } = useQuery<WebAppReferralStatsResponse>({
     queryKey: ["webapp", "referral", "stats"],
     queryFn: () => webappApi.get<WebAppReferralStatsResponse>("/webapp/referral/stats"),
+    enabled: hasToken,
   });
   const linkPayload = linkData?.payload;
   const rawBot =
@@ -30,6 +40,34 @@ export function ReferralPage() {
       navigator.clipboard.writeText(shareUrl);
     }
   };
+
+  if (!hasToken) {
+    return (
+      <div className="page-content">
+        <h1 className="miniapp-page-title">Invite friend</h1>
+        <InlineAlert
+          variant="warning"
+          title="Session missing"
+          message="Your Telegram session is not active. Close and reopen the mini app from the bot to access referrals."
+        />
+        <Link to="/" className="miniapp-back-link">Back</Link>
+      </div>
+    );
+  }
+
+  if (linkError || statsError) {
+    return (
+      <div className="page-content">
+        <h1 className="miniapp-page-title">Invite friend</h1>
+        <InlineAlert
+          variant="error"
+          title="Referrals temporarily unavailable"
+          message="We could not load your referral data. Please try again later."
+        />
+        <Link to="/" className="miniapp-back-link">Back</Link>
+      </div>
+    );
+  }
 
   if (linkLoading || !linkData) {
     return (

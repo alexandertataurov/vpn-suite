@@ -1,15 +1,44 @@
 import { Link } from "react-router-dom";
-import { Panel, Button, ProfileCard, Skeleton } from "@vpn-suite/shared/ui";
+import { Panel, Button, ProfileCard, Skeleton, InlineAlert } from "@vpn-suite/shared/ui";
 import { useSession } from "../hooks/useSession";
+import { getWebappToken } from "../api/client";
 
 export function ProfilePage() {
-  const { data, isLoading } = useSession(true);
+  const hasToken = !!getWebappToken();
+  const { data, isLoading, error } = useSession(hasToken);
   const activeSub = data?.subscriptions?.find((s) => s.status === "active");
+  const activeDevices = data?.devices?.filter((d) => !d.revoked_at) ?? [];
+  const deviceLimit = activeSub?.device_limit ?? null;
 
   if (isLoading) {
     return (
       <div className="page-content">
         <Skeleton variant="card" />
+      </div>
+    );
+  }
+  if (!hasToken) {
+    return (
+      <div className="page-content">
+        <h1 className="miniapp-page-title">Profile</h1>
+        <InlineAlert
+          variant="warning"
+          title="Session missing"
+          message="Your Telegram session is not active. Close and reopen the mini app from the bot."
+        />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="page-content">
+        <h1 className="miniapp-page-title">Profile</h1>
+        <InlineAlert
+          variant="error"
+          title="Could not load profile"
+          message="We could not load your profile. Please try again or reopen from Telegram."
+        />
       </div>
     );
   }
@@ -32,6 +61,11 @@ export function ProfilePage() {
         <Panel>
           <p>No active subscription.</p>
         </Panel>
+      )}
+      {deviceLimit != null && (
+        <p className="fs-sm text-muted mt-sm">
+          Devices: <strong>{activeDevices.length}</strong> / <strong>{deviceLimit}</strong>
+        </p>
       )}
       <Panel className="mt-lg">
         <h2 className="card-title">Invite friend</h2>

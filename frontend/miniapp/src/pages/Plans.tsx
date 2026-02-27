@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Panel, Skeleton, Button } from "@vpn-suite/shared/ui";
-import { webappApi } from "../api/client";
+import { Panel, Skeleton, Button, InlineAlert, EmptyTableState } from "@vpn-suite/shared/ui";
+import { getWebappToken, webappApi } from "../api/client";
 
 interface PlanItem {
   id: string;
@@ -15,17 +15,36 @@ interface PlansResponse {
 }
 
 export function PlansPage() {
+  const hasToken = !!getWebappToken();
   const { data, isLoading, error } = useQuery({
     queryKey: ["webapp", "plans"],
     queryFn: () => webappApi.get<PlansResponse>("/webapp/plans"),
+    enabled: hasToken,
   });
 
+  if (!hasToken) {
+    return (
+      <div className="page-content">
+        <h1 className="miniapp-page-title">Plans</h1>
+        <InlineAlert
+          variant="warning"
+          title="Session missing"
+          message="Your Telegram session is not active. Close and reopen the mini app from the bot."
+        />
+        <Link to="/" className="miniapp-back-link">Back</Link>
+      </div>
+    );
+  }
   if (error) {
     return (
       <div className="page-content">
         <h1 className="miniapp-page-title">Plans</h1>
-        <p className="text-error">Failed to load plans.</p>
-        <Link to="/">Back</Link>
+        <InlineAlert
+          variant="error"
+          title="Could not load plans"
+          message="Please try again in a few seconds. If the issue persists, contact support."
+        />
+        <Link to="/" className="miniapp-back-link">Back</Link>
       </div>
     );
   }
@@ -58,7 +77,13 @@ export function PlansPage() {
           </Panel>
         ))}
       </div>
-      {data.items.length === 0 ? <p className="table-empty">No plans available</p> : null}
+      {data.items.length === 0 ? (
+        <EmptyTableState
+          className="table-empty"
+          title="No plans available"
+          description="Plans will appear here when your provider configures them."
+        />
+      ) : null}
     </div>
   );
 }

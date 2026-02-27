@@ -53,6 +53,30 @@ export const SEMANTICS = {
     "component-padding-lg": { token: "--spacing-component-padding-lg", value: "6" },
     "section-gap": { token: "--spacing-section-gap", value: "16" },
   },
+  /**
+   * Table style contract — do not hardcode paddings / row heights in components.
+   * These map to CSS vars defined in tokens.css and consumed by table.css / table-primitives.css.
+   */
+  table: {
+    rowHeightComfortable: { token: "--table-row-height-md", usage: "Default data row height" },
+    rowHeightCompact: { token: "--table-row-height-compact", usage: "Compact data row height" },
+    cellPaddingX: { token: "--table-cell-padding-x", usage: "Horizontal cell padding" },
+    cellPaddingYMd: { token: "--table-cell-padding-y-md", usage: "Vertical padding (comfortable)" },
+    cellPaddingYSm: { token: "--table-cell-padding-y-sm", usage: "Vertical padding (compact)" },
+  },
+  /**
+   * Chart tokens — axis, grid, tooltip chrome. Series colors are resolved via CSS vars in tokens.css.
+   */
+  chart: {
+    axisFontSize: { token: "--chart-axis-font-size", usage: "Axis + tooltip font size" },
+    grid: { token: "--chart-grid", usage: "Grid line color" },
+    tooltipBg: { token: "--chart-tooltip-bg", usage: "Tooltip background" },
+    tooltipBorder: { token: "--chart-tooltip-border", usage: "Tooltip border" },
+    series1: { token: "--chart-series-1", usage: "Primary series" },
+    series2: { token: "--chart-series-2", usage: "Secondary series" },
+    series3: { token: "--chart-series-3", usage: "Tertiary series" },
+    series4: { token: "--chart-series-4", usage: "Quaternary series" },
+  },
 } as const;
 
 /** Component → token mapping. Required for governance. */

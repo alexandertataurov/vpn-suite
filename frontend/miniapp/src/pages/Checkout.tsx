@@ -1,17 +1,22 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import type { WebAppCreateInvoiceResponse } from "@vpn-suite/shared/types";
-import { Panel, Input, Button } from "@vpn-suite/shared/ui";
+import { Panel, Input, Button, InlineAlert } from "@vpn-suite/shared/ui";
 import { useMutation } from "@tanstack/react-query";
-import { webappApi } from "../api/client";
+import { webappApi, getWebappToken } from "../api/client";
+import { useTelegramMainButton } from "../hooks/useTelegramMainButton";
+import { useTelegramBackButton } from "../hooks/useTelegramBackButton";
+import { useTelegramHaptics } from "../hooks/useTelegramHaptics";
 
 export function CheckoutPage() {
   const { planId } = useParams<{ planId: string }>();
   const selectedPlanId = planId ?? "";
+  const hasToken = !!getWebappToken();
   const [promoCode, setPromoCode] = useState("");
   const [promoError, setPromoError] = useState("");
   const [promoPreview, setPromoPreview] = useState<{ description: string } | null>(null);
   const [paymentStatus, setPaymentStatus] = useState<string>("");
+  const { impact, notify } = useTelegramHaptics();
 
   const validatePromo = useMutation({
     mutationFn: async (): Promise<{ valid: boolean; description?: string }> => {
@@ -38,9 +43,35 @@ export function CheckoutPage() {
         promo_code: promoCode.trim() || undefined,
       });
     },
-    onSuccess: () => setPaymentStatus("waiting"),
-    onError: () => setPaymentStatus("error"),
+    onSuccess: () => {
+      setPaymentStatus("waiting");
+      notify("success");
+    },
+    onError: () => {
+      setPaymentStatus("error");
+      notify("error");
+    },
   });
+
+  useTelegramBackButton(true);
+
+  const canPay = !!selectedPlanId && hasToken;
+  const handlePay = () => {
+    impact("medium");
+    createInvoice.mutate();
+  };
+
+  useTelegramMainButton(
+    canPay
+      ? {
+          text: createInvoice.isPending ? "Starting payment…" : "Pay with Telegram Stars",
+          visible: true,
+          enabled: !createInvoice.isPending,
+          loading: createInvoice.isPending,
+          onClick: handlePay,
+        }
+      : null
+  );
 
   return (
     <div className="page-content">
@@ -52,6 +83,14 @@ export function CheckoutPage() {
       </div>
       <Link to="/plans" className="miniapp-back-link">Back to plans</Link>
       <Panel>
+        {!hasToken && (
+          <InlineAlert
+            variant="warning"
+            title="Session missing"
+            message="Your Telegram session is not active. Close and reopen the mini app from the bot before paying."
+            className="mb-md"
+          />
+        )}
         <p>Plan ID: {planId}</p>
         <form onSubmit={(e) => { e.preventDefault(); validatePromo.mutate(); }} className="form-inline flex-col items-stretch">
           <Input placeholder="Promo code" value={promoCode} onChange={(e) => setPromoCode(e.target.value)} />
@@ -64,19 +103,46 @@ export function CheckoutPage() {
             Apply
           </Button>
         </form>
-        {promoPreview && <p className="text-success">{promoPreview.description}</p>}
-        {promoError && <p className="text-error">{promoError}</p>}
+        {promoPreview && (
+          <InlineAlert
+            variant="info"
+            title="Promo applied"
+            message={promoPreview.description}
+            className="mt-sm"
+          />
+        )}
+        {promoError && (
+          <InlineAlert
+            variant="error"
+            title="Invalid promo code"
+            message={promoError}
+            className="mt-sm"
+          />
+        )}
         <Button
-          onClick={() => createInvoice.mutate()}
+          onClick={handlePay}
           loading={createInvoice.isPending}
           size="lg"
           className="mt-md"
-          disabled={!planId}
+          disabled={!planId || !hasToken}
         >
           Pay with Telegram Stars
         </Button>
-        {paymentStatus === "waiting" && <p className="payment-status-waiting">Waiting for payment. Complete in Telegram.</p>}
-        {paymentStatus === "error" && <p className="text-error">Failed to start payment. Please try again.</p>}
+        {paymentStatus === "waiting" && (
+          <InlineAlert
+            variant="info"
+            title="Waiting for payment"
+            message="Confirm the Stars payment in the Telegram sheet to activate your subscription."
+            className="payment-status-waiting"
+          />
+        )}
+        {paymentStatus === "error" && (
+          <InlineAlert
+            variant="error"
+            title="Payment not started"
+            message="We could not start the Telegram Stars payment. Please try again."
+          />
+        )}
       </Panel>
     </div>
   );
