@@ -6,6 +6,7 @@
 # X-Request-ID: forwarded from client or generated for correlation with app logs.
 {
 	admin off
+	skip_install_trust
 	servers {
 		protocols h1 h2
 	}
@@ -111,6 +112,14 @@ reverse-proxy:8443 {
 		Permissions-Policy "geolocation=(), microphone=(), camera=()"
 	}
 	route {
+		handle /bot-webhook {
+			reverse_proxy telegram-vpn-bot:8090 {
+				health_uri /healthz
+				health_interval 10s
+				health_timeout 5s
+				lb_try_duration 5s
+			}
+		}
 		handle /api/* {
 			reverse_proxy admin-api:8000 {
 				health_uri /health

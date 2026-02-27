@@ -1,0 +1,15 @@
+{
+  "title": "VPN Suite - Latency by Endpoint",
+  "uid": "vpn-suite-latency",
+  "schemaVersion": 38,
+  "version": 1,
+  "tags": ["vpn-suite", "observability"],
+  "time": {"from": "now-1h", "to": "now"},
+  "refresh": "30s",
+  "panels": [
+    {"type": "stat", "title": "API P95 Latency (s)", "gridPos": {"x": 0, "y": 0, "w": 8, "h": 3}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, path_template))", "refId": "A"}]},
+    {"type": "timeseries", "title": "P50 / P95 / P99 by Path", "gridPos": {"x": 0, "y": 3, "w": 24, "h": 8}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "http_request_duration_seconds:p50", "legendFormat": "P50 {{path_template}}", "refId": "A"}, {"expr": "http_request_duration_seconds:p95", "legendFormat": "P95 {{path_template}}", "refId": "B"}, {"expr": "http_request_duration_seconds:p99", "legendFormat": "P99 {{path_template}}", "refId": "C"}]},
+    {"type": "timeseries", "title": "DB Time per Request P95", "gridPos": {"x": 0, "y": 11, "w": 12, "h": 6}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "histogram_quantile(0.95, sum(rate(db_time_per_request_seconds_bucket[5m])) by (le, path_template))", "legendFormat": "{{path_template}}", "refId": "A"}]},
+    {"type": "timeseries", "title": "Redis Latency", "gridPos": {"x": 12, "y": 11, "w": 12, "h": 6}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "histogram_quantile(0.95, sum(rate(redis_latency_seconds_bucket[5m])) by (le))", "legendFormat": "P95", "refId": "A"}]}
+  ]
+}

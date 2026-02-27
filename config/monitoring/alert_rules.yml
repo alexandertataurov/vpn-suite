@@ -178,6 +178,24 @@ groups:
           summary: "One or more devices have no handshake within gate (check endpoint, firewall, NAT)"
           description: "{{ $value }} device(s) in NO_HANDSHAKE state. See docs/ops/no-traffic-troubleshooting.md"
 
+      - alert: VpnPeersGhost
+        expr: vpn_peers_ghost_count > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Peers on node not in DB (ghost/orphan)"
+          description: "Node {{ $labels.node_id }} has {{ $value }} peer(s) on wireguard not in DB. Consider reconcile_remove_orphans or investigate."
+
+      - alert: VpnPeersExpiredActive
+        expr: vpn_peers_expired_active_count > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Expired (revoked) peers still present on node"
+          description: "Node {{ $labels.node_id }} has {{ $value }} revoked device(s) still on wireguard. Reconcile should remove them."
+
   - name: admin-operator
     rules:
       - alert: AdminIssuanceFailuresRepeated
@@ -321,3 +339,78 @@ groups:
       #     severity: warning
       #   annotations:
       #     summary: "Agent mTLS cert expires in less than 7 days"
+
+  - name: business
+    rules:
+      - alert: RevenueDrop
+        expr: vpn_revenue_mrr > 0 and vpn_revenue_mrr < (max_over_time(vpn_revenue_mrr[7d]) * 0.85)
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "MRR dropped more than 15% vs 7d max"
+          description: "Current MRR {{ $value }} is below 85% of 7d max. Server ID: {{ $labels.server_id | default \"N/A\" }}."
+
+      - alert: PaymentFailureSpike
+        expr: |
+          sum(rate(payment_webhook_total{status="failed"}[15m])) / (sum(rate(payment_webhook_total[15m])) + 1) > 0.2
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Payment webhook failure rate above 20%"
+
+      - alert: RenewalRateDrop
+        expr: vpn_revenue_renewal_rate < 50 and vpn_revenue_subscriptions_active > 10
+        for: 2h
+        labels:
+          severity: warning
+        annotations:
+          summary: "Renewal rate below 50% (active subs > 10)"
+
+  - name: infrastructure-extra
+    rules:
+      - alert: HighNodeCpu5m
+        expr: (100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)) > 85
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "CPU > 85% for 5 min on {{ $labels.instance }}"
+          description: "Node {{ $labels.node_id | default \"N/A\" }}. Value: {{ $value }}%."
+
+      - alert: WireguardHandshakeStaleSpike
+        expr: wireguard_peers > 0 and (wireguard_peers_handshake_stale_count / wireguard_peers) > 0.2
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "More than 20% of peers have stale handshake (>5m)"
+          description: "Server ID: {{ $labels.server_id | default \"N/A\" }}."
+
+      - alert: WgExporterNodeNotDiscovered
+        expr: absent(up{job="wg-exporter"}) and count(up{job="admin-api"}) >= 1
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "No wg-exporter targets discovered (expected when no VPN nodes)"
+
+  - name: application
+    rules:
+      - alert: ProvisioningErrorRateHigh
+        expr: |
+          sum(rate(provision_failures_total[10m])) / (sum(rate(vpn_admin_issue_total[10m])) + 1) > 0.05
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Provisioning error rate above 5%"
+
+      - alert: DbLatencyHigh
+        expr: histogram_quantile(0.95, sum(rate(db_time_per_request_seconds_bucket[5m])) by (le)) > 1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "DB P95 latency per request > 1s"

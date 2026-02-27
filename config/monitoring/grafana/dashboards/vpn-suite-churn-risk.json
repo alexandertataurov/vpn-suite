@@ -1,0 +1,15 @@
+{
+  "title": "VPN Suite - Churn Risk",
+  "uid": "vpn-suite-churn",
+  "schemaVersion": 38,
+  "version": 1,
+  "tags": ["vpn-suite", "observability"],
+  "time": {"from": "now-7d", "to": "now"},
+  "refresh": "5m",
+  "panels": [
+    {"type": "stat", "title": "Renewal Rate %", "gridPos": {"x": 0, "y": 0, "w": 6, "h": 3}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "vpn_revenue_renewal_rate", "refId": "A"}]},
+    {"type": "stat", "title": "Churn Rate %", "gridPos": {"x": 6, "y": 0, "w": 6, "h": 3}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "vpn_revenue_churn_rate", "refId": "A"}]},
+    {"type": "stat", "title": "Expiring in 30d", "gridPos": {"x": 12, "y": 0, "w": 6, "h": 3}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "vpn_revenue_expiry_forecast_30d", "refId": "A"}]},
+    {"type": "timeseries", "title": "Renewal / Churn Over Time", "gridPos": {"x": 0, "y": 3, "w": 24, "h": 6}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "vpn_revenue_renewal_rate", "legendFormat": "Renewal %", "refId": "A"}, {"expr": "vpn_revenue_churn_rate", "legendFormat": "Churn %", "refId": "B"}]}
+  ]
+}

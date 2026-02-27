@@ -1,0 +1,14 @@
+{
+  "title": "VPN Suite - Referral System Health",
+  "uid": "vpn-suite-referral",
+  "schemaVersion": 38,
+  "version": 1,
+  "tags": ["vpn-suite", "observability"],
+  "time": {"from": "now-7d", "to": "now"},
+  "refresh": "5m",
+  "panels": [
+    {"type": "stat", "title": "Referral Signups (30d)", "gridPos": {"x": 0, "y": 0, "w": 6, "h": 3}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "sum(increase(vpn_revenue_referral_signup_total[30d]))", "refId": "A"}]},
+    {"type": "stat", "title": "Referral Paid (30d)", "gridPos": {"x": 6, "y": 0, "w": 6, "h": 3}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "sum(increase(vpn_revenue_referral_paid_total[30d]))", "refId": "A"}]},
+    {"type": "timeseries", "title": "Referral Signups / Paid Rate", "gridPos": {"x": 0, "y": 3, "w": 24, "h": 6}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "sum(rate(vpn_revenue_referral_signup_total[1h]))", "legendFormat": "Signups", "refId": "A"}, {"expr": "sum(rate(vpn_revenue_referral_paid_total[1h]))", "legendFormat": "Paid", "refId": "B"}]}
+  ]
+}

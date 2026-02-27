@@ -1,0 +1,17 @@
+{
+  "title": "VPN Suite - Abuse Monitoring",
+  "uid": "vpn-suite-abuse",
+  "schemaVersion": 38,
+  "version": 1,
+  "tags": ["vpn-suite", "observability"],
+  "time": {"from": "now-24h", "to": "now"},
+  "refresh": "2m",
+  "panels": [
+    {"type": "stat", "title": "Abuse High Risk Users", "gridPos": {"x": 0, "y": 0, "w": 6, "h": 3}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "vpn_abuse_high_risk_users", "refId": "A"}]},
+    {"type": "stat", "title": "Abuse Medium Risk Users", "gridPos": {"x": 6, "y": 0, "w": 6, "h": 3}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "vpn_abuse_medium_risk_users", "refId": "A"}]},
+    {"type": "stat", "title": "Anomaly High Risk", "gridPos": {"x": 12, "y": 0, "w": 6, "h": 3}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "vpn_anomaly_high_risk_users", "refId": "A"}]},
+    {"type": "stat", "title": "Config Regen Cap Hits", "gridPos": {"x": 18, "y": 0, "w": 6, "h": 3}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "sum(increase(vpn_config_regen_cap_hits_total[24h]))", "refId": "A"}]},
+    {"type": "timeseries", "title": "Abuse Signals by Severity", "gridPos": {"x": 0, "y": 3, "w": 12, "h": 6}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "sum(rate(vpn_abuse_signals_total[1h])) by (severity)", "legendFormat": "{{severity}}", "refId": "A"}]},
+    {"type": "timeseries", "title": "Anomaly Score Max", "gridPos": {"x": 12, "y": 3, "w": 12, "h": 6}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "vpn_anomaly_score_max", "legendFormat": "Max score", "refId": "A"}]}
+  ]
+}

@@ -28,7 +28,7 @@ x-resource-tiny: &resource_tiny
 
 x-resource-small: &resource_small
   cpus: "${CPU_SMALL:-0.2}"
-  mem_limit: "${MEM_SMALL:-128m}"
+  mem_limit: "${MEM_SMALL:-256m}"
 
 x-resource-medium: &resource_medium
   cpus: "${CPU_MEDIUM:-0.5}"
@@ -221,6 +221,8 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     command: ["python", "-m", "app.worker_main"]
+    healthcheck:
+      disable: true
     env_file: *env_file
     environment:
       - DATABASE_URL=${DATABASE_URL}

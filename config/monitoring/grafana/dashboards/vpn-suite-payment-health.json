@@ -1,0 +1,15 @@
+{
+  "title": "VPN Suite - Payment Health",
+  "uid": "vpn-suite-payment",
+  "schemaVersion": 38,
+  "version": 1,
+  "tags": ["vpn-suite", "observability"],
+  "time": {"from": "now-6h", "to": "now"},
+  "refresh": "1m",
+  "panels": [
+    {"type": "stat", "title": "Webhook Received", "gridPos": {"x": 0, "y": 0, "w": 4, "h": 3}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "sum(increase(payment_webhook_total{status=\"received\"}[1h]))", "refId": "A"}]},
+    {"type": "stat", "title": "Webhook Processed", "gridPos": {"x": 4, "y": 0, "w": 4, "h": 3}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "sum(increase(payment_webhook_total{status=\"processed\"}[1h]))", "refId": "A"}]},
+    {"type": "stat", "title": "Webhook Failed", "gridPos": {"x": 8, "y": 0, "w": 4, "h": 3}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "sum(increase(payment_webhook_total{status=\"failed\"}[1h]))", "refId": "A"}]},
+    {"type": "timeseries", "title": "Payment Webhook Rate by Status", "gridPos": {"x": 0, "y": 3, "w": 24, "h": 6}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "sum(rate(payment_webhook_total[5m])) by (status)", "legendFormat": "{{status}}", "refId": "A"}]}
+  ]
+}

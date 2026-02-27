@@ -1,0 +1,17 @@
+{
+  "title": "VPN Suite - Executive Overview",
+  "uid": "vpn-suite-executive",
+  "schemaVersion": 38,
+  "version": 1,
+  "tags": ["vpn-suite", "observability"],
+  "time": {"from": "now-24h", "to": "now"},
+  "refresh": "1m",
+  "panels": [
+    {"type": "stat", "title": "MRR", "gridPos": {"x": 0, "y": 0, "w": 4, "h": 3}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "vpn_revenue_mrr", "refId": "A"}]},
+    {"type": "stat", "title": "ARR", "gridPos": {"x": 4, "y": 0, "w": 4, "h": 3}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "vpn_revenue_arr", "refId": "A"}]},
+    {"type": "stat", "title": "Cluster Health", "gridPos": {"x": 8, "y": 0, "w": 4, "h": 3}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "vpn_cluster_health_score", "refId": "A"}]},
+    {"type": "stat", "title": "Error Rate (5xx)", "gridPos": {"x": 12, "y": 0, "w": 4, "h": 3}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "sum(rate(http_requests_total{status_class=\"5xx\"}[5m]))/sum(rate(http_requests_total[5m]))*100", "refId": "A"}]},
+    {"type": "timeseries", "title": "Conversion Trend", "gridPos": {"x": 0, "y": 3, "w": 12, "h": 6}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "vpn_revenue_conversion_rate", "legendFormat": "Trial conversion %", "refId": "A"}]},
+    {"type": "timeseries", "title": "Revenue (MRR/ARR)", "gridPos": {"x": 12, "y": 3, "w": 12, "h": 6}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "vpn_revenue_mrr", "legendFormat": "MRR", "refId": "A"}, {"expr": "vpn_revenue_arr", "legendFormat": "ARR", "refId": "B"}]}
+  ]
+}

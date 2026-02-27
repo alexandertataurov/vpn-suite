@@ -112,6 +112,13 @@ def _format_metrics() -> str:
     metrics.append("# TYPE wireguard_peers gauge")
     metrics.append(f"wireguard_peers{suffix} {len(peers)}")
 
+    # Peers with handshake older than 5m (stale); useful for handshake health alerting
+    stale_5m = 300
+    stale_count = sum(1 for p in peers if (now - int(p.get("last_handshake") or 0)) > stale_5m)
+    metrics.append("# HELP wireguard_peers_handshake_stale_count Peers with last handshake > 5m ago")
+    metrics.append("# TYPE wireguard_peers_handshake_stale_count gauge")
+    metrics.append(f"wireguard_peers_handshake_stale_count{suffix} {stale_count}")
+
     metrics.append("# HELP wireguard_listen_port Listen port")
     metrics.append("# TYPE wireguard_listen_port gauge")
     metrics.append(f"wireguard_listen_port{suffix} {data.get('listen_port', 0)}")

@@ -1,0 +1,15 @@
+{
+  "title": "VPN Suite - Conversion Funnel",
+  "uid": "vpn-suite-funnel",
+  "schemaVersion": 38,
+  "version": 1,
+  "tags": ["vpn-suite", "observability"],
+  "time": {"from": "now-7d", "to": "now"},
+  "refresh": "5m",
+  "panels": [
+    {"type": "stat", "title": "Conversion %", "gridPos": {"x": 0, "y": 0, "w": 6, "h": 3}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "vpn_revenue_conversion_rate", "refId": "A"}]},
+    {"type": "stat", "title": "Trial Started (24h)", "gridPos": {"x": 6, "y": 0, "w": 6, "h": 3}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "sum(increase(funnel_events_total{event_type=\"trial_started\"}[24h]))", "refId": "A"}]},
+    {"type": "timeseries", "title": "Funnel Events by Stage", "gridPos": {"x": 0, "y": 3, "w": 24, "h": 8}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "sum(rate(funnel_events_total[1h])) by (event_type)", "legendFormat": "{{event_type}}", "refId": "A"}]},
+    {"type": "timeseries", "title": "Mini App Events", "gridPos": {"x": 0, "y": 11, "w": 24, "h": 6}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "sum(rate(miniapp_events_total[1h])) by (event)", "legendFormat": "{{event}}", "refId": "A"}]}
+  ]
+}

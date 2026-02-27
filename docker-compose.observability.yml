@@ -62,7 +62,7 @@ services:
     <<: [*service_default, *resource_medium]
     image: victoriametrics/victoria-metrics:latest
     command:
-      - "-retentionPeriod=365d"
+      - "-retentionPeriod=90d"
       - "-storageDataPath=/storage"
     volumes:
       - victoria_metrics_data:/storage
