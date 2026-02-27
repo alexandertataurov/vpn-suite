@@ -1,4 +1,6 @@
 /* Admin app styles — logical modules */
+@import "./styles/admin-adaptive-vars.css";
+@import "./styles/admin-content-aware.css";
 @import "./styles/admin-animations.css";
 @import "./styles/admin-layout.css";
 @import "./styles/admin-pages.css";
@@ -9,3 +11,4 @@
 @import "./styles/admin-misc.css";
 @import "./styles/admin-operator.css";
 @import "./styles/operator-dashboard.css";
+@import "./styles/admin-responsive.css";

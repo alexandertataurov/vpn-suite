@@ -40,7 +40,7 @@ export function RowActionsMenu({
         aria-label="Sync from node"
         title="Sync"
       >
-        <RefreshCw aria-hidden strokeWidth={1.5} />
+        <RefreshCw aria-hidden size={14} strokeWidth={2} />
       </Button>
       <DropdownMenu
         portal
@@ -72,7 +72,7 @@ export function RowActionsMenu({
             aria-label="More actions"
             title="More actions"
           >
-            <MoreVertical aria-hidden strokeWidth={1.5} />
+            <MoreVertical aria-hidden size={14} strokeWidth={2} />
           </Button>
         }
       />

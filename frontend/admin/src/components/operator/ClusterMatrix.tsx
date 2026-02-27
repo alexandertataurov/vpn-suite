@@ -1,12 +1,12 @@
 import { useMemo, useState } from "react";
-import type { OperatorClusterRow } from "@vpn-suite/shared/types";
+import type { ClusterMatrixRow } from "../../domain/dashboard/types";
 import { formatBytes } from "@vpn-suite/shared";
 
 interface ClusterMatrixProps {
-  rows: OperatorClusterRow[];
+  rows: ClusterMatrixRow[];
 }
 
-type SortCol = "region" | "cpu_avg" | "ram_avg" | "users" | "health" | null;
+type SortCol = "region" | "cpuAvg" | "ramAvg" | "users" | "health" | null;
 type SortDir = "asc" | "desc";
 
 function cellClass(v: number | null): string {
@@ -16,6 +16,9 @@ function cellClass(v: number | null): string {
   return "";
 }
 
+const EMPTY_LABEL = "—";
+const EMPTY_TITLE = "Metric unavailable (Prometheus/telemetry not available)";
+
 function MetricCell({
   value,
   showBar,
@@ -23,10 +26,10 @@ function MetricCell({
   value: number | null;
   showBar?: boolean;
 }) {
-  const display = value != null ? value.toFixed(1) : "No data";
+  const display = value != null ? value.toFixed(1) : EMPTY_LABEL;
   const barPct = value != null ? Math.min(100, Math.max(0, Math.round(value / 5) * 5)) : 0;
   return (
-    <td className={`num ${cellClass(value)}`}>
+    <td className={`num ${cellClass(value)}`} title={value == null ? EMPTY_TITLE : undefined}>
       {showBar && value != null ? (
         <div className="operator-metric-cell">
           <div className="operator-micro-bar" data-pct={barPct}>
@@ -101,13 +104,13 @@ export function ClusterMatrix({ rows }: ClusterMatrixProps) {
           av = a.region;
           bv = b.region;
           return sortDir === "asc" ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
-        case "cpu_avg":
-          av = a.cpu_avg ?? -1;
-          bv = b.cpu_avg ?? -1;
+        case "cpuAvg":
+          av = a.cpuAvg ?? -1;
+          bv = b.cpuAvg ?? -1;
           return sortDir === "asc" ? (av as number) - (bv as number) : (bv as number) - (av as number);
-        case "ram_avg":
-          av = a.ram_avg ?? -1;
-          bv = b.ram_avg ?? -1;
+        case "ramAvg":
+          av = a.ramAvg ?? -1;
+          bv = b.ramAvg ?? -1;
           return sortDir === "asc" ? (av as number) - (bv as number) : (bv as number) - (av as number);
         case "users":
           av = a.users;
@@ -136,16 +139,16 @@ export function ClusterMatrix({ rows }: ClusterMatrixProps) {
           </SortTh>
           <th className="num">Total</th>
           <th className="num">Online</th>
-          <SortTh col="cpu_avg" currentCol={sortCol} dir={sortDir} onSort={handleSort} className="num">
+          <SortTh col="cpuAvg" currentCol={sortCol} dir={sortDir} onSort={handleSort} className="num">
             CPU %
           </SortTh>
-          <SortTh col="ram_avg" currentCol={sortCol} dir={sortDir} onSort={handleSort} className="num">
+          <SortTh col="ramAvg" currentCol={sortCol} dir={sortDir} onSort={handleSort} className="num">
             RAM %
           </SortTh>
           <SortTh col="users" currentCol={sortCol} dir={sortDir} onSort={handleSort} className="num">
             Users
           </SortTh>
-          <th className="num">Throughput</th>
+          <th className="num" title="Cumulative traffic (total RX+TX for region)">Throughput</th>
           <th className="num">Error %</th>
           <SortTh col="health" currentCol={sortCol} dir={sortDir} onSort={handleSort}>
             Health
@@ -156,14 +159,14 @@ export function ClusterMatrix({ rows }: ClusterMatrixProps) {
         {sortedRows.map((r) => (
           <tr key={r.region}>
             <td>{r.region}</td>
-            <td className="num">{r.total_nodes}</td>
-            <td className="num">{r.online}</td>
-            <MetricCell value={r.cpu_avg} showBar />
-            <MetricCell value={r.ram_avg} showBar />
+            <td className="num" title="Nodes in region">{r.totalNodes}</td>
+            <td className="num" title="Nodes reporting healthy/ok/degraded">{r.online}</td>
+            <MetricCell value={r.cpuAvg} showBar />
+            <MetricCell value={r.ramAvg} showBar />
             <td className="num">{r.users}</td>
             <td className="num">{formatBytes(r.throughput)}</td>
-            <td className={`num ${r.error_pct != null ? "" : "num-muted"}`}>
-              {r.error_pct != null ? r.error_pct.toFixed(2) : "No data"}
+            <td className={`num ${r.errorPct != null ? "" : "num-muted"}`} title={r.errorPct == null ? EMPTY_TITLE : undefined}>
+              {r.errorPct != null ? r.errorPct.toFixed(2) : EMPTY_LABEL}
             </td>
             <td>
               <span className={`operator-freshness operator-freshness--${r.health === "ok" ? "fresh" : r.health === "degraded" ? "degraded" : "stale"}`}>

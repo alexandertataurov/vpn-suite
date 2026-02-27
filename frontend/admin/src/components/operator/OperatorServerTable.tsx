@@ -1,12 +1,12 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { RefreshCw } from "lucide-react";
-import { Button, RelativeTime, Skeleton } from "@vpn-suite/shared/ui";
-import type { OperatorServerRow } from "@vpn-suite/shared/types";
+import { Button, RelativeTime, Skeleton, EmptyTableState } from "@vpn-suite/shared/ui";
+import type { ServerRowView } from "../../domain/dashboard/types";
 import { formatBytes } from "@vpn-suite/shared";
 
 interface OperatorServerTableProps {
-  rows: OperatorServerRow[];
+  rows: ServerRowView[];
   onSync?: (id: string) => void;
   loading?: boolean;
   filter?: string;
@@ -20,8 +20,11 @@ function cpuRamClass(v: number | null): string {
   return "";
 }
 
+const EMPTY_LABEL = "—";
+const EMPTY_TITLE = "Metric unavailable (Prometheus/telemetry not available)";
+
 function MetricCell({ value, showBar }: { value: number | null; showBar?: boolean }) {
-  const display = value != null ? value.toFixed(1) : "No data";
+  const display = value != null ? value.toFixed(1) : EMPTY_LABEL;
   const barPct = value != null ? Math.min(100, Math.max(0, Math.round(value / 5) * 5)) : 0;
   if (showBar && value != null) {
     return (
@@ -36,7 +39,7 @@ function MetricCell({ value, showBar }: { value: number | null; showBar?: boolea
     );
   }
   return (
-    <td className={`num ${value == null ? "num-muted" : ""}`}>
+    <td className={`num ${value == null ? "num-muted" : ""}`} title={value == null ? EMPTY_TITLE : undefined}>
       {display}
     </td>
   );
@@ -53,7 +56,7 @@ export function OperatorServerTable({ rows, onSync, loading, filter = "", onFilt
       (r) =>
         r.name.toLowerCase().includes(q) ||
         r.region.toLowerCase().includes(q) ||
-        r.ip.toLowerCase().includes(q)
+        (r.ip && r.ip.toLowerCase().includes(q))
     );
   }, [rows, filter]);
 
@@ -93,7 +96,13 @@ export function OperatorServerTable({ rows, onSync, loading, filter = "", onFilt
   }
 
   if (rows.length === 0) {
-    return <p className="operator-placeholder">No servers</p>;
+    return (
+      <EmptyTableState
+        className="table-empty"
+        title="No servers"
+        description="Create a server or check region scope."
+      />
+    );
   }
 
   if (filtered.length === 0) {
@@ -109,7 +118,11 @@ export function OperatorServerTable({ rows, onSync, loading, filter = "", onFilt
             aria-label="Filter servers"
           />
         )}
-        <p className="operator-placeholder">No servers match filter</p>
+        <EmptyTableState
+          className="table-empty"
+          title="No servers match filter"
+          description="Clear the filter or change region."
+        />
       </div>
     );
   }
@@ -136,7 +149,7 @@ export function OperatorServerTable({ rows, onSync, loading, filter = "", onFilt
           <th className="num">CPU %</th>
           <th className="num">RAM %</th>
           <th className="num">Users</th>
-          <th className="num">Throughput</th>
+          <th className="num" title="Cumulative traffic (total RX+TX for this server)">Throughput</th>
           <th>Last HB</th>
           <th>Freshness</th>
           {onSync && <th>Actions</th>}
@@ -155,13 +168,13 @@ export function OperatorServerTable({ rows, onSync, loading, filter = "", onFilt
                 {r.status}
               </span>
             </td>
-            <MetricCell value={r.cpu_pct} showBar />
-            <MetricCell value={r.ram_pct} showBar />
+            <MetricCell value={r.cpuPct} showBar />
+            <MetricCell value={r.ramPct} showBar />
             <td className="num">{r.users}</td>
-            <td className="num">{formatBytes(r.throughput_bps)}</td>
+            <td className="num">{formatBytes(r.throughputBps)}</td>
             <td>
-              {r.last_heartbeat ? (
-                <RelativeTime date={r.last_heartbeat} title={new Date(r.last_heartbeat).toISOString()} />
+              {r.lastHeartbeat ? (
+                <RelativeTime date={r.lastHeartbeat} title={new Date(r.lastHeartbeat).toISOString()} />
               ) : (
                 "—"
               )}

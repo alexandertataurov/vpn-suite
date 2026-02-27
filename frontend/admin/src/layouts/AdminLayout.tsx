@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { Outlet, NavLink, Link, useNavigate, useLocation } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Shield,
   LayoutGrid,
@@ -22,18 +21,17 @@ import {
   Moon,
   type LucideIcon,
 } from "lucide-react";
-import { Button, Select, PrimitiveBadge } from "@vpn-suite/shared/ui";
+import { Button, Select, PageContainer } from "@vpn-suite/shared/ui";
 import { useTheme } from "@vpn-suite/shared/theme";
 import { useAuthStore } from "../store/authStore";
 import { CommandPalette } from "../components/CommandPalette";
 import type { CommandItem } from "../components/CommandPalette";
 import { useServerListFull } from "../hooks/useServerList";
-import { TopStatusBar } from "../components/operator/TopStatusBar";
-import { LiveStatusBlock } from "../components/operator/LiveStatusBlock";
+import { HealthBar, LiveStatusBlock } from "../components/operator";
+import { selectTimeseriesForChart } from "../domain/dashboard";
 import { ResourceDebugPanel } from "../components/ResourceDebugPanel";
-import { api } from "../api/client";
-import { OPERATOR_DASHBOARD_KEY } from "../api/query-keys";
-import type { OperatorDashboardOut } from "@vpn-suite/shared/types";
+import { TelemetryDebugPanel } from "../components/TelemetryDebugPanel";
+import { useOperatorStrip } from "../domain/dashboard";
 
 interface NavItem {
   to: string;
@@ -47,7 +45,6 @@ const allNavItems: NavItem[] = [
   { to: "/", label: "Dashboard", short: "OV", section: "CONTROL", icon: LayoutGrid },
   { to: "/servers", label: "Servers", short: "SV", section: "CONTROL", icon: Server },
   { to: "/telemetry", label: "Telemetry", short: "TM", section: "CONTROL", icon: Activity },
-  { to: "/", label: "Incidents", short: "IN", section: "CONTROL", icon: AlertTriangle },
   { to: "/users", label: "Users", short: "US", section: "ACCESS", icon: Users },
   { to: "/devices", label: "Devices", short: "DV", section: "ACCESS", icon: Cpu },
   { to: "/automation", label: "Automation", short: "AT", section: "NETWORK", icon: Workflow },
@@ -71,15 +68,25 @@ const mobileNavItems = navItems.filter(
 
 const REGION_STORAGE_KEY = "vpn-suite-admin-region";
 
+const SIDEBAR_COLLAPSED_KEY = "vpn-suite-sidebar-collapsed";
+
+function getInitialSidebarCollapsed(): boolean {
+  try {
+    const stored = localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
+    if (stored !== null) return stored === "1";
+  } catch {
+    /* ignore */
+  }
+  if (typeof window !== "undefined") {
+    const w = window.innerWidth;
+    return w >= 640 && w < 1024;
+  }
+  return false;
+}
+
 export function AdminLayout() {
   const [sidebarOpen, setOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
-    try {
-      return localStorage.getItem("vpn-suite-sidebar-collapsed") === "1";
-    } catch {
-      return false;
-    }
-  });
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(getInitialSidebarCollapsed);
   const [commandOpen, setCommandOpen] = useState(false);
   const [activeRegion, setActiveRegion] = useState<string>(() => {
     if (typeof window === "undefined") return "all";
@@ -93,14 +100,13 @@ export function AdminLayout() {
   const chordRef = useRef<{ key: string; ts: number } | null>(null);
   const { data: serversData } = useServerListFull();
 
-  const queryClient = useQueryClient();
-  const operatorQuery = useQuery<OperatorDashboardOut>({
-    queryKey: [...OPERATOR_DASHBOARD_KEY, "5m"],
-    queryFn: ({ signal }) =>
-      api.get<OperatorDashboardOut>("/overview/operator?time_range=5m", { signal }),
-    staleTime: 15_000,
-    refetchInterval: 30_000,
-  });
+  const {
+    data: operatorData,
+    error: operatorError,
+    isLoading: operatorLoading,
+    refetch: refetchOperatorStrip,
+  } = useOperatorStrip();
+  const healthStrip = operatorData?.health_strip;
 
   const regionOptions = useMemo(() => {
     const unique = new Set<string>();
@@ -251,15 +257,15 @@ export function AdminLayout() {
 
   useEffect(() => {
     try {
-      localStorage.setItem("vpn-suite-sidebar-collapsed", sidebarCollapsed ? "1" : "0");
+      localStorage.setItem(SIDEBAR_COLLAPSED_KEY, sidebarCollapsed ? "1" : "0");
     } catch {
       /* ignore */
     }
   }, [sidebarCollapsed]);
 
   const handleRefresh = useCallback(() => {
-    queryClient.refetchQueries({ queryKey: OPERATOR_DASHBOARD_KEY });
-  }, [queryClient]);
+    void refetchOperatorStrip();
+  }, [refetchOperatorStrip]);
 
   const handleRegionChange = (region: string) => {
     setActiveRegion(region);
@@ -303,45 +309,23 @@ export function AdminLayout() {
           </label>
           <span className="admin-env-badge" title="Environment">Prod</span>
         </div>
-        <div className="admin-top-bar-center" role="region" aria-label="System health">
-          {operatorQuery.data?.health_strip ? (
-            <TopStatusBar data={operatorQuery.data.health_strip} />
-          ) : operatorQuery.isError ? (
-            <div className="operator-health-strip operator-top-bar-health">
-              <div className="operator-health-block operator-health-block--core operator-health-block--down">
-                <div className="operator-topbar-cell">
-                  <span className="operator-topbar-label">API</span>
-                  <span className="operator-topbar-value operator-topbar-value--down">Down</span>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="operator-health-strip operator-top-bar-health">
-              <div className="operator-health-block">
-                <div className="operator-topbar-cell">
-                  <span className="operator-topbar-label">Status</span>
-                  <span className="operator-topbar-value">…</span>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+        <div className="admin-top-bar-center" aria-hidden />
         <div className="admin-top-bar-right">
           <LiveStatusBlock
-            last_updated={operatorQuery.data?.health_strip?.last_updated ?? new Date().toISOString()}
-            freshness={operatorQuery.data?.health_strip?.freshness ?? "unknown"}
+            last_updated={healthStrip?.last_updated ?? new Date().toISOString()}
+            freshness={healthStrip?.freshness ?? "unknown"}
             onRefresh={handleRefresh}
           />
           <Link
             to="/"
             className="admin-alerts-trigger"
-            aria-label={operatorQuery.data?.incidents?.length ? `${operatorQuery.data.incidents.length} active incidents` : "Alerts"}
+            aria-label={operatorData?.incidents?.length ? `${operatorData.incidents.length} active incidents` : "Alerts"}
             title="View incidents"
           >
             <Bell className="admin-alerts-icon" aria-hidden size={14} strokeWidth={2} />
-            {operatorQuery.data?.incidents && operatorQuery.data.incidents.length > 0 && (
-              <span className={`admin-alerts-count ${operatorQuery.data.incidents.some((i) => i.severity === "critical") ? "admin-alerts-count--critical" : "admin-alerts-count--warning"}`}>
-                {operatorQuery.data.incidents.length}
+            {operatorData?.incidents && operatorData.incidents.length > 0 && (
+              <span className={`admin-alerts-count ${operatorData.incidents.some((i) => i.severity === "critical") ? "admin-alerts-count--critical" : "admin-alerts-count--warning"}`}>
+                {operatorData.incidents.length}
               </span>
             )}
           </Link>
@@ -362,6 +346,32 @@ export function AdminLayout() {
             Log out
           </Button>
         </div>
+      </div>
+      <div className="admin-health-bar" role="region" aria-label="System health">
+        {healthStrip ? (
+          <HealthBar
+            data={healthStrip}
+            timeseries={selectTimeseriesForChart(operatorData ?? null)}
+          />
+        ) : operatorError ? (
+          <div className="operator-health-strip operator-health-strip--bar">
+            <div className="operator-health-block operator-health-block--core operator-health-block--down">
+              <div className="operator-health-bar-cell">
+                <span className="operator-health-bar-label">API</span>
+                <span className="operator-health-bar-value operator-topbar-value--down">Down</span>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="operator-health-strip operator-health-strip--bar">
+            <div className="operator-health-block">
+              <div className="operator-health-bar-cell">
+                <span className="operator-health-bar-label">Status</span>
+                <span className="operator-health-bar-value">…</span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
       <div className="admin-body">
         <aside className={`admin-sidebar ${sidebarOpen ? "open" : ""} ${sidebarCollapsed ? "collapsed" : ""}`} data-testid="admin-sidebar">
@@ -413,8 +423,11 @@ export function AdminLayout() {
           />
         ) : null}
         <main id="admin-main" className="admin-main" tabIndex={-1}>
-          <Outlet />
+          <PageContainer>
+            <Outlet />
+          </PageContainer>
           {isDev ? <ResourceDebugPanel /> : null}
+          {isDev ? <TelemetryDebugPanel /> : null}
         </main>
       </div>
       <nav className="admin-bottom-nav" aria-label="Mobile">

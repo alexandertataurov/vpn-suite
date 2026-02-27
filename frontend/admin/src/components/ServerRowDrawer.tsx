@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { formatDateTime, formatBytes, getErrorMessage } from "@vpn-suite/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ExternalLink, MapPin, Power, Settings } from "lucide-react";
-import { Button, Drawer, Skeleton, useToast, RelativeTime, Text, Heading } from "@vpn-suite/shared/ui";
+import { Activity, Copy, ExternalLink, MapPin, Power, Settings } from "lucide-react";
+import { Button, Modal, Skeleton, useToast, RelativeTime, Text, Heading, PrimitiveBadge } from "@vpn-suite/shared/ui";
 import { ButtonLink } from "./ButtonLink";
 import type {
   ServerOut,
@@ -15,7 +15,7 @@ import { api } from "../api/client";
 import {
   SERVERS_LIST_KEY,
   serversIpsKey,
-  serversTelemetryKey,
+  serverTelemetryKey,
   auditServerKey,
 } from "../api/query-keys";
 
@@ -58,7 +58,7 @@ export function ServerRowDrawer({ server, onClose, peerCount = 0, onRestart, tel
     enabled: !!serverId,
   });
   const telemetryQuery = useQuery<ServerTelemetryOut>({
-    queryKey: serversTelemetryKey(serverId),
+    queryKey: serverTelemetryKey(serverId),
     queryFn: ({ signal }) => api.get<ServerTelemetryOut>(`/servers/${serverId}/telemetry`, { signal }),
     enabled: !!serverId,
   });
@@ -101,12 +101,33 @@ export function ServerRowDrawer({ server, onClose, peerCount = 0, onRestart, tel
     { id: "activity", label: "Activity" },
   ];
 
+  const statusBadgeVariant = visualStatus === "online" ? "success" : visualStatus === "maintenance" ? "warning" : "neutral";
+
+  const footer = (
+    <div className="server-modal-footer-actions">
+      <ButtonLink to={`/servers/${server.id}/edit`} variant="secondary">
+        <Settings aria-hidden size={14} strokeWidth={2} /> Configure
+      </ButtonLink>
+      {onRestart && (
+        <Button variant="primary" size="sm" onClick={() => onRestart(server)}>
+          <Power aria-hidden size={14} strokeWidth={2} /> {server.is_active ? "Restart" : "Start"}
+        </Button>
+      )}
+    </div>
+  );
+
   return (
-    <Drawer open={!!server} onClose={onClose} title={server.name || `Node ${server.id.slice(0, 8)}`} width={440}>
-      <div className="server-drawer-content">
-        <div className="server-drawer-header-actions">
+    <Modal
+      open={!!server}
+      onClose={onClose}
+      title={server.name || `Node ${server.id.slice(0, 8)}`}
+      footer={footer}
+      className="server-detail-modal"
+    >
+      <div className="server-modal-content">
+        <div className="server-modal-actions-bar">
           <Button variant="ghost" size="sm" onClick={copyId} aria-label="Copy server ID">
-            Copy ID
+            <Copy aria-hidden size={14} strokeWidth={2} /> Copy ID
           </Button>
           <ButtonLink
             to={`/servers/${server.id}`}
@@ -115,18 +136,17 @@ export function ServerRowDrawer({ server, onClose, peerCount = 0, onRestart, tel
             variant="primary"
             size="sm"
           >
-            <ExternalLink aria-hidden strokeWidth={1.5} className="server-drawer-icon-sm" />
-            Open full detail
+            <ExternalLink aria-hidden size={14} strokeWidth={2} /> Open full detail
           </ButtonLink>
         </div>
-        <div className="server-drawer-tabs" role="tablist">
+        <div className="server-modal-tabs" role="tablist">
           {tabs.map((t) => (
             <button
               key={t.id}
               type="button"
               role="tab"
               aria-selected={activeTab === t.id}
-              className={`server-drawer-tab ${activeTab === t.id ? "server-drawer-tab-active" : ""}`}
+              className={`server-modal-tab ${activeTab === t.id ? "server-modal-tab-active" : ""}`}
               onClick={() => setActiveTab(t.id)}
             >
               {t.label}
@@ -134,186 +154,205 @@ export function ServerRowDrawer({ server, onClose, peerCount = 0, onRestart, tel
           ))}
         </div>
         {activeTab === "overview" && (
-          <>
-            <p className="server-drawer-status">
-              <span className={`ref-server-status ${visualStatus}`}>{statusLabel}</span>
-            </p>
-            <dl className="server-drawer-meta">
-              <dt>Region</dt>
-              <dd>
-                <MapPin aria-hidden strokeWidth={1.5} className="server-drawer-icon-inline" />
-                {server.region ?? "Unknown"}
-              </dd>
-          <dt>API endpoint</dt>
-          <dd className="ref-server-mono">{server.api_endpoint ? resolveHost(server.api_endpoint) : "—"}</dd>
-              <dt>VPN Endpoint</dt>
-              <dd>{server.vpn_endpoint ? resolveHost(server.vpn_endpoint) : "—"}</dd>
-              <dt>Last seen</dt>
-              <dd>
-                {server.last_seen_at ? <RelativeTime date={server.last_seen_at} /> : "No data"}
-              </dd>
-              <dt>Last sync</dt>
-              <dd>
-                {server.last_snapshot_at ? <RelativeTime date={server.last_snapshot_at} /> : "—"}
-              </dd>
-              <dt>Peers / capacity</dt>
-              <dd>{peerCount} / {maxUsers}</dd>
-            </dl>
-            <section className="server-drawer-auto-sync" aria-label="Auto-sync">
-              <Heading level={4} className="server-drawer-heading-auto-sync">Auto-sync</Heading>
-              {server.is_active ? (
-                <>
-                  <p className="server-drawer-sync-text">On (always-on for active servers)</p>
-                  <label className="server-drawer-sync-label">
-                    <Text variant="muted" as="span">Interval (seconds)</Text>
-                  </label>
-                  <select
-                    value={server.auto_sync_interval_sec ?? 60}
-                    disabled={autoSyncMutation.isPending}
-                    onChange={(e) =>
-                      autoSyncMutation.mutate({
-                        auto_sync_enabled: true,
-                        auto_sync_interval_sec: Number(e.target.value),
-                      })
-                    }
-                    data-testid="auto-sync-interval"
-                  >
-                    {[15, 30, 60, 120].map((s) => (
-                      <option key={s} value={s}>
-                        {s}s
-                      </option>
-                    ))}
-                  </select>
-                </>
-              ) : (
-                <>
-                  <p className="server-drawer-sync-text">
-                    {server.auto_sync_enabled
-                      ? `On (every ${server.auto_sync_interval_sec ?? 60}s)`
-                      : "Off"}
-                  </p>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={autoSyncMutation.isPending}
-                    onClick={() =>
-                      autoSyncMutation.mutate({
-                        auto_sync_enabled: !server.auto_sync_enabled,
-                        auto_sync_interval_sec: server.auto_sync_interval_sec ?? 60,
-                      })
-                    }
-                  >
-                    {server.auto_sync_enabled ? "Turn off" : "Turn on"}
-                  </Button>
-                </>
-              )}
-            </section>
-            <div className="server-drawer-actions">
-              <ButtonLink to={`/servers/${server.id}/edit`} variant="secondary">
-                <Settings aria-hidden strokeWidth={1.5} className="server-drawer-icon-md" />
-                Configure
-              </ButtonLink>
-              {onRestart && (
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={() => onRestart(server)}
-                >
-                  <Power aria-hidden strokeWidth={1.5} className="server-drawer-icon-md" />
-                  {server.is_active ? "Restart" : "Start"}
-                </Button>
-              )}
+          <div className="server-modal-overview">
+            <div className="server-modal-stats-grid">
+              <div className="ref-stat-card server-modal-stat-card">
+                <div className="ref-stat-label-row">
+                  <span className="ref-stat-label">Status</span>
+                </div>
+                <p className="ref-stat-value">
+                  <PrimitiveBadge variant={statusBadgeVariant} size="sm">{statusLabel}</PrimitiveBadge>
+                </p>
+              </div>
+              <div className="ref-stat-card server-modal-stat-card">
+                <div className="ref-stat-label-row">
+                  <MapPin aria-hidden size={12} strokeWidth={2} className="ref-stat-icon" />
+                  <span className="ref-stat-label">Region</span>
+                </div>
+                <p className="ref-stat-value">{server.region ?? "Unknown"}</p>
+              </div>
+              <div className="ref-stat-card server-modal-stat-card">
+                <div className="ref-stat-label-row">
+                  <span className="ref-stat-label">Last seen</span>
+                </div>
+                <p className="ref-stat-value">
+                  {server.last_seen_at ? <RelativeTime date={server.last_seen_at} /> : "No data"}
+                </p>
+              </div>
+              <div className="ref-stat-card server-modal-stat-card">
+                <div className="ref-stat-label-row">
+                  <span className="ref-stat-label">Peers</span>
+                </div>
+                <p className="ref-stat-value">{peerCount} <span className="ref-stat-meta">/ {maxUsers}</span></p>
+              </div>
             </div>
-          </>
+            <div className="data-card server-modal-section">
+              <div className="data-card__header">
+                <span className="data-card__title">Endpoints</span>
+              </div>
+              <div className="data-card__body server-modal-endpoints">
+                <div className="server-modal-meta-row">
+                  <span>API</span>
+                  <span className="ref-server-mono">{server.api_endpoint ? resolveHost(server.api_endpoint) : "—"}</span>
+                </div>
+                <div className="server-modal-meta-row">
+                  <span>VPN</span>
+                  <span className="ref-server-mono">{server.vpn_endpoint ? resolveHost(server.vpn_endpoint) : "—"}</span>
+                </div>
+                <div className="server-modal-meta-row">
+                  <span>Last sync</span>
+                  <span>{server.last_snapshot_at ? <RelativeTime date={server.last_snapshot_at} /> : "—"}</span>
+                </div>
+              </div>
+            </div>
+            <section className="data-card server-modal-section" aria-label="Auto-sync">
+              <div className="data-card__header">
+                <Heading level={4} className="data-card__title" style={{ margin: 0 }}>Auto-sync</Heading>
+              </div>
+              <div className="data-card__body">
+                {server.is_active ? (
+                  <>
+                    <Text variant="muted" as="p" style={{ marginBottom: "var(--spacing-2)" }}>On (always-on for active servers)</Text>
+                    <label className="server-modal-sync-label">
+                      <Text variant="muted" as="span">Interval</Text>
+                    </label>
+                    <select
+                      value={server.auto_sync_interval_sec ?? 60}
+                      disabled={autoSyncMutation.isPending}
+                      onChange={(e) =>
+                        autoSyncMutation.mutate({
+                          auto_sync_enabled: true,
+                          auto_sync_interval_sec: Number(e.target.value),
+                        })
+                      }
+                      data-testid="auto-sync-interval"
+                      className="server-modal-select"
+                    >
+                      {[15, 30, 60, 120].map((s) => (
+                        <option key={s} value={s}>{s}s</option>
+                      ))}
+                    </select>
+                  </>
+                ) : (
+                  <>
+                    <Text variant="muted" as="p" style={{ marginBottom: "var(--spacing-2)" }}>
+                      {server.auto_sync_enabled ? `On (every ${server.auto_sync_interval_sec ?? 60}s)` : "Off"}
+                    </Text>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      disabled={autoSyncMutation.isPending}
+                      onClick={() =>
+                        autoSyncMutation.mutate({
+                          auto_sync_enabled: !server.auto_sync_enabled,
+                          auto_sync_interval_sec: server.auto_sync_interval_sec ?? 60,
+                        })
+                      }
+                    >
+                      {server.auto_sync_enabled ? "Turn off" : "Turn on"}
+                    </Button>
+                  </>
+                )}
+              </div>
+            </section>
+          </div>
         )}
         {activeTab === "ips" && (
-          <section aria-label="IP addresses">
-            <Heading level={4} className="server-drawer-heading-section">IP addresses</Heading>
-            {ipsQuery.isLoading && <Skeleton height={24} width="80%" />}
-            {ipsQuery.data?.items?.length ? (
-              <ul className="server-drawer-list">
-                {ipsQuery.data.items.map((ip) => (
-                  <li key={ip.id} className="ref-server-mono server-drawer-list-item">
-                    {ip.ip} <Text variant="muted" as="span">({ip.role}, {ip.state})</Text>
-                  </li>
-                ))}
-              </ul>
-            ) : ipsQuery.data && !ipsQuery.isLoading ? (
-              <Text variant="muted" as="p">No IPs configured</Text>
-            ) : null}
+          <section className="data-card server-modal-section" aria-label="IP addresses">
+            <div className="data-card__header">
+              <Heading level={4} className="data-card__title" style={{ margin: 0 }}>IP addresses</Heading>
+            </div>
+            <div className="data-card__body">
+              {ipsQuery.isLoading && <Skeleton height={24} width="80%" />}
+              {ipsQuery.data?.items?.length ? (
+                <ul className="server-modal-list">
+                  {ipsQuery.data.items.map((ip) => (
+                    <li key={ip.id} className="ref-server-mono server-modal-list-item">
+                      {ip.ip} <Text variant="muted" as="span">({ip.role}, {ip.state})</Text>
+                    </li>
+                  ))}
+                </ul>
+              ) : ipsQuery.data && !ipsQuery.isLoading ? (
+                <Text variant="muted" as="p">No IPs configured</Text>
+              ) : null}
+            </div>
           </section>
         )}
         {activeTab === "telemetry" && (
-          <section aria-label="Telemetry">
-            <Heading level={4} className="server-drawer-heading-section">Telemetry</Heading>
-            {telemetryQuery.data?.source === "agent" && (
-              <dl className="server-drawer-meta">
-                <dt>Agent</dt>
-                <dd>
-                  Container: {telemetryQuery.data.container_name || "—"} · Agent v{telemetryQuery.data.agent_version || "—"}
-                  {telemetryQuery.data.reported_status && (
-                    <Text variant="muted" as="span" className="server-drawer-inline-gap">
-                      · {telemetryQuery.data.reported_status}
-                    </Text>
+          <section className="data-card server-modal-section" aria-label="Telemetry">
+            <div className="data-card__header">
+              <Activity aria-hidden size={14} strokeWidth={2} style={{ color: "var(--color-neutral-500)" }} />
+              <Heading level={4} className="data-card__title" style={{ margin: 0 }}>Telemetry</Heading>
+            </div>
+            <div className="data-card__body">
+              {telemetryQuery.data?.source === "agent" && (
+                <div className="server-modal-telemetry-block">
+                  <div className="server-modal-meta-row">
+                    <span>Agent</span>
+                    <span>Container: {telemetryQuery.data.container_name || "—"} · v{telemetryQuery.data.agent_version || "—"}
+                      {telemetryQuery.data.reported_status && (
+                        <Text variant="muted" as="span" style={{ marginLeft: "var(--spacing-1)" }}>· {telemetryQuery.data.reported_status}</Text>
+                      )}
+                    </span>
+                  </div>
+                  {((telemetryQuery.data.total_rx_bytes ?? 0) > 0 || (telemetryQuery.data.total_tx_bytes ?? 0) > 0) && (
+                    <div className="server-modal-meta-row">
+                      <span>Traffic</span>
+                      <span className="ref-server-mono">
+                        RX {formatBytes(telemetryQuery.data.total_rx_bytes ?? 0)} · TX {formatBytes(telemetryQuery.data.total_tx_bytes ?? 0)}
+                      </span>
+                    </div>
                   )}
-                </dd>
-                {((telemetryQuery.data.total_rx_bytes ?? 0) > 0 || (telemetryQuery.data.total_tx_bytes ?? 0) > 0) && (
-                  <>
-                    <dt>Traffic</dt>
-                    <dd className="ref-server-mono">
-                      RX {formatBytes(telemetryQuery.data.total_rx_bytes ?? 0)} · TX {formatBytes(telemetryQuery.data.total_tx_bytes ?? 0)}
-                    </dd>
-                  </>
-                )}
-              </dl>
-            )}
-            {(telemetrySnapshot?.cpu_pct != null || telemetrySnapshot?.ram_pct != null) && (
-              <dl className="server-drawer-meta">
-                <dt>Resources</dt>
-                <dd>
-                  {telemetrySnapshot?.cpu_pct != null && `CPU ${Number(telemetrySnapshot.cpu_pct).toFixed(0)}%`}
-                  {telemetrySnapshot?.cpu_pct != null && telemetrySnapshot?.ram_pct != null && " · "}
-                  {telemetrySnapshot?.ram_pct != null && `RAM ${Number(telemetrySnapshot.ram_pct).toFixed(0)}%`}
-                </dd>
-              </dl>
-            )}
-            {telemetrySnapshot?.health_score != null && (
-              <dl className="server-drawer-meta">
-                <dt>Health score</dt>
-                <dd>{Math.round(Number(telemetrySnapshot.health_score))}%</dd>
-              </dl>
-            )}
-            {!telemetryQuery.data && !telemetrySnapshot?.cpu_pct && !telemetrySnapshot?.ram_pct && (
-              <Text variant="muted" as="p">No telemetry data available</Text>
-            )}
+                </div>
+              )}
+              {(telemetrySnapshot?.cpu_pct != null || telemetrySnapshot?.ram_pct != null) && (
+                <div className="server-modal-meta-row">
+                  <span>Resources</span>
+                  <span>
+                    {telemetrySnapshot?.cpu_pct != null && `CPU ${Number(telemetrySnapshot.cpu_pct).toFixed(0)}%`}
+                    {telemetrySnapshot?.cpu_pct != null && telemetrySnapshot?.ram_pct != null && " · "}
+                    {telemetrySnapshot?.ram_pct != null && `RAM ${Number(telemetrySnapshot.ram_pct).toFixed(0)}%`}
+                  </span>
+                </div>
+              )}
+              {telemetrySnapshot?.health_score != null && (
+                <div className="server-modal-meta-row">
+                  <span>Health score</span>
+                  <span>{Math.round(Number(telemetrySnapshot.health_score))}%</span>
+                </div>
+              )}
+              {!telemetryQuery.data && !telemetrySnapshot?.cpu_pct && !telemetrySnapshot?.ram_pct && (
+                <Text variant="muted" as="p">No telemetry data available</Text>
+              )}
+            </div>
           </section>
         )}
         {activeTab === "activity" && (
-          <section aria-label="Activity">
-            <Heading level={4} className="server-drawer-heading-section">Recent activity</Heading>
-            {auditQuery.isLoading && <Skeleton height={24} width="80%" />}
-            {auditQuery.data?.items?.length ? (
-              <ul className="dashboard-audit-list server-drawer-audit-list">
-                {auditQuery.data.items.map((entry) => (
-                  <li key={entry.id} className="server-drawer-audit-item">
-                    <Text variant="caption" as="span">
-                      {formatDateTime(entry.created_at)}
-                    </Text>
-                    <span className="server-drawer-inline-gap-lg">{entry.action}</span>
-                    {entry.admin_id && (
-                      <Text variant="caption" as="span" className="server-drawer-inline-gap-lg">
-                        by {entry.admin_id}
-                      </Text>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            ) : auditQuery.data && !auditQuery.isLoading ? (
-              <Text variant="muted" as="p">No activity recorded</Text>
-            ) : null}
+          <section className="data-card server-modal-section" aria-label="Activity">
+            <div className="data-card__header">
+              <Heading level={4} className="data-card__title" style={{ margin: 0 }}>Recent activity</Heading>
+            </div>
+            <div className="data-card__body">
+              {auditQuery.isLoading && <Skeleton height={24} width="80%" />}
+              {auditQuery.data?.items?.length ? (
+                <ul className="server-modal-audit-list">
+                  {auditQuery.data.items.map((entry) => (
+                    <li key={entry.id} className="server-modal-audit-item">
+                      <Text variant="caption" as="span">{formatDateTime(entry.created_at)}</Text>
+                      <span style={{ marginLeft: "var(--spacing-2)" }}>{entry.action}</span>
+                      {entry.admin_id && (
+                        <Text variant="caption" as="span" style={{ marginLeft: "var(--spacing-2)" }}>by {entry.admin_id}</Text>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              ) : auditQuery.data && !auditQuery.isLoading ? (
+                <Text variant="muted" as="p">No activity recorded</Text>
+              ) : null}
+            </div>
           </section>
         )}
       </div>
-    </Drawer>
+    </Modal>
   );
 }

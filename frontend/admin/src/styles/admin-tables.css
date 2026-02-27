@@ -1,8 +1,44 @@
+/* XS audit cards */
+.audit-card-xs {
+  padding: var(--spacing-4);
+  border-radius: 12px;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-raised);
+}
+.audit-card-xs__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-2);
+}
+.audit-card-xs__time {
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
+}
+.audit-card-xs__meta {
+  margin-top: var(--spacing-2);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+.audit-card-xs__request {
+  margin-top: var(--spacing-1);
+  font-size: var(--text-xs);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* TableSection (reusable table block) */
 .ref-table-section {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-4);
+  border-radius: 12px;
+  overflow: hidden;
 }
 .ref-table-section-head {
   display: flex;
@@ -51,11 +87,41 @@
   white-space: nowrap;
 }
 
-/* Devices page: match Servers panel structure */
+/* Devices page: match Servers panel + Dashboard card style */
+.devices-page .ref-table-section {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-sm);
+}
 .devices-panel {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: var(--spacing-4);
+  padding: var(--spacing-4) 0 0;
+}
+
+/* Devices page: card view — Dashboard-style grid */
+.devices-page .device-card-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--grid-min-card-lg, 280px), 1fr));
+  gap: var(--spacing-4);
+}
+.devices-page .device-card-list > li {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  padding: var(--spacing-5);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--duration-fast) var(--ease-standard), border-color var(--duration-fast);
+}
+.devices-page .device-card-list > li:hover {
+  box-shadow: 0 2px 8px oklch(0 0 0 / 0.06);
+  border-color: var(--color-primary-400, var(--border-subtle));
 }
 .devices-panel .operator-section-title {
   margin-bottom: var(--spacing-2);
@@ -140,17 +206,17 @@
   align-items: center;
   gap: var(--spacing-3);
   margin-bottom: var(--spacing-4);
-  padding: var(--spacing-3);
+  padding: var(--spacing-4);
   background: var(--color-neutral-50);
-  border-radius: var(--radius-md);
+  border-radius: 12px;
   border: 1px solid var(--color-neutral-200);
 }
 
 /* Banners */
 .ref-banner {
   margin-bottom: var(--spacing-4);
-  padding: var(--spacing-2) var(--spacing-3);
-  border-radius: var(--radius-md);
+  padding: var(--spacing-3) var(--spacing-4);
+  border-radius: 12px;
   border: 1px solid transparent;
 }
 .ref-banner-warning {
@@ -215,17 +281,207 @@
   border-radius: var(--input-border-radius, var(--radius-md));
 }
 
-/* Devices dashboard: Control Bar (sticky) + Metrics Strip */
+/* Servers page: Dashboard-style layout */
+.servers-page {
+  gap: var(--density-section-gap, var(--spacing-8));
+}
+.servers-page .page-header {
+  margin-bottom: var(--spacing-4);
+  align-items: flex-start;
+}
+.servers-page .page-header-actions {
+  flex-shrink: 0;
+  flex-wrap: nowrap;
+}
+/* Toolbar section: separate from header, organized like Dashboard toolbar */
+.servers-toolbar-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  padding: var(--spacing-4);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-sm);
+}
+.servers-toolbar-section .servers-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-4);
+}
+.servers-toolbar-section .servers-toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding-right: var(--spacing-4);
+  border-right: 1px solid var(--border-subtle);
+}
+.servers-toolbar-section .servers-toolbar-group:last-of-type {
+  padding-right: 0;
+  border-right: none;
+}
+.servers-toolbar-section .servers-toolbar-filters {
+  flex: 1;
+  min-width: min(100%, 320px);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+.servers-toolbar-section .ref-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+.servers-toolbar-section .ref-filter-bar .ref-search-input {
+  min-width: 12rem;
+}
+.servers-toolbar-section .ref-filter-bar .ref-status-filter,
+.servers-toolbar-section .ref-filter-bar .ref-sort-select,
+.servers-toolbar-section .ref-filter-bar .ref-last-seen-filter {
+  min-width: 7rem;
+}
+@media (max-width: 1023px) {
+  .servers-toolbar-section .servers-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .servers-toolbar-section .servers-toolbar-group {
+    border-right: none;
+    padding-right: 0;
+    padding-bottom: var(--spacing-3);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .servers-toolbar-section .servers-toolbar-group:last-of-type {
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+}
+/* Servers panel: Dashboard operator-card style */
+.servers-page .servers-panel {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-sm);
+  padding: var(--spacing-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+.servers-page .servers-panel .operator-section-title {
+  margin: 0 0 var(--spacing-2);
+  padding-bottom: var(--spacing-3);
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.servers-page .servers-panel .ref-presets {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-2);
+  margin-bottom: var(--spacing-2);
+}
+.servers-page .servers-panel .ref-presets [role="tablist"],
+.servers-page .servers-panel .ref-presets .tabs-list {
+  display: flex;
+  gap: var(--spacing-1);
+}
+.servers-page .servers-panel .inline-alert {
+  margin-bottom: var(--spacing-2);
+}
+.servers-page .servers-panel .inline-alert:last-of-type {
+  margin-bottom: var(--spacing-3);
+}
+.servers-page .servers-panel .ref-bulk-toolbar {
+  margin-bottom: var(--spacing-3);
+}
+.servers-page .servers-panel .mb-2 {
+  margin-bottom: var(--spacing-2);
+}
+/* Servers table: Dashboard operator-card style */
+.servers-page .servers-panel .data-table-wrap,
+.servers-page .servers-panel .ds-table-wrap {
+  border-radius: 12px;
+  overflow-x: auto;
+  overflow-y: visible;
+  width: 100%;
+  padding: 0;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-sm);
+  -webkit-overflow-scrolling: touch;
+}
+.servers-page .servers-panel .servers-table {
+  width: 100%;
+  table-layout: auto;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+.servers-page .servers-panel .servers-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--color-surface-2, var(--color-neutral-100));
+  box-shadow: 0 1px 0 var(--border-subtle);
+}
+.servers-page .servers-panel .servers-table th {
+  padding: var(--spacing-3) var(--spacing-4);
+  font-weight: 600;
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  border-bottom: 1px solid var(--border-subtle);
+  white-space: nowrap;
+}
+.servers-page .servers-panel .servers-table td {
+  padding: var(--spacing-3) var(--spacing-4);
+  border-bottom: 1px solid var(--color-border-subtle, var(--color-neutral-100));
+  vertical-align: middle;
+  transition: background-color 120ms ease-out;
+}
+.servers-page .servers-panel .servers-table tbody tr {
+  min-height: 48px;
+}
+.servers-page .servers-panel .servers-table tbody tr:hover {
+  background: var(--table-hover-bg, color-mix(in oklab, var(--color-primary) 6%, var(--color-surface)));
+}
+.servers-page .servers-panel .servers-table tbody tr:nth-child(even) {
+  background: color-mix(in oklab, var(--color-surface) 97%, var(--color-neutral-100));
+}
+.servers-page .servers-panel .servers-table tbody tr:nth-child(even):hover {
+  background: var(--table-hover-bg, color-mix(in oklab, var(--color-primary) 6%, var(--color-surface)));
+}
+.servers-page .servers-panel .servers-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+/* Devices page: Dashboard-style layout */
+.devices-page {
+  gap: var(--density-section-gap, var(--spacing-8));
+}
+.devices-page .page-header {
+  margin-bottom: var(--spacing-4);
+}
+
+/* Devices dashboard: Control Bar (sticky) — Dashboard card style */
 .devices-control-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: var(--spacing-3);
-  padding: var(--spacing-2) 0;
-  margin-bottom: var(--spacing-2);
-  border-bottom: 1px solid var(--color-border-subtle, var(--color-neutral-200));
-  background: var(--color-background-primary, #fff);
+  padding: var(--spacing-4);
+  margin-bottom: var(--spacing-4);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-sm);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -271,8 +527,13 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: var(--spacing-2);
-  padding: var(--spacing-1) 0 var(--spacing-2);
+  gap: var(--spacing-3);
+  padding: var(--spacing-3) var(--spacing-4);
+  margin-bottom: var(--spacing-4);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-sm);
 }
 .devices-metrics-strip {
   display: flex;
@@ -404,11 +665,11 @@ button.devices-metrics-strip-item:hover { background: var(--color-neutral-100); 
   justify-content: space-between;
   flex-wrap: wrap;
   gap: var(--spacing-3);
-  padding: var(--spacing-2) var(--spacing-3);
+  padding: var(--spacing-3) var(--spacing-4);
   margin-bottom: var(--spacing-2);
   background: var(--color-neutral-50);
   border: 1px solid var(--color-neutral-200);
-  border-radius: var(--radius-md);
+  border-radius: 12px;
   position: sticky;
   bottom: 0;
   z-index: 5;
@@ -421,4 +682,12 @@ button.devices-metrics-strip-item:hover { background: var(--color-neutral-100); 
 }
 .devices-table tbody tr:hover {
   background: var(--table-hover-bg);
+}
+
+/* Empty state: why + what to do */
+.table-empty .table-empty-title { margin: 0; font-weight: 500; }
+.table-empty .table-empty-hint {
+  margin: var(--spacing-2) 0 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-tertiary);
 }

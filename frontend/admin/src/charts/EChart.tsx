@@ -1,6 +1,8 @@
 import type { ComponentType, CSSProperties } from "react";
-import { Suspense, lazy, memo } from "react";
+import { Suspense, lazy, memo, useRef, useEffect, forwardRef } from "react";
 import type { EChartsOption } from "echarts";
+
+type EChartsReactRef = { getEchartsInstance: () => { resize: () => void } } | null;
 
 // `echarts` is sizeable. Lazy-load the wrapper + a minimal ECharts registry together.
 const ReactECharts = lazy(async () => {
@@ -9,13 +11,11 @@ const ReactECharts = lazy(async () => {
     import("./echarts-lite"),
   ]);
 
-  // Wrap to inject our modular ECharts instance.
-  // Keep this wrapper loosely typed to avoid tight coupling to echarts-for-react's prop types.
-  const Impl = ReactEChartsImpl as unknown as ComponentType<Record<string, unknown>>;
+  const Impl = ReactEChartsImpl as unknown as ComponentType<Record<string, unknown> & { ref?: React.Ref<EChartsReactRef> }>;
   return {
-    default: function LazyEChart(props: Record<string, unknown>) {
-      return <Impl {...props} echarts={echarts} />;
-    },
+    default: forwardRef<EChartsReactRef, Record<string, unknown>>(function LazyEChart(props, ref) {
+      return <Impl {...props} ref={ref} echarts={echarts} />;
+    }),
   };
 });
 
@@ -40,6 +40,19 @@ export const EChart = memo(function EChart({
   lazyUpdate = true,
   opts,
 }: EChartProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const chartRef = useRef<EChartsReactRef>(null);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => {
+      chartRef.current?.getEchartsInstance?.()?.resize?.();
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   const resolvedStyle: CSSProperties | undefined =
     height == null
       ? style
@@ -49,16 +62,19 @@ export const EChart = memo(function EChart({
           height: typeof height === "number" ? `${height}px` : height,
         };
   return (
-    <Suspense fallback={<div className="ref-chart-suspense" />}>
-      <ReactECharts
-        className={className}
-        style={resolvedStyle}
-        option={option}
-        notMerge={notMerge}
-        lazyUpdate={lazyUpdate}
-        onEvents={onEvents}
-        opts={opts ?? { renderer: "canvas" }}
-      />
-    </Suspense>
+    <div ref={containerRef} className="ref-echart-container">
+      <Suspense fallback={<div className="ref-chart-suspense" />}>
+        <ReactECharts
+          ref={chartRef}
+          className={className}
+          style={resolvedStyle}
+          option={option}
+          notMerge={notMerge}
+          lazyUpdate={lazyUpdate}
+          onEvents={onEvents}
+          opts={opts ?? { renderer: "canvas" }}
+        />
+      </Suspense>
+    </div>
   );
 });

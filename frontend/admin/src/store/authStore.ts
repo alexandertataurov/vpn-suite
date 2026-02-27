@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { getBaseUrl } from "@vpn-suite/shared/api-client";
 import { ADMIN_BASE } from "../config";
 
 const ACCESS_KEY = "vpn_admin_access";
@@ -50,6 +51,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ accessToken: access, refreshToken: refresh });
   },
   logout: () => {
+    const refresh = get().refreshToken;
+    if (refresh) {
+      try {
+        const base = getBaseUrl().replace(/\/$/, "");
+        // Fire-and-forget best-effort logout so the backend can revoke the refresh token.
+        void fetch(`${base}/auth/logout`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ refresh_token: refresh }),
+        });
+      } catch {
+        // ignore network errors during logout; client-side tokens are still cleared
+      }
+    }
     clearStored();
     set({ accessToken: null, refreshToken: null });
     if (typeof window !== "undefined") {

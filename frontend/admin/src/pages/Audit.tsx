@@ -1,7 +1,18 @@
 import { useMemo, useState } from "react";
 import { FileText } from "lucide-react";
 import { formatDateTime, getErrorMessage } from "@vpn-suite/shared";
-import { Table, PageError, Skeleton, Input, Select, Button, CodeText, Drawer } from "@vpn-suite/shared/ui";
+import {
+  Table,
+  Panel,
+  PageError,
+  Skeleton,
+  Input,
+  Select,
+  Button,
+  CodeText,
+  Drawer,
+  EmptyTableState,
+} from "@vpn-suite/shared/ui";
 import type { AuditLogOut, AuditLogList } from "@vpn-suite/shared/types";
 import { ApiError } from "@vpn-suite/shared/types";
 import { useQuery } from "@tanstack/react-query";
@@ -10,10 +21,12 @@ import { api } from "../api/client";
 import { PageHeader } from "../components/PageHeader";
 import { TableSection } from "../components/TableSection";
 import { Toolbar } from "../components/Toolbar";
+import { useIsXs } from "../hooks/useBreakpoint";
 
 const LIMIT = 50;
 
 export function AuditPage() {
+  const isXs = useIsXs();
   const [offset, setOffset] = useState(0);
   const [resourceType, setResourceType] = useState<string>("");
   const [resourceId, setResourceId] = useState("");
@@ -141,12 +154,40 @@ export function AuditPage() {
         </Toolbar>
         {isLoading ? (
           <Skeleton height={220} />
-        ) : (
+        ) : isXs && data?.items.length ? (
+          <div className="table-cards" data-testid="audit-cards">
+            {data.items.map((r) => (
+              <Panel key={String(r.id)} variant="outline" className="audit-card-xs">
+                <div className="audit-card-xs__row">
+                  <span className="audit-card-xs__time">{formatDateTime(r.created_at)}</span>
+                  {r.old_new ? (
+                    <Button variant="ghost" size="sm" onClick={() => setDetailsDrawer(r)}>View</Button>
+                  ) : null}
+                </div>
+                <div className="audit-card-xs__meta">
+                  <span>{r.admin_id ?? "-"}</span>
+                  <span>{r.action}</span>
+                  <span title={[r.resource_type, r.resource_id].filter(Boolean).join(" ")}>
+                    {[r.resource_type, r.resource_id].filter(Boolean).join(" ") || "-"}
+                  </span>
+                </div>
+                {r.request_id ? <CodeText className="audit-card-xs__request">{r.request_id}</CodeText> : null}
+              </Panel>
+            ))}
+          </div>
+        ) : !isXs ? (
           <Table
             columns={columns}
             data={data ? data.items : []}
             keyExtractor={(r) => String(r.id)}
-            emptyMessage="No audit entries yet."
+            emptyTitle="No audit entries yet."
+            emptyHint="Audit entries will appear when administrators perform actions."
+          />
+        ) : (
+          <EmptyTableState
+            className="table-empty"
+            title="No audit entries yet."
+            description="Audit entries will appear when administrators perform actions."
           />
         )}
       </TableSection>

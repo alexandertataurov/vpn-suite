@@ -223,7 +223,7 @@ function ServerRowInner({
       <td className="servers-table-col-health table-cell-numeric table-cell-align-right">
         {healthScore != null ? (
           <span className="table-cell-health" title={`Health: ${Math.round(Number(healthScore))}%`}>
-            <span className="table-cell-health-value">{Math.round(Number(healthScore))}</span>
+            <span className="table-cell-health-value">{Math.round(Number(healthScore))}%</span>
             <span className="table-cell-health-track">
               <span
                 className="table-cell-health-bar"

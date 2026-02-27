@@ -1,11 +1,15 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ServiceScrapeStatus, TelemetryServicesOut } from "@vpn-suite/shared/types";
-import { Panel, PrimitiveBadge, InlineAlert, Skeleton } from "@vpn-suite/shared/ui";
+import { PrimitiveBadge, InlineAlert, Skeleton, Button, useToast } from "@vpn-suite/shared/ui";
 import { api } from "../../api/client";
 import { ANALYTICS_TELEMETRY_SERVICES_KEY } from "../../api/query-keys";
+import { getTelemetryErrorMessage } from "../../utils/telemetry-freshness";
 import { shouldRetryQuery } from "../../utils/queryPolicy";
+import { TelemetrySection } from "./TelemetrySection";
 
 export function ScrapeStatusPanel() {
+  const queryClient = useQueryClient();
+  const addToast = useToast();
   const { data, isLoading, isError, error } = useQuery<TelemetryServicesOut>({
     queryKey: ANALYTICS_TELEMETRY_SERVICES_KEY,
     queryFn: ({ signal }) => api.get<TelemetryServicesOut>("/analytics/telemetry/services", { signal }),
@@ -14,34 +18,52 @@ export function ScrapeStatusPanel() {
     retry: shouldRetryQuery,
   });
 
+  const controlMutation = useMutation({
+    mutationFn: async (params: { job: string; action: "start" | "stop" | "restart" }) => {
+      const { job, action } = params;
+      await api.post<void>(
+        `/analytics/telemetry/services/${encodeURIComponent(job)}/${encodeURIComponent(action)}`,
+        {},
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ANALYTICS_TELEMETRY_SERVICES_KEY });
+      addToast("Scrape service control requested", "success");
+    },
+    onError: (err) => {
+      addToast(getTelemetryErrorMessage(err, "Scrape service control failed"), "error");
+    },
+  });
+
   if (isLoading) {
     return (
-      <Panel as="section" variant="outline" aria-label="Scrape status">
-        <h3 className="ref-settings-title">Scrape status</h3>
+      <TelemetrySection title="Scrape status" ariaLabel="Scrape status">
         <Skeleton className="h-16" />
-      </Panel>
+      </TelemetrySection>
     );
   }
 
   if (isError || !data) {
     return (
-      <Panel as="section" variant="outline" aria-label="Scrape status">
-        <h3 className="ref-settings-title">Scrape status</h3>
-        <InlineAlert variant="error" title="Failed to load scrape status" message={error instanceof Error ? error.message : "Unknown error"} />
-      </Panel>
+      <TelemetrySection title="Scrape status" ariaLabel="Scrape status">
+        <InlineAlert
+          variant="error"
+          title="Failed to load scrape status"
+          message={getTelemetryErrorMessage(error, "Could not load scrape status")}
+        />
+      </TelemetrySection>
     );
   }
 
   if (!data.prometheus_available) {
     return (
-      <Panel as="section" variant="outline" aria-label="Scrape status">
-        <h3 className="ref-settings-title">Scrape status</h3>
+      <TelemetrySection title="Scrape status" ariaLabel="Scrape status">
         <InlineAlert
           variant="warning"
           title="Prometheus not configured"
           message={data.message ?? "TELEMETRY_PROMETHEUS_URL is unset. Set it when monitoring profile is running."}
         />
-      </Panel>
+      </TelemetrySection>
     );
   }
 
@@ -49,16 +71,22 @@ export function ScrapeStatusPanel() {
   const downCount = data.services.length - upCount;
 
   return (
-    <Panel as="section" variant="outline" aria-label="Scrape status">
-      <h3 className="ref-settings-title">Scrape status</h3>
-      <p className="text-sm text-muted mb-2">
-        {upCount} up, {downCount} down
-      </p>
+    <TelemetrySection
+      title="Scrape status"
+      ariaLabel="Scrape status"
+      description={
+        <span>
+          {upCount} up, {downCount} down
+        </span>
+      }
+    >
       <div className="flex flex-wrap gap-2" role="list">
         {data.services.map((s: ServiceScrapeStatus) => {
           const lastScrape = s.last_scrape ? new Date(s.last_scrape).toLocaleString() : "unknown";
+          const job = s.job;
+          const isUp = s.health === "up";
           return (
-            <span key={`${s.job}-${s.instance}`} className="inline-flex items-center gap-1" role="listitem">
+            <span key={`${s.job}-${s.instance}`} className="inline-flex items-center gap-2" role="listitem">
               <PrimitiveBadge
                 size="sm"
                 variant={s.health === "up" ? "success" : "danger"}
@@ -67,10 +95,39 @@ export function ScrapeStatusPanel() {
               >
                 {s.job}
               </PrimitiveBadge>
+              <div className="inline-flex items-center gap-1">
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  onClick={() => controlMutation.mutate({ job, action: "start" })}
+                  disabled={controlMutation.isPending || isUp}
+                  aria-label={`Start scrape service ${s.job}`}
+                >
+                  Start
+                </Button>
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  onClick={() => controlMutation.mutate({ job, action: "stop" })}
+                  disabled={controlMutation.isPending || !isUp}
+                  aria-label={`Stop scrape service ${s.job}`}
+                >
+                  Stop
+                </Button>
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  onClick={() => controlMutation.mutate({ job, action: "restart" })}
+                  disabled={controlMutation.isPending}
+                  aria-label={`Restart scrape service ${s.job}`}
+                >
+                  Restart
+                </Button>
+              </div>
             </span>
           );
         })}
       </div>
-    </Panel>
+    </TelemetrySection>
   );
 }

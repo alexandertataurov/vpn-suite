@@ -3,7 +3,7 @@ import { formatDate, getErrorMessage, userStatusToVariant } from "@vpn-suite/sha
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { userKey } from "../api/query-keys";
 import { Users } from "lucide-react";
-import { PrimitiveBadge, Button, Panel, Skeleton, useToast, PageError } from "@vpn-suite/shared/ui";
+import { PrimitiveBadge, Button, Panel, Skeleton, useToast, PageError, EmptyTableState } from "@vpn-suite/shared/ui";
 import type { UserDetail as UserDetailType } from "@vpn-suite/shared/types";
 import { ApiError } from "@vpn-suite/shared/types";
 import { api } from "../api/client";
@@ -92,7 +92,11 @@ export function UserDetailPage() {
             ))}
           </ul>
         ) : (
-          <p className="table-empty">No subscriptions</p>
+          <EmptyTableState
+            className="table-empty"
+            title="No subscriptions"
+            description="This user has no active or historical subscriptions."
+          />
         )}
       </Panel>
 
@@ -110,7 +114,11 @@ export function UserDetailPage() {
             </Button>
           </div>
         </div>
-        <p className="table-empty">Load devices from Devices page (filter by user).</p>
+        <EmptyTableState
+          className="table-empty"
+          title="No devices in this view"
+          description="Load devices from the Devices page, filtering by this user."
+        />
       </Panel>
     </div>
   );

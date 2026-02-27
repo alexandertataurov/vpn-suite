@@ -1,23 +1,12 @@
-import { useQuery } from "@tanstack/react-query";
 import { Activity } from "lucide-react";
-import type { TelemetrySnapshotOut } from "@vpn-suite/shared/types";
-import { api } from "../../api/client";
-import { TELEMETRY_SNAPSHOT_KEY } from "../../api/query-keys";
+import { Button } from "@vpn-suite/shared/ui";
+import { getTelemetryErrorMessage } from "../../utils/telemetry-freshness";
 import { FreshnessBadge } from "./FreshnessBadge";
-import { RelativeTime } from "@vpn-suite/shared/ui";
-import { Skeleton } from "@vpn-suite/shared/ui";
+import { RelativeTime, Skeleton } from "@vpn-suite/shared/ui";
+import { useTelemetrySnapshotMeta } from "../../domain/telemetry/hooks/useSnapshotTelemetry";
 
 export function TelemetryHealthWidget() {
-  const { data, isLoading, isError } = useQuery<TelemetrySnapshotOut>({
-    queryKey: [...TELEMETRY_SNAPSHOT_KEY, "meta", "nodes.summary"],
-    queryFn: ({ signal }) =>
-      api.get<TelemetrySnapshotOut>(
-        "/telemetry/snapshot?scope=all&fields=meta,nodes.summary",
-        { signal }
-      ),
-    staleTime: 10_000,
-    refetchInterval: 15_000,
-  });
+  const { data, isLoading, isError, error, refetch } = useTelemetrySnapshotMeta();
 
   if (isLoading) {
     return (
@@ -38,7 +27,10 @@ export function TelemetryHealthWidget() {
           <Activity className="operator-section-icon" aria-hidden size={14} strokeWidth={2} />
           Telemetry health
         </div>
-        <p className="operator-health-label">—</p>
+        <p className="operator-health-label">{getTelemetryErrorMessage(error, "Snapshot unavailable")}</p>
+        <Button variant="ghost" size="sm" onClick={() => refetch()} aria-label="Retry telemetry snapshot">
+          Retry
+        </Button>
       </div>
     );
   }
@@ -84,7 +76,7 @@ export function TelemetryHealthWidget() {
         {nodes ? (
           <span className="operator-health-label">
             Nodes: {nodes.online} OK / {nodes.degraded} degraded / {nodes.down} down
-            {meta.stale_node_ids.length > 0 && ` · ${meta.stale_node_ids.length} stale`}
+            {(meta.stale_node_ids?.length ?? 0) > 0 && ` · ${meta.stale_node_ids?.length ?? 0} stale`}
           </span>
         ) : null}
       </div>

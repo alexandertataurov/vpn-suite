@@ -1,4 +1,4 @@
-import { ExternalLink, RefreshCw, Wrench } from "lucide-react";
+import { ExternalLink, Pencil, RefreshCw, Wrench } from "lucide-react";
 import { Drawer, Button, useToast } from "@vpn-suite/shared/ui";
 import { formatDate, getErrorMessage } from "@vpn-suite/shared";
 import { Link } from "react-router-dom";
@@ -12,6 +12,7 @@ export interface DeviceDetailDrawerProps {
   open: boolean;
   onClose: () => void;
   onReissue?: (device: DeviceOut) => void;
+  onEdit?: (device: DeviceOut) => void;
 }
 
 export function DeviceDetailDrawer({
@@ -19,6 +20,7 @@ export function DeviceDetailDrawer({
   open,
   onClose,
   onReissue,
+  onEdit,
 }: DeviceDetailDrawerProps) {
   const queryClient = useQueryClient();
   const { addToast } = useToast();
@@ -115,6 +117,12 @@ export function DeviceDetailDrawer({
             )}
           </section>
           <section className="flex flex-wrap gap-2 border-t pt-3">
+            {onEdit && (
+              <Button variant="secondary" size="sm" onClick={() => onEdit(device)}>
+                <Pencil aria-hidden size={14} />
+                Edit
+              </Button>
+            )}
             {!device.revoked_at && onReissue && (
               <Button variant="secondary" size="sm" onClick={() => { onReissue(device); onClose(); }}>
                 <RefreshCw aria-hidden size={14} />

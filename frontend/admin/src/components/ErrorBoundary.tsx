@@ -1,6 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { PageError } from "@vpn-suite/shared/ui";
-import { logFrontendError } from "../utils/logFrontendError";
+import { error as reportTelemetryError } from "../telemetry";
 
 interface Props {
   children: ReactNode;
@@ -23,12 +23,9 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   reportFrontendError(error: Error, componentStack: string | null | undefined): void {
-    logFrontendError({
-      message: error.message,
-      stack: error.stack ?? null,
-      componentStack: componentStack ?? null,
+    reportTelemetryError(error, {
       route: typeof window !== "undefined" ? window.location.pathname : undefined,
-      userAgent: typeof navigator !== "undefined" ? navigator.userAgent : undefined,
+      component_stack: componentStack ?? null,
     });
   }
 

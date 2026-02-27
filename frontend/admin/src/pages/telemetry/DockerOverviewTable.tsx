@@ -1,11 +1,11 @@
 import { useMemo } from "react";
-import { ArrowUpRight, FileText } from "lucide-react";
+import { ArrowUpRight, FileText, Play, Square, RotateCcw } from "lucide-react";
 import type { ContainerSummary } from "@vpn-suite/shared/types";
-import { PrimitiveBadge, Button, VirtualTable } from "@vpn-suite/shared/ui";
+import { PrimitiveBadge, Button, Table, VirtualTable } from "@vpn-suite/shared/ui";
 import { containerStatusToVariant, formatBytes } from "@vpn-suite/shared";
 
-const ROW_HEIGHT = 48;
-const VIEWPORT_HEIGHT = 420;
+const ROW_HEIGHT = 44;
+const VIEWPORT_HEIGHT = 360;
 
 function formatUptime(seconds: number | null | undefined): string {
   if (!seconds || seconds <= 0) return "—";
@@ -22,23 +22,36 @@ interface Props {
   selectedId: string;
   onSelect: (containerId: string) => void;
   onOpenLogs: (containerId: string) => void;
+  onStart?: (containerId: string) => void;
+  onStop?: (containerId: string) => void;
+  onRestart?: (containerId: string) => void;
+  actionsDisabled?: boolean;
 }
 
-export function DockerOverviewTable({ items, selectedId, onSelect, onOpenLogs }: Props) {
+export function DockerOverviewTable({
+  items,
+  selectedId,
+  onSelect,
+  onOpenLogs,
+  onStart,
+  onStop,
+  onRestart,
+  actionsDisabled,
+}: Props) {
   const columns = useMemo(
     () => [
       {
         key: "name",
-        header: "Name",
+        header: "Container",
         truncate: true,
         width: 170,
-        titleTooltip: (item: ContainerSummary) => item.name,
+        titleTooltip: (item: ContainerSummary) => `${item.name} (${item.container_id.slice(0, 12)})`,
         render: (item: ContainerSummary) => item.name,
       },
       {
         key: "status",
         header: "Status",
-        width: 110,
+        width: 120,
         render: (item: ContainerSummary) => (
           <PrimitiveBadge variant={containerStatusToVariant(item.state)}>{item.state}</PrimitiveBadge>
         ),
@@ -60,15 +73,17 @@ export function DockerOverviewTable({ items, selectedId, onSelect, onOpenLogs }:
       },
       {
         key: "cpu",
-        header: "CPU",
+        header: "CPU %",
         numeric: true,
-        width: 74,
+        mono: true,
+        width: 80,
         render: (item: ContainerSummary) => (item.cpu_pct != null ? `${item.cpu_pct.toFixed(1)}%` : "—"),
       },
       {
         key: "ram",
         header: "RAM",
         numeric: true,
+        mono: true,
         truncate: true,
         width: 130,
         titleTooltip: (item: ContainerSummary) =>
@@ -80,12 +95,14 @@ export function DockerOverviewTable({ items, selectedId, onSelect, onOpenLogs }:
         key: "uptime",
         header: "Uptime",
         numeric: true,
-        width: 90,
+        mono: true,
+        width: 100,
         render: (item: ContainerSummary) => formatUptime(item.uptime_seconds),
       },
       {
         key: "ports",
         header: "Ports",
+        mono: true,
         truncate: true,
         width: 210,
         titleTooltip: (item: ContainerSummary) =>
@@ -104,47 +121,118 @@ export function DockerOverviewTable({ items, selectedId, onSelect, onOpenLogs }:
         width: 88,
         minWidth: 88,
         className: "docker-overview-actions-cell",
-        render: (item: ContainerSummary) => (
-          <div className="table-actions docker-overview-actions">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onSelect(item.container_id)}
-              aria-label={`View details for ${item.name}`}
-              title="Details"
-            >
-              <ArrowUpRight aria-hidden strokeWidth={1.5} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onOpenLogs(item.container_id)}
-              aria-label={`Open logs for ${item.name}`}
-              title="Logs"
-            >
-              <FileText aria-hidden strokeWidth={1.5} />
-            </Button>
-          </div>
-        ),
+        render: (item: ContainerSummary) => {
+          const canStart =
+            !!onStart &&
+            item.state !== "running" &&
+            item.state !== "restarting";
+          const canStop =
+            !!onStop &&
+            (item.state === "running" || item.state === "restarting");
+          const canRestart =
+            !!onRestart && item.state === "running";
+          return (
+            <div className="table-actions docker-overview-actions">
+              {onStart ? (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onStart(item.container_id);
+                  }}
+                  aria-label={`Start ${item.name}`}
+                  title="Start"
+                  disabled={actionsDisabled || !canStart}
+                >
+                  <Play aria-hidden size={14} strokeWidth={2} />
+                </Button>
+              ) : null}
+              {onStop ? (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onStop(item.container_id);
+                  }}
+                  aria-label={`Stop ${item.name}`}
+                  title="Stop"
+                  disabled={actionsDisabled || !canStop}
+                >
+                  <Square aria-hidden size={14} strokeWidth={2} />
+                </Button>
+              ) : null}
+              {onRestart ? (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onRestart(item.container_id);
+                  }}
+                  aria-label={`Restart ${item.name}`}
+                  title="Restart"
+                  disabled={actionsDisabled || !canRestart}
+                >
+                  <RotateCcw aria-hidden size={14} strokeWidth={2} />
+                </Button>
+              ) : null}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onSelect(item.container_id);
+                }}
+                aria-label={`View details for ${item.name}`}
+                title="Details"
+              >
+                <ArrowUpRight aria-hidden size={14} strokeWidth={2} />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onOpenLogs(item.container_id);
+                }}
+                aria-label={`Open logs for ${item.name}`}
+                title="Logs"
+              >
+                <FileText aria-hidden size={14} strokeWidth={2} />
+              </Button>
+            </div>
+          );
+        },
       },
     ],
-    [onOpenLogs, onSelect]
+    [actionsDisabled, onOpenLogs, onRestart, onSelect, onStart, onStop]
   );
 
-  if (items.length === 0) {
-    return <p className="text-muted">No containers match the current filters.</p>;
+  const commonProps = {
+    columns,
+    data: items,
+    className: "telemetry-docker-table table-density-compact",
+    density: "compact" as const,
+    keyExtractor: (item: ContainerSummary) => item.container_id,
+    emptyTitle: "No containers match the current filters",
+    emptyHint: "Adjust the filters above to see Docker containers.",
+    rowClassName: (item: ContainerSummary) =>
+      item.container_id === selectedId ? "table-row-selected" : undefined,
+    onRowClick: (item: ContainerSummary) => onSelect(item.container_id),
+  };
+
+  if (items.length > 200) {
+    return (
+      <VirtualTable<ContainerSummary>
+        {...commonProps}
+        maxHeight={VIEWPORT_HEIGHT}
+        rowHeight={ROW_HEIGHT}
+        overscan={6}
+      />
+    );
   }
 
-  return (
-    <VirtualTable<ContainerSummary>
-      columns={columns}
-      data={items}
-      className="telemetry-docker-table"
-      keyExtractor={(item) => item.container_id}
-      height={VIEWPORT_HEIGHT}
-      rowHeight={ROW_HEIGHT}
-      overscan={6}
-      rowClassName={(item) => (item.container_id === selectedId ? "table-row-selected" : undefined)}
-    />
-  );
+  return <Table<ContainerSummary> {...commonProps} />;
 }

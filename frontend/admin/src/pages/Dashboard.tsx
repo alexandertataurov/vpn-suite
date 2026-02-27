@@ -1,64 +1,31 @@
 import { useState, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
-import {
-  LayoutGrid,
-  RefreshCw,
-  Server,
-  FileText,
-  Activity,
-  Settings,
-  RotateCw,
-} from "lucide-react";
+import { RefreshCw, Server, FileText, Activity, Settings, RotateCw } from "lucide-react";
 import { Button, ConfirmModal } from "@vpn-suite/shared/ui";
 import { ApiError } from "@vpn-suite/shared/types";
 import { api } from "../api/client";
-import { AUDIT_KEY, CONNECTION_NODES_KEY, OPERATOR_DASHBOARD_KEY, PEERS_LIST_KEY, SERVERS_LIST_DASHBOARD_KEY } from "../api/query-keys";
 import { useDashboardSettings } from "../hooks/useDashboardSettings";
+import { useDashboardRefresh } from "../hooks/useDashboardRefresh";
 import { useServerListFull } from "../hooks/useServerList";
-import { logFrontendError } from "../utils/logFrontendError";
+import { useOperatorStrip } from "../domain/dashboard";
+import { error as reportTelemetryError } from "../telemetry";
 import { PageHeader } from "../components/PageHeader";
 import { DashboardSettings } from "./dashboard/DashboardSettings";
 import { OperatorDashboardContent } from "./dashboard/OperatorDashboardContent";
 import { RefreshButton } from "../components/RefreshButton";
-import { refreshRegisteredResources } from "../utils/resourceRegistry";
 
 export function DashboardPage() {
-  const queryClient = useQueryClient();
   const [settings, updateSetting] = useDashboardSettings();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [resyncConfirmOpen, setResyncConfirmOpen] = useState(false);
   const [resyncLoading, setResyncLoading] = useState(false);
   const { data: serversData } = useServerListFull();
+  const { refresh } = useDashboardRefresh();
+  const { strip } = useOperatorStrip();
 
   const handleRefresh = useCallback(async () => {
-    const [results, registered] = await Promise.all([
-      Promise.all([
-        queryClient.refetchQueries({ queryKey: OPERATOR_DASHBOARD_KEY }),
-        queryClient.refetchQueries({ queryKey: PEERS_LIST_KEY }),
-        queryClient.refetchQueries({ queryKey: CONNECTION_NODES_KEY }),
-        queryClient.refetchQueries({ queryKey: AUDIT_KEY }),
-        queryClient.refetchQueries({ queryKey: SERVERS_LIST_DASHBOARD_KEY }),
-      ]),
-      refreshRegisteredResources(),
-    ]);
-    const hasResultError = results.some(
-      (res) => Array.isArray(res) && res.some((r) => (r as { error?: unknown }).error)
-    );
-    const hasCacheError = [
-      OPERATOR_DASHBOARD_KEY,
-      PEERS_LIST_KEY,
-      CONNECTION_NODES_KEY,
-      AUDIT_KEY,
-      SERVERS_LIST_DASHBOARD_KEY,
-    ].some((key) =>
-      queryClient.getQueryCache().findAll({ queryKey: key }).some((q) => q.state.status === "error")
-    );
-    const hasRegisteredError = registered.some((r) => !r.ok);
-    if (hasResultError || hasCacheError || hasRegisteredError) {
-      throw new Error("refresh_failed");
-    }
-  }, [queryClient]);
+    await refresh();
+  }, [refresh]);
 
   const regionOptions = useMemo(() => {
     const unique = new Set<string>();
@@ -73,7 +40,7 @@ export function DashboardPage() {
       await api.post("/cluster/resync", {});
       handleRefresh();
     } catch (e) {
-      if (e instanceof ApiError) logFrontendError({ message: e.message, route: "/", widgetId: "resync", statusCode: e.statusCode });
+      if (e instanceof ApiError) reportTelemetryError(e, { route: "/" });
     } finally {
       setResyncLoading(false);
       setResyncConfirmOpen(false);
@@ -82,7 +49,7 @@ export function DashboardPage() {
 
   return (
     <div className={`dashboard ref-page dashboard--${settings.density}`} data-testid="dashboard-page">
-      <PageHeader icon={LayoutGrid} title="Dashboard">
+      <PageHeader title="Dashboard" scopeLabel="Region: All" lastUpdated={strip?.lastUpdated}>
         <Link to="/servers">
           <Button variant="secondary" size="sm" aria-label="View servers">
             <Server className="icon-sm" aria-hidden /> Servers

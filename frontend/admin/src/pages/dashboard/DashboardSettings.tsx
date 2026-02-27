@@ -13,13 +13,14 @@ export interface DashboardSettingsProps {
 const DENSITY_OPTIONS: SelectOption[] = [
   { value: "comfortable", label: "Comfortable" },
   { value: "compact", label: "Compact" },
+  { value: "spacious", label: "Spacious" },
 ];
 
 const AUTO_REFRESH_OPTIONS: SelectOption[] = [
   { value: "0", label: "Off" },
-  { value: "15", label: "15 seconds" },
-  { value: "30", label: "30 seconds" },
-  { value: "60", label: "60 seconds" },
+  { value: "15", label: "15 sec" },
+  { value: "30", label: "30 sec" },
+  { value: "60", label: "60 sec" },
 ];
 
 const TIME_RANGE_OPTIONS: SelectOption[] = [
@@ -27,6 +28,14 @@ const TIME_RANGE_OPTIONS: SelectOption[] = [
   { value: "6h", label: "Last 6 hours" },
   { value: "24h", label: "Last 24 hours" },
   { value: "7d", label: "Last 7 days" },
+];
+
+const WIDGET_OPTIONS: { key: keyof DashboardSettingsType["visibleWidgets"]; label: string }[] = [
+  { key: "health", label: "Health summary" },
+  { key: "capacity", label: "Capacity (users, subs, MRR)" },
+  { key: "trends", label: "Trends (charts)" },
+  { key: "topIssues", label: "Top issues" },
+  { key: "recentAudit", label: "Recent audit" },
 ];
 
 export function DashboardSettings({ open, onClose, settings, onChange, regionOptions }: DashboardSettingsProps) {
@@ -42,77 +51,86 @@ export function DashboardSettings({ open, onClose, settings, onChange, regionOpt
           Done
         </Button>
       }
+      className="dashboard-settings-modal"
       data-testid="dashboard-settings-modal"
     >
-      <div className="dashboard-settings-fields">
-        <Field id="dashboard-density" label="Density">
-          <Select
-            id="dashboard-density"
-            options={DENSITY_OPTIONS}
-            value={settings.density}
-            onChange={(v) => onChange("density", v as DashboardSettingsType["density"])}
-            aria-label="Dashboard density"
-          />
-        </Field>
-        <Field id="dashboard-auto-refresh" label="Auto-refresh">
-          <Select
-            id="dashboard-auto-refresh"
-            options={AUTO_REFRESH_OPTIONS}
-            value={String(settings.autoRefreshInterval)}
-            onChange={(v) => onChange("autoRefreshInterval", parseInt(v, 10) as DashboardSettingsType["autoRefreshInterval"])}
-            aria-label="Auto-refresh interval"
-          />
-        </Field>
-        <Field id="dashboard-time-range" label="Default time range (label only)">
-          <Select
-            id="dashboard-time-range"
-            options={TIME_RANGE_OPTIONS}
-            value={settings.defaultTimeRange}
-            onChange={(v) => onChange("defaultTimeRange", v as DashboardSettingsType["defaultTimeRange"])}
-            aria-label="Default time range"
-          />
-        </Field>
-        <Field id="dashboard-pinned-region" label="Pin region for dashboard">
-          <Select
-            id="dashboard-pinned-region"
-            options={pinnedOptions}
-            value={settings.pinnedRegion ?? ""}
-            onChange={(v) => onChange("pinnedRegion", v === "" ? null : v)}
-            aria-label="Pinned region for Top Issues"
-          />
-        </Field>
-        <div className="dashboard-settings-widgets" role="group" aria-labelledby="dashboard-visible-label">
-          <span id="dashboard-visible-label" className="field-label">
-            Visible widgets
-          </span>
-          <div className="dashboard-settings-checkboxes">
-            <Checkbox
-              label="Health summary"
-              checked={settings.visibleWidgets.health}
-              onChange={(e) => onChange("visibleWidgets", { ...settings.visibleWidgets, health: e.target.checked })}
-            />
-            <Checkbox
-              label="Capacity (users, subs, MRR)"
-              checked={settings.visibleWidgets.capacity}
-              onChange={(e) => onChange("visibleWidgets", { ...settings.visibleWidgets, capacity: e.target.checked })}
-            />
-            <Checkbox
-              label="Trends (charts)"
-              checked={settings.visibleWidgets.trends}
-              onChange={(e) => onChange("visibleWidgets", { ...settings.visibleWidgets, trends: e.target.checked })}
-            />
-            <Checkbox
-              label="Top issues"
-              checked={settings.visibleWidgets.topIssues}
-              onChange={(e) => onChange("visibleWidgets", { ...settings.visibleWidgets, topIssues: e.target.checked })}
-            />
-            <Checkbox
-              label="Recent audit"
-              checked={settings.visibleWidgets.recentAudit}
-              onChange={(e) => onChange("visibleWidgets", { ...settings.visibleWidgets, recentAudit: e.target.checked })}
-            />
+      <div className="dashboard-settings-body">
+        <section className="dashboard-settings-section" aria-labelledby="settings-layout-heading">
+          <h3 id="settings-layout-heading" className="dashboard-settings-section__title">
+            Layout
+          </h3>
+          <p className="dashboard-settings-section__desc">Control how dense or spacious the dashboard appears.</p>
+          <div className="dashboard-settings-section__fields">
+            <Field id="dashboard-density" label="Density">
+              <Select
+                id="dashboard-density"
+                options={DENSITY_OPTIONS}
+                value={settings.density}
+                onChange={(v) => onChange("density", v as DashboardSettingsType["density"])}
+                aria-label="Dashboard density"
+              />
+            </Field>
           </div>
-        </div>
+        </section>
+
+        <section className="dashboard-settings-section" aria-labelledby="settings-data-heading">
+          <h3 id="settings-data-heading" className="dashboard-settings-section__title">
+            Data &amp; refresh
+          </h3>
+          <p className="dashboard-settings-section__desc">Auto-refresh interval and default time range for charts.</p>
+          <div className="dashboard-settings-grid">
+            <Field id="dashboard-auto-refresh" label="Auto-refresh">
+              <Select
+                id="dashboard-auto-refresh"
+                options={AUTO_REFRESH_OPTIONS}
+                value={String(settings.autoRefreshInterval)}
+                onChange={(v) =>
+                  onChange("autoRefreshInterval", parseInt(v, 10) as DashboardSettingsType["autoRefreshInterval"])
+                }
+                aria-label="Auto-refresh interval"
+              />
+            </Field>
+            <Field id="dashboard-time-range" label="Default time range">
+              <Select
+                id="dashboard-time-range"
+                options={TIME_RANGE_OPTIONS}
+                value={settings.defaultTimeRange}
+                onChange={(v) => onChange("defaultTimeRange", v as DashboardSettingsType["defaultTimeRange"])}
+                aria-label="Default time range"
+              />
+            </Field>
+          </div>
+          <div className="dashboard-settings-section__fields">
+            <Field id="dashboard-pinned-region" label="Pin region">
+              <Select
+                id="dashboard-pinned-region"
+                options={pinnedOptions}
+                value={settings.pinnedRegion ?? ""}
+                onChange={(v) => onChange("pinnedRegion", v === "" ? null : v)}
+                aria-label="Pinned region for Top Issues"
+              />
+            </Field>
+          </div>
+        </section>
+
+        <section className="dashboard-settings-section" aria-labelledby="settings-widgets-heading">
+          <h3 id="settings-widgets-heading" className="dashboard-settings-section__title">
+            Visible widgets
+          </h3>
+          <p className="dashboard-settings-section__desc">Choose which sections appear on the dashboard.</p>
+          <div className="dashboard-settings-checkboxes" role="group" aria-labelledby="settings-widgets-heading">
+            {WIDGET_OPTIONS.map(({ key, label }) => (
+              <Checkbox
+                key={key}
+                label={label}
+                checked={settings.visibleWidgets[key]}
+                onChange={(e) =>
+                  onChange("visibleWidgets", { ...settings.visibleWidgets, [key]: e.target.checked })
+                }
+              />
+            ))}
+          </div>
+        </section>
       </div>
     </Modal>
   );

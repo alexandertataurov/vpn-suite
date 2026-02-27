@@ -1,35 +1,25 @@
 import { useSearchParams } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
-import { BarChart3, ExternalLink, RefreshCw } from "lucide-react";
-import { getBaseUrl } from "@vpn-suite/shared/api-client";
-import { PrimitiveBadge, Tabs } from "@vpn-suite/shared/ui";
+import { RefreshCw } from "lucide-react";
+import { Button, Tabs } from "@vpn-suite/shared/ui";
 import { PageHeader } from "../components/PageHeader";
-import { DockerServicesTab } from "./telemetry/DockerServicesTab";
-import { VpnNodesTab } from "./telemetry/VpnNodesTab";
-import { MetricsKpisPanel } from "../components/telemetry/MetricsKpisPanel";
-import { ScrapeStatusPanel } from "../components/telemetry/ScrapeStatusPanel";
-import { TraceValidationPanel } from "../components/telemetry/TraceValidationPanel";
-import {
-  ANALYTICS_METRICS_KPIS_KEY,
-  ANALYTICS_TELEMETRY_SERVICES_KEY,
-  DOCKER_TELEMETRY_KEY,
-  OPERATOR_DASHBOARD_KEY,
-  SERVERS_LIST_KEY,
-  TELEMETRY_TOPOLOGY_KEY,
-} from "../api/query-keys";
+import { useTelemetryContext } from "../context/TelemetryContext";
+import { track } from "../telemetry";
 import { RefreshButton } from "../components/RefreshButton";
-import { refreshRegisteredResources } from "../utils/resourceRegistry";
+import { parseTelemetryUrlState, updateTelemetryUrlState } from "../domain/telemetry/urlState";
+import type { TelemetryMode, TelemetryTab } from "../domain/telemetry/telemetryTypes";
+import { OperatorTelemetryView } from "../components/telemetry/OperatorTelemetryView";
+import { EngineerTelemetryView } from "../components/telemetry/EngineerTelemetryView";
 
-type TelemetryTab = "docker" | "vpn";
 const TELEMETRY_TAB_ITEMS = [
   { id: "docker" as const, label: "Docker Services" },
   { id: "vpn" as const, label: "VPN Nodes" },
 ];
 
 export function TelemetryPage() {
-  const queryClient = useQueryClient();
+  const { refetchAllTelemetry } = useTelemetryContext();
   const [searchParams, setSearchParams] = useSearchParams();
-  const regionFilter = searchParams.get("region") ?? "all";
+  const urlState = parseTelemetryUrlState(searchParams);
+  const regionFilter = urlState.region;
   const activeTab: TelemetryTab = searchParams.get("tab") === "vpn" ? "vpn" : "docker";
 
   const setTab = (tab: string) => {
@@ -38,46 +28,44 @@ export function TelemetryPage() {
     setSearchParams(next);
   };
 
+  const setMode = (mode: TelemetryMode) => {
+    const next = updateTelemetryUrlState(searchParams, { mode });
+    setSearchParams(next);
+  };
+
   const handleRefreshNow = async () => {
-    const [results, registered] = await Promise.all([
-      Promise.all([
-        queryClient.refetchQueries({ queryKey: ["telemetry"] }),
-        queryClient.refetchQueries({ queryKey: DOCKER_TELEMETRY_KEY }),
-        queryClient.refetchQueries({ queryKey: OPERATOR_DASHBOARD_KEY }),
-        queryClient.refetchQueries({ queryKey: TELEMETRY_TOPOLOGY_KEY }),
-        queryClient.refetchQueries({ queryKey: SERVERS_LIST_KEY }),
-        queryClient.refetchQueries({ queryKey: ANALYTICS_TELEMETRY_SERVICES_KEY }),
-        queryClient.refetchQueries({ queryKey: ANALYTICS_METRICS_KPIS_KEY }),
-      ]),
-      refreshRegisteredResources(),
-    ]);
-    const hasResultError = results.some(
-      (res) => Array.isArray(res) && res.some((r) => (r as { error?: unknown }).error)
-    );
-    const hasCacheError = [
-      ["telemetry"],
-      ANALYTICS_TELEMETRY_SERVICES_KEY,
-      ANALYTICS_METRICS_KPIS_KEY,
-      DOCKER_TELEMETRY_KEY,
-      OPERATOR_DASHBOARD_KEY,
-      TELEMETRY_TOPOLOGY_KEY,
-      SERVERS_LIST_KEY,
-    ].some((key) =>
-      queryClient.getQueryCache().findAll({ queryKey: key }).some((q) => q.state.status === "error")
-    );
-    const hasRegisteredError = registered.some((r) => !r.ok);
-    if (hasResultError || hasCacheError || hasRegisteredError) {
-      throw new Error("refresh_failed");
+    try {
+      track("user_action", { action_type: "telemetry_refresh", target_page: "/telemetry" });
+    } catch {
+      /* noop */
     }
+    await refetchAllTelemetry();
   };
 
   return (
-    <div className="ref-page" data-testid="telemetry-page">
+    <div className="dashboard ref-page dashboard--comfortable telemetry-page" data-testid="telemetry-page">
       <PageHeader
-        icon={BarChart3}
         title="Telemetry"
-        description="Docker and VPN node metrics"
+        scopeLabel={regionFilter === "all" ? "Region: All" : `Region: ${regionFilter}`}
       >
+        <div className="flex items-center gap-2">
+          <Button
+            variant={urlState.mode === "operator" ? "secondary" : "ghost"}
+            size="sm"
+            onClick={() => setMode("operator")}
+            aria-pressed={urlState.mode === "operator"}
+          >
+            Operator
+          </Button>
+          <Button
+            variant={urlState.mode === "engineer" ? "secondary" : "ghost"}
+            size="sm"
+            onClick={() => setMode("engineer")}
+            aria-pressed={urlState.mode === "engineer"}
+          >
+            Engineer
+          </Button>
+        </div>
         <RefreshButton
           variant="secondary"
           size="sm"
@@ -89,52 +77,24 @@ export function TelemetryPage() {
           successLabel="Updated just now"
           errorLabel="Update failed"
         />
-        {regionFilter !== "all" ? <PrimitiveBadge variant="info">Region: {regionFilter}</PrimitiveBadge> : null}
       </PageHeader>
 
-      <div className="ref-page-sections">
-        <ScrapeStatusPanel />
-        <MetricsKpisPanel />
-        <TraceValidationPanel />
-      </div>
-
-      <p className="text-muted text-sm mt-2">
-        <a
-          href={`${getBaseUrl().replace(/\/$/, "")}/api/v1/_debug/metrics-targets`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1"
-        >
-          <ExternalLink className="icon-sm" aria-hidden />
-          Debug: raw Prometheus targets
-        </a>
-      </p>
-
-      <Tabs
-        items={TELEMETRY_TAB_ITEMS}
-        value={activeTab}
-        onChange={setTab}
-        ariaLabel="Telemetry tabs"
-        className="tabs tabs-page"
-        tabClassName="tabs-page-item"
-        idPrefix="telemetry"
-      />
-
-      <div
-        id="telemetry-tabpanel-docker"
-        role="tabpanel"
-        aria-labelledby="telemetry-tab-docker"
-        hidden={activeTab !== "docker"}
-      >
-        {activeTab === "docker" ? <DockerServicesTab /> : null}
-      </div>
-      <div
-        id="telemetry-tabpanel-vpn"
-        role="tabpanel"
-        aria-labelledby="telemetry-tab-vpn"
-        hidden={activeTab !== "vpn"}
-      >
-        {activeTab === "vpn" ? <VpnNodesTab regionFilter={regionFilter} /> : null}
+      <div className="operator-dashboard telemetry-dashboard" aria-label="Telemetry overview and details">
+        {urlState.mode === "operator" ? (
+          <OperatorTelemetryView
+            urlState={urlState}
+            activeTab={activeTab}
+            onTabChange={setTab}
+            onModeChange={setMode}
+          />
+        ) : (
+          <EngineerTelemetryView
+            urlState={urlState}
+            activeTab={activeTab}
+            onTabChange={setTab}
+            onModeChange={setMode}
+          />
+        )}
       </div>
     </div>
   );

@@ -152,6 +152,12 @@
   align-items: flex-start;
   gap: var(--spacing-3);
 }
+.page-header-title-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--spacing-2) var(--spacing-4);
+}
 .page-header-icon {
   display: flex;
   align-items: center;
@@ -172,7 +178,13 @@
   color: var(--text-primary);
 }
 .page-header-description {
-  margin: var(--spacing-1) 0 0;
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-neutral-500);
+  width: 100%;
+}
+.page-header-meta {
+  margin: 0;
   font-size: var(--text-sm);
   color: var(--color-neutral-500);
 }

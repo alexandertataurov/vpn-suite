@@ -1,9 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
-import { PrimitiveBadge, Panel, Input, PageError, Select, Skeleton } from "@vpn-suite/shared/ui";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  PrimitiveBadge,
+  Panel,
+  Input,
+  PageError,
+  Select,
+  Skeleton,
+  Button,
+  useToast,
+} from "@vpn-suite/shared/ui";
 import { DataSourceHealthStrip } from "../../components/telemetry/DataSourceHealthStrip";
 import type { ContainerLogLine } from "@vpn-suite/shared/types";
 import { ApiError } from "@vpn-suite/shared/types";
-import { formatBytes } from "@vpn-suite/shared";
+import { formatBytes, getErrorMessage } from "@vpn-suite/shared";
 import {
   useContainerLogs,
   useContainerMetrics,
@@ -11,10 +21,14 @@ import {
   useDockerContainers,
   useDockerHosts,
 } from "../../hooks/useDockerTelemetry";
+import { DOCKER_TELEMETRY_KEY } from "../../api/query-keys";
+import { api } from "../../api/client";
 import { AlertsPanel } from "./AlertsPanel";
 import { ContainerDetailsPanel } from "./ContainerDetailsPanel";
 import { DockerOverviewTable } from "./DockerOverviewTable";
 import { LogsViewer } from "./LogsViewer";
+import { TelemetryKpiGrid } from "../../components/telemetry/TelemetryKpiGrid";
+import { TableSection } from "../../components/TableSection";
 
 export function DockerServicesTab() {
   // Do not assume any default host exists. When DOCKER_TELEMETRY_HOSTS_JSON is unset,
@@ -34,6 +48,9 @@ export function DockerServicesTab() {
   const [logsPollingEnabled, setLogsPollingEnabled] = useState(true);
   const [logLines, setLogLines] = useState<ContainerLogLine[]>([]);
 
+  const queryClient = useQueryClient();
+  const addToast = useToast();
+
   const hostsQuery = useDockerHosts(overviewIntervalMs);
   const containersQuery = useDockerContainers(hostId, overviewIntervalMs);
   const metricsQuery = useContainerMetrics(
@@ -52,6 +69,62 @@ export function DockerServicesTab() {
     detailIntervalMs
   );
   const alertsQuery = useDockerAlerts(hostId, overviewIntervalMs);
+
+  const invalidateContainers = () => {
+    if (!hostId) return;
+    queryClient.invalidateQueries({
+      queryKey: [...DOCKER_TELEMETRY_KEY, "containers", hostId],
+    });
+    hostsQuery.refetch();
+  };
+
+  const startMutation = useMutation({
+    mutationFn: (containerId: string) =>
+      api.post<void>(
+        `/telemetry/docker/container/${encodeURIComponent(
+          containerId,
+        )}/start?host_id=${encodeURIComponent(hostId)}`,
+      ),
+    onSuccess: () => {
+      invalidateContainers();
+      addToast("Container start requested", "success");
+    },
+    onError: (err) => {
+      addToast(getErrorMessage(err, "Start failed"), "error");
+    },
+  });
+
+  const stopMutation = useMutation({
+    mutationFn: (containerId: string) =>
+      api.post<void>(
+        `/telemetry/docker/container/${encodeURIComponent(
+          containerId,
+        )}/stop?host_id=${encodeURIComponent(hostId)}`,
+      ),
+    onSuccess: () => {
+      invalidateContainers();
+      addToast("Container stop requested", "success");
+    },
+    onError: (err) => {
+      addToast(getErrorMessage(err, "Stop failed"), "error");
+    },
+  });
+
+  const restartMutation = useMutation({
+    mutationFn: (containerId: string) =>
+      api.post<void>(
+        `/telemetry/docker/container/${encodeURIComponent(
+          containerId,
+        )}/restart?host_id=${encodeURIComponent(hostId)}`,
+      ),
+    onSuccess: () => {
+      invalidateContainers();
+      addToast("Container restart requested", "success");
+    },
+    onError: (err) => {
+      addToast(getErrorMessage(err, "Restart failed"), "error");
+    },
+  });
 
   const safeLower = (v: unknown): string => (typeof v === "string" ? v.toLowerCase() : "");
   const safeTrimLower = (v: unknown): string => (typeof v === "string" ? v.trim().toLowerCase() : "");
@@ -236,52 +309,87 @@ export function DockerServicesTab() {
             onChange={(v) => setDetailIntervalMs(Number(v) || 3000)}
             className="w-auto"
           />
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => {
+              if (!selectedContainerId || !hostId) return;
+              restartMutation.mutate(selectedContainerId);
+            }}
+            disabled={
+              !selectedContainerId ||
+              !hostId ||
+              startMutation.isPending ||
+              stopMutation.isPending ||
+              restartMutation.isPending
+            }
+          >
+            Restart selected
+          </Button>
         </div>
       </Panel>
 
-      <div className="ref-stats-grid" aria-label="Docker stats">
-        <div className="ref-stat-card">
-          <div className="ref-stat-label-row">
-            <span className="ref-stat-label">Total containers</span>
-          </div>
-          {containersQuery.isLoading ? <Skeleton height={22} /> : <p className="ref-stat-value">{summary.total}</p>}
-          <p className="ref-stat-meta">all running + stopped</p>
-        </div>
-        <div className="ref-stat-card">
-          <div className="ref-stat-label-row">
-            <span className="ref-stat-label">Running</span>
-          </div>
-          {containersQuery.isLoading ? <Skeleton height={22} /> : <p className="ref-stat-value">{summary.running}</p>}
-          <p className="ref-stat-meta">healthy runtime</p>
-        </div>
-        <div className="ref-stat-card">
-          <div className="ref-stat-label-row">
-            <span className="ref-stat-label">Unhealthy / loops</span>
-          </div>
-          {containersQuery.isLoading ? (
-            <Skeleton height={22} />
-          ) : (
-            <p className="ref-stat-value">{summary.unhealthy} / {summary.loops}</p>
-          )}
-          <p className="ref-stat-meta">healthcheck + restart loop</p>
-        </div>
-        <div className="ref-stat-card">
-          <div className="ref-stat-label-row">
-            <span className="ref-stat-label">Top CPU / RAM</span>
-          </div>
-          {containersQuery.isLoading ? (
-            <Skeleton height={22} />
-          ) : (
-            <p className="ref-stat-value">{summary.topCpu?.name ?? "—"}</p>
-          )}
-          <p className="ref-stat-meta">{summary.topMem ? `${summary.topMem.name}: ${formatBytes(summary.topMem.mem_bytes)}` : "—"}</p>
-        </div>
-      </div>
+      <TelemetryKpiGrid
+        items={[
+          {
+            id: "docker-total",
+            label: "Total containers",
+            value: containersQuery.isLoading ? "…" : summary.total,
+            hint: "all running + stopped",
+          },
+          {
+            id: "docker-running",
+            label: "Running",
+            value: containersQuery.isLoading ? "…" : summary.running,
+            hint: "healthy runtime",
+          },
+          {
+            id: "docker-unhealthy-loops",
+            label: "Unhealthy / loops",
+            value: containersQuery.isLoading
+              ? "…"
+              : `${summary.unhealthy} / ${summary.loops}`,
+            hint: "healthcheck + restart loop",
+          },
+          {
+            id: "docker-top",
+            label: "Top CPU / RAM",
+            value: containersQuery.isLoading
+              ? "…"
+              : summary.topCpu?.name ?? "—",
+            hint: summary.topMem
+              ? `${summary.topMem.name}: ${formatBytes(summary.topMem.mem_bytes)}`
+              : "—",
+          },
+        ]}
+      />
 
-      <Panel as="section" variant="outline" aria-label="Docker overview">
-        <div className="ref-section-head">
-          <h3 className="ref-settings-title">Docker overview</h3>
-        </div>
+      <TableSection
+        title="Docker overview"
+        actions={
+          <div className="docker-overview-meta">
+            <PrimitiveBadge variant="neutral" size="sm">
+              {containersQuery.isLoading ? "Loading containers…" : `${summary.total} containers`}
+            </PrimitiveBadge>
+            {!containersQuery.isLoading ? (
+              <>
+                <PrimitiveBadge variant="success" size="sm">
+                  {summary.running} running
+                </PrimitiveBadge>
+                <PrimitiveBadge
+                  variant={summary.unhealthy > 0 || summary.loops > 0 ? "danger" : "neutral"}
+                  size="sm"
+                >
+                  {summary.unhealthy} unhealthy / {summary.loops} loops
+                </PrimitiveBadge>
+              </>
+            ) : null}
+          </div>
+        }
+      >
+        <p className="ref-settings-text">
+          Filter Docker services by name, state, image, or compose service. Use the actions column to inspect metrics and logs.
+        </p>
 
         <div className="docker-filters-grid">
           <Input label="Name" value={nameFilter} onChange={(e) => setNameFilter(e.target.value)} />
@@ -321,9 +429,24 @@ export function DockerServicesTab() {
             selectedId={selectedContainerId}
             onSelect={setSelectedContainerId}
             onOpenLogs={setSelectedContainerId}
+            onStart={
+              hostId ? (id) => startMutation.mutate(id) : undefined
+            }
+            onStop={
+              hostId ? (id) => stopMutation.mutate(id) : undefined
+            }
+            onRestart={
+              hostId ? (id) => restartMutation.mutate(id) : undefined
+            }
+            actionsDisabled={
+              !hostId ||
+              startMutation.isPending ||
+              stopMutation.isPending ||
+              restartMutation.isPending
+            }
           />
         )}
-      </Panel>
+      </TableSection>
 
       <Panel as="section" variant="outline" aria-label="Metrics controls">
         <div className="ref-section-head">
@@ -368,6 +491,24 @@ export function DockerServicesTab() {
         logsError={logsForbidden ? undefined : logsQuery.error}
         onMetricsRetry={() => metricsQuery.refetch()}
         onLogsRetry={() => logsQuery.refetch()}
+        onStart={
+          selectedContainer && hostId
+            ? () => startMutation.mutate(selectedContainer.container_id)
+            : undefined
+        }
+        onStop={
+          selectedContainer && hostId
+            ? () => stopMutation.mutate(selectedContainer.container_id)
+            : undefined
+        }
+        onRestart={
+          selectedContainer && hostId
+            ? () => restartMutation.mutate(selectedContainer.container_id)
+            : undefined
+        }
+        startPending={startMutation.isPending}
+        stopPending={stopMutation.isPending}
+        restartPending={restartMutation.isPending}
       />
 
       <LogsViewer

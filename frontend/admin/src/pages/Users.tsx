@@ -10,7 +10,7 @@ import { USERS_KEY, userKey } from "../api/query-keys";
 import { useServerListForRegion } from "../hooks/useServerList";
 import { ButtonLink } from "../components/ButtonLink";
 import { PageHeader } from "../components/PageHeader";
-import { userStatusToVariant, formatDate, getErrorMessage } from "@vpn-suite/shared";
+import { userStatusToVariant, formatDate, getErrorMessage, useApiErrorToast } from "@vpn-suite/shared";
 import {
   loadSavedViews,
   removeSavedView,
@@ -41,6 +41,7 @@ function toInitial(user: UserOut): string {
 export function UsersPage() {
   const queryClient = useQueryClient();
   const { addToast } = useToast();
+  const { showApiError } = useApiErrorToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const [offset, setOffset] = useState(0);
   const qParam = searchParams.get("q") ?? "";
@@ -113,7 +114,7 @@ export function UsersPage() {
       addToast("User blocked", "success");
     },
     onError: (err) => {
-      addToast(getErrorMessage(err, "Block failed"), "error");
+      showApiError(err, "Block failed");
     },
   });
 

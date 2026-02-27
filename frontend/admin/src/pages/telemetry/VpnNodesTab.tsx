@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { PrimitiveBadge, Button, Panel, InlineAlert, PageError, Select, Skeleton, Table, RelativeTime } from "@vpn-suite/shared/ui";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { PrimitiveBadge, Button, Panel, InlineAlert, PageError, Select, Skeleton, Table, RelativeTime, useToast } from "@vpn-suite/shared/ui";
 import { serverHealthBadge } from "../../utils/statusBadges";
 import { ClusterHealthCharts } from "../../components/telemetry/ClusterHealthCharts";
 import { DataSourceHealthStrip } from "../../components/telemetry/DataSourceHealthStrip";
@@ -10,7 +10,7 @@ import type {
   ServerTelemetryOut,
   TopologySummaryOut,
 } from "@vpn-suite/shared/types";
-import { OPERATOR_DASHBOARD_KEY, TELEMETRY_TOPOLOGY_KEY, telemetryServerKey } from "../../api/query-keys";
+import { OPERATOR_DASHBOARD_KEY, TELEMETRY_TOPOLOGY_KEY, serverTelemetryKey } from "../../api/query-keys";
 import { api } from "../../api/client";
 import { shouldRetryQuery } from "../../utils/queryPolicy";
 import { useServerListForRegion } from "../../hooks/useServerList";
@@ -21,6 +21,9 @@ import {
   freshnessStatusToVariant,
   getTelemetryErrorMessage,
 } from "../../utils/telemetry-freshness";
+import { TelemetryKpiGrid } from "../../components/telemetry/TelemetryKpiGrid";
+import { LiveDegradedBanner } from "../../components/telemetry/LiveDegradedBanner";
+import { useClusterLiveMetrics } from "../../context/LiveMetricsProvider";
 
 interface RegionHealthRow {
   region: string;
@@ -43,8 +46,10 @@ function isHealthyStatus(status: string | null | undefined): boolean {
 
 export function VpnNodesTab({ regionFilter }: { regionFilter: string }) {
   const queryClient = useQueryClient();
+  const addToast = useToast();
   const [activeServerId, setActiveServerId] = useState("");
   const [chartTimeRange, setChartTimeRange] = useState("1h");
+  const liveCluster = useClusterLiveMetrics();
 
   const operatorQuery = useQuery<OperatorDashboardOut>({
     queryKey: [...OPERATOR_DASHBOARD_KEY, chartTimeRange],
@@ -76,6 +81,11 @@ export function VpnNodesTab({ regionFilter }: { regionFilter: string }) {
     return serversQuery.data.items.filter((server) => (server.region ?? "") === regionFilter);
   }, [serversQuery.data, regionFilter]);
 
+  const activeServer = useMemo(
+    () => visibleServers.find((server) => server.id === activeServerId) ?? null,
+    [activeServerId, visibleServers]
+  );
+
   useEffect(() => {
     const hasActive = visibleServers.some((server) => server.id === activeServerId);
     if (!hasActive) {
@@ -84,11 +94,34 @@ export function VpnNodesTab({ regionFilter }: { regionFilter: string }) {
   }, [activeServerId, visibleServers]);
 
   const serverTelemetryQuery = useQuery<ServerTelemetryOut>({
-    queryKey: telemetryServerKey(activeServerId),
+    queryKey: serverTelemetryKey(activeServerId),
     queryFn: ({ signal }) => api.get<ServerTelemetryOut>(`/servers/${activeServerId}/telemetry`, { signal }),
     refetchInterval: (q) => refetchWhenVisible(backoffInterval(5000, (q.state as { failureCount?: number }).failureCount ?? 0))(),
     refetchOnWindowFocus: true,
     enabled: Boolean(activeServerId),
+  });
+
+  const restartNodeMutation = useMutation({
+    mutationFn: async () => {
+      if (!activeServerId) {
+        throw new Error("No server selected");
+      }
+      await api.post(`/servers/${activeServerId}/actions`, {
+        type: "restart_service",
+        payload: { origin: "telemetry", reason: "manual_restart" },
+      });
+    },
+    onSuccess: () => {
+      if (activeServerId) {
+        queryClient.invalidateQueries({ queryKey: serverTelemetryKey(activeServerId) });
+      }
+      queryClient.invalidateQueries({ queryKey: TELEMETRY_TOPOLOGY_KEY });
+      queryClient.invalidateQueries({ queryKey: OPERATOR_DASHBOARD_KEY });
+      addToast("Restart requested for node", "success");
+    },
+    onError: (err: unknown) => {
+      addToast(getTelemetryErrorMessage(err), "error");
+    },
   });
 
   const regionRows = useMemo<RegionHealthRow[]>(() => {
@@ -114,10 +147,34 @@ export function VpnNodesTab({ regionFilter }: { regionFilter: string }) {
   const regionColumns = useMemo(
     () => [
       { key: "region", header: "Region", render: (r: RegionHealthRow) => r.region },
-      { key: "total", header: "Nodes", numeric: true, align: "right" as const, render: (r: RegionHealthRow) => String(r.total) },
-      { key: "healthy", header: "Healthy", numeric: true, align: "right" as const, render: (r: RegionHealthRow) => String(r.healthy) },
-      { key: "unhealthy", header: "Unhealthy", numeric: true, align: "right" as const, render: (r: RegionHealthRow) => String(r.unhealthy) },
-      { key: "inactive", header: "Inactive", numeric: true, align: "right" as const, render: (r: RegionHealthRow) => String(r.inactive) },
+      {
+        key: "total",
+        header: "Nodes total",
+        numeric: true,
+        align: "right" as const,
+        render: (r: RegionHealthRow) => String(r.total),
+      },
+      {
+        key: "healthy",
+        header: "Healthy",
+        numeric: true,
+        align: "right" as const,
+        render: (r: RegionHealthRow) => String(r.healthy),
+      },
+      {
+        key: "unhealthy",
+        header: "Unhealthy",
+        numeric: true,
+        align: "right" as const,
+        render: (r: RegionHealthRow) => String(r.unhealthy),
+      },
+      {
+        key: "inactive",
+        header: "Inactive",
+        numeric: true,
+        align: "right" as const,
+        render: (r: RegionHealthRow) => String(r.inactive),
+      },
     ],
     []
   );
@@ -187,6 +244,7 @@ export function VpnNodesTab({ regionFilter }: { regionFilter: string }) {
         <div className="ref-section-head">
           <h3 className="ref-settings-title">Live cluster health</h3>
         </div>
+        <LiveDegradedBanner />
         {operatorQuery.error && (
           <InlineAlert
             variant="error"
@@ -215,46 +273,55 @@ export function VpnNodesTab({ regionFilter }: { regionFilter: string }) {
         inferred
         isOffline={typeof navigator !== "undefined" && !navigator.onLine}
       />
-      <div className="ref-stats-grid" aria-label="VPN nodes summary">
-        <div className="ref-stat-card">
-          <div className="ref-stat-label-row"><span className="ref-stat-label">Cluster load</span></div>
-          {summaryQuery.isLoading || !summaryQuery.data ? (
-            <Skeleton height={22} />
-          ) : (
-            <p className="ref-stat-value">{asPercent(summaryQuery.data.load_factor)}</p>
-          )}
-          <p className="ref-stat-meta">{summaryQuery.data?.current_load ?? 0} / {summaryQuery.data?.total_capacity ?? 0}</p>
-        </div>
-        <div className="ref-stat-card">
-          <div className="ref-stat-label-row"><span className="ref-stat-label">Node health</span></div>
-          {summaryQuery.isLoading || !summaryQuery.data ? (
-            <Skeleton height={22} />
-          ) : (
-            <p className="ref-stat-value">{summaryQuery.data.healthy_nodes}/{summaryQuery.data.nodes_total}</p>
-          )}
-          <p className="ref-stat-meta">healthy / total</p>
-        </div>
-        <div className="ref-stat-card">
-          <div className="ref-stat-label-row"><span className="ref-stat-label">Unhealthy nodes</span></div>
-          {summaryQuery.isLoading || !summaryQuery.data ? (
-            <Skeleton height={22} />
-          ) : (
-            <p className="ref-stat-value">{summaryQuery.data.unhealthy_nodes}</p>
-          )}
-          <p className="ref-stat-meta">requires operator attention</p>
-        </div>
-        <div className="ref-stat-card">
-          <div className="ref-stat-label-row"><span className="ref-stat-label">Stream</span></div>
-          <p className="ref-stat-value">
-            {serverTelemetryQuery.isLoading ? "…" : freshnessStatusToLabel(freshness)}
-          </p>
-          <p className="ref-stat-meta">
-            {lastUpdatedMs == null
-              ? "No timestamp from source"
-              : `${Math.floor((Date.now() - lastUpdatedMs) / 1000)}s ago`}
-          </p>
-        </div>
-      </div>
+      <TelemetryKpiGrid
+        items={[
+          {
+            id: "cluster-load",
+            label: "Cluster load",
+            value:
+              summaryQuery.isLoading || !summaryQuery.data
+                ? "…"
+                : asPercent(summaryQuery.data.load_factor),
+            hint:
+              summaryQuery.data
+                ? `${summaryQuery.data.current_load ?? 0} / ${summaryQuery.data.total_capacity ?? 0}`
+                : undefined,
+          },
+          {
+            id: "node-health",
+            label: "Node health",
+            value:
+              liveCluster
+                ? `${liveCluster.summary.online_nodes}/${liveCluster.summary.total_nodes}`
+                : summaryQuery.isLoading || !summaryQuery.data
+                  ? "…"
+                  : `${summaryQuery.data.healthy_nodes}/${summaryQuery.data.nodes_total}`,
+            hint: "healthy / total",
+          },
+          {
+            id: "unhealthy-nodes",
+            label: "Unhealthy nodes",
+            value:
+              liveCluster
+                ? String(liveCluster.summary.degraded_nodes + liveCluster.summary.down_nodes)
+                : summaryQuery.isLoading || !summaryQuery.data
+                  ? "…"
+                  : String(summaryQuery.data.unhealthy_nodes),
+            hint: "requires operator attention",
+          },
+          {
+            id: "stream-freshness",
+            label: "Stream",
+            value: serverTelemetryQuery.isLoading
+              ? "…"
+              : freshnessStatusToLabel(freshness),
+            hint:
+              lastUpdatedMs == null
+                ? "No timestamp from source"
+                : `${Math.floor((Date.now() - lastUpdatedMs) / 1000)}s ago`,
+          },
+        ]}
+      />
 
       <Panel as="section" variant="outline" aria-label="Server stream">
         <div className="ref-section-head">
@@ -274,6 +341,19 @@ export function VpnNodesTab({ regionFilter }: { regionFilter: string }) {
             <PrimitiveBadge variant={freshnessStatusToVariant(freshness)} title={lastUpdatedMs == null ? "No timestamp provided by data source" : undefined}>
               {freshnessStatusToLabel(freshness)}
             </PrimitiveBadge>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => restartNodeMutation.mutate()}
+              disabled={
+                !activeServerId ||
+                restartNodeMutation.isPending ||
+                !activeServer ||
+                !activeServer.is_active
+              }
+            >
+              Restart node
+            </Button>
           </div>
         </div>
 
@@ -319,6 +399,9 @@ export function VpnNodesTab({ regionFilter }: { regionFilter: string }) {
         <div className="ref-section-head">
           <h3 className="ref-settings-title">Region health matrix</h3>
         </div>
+        <p className="ref-settings-text">
+          Each row summarizes how many VPN nodes are healthy, unhealthy, or inactive within a region.
+        </p>
         {serversQuery.isLoading ? (
           <Skeleton height={140} />
         ) : (
@@ -327,7 +410,7 @@ export function VpnNodesTab({ regionFilter }: { regionFilter: string }) {
             data={regionRows}
             className="telemetry-region-table"
             keyFn={(row) => row.region}
-            emptyMessage="No regions found"
+            emptyMessage="No regions to display for the current region scope."
           />
         )}
       </Panel>
@@ -336,6 +419,9 @@ export function VpnNodesTab({ regionFilter }: { regionFilter: string }) {
         <div className="ref-section-head">
           <h3 className="ref-settings-title">Server status list</h3>
         </div>
+        <p className="ref-settings-text">
+          This table lists individual VPN nodes in the selected region. Click a row to view stream details above.
+        </p>
         {serversQuery.isLoading ? (
           <Skeleton height={160} />
         ) : (
@@ -344,7 +430,7 @@ export function VpnNodesTab({ regionFilter }: { regionFilter: string }) {
             data={visibleServers}
             className="telemetry-server-table"
             keyFn={(row) => row.id}
-            emptyMessage="No servers found"
+            emptyMessage="No VPN nodes match the current region scope."
           />
         )}
       </Panel>

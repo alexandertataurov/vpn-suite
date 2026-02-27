@@ -34,11 +34,11 @@ export function LiveStatusBlock({ last_updated, freshness, onRefresh }: LiveStat
     <div
       className={`admin-live-status-block${isStale ? " admin-live-status-block--stale" : ""}`}
       role="status"
-      aria-label={`Live data${isStale ? ", data may be delayed" : ""}. Dashboard auto-refresh every 30s.`}
-      title="Dashboard auto-refresh every 30s."
+      aria-label={`Live data${isStale ? ", data may be delayed" : ""}. Dashboard auto-refresh every 15s (Prometheus scrape).`}
+      title="Dashboard auto-refresh every 15s (synced with Prometheus scrape)."
     >
       <span className={`admin-live-dot admin-live-dot--topbar ${dotModifier(freshness)}${freshness === "fresh" ? " admin-live-dot--pulse" : ""}`} aria-hidden />
-      <span className="admin-live-status-text">Live (30s auto)</span>
+      <span className="admin-live-status-text">Live (15s)</span>
       <span className="admin-live-updated" aria-hidden>
         Updated <RelativeTime date={last_updated} updateInterval={5000} title={new Date(last_updated).toISOString()} />
       </span>

@@ -1,9 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import type { MetricsKpisOut } from "@vpn-suite/shared/types";
-import { Panel, InlineAlert, Skeleton } from "@vpn-suite/shared/ui";
+import { InlineAlert, Skeleton } from "@vpn-suite/shared/ui";
 import { api } from "../../api/client";
 import { ANALYTICS_METRICS_KPIS_KEY } from "../../api/query-keys";
+import { getTelemetryErrorMessage } from "../../utils/telemetry-freshness";
 import { shouldRetryQuery } from "../../utils/queryPolicy";
+import { TelemetrySection } from "./TelemetrySection";
+import { TelemetryKpiGrid } from "./TelemetryKpiGrid";
 
 function formatReqRate(v: number | null): string {
   if (v == null) return "—";
@@ -31,59 +34,60 @@ export function MetricsKpisPanel() {
 
   if (isLoading) {
     return (
-      <Panel as="section" variant="outline" aria-label="Metrics KPIs">
-        <h3 className="ref-settings-title">Metrics KPIs</h3>
+      <TelemetrySection title="Metrics KPIs" ariaLabel="Metrics KPIs">
         <Skeleton className="h-16" />
-      </Panel>
+      </TelemetrySection>
     );
   }
 
   if (isError || !data) {
     return (
-      <Panel as="section" variant="outline" aria-label="Metrics KPIs">
-        <h3 className="ref-settings-title">Metrics KPIs</h3>
+      <TelemetrySection title="Metrics KPIs" ariaLabel="Metrics KPIs">
         <InlineAlert
           variant="error"
           title="Failed to load KPIs"
-          message={error instanceof Error ? error.message : "Unknown error"}
+          message={getTelemetryErrorMessage(error, "Could not load metrics KPIs")}
         />
-      </Panel>
+      </TelemetrySection>
     );
   }
 
   if (!data.prometheus_available) {
     return (
-      <Panel as="section" variant="outline" aria-label="Metrics KPIs">
-        <h3 className="ref-settings-title">Metrics KPIs</h3>
+      <TelemetrySection title="Metrics KPIs" ariaLabel="Metrics KPIs">
         <InlineAlert
           variant="warning"
           title="Prometheus not configured"
           message={data.message ?? "TELEMETRY_PROMETHEUS_URL is unset. Set it when monitoring profile is running."}
         />
-      </Panel>
+      </TelemetrySection>
     );
   }
 
   return (
-    <Panel as="section" variant="outline" aria-label="Metrics KPIs">
-      <h3 className="ref-settings-title">Metrics KPIs</h3>
-      <dl className="flex flex-wrap gap-4 sm:gap-6 text-sm">
-        <div>
-          <dt className="text-muted">Request rate (5m)</dt>
-          <dd className="font-mono">{formatReqRate(data.request_rate_5m)}</dd>
-        </div>
-        <div>
-          <dt className="text-muted">Error rate (5xx)</dt>
-          <dd className="font-mono">{formatErrorRate(data.error_rate_5m)}</dd>
-        </div>
-        <div>
-          <dt className="text-muted">P95 latency</dt>
-          <dd className="font-mono">{formatLatency(data.latency_p95_seconds)}</dd>
-        </div>
-      </dl>
+    <TelemetrySection title="Metrics KPIs" ariaLabel="Metrics KPIs">
+      <TelemetryKpiGrid
+        items={[
+          {
+            id: "req-rate",
+            label: "Request rate (5m)",
+            value: formatReqRate(data.request_rate_5m),
+          },
+          {
+            id: "error-rate",
+            label: "Error rate (5xx)",
+            value: formatErrorRate(data.error_rate_5m),
+          },
+          {
+            id: "latency-p95",
+            label: "P95 latency",
+            value: formatLatency(data.latency_p95_seconds),
+          },
+        ]}
+      />
       {data.message ? (
         <p className="text-sm text-muted mt-2">{data.message}</p>
       ) : null}
-    </Panel>
+    </TelemetrySection>
   );
 }

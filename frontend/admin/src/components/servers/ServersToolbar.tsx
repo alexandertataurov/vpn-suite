@@ -1,16 +1,13 @@
 import type { ReactNode } from "react";
 import { RefreshCw } from "lucide-react";
-import {
-  Button,
-  PrimitiveBadge,
-  RelativeTime,
-} from "@vpn-suite/shared/ui";
+import { Button, PrimitiveBadge } from "@vpn-suite/shared/ui";
 import { streamStatusToVariant } from "@vpn-suite/shared";
 
 export type StreamConnectionState = "live" | "degraded" | "offline";
 
 export interface ServersToolbarProps {
-  dataUpdatedAt: number | undefined;
+  /** @deprecated Use PageHeader lastUpdated instead; kept for sync state only */
+  dataUpdatedAt?: number | undefined;
   isFetching: boolean;
   onSync: () => void | Promise<void>;
   connectionState: StreamConnectionState;
@@ -64,25 +61,6 @@ export function ServersToolbar({
   return (
     <div className="servers-toolbar" role="toolbar">
       <div className="servers-toolbar-group" aria-label="Status and sync">
-        <span className="servers-toolbar-last-updated" aria-live="polite">
-          {isFetching ? (
-            "Updating…"
-          ) : dataUpdatedAt ? (
-            <>
-              Last:{" "}
-              <RelativeTime
-                date={new Date(dataUpdatedAt)}
-                updateInterval={5000}
-                title={new Date(dataUpdatedAt).toLocaleString(undefined, {
-                  dateStyle: "medium",
-                  timeStyle: "medium",
-                })}
-              />
-            </>
-          ) : (
-            <span title="No successful fetch yet">Last: —</span>
-          )}
-        </span>
         {hasError ? (
           <PrimitiveBadge variant="danger" size="sm">Error</PrimitiveBadge>
         ) : isStale ? (

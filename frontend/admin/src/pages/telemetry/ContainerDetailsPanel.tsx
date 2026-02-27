@@ -6,7 +6,7 @@ import { DiskRateChart } from "../../charts/telemetry/DiskRateChart";
 import { ErrorsPerMinuteChart } from "../../charts/telemetry/ErrorsPerMinuteChart";
 import { MemoryBytesChart } from "../../charts/telemetry/MemoryBytesChart";
 import { NetRateChart } from "../../charts/telemetry/NetRateChart";
-import { Panel } from "@vpn-suite/shared/ui";
+import { Panel, Button } from "@vpn-suite/shared/ui";
 import { formatBytes, formatTime } from "@vpn-suite/shared";
 
 function formatUptime(seconds: number | null | undefined): string {
@@ -30,6 +30,12 @@ interface Props {
   logsError?: unknown;
   onMetricsRetry?: () => void;
   onLogsRetry?: () => void;
+  onStart?: () => void;
+  onStop?: () => void;
+  onRestart?: () => void;
+  startPending?: boolean;
+  stopPending?: boolean;
+  restartPending?: boolean;
 }
 
 function statusFrom(args: {
@@ -58,6 +64,12 @@ export function ContainerDetailsPanel({
   logsError,
   onMetricsRetry,
   onLogsRetry,
+  onStart,
+  onStop,
+  onRestart,
+  startPending,
+  stopPending,
+  restartPending,
 }: Props) {
   const [cpuState, setCpuState] = useState({ stale: false, partial: false, empty: true, lastTsMs: null as number | null });
   const [memState, setMemState] = useState({ stale: false, partial: false, empty: true, lastTsMs: null as number | null });
@@ -89,6 +101,54 @@ export function ContainerDetailsPanel({
       <Panel as="section" variant="outline" aria-label="Container details">
         <div className="ref-section-head">
           <h3 className="ref-settings-title">Container details</h3>
+          <div className="ref-page-actions">
+            {onStart ? (
+              <Button
+                size="xs"
+                variant="secondary"
+                onClick={onStart}
+                disabled={
+                  startPending ||
+                  stopPending ||
+                  restartPending ||
+                  container.state === "running" ||
+                  container.state === "restarting"
+                }
+              >
+                Start
+              </Button>
+            ) : null}
+            {onStop ? (
+              <Button
+                size="xs"
+                variant="secondary"
+                onClick={onStop}
+                disabled={
+                  startPending ||
+                  stopPending ||
+                  restartPending ||
+                  (container.state !== "running" && container.state !== "restarting")
+                }
+              >
+                Stop
+              </Button>
+            ) : null}
+            {onRestart ? (
+              <Button
+                size="xs"
+                variant="secondary"
+                onClick={onRestart}
+                disabled={
+                  startPending ||
+                  stopPending ||
+                  restartPending ||
+                  container.state !== "running"
+                }
+              >
+                Restart
+              </Button>
+            ) : null}
+          </div>
         </div>
 
         <div className="docker-details-header">

@@ -60,4 +60,17 @@ test.describe("Dashboard when authenticated", () => {
     await expect(page.getByTestId("dashboard-settings-modal")).toBeVisible({ timeout: 5000 });
     await expect(page.getByRole("heading", { name: /Dashboard settings/i })).toBeVisible();
   });
+
+  test("dashboard refresh updates data without error", async ({ page, request }) => {
+    const ok = await login(page, request);
+    test.skip(!ok, "Skipping authenticated flow: valid admin credentials or auth API unavailable.");
+    await page.goto("");
+    await expect(page.getByTestId("dashboard-page")).toBeVisible({ timeout: 10000 });
+    await page.getByTestId("dashboard-refresh").click();
+    await expect(
+      page.getByRole("button", { name: /Updated just now|Refresh|Updating/i })
+    ).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole("button", { name: /Update failed/i })).not.toBeVisible();
+    await expect(page.getByTestId("dashboard-page")).toBeVisible();
+  });
 });

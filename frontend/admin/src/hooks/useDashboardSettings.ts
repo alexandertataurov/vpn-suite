@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 const NS = "vpn-suite-admin-dashboard";
 const DEBOUNCE_MS = 300;
 
-export type DashboardDensity = "compact" | "comfortable";
+export type DashboardDensity = "compact" | "comfortable" | "spacious";
 export type DashboardTimeRange = "1h" | "6h" | "24h" | "7d";
 export type AutoRefreshInterval = 0 | 15 | 30 | 60;
 
@@ -58,7 +58,7 @@ function read<K extends keyof DashboardSettings>(key: K): DashboardSettings[K] {
       if ([0, 15, 30, 60].includes(n)) return n as DashboardSettings[K];
       return DEFAULTS[key];
     }
-    if (key === "density" && (raw === "compact" || raw === "comfortable")) return raw as DashboardSettings[K];
+    if (key === "density" && (raw === "compact" || raw === "comfortable" || raw === "spacious")) return raw as DashboardSettings[K];
     if (key === "defaultTimeRange" && ["1h", "6h", "24h", "7d"].includes(raw)) return raw as DashboardSettings[K];
     return DEFAULTS[key];
   } catch {

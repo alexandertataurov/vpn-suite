@@ -1,4 +1,5 @@
-/* Admin layout: shell, header, sidebar, nav, main, bottom-nav */
+/* Admin layout: shell, header, sidebar, nav, main, bottom-nav
+   Breakpoints: XS <640 SM 640–1024 MD 1024+ (see admin-adaptive-vars.css) */
 /* Light theme alignment */
 html[data-theme="light"] .admin-layout {
   --surface-base: oklch(1 0 0);
@@ -13,6 +14,8 @@ html[data-theme="light"] .admin-header {
 }
 
 .admin-layout {
+  --width-sidebar: 220px;
+  --width-sidebar-collapsed: 48px;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
@@ -68,7 +71,7 @@ html[data-theme="light"] .admin-header {
   font-weight: var(--font-medium);
   white-space: nowrap;
 }
-@media (max-width: 767px) {
+@media (max-width: 639px) {
   .admin-brand-text { display: none; }
 }
 
@@ -89,7 +92,7 @@ html[data-theme="light"] .admin-header {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
-@media (min-width: 768px) {
+@media (min-width: 640px) {
   .admin-menu-btn { display: none; }
 }
 
@@ -123,10 +126,13 @@ html[data-theme="light"] .admin-header {
   display: flex;
   flex: 1;
   min-height: 0;
+  min-width: 0;
   overflow: hidden;
 }
 
 .admin-sidebar {
+  container-type: inline-size;
+  container-name: sidebar;
   position: fixed;
   top: 0;
   inset-inline-start: 0;
@@ -142,7 +148,7 @@ html[data-theme="light"] .admin-header {
   overflow: hidden;
 }
 .admin-sidebar.open { transform: translateX(0); }
-@media (min-width: 768px) {
+@media (min-width: 640px) {
   .admin-sidebar {
     position: sticky;
     top: 0;
@@ -150,12 +156,37 @@ html[data-theme="light"] .admin-header {
     height: 100%;
     align-self: stretch;
     flex: 0 0 var(--width-sidebar);
+    width: var(--width-sidebar);
     z-index: 1;
+    transition: width 120ms var(--ease-standard, ease), flex-basis 120ms var(--ease-standard, ease);
+  }
+  .admin-sidebar.collapsed {
+    flex: 0 0 var(--width-sidebar-collapsed);
+    width: var(--width-sidebar-collapsed);
+    min-width: var(--width-sidebar-collapsed);
   }
 }
-@media (min-width: 768px) and (max-width: 1279px) {
+@media (min-width: 640px) and (max-width: 1023px) {
   .admin-sidebar {
     flex-basis: var(--width-sidebar-collapsed);
+    width: var(--width-sidebar-collapsed);
+    min-width: var(--width-sidebar-collapsed);
+  }
+  .admin-sidebar:not(.collapsed) {
+    flex-basis: var(--width-sidebar);
+    width: var(--width-sidebar);
+    min-width: var(--width-sidebar);
+  }
+}
+@media (min-width: 1024px) {
+  .admin-sidebar.collapsed {
+    flex-basis: var(--width-sidebar-collapsed);
+    width: var(--width-sidebar-collapsed);
+    min-width: var(--width-sidebar-collapsed);
+  }
+  .admin-sidebar:not(.collapsed) {
+    flex-basis: var(--width-sidebar);
+    width: var(--width-sidebar);
   }
 }
 
@@ -165,7 +196,7 @@ html[data-theme="light"] .admin-header {
   background: var(--surface-overlay);
   z-index: var(--z-overlay);
 }
-@media (min-width: 768px) {
+@media (min-width: 640px) {
   .admin-overlay { display: none; }
 }
 
@@ -177,6 +208,7 @@ html[data-theme="light"] .admin-header {
   overflow: auto;
   flex: 1;
   min-height: 0;
+  min-width: 0;
 }
 .admin-nav-section {
   display: block;
@@ -187,9 +219,50 @@ html[data-theme="light"] .admin-header {
   letter-spacing: var(--letter-spacing-wider);
   color: var(--text-tertiary);
 }
-@media (min-width: 768px) {
+/* Narrow sidebar (collapsed): hide section headers */
+@container sidebar (max-width: 140px) {
   .admin-nav-section {
     display: none;
+  }
+}
+/* Wide enough: show section headers for structure */
+@container sidebar (min-width: 141px) {
+  .admin-nav-section {
+    display: block;
+  }
+}
+/* Collapsed/narrow sidebar: icon-only, centered */
+@container sidebar (max-width: 72px) {
+  .admin-nav-link {
+    justify-content: center;
+    padding: var(--spacing-2);
+    min-height: 40px;
+  }
+  .admin-nav-label {
+    display: none;
+  }
+}
+/* Expanded sidebar: full link with label */
+@container sidebar (min-width: 73px) {
+  .admin-nav-link {
+    justify-content: flex-start;
+  }
+  .admin-nav-label {
+    display: block;
+  }
+}
+/* Tighter padding when sidebar is medium-width */
+@container sidebar (min-width: 73px) and (max-width: 180px) {
+  .admin-nav {
+    padding: var(--spacing-2) var(--spacing-2);
+    gap: 0;
+  }
+  .admin-nav-section {
+    padding: var(--spacing-2) var(--spacing-2) var(--spacing-1);
+  }
+  .admin-nav-link {
+    padding: var(--spacing-2);
+    gap: var(--spacing-2);
   }
 }
 
@@ -202,6 +275,7 @@ html[data-theme="light"] .admin-header {
   color: var(--color-neutral-600);
   text-decoration: none;
   transition: background-color var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard);
+  min-width: 0;
 }
 .admin-nav-icon-svg {
   width: var(--icon-size-xs);
@@ -229,17 +303,42 @@ html[data-theme="light"] .admin-header {
   font-size: var(--text-sm);
   line-height: var(--text-sm-line);
   white-space: nowrap;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-@media (min-width: 768px) and (max-width: 1279px) {
-  .admin-nav-section {
-    display: none;
+
+.admin-sidebar-collapse {
+  display: none;
+  position: absolute;
+  inset-inline-end: var(--spacing-2);
+  bottom: var(--spacing-2);
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--surface-base);
+  color: var(--color-text);
+  cursor: pointer;
+}
+.admin-sidebar-collapse:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+@media (min-width: 640px) {
+  .admin-sidebar-collapse {
+    display: flex;
   }
-  .admin-nav-link {
-    justify-content: center;
-    padding-inline: var(--spacing-2);
+}
+@media (min-width: 640px) and (max-width: 1023px) {
+  .admin-sidebar {
+    overflow: hidden;
   }
-  .admin-nav-label {
-    display: none;
+  .admin-nav {
+    overflow-x: hidden;
+    overflow-y: auto;
   }
 }
 
@@ -290,7 +389,7 @@ html[data-theme="light"] .admin-header {
   color: var(--text-tertiary);
   font-size: var(--text-xs);
 }
-@media (min-width: 768px) and (max-width: 1279px) {
+@media (min-width: 640px) and (max-width: 1023px) {
   .admin-sidebar-footer {
     align-items: center;
     padding-inline: var(--spacing-2);
@@ -319,15 +418,16 @@ html[data-theme="light"] .admin-header {
   flex: 1;
   padding: var(--spacing-12);
   min-width: 0;
-  background: var(--surface-base);
+  max-width: 100%;
+  background: var(--color-op-bg, var(--surface-base));
   overflow: auto;
+  box-sizing: border-box;
 }
-@media (max-width: 767px) {
-  .admin-main {
-    padding: var(--spacing-4);
-    padding-bottom: calc(var(--height-bottom-nav) + var(--spacing-6));
-  }
+.admin-main .ds-page-container {
+  --content-max-width: min(100%, 1440px);
 }
+
+/* Responsive main padding in admin-responsive.css */
 
 .admin-bottom-nav {
   position: fixed;
@@ -362,7 +462,7 @@ html[data-theme="light"] .admin-header {
 .admin-bottom-label {
   line-height: 1;
 }
-@media (min-width: 768px) {
+@media (min-width: 640px) {
   .admin-bottom-nav {
     display: none;
   }
@@ -371,12 +471,13 @@ html[data-theme="light"] .admin-header {
 @media (prefers-reduced-motion: reduce) {
   .skip-link,
   .admin-sidebar,
-  .admin-nav-link {
+  .admin-nav-link,
+  .admin-sidebar-collapse {
     transition: none !important;
   }
 }
 
-@media (max-width: 767px) {
+@media (max-width: 639px) {
   .admin-region-label {
     display: none;
   }

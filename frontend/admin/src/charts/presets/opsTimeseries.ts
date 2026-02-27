@@ -50,11 +50,17 @@ export function axisTooltipFormatter(args: {
     const ts = parsed.find((p) => p.tsMs != null)?.tsMs ?? null;
     if (!ts) return "";
 
-    const rows: TooltipRow[] = parsed.map((p) => ({
-      name: p.name,
-      color: p.color,
-      value: args.formatValue(p.name, p.v),
-    }));
+    const seen = new Set<string>();
+    const rows: TooltipRow[] = [];
+    for (const p of parsed) {
+      if (seen.has(p.name)) continue;
+      seen.add(p.name);
+      rows.push({
+        name: p.name,
+        color: p.color,
+        value: args.formatValue(p.name, p.v),
+      });
+    }
 
     return buildAxisTooltipHTML({ tsMs: ts, tz: args.tz, rows });
   };
@@ -78,8 +84,13 @@ export function makeOpsTimeseriesOption(args: {
   showLegend?: boolean;
   showZoom?: boolean | "auto";
   height?: number;
+  /** Container width for tick density; smaller width → fewer axis splits */
+  containerWidth?: number;
 }): EChartsOption {
   const t = getChartTheme();
+  const splitNumber = args.containerWidth != null
+    ? args.containerWidth < 360 ? 2 : args.containerWidth < 500 ? 3 : 4
+    : 4;
 
   const allTs: number[] = [];
   let maxPoints = 0;
@@ -155,7 +166,7 @@ export function makeOpsTimeseriesOption(args: {
       min: args.yMin ?? 0,
       max: args.yMax,
       show: true,
-      splitNumber: 4,
+      splitNumber,
       axisLine: { show: false },
       axisTick: { show: false },
       axisLabel: {

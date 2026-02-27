@@ -1,0 +1,202 @@
+/**
+ * Content-aware adaptive layer.
+ * Layout adapts to container size (container queries) and content state (data attributes).
+ * Use with viewport breakpoints for full viewport + content awareness.
+ */
+
+/* ========== CONTAINER CONTEXT ========== */
+
+/* Top bar center: children adapt to available width */
+.admin-top-bar-center {
+  container-type: inline-size;
+  container-name: topbar-center;
+}
+
+/* Dashboard grid: cells can adapt to their column width */
+.operator-dashboard {
+  container-type: inline-size;
+  container-name: dashboard-grid;
+}
+
+/* Each card is a container so chart/table inside can adapt */
+.operator-card {
+  container-type: inline-size;
+  container-name: card;
+  min-width: 0;
+}
+
+/* ========== CONTENT-DRIVEN CARD STATES ========== */
+
+/* Empty content: minimal height, centered empty state, no scroll */
+.operator-card[data-content-empty="true"] {
+  min-height: 80px;
+  flex: 0 0 auto;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.operator-card[data-content-empty="true"] .operator-section-title {
+  margin-block-end: var(--spacing-2);
+}
+
+/* Dense content: no scrollbar on card; content visible, page scrolls */
+.operator-card[data-content-dense="true"] {
+  min-height: 0;
+  overflow: visible;
+}
+
+.operator-card[data-content-dense="true"] .operator-table-loading,
+.operator-card[data-content-dense="true"] .operator-charts-grid {
+  min-height: 0;
+}
+
+/* ========== FULL-WIDTH BANNER (degraded/partial) ========== */
+
+.operator-degraded-banner {
+  width: 100%;
+  min-width: 0;
+}
+
+.operator-degraded-banner .inline-alert {
+  width: 100%;
+  max-width: none;
+  box-sizing: border-box;
+}
+
+/* ========== TOP BAR CENTER — CONTAINER-AWARE HEALTH STRIP ========== */
+
+/* When center container is narrow: wrap strip to multiple rows, reduce gaps */
+@container topbar-center (max-width: 380px) {
+  .operator-health-strip.operator-top-bar-health {
+    flex-wrap: wrap;
+    gap: var(--spacing-2);
+    justify-content: center;
+    padding: var(--spacing-1) 0;
+  }
+  .operator-health-strip.operator-top-bar-health .operator-health-block + .operator-health-block {
+    margin-inline-start: 0;
+    padding-inline-start: var(--spacing-2);
+    border-inline-start: none;
+    border-block-start: 1px solid var(--border-subtle);
+    padding-block-start: var(--spacing-1);
+    margin-block-start: var(--spacing-1);
+    width: 100%;
+  }
+}
+
+/* Very narrow: single column of blocks */
+@container topbar-center (max-width: 260px) {
+  .operator-health-strip.operator-top-bar-health .operator-health-block {
+    width: 100%;
+    padding-inline: var(--spacing-1);
+  }
+  .operator-topbar-label {
+    font-size: 9px;
+  }
+  .operator-topbar-value {
+    font-size: var(--text-op-topbar-value-primary);
+  }
+}
+
+/* ========== CARD CONTAINER — CHART/TABLE ADAPT TO CARD WIDTH ========== */
+
+/* Narrow card: single-column charts, smaller caption */
+@container card (max-width: 380px) {
+  .operator-chart-caption {
+    font-size: var(--text-xs);
+  }
+  .operator-charts-grid {
+    grid-template-columns: 1fr;
+  }
+  .operator-traffic-toolbar {
+    flex-wrap: wrap;
+    gap: var(--spacing-op-1);
+  }
+}
+
+/* Wide enough: two-column charts */
+@container card (min-width: 400px) {
+  .operator-charts-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Cards with table: stay within card, no horizontal scroll; table fits width */
+.operator-card:has(> .operator-table) > .operator-table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+/* Tables inside cards: compact padding when card is narrow */
+@container card (max-width: 420px) {
+  .operator-table th,
+  .operator-table td,
+  .operator-server-table th,
+  .operator-server-table td {
+    padding: var(--spacing-op-1) var(--spacing-op-2);
+    font-size: var(--text-op-sm);
+  }
+  .operator-section-title {
+    font-size: var(--text-op-sm);
+  }
+  .operator-chart-wrap {
+    min-height: 160px;
+  }
+}
+
+/* Sessions table wrapper: responsive, no horizontal scroll */
+.operator-card .operator-sessions-wrap {
+  min-width: 0;
+}
+
+/* ========== DASHBOARD GRID — CONTENT-AWARE COLUMN SPAN ========== */
+
+/* When grid container is narrow, full-width cards (single column) */
+@container dashboard-grid (max-width: 768px) {
+  .operator-grid-cell--span-6,
+  .operator-grid-cell--span-8,
+  .operator-grid-cell--span-4,
+  .operator-grid-cell--span-3 {
+    grid-column: 1 / -1;
+  }
+  .operator-dashboard__section-label {
+    margin-top: var(--spacing-op-2);
+  }
+  .operator-dashboard__section-label:first-of-type {
+    margin-top: 0;
+  }
+}
+
+/* Active Incidents: when it has content, give full width so it doesn't sit in narrow column */
+.operator-grid-cell[data-card-type="incidents"]:not([data-content-empty="true"]) {
+  grid-column: 1 / -1;
+}
+
+/* Very narrow container: tighter spacing */
+@container dashboard-grid (max-width: 480px) {
+  .operator-dashboard {
+    padding: var(--spacing-op-2);
+    gap: var(--spacing-op-2);
+  }
+  .operator-card {
+    padding: var(--spacing-op-2) var(--spacing-op-3);
+  }
+}
+
+/* Narrow card (e.g. span-4): reduce padding for better fit */
+@container card (max-width: 280px) {
+  .operator-card {
+    padding: var(--spacing-op-2) var(--spacing-op-2);
+  }
+  .operator-section-title {
+    font-size: var(--text-op-sm);
+    margin-bottom: var(--spacing-op-2);
+    padding-bottom: var(--spacing-op-1);
+  }
+  .operator-incident-item,
+  .operator-incident-empty-state {
+    padding: var(--spacing-op-2) 0;
+  }
+}

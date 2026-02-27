@@ -4,6 +4,7 @@ import { ToastContainer, Skeleton } from "@vpn-suite/shared/ui";
 import { AdminLayout } from "./layouts/AdminLayout";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { TelemetryPageViewTracker } from "./components/TelemetryPageViewTracker";
 
 const LoginPage = lazy(() => import("./pages/Login").then((m) => ({ default: m.LoginPage })));
 const DashboardPage = lazy(() => import("./pages/Dashboard").then((m) => ({ default: m.DashboardPage })));
@@ -25,6 +26,7 @@ function App() {
   return (
     <ErrorBoundary>
       <ToastContainer>
+          <TelemetryPageViewTracker />
           <Suspense fallback={<div className="admin-loading"><Skeleton height={24} /></div>}>
             <Routes>
               <Route

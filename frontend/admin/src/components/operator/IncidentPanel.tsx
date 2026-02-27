@@ -11,6 +11,8 @@ interface IncidentPanelProps {
 }
 
 export function IncidentPanel({ resource, onRetry }: IncidentPanelProps) {
+  const [expanded, setExpanded] = useState(true);
+
   if (resource.status === "loading" || resource.status === "idle") {
     return <p className="operator-incident-empty">Loading incidents…</p>;
   }
@@ -31,7 +33,6 @@ export function IncidentPanel({ resource, onRetry }: IncidentPanelProps) {
   }
 
   const incidents = resource.data ?? [];
-  const [expanded, setExpanded] = useState(true);
 
   if (incidents.length === 0) {
     return (

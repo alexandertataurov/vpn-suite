@@ -2,13 +2,14 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { MoreVertical, RefreshCw, Smartphone } from "lucide-react";
 import { PrimitiveBadge, Table, VirtualTable, Select, Button, Checkbox, DeviceCard, ConfirmDanger, ConfirmModal, useToast, PageError, HelperText, DropdownMenu } from "@vpn-suite/shared/ui";
-import { formatDate, getErrorMessage } from "@vpn-suite/shared";
+import { formatDate, getErrorMessage, useApiErrorToast } from "@vpn-suite/shared";
 import { ConfigContentModal } from "../components/ConfigContentModal";
 import { ReissueConfigModal } from "../components/ReissueConfigModal";
 import { PageHeader } from "../components/PageHeader";
 import { TableSection } from "../components/TableSection";
 import { DevicesControlBar } from "../components/devices/DevicesControlBar";
 import { DeviceDetailDrawer } from "../components/devices/DeviceDetailDrawer";
+import { EditDeviceModal } from "../components/devices/EditDeviceModal";
 import { DevicesMetricsStrip, type DevicesQuickFilter } from "../components/devices/DevicesMetricsStrip";
 import { DevicesTelemetryHealth } from "../components/devices/DevicesTelemetryHealth";
 import { DevicesBulkPanel } from "../components/devices/DevicesBulkPanel";
@@ -24,6 +25,7 @@ import {
   type SavedView,
   upsertSavedView,
 } from "../utils/savedViews";
+import { useIsXs } from "../hooks/useBreakpoint";
 
 const SEARCH_DEBOUNCE_MS = 300;
 const SORT_OPTIONS = [
@@ -184,6 +186,7 @@ export function DevicesPage() {
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "revoked">("all");
   const [sort, setSort] = useState<string>("issued_at_desc");
   const [viewMode, setViewMode] = useState<ViewMode>("table");
+  const isXs = useIsXs();
   const [savedViews, setSavedViews] = useState<SavedView<DevicesViewState>[]>(() =>
     loadSavedViews<DevicesViewState>(DEVICES_VIEWS_SCOPE)
   );
@@ -201,9 +204,11 @@ export function DevicesPage() {
   const [quickFilter, setQuickFilter] = useState<DevicesQuickFilter>(null);
   const [viewPreset, setViewPreset] = useState<ViewPreset>(null);
   const [detailDeviceId, setDetailDeviceId] = useState<string | null>(null);
+  const [editDevice, setEditDevice] = useState<DeviceOut | null>(null);
   const queryClient = useQueryClient();
   const { addToast } = useToast();
   const queryLimit = regionFilter === "all" ? LIMIT : 200;
+  const { showApiError } = useApiErrorToast();
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(searchInput.trim()), SEARCH_DEBOUNCE_MS);
@@ -337,7 +342,7 @@ export function DevicesPage() {
       setRevokeDeviceId(null);
     },
     onError: (err) => {
-      addToast(getErrorMessage(err, "Revoke failed"), "error");
+      showApiError(err, "Revoke failed");
     },
   });
 
@@ -352,7 +357,7 @@ export function DevicesPage() {
       setSelectedDeviceIds(new Set());
     },
     onError: (err) => {
-      addToast(getErrorMessage(err, "Bulk revoke failed"), "error");
+      showApiError(err, "Bulk revoke failed");
     },
   });
 
@@ -366,7 +371,7 @@ export function DevicesPage() {
       setDeleteDeviceId(null);
     },
     onError: (err) => {
-      addToast(getErrorMessage(err, "Delete failed"), "error");
+      showApiError(err, "Delete failed");
     },
   });
 
@@ -380,7 +385,7 @@ export function DevicesPage() {
       addToast("Config reissued", "success");
     },
     onError: (err) => {
-      addToast(getErrorMessage(err, "Reissue failed"), "error");
+      showApiError(err, "Reissue failed");
     },
   });
 
@@ -550,25 +555,6 @@ export function DevicesPage() {
     URL.revokeObjectURL(a.href);
   }, [displayDevices, selectedDeviceIds, serverNameMap]);
 
-  if (error) {
-    return (
-      <div className="ref-page" data-testid="devices-page">
-        <PageHeader icon={Smartphone} title="Devices" description="Issued configs and revocation state">
-          <Button variant="secondary" size="sm" onClick={() => refetch()} aria-label="Retry">
-            Retry
-          </Button>
-        </PageHeader>
-        <PageError
-          message={getErrorMessage(error, "Failed to load devices")}
-          requestId={error instanceof ApiError ? error.requestId : undefined}
-          statusCode={error instanceof ApiError ? error.statusCode : undefined}
-          endpoint="GET /devices"
-          onRetry={() => refetch()}
-        />
-      </div>
-    );
-  }
-
   const columns = useMemo(() => [
     {
       key: "select",
@@ -679,6 +665,11 @@ export function DevicesPage() {
                 label: "View details",
                 onClick: () => setDetailDeviceId(r.id),
               },
+              {
+                id: "edit",
+                label: "Edit",
+                onClick: () => setEditDevice(r),
+              },
               ...(!r.revoked_at
                 ? [
                   ...(reconcileDisabled
@@ -729,13 +720,30 @@ export function DevicesPage() {
     toggleDeviceSelection,
     reissueMutation.isPending,
     reconcileDisabled,
-    reconcileMutation.isPending,
-    revokeMutation.isPending,
-    deleteMutation.isPending
+    reconcileMutation,
   ]);
 
+  if (error) {
+    return (
+      <div className="dashboard ref-page dashboard--comfortable devices-page" data-testid="devices-page">
+        <PageHeader icon={Smartphone} title="Devices" description="Issued configs and revocation state">
+          <Button variant="secondary" size="sm" onClick={() => refetch()} aria-label="Retry">
+            Retry
+          </Button>
+        </PageHeader>
+        <PageError
+          message={getErrorMessage(error, "Failed to load devices")}
+          requestId={error instanceof ApiError ? error.requestId : undefined}
+          statusCode={error instanceof ApiError ? error.statusCode : undefined}
+          endpoint="GET /devices"
+          onRetry={() => refetch()}
+        />
+      </div>
+    );
+  }
+
   return (
-    <div className="ref-page" data-testid="devices-page">
+    <div className="dashboard ref-page dashboard--comfortable devices-page" data-testid="devices-page">
       <PageHeader
         icon={Smartphone}
         title="Devices"
@@ -890,8 +898,8 @@ export function DevicesPage() {
             </HelperText>
           )}
         </div>
-        {viewMode === "cards" && displayDevices.length ? (
-          <ul className="device-card-list">
+        {(isXs || viewMode === "cards") && displayDevices.length ? (
+          <ul className="device-card-list" data-testid={isXs ? "devices-cards" : undefined}>
             {displayDevices.map((d) => {
               const configs = d.issued_configs ?? [];
               return (
@@ -904,6 +912,9 @@ export function DevicesPage() {
                     shortId={d.id.slice(0, 8)}
                     secondaryActions={
                       <span className="ref-device-card-actions">
+                        <Button variant="ghost" size="sm" onClick={() => setEditDevice(d)}>
+                          Edit
+                        </Button>
                         {!d.revoked_at && (
                           <>
                             <Button
@@ -1075,6 +1086,13 @@ export function DevicesPage() {
         open={!!detailDeviceId}
         onClose={() => setDetailDeviceId(null)}
         onReissue={setReissueDevice}
+        onEdit={(d) => setEditDevice(d)}
+      />
+      <EditDeviceModal
+        open={!!editDevice}
+        onClose={() => setEditDevice(null)}
+        device={editDevice}
+        onSaved={() => queryClient.invalidateQueries({ queryKey: ["device", editDevice?.id] })}
       />
     </div>
   );

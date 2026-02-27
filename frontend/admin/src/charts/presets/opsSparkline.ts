@@ -4,21 +4,44 @@ import type { XY } from "../timeseries";
 import { axisTooltipFormatter } from "./opsTimeseries";
 import { getChartTheme } from "../theme";
 
+/** Compact axis/tooltip: 1000 → 1K, 1.2e6 → 1.2M, 1e9 → 1G. */
+export function formatCompact(value: number): string {
+  if (value >= 1_000_000_000) {
+    const g = value / 1_000_000_000;
+    return g % 1 === 0 ? `${g}G` : `${g.toFixed(1)}G`;
+  }
+  if (value >= 1_000_000) {
+    const m = value / 1_000_000;
+    return m % 1 === 0 ? `${m}M` : `${m.toFixed(1)}M`;
+  }
+  if (value >= 1_000) {
+    const k = value / 1_000;
+    return k % 1 === 0 ? `${k}K` : `${k.toFixed(1)}K`;
+  }
+  return String(Math.round(value));
+}
+
 function defaultYAxisFormatter(v: number): string {
-  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
-  if (v >= 1_000) return `${(v / 1_000).toFixed(1)}k`;
-  return String(Math.round(v));
+  return formatCompact(v);
 }
 
 export function makeOpsSparklineOption(args: {
   tz: TimeZoneMode;
   series: Array<{ name: string; data: XY[]; color: string; area?: boolean; areaColor?: string }>;
   tooltipValue: (seriesName: string, v: number | null) => string;
-  /** Format Y-axis labels; default compact (1k, 1M) */
   yAxisFormatter?: (v: number) => string;
+  /** Container width for tick density and grid; smaller → fewer splits, tighter margins */
+  containerWidth?: number;
 }): EChartsOption {
   const t = getChartTheme();
   const yAxisFormatter = args.yAxisFormatter ?? defaultYAxisFormatter;
+  const w = args.containerWidth ?? 400;
+  const isNarrow = w < 280;
+  const splitNumber = isNarrow ? 2 : w < 360 ? 2 : w < 500 ? 3 : 4;
+  const grid = isNarrow
+    ? { left: 4, right: 6, top: 6, bottom: 34, containLabel: true as const }
+    : { left: 48, right: 16, top: 16, bottom: 32, containLabel: true as const };
+  const axisFontSize = isNarrow ? Math.max(9, t.axisFontSize - 1) : t.axisFontSize;
 
   const allTs: number[] = [];
   for (const s of args.series) {
@@ -33,36 +56,33 @@ export function makeOpsSparklineOption(args: {
   return {
     backgroundColor: "transparent",
     animation: false,
-    textStyle: { fontFamily: t.fontFamily, color: t.muted, fontSize: t.axisFontSize },
-    grid: {
-      left: 44,
-      right: 12,
-      top: 12,
-      bottom: 28,
-      containLabel: true,
-    },
+    textStyle: { fontFamily: t.fontFamily, color: t.muted, fontSize: axisFontSize },
+    grid,
     tooltip: {
       trigger: "axis",
-      axisPointer: { type: "line", lineStyle: { color: t.border, width: 1 } },
+      axisPointer: { type: "line", lineStyle: { color: t.border, width: 1, opacity: 0.8 } },
       confine: true,
       appendToBody: true,
       transitionDuration: 0,
       backgroundColor: t.tooltipBg,
       borderColor: t.tooltipBorder,
       borderWidth: 1,
-      padding: 0,
-      extraCssText: "border-radius:10px;box-shadow:0 8px 22px rgba(0,0,0,0.08);",
+      padding: [10, 12],
+      extraCssText: "border-radius:12px;box-shadow:0 10px 28px rgba(0,0,0,0.1);font-weight:500;",
       formatter: axisTooltipFormatter({ tz: args.tz, formatValue: args.tooltipValue }),
     },
     xAxis: {
       type: "time",
       show: true,
+      boundaryGap: [0, 0],
       axisLine: { show: false },
       axisTick: { show: false },
       axisLabel: {
         show: true,
         color: t.faint,
-        fontSize: t.axisFontSize,
+        fontSize: axisFontSize,
+        margin: isNarrow ? 6 : 10,
+        align: "center",
         formatter: (v: string | number) =>
           typeof v === "number" ? formatTimeAxis(v, { tz: args.tz, rangeMs }) : String(v),
       },
@@ -72,18 +92,20 @@ export function makeOpsSparklineOption(args: {
       type: "value",
       min: 0,
       show: true,
-      splitNumber: 4,
+      splitNumber,
       axisLine: { show: false },
       axisTick: { show: false },
       axisLabel: {
-        show: true,
+        show: !isNarrow,
+        align: "right",
         color: t.faint,
-        fontSize: t.axisFontSize,
+        fontSize: axisFontSize,
+        margin: isNarrow ? 4 : 8,
         formatter: (v: number) => yAxisFormatter(v),
       },
       splitLine: {
         show: true,
-        lineStyle: { color: t.grid || t.faint || "rgba(0,0,0,0.06)", type: "solid", width: 1, opacity: 0.4 },
+        lineStyle: { color: t.grid || t.faint || "rgba(0,0,0,0.06)", type: "solid", width: 1, opacity: 0.35 },
       },
     },
     series: args.series.map((s) => ({
@@ -92,12 +114,13 @@ export function makeOpsSparklineOption(args: {
       data: s.data,
       showSymbol: false,
       sampling: "lttb",
-      lineStyle: { color: s.color, width: 1.5, lineCap: "round", lineJoin: "round" },
+      smooth: 0.18,
+      lineStyle: { color: s.color, width: 2, lineCap: "round", lineJoin: "round" },
       itemStyle: { color: s.color },
       areaStyle: s.area
         ? s.areaColor
           ? { color: s.areaColor }
-          : { color: s.color, opacity: 0.12 }
+          : { color: s.color, opacity: 0.14 }
         : undefined,
       clip: true,
       encode: { x: 0, y: 1 },

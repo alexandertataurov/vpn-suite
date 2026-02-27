@@ -79,19 +79,11 @@ export const serversDeviceCountsKey = (skip404: boolean) =>
 /** Server IPs (drawer). */
 export const serversIpsKey = (serverId: string) => [...SERVERS_LIST_KEY, serverId, "ips"] as const;
 
-/** Server telemetry (drawer). */
-export const serversTelemetryKey = (serverId: string) =>
-  [...SERVERS_LIST_KEY, serverId, "telemetry"] as const;
-
 /** Audit by server. */
 export const auditServerKey = (serverId: string) => [...AUDIT_KEY, "server", serverId] as const;
 
 /** Telemetry topology summary. */
 export const TELEMETRY_TOPOLOGY_KEY = ["telemetry", "topology-summary"] as const;
-
-/** Telemetry server. */
-export const telemetryServerKey = (serverId: string) =>
-  ["telemetry", "server", serverId] as const;
 
 /** Cluster health (dashboard). */
 export const CLUSTER_HEALTH_KEY = ["cluster", "health"] as const;

@@ -1,0 +1,43 @@
+/**
+ * Admin adaptive variables — breakpoint-driven layout tokens.
+ * Depends on shared/theme/breakpoints.css (--bp-xs, --bp-sm, --bp-md, --bp-lg).
+ * Media queries use literals to match: 640px, 1024px, 1440px, 1920px (mobile-first).
+ *
+ * Sidebar: XS overlay, SM collapsible, MD+ persistent.
+ * Table: XS stacked cards, SM/MD+ horizontal scroll.
+ * Chart: tick density by width (see presets).
+ */
+
+:root {
+  /* Default (XS): single column, narrow content */
+  --content-max-width: 100%;
+  --dashboard-cols: 1;
+  --card-min-width: 280px;
+  --section-gap: var(--spacing-section-gap, var(--spacing-6));
+}
+
+@media (min-width: 640px) {
+  :root {
+    --dashboard-cols: 2;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --content-max-width: min(100%, 1280px);
+    --dashboard-cols: 3;
+  }
+}
+
+@media (min-width: 1440px) {
+  :root {
+    --content-max-width: min(100%, 1440px);
+    --dashboard-cols: 4;
+  }
+}
+
+@media (min-width: 1920px) {
+  :root {
+    --content-max-width: 1600px;
+  }
+}

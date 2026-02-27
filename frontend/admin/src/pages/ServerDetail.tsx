@@ -253,13 +253,13 @@ export function ServerDetailPage() {
       return d.status === "revoked";
     }) ?? [];
 
-  const issueLabels: Record<string, string> = {
-    no_handshake: "No handshake",
-    no_traffic: "No traffic",
-    wrong_allowed_ips: "Wrong allowed_ips",
-  };
-
-  const columns = useMemo(() => [
+  const columns = useMemo(() => {
+    const issueLabels: Record<string, string> = {
+      no_handshake: "No handshake",
+      no_traffic: "No traffic",
+      wrong_allowed_ips: "Wrong allowed_ips",
+    };
+    return [
     {
       key: "device_name",
       header: "Device",
@@ -346,7 +346,8 @@ export function ServerDetailPage() {
         </span>
       ),
     },
-  ], [peerRates]);
+  ];
+  }, [peerRates]);
 
   if (serverError || !id) {
     return (

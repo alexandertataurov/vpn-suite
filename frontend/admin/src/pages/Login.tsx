@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Button, Input, Panel } from "@vpn-suite/shared/ui";
 import { useAuthStore } from "../store/authStore";
 import { api } from "../api/client";
+import { track } from "../telemetry";
 import { getErrorMessage, type TokenResponse } from "@vpn-suite/shared";
 
 export function LoginPage() {
@@ -23,6 +24,11 @@ export function LoginPage() {
     try {
       const data = await api.post<TokenResponse>("/auth/login", { email, password });
       setTokens(data.access_token, data.refresh_token);
+      try {
+        track("user_action", { action_type: "login_success" });
+      } catch {
+        /* noop */
+      }
       navigate(from, { replace: true });
     } catch (err) {
       setError(getErrorMessage(err, "Login failed"));

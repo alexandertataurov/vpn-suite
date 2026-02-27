@@ -1,8 +1,25 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Server } from "lucide-react";
-import { Panel, Button, InlineAlert, Checkbox, EmptyState, Input, ConfirmDanger, Modal, PageError, Pagination, Tabs, TableContainer, TableSkeleton, useToast, HelperText } from "@vpn-suite/shared/ui";
+import { Plus, Server } from "lucide-react";
+import {
+  Panel,
+  Button,
+  InlineAlert,
+  Checkbox,
+  EmptyState,
+  Input,
+  ConfirmDanger,
+  Modal,
+  PageError,
+  Pagination,
+  Tabs,
+  TableContainer,
+  TableSkeleton,
+  useToast,
+  HelperText,
+  EmptyTableState,
+} from "@vpn-suite/shared/ui";
 import { getErrorMessage } from "@vpn-suite/shared";
 import type { ServerDeviceCountsOut, ServerOut, ServerSyncResponse } from "@vpn-suite/shared/types";
 import { ApiError } from "@vpn-suite/shared/types";
@@ -22,7 +39,9 @@ import { ServersToolbar } from "../components/servers/ServersToolbar";
 import { IssueConfigModal } from "../components/IssueConfigModal";
 import { PageHeader } from "../components/PageHeader";
 import { ServerRow } from "../components/ServerRow";
+import { ServerCard } from "../components/servers/ServerCard";
 import { ServerRowDrawer } from "../components/ServerRowDrawer";
+import { useIsXs } from "../hooks/useBreakpoint";
 import { isSnapshotStale, isStale } from "../components/ServerRow";
 import { ButtonLink } from "../components/ButtonLink";
 import { serversLogger } from "../utils/serversLogger";
@@ -92,6 +111,7 @@ export function ServersPage() {
   const [bulkConfirmCode, setBulkConfirmCode] = useState("");
   const [syncingServerId, setSyncingServerId] = useState<string | null>(null);
   const [bulkSyncProgress, setBulkSyncProgress] = useState<{ total: number; done: number; errors: number } | null>(null);
+  const isXs = useIsXs();
   const queryClient = useQueryClient();
   const { addToast } = useToast();
   const regionFilter = searchParams.get("region") ?? "all";
@@ -527,8 +547,8 @@ export function ServersPage() {
   if (error && !data) {
     const statusCode = error instanceof ApiError ? error.statusCode : undefined;
     return (
-      <div className="ref-page" data-testid="servers-page">
-        <PageHeader icon={Server} title="Servers" description="Manage your VPN servers and configurations">
+      <div className="dashboard ref-page dashboard--comfortable servers-page" data-testid="servers-page">
+        <PageHeader title="Servers">
           <Button variant="secondary" size="sm" onClick={() => refetch()} aria-label="Retry">
             Retry
           </Button>
@@ -556,18 +576,18 @@ export function ServersPage() {
   const hasTelemetryError = telemetryResource.status === "error" || snapshotResource.status === "error";
 
   return (
-    <div className="ref-page" data-testid="servers-page">
+    <div className="dashboard ref-page dashboard--comfortable servers-page" data-testid="servers-page">
       <PageHeader
-        icon={Server}
         title="Servers"
-        description="Manage your VPN servers and configurations"
+        scopeLabel={`Region: ${regionFilter === "all" ? "All" : regionFilter}`}
+        lastUpdated={dataUpdatedAt ? new Date(dataUpdatedAt).toISOString() : undefined}
         primaryAction={
-          <ButtonLink to="/servers/new" variant="primary">
-            Add Server
+          <ButtonLink to="/servers/new" variant="secondary" size="sm" aria-label="Add server">
+            <Plus className="icon-sm" aria-hidden strokeWidth={2} /> Add Server
           </ButtonLink>
         }
-      >
-        <div className="page-header-toolbar-group">
+      />
+      <div className="servers-toolbar-section" role="toolbar" aria-label="Servers filters and sync">
         <ServersToolbar
           dataUpdatedAt={dataUpdatedAt}
           isFetching={isFetching}
@@ -607,8 +627,7 @@ export function ServersPage() {
           }}
           />
         </ServersToolbar>
-        </div>
-      </PageHeader>
+      </div>
 
       <Panel as="section" variant="outline" className="servers-panel" aria-label="Servers list">
         <div className="operator-section-title" role="heading" aria-level={2}>
@@ -686,7 +705,7 @@ export function ServersPage() {
         <TableSkeleton rows={4} columns={11} density={density === "compact" ? "compact" : "comfortable"} data-testid="servers-loading" />
       ) : visibleItems.length ? (
         <>
-          {selectedServerIds.size > 0 && (
+          {selectedServerIds.size > 0 && !isXs && (
             <div className="ref-bulk-toolbar">
               <span>
                 {bulkSyncProgress
@@ -718,6 +737,26 @@ export function ServersPage() {
               </Button>
             </div>
           )}
+          {isXs ? (
+            <div className="table-cards" data-testid="servers-cards">
+              {visibleItems.map((server) => (
+                <ServerCard
+                  key={server.id}
+                  server={server}
+                  snapshotSummary={snapshotSummary.data}
+                  telemetrySummary={telemetrySummary.data}
+                  syncingServerId={syncingServerId}
+                  onRowClick={() => setSelectedServerId(server.id)}
+                  onSync={() => { setSyncingServerId(server.id); syncMutation.mutate(server.id); }}
+                  onReconcile={() => actionMutation.mutate({ serverId: server.id, type: "apply_peers" })}
+                  onIssueConfig={() => setIssueConfigServer(server)}
+                  onRestart={() => setRestartServer(server)}
+                  onDrainUndrain={() => actionMutation.mutate({ serverId: server.id, type: server.is_draining ? "undrain" : "drain" })}
+                  onDelete={() => setDeleteServer(server)}
+                />
+              ))}
+            </div>
+          ) : (
           <TableContainer
             ref={parentRef}
             maxHeight={visibleItems.length > VIRTUAL_THRESHOLD ? 480 : undefined}
@@ -811,6 +850,7 @@ export function ServersPage() {
               </tbody>
             </table>
           </TableContainer>
+          )}
           <ServerRowDrawer
             server={visibleItems.find((s) => s.id === selectedServerId) ?? null}
             onClose={() => setSelectedServerId(null)}
@@ -850,11 +890,19 @@ export function ServersPage() {
           />
         )
       ) : (
-        <p className="table-empty" data-testid="servers-empty">
-          {regionFilter !== "all" || statusFilter !== "all" || searchTerm.trim()
-            ? "No servers match filters"
-            : "No servers found"}
-        </p>
+        <EmptyTableState
+          className="table-empty"
+          title={
+            regionFilter !== "all" || statusFilter !== "all" || searchTerm.trim()
+              ? "No servers match filters"
+              : "No servers found"
+          }
+          description={
+            regionFilter !== "all" || statusFilter !== "all" || searchTerm.trim()
+              ? "Try clearing filters or selecting a different region."
+              : "Create a server to get started."
+          }
+        />
       )}
       </ErrorBoundary>
       </Panel>

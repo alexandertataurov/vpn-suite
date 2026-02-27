@@ -1,6 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
 import { login } from "./helpers";
 
+type DockerActionKind = "start" | "stop" | "restart";
+
+let lastDockerAction: { type: DockerActionKind; containerId: string } | null = null;
+
 async function mockDockerTelemetry(
   page: Page,
   opts?: {
@@ -13,6 +17,21 @@ async function mockDockerTelemetry(
   await page.route("**/api/v1/telemetry/docker/**", async (route) => {
     const url = new URL(route.request().url());
     const path = url.pathname;
+    const method = route.request().method();
+
+    if (method === "POST" && path.includes("/telemetry/docker/container/")) {
+      const parts = path.split("/");
+      const action = parts[parts.length - 1] as DockerActionKind;
+      const containerId = parts[parts.length - 2];
+      if (action === "start" || action === "stop" || action === "restart") {
+        lastDockerAction = { type: action, containerId };
+        return route.fulfill({
+          status: 204,
+          contentType: "application/json",
+          body: "",
+        });
+      }
+    }
 
     if (path.endsWith("/telemetry/docker/hosts")) {
       return route.fulfill({
@@ -445,5 +464,40 @@ test.describe("Telemetry Docker tab", () => {
     const logsRegion = page.getByRole("region", { name: "Logs" });
     await expect(logsRegion).toBeVisible({ timeout: 10000 });
     await expect(logsRegion.getByRole("alert")).toHaveText("Failed to load logs for this container.", { timeout: 15000 });
+  });
+
+  test("docker controls can restart a running container from details panel and toolbar", async ({ page }) => {
+    await mockDockerTelemetry(page);
+    lastDockerAction = null;
+
+    await page.goto("telemetry?tab=docker");
+    await page.waitForLoadState("domcontentloaded");
+
+    const dockerApiRow = page.locator("[data-testid=table-row]", { hasText: "docker-api" });
+    await dockerApiRow.getByRole("button", { name: "Details" }).click();
+
+    const startButton = page.getByRole("button", { name: "Start" });
+    const stopButton = page.getByRole("button", { name: "Stop" });
+    const restartButton = page.getByRole("button", { name: "Restart" });
+
+    await expect(startButton).toBeDisabled();
+    await expect(stopButton).toBeEnabled();
+    await expect(restartButton).toBeEnabled();
+
+    await restartButton.click();
+
+    expect(lastDockerAction).not.toBeNull();
+    expect(lastDockerAction?.type).toBe("restart");
+    expect(lastDockerAction?.containerId).toBe("abc123def456");
+
+    lastDockerAction = null;
+
+    const restartSelectedButton = page.getByRole("button", { name: "Restart selected" });
+    await expect(restartSelectedButton).toBeEnabled();
+    await restartSelectedButton.click();
+
+    expect(lastDockerAction).not.toBeNull();
+    expect(lastDockerAction?.type).toBe("restart");
+    expect(lastDockerAction?.containerId).toBe("abc123def456");
   });
 });
