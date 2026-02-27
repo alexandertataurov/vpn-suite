@@ -20,6 +20,8 @@ from config import (
     BOT_USERNAME,
     BOT_POLLING_TIMEOUT,
     BOT_TASKS_CONCURRENCY_LIMIT,
+    BOT_WEBHOOK_PATH,
+    BOT_WEBHOOK_URL,
     OTEL_TRACES_ENDPOINT,
     PORT,
     REDIS_URL,
@@ -32,11 +34,16 @@ from utils.config_validator import validate_config
 from middleware.logging import LoggingMiddleware
 from handlers.start import router as start_router
 from handlers.tariffs import router as tariffs_router
+from handlers.trial import router as trial_router
+from handlers.churn import router as churn_router
 from handlers.status import router as status_router
 from handlers.devices import router as devices_router
 from handlers.install import router as install_router
 from handlers.help import router as help_router
 from handlers.support import router as support_router
+from handlers.nav import router as nav_router
+from handlers.menu_actions import router as menu_actions_router
+from handlers.fallback import router as fallback_router
 from otel_tracing import setup_otel_tracing
 
 _log = get_logger(__name__)
@@ -84,7 +91,7 @@ async def bad_request_middleware(request, handler):
         return web.Response(status=400, text="Bad Request")
 
 
-async def run_healthz_app(tracing_enabled: bool):
+def _make_app(tracing_enabled: bool, webhook_path: str = "", dp=None, bot=None):
     app = web.Application(middlewares=[bad_request_middleware])
     if tracing_enabled:
         from opentelemetry.instrumentation.aiohttp_server import AioHttpServerInstrumentor
@@ -92,6 +99,25 @@ async def run_healthz_app(tracing_enabled: bool):
         AioHttpServerInstrumentor().instrument()
     app.router.add_get("/healthz", healthz_handler)
     app.router.add_get("/metrics", metrics_handler)
+    if webhook_path and dp is not None and bot is not None:
+        from aiogram.types import Update
+
+        async def webhook_handler(request: web.Request) -> web.Response:
+            try:
+                body = await request.json()
+                update = Update(**body)
+                await dp.feed_update(bot, update)
+            except Exception as e:
+                _log.warning("webhook_handler_error", error=str(e))
+                return web.Response(status=500, text="Internal error")
+            return web.Response(status=200)
+        app.router.add_post(webhook_path, webhook_handler)
+    return app
+
+
+async def run_healthz_app(tracing_enabled: bool, app: web.Application | None = None):
+    if app is None:
+        app = _make_app(tracing_enabled)
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(runner, "0.0.0.0", PORT)
@@ -104,7 +130,6 @@ async def run_bot():
     tracing_enabled = setup_otel_tracing(OTEL_TRACES_ENDPOINT)
     global TRACING_ENABLED
     TRACING_ENABLED = tracing_enabled
-    await run_healthz_app(tracing_enabled)
     await init_api()
     try:
         bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
@@ -133,18 +158,34 @@ async def run_bot():
         dp = Dispatcher(storage=storage)
         dp.update.outer_middleware(LoggingMiddleware())
         dp.include_router(start_router)
+        dp.include_router(nav_router)
+        dp.include_router(menu_actions_router)
         dp.include_router(tariffs_router)
+        dp.include_router(trial_router)
+        dp.include_router(churn_router)
         dp.include_router(status_router)
         dp.include_router(devices_router)
         dp.include_router(install_router)
         dp.include_router(help_router)
         dp.include_router(support_router)
-        await dp.start_polling(
-            bot,
-            polling_timeout=BOT_POLLING_TIMEOUT,
-            allowed_updates=["message", "callback_query"],
-            tasks_concurrency_limit=BOT_TASKS_CONCURRENCY_LIMIT,
-        )
+        dp.include_router(fallback_router)  # last: unknown callbacks → home
+        if BOT_WEBHOOK_URL:
+            await bot.set_webhook(
+                f"{BOT_WEBHOOK_URL.rstrip('/')}{BOT_WEBHOOK_PATH}",
+                allowed_updates=["message", "callback_query", "pre_checkout_query"],
+            )
+            _log.info("webhook_mode", url=f"{BOT_WEBHOOK_URL}{BOT_WEBHOOK_PATH}")
+            app = _make_app(tracing_enabled, webhook_path=BOT_WEBHOOK_PATH, dp=dp, bot=bot)
+            await run_healthz_app(tracing_enabled, app=app)
+            await asyncio.Event().wait()
+        else:
+            await run_healthz_app(tracing_enabled)
+            await dp.start_polling(
+                bot,
+                polling_timeout=BOT_POLLING_TIMEOUT,
+                allowed_updates=["message", "callback_query", "pre_checkout_query"],
+                tasks_concurrency_limit=BOT_TASKS_CONCURRENCY_LIMIT,
+            )
     finally:
         await close_api()
 

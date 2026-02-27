@@ -25,4 +25,4 @@ def test_navigation_row():
     assert nav_row[0].text == BACK_TEXT
     assert nav_row[1].text == HOME_TEXT
     assert nav_row[0].callback_data == "menu:settings"
-    assert nav_row[1].callback_data == "menu:main"
+    assert nav_row[1].callback_data == "nav:home"

@@ -7,6 +7,8 @@ from aiogram.types import Message, CallbackQuery, LabeledPrice
 from aiogram.utils.deep_linking import decode_payload
 
 from i18n import t
+from metrics import record_payment_start
+from menus.render import render_menu
 from utils.formatting import is_subscription_effectively_active
 
 router = Router()
@@ -56,12 +58,15 @@ async def cmd_start(message: Message, state):
         if inv_result.success and inv_result.data:
             inv = inv_result.data
             if inv.get("free_activation") or int(inv.get("star_count", 1)) == 0:
-                await message.answer("Subscription is active. Use the menu to add a device and get your config.")
+                locale = (await state.get_data()).get("locale", "en")
+                home_text, home_markup = render_menu("home", locale)
+                await message.answer(t(locale, "subscription_active_use_menu"), reply_markup=home_markup)
                 return
             title = inv.get("title", "VPN")
             description = inv.get("description", "VPN plan")
             payload = inv.get("payload", inv.get("payment_id", ""))
             star_count = max(1, int(inv.get("star_count", 1)))
+            record_payment_start()
             await message.answer_invoice(
                 title=title,
                 description=description,
@@ -95,11 +100,18 @@ async def cmd_start(message: Message, state):
                 welcome += "\n\n" + t(locale, "ref_invited")
                 await state.update_data(referral_code=ref_code)
             await message.answer(welcome)
-            await _send_main_keyboard(message, locale, is_existing=True)
+            home_text, home_markup = render_menu("home", locale)
+            await message.answer(home_text, reply_markup=home_markup)
             if message.from_user:
                 from api_client import post_event
                 await post_event("start", message.from_user.id, {"ref": ref_code[:32] if ref_code else None})
             return
+        from keyboards.revenue import entry_keyboard
+        await message.answer(t(locale, "entry_message"), reply_markup=entry_keyboard(locale))
+        if message.from_user:
+            from api_client import post_event
+            await post_event("start", message.from_user.id, {"ref": ref_code[:32] if ref_code else None})
+        return
     await state.clear()
     if ref_code and message.from_user:
         await state.update_data(referral_code=ref_code)
@@ -148,38 +160,33 @@ async def set_lang(callback: CallbackQuery, state):
                 error=attach_result.error,
             )
     await callback.answer()
-    welcome = t(lang, "welcome")
-    if ref_code:
-        welcome += "\n\n" + t(lang, "ref_invited")
-    try:
-        if callback.message and callback.message.text:
-            await callback.message.edit_text(welcome)
-        else:
+    has_sub = await _user_has_active_sub(callback.from_user.id) if callback.from_user else False
+    if has_sub:
+        welcome = t(lang, "welcome")
+        if ref_code:
+            welcome += "\n\n" + t(lang, "ref_invited")
+        try:
+            if callback.message and callback.message.text:
+                await callback.message.edit_text(welcome)
+            else:
+                await callback.message.answer(welcome)
+        except Exception as e:
+            _log.debug("edit_text_failed", error=str(e))
             await callback.message.answer(welcome)
-    except Exception as e:
-        _log.debug("edit_text_failed", error=str(e))
-        await callback.message.answer(welcome)
-    await _send_main_keyboard(callback.message, lang)
-
-
-def _main_keyboard(locale: str, is_existing: bool):
-    """New clients: Connect, Instruction, Support. Existing: Profile, Add device, Devices, etc."""
-    from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
-
-    if is_existing:
-        keyboard = [
-            [KeyboardButton(text=t(locale, "my_cabinet")), KeyboardButton(text=t(locale, "add_device"))],
-            [KeyboardButton(text=t(locale, "devices")), KeyboardButton(text=t(locale, "reset_device"))],
-            [KeyboardButton(text=t(locale, "invite_friend")), KeyboardButton(text=t(locale, "promo_code"))],
-            [KeyboardButton(text=t(locale, "connect_cta"))],
-            [KeyboardButton(text=t(locale, "instruction")), KeyboardButton(text=t(locale, "support"))],
-        ]
+        home_text, home_markup = render_menu("home", lang)
+        await callback.message.answer(home_text, reply_markup=home_markup)
     else:
-        keyboard = [
-            [KeyboardButton(text=t(locale, "connect_cta"))],
-            [KeyboardButton(text=t(locale, "instruction")), KeyboardButton(text=t(locale, "support"))],
-        ]
-    return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
+        from keyboards.revenue import entry_keyboard
+
+        entry_msg = t(lang, "entry_message")
+        try:
+            if callback.message and callback.message.text:
+                await callback.message.edit_text(entry_msg, reply_markup=entry_keyboard(lang))
+            else:
+                await callback.message.answer(entry_msg, reply_markup=entry_keyboard(lang))
+        except Exception as e:
+            _log.debug("edit_text_failed", error=str(e))
+            await callback.message.answer(entry_msg, reply_markup=entry_keyboard(lang))
 
 
 async def _user_has_active_sub(tg_id: int) -> bool:
@@ -193,25 +200,9 @@ async def _user_has_active_sub(tg_id: int) -> bool:
     return False
 
 
-async def _send_main_keyboard(message: Message, locale: str, is_existing: bool | None = None, text: str | None = None):
-    if is_existing is None and message.from_user:
-        is_existing = await _user_has_active_sub(message.from_user.id)
-    await message.answer(text or "—", reply_markup=_main_keyboard(locale, is_existing))
-
-
-def get_main_keyboard(locale: str, is_existing: bool):
-    """Return ReplyKeyboardMarkup for new (False) or existing (True) client. For use by other handlers."""
-    return _main_keyboard(locale, is_existing)
-
-
-async def send_main_keyboard_for(message: Message, locale: str, is_existing: bool, text: str | None = None):
-    """Send the main menu keyboard. Pass text to attach keyboard to content; else sends minimal placeholder."""
-    await message.answer(text or "—", reply_markup=_main_keyboard(locale, is_existing))
-
-
 @router.callback_query(F.data == "menu:main")
 async def menu_main(callback: CallbackQuery, state):
-    """Show main ReplyKeyboard (new vs existing based on API). Clear add_device/issued_config state to avoid stuck FSM."""
+    """Backward compat: show inline HOME menu (same as nav:home). Clear add_device/issued_config state."""
     await callback.answer()
     await state.set_state(None)
     await state.update_data(
@@ -228,4 +219,11 @@ async def menu_main(callback: CallbackQuery, state):
     )
     data = await state.get_data()
     locale = data.get("locale", "en")
-    await _send_main_keyboard(callback.message, locale, is_existing=None)
+    home_text, home_markup = render_menu("home", locale)
+    msg = callback.message
+    if msg:
+        try:
+            await msg.edit_text(home_text, reply_markup=home_markup)
+        except Exception as e:
+            _log.debug("menu_main_edit_failed", error=str(e))
+            await msg.answer(home_text, reply_markup=home_markup)

@@ -2,6 +2,38 @@
 
 from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
 
+bot_commands_total = Counter(
+    "bot_commands_total",
+    "Total bot commands by command name",
+    ["command"],
+)
+bot_trial_activations_total = Counter(
+    "bot_trial_activations_total",
+    "Trial activations",
+)
+bot_payment_start_total = Counter(
+    "bot_payment_start_total",
+    "Payment flow started",
+)
+bot_payment_success_total = Counter(
+    "bot_payment_success_total",
+    "Payment completed successfully",
+)
+bot_payment_confirm_total = Counter(
+    "bot_payment_confirm_total",
+    "Backend payment confirm (sync) by result",
+    ["status"],  # ok, fail
+)
+bot_events_total = Counter(
+    "bot_events_total",
+    "Funnel/analytics events sent to backend",
+    ["event_type"],
+)
+bot_retries_total = Counter(
+    "bot_retries_total",
+    "HTTP retries to admin-api",
+)
+
 bot_requests_total = Counter(
     "bot_requests_total",
     "Total HTTP requests from bot to admin-api",
@@ -26,6 +58,41 @@ def _status_class(status_code: int | None) -> str:
     if status_code < 500:
         return "4xx"
     return "5xx"
+
+
+def record_command(command: str) -> None:
+    """Increment command counter."""
+    bot_commands_total.labels(command=command).inc()
+
+
+def record_trial_activation() -> None:
+    """Increment trial activation counter."""
+    bot_trial_activations_total.inc()
+
+
+def record_payment_start() -> None:
+    """Increment payment start counter."""
+    bot_payment_start_total.inc()
+
+
+def record_payment_success() -> None:
+    """Increment payment success counter."""
+    bot_payment_success_total.inc()
+
+
+def record_payment_confirm(success: bool) -> None:
+    """Increment payment confirm (backend sync) counter."""
+    bot_payment_confirm_total.labels(status="ok" if success else "fail").inc()
+
+
+def record_event_sent(event_type: str) -> None:
+    """Increment events sent to backend (funnel/analytics)."""
+    bot_events_total.labels(event_type=event_type).inc()
+
+
+def record_retry() -> None:
+    """Increment retry counter (admin-api call retried)."""
+    bot_retries_total.inc()
 
 
 def record_request(status_code: int | None, latency_seconds: float | None = None) -> None:

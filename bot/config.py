@@ -44,3 +44,7 @@ BOT_TASKS_CONCURRENCY_LIMIT = int(get_env("BOT_TASKS_CONCURRENCY_LIMIT", "5") or
 
 # OTLP traces endpoint (e.g. otel-collector:4317). Empty = tracing disabled.
 OTEL_TRACES_ENDPOINT = get_env("OTEL_TRACES_ENDPOINT", "")
+
+# Webhook: if BOT_WEBHOOK_URL is set, use webhook instead of polling (scale to 100k).
+BOT_WEBHOOK_PATH = get_env("BOT_WEBHOOK_PATH", "/webhook")
+BOT_WEBHOOK_URL = get_env("BOT_WEBHOOK_URL", "")

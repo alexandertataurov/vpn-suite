@@ -1,0 +1,17 @@
+# Test image: install dev deps and run pytest. Build from repo root: docker build -f bot/Dockerfile.test .
+FROM python:3.12-slim
+
+WORKDIR /app
+
+COPY bot/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+RUN pip install --no-cache-dir pytest pytest-asyncio
+
+COPY bot/ .
+
+ENV PYTHONUNBUFFERED=1
+ENV BOT_USERNAME=TestBot
+ENV SUPPORT_HANDLE=@TestSupport
+
+CMD ["python", "-m", "pytest", "tests/", "-v"]

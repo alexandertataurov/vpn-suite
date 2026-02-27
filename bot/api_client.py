@@ -8,7 +8,7 @@ from typing import Any
 import httpx
 
 from config import PANEL_URL, BOT_API_KEY
-from metrics import record_request
+from metrics import record_event_sent, record_request, record_retry
 from utils.cache import cached
 from utils.context import correlation_id_ctx
 from utils.logging import get_logger
@@ -92,6 +92,7 @@ def _error_key_from_response(r: httpx.Response) -> str:
             "USER_BANNED": "error_api",
             "DEVICE_NOT_FOUND": "error_device_not_found",
             "NOT_FOUND": "error_device_not_found",
+            "TRIAL_ALREADY_USED": "error_subscription_expired",
         }
         mapped = by_code.get(code)
         if mapped:
@@ -197,6 +198,7 @@ class ApiClient:
                     return (r, None)
                 # 5xx: retry with backoff
                 if attempt < MAX_RETRIES - 1:
+                    record_retry()
                     delay = BACKOFF_BASE * (2**attempt)
                     _log.warning(
                         "external.call.retry",
@@ -221,6 +223,7 @@ class ApiClient:
                     telegram_id=telegram_id,
                 )
                 if attempt < MAX_RETRIES - 1:
+                    record_retry()
                     delay = BACKOFF_BASE * (2**attempt)
                     await asyncio.sleep(delay)
                     continue
@@ -320,6 +323,27 @@ class ApiClient:
             return Result.fail(err)
         return Result.ok(self._parse_json(r))
 
+    async def confirm_telegram_stars_payment(
+        self,
+        tg_id: int,
+        invoice_payload: str,
+        telegram_payment_charge_id: str | None = None,
+        total_amount: int | None = None,
+    ) -> Result:
+        r, err = await self._request_with_retry(
+            "POST", "/api/v1/bot/payments/telegram-stars-confirm",
+            json={
+                "tg_id": tg_id,
+                "invoice_payload": invoice_payload,
+                "telegram_payment_charge_id": telegram_payment_charge_id,
+                "total_amount": total_amount,
+            },
+            telegram_id=tg_id,
+        )
+        if err:
+            return Result.fail(err)
+        return Result.ok(self._parse_json(r) if r and r.content else {})
+
     async def issue_device(
         self,
         user_id: int,
@@ -363,6 +387,10 @@ class ApiClient:
         )
         if err:
             return Result.fail(err)
+        try:
+            record_event_sent(event_type)
+        except Exception:
+            pass
         return Result.ok(None)
 
     async def get_referral_my_link(self, tg_id: int) -> Result:
@@ -407,6 +435,34 @@ class ApiClient:
             return Result.fail(err)
         return Result.ok(self._parse_json(r) if r and r.content else {})
 
+    async def start_trial(self, tg_id: int) -> Result:
+        r, err = await self._request_with_retry(
+            "POST", "/api/v1/bot/trial/start",
+            json={"tg_id": tg_id},
+            telegram_id=tg_id,
+        )
+        if err:
+            return Result.fail(err)
+        return Result.ok(self._parse_json(r))
+
+    async def churn_survey(
+        self,
+        tg_id: int,
+        reason: str,
+        subscription_id: str | None = None,
+    ) -> Result:
+        body = {"tg_id": tg_id, "reason": reason}
+        if subscription_id:
+            body["subscription_id"] = subscription_id
+        r, err = await self._request_with_retry(
+            "POST", "/api/v1/bot/churn-survey",
+            json=body,
+            telegram_id=tg_id,
+        )
+        if err:
+            return Result.fail(err)
+        return Result.ok(self._parse_json(r))
+
 
 # ---------------------------------------------------------------------------
 # Module-level wrappers (delegate to get_api())
@@ -435,6 +491,18 @@ async def create_invoice(
 
 async def get_payment_invoice(payment_id: str, tg_id: int) -> Result:
     return await get_api().get_payment_invoice(payment_id, tg_id)
+
+
+async def confirm_telegram_stars_payment(
+    tg_id: int,
+    invoice_payload: str,
+    telegram_payment_charge_id: str | None = None,
+    total_amount: int | None = None,
+) -> Result:
+    return await get_api().confirm_telegram_stars_payment(
+        tg_id, invoice_payload, telegram_payment_charge_id, total_amount
+    )
+
 
 async def issue_device(
     user_id: int,
@@ -465,3 +533,11 @@ async def promo_validate(code: str, plan_id: str, tg_id: int) -> Result:
 
 async def reset_device(device_id: str) -> Result:
     return await get_api().reset_device(device_id)
+
+
+async def start_trial(tg_id: int) -> Result:
+    return await get_api().start_trial(tg_id)
+
+
+async def churn_survey(tg_id: int, reason: str, subscription_id: str | None = None) -> Result:
+    return await get_api().churn_survey(tg_id, reason, subscription_id)

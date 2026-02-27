@@ -19,29 +19,25 @@ async def _locale_from_state(state) -> str:
 async def cmd_install(message: Message, state):
     locale = await _locale_from_state(state)
     await safe_send_message(message, t(locale, "instruction_text"))
-    open_menu_text = "➡️ Open Connect menu" if locale == "en" else "➡️ Открыть меню подключения"
-    home_text = "🏠 Home" if locale == "en" else "🏠 Домой"
+    open_menu_text = t(locale, "➡️ Open Connect menu")
+    home_text = t(locale, "🏠 Home")
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text=open_menu_text, callback_data="install:get_config")],
-        [InlineKeyboardButton(text=home_text, callback_data="menu:main")],
+        [InlineKeyboardButton(text=home_text, callback_data="nav:home")],
     ])
-    hint = (
-        "Use the button below, then choose Connect in the main menu to get your config."
-        if locale == "en"
-        else "Нажмите кнопку ниже, затем в главном меню выберите Подключить, чтобы получить конфиг."
-    )
+    hint = t(locale, "install_hint_open_connect")
     await message.answer(hint, reply_markup=keyboard)
 
 
 @router.callback_query(F.data == "install:get_config")
 async def on_get_config(callback: CallbackQuery, state):
-    """Redirect to main menu for Connect / Add device."""
-    from handlers.start import _send_main_keyboard
+    """Offer quick navigation to Connect menu."""
     await callback.answer()
     locale = (await state.get_data()).get("locale", "en")
     await callback.message.answer(
-        "Use Connect or Add device from the menu below."
-        if locale == "en"
-        else "Используйте Подключить или Добавить устройство в меню ниже."
+        t(locale, "install_hint_open_connect_short"),
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text=t(locale, "🚀 Connect VPN"), callback_data="nav:connect")],
+            [InlineKeyboardButton(text=t(locale, "🏠 Home"), callback_data="nav:home")],
+        ]),
     )
-    await _send_main_keyboard(callback.message, locale)

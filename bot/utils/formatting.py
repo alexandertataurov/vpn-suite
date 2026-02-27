@@ -16,8 +16,10 @@ DEVICE_ICONS = {
 
 
 def is_subscription_effectively_active(sub: dict) -> bool:
-    """Return active status using effective_status if present, else status + valid_until."""
+    """Return active status using effective_status if present, else status + valid_until. Paused = inactive."""
     if not isinstance(sub, dict):
+        return False
+    if sub.get("paused_at"):
         return False
     effective = str(sub.get("effective_status") or "").strip().lower()
     if effective:
@@ -57,7 +59,7 @@ def format_date(expires, lang: str = "en") -> str:
 
 def format_subscription_status(sub: dict, lang: str = "en", devices_used: int = 0) -> str:
     """Format subscription info consistently. sub: status, valid_until, device_limit."""
-    is_active = sub.get("status") == "active" and bool(sub.get("valid_until"))
+    is_active = is_subscription_effectively_active(sub)
     status_emoji = "✅" if is_active else "❌"
     if lang == "ru":
         status_text = "Активна" if is_active else "Истекла"
@@ -99,6 +101,12 @@ def format_device_info(device: dict, lang: str = "en") -> str:
     else:
         status_text = "Active" if is_active else "Inactive"
 
+    if lang == "ru":
+        return (
+            f"{type_icon} {name}\n"
+            f"Статус: {status_emoji} {status_text}\n"
+            f"Сервер: {server}"
+        )
     return (
         f"{type_icon} {name}\n"
         f"Status: {status_emoji} {status_text}\n"

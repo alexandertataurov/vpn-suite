@@ -32,18 +32,19 @@ def _devices_list_message(devices: list, locale: str) -> str:
 
 
 def _device_list_keyboard(devices: list, locale: str):
-    download_text = "ℹ️ Config help" if locale == "en" else "ℹ️ Как получить конфиг"
-    reissue_text = "♻️ Replace config" if locale == "en" else "♻️ Пересоздать конфиг"
-    remove_text = "🗑 Remove" if locale == "en" else "🗑 Удалить"
+    download_text = "📎 " + t(locale, "btn_config")
+    reissue_text = "🔁 " + t(locale, "btn_reissue")
+    remove_text = "🗑 " + t(locale, "btn_remove")
     buttons = []
     for d in devices[:10]:
-        dev_id = d.get("id", "")
+        dev_id = str(d.get("id", ""))
+        # Spec: dev:<id>:<action> (≤64 bytes; id can be UUID)
         buttons.append([
-            InlineKeyboardButton(text=download_text, callback_data=f"config_download:{dev_id}"),
-            InlineKeyboardButton(text=reissue_text, callback_data=f"device_reissue:{dev_id}"),
-            InlineKeyboardButton(text=remove_text, callback_data=f"device_remove:{dev_id}"),
+            InlineKeyboardButton(text=download_text, callback_data=f"dev:{dev_id}:config"),
+            InlineKeyboardButton(text=reissue_text, callback_data=f"dev:{dev_id}:reissue"),
+            InlineKeyboardButton(text=remove_text, callback_data=f"dev:{dev_id}:remove"),
         ])
-    buttons.append(nav_row_buttons(back_callback="menu:main"))
+    buttons.append(nav_row_buttons(back_callback="nav:home"))
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
@@ -64,16 +65,16 @@ async def show_devices_list(message: Message, state):
     dev_result = await get_user_devices(user_id)
     if not dev_result.success:
         if dev_result.error == ERROR_DEVICE_NOT_FOUND:
-            await message.answer("No devices yet. Add one from the menu." if locale == "en" else "Пока нет устройств. Добавьте в меню.", reply_markup=error_nav_markup())
+            await message.answer(t(locale, "no_devices_yet"), reply_markup=error_nav_markup())
             return
         await message.answer(get_error_message(dev_result.error or "error_api", locale), reply_markup=error_nav_markup())
         return
     devices = dev_result.data or []
     active = [d for d in devices if not d.get("revoked_at")]
     if not active:
-        await message.answer("No devices yet. Add one from the menu." if locale == "en" else "Пока нет устройств. Добавьте в меню.", reply_markup=error_nav_markup())
+        await message.answer(t(locale, "no_devices_yet"), reply_markup=error_nav_markup())
         return
-    text = ("Your devices:" if locale == "en" else "Ваши устройства:") + "\n\n" + _devices_list_message(active, locale)
+    text = t(locale, "your_devices") + "\n\n" + _devices_list_message(active, locale)
     await message.answer(text, reply_markup=_device_list_keyboard(active, locale))
 
 
@@ -99,16 +100,16 @@ async def cmd_configs(message: Message, state):
     dev_result = await get_user_devices(int(user_data["id"]))
     if not dev_result.success:
         if dev_result.error == ERROR_DEVICE_NOT_FOUND:
-            await message.answer("No devices yet. Add one from the menu." if locale == "en" else "Пока нет устройств. Добавьте в меню.", reply_markup=error_nav_markup())
+            await message.answer(t(locale, "no_devices_yet"), reply_markup=error_nav_markup())
             return
         await message.answer(get_error_message(dev_result.error or "error_api", locale), reply_markup=error_nav_markup())
         return
     devices = dev_result.data or []
     active = [d for d in devices if not d.get("revoked_at")]
     if not active:
-        await message.answer("No devices yet. Add one from the menu." if locale == "en" else "Пока нет устройств. Добавьте в меню.", reply_markup=error_nav_markup())
+        await message.answer(t(locale, "no_devices_yet"), reply_markup=error_nav_markup())
         return
-    text = ("Select device:" if locale == "en" else "Выберите устройство:") + "\n\n" + _devices_list_message(active, locale)
+    text = t(locale, "select_device") + "\n\n" + _devices_list_message(active, locale)
     await message.answer(text, reply_markup=_device_list_keyboard(active, locale))
 
 
@@ -130,55 +131,78 @@ async def on_menu_devices(callback: CallbackQuery, state):
     dev_result = await get_user_devices(int(user_data["id"]))
     if not dev_result.success:
         if dev_result.error == ERROR_DEVICE_NOT_FOUND:
-            await callback.message.answer("No devices yet. Add one from the menu." if locale == "en" else "Пока нет устройств. Добавьте в меню.", reply_markup=error_nav_markup())
+            await callback.message.answer(t(locale, "no_devices_yet"), reply_markup=error_nav_markup())
             return
         await callback.message.answer(get_error_message(dev_result.error or "error_api", locale), reply_markup=error_nav_markup())
         return
     devices = dev_result.data or []
     active = [d for d in devices if not d.get("revoked_at")]
     if not active:
-        await callback.message.answer("No devices yet. Add one from the menu." if locale == "en" else "Пока нет устройств. Добавьте в меню.", reply_markup=error_nav_markup())
+        await callback.message.answer(t(locale, "no_devices_yet"), reply_markup=error_nav_markup())
         return
-    text = ("Your devices:" if locale == "en" else "Ваши устройства:") + "\n\n" + _devices_list_message(active, locale)
+    text = t(locale, "your_devices") + "\n\n" + _devices_list_message(active, locale)
     await callback.message.answer(text, reply_markup=_device_list_keyboard(active, locale))
+
+
+def _device_id_from_callback(data: str) -> str | None:
+    """Extract device id from config_download:id, device_reissue:id, device_remove:id, or dev:id:action."""
+    if data.startswith("dev:"):
+        parts = data.split(":", 2)
+        return parts[1] if len(parts) >= 2 else None
+    for prefix in ("config_download:", "device_reissue:", "device_remove:", "device_reset:"):
+        if data.startswith(prefix):
+            return data[len(prefix):].strip() or None
+    if data.startswith("reset_"):
+        return data[6:].strip() or None
+    return None
+
+
+@router.callback_query(F.data.startswith("dev:"))
+async def on_dev_callback(callback: CallbackQuery, state):
+    """Handle dev:id:config, dev:id:reissue, dev:id:remove."""
+    data = callback.data or ""
+    parts = data.split(":", 2)
+    if len(parts) < 3:
+        await callback.answer()
+        return
+    _prefix, dev_id, action = parts[0], parts[1], parts[2]
+    if action == "config":
+        await on_device_config_impl(callback, state, dev_id)
+    elif action == "reissue":
+        await on_device_reissue_impl(callback, state, dev_id)
+    elif action == "remove":
+        await on_reset_device_impl(callback, state, dev_id)
+    else:
+        await callback.answer()
+
+
+async def on_device_config_impl(callback: CallbackQuery, state, _dev_id: str):
+    locale = await _locale_from_state(state)
+    await callback.answer()
+    from utils.safe_send import safe_send_message
+    await safe_send_message(callback.message, t(locale, "instruction_text"))
+    await callback.message.answer(t(locale, "config_hint_add"), reply_markup=error_nav_markup())
+
+
+async def on_device_reissue_impl(callback: CallbackQuery, state, _dev_id: str):
+    await callback.answer()
+    locale = await _locale_from_state(state)
+    await callback.message.answer(t(locale, "config_hint_reissue"), reply_markup=error_nav_markup())
 
 
 @router.callback_query(F.data.startswith("config_download:") | F.data.startswith("device_config:"))
 async def on_device_config(callback: CallbackQuery, state):
-    """Show config guidance — config is issued on add device; no API to re-fetch by device."""
-    locale = await _locale_from_state(state)
-    await callback.answer()
-    from utils.safe_send import safe_send_message
-    hint = (
-        "Config is shown when you add a device. To get a new one, use main menu -> Add device."
-        if locale == "en"
-        else "Конфиг показывается при добавлении устройства. Для нового: меню -> Добавить устройство."
-    )
-    await safe_send_message(callback.message, t(locale, "instruction_text"))
-    await callback.message.answer(hint)
+    dev_id = _device_id_from_callback(callback.data or "")
+    await on_device_config_impl(callback, state, dev_id or "")
 
 
 @router.callback_query(F.data.startswith("device_reissue:"))
 async def on_device_reissue(callback: CallbackQuery, state):
-    await callback.answer()
-    locale = await _locale_from_state(state)
-    hint = (
-        "Config is issued once. Replace flow: Remove this device, then Add device again."
-        if locale == "en"
-        else "Конфиг выдаётся один раз. Переиздать: удалите устройство, затем снова Добавить устройство."
-    )
-    await callback.message.answer(hint)
+    dev_id = _device_id_from_callback(callback.data or "")
+    await on_device_reissue_impl(callback, state, dev_id or "")
 
 
-@router.callback_query(F.data.startswith("device_remove:"))
-@router.callback_query(F.data.startswith("reset_"))
-@router.callback_query(F.data.startswith("device_reset:"))
-async def on_reset_device(callback: CallbackQuery, state):
-    device_id = (
-        callback.data.replace("device_remove:", "")
-        .replace("device_reset:", "")
-        .replace("reset_", "", 1)
-    )
+async def on_reset_device_impl(callback: CallbackQuery, state, device_id: str):
     if not device_id:
         await callback.answer()
         return
@@ -190,15 +214,23 @@ async def on_reset_device(callback: CallbackQuery, state):
             await callback.message.answer(
                 get_error_message(ERROR_DEVICE_NOT_FOUND, locale),
                 reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-                    [InlineKeyboardButton(text="🔄 Refresh list" if locale == "en" else "🔄 Обновить", callback_data="menu:devices")],
-                    nav_row_buttons(back_callback="menu:main"),
+                    [InlineKeyboardButton(text="🔄 " + t(locale, "btn_refresh_list"), callback_data="menu:devices")],
+                    nav_row_buttons(back_callback="nav:home"),
                 ]),
             )
         else:
             await callback.message.answer(get_error_message(result.error or "error_api", locale), reply_markup=error_nav_markup())
         return
-    await callback.answer("Done" if locale == "en" else "Готово")
-    await callback.message.answer(get_success_message("device_removed", locale))
+    await callback.answer(t(locale, "done_btn"))
+    await callback.message.answer(get_success_message("device_removed", locale), reply_markup=error_nav_markup())
 
 
-# menu:main is handled in start.py
+@router.callback_query(F.data.startswith("device_remove:"))
+@router.callback_query(F.data.startswith("reset_"))
+@router.callback_query(F.data.startswith("device_reset:"))
+async def on_reset_device(callback: CallbackQuery, state):
+    device_id = _device_id_from_callback(callback.data or "")
+    await on_reset_device_impl(callback, state, device_id)
+
+
+# menu:main handled in start.py; menu:devices shows device list (handled above)

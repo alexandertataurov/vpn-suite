@@ -1,11 +1,13 @@
 """Shared inline keyboard helpers and callback patterns.
 
 Callback format: action:param1:param2 (no spaces, : separator).
-Examples: plan:abc, device_config:123, device_reset:456, menu:main, menu:devices.
+Examples: plan:abc, dev:id:config, nav:home, nav:devices.
 """
 
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+
+from i18n import t
 
 
 BACK_TEXT = "⬅️ Back"
@@ -24,7 +26,7 @@ def add_navigation_row(
     if back_callback:
         row.append(InlineKeyboardButton(text=back_text, callback_data=back_callback))
     if show_home:
-        row.append(InlineKeyboardButton(text=HOME_TEXT, callback_data="menu:main"))
+        row.append(InlineKeyboardButton(text=HOME_TEXT, callback_data="nav:home"))
     if row:
         keyboard.row(*row)
     return keyboard
@@ -40,13 +42,13 @@ def nav_row_buttons(
     if back_callback:
         row.append(InlineKeyboardButton(text=back_text, callback_data=back_callback))
     if show_home:
-        row.append(InlineKeyboardButton(text=HOME_TEXT, callback_data="menu:main"))
+        row.append(InlineKeyboardButton(text=HOME_TEXT, callback_data="nav:home"))
     return row
 
 
 def error_nav_markup() -> InlineKeyboardMarkup:
     """Inline Home for error / dead-end messages."""
-    return InlineKeyboardMarkup(inline_keyboard=[nav_row_buttons(back_callback="menu:main")])
+    return InlineKeyboardMarkup(inline_keyboard=[nav_row_buttons(back_callback="nav:home")])
 
 
 def connect_nav_markup(locale: str = "en") -> InlineKeyboardMarkup:
@@ -54,7 +56,7 @@ def connect_nav_markup(locale: str = "en") -> InlineKeyboardMarkup:
     connect_text = "Connect" if locale == "en" else "Подключить"
     return InlineKeyboardMarkup(inline_keyboard=[[
         InlineKeyboardButton(text=connect_text, callback_data="show_tariffs"),
-        InlineKeyboardButton(text=HOME_TEXT, callback_data="menu:main"),
+        InlineKeyboardButton(text=t(locale, HOME_TEXT), callback_data="nav:home"),
     ]])
 
 
@@ -63,5 +65,5 @@ def instruction_nav_markup(locale: str = "en") -> InlineKeyboardMarkup:
     open_connect = "Open Connect menu" if locale == "en" else "Открыть меню Подключить"
     return InlineKeyboardMarkup(inline_keyboard=[[
         InlineKeyboardButton(text=open_connect, callback_data="show_tariffs"),
-        InlineKeyboardButton(text=HOME_TEXT, callback_data="menu:main"),
+        InlineKeyboardButton(text=t(locale, HOME_TEXT), callback_data="nav:home"),
     ]])

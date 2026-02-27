@@ -5,10 +5,15 @@ import uuid
 from typing import Any, Awaitable, Callable, Dict
 
 from aiogram import BaseMiddleware
-from aiogram.types import TelegramObject
+from aiogram.types import Message, TelegramObject
 
 from utils.context import correlation_id_ctx
 from utils.logging import get_logger
+
+try:
+    from metrics import record_command
+except Exception:
+    record_command = None
 
 logger = get_logger(__name__)
 
@@ -48,6 +53,12 @@ class LoggingMiddleware(BaseMiddleware):
             event_type = type(event).__name__
             text = _safe_truncate(getattr(event, "text", None))
             callback_data = _safe_truncate(getattr(event, "data", None))
+
+            if record_command and isinstance(event, Message) and getattr(event, "text", ""):
+                txt = (event.text or "").strip()
+                if txt.startswith("/"):
+                    cmd = txt.split(maxsplit=1)[0].lstrip("/") or "start"
+                    record_command(cmd)
 
             logger.debug(
                 "bot.user_action",

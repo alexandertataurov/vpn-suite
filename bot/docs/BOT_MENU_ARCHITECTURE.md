@@ -14,37 +14,28 @@
 
 ## 2. Global Navigation Structure
 
+**Main menu:** Inline only (single message edited). No ReplyKeyboard in main flow. After /start + language → inline home menu from `render_menu("home")`.
+
 ```
-Main Menu (ReplyKeyboard — role-based)
-├─ [NEW CLIENT]
-│   ├─ Connect          → Plan list → Pay/Free → Add device → Config choice → Done
-│   ├─ Instruction      → Static install guide
-│   └─ Support          → Link / handle
-│
-├─ [EXISTING CLIENT]
-│   ├─ My cabinet       → Subscription status + device count
-│   ├─ Add device       → Type → Name → Server → Issue → Config choice → Done
-│   ├─ Devices          → List → [Config help | Replace | Remove] per device
-│   ├─ Reset device     → Pick device → Confirm → Revoke
-│   ├─ Invite friend    → Referral link + stats
-│   ├─ Promo code       → Enter code (then plan selection)
-│   ├─ Connect          → Plans (renew/extend)
-│   ├─ Instruction      → Install guide
-│   └─ Support          → Link / handle
-│
-Inline / Callbacks (contextual)
-├─ plan:{id}            → Create subscription + invoice or free activation
-├─ config_type:awg|wg_obf|wg  → Send chosen config (text + file + QR)
-├─ device_type:{key}    → Add device flow
-├─ server_select:{id}   → Issue device on server
-├─ device_reset:{id} / device_remove:{id}  → Revoke device
-├─ config_download:{id} / device_reissue:{id}  → Device list actions
-├─ menu:main            → Back to main ReplyKeyboard
-├─ menu:devices         → Back to device list
-└─ add_device_back_to_type  → Back to device type
+Inline Main Menu (nav:home)
+├─ Connect (nav:connect)     → Get config / Reissue / Add device / Tariffs / Locations
+├─ Subscription (nav:subs)  → Buy plan (nav:buy_plan) → pay_methods → pay:stars:<slug>, Promo (act:promo)
+├─ Devices (nav:devices)    → act:list_devices → list with dev:<id>:config|reissue|remove
+├─ Status (nav:status)      → act:service_status (calls /status API)
+├─ Settings (nav:settings)  → Language (nav:lang), Notifications (nav:notif), Security (nav:security)
+└─ Support (nav:support)    → FAQ, Talk support, Troubleshooter (nav:troubleshooter), Report (act:send_report)
 ```
 
-**Breadcrumb strategy:** Inline “⬅ Back” / “🏠 Home” always return to main menu. No nested breadcrumbs; max depth 2 (list → detail or list → action).
+**Callbacks (convention):**
+- `nav:<menu_id>` — open menu (e.g. nav:home, nav:subs, nav:pay_methods:plan_1m)
+- `act:<name>` — action (get_config, reissue_config, add_device, list_devices, promo, ts_*, send_report, …)
+- `dev:<id>:config|reissue|remove` — per-device actions (legacy: device_reset:, device_remove:, config_download:, device_reissue:)
+- `pay:stars:<plan_slug>` — pay with Telegram Stars
+- `plan:<id>` — select plan (subscription + invoice)
+- `menu:main` — legacy; edits to inline home. `menu:devices` — refresh device list.
+- `lang_ru` / `lang_en` — set language (start.py)
+
+**Breadcrumb:** Inline “⬅ Back” / “🏠 Home” return to home or parent. Max depth ~2.
 
 ---
 
@@ -75,7 +66,7 @@ Inline / Callbacks (contextual)
 | Entry | /start | Language already in state → welcome + **existing** menu (Profile, Add device, Devices, …) |
 | Or | Any “Home” | Inline [🏠 Home] → main ReplyKeyboard (API check: show existing menu if has active sub) |
 
-**Decision:** After language, `get_user_by_tg` + active subscription check → one of two keyboards (new vs existing).  
+**Decision:** After language, `get_user_by_tg` + active subscription check → inline home or entry (trial) keyboard.  
 **Exit:** Same as onboarding end state.
 
 ---
