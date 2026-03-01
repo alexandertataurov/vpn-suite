@@ -39,7 +39,7 @@
 
 | Change | Files | Risk |
 |--------|-------|------|
-| Outline integration removed | `outline.py` (D), `outline_client.py` (D), `outline.py` schema (D), `test_outline_api.py` (D) | **High** — Breaking if clients depend on Outline API |
+| Outline integration removed (unsupported) | `outline.py` (D), `outline_client.py` (D), schema (D), tests (D). Outline is off by default; use AmneziaWG + node-agent only. | **High** — Breaking if clients depended on Outline API |
 | Analytics API added | `backend/app/api/v1/analytics.py` (new) — `/analytics/telemetry/services`, `/analytics/metrics/kpis` | Low — additive |
 | OpenTelemetry tracing | `backend/app/core/otel_tracing.py` (new), `main.py`, `config.py` | Low — opt-in via `OTEL_TRACES_ENDPOINT` |
 | Overview / operator dashboard | `overview.py`, `operator_dashboard_service.py`, `servers_telemetry.py` | Medium — core dashboard data path |

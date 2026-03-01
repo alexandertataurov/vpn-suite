@@ -31,7 +31,7 @@
 
 ## 3. Optional Cleanup
 
-- [ ] Remove dead Outline references in comments
+- [x] Legacy schema references cleaned in migrations (032/033/035/036)
 - [ ] Update CHANGELOG with breaking changes
 - [ ] Ensure .env.example has all required vars documented
 - [ ] Run `./manage.sh smoke-staging` end-to-end (requires stack)

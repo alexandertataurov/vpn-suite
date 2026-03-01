@@ -19,13 +19,13 @@
 
 - Upgrade: op.drop_column("devices", "outline_key_id")
 - Downgrade: Adds column back nullable; data in dropped column is lost.
-- Context: Outline API removed.
+- Context: Schema cleanup (legacy column).
 
 ### 036 — servers.integration_type
 
 - Upgrade: op.drop_column("servers", "integration_type")
 - Downgrade: Adds column back with server_default="awg"; data lost.
-- Context: Outline API removed.
+- Context: Schema cleanup (legacy column).
 
 ---
 
@@ -33,7 +33,7 @@
 
 - [ ] No remaining references to outline_key_id in code
 - [ ] No remaining references to integration_type in code
-- [ ] Outline API removed (done)
+- [ ] No Outline/legacy API in use (removed)
 - [ ] Backup DB before migration
 - [ ] Test migration on staging
 - [ ] Test downgrade/upgrade cycle (alembic downgrade -1; alembic upgrade head)

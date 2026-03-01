@@ -9,12 +9,19 @@ Precise map of the repository structure, entry points, and responsibilities.
 
 | File / Dir           | Purpose                                                                                                                                                                                                               |
 | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `manage.sh`          | Ops CLI: `up-core`, `up-api`, `up-monitoring`, `down-core`, `bootstrap`, `up-agent`, `migrate`, `seed`, `seed-plans`, `seed-nodes`, `seed-agent-server`, `seed-operator`, `check`, `verify`, `smoke-staging`, `smoke-ha`, `config`, `config-validate`, `build`, `build-bot`, `build-admin`, `build-webapp`, `openapi`, `backup-db`, `restore-db`, `node-sync`, `node-resync`, `node-list`, `ps`, `logs` |
+| `manage.sh`          | Ops CLI: `up-core`, `up-api`, `up-monitoring`, `down-core`, `bootstrap`, `up-agent`, `migrate`, `seed*`, `check`, `verify`, `smoke-staging`, `config`, `config-validate`, `build*`, `backup-db`, `restore-db`, `node-*`, `server:verify`, `server:sync`, `server:reconcile`, `device:reissue`, `support-bundle`, `ps`, `logs`. See README.md and [docs/ops/runbook.md](ops/runbook.md). |
 | `docker-compose.yml` | Services: admin-api, reverse-proxy, postgres, redis, telegram-vpn-bot; profile `monitoring`: prometheus, cadvisor, node-exporter, loki, promtail, grafana                                                             |
 | `.env.example`       | Env template; copy to `.env` (single source of truth); manage.sh uses `.env` unless `ENV_FILE` set                                                                                                                    |
 | `AGENTS.MD`          | Architecture, constraints, API contract, AmneziaWG/WireGuard control channel                                                                                                                                          |
 | `README.md`          | Quick start, key commands, stack summary                                                                                                                                                                              |
 
+
+### 1.1 Operations (agent-only ownership, key verification, support)
+
+- **Production:** Must use `NODE_DISCOVERY=agent`; only node-agent mutates WireGuard/AmneziaWG peers. Control-plane with docker discovery refuses to start when `ENVIRONMENT=production`.
+- **Key verification:** Issuance and reissue use live server key from node/heartbeat; block with 409 `SERVER_NOT_SYNCED` if key unknown. Run `./manage.sh server:sync <server_id>` to sync key to DB.
+- **Reconcile:** In agent mode, node-agent pulls desired state and reconciles; in docker mode use `./manage.sh server:reconcile <server_id>` or `node-resync`.
+- **Support bundle:** `./manage.sh support-bundle [--output DIR]` collects bounded logs, Redis agent keys, manifest. Audit events: `GET /api/v1/audit?limit=N`.
 
 ---
 

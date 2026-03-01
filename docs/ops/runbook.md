@@ -1,5 +1,7 @@
 # Runbook — Ops, Troubleshooting, Backups
 
+**Production:** Must use `NODE_DISCOVERY=agent` and `NODE_MODE=agent`. Only node-agent may mutate WireGuard/AmneziaWG peers. Control-plane with `NODE_DISCOVERY=docker` will refuse to start when `ENVIRONMENT=production`.
+
 ## Env & secrets
 
 - **Config:** repo-root `.env` (chmod 600). mTLS: `secrets/agent_ca.pem`, `secrets/pki/agent_ca.key`. Node: `amnezia-awg2/secrets/node.env` (0600).
@@ -22,6 +24,7 @@ Node (per server): `cd /opt/amnezia/amnezia-awg2 && ./manage.sh up|down`
 ## Backups
 
 - **Postgres:** `./manage.sh backup-db` → `backups/postgres/pgdump_*.dump`. Restore: `./manage.sh restore-db --force backups/postgres/pgdump_<ts>.dump` (run on staging first).
+- **Safeguards:** See [postgres-safeguards.md](postgres-safeguards.md) — never run `docker compose down -v`; `rebuild-restart` and `down-core` auto-backup unless `BACKUP_SKIP=1`.
 - **Redis:** `docker compose exec redis redis-cli BGSAVE`; copy volume or `dump.rdb`. Restore: stop admin-api/redis, replace data, start.
 - **Schedule:** use `ops/systemd/vpn-suite-backup-db.timer`.
 
@@ -34,6 +37,8 @@ Node (per server): `cd /opt/amnezia/amnezia-awg2 && ./manage.sh up|down`
 **500:** Use request ID in logs for stack trace. Typical: DB/Redis, missing config, route error.
 
 **Control-plane 503:** `GET /api/v1/control-plane/automation/status` and events need migrations (control_plane_events), admin with `cluster:read`. If 500 → check logs for migration/RBAC.
+
+**Postgres PANIC / "No space left on device":** Host disk full. Immediate: `df -h`; free space (`docker system prune`, remove old backups). Long-term: add `node_filesystem_avail_bytes` / `node_filesystem_size_bytes` alert (e.g. <15% free); rotate logs; monitor Docker volumes.
 
 **ServersAPIHigh5xxRate:** Check logs for 5xx on `/api/v1/servers*`; verify Postgres/Redis.
 
@@ -60,6 +65,52 @@ Node (per server): `cd /opt/amnezia/amnezia-awg2 && ./manage.sh up|down`
 - After 24h stable synthetic checks, restore previous TTL.
 - If a DNS record change caused regression, restore provider export/snapshot immediately.
 
+## Debug broken node metrics
+
+Use this flow when `/admin/telemetry` or `/admin/servers` shows missing/stale metrics.
+
+1. Validate API and scrape health:
+   - `curl -sS http://127.0.0.1:8000/health`
+   - `curl -sS http://127.0.0.1:8000/api/v1/servers/telemetry/summary -H "Authorization: Bearer <ADMIN_JWT>"`
+   - `curl -sS http://127.0.0.1:8000/api/v1/telemetry/docker/hosts -H "Authorization: Bearer <ADMIN_JWT>"`
+2. Check Prometheus and recent scrape state:
+   - `curl -sS http://127.0.0.1:9090/-/ready`
+   - `curl -sS 'http://127.0.0.1:9090/api/v1/query?query=up'`
+3. Check telemetry ingest and cache freshness metrics:
+   - `curl -sS http://127.0.0.1:8000/metrics | rg 'frontend_telemetry_(events|batches)_total|vpn_server_snapshot_staleness_seconds'`
+4. Check API and worker logs with request/correlation IDs:
+   - `docker compose logs admin-api --since 30m | rg 'frontend\\.event|api.request.end|request_id|correlation_id'`
+   - `docker compose logs admin-worker --since 30m | rg 'telemetry|snapshot|error'`
+5. If dashboard is stale but API routes are healthy, force refresh paths:
+   - `./manage.sh server:sync <server_id>`
+   - `curl -sS http://127.0.0.1:8000/api/v1/servers/snapshots/summary -H "Authorization: Bearer <ADMIN_JWT>"`
+
+Expected:
+- `/servers/telemetry/summary` returns `200`.
+- `frontend_telemetry_events_total` and `frontend_telemetry_batches_total` increase after UI activity.
+- API logs contain matching `request_id` and `correlation_id`.
+
+## Trace a user action end-to-end
+
+Use this for incident triage from UI action to backend logs/metrics/audit.
+
+1. Trigger the action in Admin UI and capture the debug packet from the error/success surface.
+   - Packet must include endpoint, status, `request_id`, and `correlation_id`.
+2. Search API logs by `request_id` first:
+   - `docker compose logs admin-api --since 30m | rg '<request_id>'`
+3. Correlate cross-request/tab behavior by `correlation_id`:
+   - `docker compose logs admin-api --since 30m | rg '<correlation_id>'`
+4. Check audit events for privileged mutations:
+   - `curl -sS 'http://127.0.0.1:8000/api/v1/audit?limit=50&offset=0' -H "Authorization: Bearer <ADMIN_JWT>"`
+   - Filter by `request_id`.
+5. Validate metrics for action impact:
+   - `curl -sS http://127.0.0.1:8000/metrics | rg 'frontend_telemetry_events_total|vpn_server_sync_total|vpn_admin_rotate_total'`
+
+Expected:
+- Response headers echo `X-Request-ID` and `X-Correlation-ID`.
+- Error envelope `meta` includes `request_id` and `correlation_id`.
+- Audit and metrics can be matched to the same action window.
+
 ## Restart / rotate keys / profile
 
 - **Restart AmneziaWG:** Disconnects peers briefly; clients usually reconnect. Needs confirm token. No rollback except fix container if it doesn’t start.
@@ -73,6 +124,13 @@ Node (per server): `cd /opt/amnezia/amnezia-awg2 && ./manage.sh up|down`
 3. Run `./manage.sh sanity-check` after changing env to verify there is no mixed control-plane (e.g. node-agent running while `NODE_DISCOVERY=docker`).
 4. Set server `public_key` and `vpn_endpoint` (Admin or API).
 5. Issue config from bot or admin; add_peer does not drop existing peers.
+
+## Drift, key sync, reissue, support-bundle
+
+- **Drift:** In agent mode, node-agent reconciles desired state from the API; use agent logs and `agent_peers_desired` / `agent_peers_runtime` metrics. In docker mode, control-plane runs reconcile loop; trigger once with `./manage.sh node-resync` or `./manage.sh server:reconcile <server_id>` (single node).
+- **Key sync:** If server key in DB is stale or issuance returns `SERVER_NOT_SYNCED`, run `./manage.sh server:sync <server_id>` (runs `fix_server_public_key.py`) so DB gets the live key from node/heartbeat.
+- **Reissue device:** Use API `POST /api/v1/devices/{device_id}/reissue` with admin auth. Blocks with 409 if server key not verified; run server:sync first if needed.
+- **Support bundle:** `./manage.sh support-bundle [--output DIR]` collects bounded service logs (admin-api, admin-worker), Redis agent heartbeat keys list, and manifest. For last N audit events use `GET /api/v1/audit?limit=N` with admin auth.
 
 ## Host isolation (production)
 

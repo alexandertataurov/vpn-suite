@@ -84,7 +84,7 @@
 
 | Component | Purpose |
 |-----------|--------|
-| **ConnectionStatusCard** | Hero status + location + primary CTA |
+| **HomeHeroPanel** | Hero status + location (supersedes ConnectionStatusCard) |
 | **SubscriptionSummaryCard** | Plan, days left, devices |
 | **PlanCard** | Plan item with “Best value” badge, price, CTA |
 | **DeviceCard** | Device name, last active, status, Reissue/Remove |

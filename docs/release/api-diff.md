@@ -22,11 +22,11 @@
 
 | Endpoint | Method | Notes |
 |----------|--------|-------|
-| `/api/v1/outline/*` | all | Entire Outline API removed; outline.py, outline_client.py, tests deleted |
-| `/api/v1/outline/servers` | GET | Outline server list |
-| `/api/v1/outline/servers/{id}/keys` | GET/POST | Outline keys management |
+| `/api/v1/outline/*` | all | Legacy Outline API removed (unsupported). Use AmneziaWG + node-agent only. |
+| `/api/v1/outline/servers` | GET | Legacy Outline server list |
+| `/api/v1/outline/servers/{id}/keys` | GET/POST | Legacy Outline keys management |
 
-**Impact:** Clients depending on Outline API will break. No replacement endpoint.
+**Impact:** Outline is off by default; no replacement endpoint. Use control-plane + node-agent for AmneziaWG.
 
 ### 2.2 Added
 
