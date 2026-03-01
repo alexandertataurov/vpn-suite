@@ -1,0 +1,176 @@
+import { expect, test, type Page } from "@playwright/test";
+
+const VIEWPORTS = [
+  { name: "mobile", width: 390, height: 844 },
+  { name: "desktop", width: 1024, height: 900 },
+] as const;
+
+const ROUTES = [
+  { path: "/", readyText: /Connect Now|Manage Connection|Get config/i },
+  { path: "/plan", readyText: /Choose Your Plan/i },
+  { path: "/plan/checkout/plan-pro", readyText: /Plan plan-pro|Checkout/i },
+  { path: "/devices", readyText: /My devices/i },
+  { path: "/servers", readyText: /Servers/i },
+  { path: "/referral", readyText: /Invite friends/i },
+  { path: "/support", readyText: /Support/i },
+  { path: "/settings", readyText: /Settings/i },
+] as const;
+
+async function injectTelegram(page: Page) {
+  await page.addInitScript(() => {
+    const fixedNow = new Date("2030-01-15T12:00:00.000Z").getTime();
+    Date.now = () => fixedNow;
+    (window as unknown as { Telegram?: { WebApp: { initData: string; ready: () => void } } }).Telegram = {
+      WebApp: { initData: "e2e-test", ready: () => {} },
+    };
+  });
+}
+
+async function mockApi(page: Page) {
+  await page.route("**/*", async (route) => {
+    const url = route.request().url();
+    if (url.includes("/api/v1/webapp/telemetry")) {
+      await route.fulfill({ status: 204, body: "" });
+      return;
+    }
+    if (url.includes("/api/v1/health/ready")) {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ status: "ok" }),
+      });
+      return;
+    }
+    if (url.includes("/api/v1/webapp/auth")) {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ session_token: "e2e-session", expires_in: 3600 }),
+      });
+      return;
+    }
+    if (url.includes("/api/v1/webapp/me")) {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          user: { id: 1, tg_id: 12345 },
+          subscriptions: [
+            {
+              id: "sub-1",
+              plan_id: "plan-pro",
+              status: "active",
+              valid_until: "2030-03-01T00:00:00Z",
+              device_limit: 5,
+            },
+          ],
+          devices: [],
+          onboarding: { completed: true, step: 2, version: 1, updated_at: "2030-01-15T12:00:00Z" },
+        }),
+      });
+      return;
+    }
+    if (url.includes("/api/v1/webapp/plans")) {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          items: [
+            { id: "plan-basic", name: "Basic", duration_days: 30, price_amount: 99, price_currency: "Stars" },
+            { id: "plan-pro", name: "Pro", duration_days: 90, price_amount: 249, price_currency: "Stars" },
+          ],
+        }),
+      });
+      return;
+    }
+    if (url.includes("/api/v1/webapp/servers")) {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          auto_select: true,
+          items: [
+            {
+              id: "srv-1",
+              name: "Frankfurt",
+              region: "de",
+              is_current: true,
+              load_percent: 42,
+              avg_ping_ms: 27,
+            },
+            {
+              id: "srv-2",
+              name: "New York",
+              region: "us",
+              is_current: false,
+              load_percent: 63,
+              avg_ping_ms: 104,
+            },
+          ],
+        }),
+      });
+      return;
+    }
+    if (url.includes("/api/v1/webapp/referral/my-link")) {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ payload: "invite-token" }),
+      });
+      return;
+    }
+    if (url.includes("/api/v1/webapp/referral/stats")) {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          earned_days: 14,
+          active_referrals: 2,
+          pending_rewards: 1,
+          total_referrals: 3,
+          invite_goal: 4,
+          invite_progress: 3,
+          invite_remaining: 1,
+        }),
+      });
+      return;
+    }
+    if (url.includes("/api/v1/webapp/subscription/offers")) {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          subscription_id: "sub-1",
+          can_pause: true,
+          can_resume: false,
+          discount_percent: 20,
+        }),
+      });
+      return;
+    }
+    await route.continue();
+  });
+}
+
+test.describe("Miniapp Visual Regression", () => {
+  test("spacex layout snapshots remain stable across core routes and viewports", async ({ page }) => {
+    await injectTelegram(page);
+    await mockApi(page);
+
+    for (const viewport of VIEWPORTS) {
+      await page.setViewportSize({ width: viewport.width, height: viewport.height });
+
+      for (const route of ROUTES) {
+        const url = route.path === "/" ? "./?tgWebAppData=e2e-test" : `.${route.path}?tgWebAppData=e2e-test`;
+        await page.goto(url);
+        await expect(page.getByText(route.readyText).first()).toBeVisible({ timeout: 15000 });
+        await page.waitForLoadState("networkidle");
+
+        const routeId = route.path === "/" ? "home" : route.path.replaceAll("/", "-").replace(/^-/, "");
+        await expect(page).toHaveScreenshot(`spacex-${routeId}-${viewport.name}.png`, {
+          fullPage: true,
+        });
+      }
+    }
+  });
+});

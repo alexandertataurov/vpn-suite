@@ -1,5 +1,4 @@
-import { Link } from "react-router-dom";
-import { Panel } from "@vpn-suite/shared/ui";
+import { Panel, ButtonLink, H3, Caption, Body } from "../ui";
 
 export interface PlanCardProps {
   id: string;
@@ -26,26 +25,27 @@ export function PlanCard({
 
   return (
     <Panel
-      className={`card plan-card ${isBestValue ? "plan-card-best" : ""} ${isCurrent ? "plan-card-current" : ""}`}
+      className={`card instrument-card ${isCurrent ? "instrument-card--active" : "instrument-card--inactive"} plan-card ${isBestValue ? "plan-card-best" : ""} ${isCurrent ? "plan-card-current" : ""}`}
     >
       {isBestValue && (
         <span className="plan-card-badge">Best value</span>
       )}
-      <h3 className="plan-card-name">{name}</h3>
-      <p className="plan-card-duration text-muted fs-sm">
+      <H3 as="h3" className="plan-card-name tracking-trim data-truncate">{name}</H3>
+      <Caption className="plan-card-duration" tabular>
         {durationDays} days
-      </p>
-      <p className="plan-card-price">
+      </Caption>
+      <Body className="plan-card-price" tabular>
         {priceAmount} {priceCurrency}
-      </p>
+      </Body>
       {!isCurrent && (
-        <Link
+        <ButtonLink
           to={checkoutPath}
-          className="plan-card-cta button button-primary button-lg"
+          variant="primary"
+          size="lg"
           onClick={() => onSelect?.(id)}
         >
           Get {name}
-        </Link>
+        </ButtonLink>
       )}
     </Panel>
   );

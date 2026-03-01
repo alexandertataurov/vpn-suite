@@ -4,8 +4,15 @@ import { BrowserRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "@vpn-suite/shared/theme";
 import App from "./App";
-import "@vpn-suite/shared/global.css";
+import { initWebVitals } from "./telemetry/webVitals";
+import { wireGlobalErrors } from "./telemetry/errors";
+import { initSentry } from "./telemetry/sentry";
+import "./shared-inline/global.css";
 import "./miniapp.css";
+
+initWebVitals();
+wireGlobalErrors();
+initSentry();
 
 const queryClient = new QueryClient({
   defaultOptions: {

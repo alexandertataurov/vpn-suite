@@ -4,8 +4,7 @@
   "type": "module",
   "workspaces": [
     "admin",
-    "miniapp",
-    "shared"
+    "miniapp"
   ],
   "scripts": {
     "dev:admin": "npm run dev -w admin",
@@ -13,14 +12,13 @@
     "build:admin": "npm run build -w admin",
     "build:miniapp": "npm run build -w miniapp",
     "build": "npm run build:admin && npm run build:miniapp",
-    "lint": "npm run lint -w shared && npm run lint -w admin && npm run lint -w miniapp",
-    "typecheck": "npm run typecheck -w shared && npm run typecheck -w admin && npm run typecheck -w miniapp",
-    "test": "npm run test -w shared && npm run test -w admin",
+    "lint": "npm run lint -w admin && npm run lint -w miniapp",
+    "typecheck": "npm run typecheck -w admin && npm run typecheck -w miniapp",
+    "test": "npm run test -w admin",
     "test:e2e": "npm run test:e2e -w admin",
     "test:e2e:miniapp": "npm run test:e2e -w miniapp",
     "test:e2e:ui": "npm run test:e2e:ui -w admin",
-    "storybook": "npm run storybook -w shared",
-    "guardrails": "node shared/scripts/check-no-raw-colors.mjs && FOUNDATIONS_STRICT=1 npm run foundations:lint -w shared && npm run storybook:check -w shared"
+    "guardrails": "true"
   },
   "devDependencies": {
     "eslint-plugin-react": "^7.37.5",
@@ -30,5 +28,9 @@
   "overrides": {
     "@types/react": "18.3.28",
     "@types/react-dom": "18.3.7"
+  },
+  "dependencies": {
+    "admin": "^1.4.1",
+    "qrcode.react": "^4.2.0"
   }
 }

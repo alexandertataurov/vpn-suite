@@ -9,12 +9,15 @@
     "lint": "eslint src --ext .ts,.tsx",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "preview": "vite preview",
-    "test:e2e": "npm run build && playwright test",
-    "test:e2e:dev": "PLAYWRIGHT_WEB_SERVER_MODE=dev playwright test"
+    "check:all": "pnpm run typecheck && pnpm run lint && pnpm run build && pnpm run test:e2e",
+    "test:e2e": "pnpm run build && pnpm exec playwright test",
+    "test:visual": "pnpm run build && pnpm exec playwright test e2e/visual-regression.spec.ts",
+    "test:e2e:dev": "PLAYWRIGHT_WEB_SERVER_MODE=dev pnpm exec playwright test",
+    "test:e2e:docker": "docker run --rm -t -e CI=1 -e PLAYWRIGHT_WEB_SERVER_MODE=preview -v \"$(pwd)/..\":/work -w /work -v miniapp_node_modules:/work/miniapp/node_modules -v shared_node_modules:/work/shared/node_modules -v frontend_node_modules:/work/node_modules -v pnpm_store:/pnpm-store mcr.microsoft.com/playwright:v1.58.2-noble bash -lc \"npm i -g pnpm@9 && pnpm config set store-dir /pnpm-store && pnpm install --frozen-lockfile --force && pnpm -C miniapp run build && pnpm -C miniapp exec playwright test\""
   },
   "dependencies": {
+    "@sentry/react": "^8.55.0",
     "@tanstack/react-query": "^5.62.0",
-    "@vpn-suite/shared": "file:../shared",
     "lucide-react": "^0.487.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -22,7 +25,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.3",
-    "@playwright/test": "^1.49.0",
+    "@playwright/test": "1.58.2",
     "@types/node": "^22.0.0",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",

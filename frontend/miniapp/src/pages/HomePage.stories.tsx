@@ -3,6 +3,7 @@ import { HomePage } from "./Home";
 import { MockWebappApi } from "../storybook/webappMocks";
 import { MiniappFrame } from "../storybook/wrappers";
 import { webappMeActive, webappMeNoSubscription } from "../storybook/fixtures";
+import { Body } from "../ui";
 
 const meta: Meta<typeof HomePage> = {
   title: "Pages/Miniapp/Home",
@@ -36,7 +37,7 @@ export const Variants: Story = {
 export const Sizes: Story = {
   render: () => (
     <div className="sb-stack">
-      <p className="m-0">Reference layout only; size variants are not exposed.</p>
+      <Body>Reference layout only; size variants are not exposed.</Body>
       {renderPage({ mode: "success", me: webappMeActive })}
     </div>
   ),

@@ -4,7 +4,7 @@ import { webappApi } from "../api/client";
 const BUILD_VERSION =
   typeof import.meta !== "undefined" && import.meta.env?.MODE ? import.meta.env.MODE : "unknown";
 
-export interface TelemetryPayload {
+interface TelemetryPayload {
   screen_name?: string;
   cta_name?: string;
   plan_id?: string;

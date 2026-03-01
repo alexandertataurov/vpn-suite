@@ -1,4 +1,4 @@
-import { Panel } from "@vpn-suite/shared/ui";
+import { Panel, Caption, Body } from "../ui";
 
 export interface SubscriptionSummaryCardProps {
   planId: string;
@@ -28,27 +28,27 @@ export function SubscriptionSummaryCard({
 
   return (
     <Panel
-      className={`card subscription-summary-card subscription-summary-card--status-${status}`}
+      className={`card instrument-card ${status === "expired" ? "instrument-card--alert" : status === "active" ? "instrument-card--active" : "instrument-card--inactive"} subscription-summary-card subscription-summary-card--status-${status}`}
     >
-      <p className="text-muted fs-sm mb-0">Subscription</p>
-      <p className="mt-xs mb-0">
+      <Caption>Subscription</Caption>
+      <Body>
         {status === "none" ? (
           "No active plan"
         ) : (
           <>
-            Plan <span className="text-primary">{planId}</span>
+            Plan <span className="subscription-summary-plan-id">{planId}</span>
           </>
         )}
-      </p>
+      </Body>
       {status !== "none" && (
-        <p className={`fs-sm mt-xs mb-0 ${daysLeft <= 7 ? "text-warning" : ""}`}>
+        <Caption className={daysLeft <= 7 ? "subscription-summary-warning" : ""}>
           {daysLabel}
-        </p>
+        </Caption>
       )}
       {deviceLimit != null && status === "active" && (
-        <p className="fs-sm mt-xs mb-0">
+        <Caption tabular>
           Devices: <strong>{deviceCount}</strong> / <strong>{deviceLimit}</strong>
-        </p>
+        </Caption>
       )}
     </Panel>
   );

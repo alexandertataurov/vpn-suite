@@ -1,4 +1,4 @@
-import { Panel, Button } from "@vpn-suite/shared/ui";
+import { Panel, Button, Caption, H3, Body, ActionRow } from "../ui";
 
 export interface TroubleshooterStepProps {
   stepIndex: number;
@@ -23,12 +23,12 @@ export function TroubleshooterStep({
 }: TroubleshooterStepProps) {
   return (
     <Panel className="card troubleshooter-step">
-      <p className="text-muted fs-sm mb-sm">
+      <Caption>
         Step {stepIndex} of {totalSteps}
-      </p>
-      <h3 className="troubleshooter-step-title">{title}</h3>
-      <p className="troubleshooter-step-body mb-md">{body}</p>
-      <div className="flex gap-sm flex-wrap">
+      </Caption>
+      <H3 as="h3" className="troubleshooter-step-title">{title}</H3>
+      <Body className="troubleshooter-step-body">{body}</Body>
+      <ActionRow>
         {onBack && backLabel && (
           <Button variant="ghost" size="sm" onClick={onBack}>
             {backLabel}
@@ -37,7 +37,7 @@ export function TroubleshooterStep({
         <Button variant="primary" size="sm" onClick={onNext}>
           {nextLabel}
         </Button>
-      </div>
+      </ActionRow>
     </Panel>
   );
 }

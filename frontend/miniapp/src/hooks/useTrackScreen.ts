@@ -5,6 +5,6 @@ export function useTrackScreen(screenName: string, userPlan?: string | null) {
   const { track } = useTelemetry(userPlan);
 
   useEffect(() => {
-    track("screen_open", { screen_name: screenName });
+    track("screen_view", { screen_name: screenName });
   }, [screenName, track]);
 }

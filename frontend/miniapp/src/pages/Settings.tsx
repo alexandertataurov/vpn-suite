@@ -1,24 +1,29 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Panel,
   Button,
+  ButtonLink,
   Skeleton,
-  InlineAlert,
   ConfirmModal,
   useToast,
-} from "@vpn-suite/shared/ui";
+  PageScaffold,
+  PageHeader,
+  PageSection,
+  ActionRow,
+  Body,
+  Caption,
+} from "../ui";
 import type { WebAppSubscriptionOffersResponse } from "@vpn-suite/shared/types";
 import { useSession } from "../hooks/useSession";
-import { getWebappToken, webappApi } from "../api/client";
+import { useWebappToken, webappApi } from "../api/client";
 import { DangerZone } from "../components/DangerZone";
 import { FallbackScreen } from "../components/FallbackScreen";
 import { SessionMissing } from "../components/SessionMissing";
 import { useTrackScreen } from "../hooks/useTrackScreen";
 
 export function SettingsPage() {
-  const hasToken = !!getWebappToken();
+  const hasToken = !!useWebappToken();
   const queryClient = useQueryClient();
   const { data, isLoading, error } = useSession(hasToken);
   const { addToast } = useToast();
@@ -26,15 +31,14 @@ export function SettingsPage() {
   const activeSub = data?.subscriptions?.find((s) => s.status === "active");
   useTrackScreen("settings", activeSub?.plan_id ?? null);
 
-  const { data: offers } = useQuery<WebAppSubscriptionOffersResponse>({
+  const { data: offers, isLoading: offersLoading, error: offersError } = useQuery<WebAppSubscriptionOffersResponse>({
     queryKey: ["webapp", "subscription", "offers"],
     queryFn: () => webappApi.get<WebAppSubscriptionOffersResponse>("/webapp/subscription/offers"),
     enabled: hasToken,
   });
 
   const pauseMutation = useMutation({
-    mutationFn: () =>
-      webappApi.post("/webapp/subscription/pause", { subscription_id: offers?.subscription_id }),
+    mutationFn: () => webappApi.post("/webapp/subscription/pause", { subscription_id: offers?.subscription_id }),
     onSuccess: () => {
       addToast("Subscription paused", "success");
       queryClient.invalidateQueries({ queryKey: ["webapp", "me"] });
@@ -43,8 +47,7 @@ export function SettingsPage() {
   });
 
   const resumeMutation = useMutation({
-    mutationFn: () =>
-      webappApi.post("/webapp/subscription/resume", { subscription_id: offers?.subscription_id }),
+    mutationFn: () => webappApi.post("/webapp/subscription/resume", { subscription_id: offers?.subscription_id }),
     onSuccess: () => {
       addToast("Subscription resumed", "success");
       queryClient.invalidateQueries({ queryKey: ["webapp", "me"] });
@@ -95,66 +98,93 @@ export function SettingsPage() {
   }
   if (isLoading) {
     return (
-      <div className="page-content">
-        <h1 className="miniapp-page-title">Settings</h1>
+      <PageScaffold>
+        <PageHeader title="Settings" subtitle="Preferences and account" />
         <Skeleton variant="card" />
-      </div>
+      </PageScaffold>
     );
   }
 
   const activeDevices = data?.devices?.filter((d) => !d.revoked_at) ?? [];
 
   return (
-    <div className="page-content">
-      <div className="miniapp-page-header">
-        <div>
-          <h1 className="miniapp-page-title">Settings</h1>
-          <p className="miniapp-page-subtitle">Preferences and account</p>
-        </div>
-      </div>
+    <PageScaffold>
+      <PageHeader title="Settings" subtitle="Preferences and account" />
 
-      <Panel className="card mb-md">
-        <h2 className="card-title">Language</h2>
-        <p className="fs-sm text-muted mb-0">System default</p>
-      </Panel>
-
-      <Panel className="card mb-md">
-        <h2 className="card-title">Notifications</h2>
-        <p className="fs-sm text-muted mb-0">Expiry reminders via bot</p>
-      </Panel>
-
-      <Panel className="card mb-md">
-        <h2 className="card-title">Security</h2>
-        <p className="fs-sm mb-sm">Revoke device configs from the Devices tab if a config is compromised.</p>
-        <Link to="/devices">
-          <Button variant="secondary" size="sm">Manage devices</Button>
-        </Link>
-      </Panel>
-
-      <Panel className="card mb-md">
-        <h2 className="card-title">Invite friends</h2>
-        <p className="fs-sm mb-sm">Share your referral link and get rewards.</p>
-        <Link to="/referral">
-          <Button variant="secondary" size="sm">Get referral link</Button>
-        </Link>
-      </Panel>
-
-      {offers && (offers.can_pause || offers.can_resume) && (
-        <Panel className="card mb-md">
-          <h2 className="card-title">Manage subscription</h2>
-          <p className="fs-sm mb-sm">Pause or resume. Loyalty discount: {offers.discount_percent}%.</p>
-          <div className="flex gap-sm flex-wrap">
-            <Button variant="secondary" size="sm" disabled={!offers.can_pause || pauseMutation.isPending} loading={pauseMutation.isPending} onClick={() => pauseMutation.mutate()}>
-              Pause
-            </Button>
-            <Button variant="ghost" size="sm" disabled={!offers.can_resume || resumeMutation.isPending} loading={resumeMutation.isPending} onClick={() => resumeMutation.mutate()}>
-              Resume
-            </Button>
-            <Button variant="danger" size="sm" onClick={() => setCancelOpen(true)} disabled={cancelMutation.isPending}>
-              Cancel
-            </Button>
-          </div>
+      <PageSection title="Preferences" description="General miniapp preferences.">
+        <Panel className="card hud-brackets">
+          <Body>Language: System default</Body>
+          <Caption>Notifications: Expiry reminders via bot</Caption>
         </Panel>
+      </PageSection>
+
+      <PageSection title="Account actions">
+        <Panel className="card hud-brackets">
+          <Body>Manage devices and referral settings from quick links below.</Body>
+          <ActionRow fullWidth>
+            <ButtonLink to="/devices" variant="secondary" size="md">
+              Manage devices
+            </ButtonLink>
+            <ButtonLink to="/referral" variant="secondary" size="md">
+              Referral link
+            </ButtonLink>
+          </ActionRow>
+        </Panel>
+      </PageSection>
+
+      {offersLoading && (
+        <Panel className="card">
+          <Skeleton height={24} />
+          <Skeleton height={16} />
+        </Panel>
+      )}
+      {offersError && (
+        <Panel className="card">
+          <Body>Subscription options could not be loaded. Try again later.</Body>
+          <ActionRow fullWidth>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => queryClient.invalidateQueries({ queryKey: ["webapp", "subscription", "offers"] })}
+            >
+              Try again
+            </Button>
+          </ActionRow>
+        </Panel>
+      )}
+      {offers && !offersError && (offers.can_pause || offers.can_resume) && (
+        <PageSection title="Manage subscription" description={`Loyalty discount: ${offers.discount_percent}%`}>
+          <Panel className="card">
+            <ActionRow fullWidth>
+              <Button
+                variant="secondary"
+                size="md"
+                disabled={!offers.can_pause || pauseMutation.isPending}
+                loading={pauseMutation.isPending}
+                onClick={() => pauseMutation.mutate()}
+              >
+                Pause
+              </Button>
+              <Button
+                variant="secondary"
+                size="md"
+                disabled={!offers.can_resume || resumeMutation.isPending}
+                loading={resumeMutation.isPending}
+                onClick={() => resumeMutation.mutate()}
+              >
+                Resume
+              </Button>
+              <Button
+                variant="danger"
+                size="md"
+                onClick={() => setCancelOpen(true)}
+                disabled={cancelMutation.isPending}
+              >
+                Cancel subscription
+              </Button>
+            </ActionRow>
+          </Panel>
+        </PageSection>
       )}
 
       {activeDevices.length > 0 && (
@@ -182,6 +212,6 @@ export function SettingsPage() {
         variant="danger"
         loading={cancelMutation.isPending}
       />
-    </div>
+    </PageScaffold>
   );
 }

@@ -1,22 +1,42 @@
-import { useState } from "react";
-import { Panel, Button, DeviceCard, Skeleton, SkeletonList, useToast, EmptyState, InlineAlert, ConfirmModal } from "@vpn-suite/shared/ui";
+import { useEffect, useRef, useState } from "react";
+import {
+  Panel,
+  Button,
+  DeviceCard,
+  Skeleton,
+  SkeletonList,
+  useToast,
+  EmptyState,
+  ConfirmModal,
+  PageScaffold,
+  PageHeader,
+  PageSection,
+  InlineAlert,
+  ActionRow,
+  Caption,
+} from "../ui";
+import { getErrorMessage } from "@vpn-suite/shared";
+import { useTelegramMainButton } from "../hooks/useTelegramMainButton";
 import type { WebAppIssueDeviceResponse } from "@vpn-suite/shared/types";
 import { useSession } from "../hooks/useSession";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { getWebappToken, webappApi } from "../api/client";
+import { useWebappToken, webappApi } from "../api/client";
 import { useTelegramHaptics } from "../hooks/useTelegramHaptics";
 import { useTrackScreen } from "../hooks/useTrackScreen";
 import { useTelemetry } from "../hooks/useTelemetry";
 import { FallbackScreen } from "../components/FallbackScreen";
 import { SessionMissing } from "../components/SessionMissing";
+import { useOnlineStatus } from "../hooks/useOnlineStatus";
 
 export function DevicesPage() {
-  const hasToken = !!getWebappToken();
+  const hasToken = !!useWebappToken();
+  const isOnline = useOnlineStatus();
   const queryClient = useQueryClient();
   const { data, isLoading, error } = useSession(hasToken);
   const { addToast } = useToast();
   const [issuedConfig, setIssuedConfig] = useState<WebAppIssueDeviceResponse | null>(null);
   const [revokeId, setRevokeId] = useState<string | null>(null);
+  const configSectionRef = useRef<HTMLDivElement | null>(null);
   const { impact, notify } = useTelegramHaptics();
   const activeSub = data?.subscriptions?.find((s) => s.status === "active");
   const activeDevices = data?.devices?.filter((d) => !d.revoked_at) ?? [];
@@ -36,7 +56,11 @@ export function DevicesPage() {
         addToast("Device created. Server sync pending. If VPN fails, retry later or contact support.", "info");
       }
     },
-    onError: () => addToast("Failed to add device", "error"),
+    onError: (err) => {
+      const msg = getErrorMessage(err, "Failed to add device");
+      addToast(msg, "error");
+      notify("error");
+    },
   });
 
   const deviceLimit = activeSub?.device_limit ?? null;
@@ -59,6 +83,15 @@ export function DevicesPage() {
     },
   });
 
+  useTelegramMainButton(null);
+  const canAddDevice = activeSub && (deviceLimit == null || activeDevices.length < deviceLimit) && isOnline;
+
+  useEffect(() => {
+    if (issuedConfig && configSectionRef.current) {
+      configSectionRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }, [issuedConfig]);
+
   if (!hasToken) {
     return <SessionMissing />;
   }
@@ -73,86 +106,94 @@ export function DevicesPage() {
   }
   if (isLoading) {
     return (
-      <div className="page-content">
+      <PageScaffold>
+        <PageHeader title="My devices" subtitle="Issue and manage VPN profiles" />
         <Skeleton height={32} />
         <SkeletonList lines={3} />
-      </div>
+      </PageScaffold>
     );
   }
 
   return (
-    <div className="page-content">
-      <div className="miniapp-page-header">
-        <div>
-          <h1 className="miniapp-page-title">My devices</h1>
-          <p className="miniapp-page-subtitle">Issue and manage VPN profiles</p>
-        </div>
-      </div>
+    <PageScaffold>
+      <PageHeader title="My devices" subtitle="Issue and manage VPN profiles" />
       {deviceLimit != null && (
-        <p className="fs-sm text-muted mb-md">
+        <Caption tabular>
           Devices: <strong>{activeDevices.length}</strong> / <strong>{deviceLimit}</strong>
-        </p>
+        </Caption>
       )}
-      {activeSub && (
-        <div className="mb-md">
-          <Button size="lg" loading={issueMutation.isPending} disabled={issueMutation.isPending} onClick={() => issueMutation.mutate()}>
-            Add device
-          </Button>
+
+      {issuedConfig && (
+        <div ref={configSectionRef}>
+          <PageSection title="Your config" description="Copy and import into AmneziaVPN. This is shown only once.">
+            <Panel className="card">
+              {!issuedConfig.peer_created && (
+                <InlineAlert
+                  variant="warning"
+                  title="Server sync pending"
+                  message="Your device is registered. If connection fails, retry later or contact support."
+                />
+              )}
+              <pre className="config-block">{issuedConfig.config_awg ?? issuedConfig.config ?? issuedConfig.config_wg_obf ?? issuedConfig.config_wg ?? ""}</pre>
+            </Panel>
+          </PageSection>
         </div>
       )}
-      {issuedConfig && (
-        <Panel className="card mb-lg">
-          <h2 className="card-title">Your config</h2>
-          <p className="empty-state-description">Copy the config and import it in AmneziaVPN. Shown only once.</p>
-          {!issuedConfig.peer_created && (
-            <p className="text-warning mb-md" role="status">
-              Your device is registered here; the VPN server may need a moment to add it. If connection fails, try again later or contact support.
-            </p>
-          )}
-          <pre className="config-block">{issuedConfig.config_awg ?? issuedConfig.config ?? issuedConfig.config_wg_obf ?? issuedConfig.config_wg ?? ""}</pre>
-        </Panel>
-      )}
-      <ul className="device-card-list">
-        {data?.devices?.map((d) => (
-          <li key={d.id}>
-            <DeviceCard
-              id={d.id}
-              name={d.device_name}
-              status={d.revoked_at ? "revoked" : "active"}
-              issuedAt={d.issued_at}
-              shortId={d.id.slice(0, 8)}
-              primaryAction={
-                !d.revoked_at ? (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setRevokeId(d.id)}
-                  >
-                    Revoke
-                  </Button>
-                ) : null
-              }
-            />
-          </li>
-        ))}
-      </ul>
-      {!data?.devices?.length && (
-        <EmptyState
-          title="No devices yet"
-          description="Issue a device to get your VPN config for AmneziaVPN."
-          actions={
-            activeSub ? (
-              <Button
-                size="md"
-                onClick={() => issueMutation.mutate()}
-                loading={issueMutation.isPending}
-              >
-                Add first device
-              </Button>
-            ) : null
-          }
-        />
-      )}
+
+      <PageSection title="Devices" description="Add or revoke device profiles.">
+        {issueMutation.isError && (
+          <InlineAlert
+            variant="error"
+            title="Could not add device"
+            message={getErrorMessage(issueMutation.error, "Try again or contact support.")}
+          />
+        )}
+        {canAddDevice && (
+          <ActionRow fullWidth>
+            <Button
+              variant="primary"
+              size="lg"
+              onClick={() => {
+                impact("medium");
+                issueMutation.mutate();
+              }}
+              loading={issueMutation.isPending}
+              disabled={issueMutation.isPending}
+            >
+              {issueMutation.isPending ? "Adding…" : "Add device"}
+            </Button>
+          </ActionRow>
+        )}
+
+        <ul className="device-card-list">
+          {data?.devices?.map((d) => (
+            <li key={d.id}>
+              <DeviceCard
+                id={d.id}
+                name={d.device_name}
+                status={d.revoked_at ? "revoked" : "active"}
+                issuedAt={d.issued_at}
+                shortId={d.id.slice(0, 8)}
+                primaryAction={
+                  !d.revoked_at ? (
+                    <Button variant="ghost" size="sm" onClick={() => setRevokeId(d.id)}>
+                      Revoke
+                    </Button>
+                  ) : null
+                }
+              />
+            </li>
+          ))}
+        </ul>
+
+        {!data?.devices?.length && (
+          <EmptyState
+            title="No devices yet"
+            description="Tap Add device above to get your VPN config for AmneziaVPN."
+          />
+        )}
+      </PageSection>
+
       <ConfirmModal
         open={revokeId !== null}
         onClose={() => !revokeMutation.isPending && setRevokeId(null)}
@@ -164,6 +205,6 @@ export function DevicesPage() {
         variant="danger"
         loading={revokeMutation.isPending}
       />
-    </div>
+    </PageScaffold>
   );
 }

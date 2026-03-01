@@ -1,4 +1,4 @@
-import { Button, InlineAlert, getButtonClassName } from "@vpn-suite/shared/ui";
+import { Button, InlineAlert, getButtonClassName, PageScaffold, ActionRow } from "../ui";
 
 export interface FallbackScreenProps {
   title?: string;
@@ -14,9 +14,9 @@ export function FallbackScreen({
   contactSupportHref = "https://t.me/support",
 }: FallbackScreenProps) {
   return (
-    <div className="page-content">
-      <InlineAlert variant="error" title={title} message={message} className="mb-md" />
-      <div className="miniapp-quick-actions">
+    <PageScaffold>
+      <InlineAlert variant="error" title={title} message={message} />
+      <ActionRow className="miniapp-quick-actions" fullWidth>
         {onRetry && (
           <Button variant="primary" size="lg" onClick={onRetry}>
             Try again
@@ -30,7 +30,7 @@ export function FallbackScreen({
         >
           Contact support
         </a>
-      </div>
-    </div>
+      </ActionRow>
+    </PageScaffold>
   );
 }

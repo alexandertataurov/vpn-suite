@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-/** Inject Telegram WebApp stub so AuthGuard proceeds and auth can be mocked. */
+/** Inject Telegram WebApp stub so startup bootstrap can auth and proceed. */
 async function injectTelegram(page: import("@playwright/test").Page) {
   await page.addInitScript(() => {
     (window as unknown as { Telegram?: { WebApp: { initData: string; ready: () => void } } }).Telegram = {
@@ -12,6 +12,17 @@ async function injectTelegram(page: import("@playwright/test").Page) {
 test.describe("Miniapp Device Issue Flow", () => {
   test("user with active subscription can add device and see config", async ({ page }) => {
     await injectTelegram(page);
+
+    await page.route("**/api/v1/webapp/telemetry", async (route) => {
+      await route.fulfill({ status: 204, body: "" });
+    });
+    await page.route("**/api/v1/health/ready", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ status: "ok" }),
+      });
+    });
 
     await page.route("**/api/v1/webapp/auth", async (route) => {
       await route.fulfill({
@@ -37,6 +48,7 @@ test.describe("Miniapp Device Issue Flow", () => {
             },
           ],
           devices: [],
+          onboarding: { completed: true, step: 2, version: 1, updated_at: new Date().toISOString() },
         }),
       });
     });
@@ -55,12 +67,12 @@ test.describe("Miniapp Device Issue Flow", () => {
       });
     });
 
-    await page.goto("./devices");
+    await page.goto("./devices?tgWebAppData=e2e-test");
     await expect(page.getByRole("heading", { name: /My devices/i })).toBeVisible({ timeout: 10000 });
 
-    await page.getByRole("button", { name: /Add device/i }).click();
+    await page.getByRole("button", { name: /Add (first )?device/i }).click();
 
-    await expect(page.getByText(/Your config|config/i)).toBeVisible({ timeout: 5000 });
+    await expect(page.getByRole("heading", { name: /Your config/i })).toBeVisible({ timeout: 5000 });
     await expect(page.locator("pre.config-block")).toContainText("[Interface]");
   });
 });

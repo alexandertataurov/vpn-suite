@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { MiniappLayout } from "./MiniappLayout";
+import { Body } from "../ui";
 
 const meta: Meta<typeof MiniappLayout> = {
   title: "Pages/Miniapp/Overview",
@@ -9,7 +10,7 @@ const meta: Meta<typeof MiniappLayout> = {
     router: { disabled: true },
     docs: {
       description: {
-        component: "Miniapp layout with bottom nav. Routes: status, devices, profile, help.",
+        component: "Miniapp tabbed shell with bottom nav. Routes: home, devices, plan, support, settings.",
       },
     },
   },
@@ -19,15 +20,20 @@ export default meta;
 
 type Story = StoryObj<typeof MiniappLayout>;
 
+function StoryText({ text }: { text: string }) {
+  return <Body>{text}</Body>;
+}
+
 export const Overview: Story = {
   render: () => (
     <MemoryRouter initialEntries={["/"]}>
       <Routes>
         <Route path="/" element={<MiniappLayout />}>
-          <Route index element={<p>Status content</p>} />
-          <Route path="devices" element={<p>Devices content</p>} />
-          <Route path="profile" element={<p>Profile content</p>} />
-          <Route path="help" element={<p>Help content</p>} />
+          <Route index element={<StoryText text="Home content" />} />
+          <Route path="devices" element={<StoryText text="Devices content" />} />
+          <Route path="plan" element={<StoryText text="Plan content" />} />
+          <Route path="support" element={<StoryText text="Support content" />} />
+          <Route path="settings" element={<StoryText text="Settings content" />} />
         </Route>
       </Routes>
     </MemoryRouter>
@@ -39,10 +45,11 @@ export const Variants: Story = {
     <MemoryRouter initialEntries={["/devices"]}>
       <Routes>
         <Route path="/" element={<MiniappLayout />}>
-          <Route index element={<p>Status content</p>} />
-          <Route path="devices" element={<p>Devices content</p>} />
-          <Route path="profile" element={<p>Profile content</p>} />
-          <Route path="help" element={<p>Help content</p>} />
+          <Route index element={<StoryText text="Home content" />} />
+          <Route path="devices" element={<StoryText text="Devices content" />} />
+          <Route path="plan" element={<StoryText text="Plan content" />} />
+          <Route path="support" element={<StoryText text="Support content" />} />
+          <Route path="settings" element={<StoryText text="Settings content" />} />
         </Route>
       </Routes>
     </MemoryRouter>
@@ -52,14 +59,15 @@ export const Variants: Story = {
 export const Sizes: Story = {
   render: () => (
     <div className="sb-stack">
-      <p className="m-0">Reference layout only; size variants are not exposed.</p>
+      <Body>Reference layout only; size variants are not exposed.</Body>
       <MemoryRouter initialEntries={["/"]}>
         <Routes>
           <Route path="/" element={<MiniappLayout />}>
-            <Route index element={<p>Status content</p>} />
-            <Route path="devices" element={<p>Devices content</p>} />
-            <Route path="profile" element={<p>Profile content</p>} />
-            <Route path="help" element={<p>Help content</p>} />
+            <Route index element={<StoryText text="Home content" />} />
+            <Route path="devices" element={<StoryText text="Devices content" />} />
+            <Route path="plan" element={<StoryText text="Plan content" />} />
+            <Route path="support" element={<StoryText text="Support content" />} />
+            <Route path="settings" element={<StoryText text="Settings content" />} />
           </Route>
         </Routes>
       </MemoryRouter>
@@ -69,13 +77,14 @@ export const Sizes: Story = {
 
 export const States: Story = {
   render: () => (
-    <MemoryRouter initialEntries={["/profile"]}>
+    <MemoryRouter initialEntries={["/support"]}>
       <Routes>
         <Route path="/" element={<MiniappLayout />}>
-          <Route index element={<p>Status content</p>} />
-          <Route path="devices" element={<p>Devices content</p>} />
-          <Route path="profile" element={<p>Profile content</p>} />
-          <Route path="help" element={<p>Help content</p>} />
+          <Route index element={<StoryText text="Home content" />} />
+          <Route path="devices" element={<StoryText text="Devices content" />} />
+          <Route path="plan" element={<StoryText text="Plan content" />} />
+          <Route path="support" element={<StoryText text="Support content" />} />
+          <Route path="settings" element={<StoryText text="Settings content" />} />
         </Route>
       </Routes>
     </MemoryRouter>
@@ -87,10 +96,14 @@ export const WithLongText: Story = {
     <MemoryRouter initialEntries={["/"]}>
       <Routes>
         <Route path="/" element={<MiniappLayout />}>
-          <Route index element={<p>Long status content that should wrap and remain readable in the miniapp layout.</p>} />
-          <Route path="devices" element={<p>Devices content</p>} />
-          <Route path="profile" element={<p>Profile content</p>} />
-          <Route path="help" element={<p>Help content</p>} />
+          <Route
+            index
+            element={<StoryText text="Long home content that should wrap and remain readable in the miniapp shell." />}
+          />
+          <Route path="devices" element={<StoryText text="Devices content" />} />
+          <Route path="plan" element={<StoryText text="Plan content" />} />
+          <Route path="support" element={<StoryText text="Support content" />} />
+          <Route path="settings" element={<StoryText text="Settings content" />} />
         </Route>
       </Routes>
     </MemoryRouter>
@@ -103,10 +116,11 @@ export const DarkMode: Story = {
     <MemoryRouter initialEntries={["/"]}>
       <Routes>
         <Route path="/" element={<MiniappLayout />}>
-          <Route index element={<p>Status content</p>} />
-          <Route path="devices" element={<p>Devices content</p>} />
-          <Route path="profile" element={<p>Profile content</p>} />
-          <Route path="help" element={<p>Help content</p>} />
+          <Route index element={<StoryText text="Home content" />} />
+          <Route path="devices" element={<StoryText text="Devices content" />} />
+          <Route path="plan" element={<StoryText text="Plan content" />} />
+          <Route path="support" element={<StoryText text="Support content" />} />
+          <Route path="settings" element={<StoryText text="Settings content" />} />
         </Route>
       </Routes>
     </MemoryRouter>
@@ -118,10 +132,11 @@ export const Accessibility: Story = {
     <MemoryRouter initialEntries={["/"]}>
       <Routes>
         <Route path="/" element={<MiniappLayout />}>
-          <Route index element={<p>Status content</p>} />
-          <Route path="devices" element={<p>Devices content</p>} />
-          <Route path="profile" element={<p>Profile content</p>} />
-          <Route path="help" element={<p>Help content</p>} />
+          <Route index element={<StoryText text="Home content" />} />
+          <Route path="devices" element={<StoryText text="Devices content" />} />
+          <Route path="plan" element={<StoryText text="Plan content" />} />
+          <Route path="support" element={<StoryText text="Support content" />} />
+          <Route path="settings" element={<StoryText text="Settings content" />} />
         </Route>
       </Routes>
     </MemoryRouter>

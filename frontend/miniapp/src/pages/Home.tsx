@@ -1,34 +1,50 @@
-import { Panel, Skeleton, ButtonLink, InlineAlert } from "@vpn-suite/shared/ui";
-import { ConnectionStatusCard } from "../components/ConnectionStatusCard";
-import { SubscriptionSummaryCard } from "../components/SubscriptionSummaryCard";
-import { ExpiringSoonBanner } from "../components/ExpiringSoonBanner";
-import { DeviceLimitNudge } from "../components/DeviceLimitNudge";
+import { useQuery } from "@tanstack/react-query";
+import type { WebAppServersResponse } from "@vpn-suite/shared/types";
+import { Skeleton, PageScaffold } from "../ui";
+import { HomeHeroPanel } from "../components/HomeHeroPanel";
+import { HomePrimaryActionZone } from "../components/HomePrimaryActionZone";
+import { HomeQuickActionGrid } from "../components/HomeQuickActionGrid";
+import { HomeDynamicBlock } from "../components/HomeDynamicBlock";
 import { FallbackScreen } from "../components/FallbackScreen";
 import { SessionMissing } from "../components/SessionMissing";
 import { useSession } from "../hooks/useSession";
-import { getWebappToken } from "../api/client";
+import { useWebappToken, webappApi } from "../api/client";
 import { useApiHealth } from "../hooks/useApiHealth";
 import { useTrackScreen } from "../hooks/useTrackScreen";
 import { useTelemetry } from "../hooks/useTelemetry";
 import { useTelegramHaptics } from "../hooks/useTelegramHaptics";
+
 export function HomePage() {
-  const hasToken = !!getWebappToken();
+  const hasToken = !!useWebappToken();
   const { data, isLoading, error, refetch, isFetching } = useSession(hasToken);
   const { error: healthError } = useApiHealth();
   const activeSub = data?.subscriptions?.find((s) => s.status === "active");
   const activeDevices = data?.devices?.filter((d) => !d.revoked_at) ?? [];
+
+  const { data: serversData } = useQuery<WebAppServersResponse>({
+    queryKey: ["webapp", "servers"],
+    queryFn: () => webappApi.get<WebAppServersResponse>("/webapp/servers"),
+    enabled: hasToken && !!activeSub,
+  });
+
   const { track } = useTelemetry(activeSub?.plan_id ?? null);
   const { impact } = useTelegramHaptics();
 
   useTrackScreen("home", activeSub?.plan_id ?? null);
 
   const connected = !!(activeSub && activeDevices.length > 0);
-  const locationLabel = "Auto"; // Backend could add current_region to /me later
-  const primaryActionLabel = activeSub ? "Manage Connection" : "Connect Now";
-  const primaryActionTo = activeSub ? "/devices" : "/plan";
+  
+  let locationLabel = "Automatic";
+  if (serversData) {
+    if (!serversData.auto_select) {
+      const currentServer = serversData.items.find(s => s.is_current);
+      if (currentServer) locationLabel = currentServer.name;
+    }
+  }
 
   const deviceLimit = activeSub?.device_limit ?? null;
   const usedDevices = activeDevices.length;
+
   let daysLeft = 0;
   let subStatus: "active" | "expired" | "none" = "none";
   if (activeSub) {
@@ -39,17 +55,33 @@ export function HomePage() {
     if (daysLeft <= 0) subStatus = "expired";
   }
 
+  const primaryLabel = activeSub
+    ? activeDevices.length === 0
+      ? "Get config"
+      : "Manage Connection"
+    : "Connect Now";
+  const primaryTo = activeSub ? "/devices" : "/plan";
+
   const handlePrimaryCta = () => {
     impact("medium");
-    track("cta_click", { cta_name: primaryActionLabel.replace(/\s+/g, "_").toLowerCase(), screen_name: "home" });
+    track("cta_click", {
+      cta_name: primaryLabel.replace(/\s+/g, "_").toLowerCase(),
+      screen_name: "home",
+    });
   };
 
   if (isLoading || (error && isFetching)) {
     return (
-      <div className="page-content">
-        <Skeleton height={32} />
-        <Skeleton variant="card" />
-      </div>
+      <PageScaffold>
+        <Skeleton height={120} className="home-skeleton-hero" />
+        <Skeleton height={48} className="home-skeleton-cta" />
+        <div className="home-skeleton-grid">
+          <Skeleton variant="card" />
+          <Skeleton variant="card" />
+          <Skeleton variant="card" />
+          <Skeleton variant="card" />
+        </div>
+      </PageScaffold>
     );
   }
 
@@ -68,84 +100,29 @@ export function HomePage() {
   }
 
   return (
-    <div className="page-content">
-      {healthError && (
-        <InlineAlert
-          variant="warning"
-          title="Service may be degraded"
-          message="We detected a backend issue. VPN service may be temporarily degraded."
-          className="mb-md"
-        />
-      )}
-      {activeSub && daysLeft <= 7 && <ExpiringSoonBanner daysLeft={daysLeft} />}
-      {activeSub && deviceLimit != null && usedDevices >= deviceLimit - 1 && (
-        <DeviceLimitNudge used={usedDevices} limit={deviceLimit} />
-      )}
-      <ConnectionStatusCard
+    <PageScaffold>
+      <HomeHeroPanel
         connected={connected}
         locationLabel={locationLabel}
-        primaryActionLabel={primaryActionLabel}
-        primaryActionTo={primaryActionTo}
-        onPrimaryClick={handlePrimaryCta}
-      />
-      <div className="miniapp-stats-row">
-        <span className="miniapp-stat"><strong>99.9%</strong> Uptime</span>
-        <span className="miniapp-stat"><strong>90+</strong> Servers</span>
-        <span className="miniapp-stat"><strong>No</strong> Logs</span>
-      </div>
-      <SubscriptionSummaryCard
         planId={activeSub?.plan_id ?? "—"}
         daysLeft={daysLeft}
-        status={subStatus}
+        subStatus={subStatus}
         deviceCount={usedDevices}
-        deviceLimit={deviceLimit ?? undefined}
+        deviceLimit={deviceLimit}
       />
-      <h2 className="miniapp-section-heading">Why VPN?</h2>
-      <div className="miniapp-feature-grid">
-        <Panel className="card miniapp-feature-card">
-          <span className="miniapp-feature-icon" aria-hidden>🔒</span>
-          <h3 className="miniapp-feature-title">AES-256 Encryption</h3>
-          <p className="miniapp-feature-desc">Military-grade encryption for your traffic.</p>
-        </Panel>
-        <Panel className="card miniapp-feature-card">
-          <span className="miniapp-feature-icon" aria-hidden>📡</span>
-          <h3 className="miniapp-feature-title">Kill Switch</h3>
-          <p className="miniapp-feature-desc">Block traffic if the VPN drops.</p>
-        </Panel>
-        <Panel className="card miniapp-feature-card">
-          <span className="miniapp-feature-icon" aria-hidden>👁</span>
-          <h3 className="miniapp-feature-title">No Logs</h3>
-          <p className="miniapp-feature-desc">We don’t store your activity.</p>
-        </Panel>
-        <Panel className="card miniapp-feature-card">
-          <span className="miniapp-feature-icon" aria-hidden>📱</span>
-          <h3 className="miniapp-feature-title">Multi-device</h3>
-          <p className="miniapp-feature-desc">Use on several devices per plan.</p>
-        </Panel>
-      </div>
-      <div className="miniapp-quick-actions">
-        {activeSub && (
-          <>
-            <ButtonLink to="/devices" variant="secondary">
-              {activeDevices.length === 0 ? "Add device" : "Get config"}
-            </ButtonLink>
-            <ButtonLink to="/servers" variant="secondary">
-              Change location
-            </ButtonLink>
-          </>
-        )}
-        {!activeSub && (
-          <ButtonLink to="/plan" variant="secondary">
-            Choose a plan
-          </ButtonLink>
-        )}
-        <ButtonLink to="/referral" variant="secondary">
-          Invite friends
-        </ButtonLink>
-        <ButtonLink to="/support" variant="secondary">
-          Contact support
-        </ButtonLink>
-      </div>
-    </div>
+      <HomePrimaryActionZone
+        primaryLabel={primaryLabel}
+        primaryTo={primaryTo}
+        onPrimaryClick={handlePrimaryCta}
+      />
+      <HomeQuickActionGrid hasSub={!!activeSub} hasDevices={activeDevices.length > 0} />
+      <HomeDynamicBlock
+        daysLeft={daysLeft}
+        hasSub={!!activeSub}
+        deviceLimit={deviceLimit}
+        usedDevices={usedDevices}
+        healthError={!!healthError}
+      />
+    </PageScaffold>
   );
 }

@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-01T13:35:43.475716+00:00",
+  "timestamp": "2026-03-01T13:36:45.679326+00:00",
   "nodes": [
     {
       "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
@@ -73,13 +73,13 @@
         }
       ],
       "mounts": [
+        "/etc/caddy/agent_ca.pem",
         "/data",
         "/etc/caddy/Caddyfile",
         "/srv/root",
         "/srv/webapp",
         "/srv/admin",
-        "/srv/storybook",
-        "/etc/caddy/agent_ca.pem"
+        "/srv/storybook"
       ],
       "interface": null,
       "public_key": null
@@ -644,8 +644,8 @@
         }
       ],
       "mounts": [
-        "/etc/redis/redis.conf",
-        "/data"
+        "/data",
+        "/etc/redis/redis.conf"
       ],
       "interface": null,
       "public_key": null
@@ -710,9 +710,9 @@
         }
       ],
       "mounts": [
+        "/etc/grafana/provisioning",
         "/var/lib/grafana/dashboards",
-        "/var/lib/grafana",
-        "/etc/grafana/provisioning"
+        "/var/lib/grafana"
       ],
       "interface": null,
       "public_key": null
@@ -741,10 +741,10 @@
       "created": "2026-02-28T09:49:52.958092225Z",
       "ports": [],
       "mounts": [
+        "/var/lib/docker/containers",
         "/etc/promtail/config.yml",
         "/promtail",
-        "/var/log",
-        "/var/lib/docker/containers"
+        "/var/log"
       ],
       "interface": null,
       "public_key": null
@@ -778,8 +778,8 @@
         }
       ],
       "mounts": [
-        "/tmp/loki",
-        "/etc/loki/config.yml"
+        "/etc/loki/config.yml",
+        "/tmp/loki"
       ],
       "interface": null,
       "public_key": null

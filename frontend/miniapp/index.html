@@ -2,15 +2,12 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>VPN Suite</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
-      (function(){
-        var t = localStorage.getItem('vpn-suite-theme');
-        if (t !== 'light' && t !== 'dark' && t !== 'dim') t = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-        document.documentElement.setAttribute('data-theme', t);
-        document.documentElement.style.colorScheme = t === 'light' ? 'light' : 'dark';
-      })();
+      document.documentElement.setAttribute('data-theme', 'consumer-dark');
+      document.documentElement.style.colorScheme = 'dark';
     </script>
   </head>
   <body>

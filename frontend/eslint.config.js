@@ -40,5 +40,12 @@ export default tseslint.config(
     rules: {
       "react/forbid-dom-props": ["warn", { forbid: ["style"] }],
     },
+  },
+  {
+    files: ["miniapp/src/**/*.tsx"],
+    plugins: { react },
+    rules: {
+      "react/forbid-dom-props": ["warn", { forbid: ["style"] }],
+    },
   }
 );

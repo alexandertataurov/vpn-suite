@@ -1,0 +1,336 @@
+/*
+ * Misc — page layout, forms, alerts, status, cards, error state
+ * Requires: tokens.css
+ */
+
+/* Page layout */
+.page-content {
+  padding: var(--spacing-lg);
+}
+.form-inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+/* Form layout */
+.actions-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+}
+
+.inline-alert {
+  padding: var(--spacing-3);
+  border-radius: var(--radius-md);
+  border: var(--border-width-hairline) solid;
+}
+.inline-alert-info {
+  border-color: var(--color-border-default);
+  background: var(--color-background-secondary, transparent);
+  color: var(--color-text-primary);
+}
+.inline-alert-warning {
+  border-color: var(--color-warning);
+  background: var(--color-background-secondary, transparent);
+  color: var(--color-text-primary);
+}
+.inline-alert-error {
+  border-color: var(--color-error);
+  background: var(--color-background-secondary, transparent);
+  color: var(--color-text-primary);
+}
+.inline-alert-success {
+  border-color: var(--color-success);
+  background: var(--color-background-secondary, transparent);
+  color: var(--color-text-primary);
+}
+.inline-alert-title {
+  font-weight: 600;
+  margin-bottom: var(--spacing-1);
+}
+.inline-alert-title:last-child { margin-bottom: 0; }
+.inline-alert-message { margin-top: 0; }
+.inline-alert-actions {
+  margin-top: var(--spacing-2);
+  display: flex;
+  gap: var(--spacing-2);
+  flex-wrap: wrap;
+}
+
+/* Bulk actions bar */
+.bulk-actions-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  flex-wrap: wrap;
+  padding: var(--spacing-3);
+  background: var(--color-background-secondary);
+  border: var(--border-width-hairline) solid var(--color-border-default);
+  border-radius: var(--radius-md);
+}
+.bulk-actions-count {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+.bulk-actions-actions {
+  display: flex;
+  gap: var(--spacing-2);
+  flex-wrap: wrap;
+}
+
+/* Spinner */
+.spinner-sm { width: var(--spacing-4); height: var(--spacing-4); }
+.spinner-md { width: var(--spacing-6); height: var(--spacing-6); }
+
+/* Live indicator */
+.live-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+.live-indicator-dot {
+  width: var(--spacing-2);
+  height: var(--spacing-2);
+  border-radius: var(--radius-pill);
+  background: var(--color-text-tertiary);
+}
+.live-indicator--live { color: var(--color-success); }
+.live-indicator--error { color: var(--color-error); }
+.live-indicator--reconnecting { color: var(--color-warning); }
+.live-indicator--live .live-indicator-dot { background: var(--color-success); }
+.live-indicator--error .live-indicator-dot { background: var(--color-error); }
+.live-indicator--reconnecting .live-indicator-dot {
+  background: var(--color-warning);
+  animation: livePulse 1.5s ease-in-out infinite;
+}
+
+@keyframes livePulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+/* Text colors */
+.text-error { color: var(--color-error); }
+.text-muted { color: var(--color-text-muted); }
+.text-success { color: var(--color-success); }
+.text-warning { color: var(--color-warning); }
+.link-block { display: block; margin-bottom: var(--spacing-md); }
+
+/* Device list */
+.device-list { list-style: none; padding: 0; margin: 0; }
+.device-list li {
+  padding: var(--spacing-sm) 0;
+  border-bottom: var(--border-width-hairline) solid var(--color-border);
+}
+.device-list li:last-child { border-bottom: none; }
+.device-list-actions {   margin-left: var(--spacing-sm); }
+
+/* Device card */
+.device-card {
+  background: var(--color-surface);
+  border: var(--border-width-hairline) solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-md) var(--spacing-lg);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  transition: border-color var(--duration-fast), box-shadow var(--duration-fast), transform var(--duration-fast);
+}
+.device-card:hover {
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-md);
+  transform: translateY(calc(var(--border-width-hairline) * -1));
+}
+.device-card-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-md);
+  min-width: 0;
+}
+.device-card-info {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+.device-card-name { font-weight: 500; }
+.device-card-id {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  font-family: ui-monospace, monospace;
+}
+.device-card-date {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+.device-card-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+.device-card-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+/* Server detail / telemetry */
+.server-detail-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+.telemetry-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--spacing-sm) var(--spacing-lg);
+  font-size: var(--font-size-sm);
+}
+.telemetry-grid dt { color: var(--color-text-muted); }
+.telemetry-grid dd { margin: 0; }
+
+.profile-card {
+  background: var(--color-surface);
+  border: var(--border-width-hairline) solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-lg);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  transition: border-color var(--duration-fast), box-shadow var(--duration-fast), transform var(--duration-fast);
+}
+.profile-card:hover {
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-md);
+  transform: translateY(calc(var(--border-width-hairline) * -1));
+}
+.profile-card-main { min-width: 0; }
+.profile-card-title { margin: 0 0 var(--spacing-xs); font-size: var(--font-size-lg); }
+.profile-card-meta {
+  margin: 0 0 var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+.profile-card-actions { flex-shrink: 0; }
+
+/* QR panel */
+.qr-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-4);
+}
+.qr-panel-actions {
+  display: flex;
+  gap: var(--spacing-2);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* Code block */
+.code-block { position: relative; }
+.code-block-actions {
+  position: absolute;
+  top: var(--spacing-2);
+  right: var(--spacing-2);
+  display: flex;
+  gap: var(--spacing-1);
+}
+.code-block-pre {
+  max-height: var(--code-block-max-height, none);
+  overflow: auto;
+  padding: var(--spacing-2);
+  margin: 0;
+  background: var(--color-background-tertiary, var(--color-surface));
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+}
+.code-block-pre-wrap {
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+.code-block-pre-nowrap { white-space: pre; }
+
+/* Layout helpers */
+.page-content-narrow {
+  padding: var(--spacing-lg);
+  max-width: var(--max-width-modal);
+  margin: 0 auto;
+}
+.card-title { margin-top: 0; margin-bottom: var(--spacing-md); font-size: var(--font-size-base); }
+.card + .card { margin-top: var(--spacing-md); }
+.nav-links {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+/* Error state */
+.error-state { padding: var(--spacing-4); text-align: center; color: var(--color-text-secondary); }
+.error-state-title { font-weight: 600; color: var(--color-error); margin-bottom: var(--spacing-2); }
+.error-state-message { font-size: var(--font-size-sm); margin-bottom: var(--spacing-3); }
+.error-state-retry { margin-top: var(--spacing-2); }
+
+/* Micro-animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.card, .device-card, .profile-card {
+  animation: fadeIn var(--duration-normal) ease-out;
+}
+
+/* Accessibility & responsiveness */
+@media (pointer: coarse) {
+  .btn-sm,
+  .btn-md {
+    min-height: var(--size-touch-target);
+  }
+
+  .table-sort {
+    min-height: var(--size-touch-target);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn,
+  .input,
+  .card,
+  .device-card,
+  .profile-card,
+  .drawer-overlay,
+  .drawer-panel {
+    transition: none !important;
+  }
+
+  .skeleton,
+  .card,
+  .device-card,
+  .profile-card,
+  .drawer-overlay,
+  .drawer-panel,
+  .btn-spinner {
+    animation: none !important;
+  }
+}

@@ -1,24 +1,31 @@
 import { Outlet, NavLink } from "react-router-dom";
-import { Home, Globe, CreditCard, User } from "lucide-react";
-import { PrimitiveBadge } from "@vpn-suite/shared/ui";
+import { Home, Smartphone, CreditCard, HelpCircle, User, Shield } from "lucide-react";
+import { OfflineBanner } from "../components/OfflineBanner";
+import { useTelegramHaptics } from "../hooks/useTelegramHaptics";
 
 const tabs = [
   { to: "/", label: "Home", end: true, icon: Home },
-  { to: "/servers", label: "Servers", end: false, icon: Globe },
+  { to: "/devices", label: "Devices", end: false, icon: Smartphone },
   { to: "/plan", label: "Plan", end: false, icon: CreditCard },
+  { to: "/support", label: "Support", end: false, icon: HelpCircle },
   { to: "/settings", label: "Account", end: false, icon: User },
 ];
 
-const isDev = typeof import.meta !== "undefined" && import.meta.env?.DEV;
+export function TabbedShellLayout() {
+  const { impact, selectionChanged } = useTelegramHaptics();
 
-export function MiniappLayout() {
   return (
-    <div className="miniapp-layout">
+    <div className="miniapp-shell miniapp-shell--tabbed hud-bg">
+      <OfflineBanner />
       <header className="miniapp-header">
-        <span className="miniapp-header-title">VPN</span>
-        {isDev && <PrimitiveBadge variant="info" size="sm">WebApp</PrimitiveBadge>}
+        <div className="miniapp-header-brand">
+          <span className="miniapp-header-logo" aria-hidden>
+            <Shield size={20} strokeWidth={1.5} />
+          </span>
+          <span className="miniapp-header-title">VPN</span>
+        </div>
       </header>
-      <main className="miniapp-main">
+      <main className="miniapp-main miniapp-main--tabbed">
         <Outlet />
       </main>
       <nav className="miniapp-bottom-nav" aria-label="Main">
@@ -27,12 +34,16 @@ export function MiniappLayout() {
             key={to}
             to={to}
             end={end}
+            onClick={() => {
+              impact("light");
+              selectionChanged();
+            }}
             className={({ isActive }) =>
               `miniapp-tab ${isActive ? "active" : ""}`
             }
           >
             <span className="miniapp-tab-icon" aria-hidden>
-              <Icon size={16} strokeWidth={1.8} />
+              <Icon size={22} strokeWidth={1.5} />
             </span>
             <span className="miniapp-tab-label">{label}</span>
           </NavLink>
@@ -41,3 +52,15 @@ export function MiniappLayout() {
     </div>
   );
 }
+
+export function StackFlowLayout() {
+  return (
+    <div className="miniapp-shell miniapp-shell--stack hud-bg">
+      <main className="miniapp-main miniapp-main--stack">
+        <Outlet />
+      </main>
+    </div>
+  );
+}
+
+export const MiniappLayout = TabbedShellLayout;

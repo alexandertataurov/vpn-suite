@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Panel,
@@ -6,12 +7,23 @@ import {
   Skeleton,
   InlineAlert,
   useToast,
-} from "@vpn-suite/shared/ui";
+  ProgressBar,
+  PageScaffold,
+  PageHeader,
+  PageSection,
+  ActionRow,
+  Body,
+  Caption,
+  H3,
+} from "../ui";
 import type { WebAppServersResponse, WebAppServerItem } from "@vpn-suite/shared/types";
-import { getWebappToken, webappApi } from "../api/client";
+import { useWebappToken, webappApi } from "../api/client";
+import { useOnlineStatus } from "../hooks/useOnlineStatus";
+import { SessionMissing } from "../components/SessionMissing";
 
 export function ServerSelectionPage() {
-  const hasToken = !!getWebappToken();
+  const hasToken = !!useWebappToken();
+  const isOnline = useOnlineStatus();
   const queryClient = useQueryClient();
   const { addToast } = useToast();
   const [pendingServerId, setPendingServerId] = useState<string | null>(null);
@@ -37,37 +49,42 @@ export function ServerSelectionPage() {
 
   if (!hasToken) {
     return (
-      <div className="page-content">
-        <h1 className="miniapp-page-title">Servers</h1>
-        <InlineAlert
-          variant="warning"
-          title="Session missing"
-          message="Your Telegram session is not active. Close and reopen the mini app from the bot."
-        />
-      </div>
+      <SessionMissing message="Your Telegram session is not active. Close and reopen the mini app from the bot." />
     );
   }
 
   if (error) {
     return (
-      <div className="page-content">
-        <h1 className="miniapp-page-title">Servers</h1>
+      <PageScaffold>
+        <PageHeader title="Servers" />
         <InlineAlert
           variant="error"
           title="Could not load servers"
           message="We could not load server list. Please try again later."
         />
-      </div>
+        <ActionRow fullWidth>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => queryClient.invalidateQueries({ queryKey: ["webapp", "servers"] })}
+          >
+            Try again
+          </Button>
+          <Link to="/" className="miniapp-back-link">
+            Back
+          </Link>
+        </ActionRow>
+      </PageScaffold>
     );
   }
 
   if (isLoading || !data) {
     return (
-      <div className="page-content">
-        <h1 className="miniapp-page-title">Servers</h1>
+      <PageScaffold>
+        <PageHeader title="Servers" />
         <Skeleton height={32} />
         <Skeleton height={120} />
-      </div>
+      </PageScaffold>
     );
   }
 
@@ -82,73 +99,76 @@ export function ServerSelectionPage() {
   };
 
   return (
-    <div className="page-content">
-      <div className="miniapp-page-header">
-        <div>
-          <h1 className="miniapp-page-title">Servers</h1>
-          <p className="miniapp-page-subtitle">
-            90+ locations worldwide
-          </p>
-        </div>
-      </div>
-      <Panel className="card mb-lg">
-        <div className="flex justify-between items-center">
-          <div>
-            <p className="text-muted fs-sm mb-0">
-              {data.auto_select
-                ? "Automatic server selection is enabled."
-                : "Manual server preference is enabled."}
-            </p>
-            <p className="fs-xs text-muted mt-xs mb-0">
-              We prioritize healthy, low-load servers close to your region.
-            </p>
-          </div>
-          <Button
-            size="sm"
-            variant={data.auto_select ? "secondary" : "primary"}
-            onClick={handleAutoSelect}
-            loading={selectMutation.isPending && pendingServerId === "auto"}
-          >
-            Use best server
-          </Button>
-        </div>
-      </Panel>
-      <div className="server-grid">
-        {data.items.map((server) => {
-          const load = server.load_percent ?? 0;
-          const isPending = selectMutation.isPending && pendingServerId === server.id;
-          const code = (server.region ?? server.name ?? "??").slice(0, 2).toUpperCase();
-          return (
-            <Panel key={server.id} className="card server-row-card">
-              <span className="server-row-code">{code}</span>
-              <div className="server-row-details">
-                <h2 className="server-row-name">{server.name}</h2>
-                <p className="server-row-meta">
-                  {server.avg_ping_ms != null ? `${Math.round(server.avg_ping_ms)} ms` : "—"}
-                </p>
-              </div>
-              <div className="server-row-load">
-                <p className="server-row-load-value">{Math.round(load)}% load</p>
-                <div className="server-row-load-bar">
-                  <div className="server-row-load-fill" style={{ width: `${load}%` }} />
-                </div>
-              </div>
-              <Button
-                size="sm"
-                variant={server.is_current ? "secondary" : "primary"}
-                onClick={() => handleSelectServer(server)}
-                loading={isPending}
-                disabled={isPending}
+    <PageScaffold>
+      <PageHeader title="Servers" subtitle="90+ locations worldwide" />
+
+      <PageSection title="Selection mode" description="Choose automatic routing or lock a preferred location.">
+        <Panel className="card instrument-card instrument-card--inactive">
+          <Body>
+            {data.auto_select
+              ? "Automatic server selection is enabled."
+              : "Manual server preference is enabled."}
+          </Body>
+          <Caption>We prioritize healthy, low-load servers close to your region.</Caption>
+          <ActionRow fullWidth>
+            <Button
+              size="sm"
+              variant={data.auto_select ? "secondary" : "primary"}
+              onClick={handleAutoSelect}
+              loading={selectMutation.isPending && pendingServerId === "auto"}
+              disabled={!isOnline || (selectMutation.isPending && pendingServerId === "auto")}
+            >
+              Use best server
+            </Button>
+          </ActionRow>
+        </Panel>
+      </PageSection>
+
+      <PageSection title="Locations">
+        <div className="server-grid">
+          {data.items.map((server) => {
+            const load = server.load_percent ?? 0;
+            const isPending = selectMutation.isPending && pendingServerId === server.id;
+            const code = (server.region ?? server.name ?? "??").slice(0, 2).toUpperCase();
+            return (
+              <Panel
+                key={server.id}
+                className={`card instrument-card ${server.is_current ? "instrument-card--active" : "instrument-card--inactive"} server-row-card`}
               >
-                {server.is_current ? "Selected" : "Select"}
-              </Button>
-            </Panel>
-          );
-        })}
-      </div>
-    </div>
+                <span className="server-row-code">{code}</span>
+                <div className="server-row-details">
+                  <H3 as="h3" className="server-row-name tracking-trim data-truncate">
+                    {server.name}
+                  </H3>
+                  <Caption className="server-row-meta" tabular>
+                    {server.avg_ping_ms != null ? `${Math.round(server.avg_ping_ms)} ms` : "—"}
+                  </Caption>
+                </div>
+                <div className="server-row-load">
+                  <Caption className="server-row-load-value" tabular>
+                    {Math.round(load)}% load
+                  </Caption>
+                  <ProgressBar
+                    value={load}
+                    max={100}
+                    className="server-row-load-bar"
+                    aria-label={`${server.name} load ${Math.round(load)}%`}
+                  />
+                </div>
+                <Button
+                  size="sm"
+                  variant={server.is_current ? "secondary" : "primary"}
+                  onClick={() => handleSelectServer(server)}
+                  loading={isPending}
+                  disabled={!isOnline || isPending}
+                >
+                  {server.is_current ? "Selected" : "Select"}
+                </Button>
+              </Panel>
+            );
+          })}
+        </div>
+      </PageSection>
+    </PageScaffold>
   );
 }
-
-export default ServerSelectionPage;
-
