@@ -1,13 +1,21 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Activity, AlertTriangle, Grid3X3, RefreshCw, Server, Users } from "lucide-react";
-import { Button, RelativeTime, Skeleton, PrimitiveBadge } from "@vpn-suite/shared/ui";
+import {
+  IconTelemetry,
+  IconWarning,
+  IconRefresh,
+  IconServer,
+  IconUsers,
+  IconGrid3X3,
+} from "@/design-system/icons";
+import { Button, RelativeTime, Skeleton, PrimitiveBadge } from "@/design-system";
 import { ApiError } from "@vpn-suite/shared/types";
-import { api } from "../../api/client";
+import { api, createIdempotencyKey } from "../../api/client";
 import { OPERATOR_DASHBOARD_KEY } from "../../api/query-keys";
 import { cooldownRemainingMs, isNetworkUnreachableError } from "../../utils/queryPolicy";
 import {
   ClusterMatrix,
+  BotMonitor,
   ErrorBanner,
   IncidentPanel,
   OperatorServerTable,
@@ -15,8 +23,9 @@ import {
   UserSessionsTable,
   FreshnessBadge,
   TelemetryHealthWidget,
-} from "../../components/operator";
-import { TelemetryKpiStrip } from "../../components/telemetry/TelemetryKpiStrip";
+} from "@/components";
+import { BroadcastCommandInput } from "@/components";
+import { SectionLabel } from "@/design-system";
 import { ChartFrame } from "../../charts/ChartFrame";
 import { deriveResource, useResourceFromQuery } from "../../hooks/useResource";
 import { EChart } from "../../charts/EChart";
@@ -103,7 +112,11 @@ export function OperatorDashboardContent() {
   const handleSync = useCallback(
     async (id: string) => {
       try {
-        await api.post(`/servers/${id}/sync`, {});
+        await api.post(
+          `/servers/${id}/sync`,
+          {},
+          { headers: { "Idempotency-Key": createIdempotencyKey("servers.sync", id) } }
+        );
         handleRefresh();
       } catch {
         // Ignore
@@ -167,6 +180,7 @@ export function OperatorDashboardContent() {
 
   const throughputRateOption = useMemo(() => {
     const colors = getChartColors();
+    const theme = getChartTheme();
     const raw = timeseriesChart?.throughputBps ?? [];
     // EMA smoothing (alpha=0.35) so the line reflects sustained activity and doesn't drop to zero between polls
     const alpha = 0.35;
@@ -201,7 +215,7 @@ export function OperatorDashboardContent() {
         {
           name: "Avg throughput (rolling)",
           data: avgSeries,
-          color: colors.primary.muted,
+          color: theme.series.muted,
           area: false,
         },
       ],
@@ -242,30 +256,36 @@ export function OperatorDashboardContent() {
   if (operatorResource.status === "loading" || operatorResource.status === "idle" || !query.data) {
     return (
       <div className="operator-dashboard" data-testid="operator-dashboard">
-        <div className="operator-grid-cell operator-grid-cell--span-8 operator-card">
-          <div className="operator-section-title"><Grid3X3 className="operator-section-icon" aria-hidden size={14} strokeWidth={2} /> Cluster Health Matrix</div>
-          <div className="operator-table-loading">
-            <Skeleton height={120} />
+        <div className="operator-dashboard__health-section" aria-label="Health and status">
+          <div className="operator-dashboard__health-secondary">
+            <div className="operator-grid-cell operator-card">
+              <div className="operator-section-title"><IconTelemetry className="operator-section-icon" aria-hidden size={14} strokeWidth={1.5} /> Telemetry health</div>
+              <Skeleton height={56} />
+            </div>
+            <div className="operator-grid-cell operator-card">
+              <div className="operator-section-title"><IconWarning className="operator-section-icon" aria-hidden size={14} strokeWidth={1.5} /> Active Incidents</div>
+              <Skeleton height={80} />
+            </div>
           </div>
         </div>
-        <div className="operator-grid-cell operator-grid-cell--span-4 operator-card">
-          <div className="operator-section-title"><Activity className="operator-section-icon" aria-hidden size={14} strokeWidth={2} /> Telemetry health</div>
-          <Skeleton height={56} />
+        <SectionLabel>Command Feed</SectionLabel>
+        <div className="operator-grid-cell operator-grid-cell--span-12 operator-card">
+          <Skeleton height={200} />
         </div>
-        <div className="operator-grid-cell operator-grid-cell--span-8 operator-card">
-          <div className="operator-section-title"><Activity className="operator-section-icon" aria-hidden size={14} strokeWidth={2} /> Traffic & Load</div>
+        <SectionLabel>Broadcast</SectionLabel>
+        <div className="operator-grid-cell operator-grid-cell--span-12 operator-card">
+          <Skeleton height={48} />
+        </div>
+        <SectionLabel>Traffic &amp; alerts</SectionLabel>
+        <div className="operator-grid-cell operator-grid-cell--span-12 operator-card">
           <Skeleton height={CHART_HEIGHT} />
         </div>
-        <div className="operator-grid-cell operator-grid-cell--span-4 operator-card">
-          <div className="operator-section-title"><AlertTriangle className="operator-section-icon" aria-hidden size={14} strokeWidth={2} /> Active Incidents</div>
-          <Skeleton height={80} />
-        </div>
-        <div className="operator-grid-cell operator-grid-cell--span-8 operator-card">
-          <div className="operator-section-title"><Users className="operator-section-icon" aria-hidden size={14} strokeWidth={2} /> User Sessions</div>
+        <SectionLabel>Sessions</SectionLabel>
+        <div className="operator-grid-cell operator-grid-cell--span-12 operator-card">
           <Skeleton height={100} />
         </div>
+        <SectionLabel>Infrastructure</SectionLabel>
         <div className="operator-grid-cell operator-grid-cell--span-12 operator-card">
-          <div className="operator-section-title"><Server className="operator-section-icon" aria-hidden size={14} strokeWidth={2} /> Server Table</div>
           <OperatorServerTable rows={[]} onSync={handleSync} loading filter={serverFilter} onFilterChange={setServerFilter} />
         </div>
       </div>
@@ -361,22 +381,18 @@ export function OperatorDashboardContent() {
   return (
     <div className="operator-dashboard" data-testid="operator-dashboard">
       {degradedBanner}
-      <div className="operator-dashboard__health-section">
-        <h2 className="operator-dashboard__section-label" id="operator-section-health">
-          Health &amp; status
-        </h2>
-        <div className="operator-dashboard__health-secondary" aria-labelledby="operator-section-health">
-          <div className="operator-grid-cell operator-card" aria-labelledby="operator-section-health">
+      <div className="operator-dashboard__health-section" aria-label="Health and status">
+        <div className="operator-dashboard__health-secondary">
+          <div className="operator-grid-cell operator-card">
             <TelemetryHealthWidget />
           </div>
           <div
             className="operator-grid-cell operator-card"
             data-card-type="incidents"
             data-content-empty={incidentsEmpty ? "true" : undefined}
-            aria-labelledby="operator-section-health"
           >
             <div className="operator-section-title operator-section-title--incidents">
-              <AlertTriangle className="operator-section-icon" aria-hidden size={14} strokeWidth={2} />
+              <IconWarning className="operator-section-icon" aria-hidden size={14} strokeWidth={1.5} />
               Active Incidents
               <span
                 className={`operator-incident-count ${(incidentsResource.data?.length ?? 0) > 0 ? "operator-incident-count--active" : "operator-incident-count--zero"}`}
@@ -388,34 +404,31 @@ export function OperatorDashboardContent() {
             <IncidentPanel resource={incidentsResource} onRetry={handleRefresh} />
           </div>
         </div>
-        <div
-          className="operator-grid-cell operator-grid-cell--span-12 operator-grid-cell--health-matrix operator-card"
-          data-content-empty={clusterMatrixEmpty ? "true" : undefined}
-          aria-labelledby="operator-section-health"
-        >
-          <div className="operator-section-title">
-            <Grid3X3 className="operator-section-icon" aria-hidden size={14} strokeWidth={2} />
-            Cluster Health Matrix
-          </div>
-          <div className="operator-card__table-wrap">
-            <ClusterMatrix rows={clusterMatrixRows} />
-          </div>
-        </div>
       </div>
 
-      <h2 className="operator-dashboard__section-label" id="operator-section-traffic">
-        Traffic &amp; alerts
-      </h2>
+      <SectionLabel id="operator-section-command-feed">Command Feed</SectionLabel>
+      <div className="operator-grid-cell operator-grid-cell--span-12 operator-card operator-card--command-feed" aria-labelledby="operator-section-command-feed">
+        <BotMonitor height={200} />
+      </div>
+
+      <SectionLabel id="operator-section-broadcast">Broadcast</SectionLabel>
+      <div className="operator-grid-cell operator-grid-cell--span-12 operator-card operator-card--broadcast" aria-labelledby="operator-section-broadcast">
+        <BroadcastCommandInput
+          onSubmit={() => {}}
+          placeholder="broadcast | ping | …"
+        />
+      </div>
+
+      <SectionLabel id="operator-section-traffic">Traffic &amp; alerts</SectionLabel>
       <div
         className="operator-grid-cell operator-grid-cell--span-12 operator-card"
         data-content-empty={trafficEmpty ? "true" : undefined}
         aria-labelledby="operator-section-traffic"
       >
         <div className="operator-section-title">
-          <Activity className="operator-section-icon" aria-hidden size={14} strokeWidth={2} />
+          <IconTelemetry className="operator-section-icon" aria-hidden size={14} strokeWidth={1.5} />
           Traffic &amp; Load
         </div>
-        <TelemetryKpiStrip />
         {(d.data_status === "degraded" && d.last_successful_sample_ts) && (() => {
             const ageMs = Date.now() - new Date(d.last_successful_sample_ts!).getTime();
             const isStale = ageMs > 2 * 60 * 1000;
@@ -453,7 +466,7 @@ export function OperatorDashboardContent() {
               aria-label="Refresh"
               className="operator-toolbar-btn"
             >
-              <RefreshCw className={isRefreshing ? "animate-spin" : ""} size={14} strokeWidth={2} aria-hidden /> Refresh
+              <IconRefresh className={isRefreshing ? "animate-spin" : ""} size={14} strokeWidth={1.5} aria-hidden /> Refresh
             </Button>
         </div>
         <div className="operator-charts-grid">
@@ -542,14 +555,25 @@ export function OperatorDashboardContent() {
             </ChartFrame>
           </div>
         </div>
+        <div
+          className="operator-card operator-card--cluster-matrix"
+          data-content-empty={clusterMatrixEmpty ? "true" : undefined}
+          aria-labelledby="operator-section-traffic"
+        >
+          <div className="operator-section-title">
+            <IconGrid3X3 className="operator-section-icon" aria-hidden size={14} strokeWidth={1.5} />
+            Cluster Health Matrix
+          </div>
+          <div className="operator-card__table-wrap">
+            <ClusterMatrix rows={clusterMatrixRows} />
+          </div>
+        </div>
       </div>
 
-      <h2 className="operator-dashboard__section-label" id="operator-section-sessions">
-        Sessions
-      </h2>
+      <SectionLabel id="operator-section-sessions">Sessions</SectionLabel>
       <div className="operator-grid-cell operator-grid-cell--span-12 operator-card" aria-labelledby="operator-section-sessions">
         <div className="operator-section-title">
-          <Users className="operator-section-icon" aria-hidden size={14} strokeWidth={2} />
+          <IconUsers className="operator-section-icon" aria-hidden size={14} strokeWidth={1.5} />
           User Sessions
         </div>
         <div className="operator-card__table-wrap">
@@ -557,9 +581,7 @@ export function OperatorDashboardContent() {
         </div>
       </div>
 
-      <h2 className="operator-dashboard__section-label" id="operator-section-servers">
-        Infrastructure
-      </h2>
+      <SectionLabel id="operator-section-servers">Infrastructure</SectionLabel>
       <div
         className="operator-grid-cell operator-grid-cell--span-12 operator-card"
         aria-labelledby="operator-section-servers"
@@ -567,7 +589,7 @@ export function OperatorDashboardContent() {
         data-content-dense={serversDense ? "true" : undefined}
       >
         <div className="operator-section-title">
-          <Server className="operator-section-icon" aria-hidden size={14} strokeWidth={2} />
+          <IconServer className="operator-section-icon" aria-hidden size={14} strokeWidth={1.5} />
           Server Table
         </div>
         {serversResource.status === "stale" ? (

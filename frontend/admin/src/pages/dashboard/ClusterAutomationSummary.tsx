@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { formatDateTime } from "@vpn-suite/shared";
-import { Activity, Server } from "lucide-react";
-import { Panel, Text } from "@vpn-suite/shared/ui";
+import { IconTelemetry, IconServer } from "@/design-system/icons";
+import { Card, Text } from "@/design-system";
 import type { AutomationStatusOut } from "@vpn-suite/shared/types";
 import { CLUSTER_HEALTH_KEY, CONTROL_PLANE_AUTOMATION_STATUS_KEY } from "../../api/query-keys";
 import { api } from "../../api/client";
@@ -41,11 +41,11 @@ export function ClusterAutomationSummary() {
 
   if (!anyOk && anyError) {
     return (
-      <Panel as="section" variant="outline" className="ref-cluster-summary" aria-label="Control-plane status" data-testid="dashboard-cluster-summary">
+      <Card as="section" variant="outline" className="ref-cluster-summary" aria-label="Control-plane status" data-testid="dashboard-cluster-summary">
         <Text className="ref-chart-caption" variant="caption">
           Control-plane unavailable
         </Text>
-      </Panel>
+      </Card>
     );
   }
 
@@ -60,7 +60,7 @@ export function ClusterAutomationSummary() {
 
   const clusterLine = clusterOk ? (
     <span className="ref-cluster-summary-line">
-      <Server className="icon-sm" aria-hidden />
+      <IconServer className="icon-sm" aria-hidden strokeWidth={1.5} />
       {clusterQuery.data!.nodes_total} nodes
       {healthyCount != null || degradedCount != null
         ? ` (${healthyCount ?? 0} healthy${degradedCount ? `, ${degradedCount} degraded` : ""})`
@@ -70,19 +70,19 @@ export function ClusterAutomationSummary() {
 
   const automationLine = automationOk ? (
     <span className="ref-cluster-summary-line">
-      <Activity className="icon-sm" aria-hidden />
+      <IconTelemetry className="icon-sm" aria-hidden strokeWidth={1.5} />
       Automation: {automationQuery.data!.enabled ? "on" : "off"}
       {automationQuery.data!.last_run_at ? ` · last run ${formatDateTime(automationQuery.data!.last_run_at, { dateStyle: "short", timeStyle: "short" })}` : ""}
     </span>
   ) : null;
 
   return (
-    <Panel as="section" variant="outline" className="ref-cluster-summary" aria-label="Control-plane status" data-testid="dashboard-cluster-summary">
+    <Card as="section" variant="outline" className="ref-cluster-summary" aria-label="Control-plane status" data-testid="dashboard-cluster-summary">
       <div className="ref-cluster-summary-inner">
         {clusterLine}
         {clusterLine && automationLine ? " · " : null}
         {automationLine}
       </div>
-    </Panel>
+    </Card>
   );
 }

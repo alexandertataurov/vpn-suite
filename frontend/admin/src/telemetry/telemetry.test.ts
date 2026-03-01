@@ -107,6 +107,8 @@ describe("telemetry SSOT with mock transport", () => {
     initTransport({
       baseUrl: () => "http://test",
       sendFrontendErrors: false,
+      sendEventsBatch: false,
+      sampleRate: 1,
       debug: false,
     });
   });
@@ -126,6 +128,8 @@ describe("telemetry SSOT with mock transport", () => {
     init({
       baseUrl: () => "http://test",
       sendFrontendErrors: false,
+      sendEventsBatch: false,
+      sampleRate: 1,
       debug: false,
     });
     pageView("/telemetry");
@@ -137,6 +141,8 @@ describe("telemetry SSOT with mock transport", () => {
     init({
       baseUrl: () => "http://test",
       sendFrontendErrors: false,
+      sendEventsBatch: false,
+      sampleRate: 1,
       debug: false,
     });
     error(new Error("test error"), { route: "/settings" });
@@ -150,6 +156,8 @@ describe("telemetry SSOT with mock transport", () => {
     init({
       baseUrl: () => "http://test",
       sendFrontendErrors: false,
+      sendEventsBatch: false,
+      sampleRate: 1,
       debug: false,
     });
     track("page_view", {} as { route: string });

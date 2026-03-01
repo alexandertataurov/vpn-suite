@@ -14,6 +14,15 @@ export const TELEMETRY_EVENT_NAMES = [
   "server_delete",
   "parsing_error",
   "stale_detected",
+  "login_success",
+  "login_failure",
+  "navigation",
+  "filter_change",
+  "sort_change",
+  "sync_action",
+  "reissue_action",
+  "incident_action",
+  "web_vital",
 ] as const;
 
 export type TelemetryEventName = (typeof TELEMETRY_EVENT_NAMES)[number];
@@ -29,6 +38,7 @@ export interface ApiRequestPayload {
   method: string;
   status: number;
   duration_ms: number;
+  request_id?: string;
   correlation_id?: string;
   retry_count?: number;
 }
@@ -37,6 +47,7 @@ export interface ApiErrorPayload {
   path: string;
   method: string;
   code: number | string;
+  request_id?: string;
   correlation_id?: string;
 }
 
@@ -45,6 +56,14 @@ export interface FrontendErrorPayload {
   route?: string;
   component_stack?: string | null;
   stack?: string | null;
+}
+
+export interface WebVitalPayload {
+  name: string;
+  value: number;
+  unit: "ms" | "score";
+  route?: string;
+  nav_type?: string;
 }
 
 export interface UserActionPayload {
@@ -85,17 +104,28 @@ export interface StaleDetectedPayload {
   age_ms: number;
 }
 
+export type GenericTelemetryPayload = Record<string, unknown>;
+
 export type TelemetryPayloadMap = {
   page_view: PageViewPayload;
   api_request: ApiRequestPayload;
   api_error: ApiErrorPayload;
   frontend_error: FrontendErrorPayload;
+  web_vital: WebVitalPayload;
   user_action: UserActionPayload;
   servers_list_fetch: ServersListFetchPayload;
   servers_sync: ServersSyncPayload;
   server_delete: ServerDeletePayload;
   parsing_error: ParsingErrorPayload;
   stale_detected: StaleDetectedPayload;
+  login_success: GenericTelemetryPayload;
+  login_failure: GenericTelemetryPayload;
+  navigation: GenericTelemetryPayload;
+  filter_change: GenericTelemetryPayload;
+  sort_change: GenericTelemetryPayload;
+  sync_action: GenericTelemetryPayload;
+  reissue_action: GenericTelemetryPayload;
+  incident_action: GenericTelemetryPayload;
 };
 
 function isRecord(x: unknown): x is Record<string, unknown> {
@@ -131,6 +161,7 @@ export function validatePayload<N extends TelemetryEventName>(
         method: raw.method,
         status: Number(raw.status) || 0,
         duration_ms: Number(raw.duration_ms) || 0,
+        request_id: raw.request_id != null ? safeString(raw.request_id) : undefined,
         correlation_id: raw.correlation_id != null ? safeString(raw.correlation_id) : undefined,
         retry_count: raw.retry_count != null ? Number(raw.retry_count) : undefined,
       } as TelemetryPayloadMap[N];
@@ -141,6 +172,7 @@ export function validatePayload<N extends TelemetryEventName>(
         path: raw.path,
         method: raw.method,
         code: typeof raw.code === "number" ? raw.code : safeString(raw.code),
+        request_id: raw.request_id != null ? safeString(raw.request_id) : undefined,
         correlation_id: raw.correlation_id != null ? safeString(raw.correlation_id) : undefined,
       } as TelemetryPayloadMap[N];
 
@@ -151,6 +183,16 @@ export function validatePayload<N extends TelemetryEventName>(
         route: raw.route != null ? safeString(raw.route) : undefined,
         component_stack: raw.component_stack != null ? safeString(raw.component_stack) : null,
         stack: raw.stack != null ? safeString(raw.stack) : null,
+      } as TelemetryPayloadMap[N];
+
+    case "web_vital":
+      if (typeof raw.name !== "string") return null;
+      return {
+        name: raw.name,
+        value: Number(raw.value) || 0,
+        unit: raw.unit === "score" ? "score" : "ms",
+        route: raw.route != null ? safeString(raw.route) : undefined,
+        nav_type: raw.nav_type != null ? safeString(raw.nav_type) : undefined,
       } as TelemetryPayloadMap[N];
 
     case "user_action":
@@ -202,6 +244,16 @@ export function validatePayload<N extends TelemetryEventName>(
         age_ms: ageMs,
       } as TelemetryPayloadMap[N];
     }
+
+    case "login_success":
+    case "login_failure":
+    case "navigation":
+    case "filter_change":
+    case "sort_change":
+    case "sync_action":
+    case "reissue_action":
+    case "incident_action":
+      return raw as TelemetryPayloadMap[N];
 
     default:
       return null;

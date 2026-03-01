@@ -1,4 +1,4 @@
-import { ExternalLink } from "lucide-react";
+import { IconLink } from "@/design-system/icons";
 import { getBaseUrl } from "@vpn-suite/shared/api-client";
 import { TelemetrySection } from "./TelemetrySection";
 
@@ -22,7 +22,7 @@ export function TraceValidationPanel() {
           rel="noopener noreferrer"
           className="telemetry-debug-anchor"
         >
-          <ExternalLink className="icon-sm" aria-hidden />
+          <IconLink className="icon-sm" aria-hidden strokeWidth={1.5} />
           Debug: raw Prometheus targets
         </a>
       </p>

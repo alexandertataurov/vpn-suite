@@ -4,10 +4,14 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>VPN Suite Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;500;600;700&family=DM+Mono:wght@300;400;500&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
     <script>
       (function(){
-        var t = localStorage.getItem('vpn-suite-theme');
-        if (t !== 'light' && t !== 'dark' && t !== 'dim') t = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+        var t = localStorage.getItem('vpn-suite-admin-theme') || localStorage.getItem('vpn-suite-theme');
+        var valid = ['starlink','orbital','dark','dim','light'];
+        if (!valid.includes(t)) t = 'starlink';
         document.documentElement.setAttribute('data-theme', t);
         document.documentElement.style.colorScheme = t === 'light' ? 'light' : 'dark';
       })();

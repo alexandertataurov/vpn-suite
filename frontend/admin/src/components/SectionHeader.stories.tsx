@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { Button } from "@vpn-suite/shared/ui";
+import { Button } from "@/design-system";
 import { SectionHeader } from "./SectionHeader";
 
 const meta: Meta<typeof SectionHeader> = {

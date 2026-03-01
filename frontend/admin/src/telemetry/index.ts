@@ -15,6 +15,10 @@ export interface TelemetryConfig {
   getToken?: () => string | null;
   /** Send frontend_error events to backend POST /log/frontend-error. Default true. */
   sendFrontendErrors?: boolean;
+  /** Send batched telemetry events to backend POST /log/events. Default true. */
+  sendEventsBatch?: boolean;
+  /** Sampling rate for non-critical events, range [0..1]. Default 1.0. */
+  sampleRate?: number;
   /** Debug: console logging and enable debug panel. Default from VITE_TELEMETRY_DEBUG. */
   debug?: boolean;
 }
@@ -29,6 +33,8 @@ export function init(config: TelemetryConfig): void {
     baseUrl: config.baseUrl,
     getToken: config.getToken,
     sendFrontendErrors: config.sendFrontendErrors ?? true,
+    sendEventsBatch: config.sendEventsBatch ?? true,
+    sampleRate: Math.max(0, Math.min(1, config.sampleRate ?? 1)),
     debug,
   });
   setContextInternal({ build_hash: env?.VITE_BUILD_HASH ?? null });

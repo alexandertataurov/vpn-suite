@@ -1,4 +1,4 @@
-import { Button } from "@vpn-suite/shared/ui";
+import { Button } from "@/design-system";
 
 export interface DevicesBulkPanelProps {
   selectedCount: number;

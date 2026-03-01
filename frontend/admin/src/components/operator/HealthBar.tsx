@@ -26,10 +26,44 @@ function formatStatus(s: string): string {
 }
 
 const EMPTY_LABEL = "—";
+const ERROR_RATE_THRESHOLD = 3;
+
+const THROUGHPUT_GRADIENT = {
+  type: "linear" as const,
+  x: 0,
+  y: 0,
+  x2: 0,
+  y2: 1,
+  colorStops: [
+    { offset: 0, color: "rgba(0,229,255,0.3)" },
+    { offset: 1, color: "rgba(0,229,255,0)" },
+  ],
+};
+
+function throughputSparklineOption(data: [number, number][]): EChartsOption {
+  return {
+    backgroundColor: "transparent",
+    animation: false,
+    grid: { left: 4, right: 4, top: 4, bottom: 4, containLabel: false },
+    xAxis: { type: "time", show: false },
+    yAxis: { type: "value", show: false, scale: true },
+    series: [
+      {
+        type: "line",
+        data,
+        showSymbol: false,
+        lineStyle: { color: "#00e5ff", width: 1.5 },
+        areaStyle: { color: THROUGHPUT_GRADIENT },
+        clip: true,
+      },
+    ],
+  };
+}
 
 function microSparklineOption(
   data: [number, number | null][],
-  color: string
+  color: string,
+  opts?: { dashed?: boolean }
 ): EChartsOption {
   return {
     backgroundColor: "transparent",
@@ -42,8 +76,12 @@ function microSparklineOption(
         type: "line",
         data,
         showSymbol: false,
-        lineStyle: { color, width: 1.5 },
-        areaStyle: { color, opacity: 0.15 },
+        lineStyle: {
+          color,
+          width: 1.5,
+          ...(opts?.dashed ? { type: "dashed", width: 1 } : {}),
+        },
+        areaStyle: opts?.dashed ? undefined : { color, opacity: 0.15 },
         clip: true,
       },
     ],
@@ -59,13 +97,21 @@ export function HealthBar({ data, timeseries }: HealthBarProps) {
   const throughputZero = data.total_throughput_bps <= 0;
   const latencyValue =
     data.avg_latency_ms != null ? `${Math.round(data.avg_latency_ms)} ms` : EMPTY_LABEL;
-  const errState = data.api_status === "ok" ? "ok" : data.api_status === "down" ? "down" : "degraded";
+  const errState =
+    data.error_rate_pct > ERROR_RATE_THRESHOLD
+      ? "degraded"
+      : data.api_status === "ok"
+        ? "ok"
+        : data.api_status === "down"
+          ? "down"
+          : "degraded";
+  const errorAboveThreshold = data.error_rate_pct > ERROR_RATE_THRESHOLD;
 
   const throughputSeries = useMemo(() => {
     if (!timeseries?.download?.length) return null;
     return timeseries.download.map(([ts], i) => {
       const up = timeseries.upload?.[i]?.[1] ?? 0;
-      const down = timeseries.download[i][1] ?? 0;
+      const down = timeseries.download[i]?.[1] ?? 0;
       return [ts, down + up] as [number, number];
     });
   }, [timeseries]);
@@ -76,19 +122,21 @@ export function HealthBar({ data, timeseries }: HealthBarProps) {
   }, [timeseries]);
 
   const throughputOption = useMemo(
-    () =>
-      throughputSeries?.length
-        ? microSparklineOption(throughputSeries, theme.primary.solid)
-        : null,
-    [throughputSeries, theme.primary.solid]
+    () => (throughputSeries?.length ? throughputSparklineOption(throughputSeries) : null),
+    [throughputSeries]
   );
-  const connectionsOption = useMemo(
-    () =>
-      connectionsSeries?.length
-        ? microSparklineOption(connectionsSeries, theme.series.muted)
-        : null,
-    [connectionsSeries, theme.series.muted]
-  );
+
+  const connectionsHasData = useMemo(() => {
+    if (!connectionsSeries?.length) return false;
+    return connectionsSeries.some(([, v]) => v != null && v > 0);
+  }, [connectionsSeries]);
+
+  const connectionsOption = useMemo(() => {
+    if (!connectionsSeries?.length || !connectionsHasData) return null;
+    return microSparklineOption(connectionsSeries, theme.series.muted);
+  }, [connectionsSeries, connectionsHasData, theme.series.muted]);
+
+  const connectionsEmpty = !connectionsOption;
 
   return (
     <div
@@ -97,13 +145,22 @@ export function HealthBar({ data, timeseries }: HealthBarProps) {
       aria-label="System health"
     >
       <div
-        className={`operator-health-block operator-health-block--core${coreDown ? " operator-health-block--down" : ""}`}
+        className={`operator-health-block operator-health-block--core${coreDown ? " operator-health-block--down" : ""}${data.api_status === "degraded" ? " operator-health-block--api-degraded" : ""}`}
         aria-label="Core health"
       >
         <div className="operator-health-bar-cell" title="Admin API liveness">
-          <span className="operator-health-bar-label">API</span>
-          <span className={`operator-health-bar-value ${statusClass(data.api_status)}`}>
-            {formatStatus(data.api_status)}
+          <span className={`operator-health-bar-label operator-health-bar-label--api${data.api_status === "degraded" ? " operator-health-bar-label--demoted" : ""}`}>
+            API
+          </span>
+          <span className={`operator-health-bar-value ${statusClass(data.api_status)}${data.api_status === "degraded" ? " operator-topbar-value--pulse" : ""}`}>
+            {data.api_status === "degraded" ? (
+              <>
+                <span className="operator-health-bar-pulse-dot" aria-hidden />
+                {formatStatus(data.api_status)}
+              </>
+            ) : (
+              formatStatus(data.api_status)
+            )}
           </span>
         </div>
         <div className="operator-health-bar-cell" title="Prometheus scrape status">
@@ -135,7 +192,7 @@ export function HealthBar({ data, timeseries }: HealthBarProps) {
           <span className="operator-health-bar-value-wrap">
             {throughputOption ? (
               <span className="operator-health-bar-sparkline" aria-hidden>
-                <EChart option={throughputOption} height={20} />
+                <EChart option={throughputOption} height={32} />
               </span>
             ) : null}
             <span className={`operator-health-bar-value${throughputZero ? " operator-topbar-value--muted" : ""}`}>
@@ -150,7 +207,14 @@ export function HealthBar({ data, timeseries }: HealthBarProps) {
           <span className="operator-health-bar-value-wrap">
             {connectionsOption ? (
               <span className="operator-health-bar-sparkline" aria-hidden>
-                <EChart option={connectionsOption} height={20} />
+                <EChart option={connectionsOption} height={32} />
+              </span>
+            ) : connectionsEmpty ? (
+              <span className="operator-health-bar-sparkline operator-health-bar-sparkline--empty" aria-hidden>
+                <svg width={48} height={32} viewBox="0 0 48 32" className="operator-sparkline-empty-svg">
+                  <line x1={4} y1={16} x2={44} y2={16} stroke="currentColor" strokeWidth={1} strokeDasharray="3 3" className="operator-sparkline-empty-line" />
+                </svg>
+                <span className="operator-sparkline-no-data">NO DATA</span>
               </span>
             ) : null}
             <span className={`operator-health-bar-value${data.peers_active == null && !timeseries?.lastConnectionsStr ? " operator-topbar-value--muted" : ""}`}>
@@ -166,8 +230,11 @@ export function HealthBar({ data, timeseries }: HealthBarProps) {
         </div>
         <div className="operator-health-bar-cell" title="Error rate percentage">
           <span className="operator-health-bar-label">Error %</span>
-          <span className={`operator-health-bar-value ${statusClass(errState)}`}>
+          <span className={`operator-health-bar-value ${statusClass(errState)}${errorAboveThreshold ? " operator-topbar-value--abort" : ""}`}>
             {data.error_rate_pct.toFixed(2)}%
+            {errorAboveThreshold ? (
+              <span className="operator-health-bar-above-threshold" aria-hidden>↑ above threshold</span>
+            ) : null}
           </span>
         </div>
       </div>

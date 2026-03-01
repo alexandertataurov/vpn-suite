@@ -1,8 +1,8 @@
 import { useState, useCallback } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { PageContainer, Skeleton, Button, Modal, ConfirmDanger } from "@vpn-suite/shared/ui";
+import { PageContainer, Skeleton, Button, Modal, ConfirmDanger } from "@/design-system";
 import { api } from "../api/client";
-import { PageHeader } from "../components/PageHeader";
+import { ListPage } from "../templates/ListPage";
 
 interface RetentionRule {
   id: string;
@@ -128,8 +128,9 @@ export function RetentionAutomationPage() {
   if (error) {
     return (
       <PageContainer>
-        <PageHeader title="Retention Automation" />
-        <p className="text-danger">{String(error)}</p>
+        <ListPage className="ref-page" title="RETENTION AUTOMATION">
+          <p className="text-danger">{String(error)}</p>
+        </ListPage>
       </PageContainer>
     );
   }
@@ -137,15 +138,17 @@ export function RetentionAutomationPage() {
   if (isLoading || !data) {
     return (
       <PageContainer>
-        <PageHeader title="Retention Automation" />
-        <Skeleton height={120} />
+        <ListPage className="ref-page" title="RETENTION AUTOMATION">
+          <Skeleton height={120} />
+        </ListPage>
       </PageContainer>
     );
   }
 
   return (
     <PageContainer>
-      <PageHeader title="Retention Rules">
+      <ListPage className="ref-page" title="RETENTION RULES" primaryAction={
+        <>
         <Button variant="secondary" size="sm" onClick={() => setShowNewRule(true)}>
           New rule
         </Button>
@@ -157,7 +160,8 @@ export function RetentionAutomationPage() {
         >
           Run engine
         </Button>
-      </PageHeader>
+        </>
+      }>
       <p className="text-muted small">Total rules: {data.total}</p>
       <div className="card mt-3">
         <table className="table table-sm mb-0">
@@ -272,7 +276,7 @@ export function RetentionAutomationPage() {
       <ConfirmDanger
         open={deleteRuleId !== null}
         onClose={() => setDeleteRuleId(null)}
-        onConfirm={(_payload) => {
+        onConfirm={() => {
           if (deleteRuleId) deleteRuleMutation.mutate(deleteRuleId);
         }}
         title="Delete retention rule"
@@ -281,6 +285,7 @@ export function RetentionAutomationPage() {
         cancelLabel="Cancel"
         loading={deleteRuleMutation.isPending}
       />
+    </ListPage>
     </PageContainer>
   );
 }

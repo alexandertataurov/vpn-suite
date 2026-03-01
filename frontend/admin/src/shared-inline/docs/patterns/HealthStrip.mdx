@@ -1,0 +1,38 @@
+import { Meta } from "@storybook/blocks";
+
+<Meta title="Patterns/HealthStrip" />
+
+# HealthStrip
+
+## Purpose
+Operator status strip for live system health.
+
+**When to use:** Dashboards and telemetry overviews.
+
+**When not to use:** Single metric cards or inline badges.
+
+## API (Props)
+
+Use `HealthStrip` component with aggregated metrics and last update data.
+
+## Examples
+
+```tsx
+<HealthStrip
+  updatedAt={new Date().toISOString()}
+  status="healthy"
+  metrics={[{ label: "Servers", value: 42 }, { label: "Alerts", value: 3 }]}
+/>
+```
+
+## Design Tokens Used
+- Spacing: `--spacing-*`
+- Colors: `--color-*`
+- Typography: `--text-*`
+
+## Anti-patterns
+- Using for single status values.
+- Inline styles or arbitrary spacing.
+
+## Accessibility
+- Ensure labels are descriptive and metrics are readable.

@@ -1,0 +1,37 @@
+import { Meta } from "@storybook/blocks";
+
+<Meta title="Components/CommandPalette/ServersCommandPalette" />
+
+# ServersCommandPalette
+
+## Purpose
+Command palette for Servers page (cmdk-based, grouped).
+
+**When to use:** Server list quick navigation and actions.
+
+**When not to use:** Non-server contexts (use CommandPalette).
+
+## API (Props)
+
+| Prop | Type |
+| --- | --- |
+| open | `boolean` |
+| onClose | `() => void` |
+| groups | `{ heading: string; items: { id: string; label: string; keywords?: string; onSelect: () => void }[] }[]` |
+
+## Examples
+
+```tsx
+<ServersCommandPalette open onClose={close} groups={groups} />
+```
+
+## Design Tokens Used
+- Spacing: `--spacing-*`
+- Colors: `--color-*`
+
+## Anti-patterns
+- Inline styles or arbitrary pixel values.
+- Unstructured lists without grouping.
+
+## Accessibility
+- Keyboard navigation required; Escape closes the palette.

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { PageHeader } from "./PageHeader";
-import { Button } from "@vpn-suite/shared/ui";
-import { Server } from "lucide-react";
+import { Button } from "@/design-system";
+import { IconServer } from "@/design-system/icons";
 
 const meta: Meta<typeof PageHeader> = {
   title: "Patterns/OperatorHeader",
@@ -32,7 +32,7 @@ export const Variants: Story = {
     <div className="sb-stack">
       <PageHeader title="Servers" description="Manage VPN nodes." primaryAction={<Button>Add server</Button>} />
       <PageHeader title="Server details" breadcrumbItems={[{ label: "Home", to: "/" }, { label: "Servers", to: "/servers" }, { label: "core-01" }]} primaryAction={<Button variant="secondary">Restart</Button>} />
-      <PageHeader title="Servers" icon={Server} primaryAction={<Button>Add server</Button>} />
+      <PageHeader title="Servers" icon={IconServer} primaryAction={<Button>Add server</Button>} />
     </div>
   ),
 };
@@ -73,7 +73,7 @@ export const WithLongText: Story = {
 };
 
 export const WithIcon: Story = {
-  args: { title: "Servers", icon: Server, primaryAction: <Button>Add server</Button> },
+  args: { title: "Servers", icon: IconServer, primaryAction: <Button>Add server</Button> },
 };
 
 export const DarkMode: Story = {

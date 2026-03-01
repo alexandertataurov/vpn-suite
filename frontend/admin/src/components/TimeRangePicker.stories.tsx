@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react";
-import { TimeRangePicker } from "./TimeRangePicker";
+import { TimeRangePicker } from "./chrome/TimeRangePicker";
 
 const meta: Meta<typeof TimeRangePicker> = {
   title: "Components/FilterBar/TimeRangePicker",

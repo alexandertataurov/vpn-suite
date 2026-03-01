@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { MetricTile } from "./MetricTile";
-import { Users } from "lucide-react";
+import { MetricTile } from "@/design-system";
+import { IconUsers } from "@/design-system/icons";
 
 const meta: Meta<typeof MetricTile> = {
   title: "Components/MetricTile",
@@ -27,7 +27,7 @@ export const Variants: Story = {
     <div className="sb-grid" data-columns="3">
       <MetricTile label="Revenue" value="42" unit="K" />
       <MetricTile label="Sessions" value="5,678" trend={{ value: 12, direction: "up" }} />
-      <MetricTile label="Users" value="100" icon={Users} />
+      <MetricTile label="Users" value="100" icon={IconUsers} />
     </div>
   ),
 };

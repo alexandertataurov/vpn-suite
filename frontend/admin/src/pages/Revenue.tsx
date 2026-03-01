@@ -1,8 +1,8 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Skeleton } from "@vpn-suite/shared/ui";
+import { Skeleton } from "@/design-system";
 import { api } from "../api/client";
-import { PageHeader } from "../components/PageHeader";
+import { DashboardPage } from "../templates/DashboardPage";
 import { EChart } from "../charts/EChart";
 
 interface RevenueOverview {
@@ -55,26 +55,23 @@ export function RevenuePage() {
 
   if (error) {
     return (
-      <div className="ref-page">
-        <PageHeader title="Revenue" />
+      <DashboardPage className="ref-page" title="REVENUE">
         <p className="text-danger">{String(error)}</p>
-      </div>
+      </DashboardPage>
     );
   }
 
   if (isLoading || !data) {
     return (
-      <div className="ref-page">
-        <PageHeader title="Revenue" />
+      <DashboardPage className="ref-page" title="REVENUE">
         <Skeleton height={120} />
-      </div>
+      </DashboardPage>
     );
   }
 
   return (
-    <div className="ref-page" data-testid="revenue-page">
-      <PageHeader title="Revenue Overview" />
-      <div className="revenue-kpis grid gap-3 mt-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))" }}>
+    <DashboardPage className="ref-page" data-testid="revenue-page" title="REVENUE OVERVIEW">
+      <div className="revenue-kpis grid gap-3 mt-3 ref-auto-grid-160">
         <div className="card p-3">
           <div className="text-muted small">MRR</div>
           <div className="h4 mb-0">{data.mrr.toFixed(2)}</div>
@@ -128,6 +125,6 @@ export function RevenuePage() {
           </ul>
         </div>
       )}
-    </div>
+    </DashboardPage>
   );
 }

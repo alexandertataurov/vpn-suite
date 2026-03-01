@@ -73,8 +73,8 @@ export const CONTROL_PLANE_AUTOMATION_STATUS_KEY = ["control-plane", "automation
 export const CONTROL_PLANE_EVENTS_KEY = ["control-plane", "events"] as const;
 
 /** Servers device counts. */
-export const serversDeviceCountsKey = (skip404: boolean) =>
-  [...SERVERS_LIST_KEY, "device-counts", skip404] as const;
+export const serversDeviceCountsKey = () =>
+  [...SERVERS_LIST_KEY, "device-counts"] as const;
 
 /** Server IPs (drawer). */
 export const serversIpsKey = (serverId: string) => [...SERVERS_LIST_KEY, serverId, "ips"] as const;

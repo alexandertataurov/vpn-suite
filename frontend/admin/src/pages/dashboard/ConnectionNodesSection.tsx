@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Server } from "lucide-react";
-import { Panel, Skeleton, PrimitiveBadge } from "@vpn-suite/shared/ui";
+import { IconServer } from "@/design-system/icons";
+import { Card, Skeleton, PrimitiveBadge } from "@/design-system";
+import { Heading } from "@/design-system";
 import type { ConnectionNodesOut } from "@vpn-suite/shared/types";
 import { api } from "../../api/client";
 import { CONNECTION_NODES_KEY } from "../../api/query-keys";
@@ -15,8 +16,8 @@ export function ConnectionNodesSection() {
 
   if (query.isLoading || query.error) {
     return (
-      <Panel as="section" variant="outline" className="connection-nodes" aria-label="Connection nodes" data-testid="dashboard-connection-nodes">
-        <h3 className="ref-settings-title">Connection nodes</h3>
+      <Card as="section" variant="outline" className="connection-nodes" aria-label="Connection nodes" data-testid="dashboard-connection-nodes">
+        <Heading level={3} className="ref-settings-title">Connection nodes</Heading>
         {query.isLoading ? (
           <div className="connection-nodes-grid">
             {[1, 2, 3].map((i) => (
@@ -26,23 +27,23 @@ export function ConnectionNodesSection() {
         ) : (
           <p className="ref-settings-text ref-muted">Unable to load nodes.</p>
         )}
-      </Panel>
+      </Card>
     );
   }
 
   const nodes = query.data?.nodes ?? [];
   if (nodes.length === 0) {
     return (
-      <Panel as="section" variant="outline" className="connection-nodes" aria-label="Connection nodes" data-testid="dashboard-connection-nodes">
-        <h3 className="ref-settings-title">Connection nodes</h3>
+      <Card as="section" variant="outline" className="connection-nodes" aria-label="Connection nodes" data-testid="dashboard-connection-nodes">
+        <Heading level={3} className="ref-settings-title">Connection nodes</Heading>
         <p className="ref-settings-text ref-muted">No servers or integrations yet.</p>
-      </Panel>
+      </Card>
     );
   }
 
   return (
-    <Panel as="section" variant="outline" className="connection-nodes" aria-label="Connection nodes" data-testid="dashboard-connection-nodes">
-      <h3 className="ref-settings-title">Connection nodes</h3>
+    <Card as="section" variant="outline" className="connection-nodes" aria-label="Connection nodes" data-testid="dashboard-connection-nodes">
+      <Heading level={3} className="ref-settings-title">Connection nodes</Heading>
       <p className="ref-settings-text ref-muted">Servers — peers at a glance.</p>
       <div className="connection-nodes-grid">
         {nodes.map((node) => (
@@ -54,7 +55,7 @@ export function ConnectionNodesSection() {
             aria-label={`${node.label}, ${node.peer_count} peers`}
           >
             <div className="connection-node-header">
-              <Server className="connection-node-icon" aria-hidden />
+              <IconServer className="connection-node-icon" aria-hidden strokeWidth={1.5} />
               <span className="connection-node-label">{node.label}</span>
               <PrimitiveBadge variant="neutral" className="connection-node-type">
                 Server
@@ -84,6 +85,6 @@ export function ConnectionNodesSection() {
           </Link>
         ))}
       </div>
-    </Panel>
+    </Card>
   );
 }

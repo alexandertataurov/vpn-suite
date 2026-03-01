@@ -1,0 +1,41 @@
+import { Meta } from "@storybook/blocks";
+
+<Meta title="Components/ProgressBar" />
+
+# ProgressBar
+
+## Purpose
+Progress indicator for ongoing tasks.
+
+**When to use:** Deterministic progress with a value.
+
+**When not to use:** Unknown duration (use Spinner).
+
+## API (Props)
+
+| Prop | Type |
+| --- | --- |
+| value | `number` |
+| max? | `number` |
+| label? | `string` |
+
+## Examples
+
+```tsx
+<ProgressBar value={45} max={100} />
+```
+
+## Design Tokens Used
+- Typography: `--text-*`
+- Spacing: `--spacing-*`
+- Colors: `--color-*`
+- Radius: `--radius-*`
+
+## Anti-patterns
+- Inline styles or arbitrary pixel values.
+- Using component for unrelated semantics.
+
+## Accessibility
+- Provide labels and aria attributes as needed.
+- Ensure focus visibility and keyboard access.
+

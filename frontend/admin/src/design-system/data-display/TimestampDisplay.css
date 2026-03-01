@@ -1,0 +1,2 @@
+.ds-timestamp { font-family: var(--font-data); font-size: var(--text-sm); color: var(--color-text-secondary); }
+.ds-timestamp:hover { color: var(--color-text-primary); }

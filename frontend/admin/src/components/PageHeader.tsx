@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
-import type { LucideIcon } from "lucide-react";
-import { Heading, Text, RelativeTime } from "@vpn-suite/shared/ui";
-import { Breadcrumb, type BreadcrumbItem } from "./Breadcrumb";
+import type { LucideIcon } from "@/design-system/icons";
+import { Heading, Text, RelativeTime } from "@/design-system";
+import { Breadcrumb, type BreadcrumbItem } from "@/design-system";
 
 export interface PageHeaderProps {
   /** Back link (e.g. in detail views). Renders as "Back to …" */

@@ -1,4 +1,4 @@
-import type { PrimitiveBadgeVariant } from "@vpn-suite/shared/ui";
+import type { PrimitiveBadgeVariant } from "@/design-system";
 
 export function serverHealthBadge(s: string | null | undefined): { variant: PrimitiveBadgeVariant; label: string } {
   if (!s) return { variant: "info", label: "Pending" };

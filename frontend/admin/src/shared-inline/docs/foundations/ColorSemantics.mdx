@@ -1,0 +1,67 @@
+import { Meta } from "@storybook/blocks";
+import { TokenSwatch } from "../../storybook";
+
+<Meta title="Foundations/Tokens/Color/Semantics" />
+
+# Color Semantics
+
+Use these tokens in components. They map to primitives and adapt to theme (dark/light/dim).
+
+> **Theme switcher (toolbar):** Use dark | light | dim to preview semantics in each theme. Swatches update live.
+
+## Background & Surface
+
+| Token | `Usage` | Mapping |
+| ------- | `-------` | --------- |
+| `--color-background-primary` | `Page, chrome` | gray-950 |
+| `--color-background-secondary` | `Cards, raised surfaces` | gray-900 |
+| `--color-background-tertiary` | `Nested surfaces` | gray-800 |
+
+<div className="sb-grid sb-mb-8">
+  <TokenSwatch cssVar="--color-background-primary" usage="Page background" />
+  <TokenSwatch cssVar="--color-background-secondary" usage="Cards, surfaces" />
+  <TokenSwatch cssVar="--color-background-tertiary" usage="Nested, elevated" />
+</div>
+
+## Text
+
+| Token | `Usage` |
+| ------- | `-------` |
+| `--color-text-primary` | `Primary content` |
+| `--color-text-secondary` | `Secondary, captions` |
+| `--color-text-tertiary` | `Placeholder, disabled` |
+
+<div className="sb-grid sb-mb-8">
+  <div className="sb-token-card" data-color="text-primary">
+    <div className="sb-token-bar" />
+    <code>--color-text-primary</code>
+  </div>
+  <div className="sb-token-card" data-color="text-secondary">
+    <div className="sb-token-bar" />
+    <code>--color-text-secondary</code>
+  </div>
+  <div className="sb-token-card" data-color="text-tertiary">
+    <div className="sb-token-bar" />
+    <code>--color-text-tertiary</code>
+  </div>
+</div>
+
+## Interactive & Border
+
+<div className="sb-grid sb-mb-8">
+  <TokenSwatch cssVar="--color-interactive-default" usage="Primary actions" />
+  <TokenSwatch cssVar="--color-interactive-hover" usage="Hover state" />
+  <TokenSwatch cssVar="--color-border-default" usage="Default borders" />
+  <TokenSwatch cssVar="--color-border-subtle" usage="Dividers" />
+  <TokenSwatch cssVar="--color-focus-ring" usage="Focus outline" />
+</div>
+
+## Status
+
+<div className="sb-grid sb-mb-8" data-columns="4">
+  <TokenSwatch cssVar="--color-success" usage="Success, connected" />
+  <TokenSwatch cssVar="--color-warning" usage="Warning, pending" />
+  <TokenSwatch cssVar="--color-error" usage="Error, destructive" />
+  <TokenSwatch cssVar="--color-info" usage="Info, syncing" />
+</div>
+

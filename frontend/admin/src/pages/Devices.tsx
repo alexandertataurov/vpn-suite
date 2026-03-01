@@ -1,24 +1,30 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { MoreVertical, RefreshCw, Smartphone } from "lucide-react";
-import { PrimitiveBadge, Table, VirtualTable, Select, Button, Checkbox, DeviceCard, ConfirmDanger, ConfirmModal, useToast, PageError, HelperText, DropdownMenu } from "@vpn-suite/shared/ui";
+import { CopyableId, StatusBadge } from "@/design-system";
+import { IconMoreVertical, IconRefresh, IconDevices } from "@/design-system/icons";
+import { Table, VirtualTable, Select, Button, Checkbox, DeviceCard, ConfirmDanger, ConfirmModal, useToast, PageError, HelperText, DropdownMenu } from "@/design-system";
 import { formatDate, getErrorMessage, useApiErrorToast } from "@vpn-suite/shared";
-import { ConfigContentModal } from "../components/ConfigContentModal";
-import { ReissueConfigModal } from "../components/ReissueConfigModal";
-import { PageHeader } from "../components/PageHeader";
-import { TableSection } from "../components/TableSection";
-import { DevicesControlBar } from "../components/devices/DevicesControlBar";
-import { DeviceDetailDrawer } from "../components/devices/DeviceDetailDrawer";
-import { EditDeviceModal } from "../components/devices/EditDeviceModal";
-import { DevicesMetricsStrip, type DevicesQuickFilter } from "../components/devices/DevicesMetricsStrip";
-import { DevicesTelemetryHealth } from "../components/devices/DevicesTelemetryHealth";
-import { DevicesBulkPanel } from "../components/devices/DevicesBulkPanel";
+import {
+  ConfigContentModal,
+  TableSection,
+  ReissueConfigModal,
+  DevicesControlBar,
+  DeviceDetailDrawer,
+  EditDeviceModal,
+  DevicesMetricsStrip,
+  type DevicesQuickFilter,
+  DevicesTelemetryHealth,
+  DevicesBulkPanel,
+} from "@/components";
+import { ListPage } from "../templates/ListPage";
 import type { AdminRotatePeerResponse, AppSettingsOut, DeviceOut, DeviceList, DeviceSummaryOut, IssuedConfigOut } from "@vpn-suite/shared/types";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ApiError } from "@vpn-suite/shared/types";
-import { api } from "../api/client";
+import { api, createIdempotencyKey } from "../api/client";
 import { APP_SETTINGS_KEY, DEVICES_KEY, DEVICES_SUMMARY_KEY } from "../api/query-keys";
 import { useServerListForRegion, useServerListFull } from "../hooks/useServerList";
+import { useDevicesStream } from "../hooks/useDevicesStream";
+import { track } from "../telemetry";
 import {
   loadSavedViews,
   removeSavedView,
@@ -37,7 +43,7 @@ const SORT_OPTIONS = [
 ] as const;
 
 const LIMIT = 20;
-const DEVICES_POLL_INTERVAL_MS = 90_000;
+const DEVICES_POLL_INTERVAL_MS = 30_000; // Fallback when SSE unavailable
 const DEVICES_VIEWS_SCOPE = "devices";
 type ViewMode = "cards" | "table";
 type ViewPreset = "needs_attention" | "pending_issuance" | "recently_active" | null;
@@ -134,40 +140,16 @@ function TelemetryCell({ telemetry }: { telemetry: DeviceOut["telemetry"] }) {
 }
 
 function DeviceStatusBadge({ device }: { device: DeviceOut }) {
-  if (device.revoked_at) {
-    return (
-      <span className="devices-status-badge devices-status-revoked" title="Revoked">
-        Revoked
-      </span>
-    );
-  }
-  if (device.apply_status === "NO_HANDSHAKE") {
-    return (
-      <span className="devices-status-badge devices-status-degraded" title={device.last_error ?? "No handshake within gate"}>
-        No handshake
-      </span>
-    );
+  if (device.revoked_at) return <StatusBadge variant="critical" label="Revoked" />;
+  if (device.apply_status === "NO_HANDSHAKE" && !device.last_seen_handshake_at) {
+    return <StatusBadge variant="warning" label="No handshake" />;
   }
   if (device.apply_status === "FAILED_APPLY") {
-    return (
-      <span className="devices-status-badge devices-status-degraded" title={device.last_error ?? "Apply failed"}>
-        Apply failed
-      </span>
-    );
+    return <StatusBadge variant="warning" label="Apply failed" />;
   }
   const hasPending = (device.issued_configs ?? []).some((c) => !c.consumed_at);
-  if (hasPending) {
-    return (
-      <span className="devices-status-badge devices-status-pending" title="Active, pending config">
-        Pending
-      </span>
-    );
-  }
-  return (
-    <span className="devices-status-badge devices-status-active" title="Active">
-      Active
-    </span>
-  );
+  if (hasPending) return <StatusBadge variant="standby" label="Pending" />;
+  return <StatusBadge variant="nominal" label="Active" />;
 }
 
 interface DevicesViewState {
@@ -216,6 +198,7 @@ export function DevicesPage() {
   }, [searchInput]);
 
   const [pollingPaused, setPollingPaused] = useState(false);
+  useDevicesStream(!pollingPaused);
   const summaryQuery = useQuery<DeviceSummaryOut>({
     queryKey: DEVICES_SUMMARY_KEY,
     queryFn: ({ signal }) => api.get<DeviceSummaryOut>("/devices/summary", { signal }),
@@ -362,8 +345,7 @@ export function DevicesPage() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: ({ deviceId, confirm_token }: { deviceId: string; confirm_token: string }) =>
-      api.post(`/devices/${deviceId}/delete`, { confirm_token }),
+    mutationFn: (deviceId: string) => api.post(`/devices/${deviceId}/delete`, {}),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: DEVICES_KEY });
       queryClient.invalidateQueries({ queryKey: DEVICES_SUMMARY_KEY });
@@ -377,14 +359,35 @@ export function DevicesPage() {
 
   const reissueMutation = useMutation({
     mutationFn: (deviceId: string) =>
-      api.post<AdminRotatePeerResponse>(`/devices/${deviceId}/reissue`, {}),
+      api.post<AdminRotatePeerResponse>(
+        `/devices/${deviceId}/reissue`,
+        {},
+        { headers: { "Idempotency-Key": createIdempotencyKey("devices.reissue", deviceId) } }
+      ),
     onSuccess: (data) => {
       setReissueResult(data);
       queryClient.invalidateQueries({ queryKey: DEVICES_KEY });
       queryClient.invalidateQueries({ queryKey: DEVICES_SUMMARY_KEY });
+      try {
+        track("reissue_action", {
+          result: "success",
+          request_id: data.request_id ?? undefined,
+        });
+      } catch {
+        /* telemetry never throws */
+      }
       addToast("Config reissued", "success");
     },
     onError: (err) => {
+      try {
+        track("reissue_action", {
+          result: "error",
+          request_id: err instanceof ApiError ? err.requestId : undefined,
+          status: err instanceof ApiError ? err.statusCode : undefined,
+        });
+      } catch {
+        /* telemetry never throws */
+      }
       showApiError(err, "Reissue failed");
     },
   });
@@ -416,9 +419,15 @@ export function DevicesPage() {
     let succeeded = 0;
     let failed = 0;
     for (let i = 0; i < ids.length; i++) {
+      const deviceId = ids[i];
+      if (!deviceId) continue;
       setBulkProgress({ done: i, total: ids.length, action: "reissue" });
       try {
-        await api.post<AdminRotatePeerResponse>(`/devices/${ids[i]}/reissue`, {});
+        await api.post<AdminRotatePeerResponse>(
+          `/devices/${deviceId}/reissue`,
+          {},
+          { headers: { "Idempotency-Key": createIdempotencyKey("devices.reissue", deviceId) } }
+        );
         succeeded++;
       } catch {
         failed++;
@@ -575,9 +584,7 @@ export function DevicesPage() {
       render: (r: DeviceOut) => (
         <div className="devices-cell-device">
           <span className="devices-cell-device-name">{r.device_name ?? "—"}</span>
-          <span className="devices-cell-device-id mono" title={r.id}>
-            {r.id.slice(0, 8)}
-          </span>
+          <CopyableId value={r.id} className="devices-cell-device-id mono" />
         </div>
       ),
     },
@@ -649,14 +656,14 @@ export function DevicesPage() {
               aria-label="Reissue config"
               title="Reissue"
             >
-              <RefreshCw aria-hidden strokeWidth={1.5} size={14} />
+              <IconRefresh aria-hidden strokeWidth={1.5} size={14} />
             </Button>
           )}
           <DropdownMenu
             portal
             trigger={
               <Button variant="ghost" size="icon" aria-label="More actions" title="More actions">
-                <MoreVertical aria-hidden strokeWidth={1.5} size={14} />
+                <IconMoreVertical aria-hidden strokeWidth={1.5} size={14} />
               </Button>
             }
             items={[
@@ -725,33 +732,28 @@ export function DevicesPage() {
 
   if (error) {
     return (
-      <div className="dashboard ref-page dashboard--comfortable devices-page" data-testid="devices-page">
-        <PageHeader icon={Smartphone} title="Devices" description="Issued configs and revocation state">
-          <Button variant="secondary" size="sm" onClick={() => refetch()} aria-label="Retry">
-            Retry
-          </Button>
-        </PageHeader>
+      <ListPage className="dashboard ref-page dashboard--comfortable devices-page" data-testid="devices-page" title="DEVICES" description="Issued configs and revocation state" icon={IconDevices} primaryAction={<Button variant="secondary" size="sm" onClick={() => refetch()} aria-label="Retry">Retry</Button>}>
         <PageError
           message={getErrorMessage(error, "Failed to load devices")}
           requestId={error instanceof ApiError ? error.requestId : undefined}
+          correlationId={error instanceof ApiError ? error.correlationId : undefined}
           statusCode={error instanceof ApiError ? error.statusCode : undefined}
           endpoint="GET /devices"
           onRetry={() => refetch()}
         />
-      </div>
+      </ListPage>
     );
   }
 
   return (
-    <div className="dashboard ref-page dashboard--comfortable devices-page" data-testid="devices-page">
-      <PageHeader
-        icon={Smartphone}
-        title="Devices"
-        description="Issued configs and revocation state"
-      >
-        {regionFilter !== "all" ? <PrimitiveBadge variant="info">Region: {regionFilter}</PrimitiveBadge> : null}
-      </PageHeader>
-
+    <ListPage
+      className="dashboard ref-page dashboard--comfortable devices-page"
+      data-testid="devices-page"
+      title="DEVICES"
+      description={regionFilter !== "all" ? `Region: ${regionFilter}` : "Issued configs and revocation state"}
+      icon={IconDevices}
+      filterBar={
+      <>
       <DevicesControlBar
         search={searchInput}
         onSearchChange={setSearchInput}
@@ -784,12 +786,14 @@ export function DevicesPage() {
           onPollingToggle={() => setPollingPaused((p) => !p)}
         />
       </div>
-
+      </>
+      }
+    >
       <TableSection
         pagination={regionFilter === "all" && data && data.total > LIMIT ? { offset, limit: LIMIT, total: data.total, onPage: setOffset } : undefined}
       >
         <div className="devices-panel">
-          <div className="ref-devices-views" style={{ marginBottom: "var(--spacing-2)" }}>
+          <div className="ref-devices-views ref-devices-views--tight">
             <span className="ref-users-view-label">Presets</span>
             <Button
               type="button"
@@ -830,7 +834,7 @@ export function DevicesPage() {
             >
               Recently active
             </Button>
-            <label htmlFor="devices-view-select" className="ref-users-view-label" style={{ marginLeft: "var(--spacing-4)" }}>Saved views</label>
+            <label htmlFor="devices-view-select" className="ref-users-view-label">Saved views</label>
             <select
               id="devices-view-select"
               className="input ref-users-view-select"
@@ -1043,24 +1047,22 @@ export function DevicesPage() {
         cancelLabel="Cancel"
         loading={bulkRevokeMutation.isPending}
       />
-      <ConfirmDanger
+      <ConfirmModal
         open={deleteDeviceId !== null}
         onClose={() => setDeleteDeviceId(null)}
+        onConfirm={() => {
+          if (!deleteDeviceId) return;
+          deleteMutation.mutate(deleteDeviceId);
+        }}
         title="Delete device"
         message={
           deleteDeviceId
             ? `Permanently delete device ${deleteDeviceId.slice(0, 8)}? This removes the device and its issued configs.`
             : ""
         }
-        confirmTokenRequired
-        confirmTokenLabel="Confirmation code"
-        onConfirm={(payload) => {
-          if (deleteDeviceId && payload.confirm_token) {
-            deleteMutation.mutate({ deviceId: deleteDeviceId, confirm_token: payload.confirm_token });
-          }
-        }}
         confirmLabel="Delete device"
         cancelLabel="Cancel"
+        variant="danger"
         loading={deleteMutation.isPending}
       />
       <ConfigContentModal
@@ -1094,6 +1096,6 @@ export function DevicesPage() {
         device={editDevice}
         onSaved={() => queryClient.invalidateQueries({ queryKey: ["device", editDevice?.id] })}
       />
-    </div>
+    </ListPage>
   );
 }

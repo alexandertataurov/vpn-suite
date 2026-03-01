@@ -13,23 +13,29 @@ let cachedLocalEnv: Record<string, string> | null = null;
 
 function readLocalEnv(): Record<string, string> {
   if (cachedLocalEnv) return cachedLocalEnv;
-  const envPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../.env");
-  try {
-    const text = fs.readFileSync(envPath, "utf8");
-    const parsed: Record<string, string> = {};
-    for (const rawLine of text.split(/\r?\n/)) {
-      const line = rawLine.trim();
-      if (!line || line.startsWith("#")) continue;
-      const idx = line.indexOf("=");
-      if (idx <= 0) continue;
-      parsed[line.slice(0, idx)] = line.slice(idx + 1);
+  const baseDir = path.dirname(fileURLToPath(import.meta.url));
+  const envPaths = [
+    path.resolve(baseDir, "../../../.env"),
+    path.resolve(baseDir, "../../../../.env"),
+  ];
+  const parsed: Record<string, string> = {};
+  for (const envPath of envPaths) {
+    if (!fs.existsSync(envPath)) continue;
+    try {
+      const text = fs.readFileSync(envPath, "utf8");
+      for (const rawLine of text.split(/\r?\n/)) {
+        const line = rawLine.trim();
+        if (!line || line.startsWith("#")) continue;
+        const idx = line.indexOf("=");
+        if (idx <= 0) continue;
+        parsed[line.slice(0, idx)] = line.slice(idx + 1);
+      }
+    } catch {
+      // ignore malformed or unreadable env file and continue with next fallback
     }
-    cachedLocalEnv = parsed;
-    return parsed;
-  } catch {
-    cachedLocalEnv = {};
-    return cachedLocalEnv;
   }
+  cachedLocalEnv = parsed;
+  return parsed;
 }
 
 function getAdminEmail() {

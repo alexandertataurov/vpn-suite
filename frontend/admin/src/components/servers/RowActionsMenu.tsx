@@ -1,5 +1,5 @@
-import { MoreVertical, RefreshCw } from "lucide-react";
-import { Button, DropdownMenu } from "@vpn-suite/shared/ui";
+import { IconMoreVertical, IconRefresh } from "@/design-system/icons";
+import { Button, DropdownMenu } from "@/design-system";
 import type { ServerOut } from "@vpn-suite/shared/types";
 
 export interface RowActionsMenuProps {
@@ -40,7 +40,7 @@ export function RowActionsMenu({
         aria-label="Sync from node"
         title="Sync"
       >
-        <RefreshCw aria-hidden size={14} strokeWidth={2} />
+        <IconRefresh aria-hidden size={14} strokeWidth={1.5} />
       </Button>
       <DropdownMenu
         portal
@@ -72,7 +72,7 @@ export function RowActionsMenu({
             aria-label="More actions"
             title="More actions"
           >
-            <MoreVertical aria-hidden size={14} strokeWidth={2} />
+            <IconMoreVertical aria-hidden size={14} strokeWidth={1.5} />
           </Button>
         }
       />

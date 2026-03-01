@@ -1,7 +1,7 @@
 import { useSearchParams } from "react-router-dom";
-import { CreditCard } from "lucide-react";
-import { PageHeader } from "../components/PageHeader";
-import { Tabs } from "@vpn-suite/shared/ui";
+import { IconSubscriptions } from "@/design-system/icons";
+import { DetailPage } from "../templates/DetailPage";
+import { Tabs } from "@/design-system";
 import { SubscriptionsTab } from "./billing/SubscriptionsTab";
 import { PaymentsTab } from "./billing/PaymentsTab";
 
@@ -22,13 +22,7 @@ export function BillingPage() {
   };
 
   return (
-    <div className="ref-page" data-testid="billing-page">
-      <PageHeader
-        icon={CreditCard}
-        title="Billing"
-        description="Subscriptions and payment history"
-      />
-
+    <DetailPage className="ref-page" data-testid="billing-page" icon={IconSubscriptions} title="BILLING" description="Subscriptions and payment history">
       <Tabs
         items={BILLING_TAB_ITEMS}
         value={activeTab}
@@ -55,6 +49,6 @@ export function BillingPage() {
       >
         {activeTab === "payments" ? <PaymentsTab /> : null}
       </div>
-    </div>
+    </DetailPage>
   );
 }

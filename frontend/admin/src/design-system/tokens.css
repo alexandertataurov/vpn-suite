@@ -1,0 +1,389 @@
+/* ============================================================
+   STARLINK VISUAL DNA — DESIGN TOKENS
+   Single source of truth. Zero rounded corners. One accent.
+   ============================================================ */
+
+:root,
+html[data-theme="starlink"],
+html[data-theme="dark"],
+html[data-theme="dim"] {
+  color-scheme: dark;
+
+  /* === BACKGROUNDS === */
+  --color-void: #060809;
+  --color-base: #0A0E12;
+  --color-surface: #0E1419;
+  --color-elevated: #141C24;
+  --color-overlay: #1A2430;
+  --color-input: #0C1118;
+  --color-scrim: rgba(6, 8, 9, 0.8);
+
+  /* === BORDERS === */
+  --color-border-faint: #151E28;
+  --color-border-subtle: #1C2A38;
+  --color-border-default: #243244;
+  --color-border-strong: #2E3E54;
+  --color-border-focus: #0EA5E9;
+  --color-border-deep: #1E2A3A;
+  --color-border-legacy-light: #e5e5e5;
+
+  /* === TEXT === */
+  --color-text-primary: #EDF2F8;
+  --color-text-secondary: #6E8499;
+  --color-text-muted: #3D5166;
+  --color-text-tertiary: #4A5A6E;
+  --color-text-disabled: #243244;
+  --color-text-inverse: #060809;
+  --color-text-accent: #0EA5E9;
+  --color-text-legacy-strong: #E8EDF5;
+  --color-text-legacy-muted: #7A8FA8;
+
+  /* === ACCENT === */
+  --color-accent: #0EA5E9;
+  --color-accent-bright: #38BDF8;
+  --color-accent-dim: rgba(14, 165, 233, 0.07);
+  --color-accent-border: rgba(14, 165, 233, 0.25);
+  --color-accent-glow: 0 0 24px rgba(14, 165, 233, 0.2);
+
+  /* === STATUS (semantic only — never use for decoration) === */
+  --color-nominal: #16A34A;
+  --color-nominal-bright: #22C55E;
+  --color-nominal-dim: rgba(22, 163, 74, 0.07);
+
+  --color-warning: #D97706;
+  --color-warning-bright: #F59E0B;
+  --color-warning-dim: rgba(217, 119, 6, 0.07);
+  --color-warning-border: rgba(217, 119, 6, 0.3);
+
+  --color-critical: #DC2626;
+  --color-critical-bright: #EF4444;
+  --color-critical-dim: rgba(220, 38, 38, 0.07);
+  --color-critical-border: rgba(220, 38, 38, 0.3);
+  --color-critical-dim-strong: rgba(220, 38, 38, 0.15);
+
+  --color-standby: #3D5166;
+  --color-standby-dim: rgba(61, 81, 102, 0.07);
+  --color-standby-border: rgba(61, 81, 102, 0.3);
+  --color-nominal-border: rgba(22, 163, 74, 0.3);
+
+  /* === CHART PALETTE === */
+  --chart-1: #0EA5E9;
+  --chart-2: #22C55E;
+  --chart-3: #F59E0B;
+  --chart-4: #8B5CF6;
+  --chart-5: #EC4899;
+  --chart-grid: rgba(255, 255, 255, 0.04);
+  --chart-axis: #3D5166;
+  --chart-tooltip-bg: #0D1117;
+  --chart-tooltip-border: #243044;
+  --chart-tooltip-shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
+  --chart-surface: #080A0E;
+
+  /* === TYPOGRAPHY === */
+  --font-display: "Chakra Petch", monospace;
+  --font-body: "DM Mono", monospace;
+  --font-data: "JetBrains Mono", monospace;
+  --font-sans: var(--font-body);
+  --font-mono: var(--font-data);
+
+  --text-2xs: 10px;
+  --text-xs: 11px;
+  --text-sm: 13px;
+  --text-base: 15px;
+  --text-lg: 18px;
+  --text-xl: 24px;
+  --text-2xl: 32px;
+  --text-3xl: 48px;
+
+  --leading-tight: 1.2;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.5;
+  --leading-snug: 1.3;
+  --leading-tight-1: 1.1;
+  --leading-none: 1;
+
+  --tracking-wide: 0.08em;
+  --tracking-wider: 0.12em;
+
+  /* === SPACING (4px grid) === */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* === LEGACY SPACING (non-grid) === */
+  --space-1px: 1px;
+  --space-2px: 2px;
+  --space-3px: 3px;
+  --space-5px: 5px;
+  --space-6px: 6px;
+  --space-9px: 9px;
+  --space-10px: 10px;
+  --space-11px: 11px;
+  --space-13px: 13px;
+  --space-14px: 14px;
+  --space-15px: 15px;
+  --space-18px: 18px;
+  --space-28px: 28px;
+  --space-36px: 36px;
+  --space-42px: 42px;
+  --space-44px: 44px;
+  --space-52px: 52px;
+  --space-56px: 56px;
+  --space-60px: 60px;
+  --space-70px: 70px;
+  --space-72px: 72px;
+  --space-73px: 73px;
+  --space-80px: 80px;
+  --space-88px: 88px;
+  --space-90px: 90px;
+  --space-96px: 96px;
+  --space-100px: 100px;
+  --space-120px: 120px;
+  --space-140px: 140px;
+  --space-141px: 141px;
+  --space-160px: 160px;
+  --space-180px: 180px;
+  --space-200px: 200px;
+  --space-220px: 220px;
+  --space-240px: 240px;
+  --space-260px: 260px;
+  --space-280px: 280px;
+  --space-300px: 300px;
+  --space-320px: 320px;
+  --space-360px: 360px;
+  --space-380px: 380px;
+  --space-400px: 400px;
+  --space-420px: 420px;
+  --space-480px: 480px;
+  --space-560px: 560px;
+  --space-640px: 640px;
+  --space-700px: 700px;
+  --space-720px: 720px;
+  --space-768px: 768px;
+  --space-880px: 880px;
+  --space-960px: 960px;
+  --space-999px: 999px;
+  --space-1024px: 1024px;
+  --space-1040px: 1040px;
+  --space-1200px: 1200px;
+  --space-1280px: 1280px;
+  --space-1440px: 1440px;
+  --space-1600px: 1600px;
+  --space-1920px: 1920px;
+  --space-9999px: 9999px;
+
+  /* === LAYOUT === */
+  --nav-width: 220px;
+  --nav-collapsed-width: 52px;
+  --health-bar-height: 56px;
+  --mission-bar-height: 40px;
+  --header-total-height: calc(var(--health-bar-height) + var(--mission-bar-height));
+  --command-bar-height: 64px;
+  --content-max-width: 1440px;
+  --content-padding: var(--space-6);
+  --content-padding-compact: var(--space-4);
+
+  /* === SHADOWS (elevated only for modals/dropdowns) === */
+  --shadow-elevated: 0 4px 16px rgba(0, 0, 0, 0.6);
+  --shadow-focus: 0 0 0 1px var(--color-border-focus);
+  --shadow-tooltip: var(--chart-tooltip-shadow);
+
+  /* === MOTION === */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 350ms;
+
+  /* === SKELETON === */
+  --skeleton-base: rgba(255, 255, 255, 0.06);
+
+  /* === Z-INDEX === */
+  --z-base: 0;
+  --z-raised: 10;
+  --z-dropdown: 100;
+  --z-drawer: 200;
+  --z-modal: 300;
+  --z-toast: 400;
+  --z-bar: 500;
+  --z-1: 1;
+  --z-2: 2;
+  --z-5: 5;
+  --z-9999: 9999;
+}
+
+/* ========== LEGACY COMPATIBILITY ALIASES — remove after Phase 7 ========== */
+:root,
+html[data-theme="starlink"],
+html[data-theme="dark"],
+html[data-theme="dim"] {
+  --bg-void: var(--color-void);
+  --bg-surface: var(--color-surface);
+  --bg-elevated: var(--color-elevated);
+  --bg-overlay: var(--color-overlay);
+  --bg-input: var(--color-input);
+  --bg-overlay-dark: var(--color-scrim);
+  --bg-overlay-dark-70: rgba(6, 8, 9, 0.7);
+
+  --border-subtle: var(--color-border-subtle);
+  --border-default: var(--color-border-default);
+  --border-strong: var(--color-border-strong);
+  --border-focus: var(--color-border-focus);
+
+  --text-primary: var(--color-text-primary);
+  --text-secondary: var(--color-text-secondary);
+  --text-muted: var(--color-text-muted);
+  --text-disabled: var(--color-text-disabled);
+  --text-inverse: var(--color-text-inverse);
+
+  --accent: var(--color-accent);
+  --accent-hover: var(--color-accent-bright);
+  --accent-dim: var(--color-accent-dim);
+  --accent-overlay-15: rgba(14, 165, 233, 0.15);
+  --accent-overlay-20: rgba(14, 165, 233, 0.2);
+  --accent-overlay-25: var(--color-accent-border);
+  --accent-overlay-30: rgba(14, 165, 233, 0.3);
+  --accent-overlay-40: rgba(14, 165, 233, 0.4);
+  --accent-overlay-50: rgba(14, 165, 233, 0.5);
+  --accent-overlay-60: rgba(14, 165, 233, 0.6);
+  --accent-glow: var(--color-accent-glow);
+
+  --status-nominal: var(--color-nominal-bright);
+  --status-nominal-dim: var(--color-nominal-dim);
+  --status-warning: var(--color-warning-bright);
+  --status-warning-dim: var(--color-warning-dim);
+  --status-abort: var(--color-critical-bright);
+  --status-abort-dim: var(--color-critical-dim);
+  --status-abort-overlay-08: var(--color-critical-dim);
+  --status-abort-overlay-12: rgba(220, 38, 38, 0.12);
+  --status-abort-overlay-30: rgba(220, 38, 38, 0.3);
+  --status-standby: var(--color-standby);
+  --status-standby-dim: var(--color-standby-dim);
+  --status-live: var(--color-accent);
+
+  --font-mono: var(--font-data);
+
+  --shadow-panel: none;
+  --shadow-inset: none;
+  --shadow-tooltip: var(--shadow-elevated);
+}
+
+/* ========== OPERATOR CONSOLE ALIASES ========== */
+html[data-theme="starlink"] [data-console="operator"],
+html[data-theme="dark"] [data-console="operator"],
+html[data-theme="dim"] [data-console="operator"] {
+  --color-bg: var(--color-void);
+  --color-background-primary: var(--color-void);
+  --surface-base: var(--color-void);
+  --color-surface-2: var(--color-surface);
+  --color-background-tertiary: var(--color-surface);
+  --surface-raised: var(--color-surface);
+  --color-background-overlay: var(--color-overlay);
+  --surface-overlay: var(--color-overlay);
+  --color-text: var(--color-text-primary);
+  --color-text-primary: var(--color-text-primary);
+  --color-text-muted: var(--color-text-secondary);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-text-tertiary: var(--color-text-muted);
+  --color-border-subtle: var(--color-border-subtle);
+  --color-border: var(--color-border-default);
+  --color-border-default: var(--color-border-default);
+  --color-border-strong: var(--color-border-strong);
+  --color-interactive-default: var(--color-accent);
+  --color-primary: var(--color-accent);
+  --color-op-primary: var(--color-accent);
+  --color-warning: var(--color-warning-bright);
+  --color-op-warning: var(--color-warning-bright);
+  --color-error: var(--color-critical-bright);
+  --color-op-error: var(--color-critical-bright);
+  --color-success: var(--color-nominal-bright);
+  --color-op-bg: var(--color-void);
+  --color-op-surface: var(--color-surface);
+  --color-op-surface-raised: var(--color-surface);
+  --color-op-border: var(--color-border-subtle);
+  --color-on-primary: #ffffff;
+  --hud-header-height: 40px;
+  --width-sidebar: 240px;
+  --width-sidebar-collapsed: 56px;
+  --width-nav-rail: 240px;
+  --width-nav-rail-collapsed: 56px;
+  --spacing-layout-gutter: 24px;
+  --ease-standard: var(--ease-out-expo);
+  --duration-normal: var(--duration-base);
+  --mission-control-glow-color: var(--color-accent-dim);
+  --mission-control-glow-border: var(--color-accent);
+  --mission-control-busy: var(--color-critical-bright);
+  --skeleton-scan: var(--color-accent-dim);
+  /* Legacy radius — all 0 per spec; remove after Phase 7 */
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+  --radius-op: 0;
+  --radius-full: 0;
+  --radius-dashboard-card: 0;
+}
+
+/* ========== ORBITAL-GRADE THEME — Ground Control Station ========== */
+/* data-theme="orbital" — Mission-critical, cockpit HUD aesthetic */
+html[data-theme="orbital"] {
+  --color-void: #000000;
+  --color-base: #0B0B0C;
+  --color-surface: #111111;
+  --color-elevated: #141414;
+  --color-overlay: #1A1A1A;
+  --color-input: #0B0B0C;
+  --color-scrim: rgba(0, 0, 0, 0.9);
+
+  --color-border-faint: #1A1A1A;
+  --color-border-subtle: #1F1F1F;
+  --color-border-default: #222222;
+  --color-border-strong: #2A2A2A;
+  --color-border-focus: #1E6FFF;
+
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: #A0A0A0;
+  --color-text-muted: #808080;
+  --color-text-disabled: #404040;
+  --color-text-inverse: #000000;
+  --color-text-accent: #1E6FFF;
+
+  --color-accent: #1E6FFF;
+  --color-accent-bright: #3D8AFF;
+  --color-accent-dim: rgba(30, 111, 255, 0.08);
+  --color-accent-border: rgba(30, 111, 255, 0.4);
+  --color-accent-glow: 0 0 20px rgba(30, 111, 255, 0.15);
+
+  --color-nominal: #22C55E;
+  --color-nominal-bright: #22C55E;
+  --color-nominal-dim: rgba(34, 197, 94, 0.08);
+
+  --color-warning: #F59E0B;
+  --color-warning-bright: #F59E0B;
+  --color-warning-dim: rgba(245, 158, 11, 0.08);
+
+  --color-critical: #EF4444;
+  --color-critical-bright: #EF4444;
+  --color-critical-dim: rgba(239, 68, 68, 0.08);
+
+  --chart-1: #1E6FFF;
+  --chart-2: #22C55E;
+  --chart-3: #F59E0B;
+  --chart-4: #8B5CF6;
+  --chart-5: #EC4899;
+
+  --duration-fast: 150ms;
+  --duration-base: 150ms;
+  --duration-slow: 200ms;
+
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 4px;
+  --radius-op: 2px;
+}

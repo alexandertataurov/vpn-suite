@@ -1,4 +1,4 @@
-import { InlineAlert } from "@vpn-suite/shared/ui";
+import { InlineAlert } from "@/design-system";
 import { useClusterLiveMetrics, useLiveConnectionState } from "../../context/LiveMetricsProvider";
 
 export function LiveDegradedBanner() {

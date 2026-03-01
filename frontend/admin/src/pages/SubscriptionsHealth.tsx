@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import { PageContainer, Skeleton } from "@vpn-suite/shared/ui";
+import { PageContainer, Skeleton } from "@/design-system";
 import { api } from "../api/client";
-import { PageHeader } from "../components/PageHeader";
+import { DashboardPage } from "../templates/DashboardPage";
 
 interface RevenueOverview {
   subscriptions_active: number;
@@ -21,8 +21,9 @@ export function SubscriptionsHealthPage() {
   if (error) {
     return (
       <PageContainer>
-        <PageHeader title="Subscriptions Health" />
-        <p className="text-danger">{String(error)}</p>
+        <DashboardPage className="ref-page" title="SUBSCRIPTIONS HEALTH">
+          <p className="text-danger">{String(error)}</p>
+        </DashboardPage>
       </PageContainer>
     );
   }
@@ -30,16 +31,17 @@ export function SubscriptionsHealthPage() {
   if (isLoading || !data) {
     return (
       <PageContainer>
-        <PageHeader title="Subscriptions Health" />
-        <Skeleton height={120} />
+        <DashboardPage className="ref-page" title="SUBSCRIPTIONS HEALTH">
+          <Skeleton height={120} />
+        </DashboardPage>
       </PageContainer>
     );
   }
 
   return (
     <PageContainer>
-      <PageHeader title="Subscriptions Health" />
-      <div className="grid gap-3 mt-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))" }}>
+      <DashboardPage className="ref-page" title="SUBSCRIPTIONS HEALTH">
+      <div className="grid gap-3 mt-3 ref-auto-grid-180">
         <div className="card p-3">
           <div className="text-muted small">Active</div>
           <div className="h4 mb-0">{data.subscriptions_active}</div>
@@ -61,6 +63,7 @@ export function SubscriptionsHealthPage() {
           <div className="h4 mb-0">{data.renewal_rate}%</div>
         </div>
       </div>
+      </DashboardPage>
     </PageContainer>
   );
 }

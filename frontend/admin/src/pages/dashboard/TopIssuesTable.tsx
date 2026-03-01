@@ -1,7 +1,8 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Panel, Table, Skeleton, EmptyState, ErrorState, RelativeTime } from "@vpn-suite/shared/ui";
+import { Card, Table, Skeleton, ErrorState, RelativeTime } from "@/design-system";
+import { EmptyState, Heading } from "@/design-system";
 import type { ServerList, ServerOut } from "@vpn-suite/shared/types";
 import { getErrorMessage } from "@vpn-suite/shared";
 import { api } from "../../api/client";
@@ -99,17 +100,17 @@ export function TopIssuesTable({ regionFilter, limit = 10 }: TopIssuesTableProps
 
   if (isLoading) {
     return (
-      <Panel as="section" variant="outline" aria-label="Top issues" data-testid="dashboard-top-issues">
-        <h3 className="ref-settings-title">Top issues</h3>
+      <Card as="section" variant="outline" aria-label="Top issues" data-testid="dashboard-top-issues">
+        <Heading level={3} className="ref-settings-title">Top issues</Heading>
         <Skeleton height={120} />
-      </Panel>
+      </Card>
     );
   }
 
   if (error) {
     return (
-      <Panel as="section" variant="outline" aria-label="Top issues" data-testid="dashboard-top-issues">
-        <h3 className="ref-settings-title">Top issues</h3>
+      <Card as="section" variant="outline" aria-label="Top issues" data-testid="dashboard-top-issues">
+        <Heading level={3} className="ref-settings-title">Top issues</Heading>
         <ErrorState
           title="Failed to load"
           message={getErrorMessage(error, "Unknown error")}
@@ -119,14 +120,14 @@ export function TopIssuesTable({ regionFilter, limit = 10 }: TopIssuesTableProps
         <p className="ref-chart-subtitle">
           <Link to="/servers?status=offline">View servers</Link>
         </p>
-      </Panel>
+      </Card>
     );
   }
 
   return (
-    <Panel as="section" variant="outline" aria-label="Top issues" data-testid="dashboard-top-issues">
+    <Card as="section" variant="outline" aria-label="Top issues" data-testid="dashboard-top-issues">
       <div className="dashboard-widget-header">
-        <h3 className="ref-settings-title">Top issues</h3>
+        <Heading level={3} className="ref-settings-title">Top issues</Heading>
         <Link
           to={
             effectiveRegion(regionFilter)
@@ -149,6 +150,6 @@ export function TopIssuesTable({ regionFilter, limit = 10 }: TopIssuesTableProps
           <Table columns={columns} data={issues} keyFn={(r) => r.id} density="compact" />
         </>
       )}
-    </Panel>
+    </Card>
   );
 }

@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
-import { Skeleton } from "@vpn-suite/shared/ui";
+import { Skeleton } from "@/design-system";
+import { Heading } from "@/design-system";
 import { api } from "../api/client";
-import { PageHeader } from "../components/PageHeader";
+import { DashboardPage } from "../templates/DashboardPage";
 
 interface PaymentMonitor {
   success_24h: number;
@@ -33,26 +34,23 @@ export function PaymentsMonitorPage() {
 
   if (error) {
     return (
-      <div className="ref-page">
-        <PageHeader title="Payments Monitor" />
+      <DashboardPage className="ref-page" title="PAYMENTS MONITOR">
         <p className="text-danger">{String(error)}</p>
-      </div>
+      </DashboardPage>
     );
   }
 
   if (isLoading || !data) {
     return (
-      <div className="ref-page">
-        <PageHeader title="Payments Monitor" />
+      <DashboardPage className="ref-page" title="PAYMENTS MONITOR">
         <Skeleton height={120} />
-      </div>
+      </DashboardPage>
     );
   }
 
   return (
-    <div className="ref-page" data-testid="payments-monitor-page">
-      <PageHeader title="Payments Monitor" />
-      <div className="grid gap-3 mt-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))" }}>
+    <DashboardPage className="ref-page" data-testid="payments-monitor-page" title="PAYMENTS MONITOR">
+      <div className="grid gap-3 mt-3 ref-auto-grid-160">
         <div className="card p-3">
           <div className="text-muted small">Success (24h)</div>
           <div className="h4 mb-0 text-success">{data.success_24h}</div>
@@ -76,7 +74,7 @@ export function PaymentsMonitorPage() {
       </div>
       {webhookErrors && webhookErrors.length > 0 && (
         <div className="card mt-3">
-          <h3 className="h6 p-3 mb-0">Recent webhook errors</h3>
+          <Heading level={3} className="h6 p-3 mb-0">Recent webhook errors</Heading>
           <table className="table table-sm mb-0">
             <thead>
               <tr>
@@ -97,6 +95,6 @@ export function PaymentsMonitorPage() {
           </table>
         </div>
       )}
-    </div>
+    </DashboardPage>
   );
 }

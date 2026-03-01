@@ -1,0 +1,38 @@
+import { Meta } from "@storybook/blocks";
+
+<Meta title="Components/FilterBar/TimeRangePicker" />
+
+# TimeRangePicker
+
+## Purpose
+Select control for time range filtering.
+
+**When to use:** Telemetry ranges and dashboards.
+
+**When not to use:** Free-form date range (use date picker component if available).
+
+## API (Props)
+
+| Prop | Type |
+| --- | --- |
+| value | `string` |
+| onChange | `(value: string) => void` |
+| options | `{ value: string; label: string }[]` |
+| aria-label? | `string` |
+
+## Examples
+
+```tsx
+<TimeRangePicker value="24h" onChange={setRange} options={options} />
+```
+
+## Design Tokens Used
+- Typography: `--text-*`
+- Spacing: `--spacing-*`
+
+## Anti-patterns
+- Inline styles or arbitrary pixel values.
+- Duplicating a separate select for ranges.
+
+## Accessibility
+- Provide `aria-label` for the select.

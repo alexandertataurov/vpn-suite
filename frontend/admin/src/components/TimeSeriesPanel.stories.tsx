@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { TimeSeriesPanel } from "./TimeSeriesPanel";
-import { Button } from "@vpn-suite/shared/ui";
+import { Button } from "@/design-system";
 
 const meta: Meta<typeof TimeSeriesPanel> = {
   title: "Components/TimeSeriesPanel",

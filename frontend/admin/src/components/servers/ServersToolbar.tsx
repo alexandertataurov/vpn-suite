@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { RefreshCw } from "lucide-react";
-import { Button, PrimitiveBadge } from "@vpn-suite/shared/ui";
+import { IconRefresh } from "@/design-system/icons";
+import { Button, Badge } from "@/design-system";
 import { streamStatusToVariant } from "@vpn-suite/shared";
 
 export type StreamConnectionState = "live" | "degraded" | "offline";
@@ -47,7 +47,6 @@ function liveTooltip(state: StreamConnectionState, intervalSec: number): string 
 }
 
 export function ServersToolbar({
-  dataUpdatedAt,
   isFetching,
   onSync,
   connectionState,
@@ -62,9 +61,9 @@ export function ServersToolbar({
     <div className="servers-toolbar" role="toolbar">
       <div className="servers-toolbar-group" aria-label="Status and sync">
         {hasError ? (
-          <PrimitiveBadge variant="danger" size="sm">Error</PrimitiveBadge>
+          <Badge variant="critical" size="sm">Error</Badge>
         ) : isStale ? (
-          <PrimitiveBadge variant="warning" size="sm">Stale</PrimitiveBadge>
+          <Badge variant="warning" size="sm">Stale</Badge>
         ) : null}
         <Button
           variant="secondary"
@@ -73,19 +72,19 @@ export function ServersToolbar({
           disabled={isFetching}
           aria-label="Sync now"
         >
-          <RefreshCw className="servers-toolbar-icon" aria-hidden strokeWidth={2} />
+          <IconRefresh className="servers-toolbar-icon" aria-hidden strokeWidth={1.5} />
           {isFetching ? "Syncing…" : "Sync"}
         </Button>
-        <PrimitiveBadge
+        <Badge
           variant={liveVariant}
           size="sm"
           className="servers-toolbar-live"
           aria-live="polite"
           title={liveTooltip(connectionState, liveIntervalSeconds)}
+          pulse={connectionState === "live"}
         >
-          <span className="ds-badge-dot-indicator" aria-hidden />
           {liveLabel(connectionState, liveIntervalSeconds)}
-        </PrimitiveBadge>
+        </Badge>
       </div>
       {children ? (
         <div className="servers-toolbar-group servers-toolbar-filters" aria-label="Filters">

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import type { OperatorHealthStrip } from "@vpn-suite/shared/types";
-import { HealthStrip } from "./HealthStrip";
+import { HealthStrip } from "../health/HealthStrip";
 
 const baseData: OperatorHealthStrip = {
   api_status: "ok",

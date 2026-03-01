@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { Button, VisuallyHidden } from "@vpn-suite/shared/ui";
+import { Button, VisuallyHidden } from "@/design-system";
 
 export type RefreshStatus = "idle" | "loading" | "success" | "error";
 

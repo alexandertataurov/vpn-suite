@@ -1,20 +1,18 @@
-import type { TelemetryMode, TelemetryUrlState } from "../../domain/telemetry/telemetryTypes";
+import type { TelemetryMode } from "../../domain/telemetry/telemetryTypes";
 import { MetricsKpisPanel } from "./MetricsKpisPanel";
 import { ScrapeStatusPanel } from "./ScrapeStatusPanel";
 import { TraceValidationPanel } from "./TraceValidationPanel";
-import { TelemetryKpiStrip } from "./TelemetryKpiStrip";
 import { IncidentBanner } from "./IncidentBanner";
-import { AlertsPanel } from "../../pages/telemetry/AlertsPanel";
+import { AlertsPanel } from "./AlertsPanel";
+import { SectionLabel } from "@/design-system";
 import { useDockerAlerts, useDockerHosts } from "../../hooks/useDockerTelemetry";
-import { Panel } from "@vpn-suite/shared/ui";
+import { Card } from "@/design-system";
 
 interface OperatorTelemetryViewProps {
-  urlState: TelemetryUrlState;
   onModeChange: (mode: TelemetryMode) => void;
 }
 
 export function OperatorTelemetryView({
-  urlState,
   onModeChange,
 }: OperatorTelemetryViewProps) {
   const hostsQuery = useDockerHosts();
@@ -35,19 +33,7 @@ export function OperatorTelemetryView({
         }}
       />
 
-      <h2 className="operator-dashboard__section-label" id="telemetry-section-kpis">
-        Operator KPIs
-      </h2>
-      <div
-        className="operator-grid-cell operator-grid-cell--span-12 operator-card"
-        aria-labelledby="telemetry-section-kpis"
-      >
-        <TelemetryKpiStrip />
-      </div>
-
-      <h2 className="operator-dashboard__section-label" id="telemetry-section-overview">
-        Health &amp; ingestion
-      </h2>
+      <SectionLabel id="telemetry-section-overview">Health &amp; ingestion</SectionLabel>
       <div
         className="operator-grid-cell operator-grid-cell--span-6 operator-card"
         aria-labelledby="telemetry-section-overview"
@@ -67,22 +53,19 @@ export function OperatorTelemetryView({
         <TraceValidationPanel />
       </div>
 
-      <h2 className="operator-dashboard__section-label" id="telemetry-section-alerts">
-        Alerts
-      </h2>
+      <SectionLabel id="telemetry-section-alerts">Alerts</SectionLabel>
       <div
         className="operator-grid-cell operator-grid-cell--span-12 operator-card"
         aria-labelledby="telemetry-section-alerts"
       >
-        <Panel as="div" variant="outline" aria-label="Alerts preview">
+        <Card as="div" variant="outline" aria-label="Alerts preview">
           <AlertsPanel
             items={alertsQuery.data?.items ?? []}
             isLoading={alertsQuery.isLoading}
             error={alertsQuery.error}
           />
-        </Panel>
+        </Card>
       </div>
     </>
   );
 }
-

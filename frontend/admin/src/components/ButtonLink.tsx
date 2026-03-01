@@ -1,1 +1,1 @@
-export { ButtonLink, type ButtonLinkProps } from "@vpn-suite/shared/ui";
+export { ButtonLink, type ButtonLinkProps } from "@/design-system";

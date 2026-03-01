@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { PageHeader } from "../components/PageHeader";
-import { HealthStrip } from "../components/operator/HealthStrip";
-import { Panel, PanelHeader, PanelBody, LoadingSkeleton } from "@vpn-suite/shared/ui";
+import { CommandBar, HealthStrip } from "@/components";
+import { Panel, PanelHeader, PanelBody, LoadingSkeleton } from "@/design-system";
 import type { OperatorHealthStrip } from "@vpn-suite/shared/types";
 
 const health: OperatorHealthStrip = {
@@ -36,7 +35,7 @@ type Story = StoryObj;
 export const Overview: Story = {
   render: () => (
     <div className="sb-stack">
-      <PageHeader title="Telemetry" description="Streaming system health and performance." />
+      <CommandBar title="TELEMETRY" description="Streaming system health and performance." />
       <HealthStrip data={health} />
       <div className="sb-grid" data-columns="2">
         <Panel>
@@ -59,7 +58,7 @@ export const Overview: Story = {
 export const Variants: Story = {
   render: () => (
     <div className="sb-stack">
-      <PageHeader title="Telemetry" description="Streaming system health and performance." />
+      <CommandBar title="TELEMETRY" description="Streaming system health and performance." />
       <HealthStrip data={health} />
     </div>
   ),
@@ -69,7 +68,7 @@ export const Sizes: Story = {
   render: () => (
     <div className="sb-stack">
       <p className="m-0">Reference layout only; size variants are not exposed.</p>
-      <PageHeader title="Telemetry" description="Streaming system health and performance." />
+      <CommandBar title="TELEMETRY" description="Streaming system health and performance." />
     </div>
   ),
 };
@@ -77,7 +76,7 @@ export const Sizes: Story = {
 export const States: Story = {
   render: () => (
     <div className="sb-stack">
-      <PageHeader title="Telemetry" description="Streaming system health and performance." />
+      <CommandBar title="TELEMETRY" description="Streaming system health and performance." />
       <HealthStrip data={health} />
     </div>
   ),
@@ -86,8 +85,8 @@ export const States: Story = {
 export const WithLongText: Story = {
   render: () => (
     <div className="sb-stack">
-      <PageHeader
-        title="Telemetry for primary and secondary regions with extended context"
+      <CommandBar
+        title="TELEMETRY FOR PRIMARY AND SECONDARY REGIONS"
         description="Streaming system health and performance across multiple environments."
       />
     </div>
@@ -98,7 +97,7 @@ export const DarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   render: () => (
     <div className="sb-stack">
-      <PageHeader title="Telemetry" description="Streaming system health and performance." />
+      <CommandBar title="TELEMETRY" description="Streaming system health and performance." />
     </div>
   ),
 };
@@ -106,7 +105,7 @@ export const DarkMode: Story = {
 export const Accessibility: Story = {
   render: () => (
     <div className="sb-stack">
-      <PageHeader title="Telemetry" description="Streaming system health and performance." />
+      <CommandBar title="TELEMETRY" description="Streaming system health and performance." />
     </div>
   ),
 };

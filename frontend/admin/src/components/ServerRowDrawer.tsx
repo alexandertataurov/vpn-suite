@@ -1,8 +1,15 @@
 import { useState } from "react";
 import { formatDateTime, formatBytes, getErrorMessage } from "@vpn-suite/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Activity, Copy, ExternalLink, MapPin, Power, Settings } from "lucide-react";
-import { Button, Modal, Skeleton, useToast, RelativeTime, Text, Heading, PrimitiveBadge } from "@vpn-suite/shared/ui";
+import {
+  IconTelemetry,
+  IconCopy,
+  IconLink,
+  IconMapPin,
+  IconPower,
+  IconSettings,
+} from "@/design-system/icons";
+import { Button, Modal, Skeleton, useToast, RelativeTime, Text, Heading, PrimitiveBadge } from "@/design-system";
 import { ButtonLink } from "./ButtonLink";
 import type {
   ServerOut,
@@ -106,11 +113,11 @@ export function ServerRowDrawer({ server, onClose, peerCount = 0, onRestart, tel
   const footer = (
     <div className="server-modal-footer-actions">
       <ButtonLink to={`/servers/${server.id}/edit`} variant="secondary">
-        <Settings aria-hidden size={14} strokeWidth={2} /> Configure
+        <IconSettings aria-hidden size={14} strokeWidth={1.5} /> Configure
       </ButtonLink>
       {onRestart && (
         <Button variant="primary" size="sm" onClick={() => onRestart(server)}>
-          <Power aria-hidden size={14} strokeWidth={2} /> {server.is_active ? "Restart" : "Start"}
+          <IconPower aria-hidden size={14} strokeWidth={1.5} /> {server.is_active ? "Restart" : "Start"}
         </Button>
       )}
     </div>
@@ -127,7 +134,7 @@ export function ServerRowDrawer({ server, onClose, peerCount = 0, onRestart, tel
       <div className="server-modal-content">
         <div className="server-modal-actions-bar">
           <Button variant="ghost" size="sm" onClick={copyId} aria-label="Copy server ID">
-            <Copy aria-hidden size={14} strokeWidth={2} /> Copy ID
+            <IconCopy aria-hidden size={14} strokeWidth={1.5} /> Copy ID
           </Button>
           <ButtonLink
             to={`/servers/${server.id}`}
@@ -136,7 +143,7 @@ export function ServerRowDrawer({ server, onClose, peerCount = 0, onRestart, tel
             variant="primary"
             size="sm"
           >
-            <ExternalLink aria-hidden size={14} strokeWidth={2} /> Open full detail
+            <IconLink aria-hidden size={14} strokeWidth={1.5} /> Open full detail
           </ButtonLink>
         </div>
         <div className="server-modal-tabs" role="tablist">
@@ -166,7 +173,7 @@ export function ServerRowDrawer({ server, onClose, peerCount = 0, onRestart, tel
               </div>
               <div className="ref-stat-card server-modal-stat-card">
                 <div className="ref-stat-label-row">
-                  <MapPin aria-hidden size={12} strokeWidth={2} className="ref-stat-icon" />
+                  <IconMapPin aria-hidden size={12} strokeWidth={1.5} className="ref-stat-icon" />
                   <span className="ref-stat-label">Region</span>
                 </div>
                 <p className="ref-stat-value">{server.region ?? "Unknown"}</p>
@@ -207,12 +214,12 @@ export function ServerRowDrawer({ server, onClose, peerCount = 0, onRestart, tel
             </div>
             <section className="data-card server-modal-section" aria-label="Auto-sync">
               <div className="data-card__header">
-                <Heading level={4} className="data-card__title" style={{ margin: 0 }}>Auto-sync</Heading>
+                <Heading level={4} className="data-card__title server-modal-title">Auto-sync</Heading>
               </div>
               <div className="data-card__body">
                 {server.is_active ? (
                   <>
-                    <Text variant="muted" as="p" style={{ marginBottom: "var(--spacing-2)" }}>On (always-on for active servers)</Text>
+                    <Text variant="muted" as="p" className="server-modal-subtext">On (always-on for active servers)</Text>
                     <label className="server-modal-sync-label">
                       <Text variant="muted" as="span">Interval</Text>
                     </label>
@@ -235,7 +242,7 @@ export function ServerRowDrawer({ server, onClose, peerCount = 0, onRestart, tel
                   </>
                 ) : (
                   <>
-                    <Text variant="muted" as="p" style={{ marginBottom: "var(--spacing-2)" }}>
+                    <Text variant="muted" as="p" className="server-modal-subtext">
                       {server.auto_sync_enabled ? `On (every ${server.auto_sync_interval_sec ?? 60}s)` : "Off"}
                     </Text>
                     <Button
@@ -260,7 +267,7 @@ export function ServerRowDrawer({ server, onClose, peerCount = 0, onRestart, tel
         {activeTab === "ips" && (
           <section className="data-card server-modal-section" aria-label="IP addresses">
             <div className="data-card__header">
-              <Heading level={4} className="data-card__title" style={{ margin: 0 }}>IP addresses</Heading>
+              <Heading level={4} className="data-card__title server-modal-title">IP addresses</Heading>
             </div>
             <div className="data-card__body">
               {ipsQuery.isLoading && <Skeleton height={24} width="80%" />}
@@ -281,8 +288,8 @@ export function ServerRowDrawer({ server, onClose, peerCount = 0, onRestart, tel
         {activeTab === "telemetry" && (
           <section className="data-card server-modal-section" aria-label="Telemetry">
             <div className="data-card__header">
-              <Activity aria-hidden size={14} strokeWidth={2} style={{ color: "var(--color-neutral-500)" }} />
-              <Heading level={4} className="data-card__title" style={{ margin: 0 }}>Telemetry</Heading>
+              <IconTelemetry aria-hidden size={14} strokeWidth={1.5} className="server-modal-telemetry-icon" />
+              <Heading level={4} className="data-card__title server-modal-title">Telemetry</Heading>
             </div>
             <div className="data-card__body">
               {telemetryQuery.data?.source === "agent" && (
@@ -291,7 +298,7 @@ export function ServerRowDrawer({ server, onClose, peerCount = 0, onRestart, tel
                     <span>Agent</span>
                     <span>Container: {telemetryQuery.data.container_name || "—"} · v{telemetryQuery.data.agent_version || "—"}
                       {telemetryQuery.data.reported_status && (
-                        <Text variant="muted" as="span" style={{ marginLeft: "var(--spacing-1)" }}>· {telemetryQuery.data.reported_status}</Text>
+                        <Text variant="muted" as="span" className="server-modal-meta-sep">· {telemetryQuery.data.reported_status}</Text>
                       )}
                     </span>
                   </div>
@@ -330,7 +337,7 @@ export function ServerRowDrawer({ server, onClose, peerCount = 0, onRestart, tel
         {activeTab === "activity" && (
           <section className="data-card server-modal-section" aria-label="Activity">
             <div className="data-card__header">
-              <Heading level={4} className="data-card__title" style={{ margin: 0 }}>Recent activity</Heading>
+              <Heading level={4} className="data-card__title server-modal-title">Recent activity</Heading>
             </div>
             <div className="data-card__body">
               {auditQuery.isLoading && <Skeleton height={24} width="80%" />}
@@ -339,9 +346,9 @@ export function ServerRowDrawer({ server, onClose, peerCount = 0, onRestart, tel
                   {auditQuery.data.items.map((entry) => (
                     <li key={entry.id} className="server-modal-audit-item">
                       <Text variant="caption" as="span">{formatDateTime(entry.created_at)}</Text>
-                      <span style={{ marginLeft: "var(--spacing-2)" }}>{entry.action}</span>
+                      <span className="server-modal-audit-action">{entry.action}</span>
                       {entry.admin_id && (
-                        <Text variant="caption" as="span" style={{ marginLeft: "var(--spacing-2)" }}>by {entry.admin_id}</Text>
+                        <Text variant="caption" as="span" className="server-modal-audit-action">by {entry.admin_id}</Text>
                       )}
                     </li>
                   ))}

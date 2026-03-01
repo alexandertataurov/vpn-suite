@@ -1,0 +1,8 @@
+.ds-command-palette-overlay { position: fixed; inset: 0; z-index: var(--z-9999); display: flex; align-items: flex-start; justify-content: center; padding-top: 15vh; background: var(--color-scrim); }
+.ds-command-palette { width: 100%; max-width: 560px; background: var(--color-surface); border: 1px solid var(--color-border-default); box-shadow: var(--shadow-elevated); overflow: hidden; }
+.ds-command-palette-input { border: none; border-bottom: 1px solid var(--color-border-subtle); }
+.ds-command-palette-list { max-height: 300px; overflow-y: auto; padding: var(--space-1); }
+.ds-command-palette-empty { padding: var(--space-4); font-size: var(--text-sm); color: var(--color-text-muted); text-align: center; }
+.ds-command-palette-item { display: block; width: 100%; padding: var(--space-2) var(--space-3); font-size: var(--text-sm); color: var(--color-text-primary); background: none; border: none; text-align: left; cursor: pointer; }
+.ds-command-palette-item:hover { background: var(--color-overlay); }
+.ds-command-palette-item--selected { background: var(--color-accent-dim); color: var(--color-accent); }

@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Settings as SettingsIcon } from "lucide-react";
-import { Button, Panel, ConfirmDanger, ConfirmModal, Modal, useToast } from "@vpn-suite/shared/ui";
+import { IconSettings } from "@/design-system/icons";
+import { Button, Card, ConfirmDanger, ConfirmModal, Modal, useToast } from "@/design-system";
+import { Alert, FormActions, Heading } from "@/design-system";
 import { useTheme } from "@vpn-suite/shared/theme";
 import type { AppSettingsOut } from "@vpn-suite/shared/types";
 import { useAuthStore } from "../store/authStore";
-import { PageHeader } from "../components/PageHeader";
+import { FormPage } from "../templates/FormPage";
 import { api } from "../api/client";
 import { APP_SETTINGS_KEY } from "../api/query-keys";
 
@@ -26,7 +27,7 @@ export function SettingsPage() {
   const [cleanupOpen, setCleanupOpen] = useState(false);
   const [totpSetupResult, setTotpSetupResult] = useState<TotpSetupResponse | null>(null);
   const [totpDisableOpen, setTotpDisableOpen] = useState(false);
-  const addToast = useToast();
+  const { addToast } = useToast();
   const { data: appSettings, isLoading: appSettingsLoading } = useQuery<AppSettingsOut>({
     queryKey: APP_SETTINGS_KEY,
     queryFn: ({ signal }) => api.get<AppSettingsOut>("/app/settings", { signal }),
@@ -34,10 +35,15 @@ export function SettingsPage() {
   const {
     data: envFile,
     isLoading: envLoading,
+    error: envError,
   } = useQuery<EnvFileOut>({
     queryKey: ["app", "env"],
     queryFn: ({ signal }) => api.get<EnvFileOut>("/app/env", { signal }),
+    enabled: !!appSettings?.capabilities?.can_edit_env,
   });
+  const canWriteSettings = !!appSettings?.capabilities?.can_write;
+  const canEditEnv = !!appSettings?.capabilities?.can_edit_env;
+  const canCleanupDb = !!appSettings?.capabilities?.can_cleanup_db;
   const [configDailyCap, setConfigDailyCap] = useState<string>("");
   const [trialHours, setTrialHours] = useState<string>("");
   const [referralBonusDays, setReferralBonusDays] = useState<string>("");
@@ -133,20 +139,38 @@ export function SettingsPage() {
   });
 
   return (
-    <div className="ref-page" data-testid="settings-page">
-      <PageHeader icon={SettingsIcon} title="Settings" description="Appearance and account controls" />
-
+    <FormPage
+      className="ref-page"
+      data-testid="settings-page"
+      title="SETTINGS"
+      icon={IconSettings}
+      description="Appearance and account controls"
+    >
       <div className="ref-page-sections">
-        <Panel as="section" variant="outline" aria-label="Env file editor">
+        <Card as="section" variant="outline" aria-label="Env file editor">
           <div className="ref-section-head">
-            <h3 className="ref-settings-title">Environment file (.env)</h3>
+            <Heading level={3} className="ref-settings-title">Environment file (.env)</Heading>
           </div>
           <p className="ref-settings-text">
             Edit the full .env file used by this stack. Changes can affect database, auth, bot and
             telemetry behavior, so update carefully.
           </p>
-          {envLoading && <p className="small mb-0">Loading .env…</p>}
-          {!envLoading && envFile && (
+          {!canEditEnv && (
+            <Alert
+              variant="warning"
+              title="Env editor unavailable"
+              message={
+                appSettings?.capabilities?.env_editor_enabled
+                  ? "You do not have settings:dangerous permission."
+                  : "Disabled by APP_ENV_EDITOR_ENABLED."
+              }
+            />
+          )}
+          {canEditEnv && envLoading && <p className="small mb-0">Loading .env…</p>}
+          {canEditEnv && envError && (
+            <Alert variant="critical" title="Failed to load .env" message="Check API permissions and retry." />
+          )}
+          {canEditEnv && !envLoading && envFile && (
             <>
               <p className="small text-muted mb-1">
                 Editing:{" "}
@@ -169,18 +193,18 @@ export function SettingsPage() {
                   size="sm"
                   onClick={() => saveEnvMutation.mutate()}
                   loading={saveEnvMutation.isPending}
-                  disabled={envLoading}
+                  disabled={envLoading || !canEditEnv}
                 >
                   Save .env
                 </Button>
               </div>
             </>
           )}
-        </Panel>
+        </Card>
 
-        <Panel as="section" variant="outline" aria-label="Environment and app settings">
+        <Card as="section" variant="outline" aria-label="Environment and app settings">
           <div className="ref-section-head">
-            <h3 className="ref-settings-title">Environment &amp; app settings (.env)</h3>
+            <Heading level={3} className="ref-settings-title">Environment &amp; app settings (.env)</Heading>
           </div>
           <p className="ref-settings-text">
             View and adjust key configuration derived from the server&apos;s .env file. These
@@ -305,28 +329,35 @@ export function SettingsPage() {
                   </div>
                 </div>
 
-                <div className="ref-page-actions mt-2">
+                <FormActions className="mt-2">
                   <Button
                     variant="primary"
                     size="sm"
                     onClick={() => updateAppSettingsMutation.mutate()}
                     loading={updateAppSettingsMutation.isPending}
-                    disabled={appSettingsLoading}
+                    disabled={appSettingsLoading || !canWriteSettings}
                   >
                     Save changes
                   </Button>
-                </div>
+                </FormActions>
+                {!canWriteSettings && (
+                  <Alert
+                    variant="warning"
+                    title="Read-only settings"
+                    message="Missing settings:write permission."
+                  />
+                )}
               </>
             )}
           </div>
-        </Panel>
+        </Card>
 
-        <Panel as="section" variant="outline" aria-label="Appearance">
+        <Card as="section" variant="outline" aria-label="Appearance">
           <div className="ref-section-head">
-            <h3 className="ref-settings-title">Appearance</h3>
+            <Heading level={3} className="ref-settings-title">Appearance</Heading>
           </div>
           <p className="ref-settings-text">Current theme: {theme}</p>
-          <div className="ref-page-actions">
+          <FormActions>
             <Button
               variant="secondary"
               size="sm"
@@ -339,41 +370,54 @@ export function SettingsPage() {
             >
               Switch theme
             </Button>
-          </div>
-        </Panel>
+          </FormActions>
+        </Card>
 
-        <Panel as="section" variant="outline" aria-label="Account">
+        <Card as="section" variant="outline" aria-label="Account">
           <div className="ref-section-head">
-            <h3 className="ref-settings-title">Account</h3>
+            <Heading level={3} className="ref-settings-title">Account</Heading>
           </div>
           <p className="ref-settings-text">Sign out from the current admin session.</p>
-          <div className="ref-page-actions">
+          <FormActions>
             <Button variant="ghost" size="sm" onClick={logout}>Log out</Button>
-          </div>
-        </Panel>
+          </FormActions>
+        </Card>
 
-        <Panel as="section" variant="outline" aria-label="Two-factor authentication">
+        <Card as="section" variant="outline" aria-label="Two-factor authentication">
           <div className="ref-section-head">
-            <h3 className="ref-settings-title">Two-factor authentication (2FA)</h3>
+            <Heading level={3} className="ref-settings-title">Two-factor authentication (2FA)</Heading>
           </div>
           <p className="ref-settings-text">Use TOTP (e.g. Google Authenticator) to secure your admin account.</p>
-          <div className="ref-page-actions d-flex gap-2">
+          <FormActions className="d-flex gap-2">
             <Button variant="secondary" size="sm" onClick={() => totpSetupMutation.mutate()} disabled={totpSetupMutation.isPending}>Enable 2FA</Button>
             <Button variant="ghost" size="sm" onClick={() => setTotpDisableOpen(true)}>Disable 2FA</Button>
-          </div>
-        </Panel>
+          </FormActions>
+        </Card>
 
-        <Panel as="section" variant="outline" aria-label="Database cleanup">
+        <Card as="section" variant="outline" aria-label="Database cleanup">
           <div className="ref-section-head">
-            <h3 className="ref-settings-title">Database cleanup</h3>
+            <Heading level={3} className="ref-settings-title">Database cleanup</Heading>
           </div>
           <p className="ref-settings-text">Remove all end-user data: devices, users, subscriptions, payments, funnel events. Admin and servers are kept. Irreversible.</p>
-          <div className="ref-page-actions">
-            <Button variant="danger" size="sm" onClick={() => setCleanupOpen(true)} data-testid="settings-cleanup-db">
+          {!canCleanupDb && (
+            <Alert
+              variant="warning"
+              title="Cleanup unavailable"
+              message="Missing settings:dangerous permission."
+            />
+          )}
+          <FormActions>
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={() => setCleanupOpen(true)}
+              data-testid="settings-cleanup-db"
+              disabled={!canCleanupDb}
+            >
               Clean up database
             </Button>
-          </div>
-        </Panel>
+          </FormActions>
+        </Card>
       </div>
 
       <Modal
@@ -415,6 +459,6 @@ export function SettingsPage() {
         cancelLabel="Cancel"
         loading={cleanupMutation.isPending}
       />
-    </div>
+    </FormPage>
   );
 }

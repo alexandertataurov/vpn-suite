@@ -1,5 +1,6 @@
-import { ExternalLink, Pencil, RefreshCw, Wrench } from "lucide-react";
-import { Drawer, Button, useToast } from "@vpn-suite/shared/ui";
+import { IconLink, IconEdit, IconRefresh, IconWrench } from "@/design-system/icons";
+import { Heading } from "@/design-system";
+import { Drawer, Button, useToast } from "@/design-system";
 import { formatDate, getErrorMessage } from "@vpn-suite/shared";
 import { Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -78,7 +79,7 @@ export function DeviceDetailDrawer({
       {device && !isLoading && !error && (
         <div className="flex flex-col gap-4">
           <section>
-            <h3 className="text-xs font-semibold uppercase text-neutral-500 mb-1">Device</h3>
+            <Heading level={3} className="text-xs font-semibold uppercase text-neutral-500 mb-1">Device</Heading>
             <p className="text-sm mono">{device.id}</p>
             <p className="text-sm">User: {device.user_id} {device.user_email ? `· ${device.user_email}` : ""}</p>
             <p className="text-sm">IP: {device.allowed_ips ?? "—"} {!device.allowed_ips?.trim() && <span className="text-amber-600">⚠</span>}</p>
@@ -86,7 +87,7 @@ export function DeviceDetailDrawer({
           </section>
           {(device.apply_status || device.last_error) && (
             <section>
-              <h3 className="text-xs font-semibold uppercase text-neutral-500 mb-1">Apply state</h3>
+              <Heading level={3} className="text-xs font-semibold uppercase text-neutral-500 mb-1">Apply state</Heading>
               <p className="text-sm">Status: {device.apply_status ?? "—"}</p>
               {device.last_applied_at && <p className="text-sm">Last applied: {formatDate(device.last_applied_at)}</p>}
               {device.last_error && <p className="text-sm text-amber-600" title={device.last_error}>Error: {device.last_error}</p>}
@@ -94,7 +95,7 @@ export function DeviceDetailDrawer({
           )}
           {device.telemetry && (
             <section>
-              <h3 className="text-xs font-semibold uppercase text-neutral-500 mb-1">Peer state (data plane)</h3>
+              <Heading level={3} className="text-xs font-semibold uppercase text-neutral-500 mb-1">Peer state (data plane)</Heading>
               <p className="text-sm">Handshake: {device.telemetry.handshake_age_sec != null ? `${device.telemetry.handshake_age_sec}s ago` : "—"}</p>
               <p className="text-sm">Rx/Tx: {device.telemetry.transfer_rx_bytes ?? "—"} / {device.telemetry.transfer_tx_bytes ?? "—"}</p>
               <p className="text-sm">AllowedIPs on node: {device.telemetry.allowed_ips_on_node ?? "—"}</p>
@@ -103,7 +104,7 @@ export function DeviceDetailDrawer({
             </section>
           )}
           <section>
-            <h3 className="text-xs font-semibold uppercase text-neutral-500 mb-1">Config history</h3>
+            <Heading level={3} className="text-xs font-semibold uppercase text-neutral-500 mb-1">Config history</Heading>
             {device.issued_configs?.length ? (
               <ul className="text-sm space-y-1">
                 {device.issued_configs.map((c) => (
@@ -119,13 +120,13 @@ export function DeviceDetailDrawer({
           <section className="flex flex-wrap gap-2 border-t pt-3">
             {onEdit && (
               <Button variant="secondary" size="sm" onClick={() => onEdit(device)}>
-                <Pencil aria-hidden size={14} />
+                <IconEdit aria-hidden size={14} strokeWidth={1.5} />
                 Edit
               </Button>
             )}
             {!device.revoked_at && onReissue && (
               <Button variant="secondary" size="sm" onClick={() => { onReissue(device); onClose(); }}>
-                <RefreshCw aria-hidden size={14} />
+                <IconRefresh aria-hidden size={14} strokeWidth={1.5} />
                 Reissue config
               </Button>
             )}
@@ -140,12 +141,12 @@ export function DeviceDetailDrawer({
               </Button>
             )}
             <Button variant="ghost" size="sm" onClick={copyDebugBundle}>
-              <Wrench aria-hidden size={14} />
+              <IconWrench aria-hidden size={14} strokeWidth={1.5} />
               Copy debug bundle
             </Button>
             <Button variant="ghost" size="sm" asChild>
               <Link to={`/servers/${device.server_id}`} onClick={onClose}>
-                <ExternalLink aria-hidden size={14} />
+                <IconLink aria-hidden size={14} strokeWidth={1.5} />
                 Open node telemetry
               </Link>
             </Button>

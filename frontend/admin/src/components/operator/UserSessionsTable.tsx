@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { RelativeTime, Button, Skeleton, PrimitiveBadge } from "@vpn-suite/shared/ui";
+import { RelativeTime, Button, Skeleton, PrimitiveBadge } from "@/design-system";
+import { TruncatedId } from "../data/TruncatedId";
 import type { PeerListOut, PeerListItem } from "@vpn-suite/shared/types";
 import { api } from "../../api/client";
 import { PEERS_LIST_KEY } from "../../api/query-keys";
@@ -250,10 +251,16 @@ export function UserSessionsTable() {
         <tbody>
           {filtered.map((row: PeerListItem) => (
             <tr key={row.peer_id}>
-              <td className="operator-session-mono" title={row.peer_id}>{row.peer_id}</td>
+              <td className="operator-session-mono">
+                {row.peer_id ? <TruncatedId value={row.peer_id} aria-label={`Copy peer ID ${row.peer_id.slice(0, 8)}…`} /> : "—"}
+              </td>
               <td className="operator-session-mono">{row.user_id}</td>
-              <td className="operator-session-mono" title={row.node_id}>{row.node_id}</td>
-              <td className="operator-session-mono" title={row.subscription_id}>{row.subscription_id}</td>
+              <td className="operator-session-mono">
+                {row.node_id ? <TruncatedId value={row.node_id} aria-label={`Copy node ID ${row.node_id.slice(0, 8)}…`} /> : "—"}
+              </td>
+              <td className="operator-session-mono">
+                {row.subscription_id ? <TruncatedId value={row.subscription_id} aria-label={`Copy subscription ID ${row.subscription_id.slice(0, 8)}…`} /> : "—"}
+              </td>
               <td>{row.issued_at ? <RelativeTime date={row.issued_at} /> : "—"}</td>
             </tr>
           ))}

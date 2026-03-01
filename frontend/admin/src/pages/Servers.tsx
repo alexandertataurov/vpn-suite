@@ -1,49 +1,54 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Server } from "lucide-react";
+import { IconAdd, IconServer } from "@/design-system/icons";
 import {
-  Panel,
+  Card,
   Button,
-  InlineAlert,
   Checkbox,
-  EmptyState,
   Input,
   ConfirmDanger,
   Modal,
   PageError,
-  Pagination,
   Tabs,
   TableContainer,
   TableSkeleton,
   useToast,
   HelperText,
   EmptyTableState,
-} from "@vpn-suite/shared/ui";
+} from "@/design-system";
+import { Alert, EmptyState } from "@/design-system";
 import { getErrorMessage } from "@vpn-suite/shared";
-import type { ServerDeviceCountsOut, ServerOut, ServerSyncResponse } from "@vpn-suite/shared/types";
+import type { ServerDeviceCountsOut, ServerOut, ServerSyncResponse, ServerTelemetryOut } from "@vpn-suite/shared/types";
 import { ApiError } from "@vpn-suite/shared/types";
-import { api } from "../api/client";
+import { api, createIdempotencyKey } from "../api/client";
 import {
   SERVERS_LIST_KEY,
   SERVERS_SNAPSHOTS_SUMMARY_KEY,
+  serverTelemetryKey,
   serversDeviceCountsKey,
 } from "../api/query-keys";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useServerList, useServersSnapshotSummary, useServersTelemetrySummary } from "../hooks/useServerList";
 import { useResourceFromQuery } from "../hooks/useResource";
 import { useServersStream } from "../hooks/useServersStream";
-import { ErrorBoundary } from "../components/ErrorBoundary";
-import { FilterBar } from "../components/FilterBar";
-import { ServersToolbar } from "../components/servers/ServersToolbar";
-import { IssueConfigModal } from "../components/IssueConfigModal";
-import { PageHeader } from "../components/PageHeader";
-import { ServerRow } from "../components/ServerRow";
-import { ServerCard } from "../components/servers/ServerCard";
-import { ServerRowDrawer } from "../components/ServerRowDrawer";
+import { track } from "../telemetry";
+import {
+  ErrorBoundary,
+  FilterBar,
+  ServersToolbar,
+  IssueConfigModal,
+  ServerRow,
+  ServerCard,
+  ServerRowDrawer,
+  isSnapshotStale,
+  isStale,
+  ButtonLink,
+  NodeCommanderLayout,
+} from "@/components";
+import { ListPage } from "../templates/ListPage";
 import { useIsXs } from "../hooks/useBreakpoint";
-import { isSnapshotStale, isStale } from "../components/ServerRow";
-import { ButtonLink } from "../components/ButtonLink";
+import { Pagination } from "@/design-system";
 import { serversLogger } from "../utils/serversLogger";
 
 function errorToastMessage(err: unknown, fallback: string): string {
@@ -87,6 +92,7 @@ const SORT_OPTIONS = [
 ];
 
 const DENSITY_STORAGE_KEY = "vpn-suite-servers-density";
+const VIEW_MODE_STORAGE_KEY = "vpn-suite-servers-view-mode";
 
 const LAST_SEEN_OPTIONS = [
   { value: "all", label: "All servers" },
@@ -107,6 +113,10 @@ export function ServersPage() {
     return v === "compact" ? "compact" : "normal";
   });
   const [selectedServerIds, setSelectedServerIds] = useState<Set<string>>(new Set());
+  const [viewMode, setViewMode] = useState<"table" | "node-commander">(() => {
+    if (typeof localStorage === "undefined") return "table";
+    return localStorage.getItem(VIEW_MODE_STORAGE_KEY) === "node-commander" ? "node-commander" : "table";
+  });
   const [bulkAction, setBulkAction] = useState<"mark_draining" | "unmark_draining" | "disable_provisioning" | "enable_provisioning" | null>(null);
   const [bulkConfirmCode, setBulkConfirmCode] = useState("");
   const [syncingServerId, setSyncingServerId] = useState<string | null>(null);
@@ -151,6 +161,11 @@ export function ServersPage() {
 
   const handleStatusChange = useCallback(
     (status: string) => {
+      try {
+        track("filter_change", { page: "servers", filter: "status", value: status });
+      } catch {
+        /* telemetry never throws */
+      }
       setSearchParams((prev) => {
         const next = new URLSearchParams(prev);
         if (status && status !== "all") next.set("status", status);
@@ -164,6 +179,11 @@ export function ServersPage() {
 
   const handleSortChange = useCallback(
     (sort: string) => {
+      try {
+        track("sort_change", { page: "servers", value: sort });
+      } catch {
+        /* telemetry never throws */
+      }
       setSearchParams((prev) => {
         const next = new URLSearchParams(prev);
         if (sort && sort !== "created_at_desc") next.set("sort", sort);
@@ -177,6 +197,11 @@ export function ServersPage() {
 
   const handleLastSeenChange = useCallback(
     (value: string) => {
+      try {
+        track("filter_change", { page: "servers", filter: "last_seen", value });
+      } catch {
+        /* telemetry never throws */
+      }
       setSearchParams((prev) => {
         const next = new URLSearchParams(prev);
         if (value && value !== "all") next.set("last_seen", value);
@@ -307,33 +332,22 @@ export function ServersPage() {
     { isEmpty: (payload) => !payload || !Object.keys(payload.servers ?? {}).length }
   );
 
-  const [skipDeviceCounts404, setSkipDeviceCounts404] = useState(
-    () =>
-      typeof sessionStorage !== "undefined" &&
-      !!sessionStorage.getItem("vpn-suite-servers-device-counts-404")
-  );
   const deviceCountsQuery = useQuery<ServerDeviceCountsOut>({
-    queryKey: serversDeviceCountsKey(skipDeviceCounts404),
-    queryFn: async ({ signal }) => {
-      try {
-        return await api.get<ServerDeviceCountsOut>("/servers/device-counts", { signal });
-      } catch (e) {
-        const err = e as { statusCode?: number };
-        if (err?.statusCode === 404) {
-          if (typeof sessionStorage !== "undefined") {
-            sessionStorage.setItem("vpn-suite-servers-device-counts-404", "1");
-          }
-          setSkipDeviceCounts404(true);
-          return { counts: {} };
-        }
-        throw e;
-      }
-    },
+    queryKey: serversDeviceCountsKey(),
+    queryFn: ({ signal }) => api.get<ServerDeviceCountsOut>("/servers/device-counts", { signal }),
     staleTime: 30_000,
-    retry: (_, error) => (error as { statusCode?: number })?.statusCode === 404 ? false : true,
-    enabled: !skipDeviceCounts404,
-    placeholderData: skipDeviceCounts404 ? { counts: {} } : undefined,
+    retry: (failureCount, error) => {
+      const statusCode = (error as { statusCode?: number })?.statusCode;
+      if (statusCode === 404) return failureCount < 1;
+      return failureCount < 2;
+    },
+    placeholderData: { counts: {} },
   });
+  const deviceCountsStatusCode =
+    deviceCountsQuery.error instanceof ApiError ? deviceCountsQuery.error.statusCode : undefined;
+  const deviceCountsRequestId =
+    deviceCountsQuery.error instanceof ApiError ? deviceCountsQuery.error.requestId : undefined;
+  const deviceCountsUnavailable = deviceCountsQuery.isError;
 
   const visibleItems = useMemo(() => {
     if (!data) return [];
@@ -347,6 +361,17 @@ export function ServersPage() {
     }
     return items;
   }, [data, regionFilter, statusFilter, searchTerm, pageParam, attentionFilter]);
+
+  const selectedServer = useMemo(
+    () => visibleItems.find((s) => s.id === selectedServerId) ?? null,
+    [visibleItems, selectedServerId]
+  );
+  const { data: selectedTelemetry, isLoading: selectedTelemetryLoading } = useQuery<ServerTelemetryOut>({
+    queryKey: serverTelemetryKey(selectedServerId ?? ""),
+    queryFn: ({ signal }) => api.get<ServerTelemetryOut>(`/servers/${selectedServerId}/telemetry`, { signal }),
+    enabled: !!selectedServerId,
+    refetchInterval: viewMode === "node-commander" ? 5000 : false,
+  });
 
   const devicesByServer = useMemo(() => {
     const map = new Map<string, number>();
@@ -392,7 +417,11 @@ export function ServersPage() {
 
   const syncMutation = useMutation({
     mutationFn: (serverId: string) =>
-      api.post<ServerSyncResponse>(`/servers/${serverId}/sync`, { mode: "manual" }),
+      api.post<ServerSyncResponse>(
+        `/servers/${serverId}/sync`,
+        { mode: "manual" },
+        { headers: { "Idempotency-Key": createIdempotencyKey("servers.sync", serverId) } }
+      ),
     onSuccess: (data, serverId) => {
       setSyncingServerId(null);
       queryClient.invalidateQueries({ queryKey: SERVERS_LIST_KEY });
@@ -402,6 +431,15 @@ export function ServersPage() {
         success: true,
         requestId: data.request_id ?? undefined,
       });
+      try {
+        track("sync_action", {
+          server_id: serverId,
+          result: "success",
+          request_id: data.request_id ?? undefined,
+        });
+      } catch {
+        /* telemetry never throws */
+      }
       const msg = data.action_id
         ? `Sync queued (agent mode). action_id=${data.action_id}`
         : `Sync completed. request_id=${data.request_id || ""}`;
@@ -415,6 +453,16 @@ export function ServersPage() {
         success: false,
         requestId: err instanceof ApiError ? err.requestId : undefined,
       });
+      try {
+        track("sync_action", {
+          server_id: serverId,
+          result: "error",
+          request_id: err instanceof ApiError ? err.requestId : undefined,
+          status: err instanceof ApiError ? err.statusCode : undefined,
+        });
+      } catch {
+        /* telemetry never throws */
+      }
       addToast(errorToastMessage(err, "Sync failed"), "error");
     },
   });
@@ -510,7 +558,11 @@ export function ServersPage() {
     let lastErr: unknown = null;
     for (const id of ids) {
       try {
-        await api.post<ServerSyncResponse>(`/servers/${id}/sync`, { mode: "manual" });
+        await api.post<ServerSyncResponse>(
+          `/servers/${id}/sync`,
+          { mode: "manual" },
+          { headers: { "Idempotency-Key": createIdempotencyKey("servers.sync", id) } }
+        );
       } catch (e) {
         errors += 1;
         lastErr = e;
@@ -547,15 +599,20 @@ export function ServersPage() {
   if (error && !data) {
     const statusCode = error instanceof ApiError ? error.statusCode : undefined;
     return (
-      <div className="dashboard ref-page dashboard--comfortable servers-page" data-testid="servers-page">
-        <PageHeader title="Servers">
+      <ListPage
+        className="dashboard ref-page dashboard--comfortable servers-page"
+        testId="servers-page"
+        title="SERVERS"
+        primaryAction={
           <Button variant="secondary" size="sm" onClick={() => refetch()} aria-label="Retry">
             Retry
           </Button>
-        </PageHeader>
+        }
+      >
+        <>
         {statusCode === 403 ? (
-          <InlineAlert
-            variant="error"
+          <Alert
+            variant="critical"
             title="Permission denied"
             message="You do not have permission to view servers. Contact your administrator."
           />
@@ -563,12 +620,14 @@ export function ServersPage() {
           <PageError
             message={getErrorMessage(error, "Failed to load servers")}
             requestId={error instanceof ApiError ? error.requestId : undefined}
+            correlationId={error instanceof ApiError ? error.correlationId : undefined}
             statusCode={statusCode}
             endpoint="GET /servers"
             onRetry={() => refetch()}
           />
         )}
-      </div>
+        </>
+      </ListPage>
     );
   }
 
@@ -576,17 +635,22 @@ export function ServersPage() {
   const hasTelemetryError = telemetryResource.status === "error" || snapshotResource.status === "error";
 
   return (
-    <div className="dashboard ref-page dashboard--comfortable servers-page" data-testid="servers-page">
-      <PageHeader
-        title="Servers"
-        scopeLabel={`Region: ${regionFilter === "all" ? "All" : regionFilter}`}
-        lastUpdated={dataUpdatedAt ? new Date(dataUpdatedAt).toISOString() : undefined}
+    <>
+      <ListPage
+      className="dashboard ref-page dashboard--comfortable servers-page"
+      testId="servers-page"
+      title="SERVERS"
+        description={
+          dataUpdatedAt
+            ? `Region: ${regionFilter === "all" ? "All" : regionFilter} · Updated ${new Date(dataUpdatedAt).toLocaleTimeString(undefined, { hour12: false })}`
+            : `Region: ${regionFilter === "all" ? "All" : regionFilter}`
+        }
         primaryAction={
           <ButtonLink to="/servers/new" variant="secondary" size="sm" aria-label="Add server">
-            <Plus className="icon-sm" aria-hidden strokeWidth={2} /> Add Server
+            <IconAdd className="icon-sm" aria-hidden strokeWidth={1.5} /> Add Server
           </ButtonLink>
         }
-      />
+        filterBar={
       <div className="servers-toolbar-section" role="toolbar" aria-label="Servers filters and sync">
         <ServersToolbar
           dataUpdatedAt={dataUpdatedAt}
@@ -625,13 +689,19 @@ export function ServersPage() {
             setDensity(next);
             if (typeof localStorage !== "undefined") localStorage.setItem(DENSITY_STORAGE_KEY, next);
           }}
+          viewMode={viewMode}
+          onViewModeChange={(m) => {
+            setViewMode(m);
+            if (typeof localStorage !== "undefined") localStorage.setItem(VIEW_MODE_STORAGE_KEY, m);
+          }}
           />
         </ServersToolbar>
       </div>
-
-      <Panel as="section" variant="outline" className="servers-panel" aria-label="Servers list">
+        }
+      >
+      <Card as="section" variant="outline" className="servers-panel" aria-label="Servers list">
         <div className="operator-section-title" role="heading" aria-level={2}>
-          <Server className="operator-section-icon" aria-hidden size={14} strokeWidth={2} />
+          <IconServer className="operator-section-icon" aria-hidden size={14} strokeWidth={1.5} />
           Servers list
         </div>
       <Tabs
@@ -646,22 +716,22 @@ export function ServersPage() {
       />
 
       {typeof navigator !== "undefined" && !navigator.onLine && (
-        <InlineAlert
+        <Alert
           variant="warning"
           title="You are offline"
           message="Changes cannot be saved. Connect to the network and sync."
         />
       )}
       {isNetworkCooldown && (
-        <InlineAlert
-          variant="error"
+        <Alert
+          variant="critical"
           title="API unreachable"
           message={`DNS/network failure detected. Auto-refresh paused for ${Math.ceil(networkCooldownRemainingMs / 1000)}s.`}
           actions={<Button variant="ghost" size="sm" onClick={() => { clearNetworkCooldown(); void refetch(); }}>Retry now</Button>}
         />
       )}
       {hasStaleCacheBanner && (
-        <InlineAlert
+        <Alert
           variant="warning"
           title="Data may be stale"
           message={`Last successful update: ${dataUpdatedAt ? new Date(dataUpdatedAt).toLocaleTimeString(undefined, { hour12: false }) : "unknown"}. Refetch failed.`}
@@ -669,7 +739,7 @@ export function ServersPage() {
         />
       )}
       {hasTelemetryError && (
-        <InlineAlert
+        <Alert
           variant="warning"
           title="Telemetry degraded"
           message="CPU, RAM, or snapshot data may not be shown. Use Retry to fetch again."
@@ -685,8 +755,20 @@ export function ServersPage() {
           }
         />
       )}
+      {deviceCountsUnavailable && (
+        <Alert
+          variant="warning"
+          title="Peer counts unavailable"
+          message={
+            deviceCountsStatusCode === 404
+              ? `Device counts endpoint is unavailable.${deviceCountsRequestId ? ` request_id=${deviceCountsRequestId}` : ""}`
+              : `Failed to load device counts.${deviceCountsRequestId ? ` request_id=${deviceCountsRequestId}` : ""}`
+          }
+          actions={<Button variant="ghost" size="sm" onClick={() => deviceCountsQuery.refetch()}>Retry counts</Button>}
+        />
+      )}
       {connectionState === "degraded" && (
-        <InlineAlert
+        <Alert
           variant="warning"
           title="Live updates paused"
           message="Polling every 30s. Use Retry to reconnect."
@@ -694,14 +776,30 @@ export function ServersPage() {
         />
       )}
 
-      {!isLoading && visibleItems.length > 0 && selectedServerIds.size === 0 && (
+      {!isLoading && visibleItems.length > 0 && selectedServerIds.size === 0 && viewMode === "table" && (
         <HelperText variant="hint" className="mb-2">
           Select rows to bulk sync or change drain/provisioning.
         </HelperText>
       )}
 
+      {viewMode === "node-commander" && !isLoading && visibleItems.length > 0 && (
+        <NodeCommanderLayout
+          servers={visibleItems}
+          snapshotSummary={snapshotSummary.data}
+          selectedServer={selectedServer}
+          telemetry={selectedTelemetry ?? null}
+          telemetryLoading={selectedTelemetryLoading}
+          maintenanceMode={selectedServer?.is_draining ?? false}
+          onSelectServer={(s) => setSelectedServerId(s.id)}
+          onMaintenanceChange={(drain) => {
+            if (!selectedServer) return;
+            actionMutation.mutate({ serverId: selectedServer.id, type: drain ? "drain" : "undrain" });
+          }}
+        />
+      )}
+
       <ErrorBoundary>
-      {isLoading ? (
+      {viewMode === "table" && (isLoading ? (
         <TableSkeleton rows={4} columns={11} density={density === "compact" ? "compact" : "comfortable"} data-testid="servers-loading" />
       ) : visibleItems.length ? (
         <>
@@ -780,8 +878,8 @@ export function ServersPage() {
                   <th className="servers-table-col-region">Region</th>
                   <th className="servers-table-col-lastseen">Last seen</th>
                   <th className="servers-table-col-lastsync">Last sync</th>
-                  <th className="servers-table-col-peers num" title={skipDeviceCounts404 ? "Device counts unavailable" : undefined}>
-                    Peers{skipDeviceCounts404 ? " (unavailable)" : ""}
+                  <th className="servers-table-col-peers num" title={deviceCountsUnavailable ? "Device counts unavailable" : undefined}>
+                    Peers{deviceCountsUnavailable ? " (unavailable)" : ""}
                   </th>
                   <th className="servers-table-col-ips num">IPs</th>
                   <th className="servers-table-col-telemetry">Telemetry</th>
@@ -845,8 +943,8 @@ export function ServersPage() {
                         onRestart={() => setRestartServer(server)}
                         onDrainUndrain={() => actionMutation.mutate({ serverId: server.id, type: server.is_draining ? "undrain" : "drain" })}
                         onDelete={() => setDeleteServer(server)}
-                      />
-                    )))}
+        />
+      )))}
               </tbody>
             </table>
           </TableContainer>
@@ -876,14 +974,14 @@ export function ServersPage() {
       ) : regionFilter === "all" && statusFilter === "all" && !searchTerm.trim() && data?.items?.length === 0 ? (
         data?.agent_mode_no_heartbeat ? (
           <EmptyState
-            icon={<Server strokeWidth={1.5} />}
+            icon={<IconServer strokeWidth={1.5} />}
             title="No server with heartbeat"
             description="Agent mode: only servers that send a heartbeat are shown. Create a server (or run ./manage.sh seed-agent-server), set SERVER_ID to its id in your node-agent env, then start the node-agent. See docs/ops/agent-mode-one-server.md."
             actions={<ButtonLink to="/servers/new" variant="primary">Add Server</ButtonLink>}
           />
         ) : (
           <EmptyState
-            icon={<Server strokeWidth={1.5} />}
+            icon={<IconServer strokeWidth={1.5} />}
             title="No servers yet"
             description="Get started by creating your first VPN server"
             actions={<ButtonLink to="/servers/new" variant="primary">Create Server</ButtonLink>}
@@ -903,9 +1001,10 @@ export function ServersPage() {
               : "Create a server to get started."
           }
         />
-      )}
+      )) }
       </ErrorBoundary>
-      </Panel>
+      </Card>
+      </ListPage>
 
       <ConfirmDanger
         open={!!deleteServer}
@@ -988,6 +1087,6 @@ export function ServersPage() {
           aria-label="Confirmation code"
         />
       </Modal>
-    </div>
+    </>
   );
 }

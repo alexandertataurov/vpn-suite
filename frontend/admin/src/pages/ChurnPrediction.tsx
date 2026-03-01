@@ -1,8 +1,8 @@
 import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { PageContainer, Skeleton, Button } from "@vpn-suite/shared/ui";
+import { PageContainer, Skeleton, Button } from "@/design-system";
 import { api } from "../api/client";
-import { PageHeader } from "../components/PageHeader";
+import { DashboardPage } from "../templates/DashboardPage";
 
 interface ChurnRiskUser {
   user_id: number;
@@ -38,8 +38,9 @@ export function ChurnPredictionPage() {
   if (error) {
     return (
       <PageContainer>
-        <PageHeader title="Churn Prediction" />
-        <p className="text-danger">{String(error)}</p>
+        <DashboardPage className="ref-page" title="CHURN PREDICTION">
+          <p className="text-danger">{String(error)}</p>
+        </DashboardPage>
       </PageContainer>
     );
   }
@@ -47,22 +48,25 @@ export function ChurnPredictionPage() {
   if (isLoading || !data) {
     return (
       <PageContainer>
-        <PageHeader title="Churn Prediction" />
-        <Skeleton height={120} />
+        <DashboardPage className="ref-page" title="CHURN PREDICTION">
+          <Skeleton height={120} />
+        </DashboardPage>
       </PageContainer>
     );
   }
 
   return (
     <PageContainer>
-      <PageHeader title="Churn Prediction">
+      <DashboardPage className="ref-page" title="CHURN PREDICTION" primaryAction={
+        <>
         <Button variant="secondary" size="sm" onClick={() => runMutation.mutate()} disabled={runMutation.isPending}>
           Run prediction
         </Button>
         <Button variant="primary" size="sm" onClick={() => runRetentionMutation.mutate()} disabled={runRetentionMutation.isPending}>
           Apply retention campaign
         </Button>
-      </PageHeader>
+        </>
+      }>
       <div className="d-flex gap-3 mb-3 flex-wrap">
         <div className="card p-3">
           <div className="text-muted small">High-risk users</div>
@@ -104,6 +108,7 @@ export function ChurnPredictionPage() {
           </tbody>
         </table>
       </div>
+      </DashboardPage>
     </PageContainer>
   );
 }

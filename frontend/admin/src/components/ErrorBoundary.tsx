@@ -1,5 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
-import { PageError } from "@vpn-suite/shared/ui";
+import { PageError } from "@/design-system";
 import { error as reportTelemetryError } from "../telemetry";
 
 interface Props {

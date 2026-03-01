@@ -1,6 +1,7 @@
 import type { DashboardSettings as DashboardSettingsType } from "../../hooks/useDashboardSettings";
-import type { SelectOption } from "@vpn-suite/shared/ui";
-import { Modal, Button, Select, Checkbox, Field } from "@vpn-suite/shared/ui";
+import type { SelectOption } from "@/design-system";
+import { Modal, Button, Select, Checkbox, Field } from "@/design-system";
+import { Heading } from "@/design-system";
 
 export interface DashboardSettingsProps {
   open: boolean;
@@ -56,9 +57,9 @@ export function DashboardSettings({ open, onClose, settings, onChange, regionOpt
     >
       <div className="dashboard-settings-body">
         <section className="dashboard-settings-section" aria-labelledby="settings-layout-heading">
-          <h3 id="settings-layout-heading" className="dashboard-settings-section__title">
+          <Heading level={3} id="settings-layout-heading" className="dashboard-settings-section__title">
             Layout
-          </h3>
+          </Heading>
           <p className="dashboard-settings-section__desc">Control how dense or spacious the dashboard appears.</p>
           <div className="dashboard-settings-section__fields">
             <Field id="dashboard-density" label="Density">
@@ -74,9 +75,9 @@ export function DashboardSettings({ open, onClose, settings, onChange, regionOpt
         </section>
 
         <section className="dashboard-settings-section" aria-labelledby="settings-data-heading">
-          <h3 id="settings-data-heading" className="dashboard-settings-section__title">
+          <Heading level={3} id="settings-data-heading" className="dashboard-settings-section__title">
             Data &amp; refresh
-          </h3>
+          </Heading>
           <p className="dashboard-settings-section__desc">Auto-refresh interval and default time range for charts.</p>
           <div className="dashboard-settings-grid">
             <Field id="dashboard-auto-refresh" label="Auto-refresh">
@@ -114,9 +115,9 @@ export function DashboardSettings({ open, onClose, settings, onChange, regionOpt
         </section>
 
         <section className="dashboard-settings-section" aria-labelledby="settings-widgets-heading">
-          <h3 id="settings-widgets-heading" className="dashboard-settings-section__title">
+          <Heading level={3} id="settings-widgets-heading" className="dashboard-settings-section__title">
             Visible widgets
-          </h3>
+          </Heading>
           <p className="dashboard-settings-section__desc">Choose which sections appear on the dashboard.</p>
           <div className="dashboard-settings-checkboxes" role="group" aria-labelledby="settings-widgets-heading">
             {WIDGET_OPTIONS.map(({ key, label }) => (

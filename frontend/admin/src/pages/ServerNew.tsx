@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Server } from "lucide-react";
-import { Input, Checkbox, Button, Field, FormStack, Panel } from "@vpn-suite/shared/ui";
-import { PageHeader } from "../components/PageHeader";
+import { IconServer } from "@/design-system/icons";
+import { Input, Checkbox, Button, Field, FormStack, Card } from "@/design-system";
+import { FormActions } from "@/design-system";
+import { FormPage } from "../templates/FormPage";
 import type { ServerOut } from "@vpn-suite/shared/types";
 import { useMutation } from "@tanstack/react-query";
 import { getErrorMessage } from "@vpn-suite/shared";
-import { useToast } from "@vpn-suite/shared/ui";
+import { useToast } from "@/design-system";
 import { api } from "../api/client";
-import { ButtonLink } from "../components/ButtonLink";
+import { ButtonLink } from "@/components";
 
 export function ServerNewPage() {
   const [serverId, setServerId] = useState("");
@@ -47,14 +48,8 @@ export function ServerNewPage() {
   };
 
   return (
-    <div className="ref-page" data-testid="server-new-page">
-      <PageHeader
-        icon={Server}
-        title="Add Server"
-        description="Create a new VPN node for the fleet"
-      />
-
-      <Panel as="section" variant="outline">
+    <FormPage className="ref-page" data-testid="server-new-page" title="NEW SERVER" icon={IconServer} description="Create a new VPN node for the fleet">
+      <Card as="section" variant="outline">
         <form onSubmit={handleSubmit}>
           <FormStack>
           <Field
@@ -104,13 +99,13 @@ export function ServerNewPage() {
             checked={isActive}
             onChange={(e) => setIsActive(e.target.checked)}
           />
-          <div className="ref-page-actions">
+          <FormActions>
             <Button type="submit" loading={mutation.isPending}>Add server</Button>
             <ButtonLink to="/servers" variant="ghost">Cancel</ButtonLink>
-          </div>
+          </FormActions>
           </FormStack>
         </form>
-      </Panel>
-    </div>
+      </Card>
+    </FormPage>
   );
 }

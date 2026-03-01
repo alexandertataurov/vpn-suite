@@ -1,0 +1,37 @@
+import { Meta } from "@storybook/blocks";
+
+<Meta title="Components/SectionHeader" />
+
+# SectionHeader
+
+## Purpose
+Section title with optional description and actions.
+
+**When to use:** Table sections and grouped panels.
+
+**When not to use:** Page-level headers (use PageHeader).
+
+## API (Props)
+
+| Prop | Type |
+| --- | --- |
+| title | `string` |
+| description? | `string` |
+| actions? | `ReactNode` |
+
+## Examples
+
+```tsx
+<SectionHeader title="Servers" actions={<Button>Export</Button>} />
+```
+
+## Design Tokens Used
+- Typography: `--text-*`
+- Spacing: `--spacing-*`
+
+## Anti-patterns
+- Inline styles or arbitrary pixel values.
+- Using as a page H1.
+
+## Accessibility
+- Use proper heading levels in titles.

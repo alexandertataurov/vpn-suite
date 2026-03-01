@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { PageContainer, Skeleton, Button, Modal } from "@vpn-suite/shared/ui";
+import { PageContainer, Skeleton, Button, Modal } from "@/design-system";
+import { Heading } from "@/design-system";
 import { api } from "../api/client";
-import { PageHeader } from "../components/PageHeader";
+import { ListPage } from "../templates/ListPage";
 
 interface Plan {
   id: string;
@@ -99,16 +100,17 @@ export function PricingEnginePage() {
   if (plansError || historyError) {
     return (
       <PageContainer>
-        <PageHeader title="Pricing Engine" />
-        <p className="text-danger">{String(plansError || historyError)}</p>
+        <ListPage className="ref-page" title="PRICING ENGINE">
+          <p className="text-danger">{String(plansError || historyError)}</p>
+        </ListPage>
       </PageContainer>
     );
   }
 
   return (
     <PageContainer>
-      <PageHeader title="Pricing Engine" />
-      <h3 className="h6 mt-3">Plans</h3>
+      <ListPage className="ref-page" title="PRICING ENGINE">
+          <Heading level={3} className="h6 mt-3">Plans</Heading>
       {plansLoading || !plansData ? (
         <Skeleton height={80} />
       ) : (
@@ -140,7 +142,7 @@ export function PricingEnginePage() {
         </div>
       )}
 
-      <h3 className="h6 mt-4">Price history</h3>
+          <Heading level={3} className="h6 mt-4">Price history</Heading>
       {historyLoading || !historyData ? (
         <Skeleton height={80} />
       ) : (
@@ -204,6 +206,7 @@ export function PricingEnginePage() {
           </div>
         )}
       </Modal>
+      </ListPage>
     </PageContainer>
   );
 }

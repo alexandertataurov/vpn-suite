@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
-import { FileText } from "lucide-react";
+import { IconAuditLog } from "@/design-system/icons";
 import { formatDateTime, getErrorMessage } from "@vpn-suite/shared";
 import {
   Table,
-  Panel,
+  Card,
   PageError,
   Skeleton,
   Input,
@@ -12,15 +12,15 @@ import {
   CodeText,
   Drawer,
   EmptyTableState,
-} from "@vpn-suite/shared/ui";
+} from "@/design-system";
 import type { AuditLogOut, AuditLogList } from "@vpn-suite/shared/types";
 import { ApiError } from "@vpn-suite/shared/types";
 import { useQuery } from "@tanstack/react-query";
 import { AUDIT_KEY } from "../api/query-keys";
 import { api } from "../api/client";
-import { PageHeader } from "../components/PageHeader";
-import { TableSection } from "../components/TableSection";
-import { Toolbar } from "../components/Toolbar";
+import { ListPage } from "../templates/ListPage";
+import { TableSection } from "@/components";
+import { Toolbar } from "@/components";
 import { useIsXs } from "../hooks/useBreakpoint";
 
 const LIMIT = 50;
@@ -98,12 +98,7 @@ export function AuditPage() {
 
   if (error) {
     return (
-      <div className="ref-page" data-testid="audit-page">
-        <PageHeader icon={FileText} title="Audit Log" description="Administrative actions and changes">
-          <Button variant="secondary" size="sm" onClick={() => refetch()} aria-label="Retry">
-            Retry
-          </Button>
-        </PageHeader>
+      <ListPage className="ref-page" data-testid="audit-page" title="AUDIT LOG" description="Administrative actions and changes" icon={IconAuditLog} primaryAction={<Button variant="secondary" size="sm" onClick={() => refetch()} aria-label="Retry">Retry</Button>}>
         <PageError
           message={getErrorMessage(error, "Failed to load audit logs")}
           requestId={error instanceof ApiError ? error.requestId : undefined}
@@ -111,17 +106,18 @@ export function AuditPage() {
           endpoint="GET /audit"
           onRetry={() => refetch()}
         />
-      </div>
+      </ListPage>
     );
   }
 
   return (
-    <div className="ref-page" data-testid="audit-page">
-      <PageHeader icon={FileText} title="Audit Log" description="Administrative actions and changes" />
-
-      <TableSection
-        pagination={data && data.total > LIMIT ? { offset, limit: LIMIT, total: data.total, onPage: setOffset } : undefined}
-      >
+    <ListPage
+      className="ref-page"
+      data-testid="audit-page"
+      title="AUDIT LOG"
+      description="Administrative actions and changes"
+      icon={IconAuditLog}
+      filterBar={
         <Toolbar className="ref-toolbar-spaced">
           <Select
             options={[
@@ -152,12 +148,17 @@ export function AuditPage() {
             Apply
           </Button>
         </Toolbar>
+      }
+    >
+      <TableSection
+        pagination={data != null && data.total > LIMIT ? { offset, limit: LIMIT, total: data.total, onPage: setOffset } : undefined}
+      >
         {isLoading ? (
           <Skeleton height={220} />
         ) : isXs && data?.items.length ? (
           <div className="table-cards" data-testid="audit-cards">
             {data.items.map((r) => (
-              <Panel key={String(r.id)} variant="outline" className="audit-card-xs">
+              <Card key={String(r.id)} variant="outline" className="audit-card-xs">
                 <div className="audit-card-xs__row">
                   <span className="audit-card-xs__time">{formatDateTime(r.created_at)}</span>
                   {r.old_new ? (
@@ -172,7 +173,7 @@ export function AuditPage() {
                   </span>
                 </div>
                 {r.request_id ? <CodeText className="audit-card-xs__request">{r.request_id}</CodeText> : null}
-              </Panel>
+              </Card>
             ))}
           </div>
         ) : !isXs ? (
@@ -203,6 +204,6 @@ export function AuditPage() {
           </CodeText>
         )}
       </Drawer>
-    </div>
+    </ListPage>
   );
 }

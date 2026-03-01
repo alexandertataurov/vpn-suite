@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import type { MetricsKpisOut } from "@vpn-suite/shared/types";
-import { InlineAlert, Skeleton } from "@vpn-suite/shared/ui";
+import { InlineAlert, Skeleton } from "@/design-system";
 import { api } from "../../api/client";
 import { ANALYTICS_METRICS_KPIS_KEY } from "../../api/query-keys";
 import { getTelemetryErrorMessage } from "../../utils/telemetry-freshness";

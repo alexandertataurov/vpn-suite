@@ -14,6 +14,9 @@ export default {
       fontFamily: {
         sans: ["var(--font-sans)"],
         mono: ["var(--font-mono)"],
+        display: ["var(--font-display)"],
+        body: ["var(--font-body)"],
+        data: ["var(--font-data)"],
       },
       fontSize: {
         xs: ["var(--font-size-xs)", { lineHeight: "var(--line-height-normal)" }],
@@ -41,8 +44,27 @@ export default {
       letterSpacing: {
         tight: "var(--letter-spacing-tight)",
         normal: "var(--letter-spacing-normal)",
+        wider: "var(--tracking-wider)",
+      },
+      borderRadius: {
+        sm: "var(--radius-sm)",
+        md: "var(--radius-md)",
+        DEFAULT: "var(--radius-md)",
       },
       colors: {
+        "bg-void": "var(--bg-void)",
+        "bg-surface": "var(--bg-surface)",
+        "bg-elevated": "var(--bg-elevated)",
+        "bg-overlay": "var(--bg-overlay)",
+        "border-subtle": "var(--border-subtle)",
+        "border-default": "var(--border-default)",
+        "text-primary": "var(--text-primary)",
+        "text-secondary": "var(--text-secondary)",
+        "text-muted": "var(--text-muted)",
+        "status-nominal": "var(--status-nominal)",
+        "status-warning": "var(--status-warning)",
+        "status-abort": "var(--status-abort)",
+        "status-standby": "var(--status-standby)",
         surface: {
           base: "var(--color-background-primary)",
           raised: "var(--color-background-tertiary)",
@@ -50,6 +72,7 @@ export default {
           border: "var(--color-border-subtle)",
         },
         accent: {
+          DEFAULT: "var(--accent)",
           blue: "var(--color-interactive-default)",
           green: "var(--color-success)",
           yellow: "var(--color-warning)",
@@ -90,9 +113,7 @@ export default {
         xl: "var(--breakpoint-xl)",
         "2xl": "var(--breakpoint-2xl)",
       },
-      backgroundImage: {
-        "surface-radial": "radial-gradient(ellipse 80% 50% at 0% 0%, var(--color-background-secondary) 0%, var(--color-background-primary) 70%)",
-      },
+      backgroundImage: {},
       transitionDuration: {
         150: "150ms",
       },

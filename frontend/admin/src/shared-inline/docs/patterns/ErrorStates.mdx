@@ -1,0 +1,39 @@
+import { Meta } from "@storybook/blocks";
+
+<Meta title="Patterns/ErrorStates" />
+
+# ErrorStates
+
+## Purpose
+Consistent error presentation for failed operations.
+
+**When to use:** Network/API errors, permission issues, or failed mutations.
+
+**When not to use:** Empty data (use EmptyState) or loading (use Skeleton/Spinner).
+
+## API (Props)
+
+Use `ErrorState` with `title`, `description`, and optional retry action.
+
+## Examples
+
+```tsx
+<ErrorState
+  title="Failed to load"
+  description="Check your connection and try again."
+  action={<Button variant="secondary">Retry</Button>}
+/>
+```
+
+## Design Tokens Used
+- Spacing: `--spacing-*`
+- Colors: `--color-*`
+- Typography: `--text-*`
+
+## Anti-patterns
+- Hiding errors without user feedback.
+- Using error patterns for empty states.
+
+## Accessibility
+- Use role="alert" for critical errors.
+- Ensure action buttons are keyboard accessible.

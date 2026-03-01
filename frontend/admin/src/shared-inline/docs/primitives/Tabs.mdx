@@ -1,0 +1,46 @@
+import { Meta } from "@storybook/blocks";
+
+<Meta title="Primitives/Tabs" />
+
+# Tabs
+
+## Purpose
+Tab switcher for inline views.
+
+**When to use:** Switch between related panels in the same page.
+
+**When not to use:** Navigation between routes (use Sidebar/Topbar).
+
+## API (Props)
+
+| Prop | Type |
+| --- | --- |
+| items | `{ id: string; label: string; disabled?: boolean }[]` |
+| value | `string` |
+| onChange | `(id: string) => void` |
+| ariaLabel | `string` |
+| tabClassName? | `string` |
+| idPrefix? | `string` |
+| size? | `"sm"` | "md" |
+| className? | `string` |
+
+## Examples
+
+```tsx
+<Tabs ariaLabel="Server tabs" items={items} value={value} onChange={setValue} />
+```
+
+## Design Tokens Used
+- Typography: `--text-*`
+- Spacing: `--spacing-*`
+- Colors: `--color-*`
+- Radius: `--radius-*`
+
+## Anti-patterns
+- Inline styles or arbitrary pixel values.
+- Using component for unrelated semantics.
+
+## Accessibility
+- Provide labels and aria attributes as needed.
+- Ensure focus visibility and keyboard access.
+

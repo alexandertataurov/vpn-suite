@@ -1,0 +1,36 @@
+import { Meta } from "@storybook/blocks";
+
+<Meta title="Primitives/Forms/InlineError" />
+
+# InlineError
+
+## Purpose
+Inline validation error message for form fields.
+
+**When to use:** Input-level validation failures.
+
+**When not to use:** Page-level errors (use PageError).
+
+## API (Props)
+
+| Prop | Type |
+| --- | --- |
+| children | `ReactNode` |
+| nativeProps | `HTMLAttributes<HTMLParagraphElement>` |
+
+## Examples
+
+```tsx
+<InlineError>Required</InlineError>
+```
+
+## Design Tokens Used
+- Typography: `--text-*`
+- Colors: `--color-danger`
+
+## Anti-patterns
+- Inline styles or arbitrary pixel values.
+- Using for non-error states.
+
+## Accessibility
+- Associate error text with `aria-describedby` and `aria-invalid`.

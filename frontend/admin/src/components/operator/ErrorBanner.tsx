@@ -3,7 +3,7 @@
  * Use inside every chart/table card when query fails.
  */
 import type { ReactNode } from "react";
-import { Button, InlineAlert } from "@vpn-suite/shared/ui";
+import { Button, InlineAlert } from "@/design-system";
 import { ApiError } from "@vpn-suite/shared/types";
 
 export interface ErrorBannerProps {

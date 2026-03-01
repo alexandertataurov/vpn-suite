@@ -1,7 +1,10 @@
+import { StatusBadge } from "@/design-system";
 import { TelemetryKpiGrid } from "./TelemetryKpiGrid";
 import { useOperatorStrip } from "../../domain/dashboard";
 import { formatBytes, formatLatencySeconds, formatPercent } from "../../domain/telemetry/formatters";
-import { Skeleton } from "@vpn-suite/shared/ui";
+import { Skeleton } from "@/design-system";
+
+const ERROR_RATE_THRESHOLD = 3;
 
 export function TelemetryKpiStrip() {
   const { strip, isLoading, isError, error } = useOperatorStrip();
@@ -18,11 +21,18 @@ export function TelemetryKpiStrip() {
     );
   }
 
+  const apiDegraded = strip.apiStatus === "degraded";
+  const errorRateAboveThreshold = strip.errorRatePct > ERROR_RATE_THRESHOLD;
+
   const items = [
     {
       id: "api",
       label: "API status",
-      value: strip.apiStatus.toUpperCase(),
+      value: apiDegraded ? (
+        <StatusBadge variant="critical" label="DEGRADED" pulse />
+      ) : (
+        strip.apiStatus.toUpperCase()
+      ),
       hint: "Health of admin-api",
     },
     {
@@ -57,7 +67,14 @@ export function TelemetryKpiStrip() {
     {
       id: "error-rate",
       label: "Error rate",
-      value: formatPercent(strip.errorRatePct / 100),
+      value: errorRateAboveThreshold ? (
+        <span className="telemetry-kpi-value-abort" title="Above threshold">
+          {formatPercent(strip.errorRatePct / 100)}
+          <span className="telemetry-kpi-above-threshold">↑ above threshold</span>
+        </span>
+      ) : (
+        formatPercent(strip.errorRatePct / 100)
+      ),
     },
   ];
 
@@ -65,4 +82,3 @@ export function TelemetryKpiStrip() {
     <TelemetryKpiGrid items={items} className="mb-4" />
   );
 }
-

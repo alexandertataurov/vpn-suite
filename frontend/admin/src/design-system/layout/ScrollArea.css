@@ -1,0 +1,5 @@
+.ds-scroll-area { overflow: auto; scrollbar-width: thin; scrollbar-color: var(--color-border-strong) transparent; }
+.ds-scroll-area::-webkit-scrollbar { width: 8px; height: 8px; }
+.ds-scroll-area::-webkit-scrollbar-track { background: transparent; }
+.ds-scroll-area::-webkit-scrollbar-thumb { background: var(--color-border-strong); }
+.ds-scroll-area::-webkit-scrollbar-thumb:hover { background: var(--color-border-default); }

@@ -1,0 +1,45 @@
+import { Meta } from "@storybook/blocks";
+
+<Meta title="Components/MetricTile" />
+
+# MetricTile
+
+## Purpose
+KPI tile component for dashboards.
+
+**When to use:** Dashboard KPI grids.
+
+**When not to use:** Row-level metrics (use MetricCell).
+
+## API (Props)
+
+| Prop | Type |
+| --- | --- |
+| label | `string` |
+| value | `string` | number |
+| unit? | `string` |
+| subtitle? | `string` |
+| trend? | `{ value: number; direction: "up"` | "down" | "neutral" } |
+| state? | `"default"` | "primary" | "success" | "warning" | "error" |
+| icon? | `LucideIcon` |
+
+## Examples
+
+```tsx
+<MetricTile label="Active sessions" value={1823} />
+```
+
+## Design Tokens Used
+- Typography: `--text-*`
+- Spacing: `--spacing-*`
+- Colors: `--color-*`
+- Radius: `--radius-*`
+
+## Anti-patterns
+- Inline styles or arbitrary pixel values.
+- Using component for unrelated semantics.
+
+## Accessibility
+- Provide labels and aria attributes as needed.
+- Ensure focus visibility and keyboard access.
+

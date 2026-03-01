@@ -1,38 +1,48 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { Outlet, NavLink, Link, useNavigate, useLocation } from "react-router-dom";
 import {
-  Shield,
-  LayoutGrid,
-  Server,
-  Users,
-  Cpu,
-  Activity,
-  Workflow,
-  FileText,
-  CreditCard,
-  Settings,
-  Palette,
-  Bell,
-  Search,
-  ChevronLeft,
-  ChevronRight,
-  AlertTriangle,
-  Sun,
-  Moon,
-  TrendingUp,
+  IconShield,
+  IconDashboard,
+  IconServer,
+  IconUsers,
+  IconDevices,
+  IconTelemetry,
+  IconWorkflow,
+  IconAuditLog,
+  IconSubscriptions,
+  IconSettings,
+  IconPalette,
+  IconBell,
+  IconSearch,
+  IconChevronLeft,
+  IconChevronRight,
+  IconSun,
+  IconMoon,
+  IconTrend,
   type LucideIcon,
-} from "lucide-react";
-import { Button, Select, PageContainer } from "@vpn-suite/shared/ui";
+} from "@/design-system/icons";
+import { Button, Select } from "@/design-system";
+import {
+  AppShell,
+  MissionBar,
+  NavRail,
+  PageContent,
+  BootSequence,
+  CommandPalette,
+  type CommandItem,
+  HealthBar,
+  LiveStatusBlock,
+  SystemHeartbeat,
+  ResourceDebugPanel,
+  TelemetryDebugPanel,
+  AvionicsBreadcrumbs,
+} from "@/components";
 import { useTheme } from "@vpn-suite/shared/theme";
 import { useAuthStore } from "../store/authStore";
-import { CommandPalette } from "../components/CommandPalette";
-import type { CommandItem } from "../components/CommandPalette";
 import { useServerListFull } from "../hooks/useServerList";
-import { HealthBar, LiveStatusBlock } from "../components/operator";
 import { selectTimeseriesForChart } from "../domain/dashboard";
-import { ResourceDebugPanel } from "../components/ResourceDebugPanel";
-import { TelemetryDebugPanel } from "../components/TelemetryDebugPanel";
 import { useOperatorStrip } from "../domain/dashboard";
+import { useDensity } from "../context/DensityContext";
 
 interface NavItem {
   to: string;
@@ -43,27 +53,27 @@ interface NavItem {
 }
 
 const allNavItems: NavItem[] = [
-  { to: "/", label: "Dashboard", short: "OV", section: "CONTROL", icon: LayoutGrid },
-  { to: "/servers", label: "Servers", short: "SV", section: "CONTROL", icon: Server },
-  { to: "/telemetry", label: "Telemetry", short: "TM", section: "CONTROL", icon: Activity },
-  { to: "/users", label: "Users", short: "US", section: "ACCESS", icon: Users },
-  { to: "/devices", label: "Devices", short: "DV", section: "ACCESS", icon: Cpu },
-  { to: "/automation", label: "Automation", short: "AT", section: "NETWORK", icon: Workflow },
-  { to: "/revenue", label: "Revenue", short: "RV", section: "REVENUE", icon: TrendingUp },
-  { to: "/subscriptions-health", label: "Subscriptions", short: "SH", section: "REVENUE", icon: CreditCard },
-  { to: "/payments-monitor", label: "Payments", short: "PM", section: "REVENUE", icon: CreditCard },
-  { to: "/referrals", label: "Referrals", short: "RF", section: "REVENUE", icon: Users },
-  { to: "/abuse", label: "Abuse & Risk", short: "AB", section: "RISK", icon: Shield },
-  { to: "/retention", label: "Retention", short: "RT", section: "RISK", icon: Bell },
-  { to: "/pricing", label: "Pricing", short: "PR", section: "RISK", icon: TrendingUp },
-  { to: "/promos", label: "Promos", short: "PC", section: "RISK", icon: TrendingUp },
-  { to: "/churn", label: "Churn", short: "CH", section: "RISK", icon: Activity },
-  { to: "/devops", label: "DevOps", short: "DO", section: "OPS", icon: Server },
-  { to: "/cohorts", label: "Cohorts", short: "CO", section: "REVENUE", icon: LayoutGrid },
-  { to: "/billing", label: "Billing", short: "BL", section: "SYSTEM", icon: CreditCard },
-  { to: "/audit", label: "Audit log", short: "AU", section: "SYSTEM", icon: FileText },
-  { to: "/settings", label: "Settings", short: "ST", section: "SYSTEM", icon: Settings },
-  { to: "/styleguide", label: "Style guide", short: "SG", section: "SYSTEM", icon: Palette },
+  { to: "/", label: "Dashboard", short: "OV", section: "CONTROL", icon: IconDashboard },
+  { to: "/servers", label: "Servers", short: "SV", section: "CONTROL", icon: IconServer },
+  { to: "/telemetry", label: "Telemetry", short: "TM", section: "CONTROL", icon: IconTelemetry },
+  { to: "/users", label: "Users", short: "US", section: "ACCESS", icon: IconUsers },
+  { to: "/devices", label: "Devices", short: "DV", section: "ACCESS", icon: IconDevices },
+  { to: "/automation", label: "Automation", short: "AT", section: "NETWORK", icon: IconWorkflow },
+  { to: "/revenue", label: "Revenue", short: "RV", section: "REVENUE", icon: IconTrend },
+  { to: "/subscriptions-health", label: "Subscriptions", short: "SH", section: "REVENUE", icon: IconSubscriptions },
+  { to: "/payments-monitor", label: "Payments", short: "PM", section: "REVENUE", icon: IconSubscriptions },
+  { to: "/referrals", label: "Referrals", short: "RF", section: "REVENUE", icon: IconUsers },
+  { to: "/abuse", label: "Abuse & Risk", short: "AB", section: "RISK", icon: IconShield },
+  { to: "/retention", label: "Retention", short: "RT", section: "RISK", icon: IconBell },
+  { to: "/pricing", label: "Pricing", short: "PR", section: "RISK", icon: IconTrend },
+  { to: "/promos", label: "Promos", short: "PC", section: "RISK", icon: IconTrend },
+  { to: "/churn", label: "Churn", short: "CH", section: "RISK", icon: IconTelemetry },
+  { to: "/devops", label: "DevOps", short: "DO", section: "OPS", icon: IconServer },
+  { to: "/cohorts", label: "Cohorts", short: "CO", section: "REVENUE", icon: IconDashboard },
+  { to: "/billing", label: "Billing", short: "BL", section: "SYSTEM", icon: IconSubscriptions },
+  { to: "/audit", label: "Audit log", short: "AU", section: "SYSTEM", icon: IconAuditLog },
+  { to: "/settings", label: "Settings", short: "ST", section: "SYSTEM", icon: IconSettings },
+  { to: "/styleguide", label: "Style guide", short: "SG", section: "SYSTEM", icon: IconPalette },
 ];
 
 const isDev = Boolean((import.meta as { env?: { DEV?: boolean } }).env?.DEV);
@@ -72,11 +82,13 @@ const navItems = allNavItems.filter(
   (item) => item.to !== "/styleguide" || isDev
 );
 
-const mobileNavItems = navItems.filter(
-  (item) =>
-    ["/", "/servers", "/users", "/telemetry", "/settings"].includes(item.to) &&
-    (item.to !== "/" || item.label === "Dashboard")
-);
+const mobileNavItems = [
+  { to: "/", label: "DRASH", short: "DR" },
+  { to: "/servers", label: "SRVR", short: "SV" },
+  { to: "/telemetry", label: "BOTS", short: "BT" },
+  { to: "/audit", label: "LOGS", short: "LG" },
+  { to: "/settings", label: "SET", short: "ST" },
+];
 
 const REGION_STORAGE_KEY = "vpn-suite-admin-region";
 
@@ -89,16 +101,13 @@ function getInitialSidebarCollapsed(): boolean {
   } catch {
     /* ignore */
   }
-  if (typeof window !== "undefined") {
-    const w = window.innerWidth;
-    return w >= 640 && w < 1024;
-  }
-  return false;
+  return true;
 }
 
 export function AdminLayout() {
   const [sidebarOpen, setOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(getInitialSidebarCollapsed);
+  const [gridOverlay, setGridOverlay] = useState(false);
   const [commandOpen, setCommandOpen] = useState(false);
   const [activeRegion, setActiveRegion] = useState<string>(() => {
     if (typeof window === "undefined") return "all";
@@ -106,19 +115,21 @@ export function AdminLayout() {
     return fromUrl ?? localStorage.getItem(REGION_STORAGE_KEY) ?? "all";
   });
   const { theme, themes, setTheme } = useTheme();
+  const { density, setDensity } = useDensity();
   const logout = useAuthStore((s) => s.logout);
   const navigate = useNavigate();
   const location = useLocation();
   const chordRef = useRef<{ key: string; ts: number } | null>(null);
+  const gChordTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { data: serversData } = useServerListFull();
 
   const {
-    data: operatorData,
+    data: operatorPayload,
+    incidents,
     error: operatorError,
-    isLoading: operatorLoading,
     refetch: refetchOperatorStrip,
   } = useOperatorStrip();
-  const healthStrip = operatorData?.health_strip;
+  const healthStrip = operatorPayload?.health_strip;
 
   const regionOptions = useMemo(() => {
     const unique = new Set<string>();
@@ -186,9 +197,22 @@ export function AdminLayout() {
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (isTypingContext(e.target)) return;
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setCommandOpen(false);
+        setOpen(false);
+        chordRef.current = null;
+        return;
+      }
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
         setCommandOpen((o) => !o);
+        chordRef.current = null;
+        return;
+      }
+      if (e.key === "s" && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        e.preventDefault();
+        setCommandOpen(true);
         chordRef.current = null;
         return;
       }
@@ -207,35 +231,30 @@ export function AdminLayout() {
 
       const now = Date.now();
       const previous = chordRef.current;
-      if (previous && previous.key === "g" && now - previous.ts < 1000) {
+      const chordMap: Record<string, string> = { s: "/servers", u: "/users", t: "/telemetry", a: "/automation", o: "/" };
+      const chordPath = chordMap[e.key];
+      if (previous?.key === "g" && now - previous.ts < 1000 && chordPath) {
+        e.preventDefault();
+        if (gChordTimerRef.current) clearTimeout(gChordTimerRef.current);
+        gChordTimerRef.current = null;
         const scoped = (path: string) =>
-          activeRegion === "all"
-            ? path
-            : { pathname: path, search: `?region=${encodeURIComponent(activeRegion)}` };
-        if (e.key === "s") {
-          e.preventDefault();
-          navigate(scoped("/servers"));
-        } else if (e.key === "u") {
-          e.preventDefault();
-          navigate(scoped("/users"));
-        } else if (e.key === "t") {
-          e.preventDefault();
-          navigate(scoped("/telemetry"));
-        } else if (e.key === "a") {
-          e.preventDefault();
-          navigate(scoped("/automation"));
-        } else if (e.key === "o") {
-          e.preventDefault();
-          navigate(scoped("/"));
-        }
+          activeRegion === "all" ? path : { pathname: path, search: `?region=${encodeURIComponent(activeRegion)}` };
+        navigate(scoped(chordPath));
         chordRef.current = null;
         return;
       }
-      if (e.key === "g") {
+      if (e.key === "g" && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        e.preventDefault();
         chordRef.current = { key: "g", ts: now };
-      } else {
-        chordRef.current = null;
+        if (gChordTimerRef.current) clearTimeout(gChordTimerRef.current);
+        gChordTimerRef.current = setTimeout(() => {
+          gChordTimerRef.current = null;
+          chordRef.current = null;
+          setGridOverlay((o) => !o);
+        }, 350);
+        return;
       }
+      chordRef.current = e.key === "g" ? { key: "g", ts: now } : null;
     };
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
@@ -291,79 +310,19 @@ export function AdminLayout() {
   let lastSection = "";
 
   return (
-    <div className="admin-layout" data-console="operator">
+    <AppShell className={[gridOverlay ? "mission-control-grid-overlay" : "", density === "combat" ? "dashboard--combat" : "dashboard--comfortable"].filter(Boolean).join(" ")}>
       <a href="#admin-main" className="skip-link">
         Skip to main content
       </a>
-      <div className="admin-top-bar" role="banner">
-        <div className="admin-top-bar-left">
-          <button
-            type="button"
-            className="admin-menu-btn"
-            onClick={() => setOpen((o) => !o)}
-            aria-label="Toggle menu"
-          >
-            {"\u2630"}
-          </button>
-          <NavLink to="/" className="admin-brand" aria-label="AmneziaWG Admin" end>
-            <Shield className="admin-brand-icon" aria-hidden strokeWidth={1.5} />
-            <span className="admin-brand-text">AmneziaWG</span>
-          </NavLink>
-          <label className="admin-region-switch">
-            <span className="admin-region-label">Region</span>
-            <Select
-              options={regionOptions}
-              value={activeRegion}
-              onChange={handleRegionChange}
-              aria-label="Scope by region"
-              className="admin-region-select"
-            />
-          </label>
-          <span className="admin-env-badge" title="Environment">Prod</span>
-        </div>
-        <div className="admin-top-bar-center" aria-hidden />
-        <div className="admin-top-bar-right">
-          <LiveStatusBlock
-            last_updated={healthStrip?.last_updated ?? new Date().toISOString()}
-            freshness={healthStrip?.freshness ?? "unknown"}
-            onRefresh={handleRefresh}
-          />
-          <Link
-            to="/"
-            className="admin-alerts-trigger"
-            aria-label={operatorData?.incidents?.length ? `${operatorData.incidents.length} active incidents` : "Alerts"}
-            title="View incidents"
-          >
-            <Bell className="admin-alerts-icon" aria-hidden size={14} strokeWidth={2} />
-            {operatorData?.incidents && operatorData.incidents.length > 0 && (
-              <span className={`admin-alerts-count ${operatorData.incidents.some((i) => i.severity === "critical") ? "admin-alerts-count--critical" : "admin-alerts-count--warning"}`}>
-                {operatorData.incidents.length}
-              </span>
-            )}
-          </Link>
-          <button
-            type="button"
-            className="admin-search-trigger"
-            onClick={() => setCommandOpen(true)}
-            aria-label="Search (Ctrl+K)"
-            title="Search (Ctrl+K)"
-          >
-            <Search className="admin-search-icon" aria-hidden size={14} strokeWidth={2} />
-            <span className="admin-search-label">Search</span>
-          </button>
-          <Button variant="ghost" size="sm" onClick={toggleTheme} aria-label="Switch theme" title="Switch theme">
-            {theme === "dark" ? <Sun size={14} strokeWidth={2} aria-hidden /> : <Moon size={14} strokeWidth={2} aria-hidden />}
-          </Button>
-          <Button variant="ghost" size="sm" onClick={logout} className="admin-logout-btn" aria-label="Log out">
-            Log out
-          </Button>
-        </div>
-      </div>
-      <div className="admin-health-bar" role="region" aria-label="System health">
+      <div
+        className={`admin-health-bar${!!operatorError || healthStrip?.api_status === "degraded" ? " admin-health-bar--api-degraded" : ""}`}
+        role="region"
+        aria-label="System health"
+      >
         {healthStrip ? (
           <HealthBar
             data={healthStrip}
-            timeseries={selectTimeseriesForChart(operatorData ?? null)}
+            timeseries={selectTimeseriesForChart(operatorPayload ?? null)}
           />
         ) : operatorError ? (
           <div className="operator-health-strip operator-health-strip--bar">
@@ -385,8 +344,90 @@ export function AdminLayout() {
           </div>
         )}
       </div>
+      <MissionBar>
+        <div className="mission-control-sweep" aria-hidden />
+        <div className="admin-top-bar-left">
+          <button
+            type="button"
+            className="admin-menu-btn"
+            onClick={() => setOpen((o) => !o)}
+            aria-label="Toggle menu"
+          >
+            {"\u2630"}
+          </button>
+          <AvionicsBreadcrumbs
+            missionName="VPN-NET-GLOBAL-01"
+            current={
+              navItems.find((n) => n.to === location.pathname)?.short ??
+              (location.pathname.startsWith("/servers/") ? "NODE" :
+               location.pathname.startsWith("/users/") ? "USER" : "SYS")
+            }
+          />
+          <span className="admin-top-bar-sep" aria-hidden>|</span>
+          <label className="admin-region-switch">
+            <span className="admin-region-label">Region</span>
+            <Select
+              options={regionOptions}
+              value={activeRegion}
+              onChange={handleRegionChange}
+              aria-label="Scope by region"
+              className="admin-region-select"
+            />
+          </label>
+          <span className="admin-env-badge" title="Environment">PROD</span>
+        </div>
+        <div className="admin-top-bar-center" role="region" aria-label="System Heartbeat">
+          <SystemHeartbeat />
+        </div>
+        <div className="admin-top-bar-right">
+          <LiveStatusBlock
+            last_updated={healthStrip?.last_updated ?? new Date().toISOString()}
+            freshness={healthStrip?.freshness ?? "unknown"}
+            apiDegraded={!!operatorError || healthStrip?.api_status === "degraded"}
+            onRefresh={handleRefresh}
+          />
+            <Link
+              to="/"
+              className="admin-alerts-trigger"
+              aria-label={incidents.length ? `${incidents.length} active incidents` : "Alerts"}
+              title="View incidents"
+            >
+              <IconBell className="admin-alerts-icon" aria-hidden size={14} strokeWidth={2} />
+              {incidents.length > 0 && (
+                <span className={`admin-alerts-count ${incidents.some((incident) => incident.severity === "critical") ? "admin-alerts-count--critical" : "admin-alerts-count--warning"}`}>
+                  {incidents.length}
+                </span>
+              )}
+            </Link>
+          <button
+            type="button"
+            className="admin-search-trigger"
+            onClick={() => setCommandOpen(true)}
+            aria-label="Search (Ctrl+K)"
+            title="Search (Ctrl+K)"
+          >
+            <IconSearch className="admin-search-icon" aria-hidden size={14} strokeWidth={1.5} />
+            <span className="admin-search-label">Search</span>
+          </button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setDensity(density === "comfortable" ? "combat" : "comfortable")}
+            aria-label="Toggle density"
+            title="Density: Comfortable / Combat"
+          >
+            <span className="admin-density-label">{density === "comfortable" ? "COMF" : "COMBAT"}</span>
+          </Button>
+          <Button variant="ghost" size="sm" onClick={toggleTheme} aria-label="Switch theme" title="Switch theme">
+            {theme === "dark" ? <IconSun size={14} strokeWidth={1.5} aria-hidden /> : <IconMoon size={14} strokeWidth={1.5} aria-hidden />}
+          </Button>
+          <Button variant="ghost" size="sm" onClick={logout} className="admin-logout-btn" aria-label="Log out">
+            Log out
+          </Button>
+        </div>
+      </MissionBar>
       <div className="admin-body">
-        <aside className={`admin-sidebar ${sidebarOpen ? "open" : ""} ${sidebarCollapsed ? "collapsed" : ""}`} data-testid="admin-sidebar">
+        <NavRail open={sidebarOpen} collapsed={sidebarCollapsed}>
           <nav className="admin-nav" aria-label="Main" data-testid="admin-nav">
             {navItems.map(({ to, label, section, icon: Icon }) => {
               const showSection = section && section !== lastSection;
@@ -421,9 +462,9 @@ export function AdminLayout() {
             aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             title={sidebarCollapsed ? "Expand" : "Collapse"}
           >
-            {sidebarCollapsed ? <ChevronRight size={14} aria-hidden /> : <ChevronLeft size={14} aria-hidden />}
+            {sidebarCollapsed ? <IconChevronRight size={14} strokeWidth={1.5} aria-hidden /> : <IconChevronLeft size={14} strokeWidth={1.5} aria-hidden />}
           </button>
-        </aside>
+        </NavRail>
         {sidebarOpen ? (
           <div
             className="admin-overlay"
@@ -435,9 +476,9 @@ export function AdminLayout() {
           />
         ) : null}
         <main id="admin-main" className="admin-main" tabIndex={-1}>
-          <PageContainer>
-            <Outlet />
-          </PageContainer>
+          <PageContent>
+            <BootSequence><Outlet /></BootSequence>
+          </PageContent>
           {isDev ? <ResourceDebugPanel /> : null}
           {isDev ? <TelemetryDebugPanel /> : null}
         </main>
@@ -456,6 +497,6 @@ export function AdminLayout() {
         ))}
       </nav>
       <CommandPalette open={commandOpen} onClose={() => setCommandOpen(false)} items={commandItems} />
-    </div>
+    </AppShell>
   );
 }

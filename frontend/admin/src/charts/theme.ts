@@ -1,12 +1,24 @@
 type CssVar = `--${string}`;
 
-function resolveCssVarRaw(varName: CssVar): string | null {
-  if (typeof window === "undefined" || typeof document === "undefined") return null;
-  return getComputedStyle(document.documentElement).getPropertyValue(varName).trim() || null;
+function getThemeScopeElement(): HTMLElement {
+  if (typeof document === "undefined") {
+    // SSR/tests: no DOM available.
+    return null as unknown as HTMLElement;
+  }
+  return (
+    document.querySelector<HTMLElement>("[data-app-shell][data-console='operator']") ??
+    document.querySelector<HTMLElement>("[data-console='operator']") ??
+    document.documentElement
+  );
 }
 
-function resolveCssNumber(varName: CssVar, fallback: number): number {
-  const raw = resolveCssVarRaw(varName);
+function resolveCssVarRaw(varName: CssVar, scope: HTMLElement): string | null {
+  if (typeof window === "undefined" || typeof document === "undefined") return null;
+  return getComputedStyle(scope).getPropertyValue(varName).trim() || null;
+}
+
+function resolveCssNumber(varName: CssVar, fallback: number, scope: HTMLElement): number {
+  const raw = resolveCssVarRaw(varName, scope);
   if (!raw) return fallback;
   // Common cases: "11px", "11", " 11px ".
   const n = Number.parseFloat(raw);
@@ -15,9 +27,9 @@ function resolveCssNumber(varName: CssVar, fallback: number): number {
 
 // Resolve a CSS var into a computed `rgb(...)` string so canvas rendering is reliable even
 // when the design tokens use `oklch(...)` / modern color spaces.
-function resolveCssColor(varName: CssVar, fallback: string): string {
+function resolveCssColor(varName: CssVar, fallback: string, scope: HTMLElement): string {
   if (typeof window === "undefined" || typeof document === "undefined") return fallback;
-  const raw = resolveCssVarRaw(varName);
+  const raw = resolveCssVarRaw(varName, scope);
   if (!raw) return fallback;
 
   const el = document.createElement("span");
@@ -26,14 +38,14 @@ function resolveCssColor(varName: CssVar, fallback: string): string {
   el.style.position = "absolute";
   el.style.left = "-99999px";
   el.style.top = "-99999px";
-  document.body.appendChild(el);
+  scope.appendChild(el);
   const color = getComputedStyle(el).color;
   el.remove();
   return color || fallback;
 }
 
-function resolveCssFont(varName: CssVar, fallback: string): string {
-  const raw = resolveCssVarRaw(varName);
+function resolveCssFont(varName: CssVar, fallback: string, scope: HTMLElement): string {
+  const raw = resolveCssVarRaw(varName, scope);
   return raw || fallback;
 }
 
@@ -49,6 +61,7 @@ export type ChartTheme = {
   surface: string;
   tooltipBg: string;
   tooltipBorder: string;
+  tooltipShadow: string;
   primary: { solid: string; area: string };
   series: {
     main: string;
@@ -64,44 +77,59 @@ export type ChartTheme = {
 };
 
 let cached: ChartTheme | null = null;
+let cachedKey: string | null = null;
+
+function getChartThemeCacheKey(scope: HTMLElement): string {
+  if (typeof document === "undefined") return "ssr";
+  const root = document.documentElement;
+  const rootTheme = root.getAttribute("data-theme") ?? "";
+  const colorScheme = root.style.colorScheme || "";
+  const scopeKey = scope.hasAttribute("data-console") ? scope.getAttribute("data-console") ?? "scope" : "root";
+  return `${rootTheme}|${colorScheme}|${scopeKey}`;
+}
 
 export function getChartTheme(): ChartTheme {
-  if (cached) return cached;
+  const scope = getThemeScopeElement();
+  const cacheKey = getChartThemeCacheKey(scope);
+  if (cached && cachedKey === cacheKey) return cached;
 
   // Prefer explicit chart tokens when available; fall back to existing semantic colors.
   cached = {
-    fontFamily: resolveCssFont("--font-sans", "ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial"),
-    monoFamily: resolveCssFont("--font-mono", "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace"),
-    axisFontSize: resolveCssNumber("--chart-axis-font-size", 11),
+    fontFamily: resolveCssFont("--font-sans", "ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial", scope),
+    monoFamily: resolveCssFont("--font-mono", "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace", scope),
+    axisFontSize: resolveCssNumber("--chart-axis-font-size", 11, scope),
     // Root cause fix: neutral-900 is dark in dark theme; use semantic text tokens for contrast.
-    text: resolveCssColor("--color-text", "#ffffff"),
-    muted: resolveCssColor("--color-text-muted", "#d4d4d4"),
-    faint: resolveCssColor("--color-text-tertiary", "#a3a3a3"),
-    grid: resolveCssColor("--chart-grid", resolveCssColor("--color-neutral-100", "#f5f5f5")),
-    border: resolveCssColor("--color-neutral-200", "#e5e5e5"),
-    surface: resolveCssColor("--color-background-primary", "#ffffff"),
-    tooltipBg: resolveCssColor("--chart-tooltip-bg", resolveCssColor("--color-background-primary", "#ffffff")),
-    tooltipBorder: resolveCssColor("--chart-tooltip-border", resolveCssColor("--color-neutral-200", "#e5e5e5")),
+    text: resolveCssColor("--color-text", resolveCssColor("--color-text-primary", "currentColor", scope), scope),
+    muted: resolveCssColor("--color-text-muted", resolveCssColor("--color-text-secondary", "currentColor", scope), scope),
+    faint: resolveCssColor("--color-text-tertiary", resolveCssColor("--color-text-muted", "currentColor", scope), scope),
+    grid: resolveCssColor("--chart-grid", resolveCssColor("--color-border-subtle", "transparent", scope), scope),
+    border: resolveCssColor("--color-border", resolveCssColor("--color-border-default", "transparent", scope), scope),
+    surface: resolveCssColor("--color-background-primary", resolveCssColor("--color-void", "transparent", scope), scope),
+    tooltipBg: resolveCssColor("--chart-tooltip-bg", resolveCssColor("--color-background-primary", "transparent", scope), scope),
+    tooltipBorder: resolveCssColor("--chart-tooltip-border", resolveCssColor("--color-border-subtle", "transparent", scope), scope),
+    tooltipShadow: resolveCssVarRaw("--shadow-tooltip", scope) || resolveCssVarRaw("--shadow-elevated", scope) || "none",
     primary: {
-      solid: resolveCssColor("--color-interactive-default", "#0ea5e9"),
-      area: resolveCssColor("--color-primary-subtle", "rgba(14, 165, 233, 0.15)"),
+      solid: resolveCssColor("--color-interactive-default", resolveCssColor("--color-accent", "currentColor", scope), scope),
+      area: resolveCssColor("--color-primary-subtle", resolveCssColor("--color-accent-dim", "transparent", scope), scope),
     },
     series: {
-      main: resolveCssColor("--chart-series-1", resolveCssColor("--color-text", "#ffffff")),
-      muted: resolveCssColor("--chart-series-2", resolveCssColor("--color-neutral-600", "#525252")),
-      faint: resolveCssColor("--chart-series-3", resolveCssColor("--color-neutral-400", "#a3a3a3")),
-      good: resolveCssColor("--color-success", "#16a34a"),
-      warn: resolveCssColor("--color-warning", "#f59e0b"),
-      bad: resolveCssColor("--color-error", "#ef4444"),
-      alt1: resolveCssColor("--chart-series-2", resolveCssColor("--color-neutral-600", "#525252")),
-      alt2: resolveCssColor("--chart-series-3", resolveCssColor("--color-neutral-400", "#a3a3a3")),
-      alt3: resolveCssColor("--chart-series-4", resolveCssColor("--color-neutral-300", "#d4d4d4")),
+      main: resolveCssColor("--chart-series-1", resolveCssColor("--color-text", "currentColor", scope), scope),
+      muted: resolveCssColor("--chart-series-2", resolveCssColor("--color-text-muted", "currentColor", scope), scope),
+      faint: resolveCssColor("--chart-series-3", resolveCssColor("--color-text-tertiary", "currentColor", scope), scope),
+      good: resolveCssColor("--color-success", resolveCssColor("--color-nominal-bright", "currentColor", scope), scope),
+      warn: resolveCssColor("--color-warning", resolveCssColor("--color-warning-bright", "currentColor", scope), scope),
+      bad: resolveCssColor("--color-error", resolveCssColor("--color-critical-bright", "currentColor", scope), scope),
+      alt1: resolveCssColor("--chart-series-2", resolveCssColor("--color-text-muted", "currentColor", scope), scope),
+      alt2: resolveCssColor("--chart-series-3", resolveCssColor("--color-text-tertiary", "currentColor", scope), scope),
+      alt3: resolveCssColor("--chart-series-4", resolveCssColor("--color-border", "currentColor", scope), scope),
     },
   };
+  cachedKey = cacheKey;
 
   return cached;
 }
 
 export function resetChartThemeCache() {
   cached = null;
+  cachedKey = null;
 }

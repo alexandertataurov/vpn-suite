@@ -1,0 +1,144 @@
+/* Typography utilities */
+.type-label {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+}
+.type-body {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  line-height: var(--leading-normal);
+}
+.type-data {
+  font-family: var(--font-data);
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.type-metric {
+  font-family: var(--font-data);
+  font-size: var(--text-lg);
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+.type-title {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  color: var(--text-primary);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+.type-muted {
+  color: var(--text-muted);
+}
+.type-secondary {
+  color: var(--text-secondary);
+}
+
+/* Surface utilities */
+.surface {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: 0;
+}
+.surface-elevated {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: 0;
+  box-shadow: var(--shadow-elevated);
+}
+
+/* Section header — the repeated "HEALTH & STATUS" style label */
+.section-label {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.section-label::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border-subtle);
+}
+
+/* Interactive row */
+.row-interactive {
+  transition: background var(--duration-fast) var(--ease-out-expo);
+  cursor: pointer;
+}
+.row-interactive:hover {
+  background: var(--bg-overlay);
+}
+
+/* Focus ring */
+.focus-ring:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+/* Truncated hash/ID */
+.id-truncated {
+  font-family: var(--font-data);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  cursor: copy;
+}
+.id-truncated:hover {
+  color: var(--accent);
+}
+
+/* Pulse animation for live/critical indicators */
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+.pulse {
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+/* Stagger fade-in for panel entry */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-in {
+  animation: fade-up var(--duration-slow) var(--ease-out-expo) both;
+}
+.animate-in:nth-child(1) {
+  animation-delay: 0ms;
+}
+.animate-in:nth-child(2) {
+  animation-delay: 40ms;
+}
+.animate-in:nth-child(3) {
+  animation-delay: 80ms;
+}
+.animate-in:nth-child(4) {
+  animation-delay: 120ms;
+}
+.animate-in:nth-child(5) {
+  animation-delay: 160ms;
+}
+.animate-in:nth-child(6) {
+  animation-delay: 200ms;
+}

@@ -3,6 +3,7 @@
  * All widgets should use these hooks and domain selectors, not raw api.get.
  */
 import { useQuery } from "@tanstack/react-query";
+import type { UseQueryOptions } from "@tanstack/react-query";
 import type { OperatorDashboardOut } from "@vpn-suite/shared/types";
 import { api } from "../../api/client";
 import { OPERATOR_DASHBOARD_KEY } from "../../api/query-keys";
@@ -14,7 +15,7 @@ const STALE_MS = 2_000;
 const REFETCH_INTERVAL_MS = 2_000;
 
 export interface UseOperatorOverviewOptions {
-  refetchInterval?: number | false | ((data: OperatorDashboardOut | undefined) => number | false);
+  refetchInterval?: UseQueryOptions<OperatorDashboardOut, Error>["refetchInterval"];
 }
 
 export function useOperatorOverview(timeRange: string, options?: UseOperatorOverviewOptions) {

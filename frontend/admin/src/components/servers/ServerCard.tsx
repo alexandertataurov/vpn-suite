@@ -1,12 +1,12 @@
 import { useNavigate } from "react-router-dom";
-import { RelativeTime, StatusBadge } from "@vpn-suite/shared/ui";
+import { RelativeTime, StatusBadge } from "@/design-system";
 import type { ServerOut, ServersSnapshotSummaryOut } from "@vpn-suite/shared/types";
 import type { ServersTelemetrySummaryOut } from "../../hooks/useServerList";
 import { getServerVisualStatus } from "../ServerRow";
 import { FreshnessBadge } from "../operator/FreshnessBadge";
 import { getFreshnessLevel } from "../../constants/freshness";
 import { RowActionsMenu } from "./RowActionsMenu";
-import { Panel } from "@vpn-suite/shared/ui";
+import { Card } from "@/design-system";
 
 export interface ServerCardProps {
   server: ServerOut;
@@ -30,8 +30,6 @@ function visualStatusToStatusBadge(v: ReturnType<typeof getServerVisualStatus>):
 
 export function ServerCard({
   server,
-  snapshotSummary: _snapshotSummary,
-  telemetrySummary: _telemetrySummary,
   syncingServerId,
   onRowClick,
   onSync,
@@ -47,7 +45,7 @@ export function ServerCard({
   const seenLevel = getFreshnessLevel(server.last_seen_at);
 
   return (
-    <Panel
+    <Card
       variant="outline"
       className="server-card-xs"
       role="button"
@@ -92,6 +90,6 @@ export function ServerCard({
           )}
         </span>
       </div>
-    </Panel>
+    </Card>
   );
 }

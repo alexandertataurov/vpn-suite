@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ServiceScrapeStatus, TelemetryServicesOut } from "@vpn-suite/shared/types";
-import { PrimitiveBadge, InlineAlert, Skeleton, Button, useToast } from "@vpn-suite/shared/ui";
+import { PrimitiveBadge, InlineAlert, Skeleton, Button, useToast } from "@/design-system";
 import { api } from "../../api/client";
 import { ANALYTICS_TELEMETRY_SERVICES_KEY } from "../../api/query-keys";
 import { getTelemetryErrorMessage } from "../../utils/telemetry-freshness";
@@ -9,7 +9,7 @@ import { TelemetrySection } from "./TelemetrySection";
 
 export function ScrapeStatusPanel() {
   const queryClient = useQueryClient();
-  const addToast = useToast();
+  const { addToast } = useToast();
   const { data, isLoading, isError, error } = useQuery<TelemetryServicesOut>({
     queryKey: ANALYTICS_TELEMETRY_SERVICES_KEY,
     queryFn: ({ signal }) => api.get<TelemetryServicesOut>("/analytics/telemetry/services", { signal }),
@@ -97,7 +97,7 @@ export function ScrapeStatusPanel() {
               </PrimitiveBadge>
               <div className="inline-flex items-center gap-1">
                 <Button
-                  size="xs"
+                  size="sm"
                   variant="ghost"
                   onClick={() => controlMutation.mutate({ job, action: "start" })}
                   disabled={controlMutation.isPending || isUp}
@@ -106,7 +106,7 @@ export function ScrapeStatusPanel() {
                   Start
                 </Button>
                 <Button
-                  size="xs"
+                  size="sm"
                   variant="ghost"
                   onClick={() => controlMutation.mutate({ job, action: "stop" })}
                   disabled={controlMutation.isPending || !isUp}
@@ -115,7 +115,7 @@ export function ScrapeStatusPanel() {
                   Stop
                 </Button>
                 <Button
-                  size="xs"
+                  size="sm"
                   variant="ghost"
                   onClick={() => controlMutation.mutate({ job, action: "restart" })}
                   disabled={controlMutation.isPending}

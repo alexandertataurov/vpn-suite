@@ -1,4 +1,4 @@
-import { PrimitiveBadge, InlineAlert } from "@vpn-suite/shared/ui";
+import { PrimitiveBadge, InlineAlert } from "@/design-system";
 import { formatDateTime } from "@vpn-suite/shared";
 
 export type ApiHealthStatus = "ok" | "degraded" | "down" | "unknown";

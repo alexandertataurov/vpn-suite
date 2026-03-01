@@ -1,0 +1,34 @@
+import { Meta } from "@storybook/blocks";
+
+<Meta title="Patterns/FreshnessBadge" />
+
+# FreshnessBadge
+
+## Purpose
+Indicator for data freshness/staleness.
+
+**When to use:** Telemetry, cache age, or last update indicators.
+
+**When not to use:** General status (use StatusBadge/HealthBadge).
+
+## API (Props)
+
+Use `FreshnessBadge` with timestamp and freshness thresholds.
+
+## Examples
+
+```tsx
+<FreshnessBadge updatedAt={new Date().toISOString()} staleAfterSeconds={120} />
+```
+
+## Design Tokens Used
+- Colors: `--color-*`
+- Typography: `--text-*`
+- Radius: `--radius-*`
+
+## Anti-patterns
+- Using for status unrelated to time freshness.
+- Inline styles or arbitrary spacing.
+
+## Accessibility
+- Provide a tooltip or label describing the time basis.

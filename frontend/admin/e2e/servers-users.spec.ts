@@ -10,7 +10,9 @@ test.describe("Servers", () => {
     await page.goto("servers");
     // SPA pages may keep polling; "networkidle" can hang indefinitely.
     await page.waitForLoadState("domcontentloaded");
-    await expect(page.getByRole("heading", { name: /Servers/i })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole("heading", { name: "Servers", level: 1 })).toBeVisible({
+      timeout: 10000,
+    });
     // Page may render either an empty state, a table, or an error state; verify it's not stuck loading.
     await expect(page.locator("main")).toBeVisible({ timeout: 8000 });
   });
@@ -55,7 +57,7 @@ test.describe("Servers", () => {
   test("delete server: menu item opens confirmation modal; cancel closes", async ({ page }) => {
     await page.goto("servers");
     await page.waitForLoadState("domcontentloaded");
-    const moreBtn = page.getByRole("button", { name: /More actions/i }).first();
+    const moreBtn = page.locator('.server-row-actions button[aria-label="More actions"]').first();
     if (!(await moreBtn.isVisible({ timeout: 5000 }).catch(() => false))) {
       test.skip(true, "No servers: cannot open row menu");
       return;
@@ -113,9 +115,10 @@ test.describe("Servers", () => {
     await page.goto("servers");
     await page.waitForLoadState("domcontentloaded");
     await expect(page.getByText(serverName)).toBeVisible({ timeout: 10000 });
-    const moreBtn = page.getByRole("button", { name: /More actions/i }).first();
+    const moreBtn = page.locator('.server-row-actions button[aria-label="More actions"]').first();
     await moreBtn.click();
-    await page.getByRole("menuitem", { name: /Delete/i }).click();
+    const deleteItem = page.getByRole("menuitem", { name: /Delete/i });
+    await deleteItem.evaluate((el) => (el as HTMLButtonElement).click());
     await expect(page.getByRole("dialog", { name: /Delete server/i })).toBeVisible({ timeout: 3000 });
     await page.getByRole("textbox").fill(serverName);
     await page.getByRole("button", { name: /^Delete$/i }).click();

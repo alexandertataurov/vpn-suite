@@ -1,4 +1,4 @@
-import { PrimitiveBadge, type PrimitiveBadgeVariant } from "@vpn-suite/shared/ui";
+import { Badge, type BadgeVariant } from "@/design-system";
 
 type Freshness = "fresh" | "degraded" | "stale";
 
@@ -9,16 +9,16 @@ export interface FreshnessBadgeProps {
   title?: string;
 }
 
-const variantMap: Record<Freshness, PrimitiveBadgeVariant> = {
-  fresh: "success",
+const variantMap: Record<Freshness, BadgeVariant> = {
+  fresh: "nominal",
   degraded: "warning",
-  stale: "danger",
+  stale: "critical",
 };
 
 export function FreshnessBadge({ freshness, children, className, title }: FreshnessBadgeProps) {
   return (
-    <PrimitiveBadge variant={variantMap[freshness]} size="sm" className={className} title={title}>
+    <Badge variant={variantMap[freshness]} size="sm" className={className} title={title}>
       {children}
-    </PrimitiveBadge>
+    </Badge>
   );
 }

@@ -17,7 +17,7 @@ function valueFromParams(p: unknown): { tsMs: number | null; v: number | null; c
   };
 
   const name = typeof anyP.seriesName === "string" ? anyP.seriesName : "Series";
-  const color = typeof anyP.color === "string" ? anyP.color : "#000";
+  const color = typeof anyP.color === "string" ? anyP.color : getChartTheme().text;
 
   const axisValue = anyP.axisValue;
   const tsMs =
@@ -134,7 +134,7 @@ export function makeOpsTimeseriesOption(args: {
       borderColor: t.tooltipBorder,
       borderWidth: 1,
       padding: 0,
-      extraCssText: "border-radius:10px;box-shadow:0 8px 22px rgba(0,0,0,0.08);",
+      extraCssText: `border-radius:10px;box-shadow:${t.tooltipShadow};`,
       formatter: axisTooltipFormatter({ tz: args.tz, formatValue: args.tooltipValue }),
     },
     legend: args.showLegend
@@ -178,7 +178,7 @@ export function makeOpsTimeseriesOption(args: {
       splitLine: {
         show: true,
         lineStyle: {
-          color: t.grid || t.faint || "rgba(0,0,0,0.06)",
+          color: t.grid || t.faint,
           width: 1,
           type: "solid",
           opacity: 0.6,

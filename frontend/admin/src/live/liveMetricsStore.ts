@@ -58,7 +58,7 @@ export function applyLiveEvent(
     };
     if (!prev) {
       // No baseline yet – treat as snapshot.
-      return payload && (payload as any).nodes ? normalizeSnapshot(payload as any) : prev;
+      return payload && typeof payload === "object" && payload.nodes ? normalizeSnapshot(payload) : prev;
     }
     const nextNodes = { ...prev.nodes };
     if (payload.nodes && typeof payload.nodes === "object") {
@@ -90,34 +90,48 @@ export function applyLiveEvent(
   return prev;
 }
 
-function normalizeSnapshot(raw: any): LiveClusterState {
-  const ts = typeof raw.ts === "number" ? raw.ts : Date.now() / 1000;
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" ? (value as Record<string, unknown>) : null;
+}
+
+function normalizeSnapshot(raw: unknown): LiveClusterState {
+  const record = asRecord(raw);
+  const summaryRecord = asRecord(record?.summary);
+  const ts = typeof record?.ts === "number" ? record.ts : Date.now() / 1000;
   const summary: LiveClusterSummary = {
-    total_nodes: raw.summary?.total_nodes ?? 0,
-    online_nodes: raw.summary?.online_nodes ?? 0,
-    degraded_nodes: raw.summary?.degraded_nodes ?? 0,
-    down_nodes: raw.summary?.down_nodes ?? 0,
-    total_peers: raw.summary?.total_peers ?? 0,
-    total_rx_bytes: raw.summary?.total_rx_bytes ?? 0,
-    total_tx_bytes: raw.summary?.total_tx_bytes ?? 0,
-    stale_nodes: raw.summary?.stale_nodes ?? 0,
+    total_nodes: typeof summaryRecord?.total_nodes === "number" ? summaryRecord.total_nodes : 0,
+    online_nodes: typeof summaryRecord?.online_nodes === "number" ? summaryRecord.online_nodes : 0,
+    degraded_nodes:
+      typeof summaryRecord?.degraded_nodes === "number" ? summaryRecord.degraded_nodes : 0,
+    down_nodes: typeof summaryRecord?.down_nodes === "number" ? summaryRecord.down_nodes : 0,
+    total_peers: typeof summaryRecord?.total_peers === "number" ? summaryRecord.total_peers : 0,
+    total_rx_bytes:
+      typeof summaryRecord?.total_rx_bytes === "number" ? summaryRecord.total_rx_bytes : 0,
+    total_tx_bytes:
+      typeof summaryRecord?.total_tx_bytes === "number" ? summaryRecord.total_tx_bytes : 0,
+    stale_nodes: typeof summaryRecord?.stale_nodes === "number" ? summaryRecord.stale_nodes : 0,
   };
   const nodes: Record<string, LiveNodeState> = {};
-  if (raw.nodes && typeof raw.nodes === "object") {
-    for (const [id, node] of Object.entries<any>(raw.nodes)) {
+  const nodesRecord = asRecord(record?.nodes);
+  if (nodesRecord) {
+    for (const [id, rawNode] of Object.entries(nodesRecord)) {
+      const node = asRecord(rawNode) ?? {};
+      const incidentFlags = Array.isArray(node.incident_flags)
+        ? node.incident_flags.filter((flag): flag is string => typeof flag === "string")
+        : [];
       nodes[id] = {
-        node_id: node.node_id ?? id,
-        name: node.name ?? null,
-        region: node.region ?? null,
-        status: node.status ?? "unknown",
-        heartbeat_age_s: node.heartbeat_age_s ?? null,
-        peer_count: node.peer_count ?? null,
-        rx_bytes: node.rx_bytes ?? null,
-        tx_bytes: node.tx_bytes ?? null,
-        cpu_pct: node.cpu_pct ?? null,
-        ram_pct: node.ram_pct ?? null,
+        node_id: typeof node.node_id === "string" ? node.node_id : id,
+        name: typeof node.name === "string" ? node.name : null,
+        region: typeof node.region === "string" ? node.region : null,
+        status: typeof node.status === "string" ? node.status : "unknown",
+        heartbeat_age_s: typeof node.heartbeat_age_s === "number" ? node.heartbeat_age_s : null,
+        peer_count: typeof node.peer_count === "number" ? node.peer_count : null,
+        rx_bytes: typeof node.rx_bytes === "number" ? node.rx_bytes : null,
+        tx_bytes: typeof node.tx_bytes === "number" ? node.tx_bytes : null,
+        cpu_pct: typeof node.cpu_pct === "number" ? node.cpu_pct : null,
+        ram_pct: typeof node.ram_pct === "number" ? node.ram_pct : null,
         stale: Boolean(node.stale),
-        incident_flags: Array.isArray(node.incident_flags) ? node.incident_flags : [],
+        incident_flags: incidentFlags,
       };
     }
   }
@@ -125,8 +139,7 @@ function normalizeSnapshot(raw: any): LiveClusterState {
     ts,
     summary,
     nodes,
-    mode: raw.mode ?? "normal",
-    degradation_reason: raw.degradation_reason ?? null,
+    mode: typeof record?.mode === "string" ? record.mode : "normal",
+    degradation_reason: typeof record?.degradation_reason === "string" ? record.degradation_reason : null,
   };
 }
-

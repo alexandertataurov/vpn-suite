@@ -1,0 +1,41 @@
+import { Meta } from "@storybook/blocks";
+
+<Meta title="Components/Breadcrumbs" />
+
+# Breadcrumb
+
+## Purpose
+Breadcrumb navigation trail.
+
+**When to use:** Deep page hierarchies.
+
+**When not to use:** Single-level pages.
+
+## API (Props)
+
+| Prop | Type |
+| --- | --- |
+| items | `{ label: string; to?: string }[]` |
+| separator? | `string` |
+| lastAsTitle? | `boolean` |
+
+## Examples
+
+```tsx
+<Breadcrumb items={[{ label: "Home", to: "/" }]} />
+```
+
+## Design Tokens Used
+- Typography: `--text-*`
+- Spacing: `--spacing-*`
+- Colors: `--color-*`
+- Radius: `--radius-*`
+
+## Anti-patterns
+- Inline styles or arbitrary pixel values.
+- Using component for unrelated semantics.
+
+## Accessibility
+- Provide labels and aria attributes as needed.
+- Ensure focus visibility and keyboard access.
+

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import { Button, Skeleton } from "@vpn-suite/shared/ui";
+import { Button, Skeleton } from "@/design-system";
 import { ApiError } from "@vpn-suite/shared/types";
 
 type Props = {

@@ -1,0 +1,43 @@
+import { Meta } from "@storybook/blocks";
+
+<Meta title="Primitives/Skeleton" />
+
+# LoadingSkeleton
+
+## Purpose
+Loading placeholder for content blocks.
+
+**When to use:** Async states while data loads.
+
+**When not to use:** Long waits without progress messaging.
+
+## API (Props)
+
+| Prop | Type |
+| --- | --- |
+| variant? | `"default"` | "line" | "card" | "list" | "shimmer" |
+| width? | `string` | number |
+| height? | `string` | number |
+| className? | `string` |
+| nativeProps | `HTMLAttributes<HTMLDivElement>` |
+
+## Examples
+
+```tsx
+<LoadingSkeleton width="var(--spacing-32)" height="var(--spacing-6)" />
+```
+
+## Design Tokens Used
+- Typography: `--text-*`
+- Spacing: `--spacing-*`
+- Colors: `--color-*`
+- Radius: `--radius-*`
+
+## Anti-patterns
+- Inline styles or arbitrary pixel values.
+- Using component for unrelated semantics.
+
+## Accessibility
+- Provide labels and aria attributes as needed.
+- Ensure focus visibility and keyboard access.
+

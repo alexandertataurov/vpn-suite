@@ -1,0 +1,40 @@
+import { Meta } from "@storybook/blocks";
+
+<Meta title="Foundations/Overview" />
+
+# Design Philosophy
+
+Foundations are the **operating system** of the design system. They are structured in three layers: **primitives**, **semantics**, and **usage contracts**.
+
+## Architecture
+
+### Layer 1 — Primitives
+
+Raw building blocks. **Not for direct use in components.**
+
+- Color ramps (gray, primary, success, warning, error)
+- Typography scale (font-size, weight, line-height)
+- Spacing scale (0–64)
+- Radius, shadow, z-index, motion
+
+### Layer 2 — Semantic System
+
+Meaningful tokens derived from primitives. **Use these in components.**
+
+- `--color-background-primary`, `--color-text-primary`
+- `--color-interactive-default`, `--color-border-subtle`
+- `--spacing-component-padding`, `--radius-card`
+
+### Layer 3 — Usage Contracts
+
+When to use, when not to use, anti-patterns, component mappings.
+
+See each foundation page for usage contracts and real examples.
+
+## Rules
+
+1. **No raw hex** — use tokens only
+2. **No primitives in components** — use semantic tokens
+3. **Theme-aware** — tokens adapt to dark/light/dim via `data-theme`
+
+See [FOUNDATIONS_GOVERNANCE.md](/docs/FOUNDATIONS_GOVERNANCE.md) for full governance.

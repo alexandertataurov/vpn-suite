@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { Modal, Button, Input, useToast, CopyButton, CodeBlock, QrPanel, Text, HelperText } from "@vpn-suite/shared/ui";
+import { Modal, Button, Input, useToast, CopyButton, CodeBlock, QrPanel, Text, HelperText } from "@/design-system";
 import type {
   AdminIssuePeerRequest,
   AdminIssuePeerResponse,

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { ServersToolbar } from "./ServersToolbar";
-import { FilterBar } from "../FilterBar";
+import { FilterBar } from "../toolbar/FilterBar";
 
 const STATUS_OPTIONS = [
   { value: "all", label: "All statuses" },

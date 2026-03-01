@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Heading, Text } from "@vpn-suite/shared/ui";
+import { Heading, Text } from "@/design-system";
 
 export interface SectionHeaderProps {
   title: string;

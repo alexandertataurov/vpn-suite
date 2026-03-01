@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { PageHeader } from "../components/PageHeader";
-import { MetricTile } from "../components/MetricTile";
-import { Panel, PanelHeader, PanelBody, Table, PrimitiveBadge, Button } from "@vpn-suite/shared/ui";
-import type { Column } from "@vpn-suite/shared/ui";
-import { Activity, ShieldCheck, TriangleAlert } from "lucide-react";
+import { CommandBar } from "@/components";
+import { MetricTile } from "@/design-system";
+import { Panel, PanelHeader, PanelBody, Table, PrimitiveBadge, Button } from "@/design-system";
+import type { Column } from "@/design-system";
+import { IconTelemetry, IconShieldCheck, IconTriangleAlert } from "@/design-system/icons";
 
 interface ActivityRow {
   id: string;
@@ -46,15 +46,15 @@ type Story = StoryObj;
 export const Overview: Story = {
   render: () => (
     <div className="sb-stack">
-      <PageHeader
-        title="Dashboard"
+      <CommandBar
+        title="DASHBOARD"
         description="Operator overview of system health and activity."
         primaryAction={<Button>Add report</Button>}
       />
       <div className="sb-grid" data-columns="3">
-        <MetricTile label="Active sessions" value={1823} trend={{ value: 3.2, direction: "up" }} icon={Activity} />
-        <MetricTile label="Compliance" value={"99.9"} unit="%" state="success" icon={ShieldCheck} />
-        <MetricTile label="Incidents" value={2} state="warning" icon={TriangleAlert} />
+        <MetricTile label="Active sessions" value={1823} trend={{ value: 3.2, direction: "up" }} icon={IconTelemetry} />
+        <MetricTile label="Compliance" value={"99.9"} unit="%" state="success" icon={IconShieldCheck} />
+        <MetricTile label="Incidents" value={2} state="warning" icon={IconTriangleAlert} />
       </div>
       <Panel>
         <PanelHeader title="Recent activity" actions={<Button variant="secondary" size="sm">View all</Button>} />
@@ -69,8 +69,8 @@ export const Overview: Story = {
 export const Variants: Story = {
   render: () => (
     <div className="sb-stack">
-      <PageHeader
-        title="Dashboard"
+      <CommandBar
+        title="DASHBOARD"
         description="Operator overview of system health and activity."
         primaryAction={<Button>Add report</Button>}
       />
@@ -86,7 +86,7 @@ export const Sizes: Story = {
   render: () => (
     <div className="sb-stack">
       <p className="m-0">Reference layout only; size variants are not exposed.</p>
-      <PageHeader title="Dashboard" description="Operator overview." />
+      <CommandBar title="DASHBOARD" description="Operator overview." />
     </div>
   ),
 };
@@ -94,7 +94,7 @@ export const Sizes: Story = {
 export const States: Story = {
   render: () => (
     <div className="sb-stack">
-      <PageHeader title="Dashboard" description="Operator overview." />
+      <CommandBar title="DASHBOARD" description="Operator overview." />
       <Panel>
         <PanelHeader title="Recent activity" />
         <PanelBody>
@@ -108,8 +108,8 @@ export const States: Story = {
 export const WithLongText: Story = {
   render: () => (
     <div className="sb-stack">
-      <PageHeader
-        title="Dashboard for the primary and secondary regions with extended context"
+      <CommandBar
+        title="DASHBOARD FOR THE PRIMARY AND SECONDARY REGIONS"
         description="Operator overview of system health and activity across multiple regions and environments."
       />
     </div>
@@ -120,7 +120,7 @@ export const DarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   render: () => (
     <div className="sb-stack">
-      <PageHeader title="Dashboard" description="Operator overview." />
+      <CommandBar title="DASHBOARD" description="Operator overview." />
     </div>
   ),
 };
@@ -128,7 +128,7 @@ export const DarkMode: Story = {
 export const Accessibility: Story = {
   render: () => (
     <div className="sb-stack">
-      <PageHeader title="Dashboard" description="Operator overview." />
+      <CommandBar title="DASHBOARD" description="Operator overview." />
     </div>
   ),
 };

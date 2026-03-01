@@ -1,0 +1,41 @@
+import { Meta } from "@storybook/blocks";
+
+<Meta title="Primitives/VisuallyHidden" />
+
+# VisuallyHidden
+
+## Purpose
+Screen-reader-only text.
+
+**When to use:** Icon-only buttons or decorative icons.
+
+**When not to use:** Hidden interactive content.
+
+## API (Props)
+
+| Prop | Type |
+| --- | --- |
+| children | `ReactNode` |
+| className? | `string` |
+| as? | `"span"` | "div" |
+
+## Examples
+
+```tsx
+<VisuallyHidden>Close</VisuallyHidden>
+```
+
+## Design Tokens Used
+- Typography: `--text-*`
+- Spacing: `--spacing-*`
+- Colors: `--color-*`
+- Radius: `--radius-*`
+
+## Anti-patterns
+- Inline styles or arbitrary pixel values.
+- Using component for unrelated semantics.
+
+## Accessibility
+- Ensure semantic elements and labels when needed.
+- Keep keyboard navigation predictable.
+

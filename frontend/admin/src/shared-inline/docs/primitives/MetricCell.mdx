@@ -1,0 +1,43 @@
+import { Meta } from "@storybook/blocks";
+
+<Meta title="Primitives/MetricCell" />
+
+# MetricCell
+
+## Purpose
+Right-aligned numeric table cell with tabular numbers.
+
+**When to use:** Counts, currency, metrics in tables.
+
+**When not to use:** Non-numeric text or multi-line content.
+
+## API (Props)
+
+| Prop | Type |
+| --- | --- |
+| align? | `"left"` | "center" | "right" |
+| truncate? | `boolean` |
+| numeric? | `boolean` |
+| mono? | `boolean` |
+| nativeProps | `TdHTMLAttributes<HTMLTableCellElement>` |
+
+## Examples
+
+```tsx
+<MetricCell>12,345</MetricCell>
+```
+
+## Design Tokens Used
+- Typography: `--text-*`
+- Spacing: `--spacing-*`
+- Colors: `--color-*`
+- Radius: `--radius-*`
+
+## Anti-patterns
+- Inline styles or arbitrary pixel values.
+- Using component for unrelated semantics.
+
+## Accessibility
+- Provide labels and aria attributes as needed.
+- Ensure focus visibility and keyboard access.
+

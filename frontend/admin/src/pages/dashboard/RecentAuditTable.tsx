@@ -2,7 +2,8 @@ import { useMemo } from "react";
 import { formatDateTime, getErrorMessage } from "@vpn-suite/shared";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Panel, Table, Skeleton, EmptyState, ErrorState } from "@vpn-suite/shared/ui";
+import { Card, Table, Skeleton, ErrorState } from "@/design-system";
+import { EmptyState, Heading } from "@/design-system";
 import type { AuditLogList, AuditLogOut } from "@vpn-suite/shared/types";
 import { ApiError } from "@vpn-suite/shared/types";
 import { api } from "../../api/client";
@@ -64,17 +65,17 @@ export function RecentAuditTable({ limit = 10 }: RecentAuditTableProps) {
 
   if (isLoading) {
     return (
-      <Panel as="section" variant="outline" aria-label="Recent audit" data-testid="dashboard-recent-audit">
-        <h3 className="ref-settings-title">Recent audit</h3>
+      <Card as="section" variant="outline" aria-label="Recent audit" data-testid="dashboard-recent-audit">
+        <Heading level={3} className="ref-settings-title">Recent audit</Heading>
         <Skeleton height={120} />
-      </Panel>
+      </Card>
     );
   }
 
   if (error) {
     return (
-      <Panel as="section" variant="outline" aria-label="Recent audit" data-testid="dashboard-recent-audit">
-        <h3 className="ref-settings-title">Recent audit</h3>
+      <Card as="section" variant="outline" aria-label="Recent audit" data-testid="dashboard-recent-audit">
+        <Heading level={3} className="ref-settings-title">Recent audit</Heading>
         <ErrorState
           title="Failed to load"
           message={getErrorMessage(error, "Unknown error")}
@@ -84,16 +85,16 @@ export function RecentAuditTable({ limit = 10 }: RecentAuditTableProps) {
         <p className="ref-chart-subtitle">
           <Link to="/audit">View audit log</Link>
         </p>
-      </Panel>
+      </Card>
     );
   }
 
   const items = data?.items ?? [];
 
   return (
-    <Panel as="section" variant="outline" aria-label="Recent audit" data-testid="dashboard-recent-audit">
+    <Card as="section" variant="outline" aria-label="Recent audit" data-testid="dashboard-recent-audit">
       <div className="dashboard-widget-header">
-        <h3 className="ref-settings-title">Recent audit</h3>
+        <Heading level={3} className="ref-settings-title">Recent audit</Heading>
         <Link to="/audit" className="ref-link">
           View details
         </Link>
@@ -113,6 +114,6 @@ export function RecentAuditTable({ limit = 10 }: RecentAuditTableProps) {
           density="compact"
         />
       )}
-    </Panel>
+    </Card>
   );
 }

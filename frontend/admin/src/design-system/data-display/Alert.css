@@ -1,0 +1,8 @@
+.ds-alert { padding: var(--space-4); border: 1px solid; border-radius: 0; }
+.ds-alert__title { font-family: var(--font-display); font-size: var(--text-sm); font-weight: 600; }
+.ds-alert__message { margin-top: var(--space-1); font-size: var(--text-sm); }
+.ds-alert__actions { margin-top: var(--space-3); }
+.ds-alert--nominal { color: var(--color-nominal-bright); background: var(--color-nominal-dim); border-color: var(--color-nominal-bright); }
+.ds-alert--warning { color: var(--color-warning-bright); background: var(--color-warning-dim); border-color: var(--color-warning-bright); }
+.ds-alert--critical { color: var(--color-critical-bright); background: var(--color-critical-dim); border-color: var(--color-critical-bright); }
+.ds-alert--info { color: var(--color-accent); background: var(--color-accent-dim); border-color: var(--color-accent-border); }

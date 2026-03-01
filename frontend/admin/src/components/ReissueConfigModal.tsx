@@ -1,4 +1,4 @@
-import { Modal, Button, CopyButton, CodeBlock, QrPanel, Text, HelperText } from "@vpn-suite/shared/ui";
+import { Modal, Button, CopyButton, CodeBlock, QrPanel, Text, HelperText } from "@/design-system";
 import type { AdminRotatePeerResponse, DeviceOut } from "@vpn-suite/shared/types";
 
 function reissueQrLevel(payload: string): "L" | "M" | "H" {

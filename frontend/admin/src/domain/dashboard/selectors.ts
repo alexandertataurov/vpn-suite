@@ -170,7 +170,7 @@ export function selectTimeseriesForChart(
     lastBpsValue != null ? `${formatBytes(lastBpsValue)}/s` : "—";
 
   const lastLatencyVal =
-    latencyMsSeries.length > 0 ? latencyMsSeries[latencyMsSeries.length - 1][1] : null;
+    latencyMsSeries.length > 0 ? latencyMsSeries[latencyMsSeries.length - 1]?.[1] ?? null : null;
   let lastLatencyStr = "—";
   if (lastLatencyVal != null) {
     const v = lastLatencyVal;

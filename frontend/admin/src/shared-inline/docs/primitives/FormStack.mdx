@@ -1,0 +1,38 @@
+import { Meta } from "@storybook/blocks";
+
+<Meta title="Primitives/Forms/FormStack" />
+
+# FormStack
+
+## Purpose
+Vertical stacking container for form fields with consistent spacing.
+
+**When to use:** Forms with multiple fields.
+
+**When not to use:** Non-form layout sections (use Stack).
+
+## API (Props)
+
+| Prop | Type |
+| --- | --- |
+| children | `ReactNode` |
+| nativeProps | `HTMLAttributes<HTMLDivElement>` |
+
+## Examples
+
+```tsx
+<FormStack>
+  <Field label="Name">...</Field>
+  <Field label="Email">...</Field>
+</FormStack>
+```
+
+## Design Tokens Used
+- Spacing: `--spacing-*`
+
+## Anti-patterns
+- Inline styles or arbitrary pixel values.
+- Mixing non-form content in the stack.
+
+## Accessibility
+- Maintain logical tab order for form controls.

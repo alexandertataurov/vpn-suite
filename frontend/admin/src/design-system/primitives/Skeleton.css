@@ -1,0 +1,40 @@
+.ds-skeleton {
+  background: var(--color-overlay);
+  animation: ds-skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+.ds-skeleton--line {
+  height: 1em;
+  min-width: 4em;
+}
+
+.ds-skeleton--block {
+  min-width: 4em;
+  min-height: 4em;
+}
+
+.ds-skeleton--card {
+  border-radius: var(--radius-sm);
+  min-width: 6em;
+  min-height: 4em;
+}
+
+.ds-skeleton--list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.ds-skeleton--shimmer {
+  animation: ds-skeleton-shimmer 1.25s ease-in-out infinite;
+}
+
+.ds-skeleton--circle {
+  border-radius: 50%;
+  aspect-ratio: 1;
+}
+
+@keyframes ds-skeleton-shimmer {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}

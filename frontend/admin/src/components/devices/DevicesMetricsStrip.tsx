@@ -1,4 +1,4 @@
-import { AlertTriangle } from "lucide-react";
+import { IconWarning } from "@/design-system/icons";
 import type { DeviceSummaryOut } from "@vpn-suite/shared/types";
 
 export type DevicesQuickFilter = "handshake_ok" | "no_handshake" | "traffic_zero" | "no_allowed_ips" | null;
@@ -34,7 +34,7 @@ export function DevicesMetricsStrip({
       onClick={() => onQuickFilterChange(quickFilter === filter ? null : filter)}
       aria-pressed={quickFilter === filter}
     >
-      {warn ? <AlertTriangle aria-hidden size={12} /> : null}
+      {warn ? <IconWarning aria-hidden size={12} strokeWidth={1.5} /> : null}
       {label}: <strong>{count}</strong>
     </button>
   );

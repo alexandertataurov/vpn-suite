@@ -2,7 +2,7 @@
  * Per-card partial/degraded data banner. Explains why data is partial and offers actions.
  */
 import type { ReactNode } from "react";
-import { InlineAlert } from "@vpn-suite/shared/ui";
+import { InlineAlert } from "@/design-system";
 
 export interface PartialDataBannerProps {
   variant?: "info" | "warning" | "error";

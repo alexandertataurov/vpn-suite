@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
-import { Panel } from "@vpn-suite/shared/ui";
+import { Card } from "@/design-system";
+import { FormActions, Heading } from "@/design-system";
 
 export interface TelemetrySectionProps {
   title: ReactNode;
@@ -19,21 +20,20 @@ export function TelemetrySection({
   className,
 }: TelemetrySectionProps) {
   return (
-    <Panel
+    <Card
       as="section"
       variant="outline"
       aria-label={ariaLabel}
       className={className}
     >
       <div className="ref-section-head">
-        <h3 className="ref-settings-title">{title}</h3>
-        {actions ? <div className="ref-page-actions">{actions}</div> : null}
+        <Heading level={3} className="ref-settings-title">{title}</Heading>
+        {actions ? <FormActions>{actions}</FormActions> : null}
       </div>
       {description ? (
         <p className="ref-settings-text">{description}</p>
       ) : null}
       {children}
-    </Panel>
+    </Card>
   );
 }
-

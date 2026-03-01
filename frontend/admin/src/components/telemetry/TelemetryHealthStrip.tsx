@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { PrimitiveBadge } from "@vpn-suite/shared/ui";
+import { PrimitiveBadge } from "@/design-system";
 
 export type TelemetryHealthVariant = "success" | "warning" | "danger" | "info";
 

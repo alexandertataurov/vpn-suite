@@ -1,0 +1,15 @@
+.ds-copyable-id {
+  font-family: var(--font-data);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: color var(--duration-fast);
+  border-radius: 0;
+}
+
+.ds-copyable-id:hover {
+  color: var(--color-text-primary);
+}

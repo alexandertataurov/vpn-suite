@@ -1,0 +1,41 @@
+import { Meta } from "@storybook/blocks";
+
+<Meta title="Components/TableSection" />
+
+# TableSection
+
+## Purpose
+Panel wrapper for tables with header and optional pagination.
+
+**When to use:** Table sections on admin pages.
+
+**When not to use:** Non-tabular panels.
+
+## API (Props)
+
+| Prop | Type |
+| --- | --- |
+| title? | `ReactNode` |
+| actions? | `ReactNode` |
+| children | `ReactNode` |
+| pagination? | `{ offset: number; limit: number; total: number; onPage: (offset: number) => void }` |
+
+## Examples
+
+```tsx
+<TableSection title="Servers" pagination={{ offset, limit, total, onPage }}>
+  <Table />
+</TableSection>
+```
+
+## Design Tokens Used
+- Spacing: `--spacing-*`
+- Colors: `--color-*`
+- Radius: `--radius-*`
+
+## Anti-patterns
+- Inline styles or arbitrary pixel values.
+- Adding table-specific logic inside the wrapper.
+
+## Accessibility
+- Ensure table headers and labels are present.

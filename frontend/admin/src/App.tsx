@@ -1,10 +1,8 @@
 import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import { ToastContainer, Skeleton } from "@vpn-suite/shared/ui";
+import { ToastContainer, Skeleton } from "@/design-system";
 import { AdminLayout } from "./layouts/AdminLayout";
-import { ProtectedRoute } from "./components/ProtectedRoute";
-import { ErrorBoundary } from "./components/ErrorBoundary";
-import { TelemetryPageViewTracker } from "./components/TelemetryPageViewTracker";
+import { ProtectedRoute, ErrorBoundary, TelemetryPageViewTracker } from "@/components";
 
 const LoginPage = lazy(() => import("./pages/Login").then((m) => ({ default: m.LoginPage })));
 const DashboardPage = lazy(() => import("./pages/Dashboard").then((m) => ({ default: m.DashboardPage })));

@@ -3,11 +3,12 @@ import { ApiError } from "@vpn-suite/shared/types";
 /** Status-aware error message for telemetry UI. */
 export function getTelemetryErrorMessage(err: unknown, fallback = "Failed to load telemetry"): string {
   if (err instanceof ApiError) {
-    if (err.statusCode === 403) return "Permission denied. Requires telemetry:read.";
-    if (err.statusCode === 429) return "Rate limited. Please wait before retrying.";
-    if (err.statusCode === 503) return "Service unavailable. Telemetry backend may be down.";
-    if (err.code === "TIMEOUT") return "Request timed out. Check your connection.";
-    return err.message || fallback;
+    const e = err;
+    if (e.statusCode === 403) return "Permission denied. Requires telemetry:read.";
+    if (e.statusCode === 429) return "Rate limited. Please wait before retrying.";
+    if (e.statusCode === 503) return "Service unavailable. Telemetry backend may be down.";
+    if (e.code === "TIMEOUT") return "Request timed out. Check your connection.";
+    return e.message || fallback;
   }
   if (err instanceof Error) return err.message;
   return fallback;

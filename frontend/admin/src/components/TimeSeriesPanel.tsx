@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { cn } from "@vpn-suite/shared";
-import { PrimitiveBadge, Panel, PanelHeader, PanelBody, Skeleton, EmptyState, ErrorState } from "@vpn-suite/shared/ui";
+import { PrimitiveBadge, Card, PanelHeader, PanelBody, Skeleton, ErrorState } from "@/design-system";
+import { EmptyState, Heading } from "@/design-system";
 
 export type TimeSeriesPanelStatus = "live" | "stale" | "partial" | "loading" | "error" | "empty";
 
@@ -83,17 +84,17 @@ export function TimeSeriesPanel({
   }
 
   return (
-    <Panel as="section" variant="outline" className={cn("ref-timeseries-panel", className)} aria-label={title}>
+    <Card as="section" variant="outline" className={cn("ref-timeseries-panel", className)} aria-label={title}>
       <PanelHeader
         title={
           <>
-            <h3 className="ref-settings-title">{title}</h3>
+            <Heading level={3} className="ref-settings-title">{title}</Heading>
             {subtitle != null ? <p className="ref-chart-subtitle">{subtitle}</p> : null}
           </>
         }
         actions={headerActions}
       />
       <PanelBody>{body}</PanelBody>
-    </Panel>
+    </Card>
   );
 }

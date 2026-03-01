@@ -7,11 +7,31 @@ import { track } from "../telemetry";
 
 /** Dashboard/peers and other overview calls may be slow on high-latency links; use 30s. */
 const API_TIMEOUT_MS = 30_000;
+const TAB_CORRELATION_ID_KEY = "vpn-suite-admin-correlation-id";
 
-function genCorrelationId(): string {
+function genId(prefix: string): string {
   return typeof crypto !== "undefined" && crypto.randomUUID
     ? crypto.randomUUID()
-    : `req-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    : `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
+function getTabCorrelationId(): string {
+  if (typeof sessionStorage === "undefined") {
+    return genId("corr");
+  }
+  const existing = sessionStorage.getItem(TAB_CORRELATION_ID_KEY);
+  if (existing && existing.trim()) return existing;
+  const generated = genId("corr");
+  sessionStorage.setItem(TAB_CORRELATION_ID_KEY, generated);
+  return generated;
+}
+
+function genRequestId(): string {
+  return genId("req");
+}
+
+export function createIdempotencyKey(action: string, resourceId: string): string {
+  return `${action}:${resourceId}:${genId("idem")}`;
 }
 
 function withInstrumentation(base: ApiClient): ApiClient {
@@ -21,9 +41,11 @@ function withInstrumentation(base: ApiClient): ApiClient {
     init: RequestInit | undefined,
     fn: (headers: Headers) => Promise<T>
   ): Promise<T> => {
-    const correlationId = genCorrelationId();
+    const correlationId = getTabCorrelationId();
+    const requestId = genRequestId();
     const headers = new Headers(init?.headers);
-    headers.set("X-Request-ID", correlationId);
+    headers.set("X-Request-ID", requestId);
+    headers.set("X-Correlation-ID", correlationId);
     const start = performance.now();
     try {
       const result = await fn(headers);
@@ -33,6 +55,7 @@ function withInstrumentation(base: ApiClient): ApiClient {
           method,
           status: 200,
           duration_ms: Math.round(performance.now() - start),
+          request_id: requestId,
           correlation_id: correlationId,
         });
       } catch {
@@ -47,7 +70,8 @@ function withInstrumentation(base: ApiClient): ApiClient {
           path,
           method,
           code: code || (e instanceof Error ? e.message : "unknown"),
-          correlation_id: correlationId,
+          request_id: e instanceof ApiError ? e.requestId ?? requestId : requestId,
+          correlation_id: e instanceof ApiError ? e.correlationId ?? correlationId : correlationId,
         });
       } catch {
         /* noop */

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { MetricTile } from "./MetricTile";
-import { Activity, ShieldCheck, TriangleAlert } from "lucide-react";
+import { MetricTile } from "@/design-system";
+import { IconTelemetry, IconShieldCheck, IconTriangleAlert } from "@/design-system/icons";
 
 const meta: Meta<typeof MetricTile> = {
   title: "Patterns/MetricRow",
@@ -21,9 +21,9 @@ type Story = StoryObj<typeof MetricTile>;
 export const Overview: Story = {
   render: () => (
     <div className="sb-grid" data-columns="3">
-      <MetricTile label="Active sessions" value={1823} trend={{ value: 3.2, direction: "up" }} icon={Activity} />
-      <MetricTile label="Compliance" value={"99.9"} unit="%" state="success" icon={ShieldCheck} />
-      <MetricTile label="Incidents" value={2} state="warning" icon={TriangleAlert} />
+      <MetricTile label="Active sessions" value={1823} trend={{ value: 3.2, direction: "up" }} icon={IconTelemetry} />
+      <MetricTile label="Compliance" value={"99.9"} unit="%" state="success" icon={IconShieldCheck} />
+      <MetricTile label="Incidents" value={2} state="warning" icon={IconTriangleAlert} />
     </div>
   ),
 };
@@ -31,9 +31,9 @@ export const Overview: Story = {
 export const Variants: Story = {
   render: () => (
     <div className="sb-grid" data-columns="3">
-      <MetricTile label="Active sessions" value={1823} trend={{ value: 3.2, direction: "up" }} icon={Activity} />
-      <MetricTile label="Compliance" value={"99.9"} unit="%" state="success" icon={ShieldCheck} />
-      <MetricTile label="Incidents" value={2} state="warning" icon={TriangleAlert} />
+      <MetricTile label="Active sessions" value={1823} trend={{ value: 3.2, direction: "up" }} icon={IconTelemetry} />
+      <MetricTile label="Compliance" value={"99.9"} unit="%" state="success" icon={IconShieldCheck} />
+      <MetricTile label="Incidents" value={2} state="warning" icon={IconTriangleAlert} />
     </div>
   ),
 };
@@ -72,9 +72,9 @@ export const DarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   render: () => (
     <div className="sb-grid" data-columns="3">
-      <MetricTile label="Active sessions" value={1823} trend={{ value: 3.2, direction: "up" }} icon={Activity} />
-      <MetricTile label="Compliance" value={"99.9"} unit="%" state="success" icon={ShieldCheck} />
-      <MetricTile label="Incidents" value={2} state="warning" icon={TriangleAlert} />
+      <MetricTile label="Active sessions" value={1823} trend={{ value: 3.2, direction: "up" }} icon={IconTelemetry} />
+      <MetricTile label="Compliance" value={"99.9"} unit="%" state="success" icon={IconShieldCheck} />
+      <MetricTile label="Incidents" value={2} state="warning" icon={IconTriangleAlert} />
     </div>
   ),
 };

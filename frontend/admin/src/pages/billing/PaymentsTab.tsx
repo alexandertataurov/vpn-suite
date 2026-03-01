@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { formatDateTime, getErrorMessage, paymentStatusToVariant } from "@vpn-suite/shared";
-import { Table, PrimitiveBadge, Input, Button, PageError } from "@vpn-suite/shared/ui";
+import { CopyableId } from "@/design-system";
+import { Table, PrimitiveBadge, Input, Button, PageError } from "@/design-system";
 import type { PaymentOut, PaymentList } from "@vpn-suite/shared/types";
 import { ApiError } from "@vpn-suite/shared/types";
 import { useQuery } from "@tanstack/react-query";
 import { PAYMENTS_KEY } from "../../api/query-keys";
 import { api } from "../../api/client";
-import { TableSection } from "../../components/TableSection";
-import { Toolbar } from "../../components/Toolbar";
+import { TableSection } from "@/components";
+import { Toolbar } from "@/components";
 
 const LIMIT = 20;
 
@@ -50,7 +51,7 @@ export function PaymentsTab() {
       truncate: true,
       mono: true,
       titleTooltip: (r: PaymentOut) => r.id,
-      render: (r: PaymentOut) => r.id.slice(0, 8),
+      render: (r: PaymentOut) => <CopyableId value={r.id} className="mono" />,
     },
     {
       key: "user_id",

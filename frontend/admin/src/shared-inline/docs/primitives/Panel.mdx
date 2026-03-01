@@ -1,0 +1,43 @@
+import { Meta } from "@storybook/blocks";
+
+<Meta title="Primitives/Panel" />
+
+# Panel
+
+## Purpose
+Surface container with consistent padding and border.
+
+**When to use:** Tables, forms, grouped content blocks.
+
+**When not to use:** Single-line items or inline layout (use Inline).
+
+## API (Props)
+
+| Prop | Type |
+| --- | --- |
+| as? | `ElementType` |
+| variant? | `"surface"` | "outline" |
+| padding? | `"sm"` | "md" | "lg" |
+| children | `ReactNode` |
+| nativeProps | `HTMLAttributes<HTMLDivElement>` |
+
+## Examples
+
+```tsx
+<PrimitivePanel padding="md">...</PrimitivePanel>
+```
+
+## Design Tokens Used
+- Typography: `--text-*`
+- Spacing: `--spacing-*`
+- Colors: `--color-*`
+- Radius: `--radius-*`
+
+## Anti-patterns
+- Inline styles or arbitrary pixel values.
+- Using component for unrelated semantics.
+
+## Accessibility
+- Provide labels and aria attributes as needed.
+- Ensure focus visibility and keyboard access.
+

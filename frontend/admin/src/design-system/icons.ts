@@ -1,0 +1,51 @@
+/**
+ * Starlink Visual DNA — Icon barrel.
+ * All icons: strokeWidth={1.5} (never 2). Use Lucide icons only.
+ * Import from here, never from 'lucide-react' directly.
+ */
+export type { LucideIcon } from "lucide-react";
+
+export {
+  LayoutDashboard as IconDashboard,
+  Server as IconServer,
+  Activity as IconTelemetry,
+  RefreshCw as IconRefresh,
+  RotateCcw as IconResync,
+  Plus as IconAdd,
+  Trash2 as IconDelete,
+  Pencil as IconEdit,
+  CreditCard as IconSubscriptions,
+  Users as IconUsers,
+  FileText as IconAuditLog,
+  Settings as IconSettings,
+  Bot as IconBot,
+  AlertTriangle as IconWarning,
+  ChevronLeft as IconChevronLeft,
+  ChevronRight as IconChevronRight,
+  ChevronDown as IconChevronDown,
+  MoreVertical as IconMoreVertical,
+  Smartphone as IconDevices,
+  Cpu as IconCpu,
+  ArrowUpRight as IconArrowUpRight,
+  TrendingUp as IconTrend,
+  Check as IconCheck,
+  X as IconClose,
+  Shield as IconShield,
+  Workflow as IconWorkflow,
+  Search as IconSearch,
+  Sun as IconSun,
+  Moon as IconMoon,
+  Palette as IconPalette,
+  Bell as IconBell,
+  ShieldCheck as IconShieldCheck,
+  TriangleAlert as IconTriangleAlert,
+  Grid3X3 as IconGrid3X3,
+  Play as IconPlay,
+  Square as IconSquare,
+  Pause as IconPause,
+  MapPin as IconMapPin,
+  Power as IconPower,
+  Copy as IconCopy,
+  ExternalLink as IconLink,
+  Wrench as IconWrench,
+} from "lucide-react";

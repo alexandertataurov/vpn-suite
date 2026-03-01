@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { PrimitiveBadge, RelativeTime } from "@vpn-suite/shared/ui";
+import { PrimitiveBadge, RelativeTime } from "@/design-system";
 import { api } from "../api/client";
 import { useResource } from "../hooks/useResource";
 

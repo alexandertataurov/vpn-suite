@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
-import { Pagination, Panel, PanelHeader, PanelBody } from "@vpn-suite/shared/ui";
+import { Card, PanelHeader, PanelBody } from "@/design-system";
+import { Heading, Pagination } from "@/design-system";
 
 export interface TableSectionProps {
   /** Optional title above the table */
@@ -24,9 +25,9 @@ export function TableSection({
   pagination,
 }: TableSectionProps) {
   return (
-    <Panel as="section" variant="outline" className="ref-table-section" aria-label={typeof title === "string" ? title : undefined}>
+    <Card as="section" variant="outline" className="ref-table-section" aria-label={typeof title === "string" ? title : undefined}>
       {title != null || actions != null ? (
-        <PanelHeader title={title != null ? <h3 className="ref-table-section-title">{title}</h3> : ""} actions={actions} />
+        <PanelHeader title={title != null ? <Heading level={3} className="ref-table-section-title">{title}</Heading> : ""} actions={actions} />
       ) : null}
       <PanelBody>
         {children}
@@ -39,6 +40,6 @@ export function TableSection({
           />
         )}
       </PanelBody>
-    </Panel>
+    </Card>
   );
 }

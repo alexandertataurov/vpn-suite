@@ -1,6 +1,6 @@
 import { useMemo } from "react";
-import { RefreshCw } from "lucide-react";
-import { Button, RelativeTime } from "@vpn-suite/shared/ui";
+import { IconRefresh } from "@/design-system/icons";
+import { Button, RelativeTime } from "@/design-system";
 import { EChart } from "../../charts/EChart";
 import { ChartFrame } from "../../charts/ChartFrame";
 import { makeOpsSparklineOption } from "../../charts/presets/opsSparkline";
@@ -93,7 +93,7 @@ export function ClusterHealthCharts({
         )}
         {onRefresh && (
           <Button variant="ghost" size="sm" onClick={onRefresh} aria-label="Refresh">
-            <RefreshCw size={14} strokeWidth={2} aria-hidden /> Refresh
+            <IconRefresh size={14} strokeWidth={1.5} aria-hidden /> Refresh
           </Button>
         )}
       </div>

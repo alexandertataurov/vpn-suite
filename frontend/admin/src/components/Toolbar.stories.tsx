@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { Button, Select } from "@vpn-suite/shared/ui";
-import { Toolbar } from "./Toolbar";
+import { Button, Select } from "@/design-system";
+import { Toolbar } from "./toolbar/Toolbar";
 
 const meta: Meta<typeof Toolbar> = {
   title: "Patterns/OperatorToolbar",

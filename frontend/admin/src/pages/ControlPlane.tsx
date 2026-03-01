@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { formatDateTime, getErrorMessage } from "@vpn-suite/shared";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Bot } from "lucide-react";
+import { IconBot } from "@/design-system/icons";
 import { getBaseUrl } from "@vpn-suite/shared/api-client";
-import { Button, Panel, Input, Checkbox, PageError, Skeleton, Table, useToast } from "@vpn-suite/shared/ui";
-import { MetricTile } from "../components/MetricTile";
-import { PageHeader } from "../components/PageHeader";
+import { Button, Card, Input, Checkbox, PageError, Skeleton, Table, useToast } from "@/design-system";
+import { Heading } from "@/design-system";
+import { MetricTile } from "@/design-system";
+import { DashboardPage } from "../templates/DashboardPage";
 import type {
   AnomalyMetricsOut,
   AutomationRunOut,
@@ -292,12 +293,7 @@ export function ControlPlanePage() {
 
   if (summaryQuery.error) {
     return (
-      <div className="ref-page" data-testid="automation-page">
-        <PageHeader icon={Bot} title="Automation" description="Control-plane orchestration and health">
-          <Button variant="secondary" size="sm" onClick={() => summaryQuery.refetch()} aria-label="Retry">
-            Retry
-          </Button>
-        </PageHeader>
+      <DashboardPage className="ref-page" data-testid="automation-page" title="AUTOMATION" description="Control-plane orchestration and health" icon={IconBot} primaryAction={<Button variant="secondary" size="sm" onClick={() => summaryQuery.refetch()} aria-label="Retry">Retry</Button>}>
         <PageError
           message={
             summaryQuery.error instanceof Error
@@ -309,13 +305,12 @@ export function ControlPlanePage() {
           endpoint="GET /control-plane/topology/summary"
           onRetry={() => summaryQuery.refetch()}
         />
-      </div>
+      </DashboardPage>
     );
   }
 
   return (
-    <div className="ref-page" data-testid="automation-page">
-      <PageHeader icon={Bot} title="Automation" description="Control-plane orchestration and health" />
+    <DashboardPage className="ref-page" data-testid="automation-page" title="AUTOMATION" description="Control-plane orchestration and health" icon={IconBot}>
 
       <div className="ref-stats-grid">
         <MetricTile
@@ -358,9 +353,9 @@ export function ControlPlanePage() {
       </div>
 
       <div className="ref-page-sections">
-        <Panel as="section" variant="outline" aria-label="Automation Engine">
+        <Card as="section" variant="outline" aria-label="Automation Engine">
           <div className="ref-section-head">
-            <h3 className="ref-settings-title">Automation Engine</h3>
+            <Heading level={3} className="ref-settings-title">Automation Engine</Heading>
           </div>
           <p className="text-muted">
             Mode: <strong>{automationStatusQuery.data?.enabled ? "enabled" : "disabled"}</strong> | interval {automationStatusQuery.data?.interval_seconds ?? 0}s | execute rebalance{" "}
@@ -472,11 +467,11 @@ export function ControlPlanePage() {
               </p>
             </div>
           ) : null}
-        </Panel>
+        </Card>
 
-        <Panel as="section" variant="outline" aria-label="Topology Graph">
+        <Card as="section" variant="outline" aria-label="Topology Graph">
           <div className="ref-section-head">
-            <h3 className="ref-settings-title">Topology Graph</h3>
+            <Heading level={3} className="ref-settings-title">Topology Graph</Heading>
           </div>
           {graphQuery.isLoading || !graphQuery.data || !graphLayout ? (
             <Skeleton height={180} />
@@ -532,11 +527,11 @@ export function ControlPlanePage() {
               </p>
             </div>
           )}
-        </Panel>
+        </Card>
 
-        <Panel as="section" variant="outline" aria-label="Recent Control-Plane Events">
+        <Card as="section" variant="outline" aria-label="Recent Control-Plane Events">
           <div className="ref-section-head">
-            <h3 className="ref-settings-title">Recent Control-Plane Events</h3>
+            <Heading level={3} className="ref-settings-title">Recent Control-Plane Events</Heading>
           </div>
           <p className="text-muted">
             Live stream: <strong>{wsConnected ? "connected" : "polling fallback"}</strong>
@@ -558,11 +553,11 @@ export function ControlPlanePage() {
           ) : (
             <p className="text-muted">No events yet</p>
           )}
-        </Panel>
+        </Card>
 
-        <Panel as="section" variant="outline" aria-label="Business Metrics (30d)">
+        <Card as="section" variant="outline" aria-label="Business Metrics (30d)">
           <div className="ref-section-head">
-            <h3 className="ref-settings-title">Business Metrics (30d)</h3>
+            <Heading level={3} className="ref-settings-title">Business Metrics (30d)</Heading>
           </div>
           {businessQuery.isLoading || !businessQuery.data ? (
             <Skeleton height={80} />
@@ -576,11 +571,11 @@ export function ControlPlanePage() {
               <dd>{asPercent(businessQuery.data.retention_d30)}</dd>
             </dl>
           )}
-        </Panel>
+        </Card>
 
-        <Panel as="section" variant="outline" aria-label="Security Metrics">
+        <Card as="section" variant="outline" aria-label="Security Metrics">
           <div className="ref-section-head">
-            <h3 className="ref-settings-title">Security Metrics</h3>
+            <Heading level={3} className="ref-settings-title">Security Metrics</Heading>
           </div>
           {securityQuery.isLoading ? (
             <Skeleton height={80} />
@@ -600,11 +595,11 @@ export function ControlPlanePage() {
           ) : (
             <Skeleton height={80} />
           )}
-        </Panel>
+        </Card>
 
-        <Panel as="section" variant="outline" aria-label="Anomaly Scoring (ML)">
+        <Card as="section" variant="outline" aria-label="Anomaly Scoring (ML)">
           <div className="ref-section-head">
-            <h3 className="ref-settings-title">Anomaly Scoring (ML)</h3>
+            <Heading level={3} className="ref-settings-title">Anomaly Scoring (ML)</Heading>
           </div>
           {anomalyQuery.isLoading ? (
             <Skeleton height={120} />
@@ -633,8 +628,8 @@ export function ControlPlanePage() {
           ) : (
             <p className="text-muted">No anomalies scored yet</p>
           )}
-        </Panel>
+        </Card>
       </div>
-    </div>
+    </DashboardPage>
   );
 }

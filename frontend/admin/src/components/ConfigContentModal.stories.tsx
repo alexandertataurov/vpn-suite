@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import type { Meta, StoryObj } from "@storybook/react";
-import { ConfigContentModal } from "./ConfigContentModal";
+import { ConfigContentModal } from "./overlays/ConfigContentModal";
 import { api } from "../api/client";
 
 const meta: Meta<typeof ConfigContentModal> = {

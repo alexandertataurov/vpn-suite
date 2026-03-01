@@ -1,0 +1,39 @@
+import { Meta } from "@storybook/blocks";
+
+<Meta title="Patterns/MetricRow" />
+
+# MetricRow
+
+## Purpose
+Row-based layout for compact metric summaries.
+
+**When to use:** Dense dashboards and telemetry rows.
+
+**When not to use:** Single metrics (use MetricTile).
+
+## API (Props)
+
+Use `MetricRow` composition built from MetricTile/Stat primitives.
+
+## Examples
+
+```tsx
+<MetricRow
+  items={[
+    { label: "Active", value: 128 },
+    { label: "Errors", value: 3 },
+  ]}
+/>
+```
+
+## Design Tokens Used
+- Spacing: `--spacing-*`
+- Colors: `--color-*`
+- Typography: `--text-*`
+
+## Anti-patterns
+- Mixing unrelated metrics in a single row.
+- Inline styles or arbitrary spacing.
+
+## Accessibility
+- Use descriptive labels and readable values.

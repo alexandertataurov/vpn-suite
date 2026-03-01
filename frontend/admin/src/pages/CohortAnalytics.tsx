@@ -1,9 +1,9 @@
 import { getBaseUrl } from "@vpn-suite/shared/api-client";
 import { useQuery } from "@tanstack/react-query";
-import { PageContainer, Skeleton, Button } from "@vpn-suite/shared/ui";
+import { PageContainer, Skeleton, Button } from "@/design-system";
 import { api } from "../api/client";
 import { useAuthStore } from "../store/authStore";
-import { PageHeader } from "../components/PageHeader";
+import { ListPage } from "../templates/ListPage";
 
 interface CohortRow {
   cohort_month: string;
@@ -57,8 +57,9 @@ export function CohortAnalyticsPage() {
   if (error) {
     return (
       <PageContainer>
-        <PageHeader title="Cohort Analytics" />
-        <p className="text-danger">{String(error)}</p>
+        <ListPage className="ref-page" title="COHORT ANALYTICS">
+          <p className="text-danger">{String(error)}</p>
+        </ListPage>
       </PageContainer>
     );
   }
@@ -66,18 +67,21 @@ export function CohortAnalyticsPage() {
   if (isLoading || !data) {
     return (
       <PageContainer>
-        <PageHeader title="Cohort Analytics" />
-        <Skeleton height={120} />
+        <ListPage className="ref-page" title="COHORT ANALYTICS">
+          <Skeleton height={120} />
+        </ListPage>
       </PageContainer>
     );
   }
 
   return (
     <PageContainer>
-      <PageHeader title="Cohort Retention">
+      <ListPage className="ref-page" title="COHORT RETENTION" primaryAction={
+        <>
         <Button variant="secondary" size="sm" onClick={handleExport}>Export CSV</Button>
         <Button variant="ghost" size="sm" onClick={handleExportPrometheus}>Export Prometheus</Button>
-      </PageHeader>
+        </>
+      }>
       <div className="card mt-3">
         <table className="table table-sm mb-0">
           <thead>
@@ -100,6 +104,7 @@ export function CohortAnalyticsPage() {
           </tbody>
         </table>
       </div>
+      </ListPage>
     </PageContainer>
   );
 }

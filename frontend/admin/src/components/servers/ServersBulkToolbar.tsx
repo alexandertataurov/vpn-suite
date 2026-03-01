@@ -3,8 +3,8 @@
  * Slides up with framer-motion when rows selected.
  */
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
-import { Text } from "@vpn-suite/shared/ui";
+import { IconClose } from "@/design-system/icons";
+import { Text } from "@/design-system";
 
 export interface ServersBulkToolbarProps {
   count: number;
@@ -128,7 +128,7 @@ export function ServersBulkToolbar({
             className="ml-auto p-1 rounded hover:bg-surface-raised text-text-muted hover:text-text-primary transition-colors"
             aria-label="Clear selection"
           >
-            <X size={16} />
+            <IconClose size={16} strokeWidth={1.5} />
           </button>
         </div>
       </motion.div>

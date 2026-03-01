@@ -1,0 +1,20 @@
+import { Meta } from "@storybook/blocks";
+
+<Meta title="Foundations/Governance" />
+
+# Governance
+
+Design system token rules. See `docs/FOUNDATIONS_GOVERNANCE.md` in the repo for full spec.
+
+## Rules
+
+1. **No raw hex** — use `var(--color-*)` only
+2. **No primitives in components** — use semantic tokens
+3. **Theme-aware** — tokens adapt to `data-theme`
+
+## Mapping
+
+`tokens-map.ts` defines:
+- **PRIMITIVES** — raw scales (do not use in components)
+- **SEMANTICS** — semantic tokens (use these)
+- **COMPONENT_TOKENS** — required mapping for each component

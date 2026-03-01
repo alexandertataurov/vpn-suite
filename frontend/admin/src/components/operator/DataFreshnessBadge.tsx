@@ -2,7 +2,7 @@
  * Telemetry-first freshness: badge + last updated + optional reason.
  * Use in every data card that has a freshness concept.
  */
-import { RelativeTime } from "@vpn-suite/shared/ui";
+import { RelativeTime } from "@/design-system";
 import { FreshnessBadge } from "./FreshnessBadge";
 import type { Freshness } from "../../domain/dashboard/types";
 
@@ -40,7 +40,7 @@ export function DataFreshnessBadge({
         {label}
       </FreshnessBadge>
       {lastUpdated && (
-        <span className="admin-live-updated operator-health-label" style={{ marginLeft: "var(--spacing-op-2, 8px)" }}>
+        <span className="admin-live-updated operator-health-label operator-health-label--updated">
           Updated <RelativeTime date={lastUpdated} updateInterval={5000} title={new Date(lastUpdated).toISOString()} />
         </span>
       )}

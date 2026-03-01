@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { PageContainer, Skeleton, Button, Modal, ConfirmDanger } from "@vpn-suite/shared/ui";
+import { PageContainer, Skeleton, Button, Modal, ConfirmDanger } from "@/design-system";
 import { api } from "../api/client";
-import { PageHeader } from "../components/PageHeader";
+import { ListPage } from "../templates/ListPage";
 
 interface PromoCampaign {
   id: string;
@@ -100,25 +100,27 @@ export function PromoCampaignsPage() {
   if (error) {
     return (
       <PageContainer>
-        <PageHeader title="Promo campaigns" />
-        <p className="text-danger">{String(error)}</p>
+        <ListPage className="ref-page" title="PROMO CAMPAIGNS">
+          <p className="text-danger">{String(error)}</p>
+        </ListPage>
       </PageContainer>
     );
   }
   if (isLoading || !campaigns) {
     return (
       <PageContainer>
-        <PageHeader title="Promo campaigns" />
-        <Skeleton height={120} />
+        <ListPage className="ref-page" title="PROMO CAMPAIGNS">
+          <Skeleton height={120} />
+        </ListPage>
       </PageContainer>
     );
   }
 
   return (
     <PageContainer>
-      <PageHeader title="Promo campaigns">
+      <ListPage className="ref-page" title="PROMO CAMPAIGNS" primaryAction={
         <Button variant="secondary" size="sm" onClick={() => { setShowCreate(true); resetForm(); }}>New campaign</Button>
-      </PageHeader>
+      }>
       <div className="card mt-3">
         <table className="table table-sm mb-0">
           <thead>
@@ -178,7 +180,7 @@ export function PromoCampaignsPage() {
       <ConfirmDanger
         open={deleteId !== null}
         onClose={() => setDeleteId(null)}
-        onConfirm={(_payload) => {
+        onConfirm={() => {
           if (deleteId) deleteMutation.mutate(deleteId);
         }}
         title="Delete promo campaign"
@@ -187,6 +189,7 @@ export function PromoCampaignsPage() {
         cancelLabel="Cancel"
         loading={deleteMutation.isPending}
       />
+      </ListPage>
     </PageContainer>
   );
 }

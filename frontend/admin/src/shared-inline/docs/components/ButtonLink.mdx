@@ -1,0 +1,41 @@
+import { Meta } from "@storybook/blocks";
+
+<Meta title="Components/ButtonLink" />
+
+# ButtonLink
+
+## Purpose
+Link styled as button for navigation.
+
+**When to use:** Route navigation actions.
+
+**When not to use:** Form submissions (use Button).
+
+## API (Props)
+
+| Prop | Type |
+| --- | --- |
+| to | `string` |
+| variant? | `ButtonVariant` |
+| size? | `ButtonSize` |
+
+## Examples
+
+```tsx
+<ButtonLink to="/servers">Servers</ButtonLink>
+```
+
+## Design Tokens Used
+- Typography: `--text-*`
+- Spacing: `--spacing-*`
+- Colors: `--color-*`
+- Radius: `--radius-*`
+
+## Anti-patterns
+- Inline styles or arbitrary pixel values.
+- Using component for unrelated semantics.
+
+## Accessibility
+- Provide labels and aria attributes as needed.
+- Ensure focus visibility and keyboard access.
+

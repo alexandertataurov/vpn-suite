@@ -1,0 +1,44 @@
+import { Meta } from "@storybook/blocks";
+
+<Meta title="Components/QrPanel" />
+
+# QrPanel
+
+## Purpose
+QR code panel with copy/download actions.
+
+**When to use:** Sharing configuration or connection URLs.
+
+**When not to use:** Non-QR content.
+
+## API (Props)
+
+| Prop | Type |
+| --- | --- |
+| value | `string` |
+| size? | `number` |
+| downloadLabel? | `string` |
+| copyLabel? | `string` |
+| onDownload? | `() => void` |
+| onCopy? | `() => void` |
+
+## Examples
+
+```tsx
+<QrPanel value={config} />
+```
+
+## Design Tokens Used
+- Typography: `--text-*`
+- Spacing: `--spacing-*`
+- Colors: `--color-*`
+- Radius: `--radius-*`
+
+## Anti-patterns
+- Inline styles or arbitrary pixel values.
+- Using component for unrelated semantics.
+
+## Accessibility
+- Provide labels and aria attributes as needed.
+- Ensure focus visibility and keyboard access.
+

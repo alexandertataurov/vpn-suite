@@ -1,9 +1,12 @@
-import { useMemo } from "react";
-import { Link } from "react-router-dom";
-import { RefreshCw } from "lucide-react";
-import { Button, RelativeTime, Skeleton, EmptyTableState } from "@vpn-suite/shared/ui";
+import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { IconRefresh } from "@/design-system/icons";
+import { Button, RelativeTime, Skeleton, EmptyTableState } from "@/design-system";
+import type { ServerOut } from "@vpn-suite/shared/types";
+import { api } from "../../api/client";
 import type { ServerRowView } from "../../domain/dashboard/types";
 import { formatBytes } from "@vpn-suite/shared";
+import { ServerRowDrawer } from "../ServerRowDrawer";
 
 interface OperatorServerTableProps {
   rows: ServerRowView[];
@@ -49,6 +52,16 @@ const SKELETON_ROWS = 5;
 const COLS = 11;
 
 export function OperatorServerTable({ rows, onSync, loading, filter = "", onFilterChange }: OperatorServerTableProps) {
+  const [selectedServerId, setSelectedServerId] = useState<string | null>(null);
+
+  const serverQuery = useQuery<ServerOut>({
+    queryKey: ["servers", selectedServerId],
+    queryFn: ({ signal }) => api.get<ServerOut>(`/servers/${selectedServerId}`, { signal }),
+    enabled: !!selectedServerId,
+  });
+
+  const drawerServer = selectedServerId && serverQuery.data ? serverQuery.data : null;
+
   const filtered = useMemo(() => {
     if (!filter.trim()) return rows;
     const q = filter.trim().toLowerCase();
@@ -157,10 +170,21 @@ export function OperatorServerTable({ rows, onSync, loading, filter = "", onFilt
       </thead>
       <tbody>
         {filtered.map((r) => (
-          <tr key={r.id}>
-            <td>
-              <Link to={r.to}>{r.name}</Link>
-            </td>
+          <tr
+            key={r.id}
+            className="operator-server-row operator-server-row--clickable"
+            role="button"
+            tabIndex={0}
+            onClick={() => setSelectedServerId(r.id)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setSelectedServerId(r.id);
+              }
+            }}
+            aria-label={`Open details for ${r.name}`}
+          >
+            <td>{r.name}</td>
             <td>{r.region}</td>
             <td className="operator-cell-mono">{r.ip}</td>
             <td>
@@ -186,9 +210,9 @@ export function OperatorServerTable({ rows, onSync, loading, filter = "", onFilt
               </span>
             </td>
             {onSync && (
-              <td>
+              <td onClick={(e) => e.stopPropagation()}>
                 <Button variant="ghost" size="sm" onClick={() => onSync(r.id)} aria-label={`Sync ${r.name}`}>
-                  <RefreshCw size={14} strokeWidth={2} aria-hidden /> Sync
+                  <IconRefresh size={14} strokeWidth={1.5} aria-hidden /> Sync
                 </Button>
               </td>
             )}
@@ -196,6 +220,12 @@ export function OperatorServerTable({ rows, onSync, loading, filter = "", onFilt
         ))}
       </tbody>
     </table>
+    <ServerRowDrawer
+      server={drawerServer}
+      onClose={() => setSelectedServerId(null)}
+      peerCount={drawerServer ? rows.find((r) => r.id === drawerServer.id)?.users ?? 0 : 0}
+      onRestart={onSync ? (s) => onSync(s.id) : undefined}
+    />
     </div>
   );
 }

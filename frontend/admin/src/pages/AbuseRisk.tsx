@@ -1,9 +1,9 @@
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Skeleton, Button, ConfirmModal, ConfirmDanger } from "@vpn-suite/shared/ui";
+import { Skeleton, Button, ConfirmModal, ConfirmDanger } from "@/design-system";
 import { api } from "../api/client";
-import { PageHeader } from "../components/PageHeader";
+import { ListPage } from "../templates/ListPage";
 
 interface AbuseSignal {
   id: string;
@@ -78,25 +78,22 @@ export function AbuseRiskPage() {
 
   if (error) {
     return (
-      <div className="ref-page">
-        <PageHeader title="Abuse & Risk" />
+      <ListPage className="ref-page" title="ABUSE & RISK">
         <p className="text-danger">{String(error)}</p>
-      </div>
+      </ListPage>
     );
   }
 
   if (isLoading || !data) {
     return (
-      <div className="ref-page">
-        <PageHeader title="Abuse & Risk" />
+      <ListPage className="ref-page" title="ABUSE & RISK">
         <Skeleton height={120} />
-      </div>
+      </ListPage>
     );
   }
 
   return (
-    <div className="ref-page" data-testid="abuse-risk-page">
-      <PageHeader title="Abuse & Risk">
+    <ListPage className="ref-page" data-testid="abuse-risk-page" title="ABUSE & RISK" primaryAction={
         <Button
           variant="secondary"
           size="sm"
@@ -105,7 +102,7 @@ export function AbuseRiskPage() {
         >
           Run detection
         </Button>
-      </PageHeader>
+      } filterBar={
       <div className="d-flex flex-wrap gap-2 align-items-center mb-3">
         <span className="text-muted small">Filters:</span>
         <select
@@ -123,14 +120,14 @@ export function AbuseRiskPage() {
         </select>
         <input
           type="number"
-          className="form-control form-control-sm"
-          style={{ width: 100 }}
+          className="form-control form-control-sm ref-input-width-100"
           placeholder="User ID"
           value={filterUserId}
           onChange={(e) => { setFilterUserId(e.target.value); setPage(0); }}
         />
         <span className="text-muted small">Total: {data.total}</span>
       </div>
+      }>
       <div className="card mt-3">
         <table className="table table-sm mb-0">
           <thead>
@@ -211,7 +208,7 @@ export function AbuseRiskPage() {
       <ConfirmDanger
         open={actionSignalId !== null && actionType !== null}
         onClose={() => { setActionSignalId(null); setActionType(null); }}
-        onConfirm={(_payload) => {
+        onConfirm={() => {
           if (actionSignalId && actionType) actionMutation.mutate({ id: actionSignalId, action: actionType });
         }}
         title={actionType === "ban_user" ? "Ban user" : "Revoke all devices"}
@@ -224,6 +221,6 @@ export function AbuseRiskPage() {
         cancelLabel="Cancel"
         loading={actionMutation.isPending}
       />
-    </div>
+    </ListPage>
   );
 }

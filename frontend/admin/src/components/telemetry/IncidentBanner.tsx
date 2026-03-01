@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Button } from "@vpn-suite/shared/ui";
+import { Button } from "@/design-system";
 import { useDockerHosts } from "../../hooks/useDockerTelemetry";
 import { useTelemetryServices } from "../../domain/telemetry/hooks/useMetricsTelemetry";
 import { useTelemetrySnapshotMeta } from "../../domain/telemetry/hooks/useSnapshotTelemetry";

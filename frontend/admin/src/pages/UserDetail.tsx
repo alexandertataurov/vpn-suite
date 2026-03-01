@@ -1,18 +1,24 @@
-import { useParams } from "react-router-dom";
-import { formatDate, getErrorMessage, userStatusToVariant } from "@vpn-suite/shared";
+import { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { formatDate, getErrorMessage } from "@vpn-suite/shared";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { userKey } from "../api/query-keys";
-import { Users } from "lucide-react";
-import { PrimitiveBadge, Button, Panel, Skeleton, useToast, PageError, EmptyTableState } from "@vpn-suite/shared/ui";
+import { userKey, USERS_KEY } from "../api/query-keys";
+import { IconUsers } from "@/design-system/icons";
+import { Button, Card, Skeleton, useToast, PageError, EmptyTableState, ConfirmModal } from "@/design-system";
+import { Heading } from "@/design-system";
+import { FormActions } from "@/design-system";
 import type { UserDetail as UserDetailType } from "@vpn-suite/shared/types";
 import { ApiError } from "@vpn-suite/shared/types";
 import { api } from "../api/client";
-import { PageHeader } from "../components/PageHeader";
+import { DetailPage } from "../templates/DetailPage";
+import { TelemetryBadge } from "@/components";
 
 export function UserDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { addToast } = useToast();
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   const { data, isLoading, error, refetch } = useQuery<UserDetailType>({
     queryKey: userKey(id!),
@@ -32,12 +38,24 @@ export function UserDetailPage() {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: () => api.request<void>(`/users/${id}`, { method: "DELETE" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: USERS_KEY });
+      addToast("User deleted", "success");
+      setDeleteConfirmOpen(false);
+      navigate("/users");
+    },
+    onError: (err) => {
+      addToast(getErrorMessage(err, "Delete failed"), "error");
+    },
+  });
+
   const activeSub = data?.subscriptions?.find((s) => s.effective_status === "active");
 
   if (error) {
     return (
-      <div className="ref-page" data-testid="user-detail-page">
-        <PageHeader backTo="/users" backLabel="Users" title={`User ${id}`} description="User profile and devices" />
+      <DetailPage className="ref-page" data-testid="user-detail-page" backTo="/users" backLabel="Users" title={`User ${id}`} description="User profile and devices">
         <PageError
           message={getErrorMessage(error, "Failed to load user")}
           requestId={error instanceof ApiError ? error.requestId : undefined}
@@ -45,44 +63,51 @@ export function UserDetailPage() {
           endpoint="GET /users/:id"
           onRetry={() => refetch()}
         />
-      </div>
+      </DetailPage>
     );
   }
 
   if (isLoading || !data) {
     return (
-      <div className="ref-page" data-testid="user-detail-page">
-        <PageHeader backTo="/users" backLabel="Users" title={`User ${id}`} description="User profile and devices" />
+      <DetailPage className="ref-page" data-testid="user-detail-page" backTo="/users" backLabel="Users" title={`User ${id}`} description="User profile and devices">
         <Skeleton variant="card" />
-      </div>
+      </DetailPage>
     );
   }
 
   return (
-    <div className="ref-page" data-testid="user-detail-page">
-      <PageHeader
-        backTo="/users"
-        backLabel="Users"
-        icon={Users}
-        title={`User ${data.id}`}
-        description="Profile and subscription state"
-      />
-
-      <Panel as="section" variant="outline">
-        <h3 className="ref-settings-title">Details</h3>
+    <DetailPage
+      className="ref-page"
+      data-testid="user-detail-page"
+      backTo="/users"
+      backLabel="Users"
+      icon={IconUsers}
+      title={`USER ${data.id}`}
+      description="Profile and subscription state"
+    >
+      <Card as="section" variant="outline">
+        <div className="ref-page-header">
+          <Heading level={3} className="ref-settings-title">Details</Heading>
+          <Button
+            variant="danger"
+            size="sm"
+            onClick={() => setDeleteConfirmOpen(true)}
+            disabled={deleteMutation.isPending}
+          >
+            Delete user
+          </Button>
+        </div>
         <p className="m-0"><strong>Telegram ID:</strong> {data.tg_id ?? "—"}</p>
         <p className="m-0"><strong>Email:</strong> {data.email ?? "—"}</p>
         <p className="m-0"><strong>Phone:</strong> {data.phone ?? "—"}</p>
         <p className="m-0">
           <strong>Status:</strong>{" "}
-          <PrimitiveBadge variant={userStatusToVariant(data.is_banned ? "banned" : "active")}>
-            {data.is_banned ? "Banned" : "Active"}
-          </PrimitiveBadge>
+          <TelemetryBadge variant={data.is_banned ? "no-signal" : "link-established"} />
         </p>
-      </Panel>
+      </Card>
 
-      <Panel as="section" variant="outline">
-        <h3 className="ref-settings-title">Subscriptions</h3>
+      <Card as="section" variant="outline">
+        <Heading level={3} className="ref-settings-title">Subscriptions</Heading>
         {data.subscriptions?.length ? (
           <ul className="m-0 pl-lg">
             {data.subscriptions.map((s) => (
@@ -98,12 +123,12 @@ export function UserDetailPage() {
             description="This user has no active or historical subscriptions."
           />
         )}
-      </Panel>
+      </Card>
 
-      <Panel as="section" variant="outline">
+      <Card as="section" variant="outline">
         <div className="ref-page-header">
-          <h3 className="ref-settings-title">Devices</h3>
-          <div className="ref-page-actions">
+          <Heading level={3} className="ref-settings-title">Devices</Heading>
+          <FormActions>
             <Button
               size="sm"
               disabled={!activeSub || issueMutation.isPending}
@@ -112,14 +137,25 @@ export function UserDetailPage() {
             >
               Issue device
             </Button>
-          </div>
+          </FormActions>
         </div>
         <EmptyTableState
           className="table-empty"
           title="No devices in this view"
           description="Load devices from the Devices page, filtering by this user."
         />
-      </Panel>
-    </div>
+      </Card>
+
+      <ConfirmModal
+        open={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+        onConfirm={() => deleteMutation.mutate()}
+        title="Delete user"
+        message="Permanently delete this user? Their devices, subscriptions, and payments will be removed. This cannot be undone."
+        confirmLabel="Delete user"
+        cancelLabel="Cancel"
+        loading={deleteMutation.isPending}
+      />
+    </DetailPage>
   );
 }

@@ -1,14 +1,12 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { formatDateTime, formatBytes, formatRate, getErrorMessage } from "@vpn-suite/shared";
-import { Server } from "lucide-react";
-import { Table, Button, Select, Skeleton, ConfirmDanger, useToast, PageError, RelativeTime, Tabs, Text, Heading, CodeText, InlineAlert, PrimitiveStack, Panel, PrimitiveBadge } from "@vpn-suite/shared/ui";
-import { ButtonLink } from "../components/ButtonLink";
-import { IssueConfigModal } from "../components/IssueConfigModal";
-import { MetricTile } from "../components/MetricTile";
+import { IconServer } from "@/design-system/icons";
+import { Table, Button, Select, Skeleton, ConfirmDanger, useToast, PageError, RelativeTime, Tabs, Text, Heading, CodeText, PrimitiveStack, Card, PrimitiveBadge } from "@/design-system";
+import { Alert, FormActions, MetricTile } from "@/design-system";
+import { ButtonLink, IssueConfigModal, ServerLogsTab } from "@/components";
 import { serverHealthBadge } from "../utils/statusBadges";
-import { PageHeader } from "../components/PageHeader";
-import { ServerLogsTab } from "../components/ServerLogsTab";
+import { DetailPage } from "../templates/DetailPage";
 import type {
   ServerOut,
   ServerPeersOut,
@@ -351,43 +349,42 @@ export function ServerDetailPage() {
 
   if (serverError || !id) {
     return (
-      <div className="ref-page" data-testid="server-detail-page">
-        <PageHeader backTo="/servers" backLabel="Servers" title="Server" description="Node details and configuration" />
+      <DetailPage className="ref-page" title="SERVER" backTo="/servers" backLabel="Servers" description="Node details and configuration">
         <PageError title="Server not found" message="This server may have been removed." />
-      </div>
+      </DetailPage>
     );
   }
 
   if (serverLoading || !server) {
     return (
-      <div className="ref-page" data-testid="server-detail-page">
-        <PageHeader backTo="/servers" backLabel="Servers" title="Server" description="Node details and configuration" />
+      <DetailPage className="ref-page" title="SERVER" backTo="/servers" backLabel="Servers" description="Node details and configuration">
         <Skeleton height={220} />
-      </div>
+      </DetailPage>
     );
   }
 
   const healthBadge = serverHealthBadge(server.status);
 
   return (
-    <div className="ref-page" data-testid="server-detail-page">
-      <PageHeader
-        backTo="/servers"
-        backLabel="Servers"
-        icon={Server}
-        title={`Server ${server.name ?? server.id.slice(0, 8)}`}
-        description="Node details, telemetry and peers"
-        primaryAction={
+    <DetailPage
+      className="ref-page"
+      data-testid="server-detail-page"
+      title={`SERVER ${server.name ?? server.id.slice(0, 8)}`}
+      backTo="/servers"
+      backLabel="Servers"
+      icon={IconServer}
+      description="Node details, telemetry and peers"
+      primaryAction={
+        <>
           <Button variant="ghost" onClick={() => setIssueConfigOpen(true)}>
             Issue config
           </Button>
-        }
-      >
-        <ButtonLink to={`/servers/${id}/edit`} variant="secondary">
-          Edit
-        </ButtonLink>
-      </PageHeader>
-
+          <ButtonLink to={`/servers/${id}/edit`} variant="secondary">
+            Edit
+          </ButtonLink>
+        </>
+      }
+    >
       <Tabs
         items={[
           { id: "overview", label: "Overview" },
@@ -405,7 +402,7 @@ export function ServerDetailPage() {
       />
 
       {activeTab === "overview" && (
-        <Panel as="section" variant="outline" id="server-tabpanel-overview" role="tabpanel" aria-labelledby="server-tab-overview">
+        <Card as="section" variant="outline" id="server-tabpanel-overview" role="tabpanel" aria-labelledby="server-tab-overview">
           <PrimitiveStack gap="3">
             <div className="server-detail-meta">
               <PrimitiveBadge variant={healthBadge.variant}>{healthBadge.label}</PrimitiveBadge>
@@ -417,10 +414,10 @@ export function ServerDetailPage() {
               {server.is_draining ? <span className="text-warning">Draining</span> : null}
             </div>
             {server.is_draining ? (
-              <InlineAlert variant="warning" title="Draining" message="This node is set to drain. New peers will not be assigned until undrained." />
+              <Alert variant="warning" title="Draining" message="This node is set to drain. New peers will not be assigned until undrained." />
             ) : null}
             {server.status === "degraded" ? (
-              <InlineAlert variant="warning" title="Degraded" message="Server health is degraded. Check telemetry and logs." />
+              <Alert variant="warning" title="Degraded" message="Server health is degraded. Check telemetry and logs." />
             ) : null}
             {server.ops_notes ? (
               <div className="mt-md">
@@ -429,12 +426,12 @@ export function ServerDetailPage() {
               </div>
             ) : null}
           </PrimitiveStack>
-        </Panel>
+        </Card>
       )}
 
       {activeTab === "peers" && (
         <>
-          <Panel as="section" variant="outline" id="server-vpn-control" role="region" aria-label="VPN control">
+          <Card as="section" variant="outline" id="server-vpn-control" role="region" aria-label="VPN control">
             <Heading level={3} className="ref-settings-title">VPN control</Heading>
             <PrimitiveStack gap="2" className="ref-vpn-control-actions">
               <Button
@@ -450,11 +447,11 @@ export function ServerDetailPage() {
                 Queues an action for the node to reconcile peers from admin-api. Refreshes after a few seconds.
               </Text>
             </PrimitiveStack>
-          </Panel>
-          <Panel as="section" variant="outline" id="server-tabpanel-peers" role="tabpanel" aria-labelledby="server-tab-peers">
+          </Card>
+          <Card as="section" variant="outline" id="server-tabpanel-peers" role="tabpanel" aria-labelledby="server-tab-peers">
             <div className="ref-peers-head">
               <Heading level={3} className="ref-settings-title">Peers</Heading>
-              <div className="ref-page-actions">
+              <FormActions>
                 {peersData?.node_reachable === false ? (
                   <Text as="span" className="text-warning" role="alert">
                     Node unreachable
@@ -472,7 +469,7 @@ export function ServerDetailPage() {
                   aria-label="Filter peers by status"
                   className="w-auto"
                 />
-              </div>
+              </FormActions>
             </div>
 
             {peersLoading ? (
@@ -485,12 +482,12 @@ export function ServerDetailPage() {
                 emptyMessage="No peers"
               />
             )}
-          </Panel>
+          </Card>
 
-          <Panel as="section" variant="outline">
+          <Card as="section" variant="outline">
             <div className="ref-peers-head">
               <Heading level={3} className="ref-settings-title">Devices (issued)</Heading>
-              <div className="ref-page-actions">
+              <FormActions>
                 <Select
                   label="Status"
                   options={[
@@ -503,7 +500,7 @@ export function ServerDetailPage() {
                   aria-label="Filter devices"
                   className="w-auto"
                 />
-              </div>
+              </FormActions>
             </div>
             <Table<PeerListItem>
               columns={deviceColumns}
@@ -511,12 +508,12 @@ export function ServerDetailPage() {
               keyExtractor={(r) => r.peer_id}
               emptyMessage="No devices"
             />
-          </Panel>
+          </Card>
         </>
       )}
 
       {activeTab === "telemetry" && (
-        <Panel as="section" variant="outline" id="server-tabpanel-telemetry" role="tabpanel" aria-labelledby="server-tab-telemetry">
+        <Card as="section" variant="outline" id="server-tabpanel-telemetry" role="tabpanel" aria-labelledby="server-tab-telemetry">
           <Heading level={3} className="ref-settings-title">Telemetry</Heading>
           {telemetry?.node_reachable === false ? (
             <Text as="p" className="text-warning mb-md" role="alert">
@@ -540,14 +537,14 @@ export function ServerDetailPage() {
           ) : (
             <Text variant="muted" as="p">N/A</Text>
           )}
-        </Panel>
+        </Card>
       )}
 
       {activeTab === "actions" && (
-        <Panel as="section" variant="outline" id="server-tabpanel-actions" role="tabpanel" aria-labelledby="server-tab-actions">
+        <Card as="section" variant="outline" id="server-tabpanel-actions" role="tabpanel" aria-labelledby="server-tab-actions">
           <div className="ref-peers-head">
             <Heading level={3} className="ref-settings-title">Actions</Heading>
-            <div className="ref-page-actions">
+            <FormActions>
               <Button
                 variant="secondary"
                 size="sm"
@@ -572,7 +569,7 @@ export function ServerDetailPage() {
               >
                 {server.is_draining ? "Undrain" : "Drain"}
               </Button>
-            </div>
+            </FormActions>
           </div>
           {actionsData?.items?.length ? (
             <Table<ActionOut>
@@ -599,20 +596,20 @@ export function ServerDetailPage() {
           ) : (
             <Text variant="muted" as="p">No actions yet. Use Sync now or Reconcile to queue an action.</Text>
           )}
-        </Panel>
+        </Card>
       )}
 
       {activeTab === "logs" && (
-        <Panel as="section" variant="outline" id="server-tabpanel-logs" role="tabpanel" aria-labelledby="server-tab-logs">
+        <Card as="section" variant="outline" id="server-tabpanel-logs" role="tabpanel" aria-labelledby="server-tab-logs">
           <ServerLogsTab serverId={id!} />
-        </Panel>
+        </Card>
       )}
 
       {activeTab === "config" && (
-        <Panel as="section" variant="outline" id="server-tabpanel-config" role="tabpanel" aria-labelledby="server-tab-config">
+        <Card as="section" variant="outline" id="server-tabpanel-config" role="tabpanel" aria-labelledby="server-tab-config">
           <Heading level={3} className="ref-settings-title">Config / Profile</Heading>
           <Text variant="muted" as="p">View and apply server profile from Edit server.</Text>
-        </Panel>
+        </Card>
       )}
 
       <ConfirmDanger
@@ -685,6 +682,6 @@ export function ServerDetailPage() {
           queryClient.invalidateQueries({ queryKey: serverTelemetryKey(id!) });
         }}
       />
-    </div>
+    </DetailPage>
   );
 }

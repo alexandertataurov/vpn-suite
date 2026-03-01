@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import { PageContainer, Skeleton } from "@vpn-suite/shared/ui";
+import { PageContainer, Skeleton } from "@/design-system";
 import { api } from "../api/client";
-import { PageHeader } from "../components/PageHeader";
+import { DashboardPage } from "../templates/DashboardPage";
 
 interface RevenueOverview {
   active_referrers: number;
@@ -20,8 +20,9 @@ export function ReferralsPage() {
   if (error) {
     return (
       <PageContainer>
-        <PageHeader title="Referrals" />
-        <p className="text-danger">{String(error)}</p>
+        <DashboardPage className="ref-page" title="REFERRALS">
+          <p className="text-danger">{String(error)}</p>
+        </DashboardPage>
       </PageContainer>
     );
   }
@@ -29,16 +30,17 @@ export function ReferralsPage() {
   if (isLoading || !data) {
     return (
       <PageContainer>
-        <PageHeader title="Referrals" />
-        <Skeleton height={120} />
+        <DashboardPage className="ref-page" title="REFERRALS">
+          <Skeleton height={120} />
+        </DashboardPage>
       </PageContainer>
     );
   }
 
   return (
     <PageContainer>
-      <PageHeader title="Referral Metrics" />
-      <div className="grid gap-3 mt-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))" }}>
+      <DashboardPage className="ref-page" title="REFERRAL METRICS">
+      <div className="grid gap-3 mt-3 ref-auto-grid-180">
         <div className="card p-3">
           <div className="text-muted small">Active referrers (30d)</div>
           <div className="h4 mb-0">{data.active_referrers}</div>
@@ -56,6 +58,7 @@ export function ReferralsPage() {
           <div className="h4 mb-0">{data.earned_bonus_days}</div>
         </div>
       </div>
+      </DashboardPage>
     </PageContainer>
   );
 }

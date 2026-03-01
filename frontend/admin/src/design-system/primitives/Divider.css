@@ -1,0 +1,38 @@
+.ds-divider {
+  margin: 0;
+  border: none;
+  background: var(--color-border-subtle);
+}
+
+.ds-divider--horizontal {
+  height: 1px;
+  width: 100%;
+}
+
+.ds-divider--vertical {
+  width: 1px;
+  height: 100%;
+  min-height: 16px;
+}
+
+.ds-divider--with-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  background: transparent;
+}
+
+.ds-divider__label {
+  flex-shrink: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.ds-divider__line {
+  flex: 1;
+  height: 1px;
+  background: var(--color-border-subtle);
+}

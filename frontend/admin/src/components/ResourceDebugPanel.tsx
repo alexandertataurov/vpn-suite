@@ -1,4 +1,4 @@
-import { RelativeTime } from "@vpn-suite/shared/ui";
+import { RelativeTime } from "@/design-system";
 import { useResourceDebug } from "../utils/resourceDebug";
 
 /**

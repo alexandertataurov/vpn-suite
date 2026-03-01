@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { formatDate, getErrorMessage, subscriptionStatusToVariant } from "@vpn-suite/shared";
-import { Table, PrimitiveBadge, Input, Button, PageError } from "@vpn-suite/shared/ui";
+import { CopyableId } from "@/design-system";
+import { Table, PrimitiveBadge, Input, Button, PageError } from "@/design-system";
 import type { SubscriptionOut, SubscriptionList } from "@vpn-suite/shared/types";
 import { ApiError } from "@vpn-suite/shared/types";
 import { useQuery } from "@tanstack/react-query";
 import { SUBSCRIPTIONS_KEY } from "../../api/query-keys";
 import { api } from "../../api/client";
-import { TableSection } from "../../components/TableSection";
-import { Toolbar } from "../../components/Toolbar";
+import { TableSection } from "@/components";
+import { Toolbar } from "@/components";
 
 const LIMIT = 20;
 
@@ -50,7 +51,7 @@ export function SubscriptionsTab() {
       truncate: true,
       mono: true,
       titleTooltip: (r: SubscriptionOut) => r.id,
-      render: (r: SubscriptionOut) => r.id.slice(0, 8),
+      render: (r: SubscriptionOut) => <CopyableId value={r.id} className="mono" />,
     },
     {
       key: "user_id",

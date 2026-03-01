@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { PageHeader } from "../components/PageHeader";
-import { Panel, PanelHeader, PanelBody, Table, PrimitiveBadge, Input, Select, Button } from "@vpn-suite/shared/ui";
-import type { Column } from "@vpn-suite/shared/ui";
+import { CommandBar } from "@/components";
+import { Panel, PanelHeader, PanelBody, Table, PrimitiveBadge, Input, Select, Button } from "@/design-system";
+import type { Column } from "@/design-system";
 
 interface ServerRow {
   id: string;
@@ -44,8 +44,8 @@ type Story = StoryObj;
 export const Overview: Story = {
   render: () => (
     <div className="sb-stack">
-      <PageHeader
-        title="Servers"
+      <CommandBar
+        title="SERVERS"
         description="Filter and inspect node health across regions."
         primaryAction={<Button>Add server</Button>}
       />
@@ -92,7 +92,7 @@ export const Overview: Story = {
 export const Variants: Story = {
   render: () => (
     <div className="sb-stack">
-      <PageHeader title="Servers" description="Filter and inspect node health across regions." />
+      <CommandBar title="SERVERS" description="Filter and inspect node health across regions." />
       <Panel>
         <PanelHeader title="Server list" />
         <PanelBody>
@@ -107,7 +107,7 @@ export const Sizes: Story = {
   render: () => (
     <div className="sb-stack">
       <p className="m-0">Reference layout only; size variants are not exposed.</p>
-      <PageHeader title="Servers" description="Filter and inspect node health across regions." />
+      <CommandBar title="SERVERS" description="Filter and inspect node health across regions." />
     </div>
   ),
 };
@@ -115,7 +115,7 @@ export const Sizes: Story = {
 export const States: Story = {
   render: () => (
     <div className="sb-stack">
-      <PageHeader title="Servers" description="Filter and inspect node health across regions." />
+      <CommandBar title="SERVERS" description="Filter and inspect node health across regions." />
       <Panel>
         <PanelHeader title="Server list" />
         <PanelBody>
@@ -129,8 +129,8 @@ export const States: Story = {
 export const WithLongText: Story = {
   render: () => (
     <div className="sb-stack">
-      <PageHeader
-        title="Servers in the primary and secondary regions with extended filter context"
+      <CommandBar
+        title="SERVERS IN THE PRIMARY AND SECONDARY REGIONS"
         description="Filter and inspect node health across regions and environments with long descriptions."
       />
     </div>
@@ -141,7 +141,7 @@ export const DarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   render: () => (
     <div className="sb-stack">
-      <PageHeader title="Servers" description="Filter and inspect node health across regions." />
+      <CommandBar title="SERVERS" description="Filter and inspect node health across regions." />
     </div>
   ),
 };
@@ -149,7 +149,7 @@ export const DarkMode: Story = {
 export const Accessibility: Story = {
   render: () => (
     <div className="sb-stack">
-      <PageHeader title="Servers" description="Filter and inspect node health across regions." />
+      <CommandBar title="SERVERS" description="Filter and inspect node health across regions." />
     </div>
   ),
 };

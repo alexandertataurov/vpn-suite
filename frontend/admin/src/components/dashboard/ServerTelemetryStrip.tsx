@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
-import { Skeleton } from "@vpn-suite/shared/ui";
+import { Skeleton } from "@/design-system";
 import { useOperatorStrip } from "../../domain/dashboard";
-import { Activity } from "lucide-react";
+import { IconTelemetry } from "@/design-system/icons";
 
 export function ServerTelemetryStrip() {
   const { strip, isLoading, error } = useOperatorStrip();
@@ -18,7 +18,7 @@ export function ServerTelemetryStrip() {
   return (
     <div className="card p-3 mb-3">
       <div className="d-flex align-items-center gap-2 mb-2">
-        <Activity className="icon-sm text-muted" />
+        <IconTelemetry className="icon-sm text-muted" strokeWidth={1.5} />
         <span className="small text-muted fw-medium">Server telemetry</span>
         <Link to="/telemetry" className="small ms-auto">View telemetry</Link>
       </div>

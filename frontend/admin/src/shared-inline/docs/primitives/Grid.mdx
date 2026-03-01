@@ -1,0 +1,42 @@
+import { Meta } from "@storybook/blocks";
+
+<Meta title="Primitives/Grid" />
+
+# Grid
+
+## Purpose
+Responsive grid layout with tokenized gaps and column rules.
+
+**When to use:** Card grids, tiles, dense data modules.
+
+**When not to use:** Single-column content (use Stack).
+
+## API (Props)
+
+| Prop | Type |
+| --- | --- |
+| columns? | `"1" \| "2" \| "3" \| "4" \| "auto"` |
+| gap? | `string` |
+| minWidth? | `"col" \| "col-sm" \| "card" \| "card-lg"` |
+| nativeProps | `HTMLAttributes<HTMLDivElement>` |
+
+## Examples
+
+```tsx
+<Grid columns="3" gap="4">
+  <Card />
+  <Card />
+  <Card />
+</Grid>
+```
+
+## Design Tokens Used
+- Spacing: `--spacing-*`
+- Radius: `--radius-*`
+
+## Anti-patterns
+- Inline styles or arbitrary pixel values.
+- Hard-coded pixel widths.
+
+## Accessibility
+- Maintain meaningful DOM order for screen readers.

@@ -1,5 +1,5 @@
 import type { AlertItem } from "@vpn-suite/shared/types";
-import { PrimitiveBadge } from "@vpn-suite/shared/ui";
+import { PrimitiveBadge } from "@/design-system";
 import { formatDateTime } from "@vpn-suite/shared";
 
 interface AlertsPreviewProps {

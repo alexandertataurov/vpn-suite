@@ -1,19 +1,13 @@
 import { useSearchParams } from "react-router-dom";
-import { RefreshCw } from "lucide-react";
-import { Button, Tabs } from "@vpn-suite/shared/ui";
-import { PageHeader } from "../components/PageHeader";
+import { IconRefresh } from "@/design-system/icons";
+import { Button } from "@/design-system";
+import { DashboardPage } from "../templates/DashboardPage";
 import { useTelemetryContext } from "../context/TelemetryContext";
 import { track } from "../telemetry";
-import { RefreshButton } from "../components/RefreshButton";
+import { RefreshButton } from "@/components";
 import { parseTelemetryUrlState, updateTelemetryUrlState } from "../domain/telemetry/urlState";
 import type { TelemetryMode, TelemetryTab } from "../domain/telemetry/telemetryTypes";
-import { OperatorTelemetryView } from "../components/telemetry/OperatorTelemetryView";
-import { EngineerTelemetryView } from "../components/telemetry/EngineerTelemetryView";
-
-const TELEMETRY_TAB_ITEMS = [
-  { id: "docker" as const, label: "Docker Services" },
-  { id: "vpn" as const, label: "VPN Nodes" },
-];
+import { OperatorTelemetryView, EngineerTelemetryView } from "@/components";
 
 export function TelemetryPage() {
   const { refetchAllTelemetry } = useTelemetryContext();
@@ -22,7 +16,7 @@ export function TelemetryPage() {
   const regionFilter = urlState.region;
   const activeTab: TelemetryTab = searchParams.get("tab") === "vpn" ? "vpn" : "docker";
 
-  const setTab = (tab: string) => {
+  const setTab = (tab: TelemetryTab) => {
     const next = new URLSearchParams(searchParams);
     next.set("tab", tab);
     setSearchParams(next);
@@ -42,12 +36,9 @@ export function TelemetryPage() {
     await refetchAllTelemetry();
   };
 
+  const description = regionFilter === "all" ? "Region: All" : `Region: ${regionFilter}`;
   return (
-    <div className="dashboard ref-page dashboard--comfortable telemetry-page" data-testid="telemetry-page">
-      <PageHeader
-        title="Telemetry"
-        scopeLabel={regionFilter === "all" ? "Region: All" : `Region: ${regionFilter}`}
-      >
+    <DashboardPage className="dashboard ref-page dashboard--comfortable telemetry-page" data-testid="telemetry-page" title="TELEMETRY" description={description}         primaryAction={
         <div className="flex items-center gap-2">
           <Button
             variant={urlState.mode === "operator" ? "secondary" : "ghost"}
@@ -65,37 +56,30 @@ export function TelemetryPage() {
           >
             Engineer
           </Button>
-        </div>
-        <RefreshButton
+          <RefreshButton
           variant="secondary"
           size="sm"
           onRefresh={handleRefreshNow}
           ariaLabel="Refresh telemetry data"
-          icon={<RefreshCw className="icon-sm" aria-hidden />}
+          icon={<IconRefresh className="icon-sm" aria-hidden strokeWidth={1.5} />}
           idleLabel="Refresh now"
           loadingLabel="Updating…"
           successLabel="Updated just now"
           errorLabel="Update failed"
-        />
-      </PageHeader>
-
+          />
+        </div>
+      }>
       <div className="operator-dashboard telemetry-dashboard" aria-label="Telemetry overview and details">
         {urlState.mode === "operator" ? (
-          <OperatorTelemetryView
-            urlState={urlState}
-            activeTab={activeTab}
-            onTabChange={setTab}
-            onModeChange={setMode}
-          />
+          <OperatorTelemetryView onModeChange={setMode} />
         ) : (
           <EngineerTelemetryView
             urlState={urlState}
             activeTab={activeTab}
             onTabChange={setTab}
-            onModeChange={setMode}
           />
         )}
       </div>
-    </div>
+    </DashboardPage>
   );
 }

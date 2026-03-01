@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { Skeleton, LiveIndicator } from "@vpn-suite/shared/ui";
+import { Skeleton, LiveIndicator } from "@/design-system";
+import { Heading } from "@/design-system";
 import { serverLogsKey } from "../api/query-keys";
 import { api } from "../api/client";
 
@@ -30,7 +31,7 @@ export function ServerLogsTab({ serverId }: { serverId: string }) {
   return (
     <div className="server-logs-panel">
       <div className="server-logs-head">
-        <h3 className="ref-settings-title server-logs-title">Action logs</h3>
+        <Heading level={3} className="ref-settings-title server-logs-title">Action logs</Heading>
         <LiveIndicator status="live" />
       </div>
       <pre className="server-logs-pre" role="log">

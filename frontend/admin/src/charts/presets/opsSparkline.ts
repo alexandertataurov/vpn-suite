@@ -1,25 +1,11 @@
 import type { EChartsOption } from "echarts";
-import { type TimeZoneMode, formatTimeAxis, safeNumber } from "@vpn-suite/shared";
+import { type TimeZoneMode, safeNumber } from "@vpn-suite/shared";
 import type { XY } from "../timeseries";
 import { axisTooltipFormatter } from "./opsTimeseries";
 import { getChartTheme } from "../theme";
+import { formatChartTimeAxisLabel, formatCompactNumber } from "../formatters";
 
-/** Compact axis/tooltip: 1000 → 1K, 1.2e6 → 1.2M, 1e9 → 1G. */
-export function formatCompact(value: number): string {
-  if (value >= 1_000_000_000) {
-    const g = value / 1_000_000_000;
-    return g % 1 === 0 ? `${g}G` : `${g.toFixed(1)}G`;
-  }
-  if (value >= 1_000_000) {
-    const m = value / 1_000_000;
-    return m % 1 === 0 ? `${m}M` : `${m.toFixed(1)}M`;
-  }
-  if (value >= 1_000) {
-    const k = value / 1_000;
-    return k % 1 === 0 ? `${k}K` : `${k.toFixed(1)}K`;
-  }
-  return String(Math.round(value));
-}
+export const formatCompact = formatCompactNumber;
 
 function defaultYAxisFormatter(v: number): string {
   return formatCompact(v);
@@ -68,7 +54,7 @@ export function makeOpsSparklineOption(args: {
       borderColor: t.tooltipBorder,
       borderWidth: 1,
       padding: [10, 12],
-      extraCssText: "border-radius:12px;box-shadow:0 10px 28px rgba(0,0,0,0.1);font-weight:500;",
+      extraCssText: `border-radius:12px;box-shadow:${t.tooltipShadow};font-weight:500;`,
       formatter: axisTooltipFormatter({ tz: args.tz, formatValue: args.tooltipValue }),
     },
     xAxis: {
@@ -84,7 +70,7 @@ export function makeOpsSparklineOption(args: {
         margin: isNarrow ? 6 : 10,
         align: "center",
         formatter: (v: string | number) =>
-          typeof v === "number" ? formatTimeAxis(v, { tz: args.tz, rangeMs }) : String(v),
+          formatChartTimeAxisLabel(v, args.tz, rangeMs),
       },
       splitLine: { show: false },
     },
@@ -105,7 +91,7 @@ export function makeOpsSparklineOption(args: {
       },
       splitLine: {
         show: true,
-        lineStyle: { color: t.grid || t.faint || "rgba(0,0,0,0.06)", type: "solid", width: 1, opacity: 0.35 },
+        lineStyle: { color: t.grid || t.faint, type: "solid" as const, width: 1, opacity: 0.35 },
       },
     },
     series: args.series.map((s) => ({
@@ -137,4 +123,3 @@ export function sparklineValueFromAxisParams(p: unknown): number | null {
   if (Array.isArray(raw)) return safeNumber(raw[1]);
   return safeNumber(raw);
 }
-

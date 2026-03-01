@@ -1,0 +1,43 @@
+import { Meta } from "@storybook/blocks";
+
+<Meta title="Components/SearchInput" />
+
+# SearchInput
+
+## Purpose
+Search input with icon and debounce-friendly UX.
+
+**When to use:** Filtering lists or tables.
+
+**When not to use:** Free-form long text.
+
+## API (Props)
+
+| Prop | Type |
+| --- | --- |
+| value? | `string` |
+| onChange? | `(value: string) => void` |
+| placeholder? | `string` |
+| label? | `string` |
+| className? | `string` |
+
+## Examples
+
+```tsx
+<SearchInput placeholder="Search servers" />
+```
+
+## Design Tokens Used
+- Typography: `--text-*`
+- Spacing: `--spacing-*`
+- Colors: `--color-*`
+- Radius: `--radius-*`
+
+## Anti-patterns
+- Inline styles or arbitrary pixel values.
+- Using component for unrelated semantics.
+
+## Accessibility
+- Provide labels and aria attributes as needed.
+- Ensure focus visibility and keyboard access.
+

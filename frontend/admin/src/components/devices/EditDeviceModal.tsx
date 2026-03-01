@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Modal, Button, Input, Select, Checkbox, Label, useToast } from "@vpn-suite/shared/ui";
+import { Modal, Button, Input, Select, Checkbox, Label, useToast } from "@/design-system";
 import { getErrorMessage } from "@vpn-suite/shared";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { DeviceOut, DeviceUpdate, UserList, ServerOut } from "@vpn-suite/shared/types";

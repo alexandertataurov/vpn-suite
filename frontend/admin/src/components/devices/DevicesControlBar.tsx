@@ -1,5 +1,5 @@
-import { Plus, Smartphone } from "lucide-react";
-import { Button, Input, Select } from "@vpn-suite/shared/ui";
+import { IconAdd, IconDevices } from "@/design-system/icons";
+import { Button, Input, Select } from "@/design-system";
 import type { DeviceSummaryOut } from "@vpn-suite/shared/types";
 import { ButtonLink } from "../ButtonLink";
 
@@ -86,7 +86,7 @@ export function DevicesControlBar({
           ) : summary ? (
             <>
               <span className="devices-control-bar-stat" title="Total devices">
-                <Smartphone aria-hidden size={12} />
+                <IconDevices aria-hidden size={12} strokeWidth={1.5} />
                 {summary.total}
               </span>
               <span className="devices-control-bar-stat devices-control-bar-stat-active" title="Active">
@@ -114,7 +114,7 @@ export function DevicesControlBar({
           Bulk actions
         </Button>
         <ButtonLink to="/servers?issue=1" variant="primary" size="sm">
-          <Plus aria-hidden size={14} />
+          <IconAdd aria-hidden size={14} strokeWidth={1.5} />
           Issue device
         </ButtonLink>
       </div>

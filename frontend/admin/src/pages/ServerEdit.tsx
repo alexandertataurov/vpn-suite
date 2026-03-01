@@ -1,16 +1,17 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Server } from "lucide-react";
-import { Input, Checkbox, Button, PageError, Skeleton, Field, FormStack, Panel } from "@vpn-suite/shared/ui";
-import { PageHeader } from "../components/PageHeader";
+import { IconServer } from "@/design-system/icons";
+import { Input, Checkbox, Button, PageError, Skeleton, Field, FormStack, Card } from "@/design-system";
+import { FormActions } from "@/design-system";
+import { FormPage } from "../templates/FormPage";
 import type { ServerOut } from "@vpn-suite/shared/types";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { serverKey } from "../api/query-keys";
 import { ApiError, getErrorMessage } from "@vpn-suite/shared";
-import { useToast } from "@vpn-suite/shared/ui";
+import { useToast } from "@/design-system";
 import { api } from "../api/client";
 import { SERVERS_LIST_KEY, CONNECTION_NODES_KEY, OVERVIEW_KEY } from "../api/query-keys";
-import { ButtonLink } from "../components/ButtonLink";
+import { ButtonLink } from "@/components";
 
 export function ServerEditPage() {
   const { id } = useParams<{ id: string }>();
@@ -71,8 +72,7 @@ export function ServerEditPage() {
 
   if (error) {
     return (
-      <div className="ref-page" data-testid="server-edit-page">
-        <PageHeader backTo={`/servers/${id}`} backLabel="Server" icon={Server} title="Edit Server" />
+      <FormPage className="ref-page" data-testid="server-edit-page" title="EDIT SERVER" backTo={`/servers/${id}`} backLabel="Server" icon={IconServer}>
         <PageError
           message={getErrorMessage(error, "Failed to load server")}
           requestId={error instanceof ApiError ? error.requestId : undefined}
@@ -80,30 +80,29 @@ export function ServerEditPage() {
           endpoint="GET /servers/:id"
           onRetry={() => refetch()}
         />
-      </div>
+      </FormPage>
     );
   }
 
   if (isLoading || !data) {
     return (
-      <div className="ref-page" data-testid="server-edit-page">
-        <PageHeader backTo={`/servers/${id}`} backLabel="Server" icon={Server} title="Edit Server" />
+      <FormPage className="ref-page" data-testid="server-edit-page" title="EDIT SERVER" backTo={`/servers/${id}`} backLabel="Server" icon={IconServer}>
         <Skeleton height={220} />
-      </div>
+      </FormPage>
     );
   }
 
   return (
-    <div className="ref-page" data-testid="server-edit-page">
-      <PageHeader
-        backTo={`/servers/${id}`}
-        backLabel="Server"
-        icon={Server}
-        title="Edit Server"
-        description={data.name ?? data.id.slice(0, 8)}
-      />
-
-      <Panel as="section" variant="outline">
+    <FormPage
+      className="ref-page"
+      data-testid="server-edit-page"
+      title="EDIT SERVER"
+      backTo={`/servers/${id}`}
+      backLabel="Server"
+      icon={IconServer}
+      description={data.name ?? data.id.slice(0, 8)}
+    >
+      <Card as="section" variant="outline">
         <form onSubmit={handleSubmit}>
           <FormStack>
           <Field id="edit-name" label="Name (optional)">
@@ -126,13 +125,13 @@ export function ServerEditPage() {
             checked={isActive}
             onChange={(e) => setIsActive(e.target.checked)}
           />
-          <div className="ref-page-actions">
+          <FormActions>
             <Button type="submit" loading={mutation.isPending}>Save</Button>
             <ButtonLink to="/servers" variant="ghost">Cancel</ButtonLink>
-          </div>
+          </FormActions>
           </FormStack>
         </form>
-      </Panel>
-    </div>
+      </Card>
+    </FormPage>
   );
 }

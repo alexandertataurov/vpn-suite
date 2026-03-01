@@ -1,0 +1,31 @@
+import { Meta, Canvas, Story } from "@storybook/blocks";
+import { PrimitiveButton, PrimitiveField, PrimitiveInput, PrimitiveText, PrimitiveHeading, PrimitiveBadge } from "../../ui";
+
+<Meta title="Primitives/Overview" />
+
+# Primitives
+
+Primitives are strict, token-only, and behavior-focused.
+
+## Button
+
+<PrimitiveButton>Primary</PrimitiveButton>
+
+## Field + Input
+
+<PrimitiveField label="Server name" hint="Short, unique, operator-friendly">
+  <PrimitiveInput placeholder="core-01" />
+</PrimitiveField>
+
+## Typography
+
+<PrimitiveHeading>Operator Title</PrimitiveHeading>
+<PrimitiveText variant="body">Body text with strict scale.</PrimitiveText>
+
+## Badge
+
+<PrimitiveBadge variant="success">Healthy</PrimitiveBadge>
+
+<Canvas>
+  <Story id="primitives-badge--overview" />
+</Canvas>

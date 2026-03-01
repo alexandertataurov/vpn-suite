@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { getFreshnessLevel } from "../constants/freshness";
 import { FreshnessBadge } from "./operator/FreshnessBadge";
 import { RowActionsMenu } from "./servers/RowActionsMenu";
-import { Button, Checkbox, RelativeTime, StatusBadge, PrimitiveTableRow } from "@vpn-suite/shared/ui";
+import { Button, Checkbox, RelativeTime, StatusBadge, PrimitiveTableRow } from "@/design-system";
 import type { ServerOut, ServersSnapshotSummaryOut } from "@vpn-suite/shared/types";
 import type { ServersTelemetrySummaryOut } from "../hooks/useServerList";
 

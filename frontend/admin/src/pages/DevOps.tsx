@@ -1,8 +1,8 @@
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Skeleton, Button } from "@vpn-suite/shared/ui";
+import { Skeleton, Button } from "@/design-system";
 import { api } from "../api/client";
-import { PageHeader } from "../components/PageHeader";
+import { DashboardPage } from "../templates/DashboardPage";
 
 interface DevOpsHealth {
   redis_ok: boolean;
@@ -23,29 +23,28 @@ export function DevOpsPage() {
 
   if (error) {
     return (
-      <div className="ref-page">
-        <PageHeader title="DevOps" />
+      <DashboardPage className="ref-page" title="DEVOPS">
         <p className="text-danger">{String(error)}</p>
-      </div>
+      </DashboardPage>
     );
   }
 
   if (isLoading || !data) {
     return (
-      <div className="ref-page">
-        <PageHeader title="DevOps" />
+      <DashboardPage className="ref-page" title="DEVOPS">
         <Skeleton height={120} />
-      </div>
+      </DashboardPage>
     );
   }
 
   return (
-    <div className="ref-page" data-testid="devops-page">
-      <PageHeader title="Infrastructure & DevOps">
+    <DashboardPage className="ref-page" data-testid="devops-page" title="INFRASTRUCTURE & DEVOPS" primaryAction={
+        <>
         <Link to="/servers"><Button variant="secondary" size="sm">Servers</Button></Link>
         <Link to="/automation"><Button variant="ghost" size="sm">Automation</Button></Link>
-      </PageHeader>
-      <div className="grid gap-3 mt-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))" }}>
+        </>
+      }>
+      <div className="grid gap-3 mt-3 ref-auto-grid-200">
         <div className={`card p-3 ${data.redis_ok ? "border-success" : "border-danger"}`}>
           <div className="text-muted small">Redis</div>
           <div className="h4 mb-0">{data.redis_ok ? "OK" : "Down"}</div>
@@ -75,6 +74,6 @@ export function DevOpsPage() {
           <div className="h4 mb-0">{data.reconciliation_read_only ? "Yes" : "No"}</div>
         </div>
       </div>
-    </div>
+    </DashboardPage>
   );
 }

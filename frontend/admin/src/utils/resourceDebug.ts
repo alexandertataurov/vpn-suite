@@ -14,9 +14,14 @@ export interface ResourceDebugEntry {
 
 const store = new Map<string, ResourceDebugEntry>();
 const listeners = new Set<() => void>();
+let cachedSnapshot: ResourceDebugEntry[] = [];
 
 function emit() {
   for (const cb of listeners) cb();
+}
+
+function rebuildSnapshot() {
+  cachedSnapshot = Array.from(store.values()).sort((a, b) => a.source.localeCompare(b.source));
 }
 
 export function recordResourceEvent(
@@ -35,11 +40,12 @@ export function recordResourceEvent(
     requestId: update.requestId ?? previous?.requestId,
   };
   store.set(source, next);
+  rebuildSnapshot();
   emit();
 }
 
 function snapshot(): ResourceDebugEntry[] {
-  return Array.from(store.values()).sort((a, b) => a.source.localeCompare(b.source));
+  return cachedSnapshot;
 }
 
 export function useResourceDebug() {

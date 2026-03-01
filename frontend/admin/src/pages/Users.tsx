@@ -1,16 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowUpRight, MoreVertical, Search, Users } from "lucide-react";
-import { Button, Drawer, EmptyState, FormStack, PageError, Pagination, RelativeTime, VirtualTable, CellCompound, CellAvatar, CellPrimary, CellMuted, useToast, PrimitiveBadge } from "@vpn-suite/shared/ui";
+import { IconArrowUpRight, IconMoreVertical, IconSearch, IconUsers } from "@/design-system/icons";
+import { Button, Drawer, FormStack, PageError, RelativeTime, VirtualTable, CellCompound, CellAvatar, CellPrimary, CellMuted, useToast } from "@/design-system";
+import { EmptyState } from "@/design-system";
 import type { DeviceList, UserOut, UserList } from "@vpn-suite/shared/types";
 import { ApiError } from "@vpn-suite/shared/types";
 import { api } from "../api/client";
 import { USERS_KEY, userKey } from "../api/query-keys";
 import { useServerListForRegion } from "../hooks/useServerList";
-import { ButtonLink } from "../components/ButtonLink";
-import { PageHeader } from "../components/PageHeader";
-import { userStatusToVariant, formatDate, getErrorMessage, useApiErrorToast } from "@vpn-suite/shared";
+import { ButtonLink } from "@/components";
+import { ListPage } from "../templates/ListPage";
+import { TelemetryBadge } from "@/components";
+import { Pagination } from "@/design-system";
+import { formatDate, getErrorMessage, useApiErrorToast } from "@vpn-suite/shared";
 import {
   loadSavedViews,
   removeSavedView,
@@ -270,12 +273,7 @@ export function UsersPage() {
 
   if (error) {
     return (
-      <div className="ref-page" data-testid="users-page">
-        <PageHeader icon={Users} title="Users" description="Manage users and subscriptions">
-          <Button variant="secondary" size="sm" onClick={() => refetch()} aria-label="Retry">
-            Retry
-          </Button>
-        </PageHeader>
+      <ListPage className="ref-page" data-testid="users-page" title="USERS" description="Manage users and subscriptions" primaryAction={<Button variant="secondary" size="sm" onClick={() => refetch()} aria-label="Retry">Retry</Button>}>
         <PageError
           message={getErrorMessage(error, "Failed to load users")}
           requestId={error instanceof ApiError ? error.requestId : undefined}
@@ -283,18 +281,18 @@ export function UsersPage() {
           endpoint="GET /users"
           onRetry={() => refetch()}
         />
-      </div>
+      </ListPage>
     );
   }
 
   return (
-    <div className="ref-page" data-testid="users-page">
-      <PageHeader
-        icon={Users}
-        title="Users"
-        description="Manage users and subscriptions"
-      />
-
+    <ListPage
+      className="ref-page"
+      data-testid="users-page"
+      title="USERS"
+      description="Manage users and subscriptions"
+      filterBar={
+      <>
       <div className="ref-users-filters">
         <select
           className="input"
@@ -319,7 +317,7 @@ export function UsersPage() {
       </div>
       <form onSubmit={handleSearch} className="ref-users-toolbar">
         <div className="ref-users-search">
-          <Search className="ref-search-icon" aria-hidden strokeWidth={1.5} />
+          <IconSearch className="ref-search-icon" aria-hidden strokeWidth={1.5} />
           <input
             type="text"
             placeholder="Search users by Telegram ID or email"
@@ -370,10 +368,13 @@ export function UsersPage() {
           Delete view
         </Button>
       </div>
-
+      </>
+      }
+      pagination={regionFilter === "all" && data != null && data.total > LIMIT ? <Pagination offset={offset} limit={LIMIT} total={data.total} onPage={setOffset} /> : null}
+    >
       {sortedUsers.length === 0 && regionFilter === "all" && statusFilter === "all" && !planFilter && !qParam.trim() && !isLoading ? (
         <EmptyState
-          icon={<Users strokeWidth={1.5} />}
+          icon={<IconUsers strokeWidth={1.5} />}
           title="No users yet"
           description="Users will appear here when they sign up or are invited"
         />
@@ -399,9 +400,7 @@ export function UsersPage() {
               header: "Status",
               sortKey: "status",
               render: (user) => (
-                <PrimitiveBadge variant={userStatusToVariant(user.is_banned ? "banned" : "active")} size="sm">
-                  {user.is_banned ? "Banned" : "Active"}
-                </PrimitiveBadge>
+                <TelemetryBadge variant={user.is_banned ? "no-signal" : "link-established"} />
               ),
             },
             {
@@ -449,7 +448,7 @@ export function UsersPage() {
                     size="icon"
                     aria-label={`Open full profile for user ${user.id}`}
                   >
-                    <ArrowUpRight className="ref-icon" aria-hidden strokeWidth={1.5} />
+                    <IconArrowUpRight className="ref-icon" aria-hidden strokeWidth={1.5} />
                   </ButtonLink>
                   <Button
                     variant="ghost"
@@ -457,7 +456,7 @@ export function UsersPage() {
                     onClick={() => setActiveUser(user)}
                     aria-label={`Open quick panel for user ${user.id}`}
                   >
-                    <MoreVertical className="ref-icon" aria-hidden strokeWidth={1.5} />
+                    <IconMoreVertical className="ref-icon" aria-hidden strokeWidth={1.5} />
                   </Button>
                 </div>
               ),
@@ -474,10 +473,6 @@ export function UsersPage() {
           overscan={6}
         />
       )}
-
-      {regionFilter === "all" && data && data.total > LIMIT ? (
-        <Pagination offset={offset} limit={LIMIT} total={data.total} onPage={setOffset} />
-      ) : null}
 
       <Drawer
         open={activeUser != null}
@@ -519,6 +514,6 @@ export function UsersPage() {
           </FormStack>
         ) : null}
       </Drawer>
-    </div>
+    </ListPage>
   );
 }

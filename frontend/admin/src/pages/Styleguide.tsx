@@ -1,7 +1,9 @@
-import { Button, Panel, PanelHeader, PanelBody, EmptyState, PageError, PrimitiveBadge, VisuallyHidden, PrimitiveStack, Inline, PrimitiveDivider, Spinner, ProgressBar, InlineAlert, DropdownMenu, Text, Heading, Label, HelperText, Stat, CodeText } from "@vpn-suite/shared/ui";
+import { Button, Card, PanelHeader, PanelBody, PageError, PrimitiveBadge, VisuallyHidden, PrimitiveStack, Inline, PrimitiveDivider, Spinner, ProgressBar, InlineAlert, DropdownMenu, Text, Heading, Label, HelperText, Stat, CodeText } from "@/design-system";
+import { EmptyState } from "@/design-system";
 import { useTheme } from "@vpn-suite/shared/theme";
-import { Breadcrumb } from "../components/Breadcrumb";
-import { SectionHeader } from "../components/SectionHeader";
+import { Breadcrumb } from "@/components";
+import { SectionHeader } from "@/components";
+import { DashboardPage } from "../templates/DashboardPage";
 
 const colorTokens = [
   { name: "--color-background-primary", swatchClass: "styleguide-swatch-color-bg" },
@@ -34,11 +36,20 @@ export function StyleguidePage() {
   const { theme } = useTheme();
 
   return (
-    <div className="dashboard styleguide">
-      <h1>Design System Style Guide</h1>
+    <DashboardPage
+      className="dashboard styleguide"
+      title="STYLEGUIDE"
+      description={`Token reference and live examples. Theme: ${theme}.`}
+    >
+      <Heading level={1}>Design System Style Guide</Heading>
       <Text variant="muted" as="p">
         Token reference and live examples. Theme: <strong>{theme}</strong>. Press <kbd>⌘K</kbd> (Ctrl+K) for command palette.
       </Text>
+
+      <section className="dashboard-section">
+        <Heading level={2} className="styleguide-section-title">Design system aliases</Heading>
+        <Text variant="muted" as="p">Spec names: Card = Panel, Alert = InlineAlert, StatCard = Stat, DataTable = Table, ConfirmDialog = ConfirmDanger. Layout: PageSection = Section, FormSection = Section, FormActions (save/cancel row).</Text>
+      </section>
 
       <section className="dashboard-section" aria-labelledby="styleguide-tokens-doc">
         <Heading level={2} id="styleguide-tokens-doc" className="styleguide-section-title">Design tokens (source of truth)</Heading>
@@ -146,13 +157,13 @@ export function StyleguidePage() {
       </section>
 
       <section className="dashboard-section">
-        <Heading level={2} className="styleguide-section-title">Panel with PanelHeader / PanelBody</Heading>
-        <Panel variant="raised">
+        <Heading level={2} className="styleguide-section-title">Card with PanelHeader / PanelBody</Heading>
+        <Card variant="raised">
           <PanelHeader title="Panel title" actions={<Button variant="ghost" size="sm">Action</Button>} />
           <PanelBody>
             <p className="m-0">Panel body. Use <code>--spacing-6</code> padding, <code>--border-subtle</code> for header border.</p>
           </PanelBody>
-        </Panel>
+        </Card>
       </section>
 
       <section className="dashboard-section">
@@ -215,8 +226,8 @@ export function StyleguidePage() {
         <Text variant="muted" as="p">Spinner, ProgressBar, InlineAlert. Use tokens for colors.</Text>
         <PrimitiveStack gap="4">
           <Inline gap="2">
-            <Spinner size="sm" aria-label="Loading small" />
-            <Spinner size="md" aria-label="Loading" />
+            <Spinner aria-label="Loading small" />
+            <Spinner aria-label="Loading" />
           </Inline>
           <div className="styleguide-progress-wrap">
             <ProgressBar value={0} label="Progress 0%" />
@@ -274,6 +285,6 @@ export function StyleguidePage() {
         <Text variant="muted" as="p">Use Tab to focus; focus uses --shadow-focus.</Text>
         <Button variant="primary">Focus me (Tab)</Button>
       </section>
-    </div>
+    </DashboardPage>
   );
 }

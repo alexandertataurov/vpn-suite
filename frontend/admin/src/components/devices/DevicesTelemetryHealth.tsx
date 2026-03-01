@@ -1,5 +1,5 @@
-import { AlertTriangle, Pause, Play } from "lucide-react";
-import { Button } from "@vpn-suite/shared/ui";
+import { IconWarning, IconPause, IconPlay } from "@/design-system/icons";
+import { Button } from "@/design-system";
 import type { DeviceSummaryOut } from "@vpn-suite/shared/types";
 
 const STALE_THRESHOLD_MS = 5 * 60 * 1000; // 5 min
@@ -44,7 +44,7 @@ export function DevicesTelemetryHealth({
       </span>
       {stale && (
         <span className="devices-telemetry-health-stale" role="alert">
-          <AlertTriangle aria-hidden size={12} />
+          <IconWarning aria-hidden size={12} strokeWidth={1.5} />
           Stale data (older than 5 min)
         </span>
       )}
@@ -56,7 +56,7 @@ export function DevicesTelemetryHealth({
           aria-label={pollingPaused ? "Resume auto-refresh" : "Pause auto-refresh"}
           title={pollingPaused ? "Resume refresh" : "Pause refresh"}
         >
-          {pollingPaused ? <Play aria-hidden size={12} /> : <Pause aria-hidden size={12} />}
+          {pollingPaused ? <IconPlay aria-hidden size={12} strokeWidth={1.5} /> : <IconPause aria-hidden size={12} strokeWidth={1.5} />}
         </Button>
       )}
     </div>

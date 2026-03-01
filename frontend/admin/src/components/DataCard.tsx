@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Panel } from "@vpn-suite/shared/ui";
+import { Card } from "@/design-system";
 import { cn } from "@vpn-suite/shared";
 
 export interface DataCardProps {
@@ -12,7 +12,7 @@ export interface DataCardProps {
 
 export function DataCard({ title, value, trend, freshness, className }: DataCardProps) {
   return (
-    <Panel variant="surface" className={cn("data-card", className)}>
+    <Card variant="surface" className={cn("data-card", className)}>
       <div className="data-card__header">
         <span className="data-card__title">{title}</span>
         {freshness != null ? <span className="data-card__freshness">{freshness}</span> : null}
@@ -21,6 +21,6 @@ export function DataCard({ title, value, trend, freshness, className }: DataCard
         <span className="data-card__value">{value}</span>
         {trend != null ? <span className="data-card__trend">{trend}</span> : null}
       </div>
-    </Panel>
+    </Card>
   );
 }

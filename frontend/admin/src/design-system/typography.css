@@ -1,0 +1,135 @@
+/**
+ * Aerospace Design System — typography.
+ * Font imports and base type rules.
+ * Display: Chakra Petch | Body: DM Mono | Data: JetBrains Mono
+ */
+
+/* Import via index.html link; this file defines usage rules */
+
+/* Base typography — body and headings */
+[data-console="operator"],
+.admin-layout {
+  font-family: var(--font-body);
+}
+
+[data-console="operator"] h1,
+[data-console="operator"] h2,
+[data-console="operator"] .page-title,
+[data-console="operator"] .mission-bar-title,
+[data-console="operator"] .command-bar-title {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* Display/page titles */
+[data-console="operator"] .font-display {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* Numerical data, IDs, metrics — tabular-nums */
+[data-console="operator"] .font-data,
+[data-console="operator"] [data-font="data"],
+[data-console="operator"] .metric-value,
+[data-console="operator"] .data-value {
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* Typography utility components */
+.ds-typo-label {
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  line-height: 1.4;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.ds-typo-body {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: var(--color-text-primary);
+}
+
+.ds-typo-data {
+  font-family: var(--font-data);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums lining-nums;
+  color: var(--color-text-primary);
+}
+
+.ds-typo-metric {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+}
+
+.ds-typo-metric-value {
+  font-family: var(--font-data);
+  font-size: var(--text-xl);
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums lining-nums;
+  color: var(--color-text-primary);
+}
+
+.ds-typo-metric-unit {
+  font-family: var(--font-data);
+  font-size: var(--text-base);
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+.ds-typo-page-title {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  line-height: 1.1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-primary);
+}
+
+.ds-typo-section-title {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  line-height: 1.3;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-primary);
+}
+
+.ds-typo-timestamp {
+  font-family: var(--font-data);
+  font-size: var(--text-2xs);
+  line-height: 1.4;
+  color: var(--color-text-muted);
+}
+
+/* Typography primitives */
+.typo-text-body { font: var(--text-body); color: var(--color-text-primary); }
+.typo-text-body-sm { font: var(--text-body-sm); color: var(--color-text-primary); }
+.typo-text-body-lg { font: var(--text-body-lg); color: var(--color-text-primary); }
+.typo-text-muted { font: var(--text-body-sm); color: var(--color-text-secondary); }
+.typo-text-caption { font: var(--text-caption); color: var(--color-text-secondary); }
+.typo-text-code { font: var(--text-body-sm); font-family: var(--font-mono); color: var(--color-text-primary); }
+.typo-text-danger { font: var(--text-body-sm); color: var(--color-error); }
+.typo-heading-1 { font: var(--text-h1); color: var(--color-text-primary); margin: 0; }
+.typo-heading-2 { font: var(--text-h2); color: var(--color-text-primary); margin: 0; }
+.typo-heading-3 { font: var(--text-h3); color: var(--color-text-primary); margin: 0; }
+.typo-heading-4 { font: var(--text-h4); color: var(--color-text-primary); margin: 0; }
+.typo-label { font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); color: var(--color-text-secondary); }
+.typo-helper-hint { font: var(--text-caption); color: var(--color-text-secondary); margin: 0; }
+.typo-helper-error { font: var(--text-body-sm); color: var(--color-error); margin: 0; }
+.typo-stat { display: flex; flex-direction: column; gap: var(--spacing-1); }
+.typo-stat-value { font: var(--font-weight-semibold) var(--font-size-2xl)/var(--line-height-tight) var(--font-sans); font-variant-numeric: tabular-nums; color: var(--color-text-primary); margin: 0; }
+.typo-stat-label { font: var(--text-caption); color: var(--color-text-secondary); margin: 0; }
+.typo-stat-delta { font: var(--text-body-sm); font-variant-numeric: tabular-nums; }
+.typo-stat-delta-up { color: var(--color-success); }
+.typo-stat-delta-down { color: var(--color-error); }
+.typo-stat-delta-neutral { color: var(--color-text-secondary); }
+.typo-code-inline { font: var(--text-body-sm); font-family: var(--font-mono); color: var(--color-text-primary); }
+.typo-code-block { font: var(--text-body-sm); font-family: var(--font-mono); color: var(--color-text-primary); display: block; white-space: pre-wrap; margin: 0; }

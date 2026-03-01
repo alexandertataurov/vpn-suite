@@ -1,0 +1,34 @@
+import { Meta } from "@storybook/blocks";
+
+<Meta title="Foundations/Motion" />
+
+# Motion
+
+Duration and easing tokens. Use for transitions and animations.
+
+## Duration
+
+| Token | `Value` | Use |
+| ------- | `-------` | ----- |
+| `--duration-instant` | `0ms` | Immediate |
+| `--duration-fast` | `150ms` | Hover, focus |
+| `--duration-normal` | `250ms` | Default |
+| `--duration-slow` | `350ms` | Drawer, modal |
+| `--duration-slower` | `500ms` | Complex |
+
+## Easing
+
+| Token | `Use` |
+| ------- | `-----` |
+| `--ease-linear` | `Progress, loading` |
+| `--ease-in-out` | `Default transitions` |
+| `--ease-standard` | `Alias` |
+| `--ease-elastic` | `Bouncy` |
+| `--ease-bounce` | `Playful` |
+
+## Example
+
+```css
+transition: opacity var(--duration-normal) var(--ease-standard);
+```
+

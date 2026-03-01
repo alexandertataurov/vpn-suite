@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Button, Input, Panel } from "@vpn-suite/shared/ui";
+import { Button, Input, Card } from "@/design-system";
+import { Heading } from "@/design-system";
+import { FormPage } from "../templates/FormPage";
 import { useAuthStore } from "../store/authStore";
 import { api } from "../api/client";
 import { track } from "../telemetry";
@@ -25,6 +27,7 @@ export function LoginPage() {
       const data = await api.post<TokenResponse>("/auth/login", { email, password });
       setTokens(data.access_token, data.refresh_token);
       try {
+        track("login_success", { route: "/login" });
         track("user_action", { action_type: "login_success" });
       } catch {
         /* noop */
@@ -32,38 +35,48 @@ export function LoginPage() {
       navigate(from, { replace: true });
     } catch (err) {
       setError(getErrorMessage(err, "Login failed"));
+      try {
+        track("login_failure", {
+          route: "/login",
+          reason: getErrorMessage(err, "Login failed"),
+        });
+      } catch {
+        /* noop */
+      }
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="login-page" data-console="operator" data-testid="login-page">
-      <Panel className="login-card">
-        <h1>VPN Suite Admin</h1>
-        <form onSubmit={handleSubmit} aria-label="Sign in" data-testid="login-form">
-          <Input
-            label="Email"
-            type="email"
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-          <Input
-            label="Password"
-            type="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-          {error ? <p className="login-error" role="alert">{error}</p> : null}
-          <Button type="submit" loading={loading}>
-            Sign in
-          </Button>
-        </form>
-      </Panel>
-    </div>
+    <FormPage className="ref-page login-page" data-testid="login-page" title="LOGIN" description="Authenticate to access the admin console.">
+      <div className="page-content" data-console="operator">
+        <Card className="login-card">
+          <Heading level={1}>VPN Suite Admin</Heading>
+          <form onSubmit={handleSubmit} aria-label="Sign in" data-testid="login-form">
+            <Input
+              label="Email"
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+            <Input
+              label="Password"
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+            {error ? <p className="login-error" role="alert">{error}</p> : null}
+            <Button type="submit" loading={loading}>
+              Sign in
+            </Button>
+          </form>
+        </Card>
+      </div>
+    </FormPage>
   );
 }
