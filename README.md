@@ -28,9 +28,14 @@ cp .env.example .env
 | `./manage.sh bootstrap` | Core + migrate + seed + seed-agent-server + node-agent (agent mode) |
 | `./manage.sh up-core` | Start admin-api, postgres, redis, reverse-proxy, bot |
 | `./manage.sh up-agent` | Start node-agent (profile agent; needs DOCKER_GID for docker.sock) |
+| `./manage.sh server:drift <server_id>` | Show desired vs actual diff (dry run); in agent mode prints where to check |
+| `./manage.sh server:reconcile <server_id>` | Reconcile server (agent: queues action via admin API; docker: runs node_ops) |
+| `./manage.sh device:reissue <device_id>` | Reissue device config (API_TOKEN or ADMIN_EMAIL/ADMIN_PASSWORD); fails if server key unverified |
 | `./manage.sh check` | Quick quality gate (ruff, pytest, frontend lint/typecheck/test/build) |
 | `./manage.sh verify` | Full quality gate (includes migrate integrity, config-validate) |
 | `./manage.sh smoke-staging` | End-to-end validation (tests, E2E, API smoke) |
+
+**Strict mode:** `STRICT=1` makes any optional step failure fatal (default: permissive, optional failures reported). Composite commands (`rebuild-restart`, `bootstrap`, `restart-metrics`, `restart-audit`) print a subsystem summary (✅ core/audit/observability/agent up or ⚠️ failed with stderr). Exit non-zero if a required step failed or if `STRICT=1` and any optional step failed.
 
 ## Docs
 
