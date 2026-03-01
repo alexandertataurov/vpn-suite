@@ -78,7 +78,9 @@ class DeviceOut(OrmSchema):
     user_email: str | None = None  # Populated when listing with User join
     telemetry: DeviceTelemetryOut | None = None  # From cache when available
     # State reconciliation
-    apply_status: str | None = None  # CREATED | APPLYING | APPLIED | VERIFIED | ERROR | PENDING_APPLY | FAILED_APPLY | NO_HANDSHAKE
+    apply_status: str | None = (
+        None  # CREATED | APPLYING | APPLIED | VERIFIED | ERROR | PENDING_APPLY | FAILED_APPLY | NO_HANDSHAKE
+    )
     last_applied_at: datetime | None = None
     last_seen_handshake_at: datetime | None = None
     last_error: str | None = None
@@ -157,7 +159,7 @@ class RevokeRequest(BaseModel):
 
 
 class DeleteRequest(BaseModel):
-    confirm_token: str
+    confirm_token: str | None = None  # Optional: warning modal only; if provided, validated
 
 
 class BlockRequest(BaseModel):

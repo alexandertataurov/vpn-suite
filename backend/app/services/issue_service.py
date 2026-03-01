@@ -19,16 +19,16 @@ from app.core.amnezia_config import (
     get_obfuscation_params,
 )
 from app.core.config import settings
-from app.core.config_builder import ConfigValidationError, DEFAULT_DNS, generate_preshared_key
+from app.core.config_builder import DEFAULT_DNS, ConfigValidationError, generate_preshared_key
 from app.core.exceptions import WireGuardCommandError
 from app.core.redaction import redact_for_log
 from app.models import Device, ProfileIssue, Server, ServerProfile, Subscription, User
 from app.services.address_allocator import allocate_address_for_device
 from app.services.admin_issue_service import _ensure_device_peer_on_node
 from app.services.load_balancer import select_node as load_balancer_select_node
-from app.services.server_live_key_service import _heartbeat_container_id, live_key_fetch
 from app.services.node_endpoint_utils import get_endpoint_from_runtime, is_endpoint_private
 from app.services.node_runtime import NodeRuntimeAdapter, PeerConfigLike
+from app.services.server_live_key_service import _heartbeat_container_id, live_key_fetch
 from app.services.server_obfuscation import request_params_with_server_h
 
 
@@ -112,6 +112,7 @@ async def issue_device(
     fallback = _heartbeat_container_id(getattr(server, "api_endpoint", None), resolved_server_id)
     db_key = (getattr(server, "public_key", None) or "").strip() or None
     db_key_synced_at = getattr(server, "public_key_synced_at", None)
+    # Block issuance/reissue if server key unknown/unverified (ServerNotSyncedError).
     live = await live_key_fetch(
         resolved_server_id,
         runtime_adapter,
@@ -167,7 +168,9 @@ async def issue_device(
                 command="wg show",
                 output="node_not_synced",
             ) from exc
-        if not runtime_obf or not all(runtime_obf.get(k) is not None for k in ("H1", "H2", "H3", "H4")):
+        if not runtime_obf or not all(
+            runtime_obf.get(k) is not None for k in ("H1", "H2", "H3", "H4")
+        ):
             raise WireGuardCommandError(
                 "Node obfuscation params unavailable (H1–H4 missing)",
                 command="wg show",
@@ -262,7 +265,11 @@ async def issue_device(
             endpoint = f"{default_host}:{port}"
             _config_log.info(
                 "Replaced private endpoint with VPN_DEFAULT_HOST for issued config",
-                extra={"event": "config.endpoint_override", "server_id": resolved_server_id, "endpoint": endpoint},
+                extra={
+                    "event": "config.endpoint_override",
+                    "server_id": resolved_server_id,
+                    "endpoint": endpoint,
+                },
             )
         else:
             _config_log.warning(
@@ -285,8 +292,12 @@ async def issue_device(
         preshared_key=preshared_key,
         issued_at=now,
         revoked_at=None,
-        apply_status="CREATED" if (settings.node_mode == "real" and settings.node_discovery != "agent") else "PENDING_APPLY",
-        connection_profile="restrictive" if first_profile and getattr(first_profile, "disable_ipv6_on_unstable_route", False) else "default",
+        apply_status="CREATED"
+        if (settings.node_mode == "real" and settings.node_discovery != "agent")
+        else "PENDING_APPLY",
+        connection_profile="restrictive"
+        if first_profile and getattr(first_profile, "disable_ipv6_on_unstable_route", False)
+        else "default",
     )
     session.add(device)
     await session.flush()
@@ -339,14 +350,37 @@ async def issue_device(
             await session.flush()
             await session.refresh(device)
         except Exception as exc:
-            session.delete(device)  # type: ignore[unused-coroutine]
-            await session.flush()
-            raise WireGuardCommandError(
-                "Node peer creation failed",
-                command="wg set",
-                output=redact_for_log(str(exc)),
-            )
-        peer_created = True
+            if settings.issue_fallback_on_peer_failure:
+                _config_log.warning(
+                    "Node peer creation failed; keeping device with PENDING_APPLY",
+                    extra={
+                        "event": "issue.fallback_on_peer_failure",
+                        "server_id": resolved_server_id,
+                        "device_id": device.id,
+                        "error": redact_for_log(str(exc)),
+                    },
+                )
+                await session.execute(
+                    update(Device)
+                    .where(Device.id == device.id)
+                    .values(
+                        apply_status="PENDING_APPLY",
+                        last_error=redact_for_log(str(exc))[:500],
+                    )
+                )
+                await session.flush()
+                peer_created = False
+                # Continue to config generation below
+            else:
+                session.delete(device)  # type: ignore[unused-coroutine]
+                await session.flush()
+                raise WireGuardCommandError(
+                    "Node peer creation failed",
+                    command="wg set",
+                    output=redact_for_log(str(exc)),
+                )
+        else:
+            peer_created = True
     elif settings.node_mode == "agent":
         # DB-only: node-agent will add peer on next reconcile cycle.
         peer_created = False

@@ -13,6 +13,7 @@ from app.services.node_runtime import NodeRuntimeAdapter, PeerConfigLike
 
 _log = logging.getLogger(__name__)
 
+
 async def migrate_peer(
     session: AsyncSession,
     device: Device,

@@ -86,6 +86,7 @@ async def test_500_exception_handler_returns_generic_body():
     req = MagicMock()
     req.state = MagicMock()
     req.state.request_id = None
+    req.state.correlation_id = None
     req.url = MagicMock()
     req.url.path = "/test"
     resp = await handler(req, RuntimeError("internal"))

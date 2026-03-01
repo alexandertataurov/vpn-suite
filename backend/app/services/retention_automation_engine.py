@@ -38,12 +38,10 @@ async def get_matching_subscriptions(
 async def run_retention_rules(session: AsyncSession) -> dict:
     """Load enabled retention rules, find matching subs, apply actions (reminder/discount). Returns run summary."""
     now = datetime.now(timezone.utc)
-    rules_result = (
-        await session.execute(
-            select(RetentionRule)
-            .where(RetentionRule.enabled.is_(True))
-            .order_by(RetentionRule.priority.desc())
-        )
+    rules_result = await session.execute(
+        select(RetentionRule)
+        .where(RetentionRule.enabled.is_(True))
+        .order_by(RetentionRule.priority.desc())
     )
     rules = list(rules_result.scalars().all())
     if not rules:

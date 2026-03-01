@@ -11,7 +11,18 @@ from sqlalchemy.orm import selectinload
 
 from app.core.bot_auth import BotPrincipal, get_admin_or_bot
 from app.core.database import get_db
-from app.models import ChurnSurvey, Device, IssuedConfig, Payment, Plan, Referral, Server, Subscription, User
+from app.core.metrics import vpn_revenue_churn_total
+from app.models import (
+    ChurnSurvey,
+    Device,
+    IssuedConfig,
+    Payment,
+    Plan,
+    Referral,
+    Server,
+    Subscription,
+    User,
+)
 from app.schemas.bot import (
     BotEventRequest,
     BotRevokeDeviceRequest,
@@ -29,12 +40,11 @@ from app.schemas.bot import (
 )
 from app.schemas.subscription import SubscriptionOut
 from app.schemas.user import UserOut
-from app.core.metrics import vpn_revenue_churn_total
 from app.services.funnel_service import log_funnel_event
 from app.services.payment_webhook_service import complete_pending_payment_by_bot
 from app.services.retention_service import pause_subscription, retention_discount_percent
-from app.services.trial_service import start_trial
 from app.services.topology_engine import TopologyEngine
+from app.services.trial_service import start_trial
 
 router = APIRouter(prefix="/bot", tags=["bot"])
 
@@ -298,7 +308,10 @@ async def telegram_stars_confirm(
     if not ok:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail={"code": "PAYMENT_NOT_FOUND", "message": "Payment not found or already completed"},
+            detail={
+                "code": "PAYMENT_NOT_FOUND",
+                "message": "Payment not found or already completed",
+            },
         )
     await db.commit()
     return {"status": "ok", "payment_id": body.invoice_payload}
@@ -565,9 +578,13 @@ async def referral_stats(
     )
     rewarded = rewarded_result.scalar() or 0
     # Days earned this month (for "Earn Free VPN Days" screen)
-    start_of_month = datetime.now(timezone.utc).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    start_of_month = datetime.now(timezone.utc).replace(
+        day=1, hour=0, minute=0, second=0, microsecond=0
+    )
     days_result = await db.execute(
-        select(func.coalesce(func.sum(Referral.reward_days), 0)).select_from(Referral).where(
+        select(func.coalesce(func.sum(Referral.reward_days), 0))
+        .select_from(Referral)
+        .where(
             Referral.referrer_user_id == user.id,
             Referral.reward_applied_at.isnot(None),
             Referral.reward_applied_at >= start_of_month,

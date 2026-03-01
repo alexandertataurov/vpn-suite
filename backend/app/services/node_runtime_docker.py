@@ -485,7 +485,9 @@ def _extract_ipv4_host_cidrs(allowed_ips: str) -> list[str]:
     return out
 
 
-def _subnets_for_allowed_ips(allowed_ips: str, prefixlen: int = _CLIENT_SUBNET_PREFIXLEN) -> list[str]:
+def _subnets_for_allowed_ips(
+    allowed_ips: str, prefixlen: int = _CLIENT_SUBNET_PREFIXLEN
+) -> list[str]:
     """Return unique subnet CIDRs (e.g. /24) that cover each host in allowed_ips."""
     seen: set[str] = set()
     out: list[str] = []

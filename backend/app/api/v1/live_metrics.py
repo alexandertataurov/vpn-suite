@@ -4,7 +4,7 @@ import asyncio
 import json
 import logging
 import time
-from typing import Any, Dict, Optional, Tuple
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
@@ -29,9 +29,9 @@ _CONNECTION_LOCK = asyncio.Lock()
 
 
 def _compute_patch(
-    prev: Optional[Dict[str, Any]],
-    curr: Dict[str, Any],
-) -> Tuple[str, Dict[str, Any]]:
+    prev: dict[str, Any] | None,
+    curr: dict[str, Any],
+) -> tuple[str, dict[str, Any]]:
     """Return (event_type, payload) where payload is either full snapshot or a patch.
 
     The patch contains only nodes whose state changed (by shallow dict compare) plus
@@ -43,7 +43,7 @@ def _compute_patch(
     prev_nodes = (prev.get("nodes") or {}) if isinstance(prev.get("nodes"), dict) else {}
     curr_nodes = (curr.get("nodes") or {}) if isinstance(curr.get("nodes"), dict) else {}
 
-    changed: Dict[str, Any] = {}
+    changed: dict[str, Any] = {}
     for node_id, node_val in curr_nodes.items():
         prev_val = prev_nodes.get(node_id)
         if prev_val != node_val:
@@ -74,7 +74,7 @@ async def _live_events(
     base_interval = max(0.5, min(10.0, float(min_interval_ms) / 1000.0))
     max_event_bytes = int(getattr(settings, "live_obs_max_event_bytes", 64_000))
 
-    prev_snapshot: Optional[Dict[str, Any]] = None
+    prev_snapshot: dict[str, Any] | None = None
     consecutive_errors = 0
 
     while True:
@@ -150,7 +150,9 @@ async def live_metrics_stream(
     global _CURRENT_CONNECTIONS
 
     max_conns = int(getattr(settings, "live_obs_sse_max_connections", 2000))
-    reconnect_header = request.headers.get("last-event-id") or request.headers.get("x-last-event-id")
+    reconnect_header = request.headers.get("last-event-id") or request.headers.get(
+        "x-last-event-id"
+    )
     if reconnect_header:
         live_reconnect_rate.inc()
 
@@ -178,4 +180,3 @@ async def live_metrics_stream(
             "X-Accel-Buffering": "no",
         },
     )
-

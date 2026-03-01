@@ -116,7 +116,9 @@ async def test_revoke_device_invalid_confirm_token(monkeypatch):
     req = _make_revoke_request()
 
     with pytest.raises(HTTPException) as exc:
-        await revoke_device(req, "dev-1", RevokeRequest(confirm_token="wrong"), db, SimpleNamespace(id="admin"))
+        await revoke_device(
+            req, "dev-1", RevokeRequest(confirm_token="wrong"), db, SimpleNamespace(id="admin")
+        )
     assert exc.value.status_code == 400
     assert "Invalid" in str(exc.value.detail)
     assert device.revoked_at is None
@@ -133,7 +135,13 @@ async def test_revoke_device_not_found(monkeypatch):
     req = _make_revoke_request()
 
     with pytest.raises(HTTPException) as exc:
-        await revoke_device(req, "dev-1", RevokeRequest(confirm_token="secret-token"), db, SimpleNamespace(id="admin"))
+        await revoke_device(
+            req,
+            "dev-1",
+            RevokeRequest(confirm_token="secret-token"),
+            db,
+            SimpleNamespace(id="admin"),
+        )
     assert exc.value.status_code == 404
 
 
@@ -145,7 +153,13 @@ async def test_revoke_device_already_revoked(monkeypatch):
     req = _make_revoke_request()
 
     with pytest.raises(HTTPException) as exc:
-        await revoke_device(req, "dev-1", RevokeRequest(confirm_token="secret-token"), db, SimpleNamespace(id="admin"))
+        await revoke_device(
+            req,
+            "dev-1",
+            RevokeRequest(confirm_token="secret-token"),
+            db,
+            SimpleNamespace(id="admin"),
+        )
     assert exc.value.status_code == 400
     assert "already revoked" in str(exc.value.detail).lower()
 
@@ -170,7 +184,9 @@ async def test_revoke_device_success(monkeypatch):
     db = _make_db(device)
     req = _make_revoke_request()
 
-    out = await revoke_device(req, "dev-1", RevokeRequest(confirm_token="secret-token"), db, SimpleNamespace(id="admin"))
+    out = await revoke_device(
+        req, "dev-1", RevokeRequest(confirm_token="secret-token"), db, SimpleNamespace(id="admin")
+    )
 
     assert out.revoked_at is not None
     assert out.id == "dev-1"
@@ -188,7 +204,9 @@ async def test_delete_device_invalid_confirm_token(monkeypatch):
     req = SimpleNamespace(state=SimpleNamespace())
 
     with pytest.raises(HTTPException) as exc:
-        await delete_device(req, "dev-1", DeleteRequest(confirm_token="wrong"), db, SimpleNamespace(id="admin"))
+        await delete_device(
+            req, "dev-1", DeleteRequest(confirm_token="wrong"), db, SimpleNamespace(id="admin")
+        )
     assert exc.value.status_code == 400
     db.delete.assert_not_called()
 
@@ -204,7 +222,13 @@ async def test_delete_device_not_found(monkeypatch):
     req = SimpleNamespace(state=SimpleNamespace())
 
     with pytest.raises(HTTPException) as exc:
-        await delete_device(req, "dev-1", DeleteRequest(confirm_token="secret-token"), db, SimpleNamespace(id="admin"))
+        await delete_device(
+            req,
+            "dev-1",
+            DeleteRequest(confirm_token="secret-token"),
+            db,
+            SimpleNamespace(id="admin"),
+        )
     assert exc.value.status_code == 404
 
 
@@ -216,9 +240,25 @@ async def test_delete_device_success(monkeypatch):
     db.delete = AsyncMock()
     req = SimpleNamespace(state=SimpleNamespace())
 
-    out = await delete_device(req, "dev-1", DeleteRequest(confirm_token="secret-token"), db, SimpleNamespace(id="admin"))
+    out = await delete_device(
+        req, "dev-1", DeleteRequest(confirm_token="secret-token"), db, SimpleNamespace(id="admin")
+    )
 
     assert out == 204  # HTTP_204_NO_CONTENT
     db.delete.assert_called_once_with(device)
     db.commit.assert_called_once()
     assert req.state.audit_old_new["delete"]["user_id"] == 10
+
+
+@pytest.mark.asyncio
+async def test_delete_device_success_without_confirm_token(monkeypatch):
+    monkeypatch.setattr("app.api.v1.devices.REVOKE_CONFIRM", "secret-token")
+    device = SimpleNamespace(id="dev-1", user_id=10)
+    db = _make_db(device)
+    db.delete = AsyncMock()
+    req = SimpleNamespace(state=SimpleNamespace())
+
+    out = await delete_device(req, "dev-1", DeleteRequest(), db, SimpleNamespace(id="admin"))
+
+    assert out == 204
+    db.delete.assert_called_once_with(device)

@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.models import ChurnSurvey, Subscription, User
+from app.models import Subscription
 
 
 async def pause_subscription(

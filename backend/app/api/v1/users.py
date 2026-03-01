@@ -5,12 +5,13 @@ import logging
 import secrets
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, or_, select, update
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.api.v1.device_cache import invalidate_devices_list_cache, invalidate_devices_summary_cache
 from app.core.bot_auth import get_admin_or_bot
-from app.core.security import encrypt_config
 from app.core.config import settings
 from app.core.constants import (
     ISSUE_DAILY_TTL_SECONDS,
@@ -24,16 +25,32 @@ from app.core.database import get_db
 from app.core.error_responses import not_found_404
 from app.core.exception_handling import raise_http_for_control_plane_exception
 from app.core.exceptions import LoadBalancerError, WireGuardCommandError
+from app.core.metrics import vpn_config_regen_cap_hits_total
 from app.core.rbac import require_permission
 from app.core.redis_client import get_redis
-from app.models import Device, IssuedConfig, Server, Subscription, User
+from app.core.security import encrypt_config
+from app.models import (
+    AbuseSignal,
+    ChurnRiskScore,
+    ChurnSurvey,
+    Device,
+    FunnelEvent,
+    IssuedConfig,
+    Payment,
+    PaymentEvent,
+    PortAllocation,
+    ProfileIssue,
+    PromoRedemption,
+    Referral,
+    Server,
+    Subscription,
+    User,
+)
 from app.schemas.device import DeviceListItemOut, IssueRequest, IssueResponse, UserDeviceList
 from app.schemas.subscription import SubscriptionOut
 from app.schemas.user import UserCreate, UserDetail, UserList, UserOut, UserUpdate
-from app.api.v1.device_cache import invalidate_devices_list_cache, invalidate_devices_summary_cache
 from app.services.funnel_service import log_funnel_event
 from app.services.issue_service import issue_device
-from app.core.metrics import vpn_config_regen_cap_hits_total
 from app.services.server_live_key_service import ServerNotSyncedError
 from app.services.topology_engine import TopologyEngine
 
@@ -163,6 +180,86 @@ async def get_user(
         **UserOut.model_validate(user).model_dump(),
         subscriptions=subs,
     )
+
+
+async def _delete_user_cascade(db: AsyncSession, user_id: int) -> None:
+    """Delete user and all dependent rows in FK-safe order (no reliance on DB CASCADE)."""
+    device_ids = select(Device.id).where(Device.user_id == user_id)
+    # Devices' children first
+    await db.execute(delete(IssuedConfig).where(IssuedConfig.device_id.in_(device_ids)))
+    await db.execute(delete(ProfileIssue).where(ProfileIssue.device_id.in_(device_ids)))
+    await db.execute(
+        update(PortAllocation)
+        .where(PortAllocation.device_id.in_(device_ids))
+        .values(device_id=None)
+    )
+    await db.execute(delete(Device).where(Device.user_id == user_id))
+    await db.flush()
+    # Payments (PaymentEvent references Payment)
+    await db.execute(
+        delete(PaymentEvent).where(
+            PaymentEvent.payment_id.in_(select(Payment.id).where(Payment.user_id == user_id))
+        )
+    )
+    await db.execute(delete(Payment).where(Payment.user_id == user_id))
+    await db.flush()
+    await db.execute(delete(PromoRedemption).where(PromoRedemption.user_id == user_id))
+    await db.execute(
+        delete(Referral).where(
+            or_(Referral.referrer_user_id == user_id, Referral.referee_user_id == user_id)
+        )
+    )
+    await db.execute(delete(ChurnRiskScore).where(ChurnRiskScore.user_id == user_id))
+    await db.execute(delete(ChurnSurvey).where(ChurnSurvey.user_id == user_id))
+    await db.execute(delete(AbuseSignal).where(AbuseSignal.user_id == user_id))
+    await db.execute(update(FunnelEvent).where(FunnelEvent.user_id == user_id).values(user_id=None))
+    await db.flush()
+    await db.execute(delete(Subscription).where(Subscription.user_id == user_id))
+    await db.flush()
+    await db.execute(delete(User).where(User.id == user_id))
+
+
+@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_user(
+    request: Request,
+    user_id: int,
+    db: AsyncSession = Depends(get_db),
+    admin=Depends(require_permission(PERM_USERS_WRITE)),
+):
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise not_found_404("User", user_id)
+    request.state.audit_resource_type = "user"
+    request.state.audit_resource_id = str(user.id)
+    request.state.audit_old_new = {"delete": {"user_id": user.id, "tg_id": user.tg_id}}
+    if hasattr(admin, "id"):
+        request.state.audit_admin_id = str(admin.id)
+    try:
+        await _delete_user_cascade(db, user_id)
+        await db.commit()
+        await invalidate_devices_summary_cache()
+        await invalidate_devices_list_cache()
+    except IntegrityError as e:
+        await db.rollback()
+        err_msg = str(e.orig) if e.orig else str(e)
+        logger.warning("delete_user integrity error user_id=%s: %s", user_id, err_msg)
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "code": "DELETE_USER_CONSTRAINT",
+                "message": "User has related data that could not be removed.",
+                "detail": err_msg,
+            },
+        ) from e
+    except Exception as e:
+        await db.rollback()
+        logger.exception("delete_user failed user_id=%s: %s", user_id, e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"code": "DELETE_USER_FAILED", "message": str(e)},
+        ) from e
+    return None
 
 
 @router.patch("/{user_id}", response_model=UserOut)

@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Diagnostic: servers, devices, and (if agent) heartbeat keys. Run from repo root:
-  docker compose run --rm admin-api python scripts/check_config_diagnostic.py
+docker compose run --rm admin-api python scripts/check_config_diagnostic.py
 """
+
 import asyncio
 import json
 import os
@@ -21,7 +22,7 @@ async def main() -> None:
     from Redis, if available.
     """
 
-    from sqlalchemy import select, text  # type: ignore[import]
+    from sqlalchemy import select  # type: ignore[import]
 
     from app.core.constants import REDIS_KEY_AGENT_HB_PREFIX
     from app.core.database import async_session_factory
@@ -46,7 +47,7 @@ async def main() -> None:
         )
         for row in r.all():
             sid, name, pk, synced, api = row
-            pk_preview = (pk[:20] + "..." if pk and len(pk) > 20 else (pk or "(empty)"))
+            pk_preview = pk[:20] + "..." if pk and len(pk) > 20 else (pk or "(empty)")
             print(f"  id={sid!r} name={name!r}")
             print(f"    public_key={pk_preview}  synced_at={synced}")
             print(f"    api_endpoint={api}")
@@ -58,16 +59,13 @@ async def main() -> None:
     print(header)
 
     async with async_session_factory() as db:
-        stmt = (
-            select(
-                Device.id,
-                Device.server_id,
-                Device.public_key,
-                Device.allowed_ips,
-                Device.revoked_at,
-            )
-            .order_by(Device.issued_at.desc())
-        )
+        stmt = select(
+            Device.id,
+            Device.server_id,
+            Device.public_key,
+            Device.allowed_ips,
+            Device.revoked_at,
+        ).order_by(Device.issued_at.desc())
         if filter_ids:
             stmt = stmt.where(Device.id.in_(filter_ids))
         else:
@@ -76,16 +74,14 @@ async def main() -> None:
         r = await db.execute(stmt)
         rows = r.all()
         device_ids = [row[0] for row in rows]
-        telemetry_map = (
-            await get_device_telemetry_bulk(device_ids) if device_ids else {}
-        )
+        telemetry_map = await get_device_telemetry_bulk(device_ids) if device_ids else {}
 
         if filter_ids and not rows:
             print(f"  (no devices found for ids={filter_ids!r})\n")
 
         for row in rows:
             did, sid, pk, ips, rev = row
-            pk_preview = (pk[:20] + "..." if pk and len(pk) > 20 else (pk or "(empty)"))
+            pk_preview = pk[:20] + "..." if pk and len(pk) > 20 else (pk or "(empty)")
             print(f"  device_id={did!r} server_id={sid!r} revoked={bool(rev)}")
             print(f"    public_key( client )={pk_preview}")
             print(f"    allowed_ips(db)={ips!r}")
@@ -136,9 +132,7 @@ async def main() -> None:
                     try:
                         data = json.loads(raw) if isinstance(raw, str) else raw
                         pk = (data.get("public_key") or "").strip()
-                        pk_preview = (
-                            pk[:20] + "..." if len(pk) > 20 else pk
-                        ) or "(empty)"
+                        pk_preview = (pk[:20] + "..." if len(pk) > 20 else pk) or "(empty)"
                         print(
                             f"  {k}: public_key={pk_preview}  "
                             f"server_id={data.get('server_id')!r}"

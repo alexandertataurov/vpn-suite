@@ -68,6 +68,7 @@ class SnapshotMetaOut(BaseModel):
 
 class TelemetrySnapshotOut(BaseModel):
     """Response for GET /telemetry/snapshot. Only included scopes are present."""
+
     nodes: NodesSnapshotOut | None = None
     devices: DevicesSnapshotOut | None = None
     sessions: SessionsSnapshotOut | None = None

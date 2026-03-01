@@ -95,7 +95,7 @@ def test_validate_production_secrets_raises_on_default_revoke_confirm_token():
 
 
 def test_validate_production_secrets_passes_with_custom_secrets():
-    """ENVIRONMENT=production with non-default secrets → no raise."""
+    """ENVIRONMENT=production with non-default secrets and NODE_DISCOVERY=agent → no raise."""
     s = Settings(
         environment="production",
         secret_key="custom-secret-key-at-least-32-characters-long",
@@ -105,8 +105,27 @@ def test_validate_production_secrets_passes_with_custom_secrets():
         restart_confirm_token="custom-restart-token-at-least-16",
         revoke_confirm_token="custom-revoke-token-at-least-16",
         cleanup_db_confirm_token="custom-cleanup-db-token-at-least-16",
-        # Make test deterministic even when NODE_DISCOVERY/NODE_MODE are injected via env.
-        node_discovery="docker",
-        node_mode="mock",
+        node_discovery="agent",
+        node_mode="agent",
+        agent_shared_token="a" * 32,
     )
     s.validate_production_secrets()  # no raise
+
+
+def test_validate_production_secrets_raises_when_node_discovery_not_agent():
+    """ENVIRONMENT=production requires NODE_DISCOVERY=agent."""
+    s = Settings(
+        environment="production",
+        secret_key="custom-secret-key-at-least-32-characters-long",
+        admin_password="secure-admin-pass",
+        ban_confirm_token="custom-ban-token-at-least-16",
+        block_confirm_token="custom-block-token-at-least-16",
+        restart_confirm_token="custom-restart-token-at-least-16",
+        revoke_confirm_token="custom-revoke-token-at-least-16",
+        cleanup_db_confirm_token="custom-cleanup-db-token-at-least-16",
+        node_discovery="docker",
+        node_mode="real",
+        agent_shared_token="",
+    )
+    with pytest.raises(ValueError, match="NODE_DISCOVERY=agent"):
+        s.validate_production_secrets()

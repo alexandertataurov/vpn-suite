@@ -1,10 +1,12 @@
-"""Middleware: record Prometheus metrics for HTTP requests (count, duration, status)."""
+"""Middleware: record Prometheus + OTLP metrics for HTTP requests (dual-emit)."""
 
 import time
 
 from prometheus_client import Counter, Histogram
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
+
+from app.core.otel_metrics import record_http_request
 
 REQUESTS_TOTAL = Counter(
     "http_requests_total",
@@ -44,8 +46,24 @@ def _status_class(status: int) -> str:
     return "5xx"
 
 
+def _get_trace_ids():
+    """Return (trace_id, span_id) from current OTel span if available."""
+    try:
+        from opentelemetry import trace
+
+        span = trace.get_current_span()
+        if span and span.is_recording():
+            ctx = span.get_span_context()
+            tid = format(ctx.trace_id, "032x") if ctx.trace_id else None
+            sid = format(ctx.span_id, "016x") if ctx.span_id else None
+            return tid, sid
+    except Exception:
+        pass
+    return None, None
+
+
 class PrometheusMiddleware(BaseHTTPMiddleware):
-    """Record request count and duration for Prometheus. Records 5xx on unhandled exception."""
+    """Record request count and duration for Prometheus + OTLP. Records 5xx on unhandled exception."""
 
     async def dispatch(self, request: Request, call_next):
         path_tpl = path_template(request.url.path)
@@ -58,6 +76,8 @@ class PrometheusMiddleware(BaseHTTPMiddleware):
                 method=request.method, path_template=path_tpl, status_class=status_cl
             ).inc()
             REQUEST_DURATION.labels(method=request.method, path_template=path_tpl).observe(duration)
+            trace_id, span_id = _get_trace_ids()
+            record_http_request(request.method, path_tpl, status_cl, duration, trace_id, span_id)
             return response
         except Exception:
             duration = time.perf_counter() - start
@@ -65,4 +85,6 @@ class PrometheusMiddleware(BaseHTTPMiddleware):
                 method=request.method, path_template=path_tpl, status_class="5xx"
             ).inc()
             REQUEST_DURATION.labels(method=request.method, path_template=path_tpl).observe(duration)
+            trace_id, span_id = _get_trace_ids()
+            record_http_request(request.method, path_tpl, "5xx", duration, trace_id, span_id)
             raise

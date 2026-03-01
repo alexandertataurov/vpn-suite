@@ -95,7 +95,11 @@ async def build_snapshot_from_node(
     _agent_log(
         "server_sync_service.py:build_snapshot_from_node:entry",
         "sync started",
-        {"server_id": server_id, "adapter": type(adapter).__name__, "server_api_endpoint": (server.api_endpoint or "")[:80]},
+        {
+            "server_id": server_id,
+            "adapter": type(adapter).__name__,
+            "server_api_endpoint": (server.api_endpoint or "")[:80],
+        },
         "A",
     )
     # #endregion
@@ -137,7 +141,11 @@ async def build_snapshot_from_node(
                 )
         if node is None and (server.name or "").strip():
             node = next(
-                (n for n in nodes if getattr(n, "container_name", None) == (server.name or "").strip()),
+                (
+                    n
+                    for n in nodes
+                    if getattr(n, "container_name", None) == (server.name or "").strip()
+                ),
                 None,
             )
     if not node:
@@ -145,7 +153,11 @@ async def build_snapshot_from_node(
         _agent_log(
             "server_sync_service.py:build_snapshot_from_node",
             "node not in discovery",
-            {"server_id": server_id, "discovered_ids": [n.node_id for n in nodes], "discovered_container_names": [getattr(n, "container_name", None) for n in nodes]},
+            {
+                "server_id": server_id,
+                "discovered_ids": [n.node_id for n in nodes],
+                "discovered_container_names": [getattr(n, "container_name", None) for n in nodes],
+            },
             "D",
         )
         # #endregion
@@ -280,7 +292,10 @@ async def run_sync_for_server(
             server.key_status = "not_found"
         try:
             from app.core.metrics import discovery_not_found_total, server_key_sync_fail_total
-            server_key_sync_fail_total.labels(server_id=server_id, reason=(err or "unknown")[:64]).inc()
+
+            server_key_sync_fail_total.labels(
+                server_id=server_id, reason=(err or "unknown")[:64]
+            ).inc()
             if "not found" in (err or "").lower():
                 discovery_not_found_total.labels(server_id=server_id).inc()
         except Exception:
@@ -330,6 +345,7 @@ async def run_sync_for_server(
         server.key_status = "verified"
         try:
             from app.core.metrics import server_key_sync_success_total
+
             server_key_sync_success_total.labels(server_id=server_id).inc()
         except Exception:
             pass

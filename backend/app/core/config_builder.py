@@ -316,7 +316,7 @@ def _normalize_obfuscation_awg2(obf: dict[str, Any], mtu: int | None) -> dict[st
             raise ValueError(f"{k} must be non-empty string")
         out[k] = v.strip()
     # H1–H4: accept any integer or range (AmneziaWG kernel uses 32-bit; we accept 0..2^32-1)
-    _H_MAX = 4294967295  # 2^32 - 1
+    h_max = 4294967295  # 2^32 - 1
     h_ranges: list[tuple[str, int, int]] = []
     for k in ("H1", "H2", "H3", "H4"):
         v = obf.get(k)
@@ -325,9 +325,9 @@ def _normalize_obfuscation_awg2(obf: dict[str, Any], mtu: int | None) -> dict[st
         lo, hi, rendered = _parse_h_value(v, k)
         if hi <= 0:
             continue
-        if lo > _H_MAX or hi > _H_MAX:
+        if lo > h_max or hi > h_max:
             raise ValueError(
-                f"{k} out of range for awg_2_0_asc profile (got {rendered!r}, max {_H_MAX})"
+                f"{k} out of range for awg_2_0_asc profile (got {rendered!r}, max {h_max})"
             )
         if lo > hi:
             raise ValueError(f"{k} range invalid")

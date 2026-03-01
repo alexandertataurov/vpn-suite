@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Callable, Awaitable, Any
+from collections.abc import Awaitable, Callable
+from typing import Any
 
 from app.core.database import async_session_factory
 from app.services.control_plane_service import anomaly_metrics

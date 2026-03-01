@@ -49,7 +49,9 @@ async def get_revenue_snapshot(session: AsyncSession) -> dict:
 
     # Trial started (funnel)
     trial_started_result = await session.execute(
-        select(func.count()).select_from(FunnelEvent).where(
+        select(func.count())
+        .select_from(FunnelEvent)
+        .where(
             FunnelEvent.event_type == "trial_started",
             FunnelEvent.created_at >= now - timedelta(days=30),
         )
@@ -58,7 +60,9 @@ async def get_revenue_snapshot(session: AsyncSession) -> dict:
 
     # Referral: paid referrals (reward_applied_at not null)
     ref_paid_result = await session.execute(
-        select(func.count()).select_from(Referral).where(
+        select(func.count())
+        .select_from(Referral)
+        .where(
             Referral.reward_applied_at.isnot(None),
             Referral.created_at >= now - timedelta(days=30),
         )

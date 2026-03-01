@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.constants import PERM_PLANS_READ, PERM_PLANS_WRITE, PERM_PRICING_READ
+from app.core.constants import PERM_PLANS_WRITE, PERM_PRICING_READ
 from app.core.database import get_db
 from app.core.rbac import require_permission
 from app.models import Plan, PriceHistory
@@ -55,6 +55,7 @@ async def list_price_history(
     if plan_id:
         q = q.where(PriceHistory.plan_id == plan_id)
     from sqlalchemy import func
+
     count_q = select(func.count()).select_from(PriceHistory)
     if plan_id:
         count_q = count_q.where(PriceHistory.plan_id == plan_id)

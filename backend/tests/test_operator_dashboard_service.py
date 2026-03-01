@@ -1,3 +1,4 @@
+import time
 from types import SimpleNamespace
 
 import pytest
@@ -49,7 +50,7 @@ async def test_fetch_operator_dashboard_handles_row_objects(monkeypatch):
     servers_rows = [
         SimpleNamespace(
             id="srv-1",
-            name="Server 1",
+            name="amnezia-awg",
             region="us",
             status="healthy",
             api_endpoint="https://1.2.3.4:443",
@@ -65,7 +66,18 @@ async def test_fetch_operator_dashboard_handles_row_objects(monkeypatch):
     monkeypatch.setattr(svc, "async_session_factory", factory)
 
     async def fake_snapshot_nodes():
-        return {"list": [{"id": "srv-1", "health": "ok", "peers": 7, "rx": 10, "tx": 20, "last_success_ts": 1000}]}
+        return {
+            "list": [
+                {
+                    "id": "srv-1",
+                    "health": "ok",
+                    "peers": 7,
+                    "rx": 10,
+                    "tx": 20,
+                    "last_success_ts": 1000,
+                }
+            ]
+        }
 
     async def fake_timeseries(window=3600):
         return [{"ts": 1000, "peers": 7, "rx": 10, "tx": 20}]
@@ -118,7 +130,7 @@ async def test_fetch_operator_dashboard_prometheus_failure_returns_degraded(monk
     servers_rows = [
         SimpleNamespace(
             id="srv-1",
-            name="Server 1",
+            name="amnezia-awg",
             region="us",
             status="healthy",
             api_endpoint="https://1.2.3.4:443",
@@ -158,7 +170,7 @@ async def test_fetch_operator_dashboard_empty_timeseries_does_not_force_degraded
     servers_rows = [
         SimpleNamespace(
             id="srv-1",
-            name="Server 1",
+            name="amnezia-awg",
             region="us",
             status="healthy",
             api_endpoint="https://1.2.3.4:443",
@@ -174,7 +186,18 @@ async def test_fetch_operator_dashboard_empty_timeseries_does_not_force_degraded
     monkeypatch.setattr(svc, "async_session_factory", factory)
 
     async def fake_snapshot_nodes():
-        return {"list": [{"id": "srv-1", "health": "ok", "peers": 0, "rx": 0, "tx": 0, "last_success_ts": 1000}]}
+        return {
+            "list": [
+                {
+                    "id": "srv-1",
+                    "health": "ok",
+                    "peers": 0,
+                    "rx": 0,
+                    "tx": 0,
+                    "last_success_ts": 1000,
+                }
+            ]
+        }
 
     async def fake_timeseries(window=3600):
         return []
@@ -182,24 +205,26 @@ async def test_fetch_operator_dashboard_empty_timeseries_does_not_force_degraded
     monkeypatch.setattr(svc, "get_snapshot_nodes", fake_snapshot_nodes)
     monkeypatch.setattr(svc, "get_dashboard_timeseries", fake_timeseries)
 
+    ts = int(time.time())
+
     class HealthyProm:
         enabled = True
 
         async def query(self, expr):
             if expr == 'up{job="admin-api"}':
-                return [{"value": [1000, "1"]}]
+                return [{"value": [ts, "1"]}]
             if expr.startswith("sum(vpn_nodes_total"):
-                return [{"value": [1000, "1"]}]
+                return [{"value": [ts, "1"]}]
             if expr == "vpn_cluster_load":
-                return [{"value": [1000, "1"]}]
+                return [{"value": [ts, "1"]}]
             if expr.startswith("sum(rate(http_requests_total"):
-                return [{"value": [1000, "0.1"]}]
+                return [{"value": [ts, "0.1"]}]
             if expr.startswith("histogram_quantile"):
-                return [{"value": [1000, "12"]}]
+                return [{"value": [ts, "12"]}]
             if "vpn_node_health" in expr:
-                return [{"value": [1000, "95"]}]
+                return [{"value": [ts, "95"]}]
             if "vpn_node_peers" in expr:
-                return [{"value": [1000, "1"]}]
+                return [{"value": [ts, "1"]}]
             return []
 
     monkeypatch.setattr(pqs, "PrometheusQueryService", HealthyProm)
@@ -208,5 +233,5 @@ async def test_fetch_operator_dashboard_empty_timeseries_does_not_force_degraded
 
     assert out["data_status"] == "ok"
     assert out["timeseries"] == []
-    assert out["health_strip"]["freshness"] == "unknown"
-    assert out["last_successful_sample_ts"] is None
+    assert out["health_strip"]["freshness"] in ("fresh", "degraded")  # derived from Prometheus ts
+    assert out["last_successful_sample_ts"] is not None  # from Prometheus fallback

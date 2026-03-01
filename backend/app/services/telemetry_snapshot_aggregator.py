@@ -77,7 +77,9 @@ async def run_snapshot_aggregator(env: str = DEFAULT_ENV) -> None:
                 Server.is_active.is_(True)
             )
         )
-        server_list = [(str(s.id), s.name or "", s.region or "", s.status or "unknown") for s in r.all()]
+        server_list = [
+            (str(s.id), s.name or "", s.region or "", s.status or "unknown") for s in r.all()
+        ]
         if server_list:
             dev_r = await session.execute(
                 select(Device.id, Device.server_id, Device.allowed_ips).where(
@@ -85,10 +87,7 @@ async def run_snapshot_aggregator(env: str = DEFAULT_ENV) -> None:
                     Device.revoked_at.is_(None),
                 )
             )
-            device_list = [
-                (str(row[0]), str(row[1]), row[2])
-                for row in dev_r.all()
-            ]
+            device_list = [(str(row[0]), str(row[1]), row[2]) for row in dev_r.all()]
 
     redis = get_redis()
     server_keys = [f"{REDIS_KEY_TELEMETRY_SERVER_PREFIX}{s[0]}" for s in server_list]
@@ -145,19 +144,21 @@ async def run_snapshot_aggregator(env: str = DEFAULT_ENV) -> None:
         rx = int(telem.get("total_rx_bytes") or 0) if telem else 0
         tx = int(telem.get("total_tx_bytes") or 0) if telem else 0
         peers = int(telem.get("peers_count") or 0) if telem else 0
-        node_entries.append({
-            "id": sid,
-            "name": name[:64] if name else "",
-            "region": region[:32] if region else "",
-            "health": health,
-            "handshake_age_s": None,
-            "traffic_recent": (rx + tx) >= TRAFFIC_RECENT_RX_TX_MIN,
-            "peers": peers,
-            "rx": rx,
-            "tx": tx,
-            "stale": stale,
-            "last_success_ts": last_ts,
-        })
+        node_entries.append(
+            {
+                "id": sid,
+                "name": name[:64] if name else "",
+                "region": region[:32] if region else "",
+                "health": health,
+                "handshake_age_s": None,
+                "traffic_recent": (rx + tx) >= TRAFFIC_RECENT_RX_TX_MIN,
+                "peers": peers,
+                "rx": rx,
+                "tx": tx,
+                "stale": stale,
+                "last_success_ts": last_ts,
+            }
+        )
     nodes_payload = {
         "summary": {
             "total": len(server_list),
@@ -186,16 +187,20 @@ async def run_snapshot_aggregator(env: str = DEFAULT_ENV) -> None:
         traffic_recent = (rx + tx) >= TRAFFIC_RECENT_RX_TX_MIN
         if handshake_age_s is not None and handshake_age_s <= HANDSHAKE_OK_SEC and allowed_ips_ok:
             handshake_ok += 1
-        elif not allowed_ips_ok or (handshake_age_s is not None and handshake_age_s > HANDSHAKE_OK_SEC):
+        elif not allowed_ips_ok or (
+            handshake_age_s is not None and handshake_age_s > HANDSHAKE_OK_SEC
+        ):
             needs_reconcile += 1
-        device_entries.append({
-            "id": did,
-            "server_id": server_id,
-            "handshake_age_s": handshake_age_s,
-            "allowed_ips_ok": allowed_ips_ok,
-            "traffic_recent": traffic_recent,
-            "stale": stale,
-        })
+        device_entries.append(
+            {
+                "id": did,
+                "server_id": server_id,
+                "handshake_age_s": handshake_age_s,
+                "allowed_ips_ok": allowed_ips_ok,
+                "traffic_recent": traffic_recent,
+                "stale": stale,
+            }
+        )
     devices_payload = {
         "summary": {
             "total": len(device_list),
@@ -228,4 +233,9 @@ async def run_snapshot_aggregator(env: str = DEFAULT_ENV) -> None:
     await set_snapshot_devices(devices_payload, env)
     await set_snapshot_sessions(sessions_payload, env)
     await set_snapshot_meta(meta_payload, env)
-    _log.debug("Snapshot aggregator wrote nodes=%s devices=%s stale_nodes=%s", len(node_entries), len(device_entries), len(stale_node_ids))
+    _log.debug(
+        "Snapshot aggregator wrote nodes=%s devices=%s stale_nodes=%s",
+        len(node_entries),
+        len(device_entries),
+        len(stale_node_ids),
+    )

@@ -1,4 +1,4 @@
-"""devices.outline_key_id for Outline key mapping.
+"""devices.outline_key_id (legacy schema; removed in 035).
 
 Revision ID: 032
 Revises: 031

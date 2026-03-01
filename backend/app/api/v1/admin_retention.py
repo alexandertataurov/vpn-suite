@@ -58,6 +58,7 @@ async def list_retention_rules(
     if enabled is not None:
         q = q.where(RetentionRule.enabled == enabled)
     from sqlalchemy import func
+
     count_q = select(func.count()).select_from(RetentionRule)
     if enabled is not None:
         count_q = count_q.where(RetentionRule.enabled == enabled)

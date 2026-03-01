@@ -4,7 +4,7 @@ import asyncio
 import logging
 import time
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 from app.core.config import settings
 from app.core.metrics import live_node_staleness_seconds, live_queue_depth
@@ -21,7 +21,7 @@ from app.services.snapshot_cache import (
 _log = logging.getLogger(__name__)
 
 
-async def _build_snapshot() -> Tuple[ClusterLiveSnapshot | None, str]:
+async def _build_snapshot() -> tuple[ClusterLiveSnapshot | None, str]:
     """Build a ClusterLiveSnapshot from existing snapshot + telemetry caches.
 
     Returns (snapshot or None, degradation_mode).
@@ -47,7 +47,7 @@ async def _build_snapshot() -> Tuple[ClusterLiveSnapshot | None, str]:
     age_s = now_ts - snapshot_ts
 
     summary_raw = nodes_payload.get("summary") or {}
-    node_list: List[Dict[str, Any]] = nodes_payload.get("list") or []
+    node_list: list[dict[str, Any]] = nodes_payload.get("list") or []
 
     total_nodes = int(summary_raw.get("total") or len(node_list))
     online_nodes = int(summary_raw.get("online") or 0)
@@ -59,7 +59,7 @@ async def _build_snapshot() -> Tuple[ClusterLiveSnapshot | None, str]:
     total_tx = 0
     stale_nodes = 0
 
-    nodes: Dict[str, NodeLiveState] = {}
+    nodes: dict[str, NodeLiveState] = {}
 
     # Reset histogram each build by just emitting new observations; old buckets decay via rate().
     for row in node_list:
@@ -71,7 +71,7 @@ async def _build_snapshot() -> Tuple[ClusterLiveSnapshot | None, str]:
         status = str(row.get("health") or "unknown")
         stale = bool(row.get("stale"))
         last_ts = row.get("last_success_ts")
-        last_ts_int = int(last_ts) if isinstance(last_ts, (int, float)) else None
+        last_ts_int = int(last_ts) if isinstance(last_ts, int | float) else None
         heartbeat_age_s = None
         if last_ts_int:
             heartbeat_age_s = max(0.0, float(snapshot_ts - last_ts_int))
@@ -168,4 +168,3 @@ async def run_live_metrics_aggregator() -> None:
         live_queue_depth.set(1 if behind > 0 else 0)
 
         await asyncio.sleep(interval)
-

@@ -92,6 +92,11 @@ vpn_reconciliation_duration_seconds = Histogram(
     "Reconciliation cycle duration",
     buckets=(0.5, 1.0, 2.0, 5.0, 10.0, 30.0),
 )
+vpn_reconciliation_errors_total = Counter(
+    "vpn_reconciliation_errors_total",
+    "Reconciliation errors by node and stage",
+    ["node_id", "stage"],
+)
 vpn_peers_expected = Gauge(
     "vpn_peers_expected",
     "Number of peers expected on node (from DB)",
@@ -322,6 +327,33 @@ miniapp_events_total = Counter(
     "Mini App frontend events",
     ["event"],
 )
+frontend_telemetry_events_total = Counter(
+    "frontend_telemetry_events_total",
+    "Admin frontend telemetry events ingestion result",
+    ["event", "result"],  # result=accepted|dropped
+)
+frontend_telemetry_batches_total = Counter(
+    "frontend_telemetry_batches_total",
+    "Admin frontend telemetry batches ingestion result",
+    ["result"],  # result=accepted|dropped|disabled
+)
+frontend_errors_total = Counter(
+    "frontend_errors_total",
+    "Frontend error reports received",
+    ["app"],  # app=admin|miniapp|unknown
+)
+frontend_web_vital_ms = Histogram(
+    "frontend_web_vital_ms",
+    "Frontend web vital measurements in milliseconds",
+    ["app", "name", "route"],
+    buckets=(50, 100, 200, 500, 1000, 2500, 4000, 8000, 15000),
+)
+frontend_web_vital_score = Histogram(
+    "frontend_web_vital_score",
+    "Frontend web vital score measurements (CLS)",
+    ["app", "name", "route"],
+    buckets=(0.01, 0.05, 0.1, 0.25, 0.5, 1, 2, 5),
+)
 
 # Redis latency (optional; updated by periodic ping)
 redis_latency_seconds = Histogram(
@@ -358,6 +390,11 @@ server_key_mismatch_total = Counter(
 discovery_not_found_total = Counter(
     "vpn_discovery_not_found_total",
     "Server not found in discovery",
+    ["server_id"],
+)
+node_agent_unreachable_total = Counter(
+    "vpn_node_agent_unreachable_total",
+    "Server in DB but no recent agent heartbeat (agent mode)",
     ["server_id"],
 )
 

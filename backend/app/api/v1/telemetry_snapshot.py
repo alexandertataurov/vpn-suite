@@ -42,7 +42,9 @@ COMPRESS_THRESHOLD_BYTES = 50 * 1024
 _log = logging.getLogger(__name__)
 
 SCOPE_VALUES = Literal["devices", "nodes", "sessions", "all"]
-FIELDS_VALUES = frozenset({"meta", "nodes.summary", "nodes.list", "devices.summary", "devices.list", "sessions"})
+FIELDS_VALUES = frozenset(
+    {"meta", "nodes.summary", "nodes.list", "devices.summary", "devices.list", "sessions"}
+)
 
 
 def _parse_fields(fields_str: str | None) -> frozenset[str] | None:
@@ -81,7 +83,10 @@ def _build_meta_with_freshness(meta: dict | None, now_ts: int) -> SnapshotMetaOu
 @router.get("/snapshot", response_model=TelemetrySnapshotOut)
 async def get_telemetry_snapshot(
     scope: SCOPE_VALUES = Query("all", description="devices|nodes|sessions|all"),
-    since: str | None = Query(None, description="Cursor for delta; when set, server may return only changes (currently returns full snapshot)"),
+    since: str | None = Query(
+        None,
+        description="Cursor for delta; when set, server may return only changes (currently returns full snapshot)",
+    ),
     fields: str | None = Query(
         None,
         description="Comma-separated: meta, nodes.summary, nodes.list, devices.summary, devices.list, sessions. When set, only these sections are returned (smaller payload).",
@@ -96,7 +101,9 @@ async def get_telemetry_snapshot(
 
     if requested_fields is not None:
         include_nodes = "nodes.summary" in requested_fields or "nodes.list" in requested_fields
-        include_devices = "devices.summary" in requested_fields or "devices.list" in requested_fields
+        include_devices = (
+            "devices.summary" in requested_fields or "devices.list" in requested_fields
+        )
         include_sessions = "sessions" in requested_fields
         include_nodes_list = "nodes.list" in requested_fields
         include_devices_list = "devices.list" in requested_fields

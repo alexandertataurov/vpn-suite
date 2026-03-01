@@ -46,6 +46,7 @@ _DEFAULT_H_FALLBACK = (10, 20, 30, 40)  # fallback when no profile/server H; mus
 
 def generate_h_params() -> tuple[int, int, int, int]:
     """Generate H1–H4 with CSPRNG. Each 1 ≤ Hn ≤ 2^32-1, distinct. Must match server AWG_H1..AWG_H4."""
+
     def gen_uint32() -> int:
         while True:
             val = secrets.randbits(32)

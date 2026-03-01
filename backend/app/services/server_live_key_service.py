@@ -139,7 +139,9 @@ async def live_key_fetch(
                             continue
                         candidate = (data.get("public_key") or "").strip()
                         if candidate and len(candidate) >= 43:
-                            hb_id = (key.decode("utf-8") if isinstance(key, bytes) else str(key)).replace(REDIS_KEY_AGENT_HB_PREFIX, "", 1)
+                            hb_id = (
+                                key.decode("utf-8") if isinstance(key, bytes) else str(key)
+                            ).replace(REDIS_KEY_AGENT_HB_PREFIX, "", 1)
                             candidates.append((hb_id, candidate))
                     # Prefer candidate matching server_id or fallback
                     for hb_id, candidate in candidates:
@@ -174,6 +176,12 @@ async def live_key_fetch(
                         )
                 except Exception as scan_err:
                     _log.debug("LiveKeyFetch agent scan fallback failed: %s", scan_err)
+                try:
+                    from app.core.metrics import node_agent_unreachable_total
+
+                    node_agent_unreachable_total.labels(server_id=server_id).inc()
+                except Exception:
+                    pass
                 raise ServerNotSyncedError(
                     server_id,
                     "no heartbeat with public_key (try sync or check agent sends key for this server/container)",
@@ -195,6 +203,12 @@ async def live_key_fetch(
             raise
         except Exception as e:
             _log.warning("LiveKeyFetch agent server_id=%s error=%s", server_id, e)
+            try:
+                from app.core.metrics import node_agent_unreachable_total
+
+                node_agent_unreachable_total.labels(server_id=server_id).inc()
+            except Exception:
+                pass
             raise ServerNotSyncedError(server_id, f"heartbeat read failed: {e!s}") from e
 
     # Docker mode: key from node via adapter; fallback to DB key when node unreachable

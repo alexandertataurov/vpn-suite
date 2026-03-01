@@ -9,7 +9,7 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import AbuseSignal, Device, Payment, Plan, Referral, Server, Subscription
+from app.models import AbuseSignal, Device, Payment, Referral, Subscription
 
 
 def _median(values: list[float]) -> float:
@@ -93,8 +93,7 @@ async def run_abuse_detection(session: AsyncSession) -> dict:
     # Plan device_limit per user (from active subscription)
     sub_plan = (
         await session.execute(
-            select(Subscription.user_id, Subscription.plan_id, Subscription.device_limit)
-            .where(
+            select(Subscription.user_id, Subscription.plan_id, Subscription.device_limit).where(
                 Subscription.status == "active",
                 Subscription.valid_until > now,
                 Subscription.paused_at.is_(None),
@@ -135,7 +134,9 @@ async def run_abuse_detection(session: AsyncSession) -> dict:
     user_ref_count = {int(r.referrer_user_id): r[1] for r in ref_counts}
 
     # Build feature rows
-    all_users = set(user_devices.keys()) | set(user_failed_payments.keys()) | set(user_ref_count.keys())
+    all_users = (
+        set(user_devices.keys()) | set(user_failed_payments.keys()) | set(user_ref_count.keys())
+    )
     if not all_users:
         return {"users_scored": 0, "signals_created": 0, "high_risk": 0}
 
@@ -149,7 +150,9 @@ async def run_abuse_detection(session: AsyncSession) -> dict:
             "excess_devices": float(excess),
             "peer_regen": float(user_issued_24h.get(uid, 0)),
             "payment_fraud": float(user_failed_payments.get(uid, 0)),
-            "referral_fraud": float(user_ref_count.get(uid, 0)) if user_ref_count.get(uid, 0) > 5 else 0.0,
+            "referral_fraud": float(user_ref_count.get(uid, 0))
+            if user_ref_count.get(uid, 0) > 5
+            else 0.0,
         }
 
     # Normalize and score

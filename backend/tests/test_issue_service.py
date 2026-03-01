@@ -57,9 +57,17 @@ async def _create_issue_device_fixture():
         return user.id, sub.id, server.id
 
 
-def _mock_live_key(server_id: str, public_key: str = "xTIBA5rboUvnH4htodjb6e697QjLERt1NAB4mZqp8Dg="):
+def _mock_live_key(
+    server_id: str, public_key: str = "xTIBA5rboUvnH4htodjb6e697QjLERt1NAB4mZqp8Dg="
+):
     from datetime import datetime, timezone
-    return LiveKeyResult(public_key=public_key, node_id=server_id, synced_at=datetime.now(timezone.utc), fingerprint="xTIBA5rboUv")
+
+    return LiveKeyResult(
+        public_key=public_key,
+        node_id=server_id,
+        synced_at=datetime.now(timezone.utc),
+        fingerprint="xTIBA5rboUv",
+    )
 
 
 @pytest.mark.asyncio
@@ -68,7 +76,10 @@ async def test_issue_device_merges_runtime_obfuscation_into_config(monkeypatch):
     if not await check_db():
         pytest.skip("DB not available")
     monkeypatch.setattr("app.services.issue_service.settings.node_mode", "mock")
-    monkeypatch.setattr("app.services.issue_service.live_key_fetch", AsyncMock(side_effect=lambda sid, _: _mock_live_key(sid)))
+    monkeypatch.setattr(
+        "app.services.issue_service.live_key_fetch",
+        AsyncMock(side_effect=lambda sid, _: _mock_live_key(sid)),
+    )
 
     user_id, sub_id, server_id = await _create_issue_device_fixture()
 
@@ -96,7 +107,10 @@ async def test_issue_device_uses_profile_defaults_when_runtime_returns_none(monk
     if not await check_db():
         pytest.skip("DB not available")
     monkeypatch.setattr("app.services.issue_service.settings.node_mode", "mock")
-    monkeypatch.setattr("app.services.issue_service.live_key_fetch", AsyncMock(side_effect=lambda sid, _: _mock_live_key(sid)))
+    monkeypatch.setattr(
+        "app.services.issue_service.live_key_fetch",
+        AsyncMock(side_effect=lambda sid, _: _mock_live_key(sid)),
+    )
 
     user_id, sub_id, server_id = await _create_issue_device_fixture()
 
@@ -123,7 +137,10 @@ async def test_issue_device_uses_profile_defaults_when_runtime_raises(monkeypatc
     if not await check_db():
         pytest.skip("DB not available")
     monkeypatch.setattr("app.services.issue_service.settings.node_mode", "mock")
-    monkeypatch.setattr("app.services.issue_service.live_key_fetch", AsyncMock(side_effect=lambda sid, _: _mock_live_key(sid)))
+    monkeypatch.setattr(
+        "app.services.issue_service.live_key_fetch",
+        AsyncMock(side_effect=lambda sid, _: _mock_live_key(sid)),
+    )
 
     user_id, sub_id, server_id = await _create_issue_device_fixture()
 

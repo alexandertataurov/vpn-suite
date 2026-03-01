@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 import logging
 import time
-from typing import Optional
 
 from app.core.metrics import (
     live_events_in_total,
@@ -42,7 +41,7 @@ async def write_cluster_snapshot(
         live_redis_write_latency_seconds.observe(time.perf_counter() - started)
 
 
-async def read_cluster_snapshot_raw() -> Optional[dict]:
+async def read_cluster_snapshot_raw() -> dict | None:
     """Internal helper: return raw snapshot dict from Redis, or None."""
     try:
         redis = get_redis()
@@ -67,7 +66,7 @@ async def set_degradation_mode(mode: str) -> None:
         _log.debug("Live metrics: set_degradation_mode failed: %s", exc)
 
 
-async def get_degradation_mode() -> Optional[str]:
+async def get_degradation_mode() -> str | None:
     """Return current degradation mode string from Redis, or None."""
     try:
         redis = get_redis()
@@ -80,4 +79,3 @@ async def get_degradation_mode() -> Optional[str]:
     except Exception as exc:  # pragma: no cover
         _log.debug("Live metrics: get_degradation_mode failed: %s", exc)
         return None
-

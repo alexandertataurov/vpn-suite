@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.v1.device_cache import invalidate_devices_list_cache, invalidate_devices_summary_cache
 from app.api.v1.server_utils import get_agent_heartbeat
 from app.core.config import settings
 from app.core.constants import PERM_SERVERS_READ, PERM_SERVERS_WRITE
@@ -19,6 +20,8 @@ from app.core.metrics import (
     admin_issue_total,
     admin_revoke_total,
     admin_rotate_total,
+    config_issue_blocked_total,
+    discovery_not_found_total,
     provision_failures_total,
 )
 from app.core.rate_limit import rate_limit_admin_issue
@@ -36,11 +39,9 @@ from app.schemas.server import (
     ResetPeerRequest,
     ServerPeersOut,
 )
-from app.api.v1.device_cache import invalidate_devices_list_cache, invalidate_devices_summary_cache
-from app.core.metrics import config_issue_blocked_total, discovery_not_found_total
 from app.services.admin_issue_service import admin_issue_peer, admin_rotate_peer
-from app.services.server_live_key_service import ServerNotSyncedError
 from app.services.server_health_service import sync_peers_after_restart
+from app.services.server_live_key_service import ServerNotSyncedError
 
 router = APIRouter(prefix="/servers", tags=["servers"])
 logger = logging.getLogger(__name__)
@@ -351,6 +352,7 @@ async def get_server_peers(
     server = result.scalar_one_or_none()
     if not server:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Server not found")
+
     def _peer_issues(
         allowed_ips: str | None,
         last_handshake_ts: datetime | None,
@@ -387,7 +389,7 @@ async def get_server_peers(
                 age_sec = p.get("last_handshake_age_sec")
                 last_handshake_ts = None
                 peer_status = "unknown"
-                if isinstance(age_sec, (int, float)) and age_sec >= 0:
+                if isinstance(age_sec, int | float) and age_sec >= 0:
                     last_handshake_ts = datetime.fromtimestamp(
                         now_ts - int(age_sec), tz=timezone.utc
                     )
@@ -398,9 +400,7 @@ async def get_server_peers(
                 dev = pk_to_dev.get(pk)
                 peer_id = dev[0] if dev else None
                 device_name = dev[1] if dev else None
-                issues = _peer_issues(
-                    allowed_ips_str, last_handshake_ts, rx, tx, now_ts
-                )
+                issues = _peer_issues(allowed_ips_str, last_handshake_ts, rx, tx, now_ts)
                 peers.append(
                     PeerOut(
                         public_key=pk,
@@ -444,9 +444,7 @@ async def get_server_peers(
             dev = pk_to_dev.get(pk)
             peer_id = dev[0] if dev else None
             device_name = dev[1] if dev else None
-            issues = _peer_issues(
-                allowed_ips_str, last_handshake_ts, rx, tx, now_ts
-            )
+            issues = _peer_issues(allowed_ips_str, last_handshake_ts, rx, tx, now_ts)
             peers.append(
                 PeerOut(
                     public_key=pk,

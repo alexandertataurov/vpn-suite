@@ -15,13 +15,13 @@ from app.core.amnezia_config import (
 
 def test_generate_h_params_csprng():
     """H1–H4 are distinct, non-zero, in uint32 range (CSPRNG)."""
-    H1, H2, H3, H4 = generate_h_params()
-    for h in (H1, H2, H3, H4):
+    h1, h2, h3, h4 = generate_h_params()
+    for h in (h1, h2, h3, h4):
         assert isinstance(h, int) and 1 <= h <= 0xFFFFFFFF
-    assert len({H1, H2, H3, H4}) == 4
+    assert len({h1, h2, h3, h4}) == 4
     # Second call gives different values (with overwhelming probability)
-    H1b, H2b, H3b, H4b = generate_h_params()
-    assert (H1, H2, H3, H4) != (H1b, H2b, H3b, H4b)
+    h1b, h2b, h3b, h4b = generate_h_params()
+    assert (h1, h2, h3, h4) != (h1b, h2b, h3b, h4b)
 
 
 def test_generate_wg_keypair_returns_base64_32_bytes():

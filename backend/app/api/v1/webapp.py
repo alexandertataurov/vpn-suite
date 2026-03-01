@@ -1,20 +1,27 @@
 """WebApp: initData validation, session token, me (user + subscription + devices)."""
 
-from datetime import datetime, timezone
+import logging
+import math
+from datetime import datetime, timedelta, timezone
 
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, Field, model_validator
 from sqlalchemy import func, select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.api.v1.device_cache import invalidate_devices_list_cache, invalidate_devices_summary_cache
 from app.core.config import settings
+from app.core.config_builder import ConfigValidationError
 from app.core.constants import REDIS_KEY_RATELIMIT_ISSUE_PREFIX
 from app.core.database import get_db
-from app.core.metrics import miniapp_events_total
+from app.core.metrics import frontend_web_vital_ms, frontend_web_vital_score, miniapp_events_total
 from app.core.redis_client import get_redis
 from app.core.security import create_webapp_session_token, decode_token, validate_telegram_init_data
 from app.models import (
+    ChurnSurvey,
     Device,
     Payment,
     Plan,
@@ -24,11 +31,9 @@ from app.models import (
     Server,
     Subscription,
     User,
-    ChurnSurvey,
 )
-from app.api.v1.device_cache import invalidate_devices_list_cache, invalidate_devices_summary_cache
-from app.services.issue_service import issue_device
 from app.services.funnel_service import log_funnel_event
+from app.services.issue_service import issue_device
 from app.services.retention_service import (
     pause_subscription,
     resume_subscription,
@@ -39,6 +44,8 @@ router = APIRouter(prefix="/webapp", tags=["webapp"])
 
 _WEBAPP_SERVER_SELECT_LIMIT = 20
 _WEBAPP_SERVER_SELECT_WINDOW_SECONDS = 60
+_WEBAPP_ONBOARDING_VERSION = 1
+_WEBAPP_ONBOARDING_MAX_STEP = 2
 
 
 class WebAppAuthRequest(BaseModel):
@@ -58,8 +65,8 @@ class WebAppAuthRequest(BaseModel):
 
 
 @router.post("/auth")
-async def webapp_auth(body: WebAppAuthRequest):
-    """Validate Telegram WebApp initData; return short-lived session token."""
+async def webapp_auth(body: WebAppAuthRequest, db: AsyncSession = Depends(get_db)):
+    """Validate Telegram WebApp initData; ensure user exists; return short-lived session token."""
     init_data = body.init_data
     bot_token = settings.telegram_bot_token
     if not bot_token:
@@ -79,8 +86,16 @@ async def webapp_auth(body: WebAppAuthRequest):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={"code": "INVALID_INIT_DATA", "message": "User id missing"},
         )
+    tg_id = int(tg_user_id)
+    # Ensure user exists so /me, trial, create-invoice etc. do not return USER_NOT_FOUND
+    existing = await db.execute(select(User).where(User.tg_id == tg_id))
+    if existing.scalar_one_or_none() is None:
+        await db.execute(
+            pg_insert(User).values(tg_id=tg_id).on_conflict_do_nothing(index_elements=[User.tg_id])
+        )
+        await db.commit()
     ttl = int(settings.webapp_session_expire_seconds)
-    token = create_webapp_session_token(int(tg_user_id), expire_seconds=ttl)
+    token = create_webapp_session_token(tg_id, expire_seconds=ttl)
     return {"session_token": token, "expires_in": ttl}
 
 
@@ -95,6 +110,51 @@ def _get_tg_id_from_bearer(request: Request) -> int | None:
         except (ValueError, TypeError):
             pass
     return None
+
+
+async def _get_or_create_webapp_user(db: AsyncSession, tg_id: int):
+    """Return User for tg_id; create if missing so valid session never gets USER_NOT_FOUND."""
+    result = await db.execute(select(User).where(User.tg_id == tg_id))
+    user = result.scalar_one_or_none()
+    if user:
+        return user
+    await db.execute(
+        pg_insert(User).values(tg_id=tg_id).on_conflict_do_nothing(index_elements=[User.tg_id])
+    )
+    await db.flush()
+    result = await db.execute(select(User).where(User.tg_id == tg_id))
+    return result.scalar_one_or_none()
+
+
+def _serialize_onboarding_state(user: User | None) -> dict:
+    if not user:
+        return {
+            "completed": False,
+            "step": None,
+            "version": _WEBAPP_ONBOARDING_VERSION,
+            "updated_at": None,
+        }
+    version = int(user.onboarding_version or _WEBAPP_ONBOARDING_VERSION)
+    step = user.onboarding_step
+    if step is not None:
+        step = max(0, min(_WEBAPP_ONBOARDING_MAX_STEP, int(step)))
+    completed = user.onboarding_completed_at is not None
+    if completed and step is None:
+        step = _WEBAPP_ONBOARDING_MAX_STEP
+    return {
+        "completed": completed,
+        "step": step,
+        "version": version,
+        "updated_at": user.onboarding_completed_at.isoformat()
+        if user.onboarding_completed_at
+        else None,
+    }
+
+
+class WebAppOnboardingStateBody(BaseModel):
+    step: int = Field(..., ge=0, le=_WEBAPP_ONBOARDING_MAX_STEP)
+    completed: bool | None = None
+    version: int = Field(_WEBAPP_ONBOARDING_VERSION, ge=1)
 
 
 @router.get("/me")
@@ -112,7 +172,12 @@ async def webapp_me(request: Request, db: AsyncSession = Depends(get_db)):
     )
     user = result.scalar_one_or_none()
     if not user:
-        return {"user": None, "subscriptions": [], "devices": []}
+        return {
+            "user": None,
+            "subscriptions": [],
+            "devices": [],
+            "onboarding": _serialize_onboarding_state(None),
+        }
     subs = [
         {
             "id": s.id,
@@ -139,7 +204,46 @@ async def webapp_me(request: Request, db: AsyncSession = Depends(get_db)):
         payload={"source": "webapp"},
     )
     miniapp_events_total.labels(event="dashboard_open").inc()
-    return {"user": {"id": user.id, "tg_id": user.tg_id}, "subscriptions": subs, "devices": devs}
+    return {
+        "user": {"id": user.id, "tg_id": user.tg_id},
+        "subscriptions": subs,
+        "devices": devs,
+        "onboarding": _serialize_onboarding_state(user),
+    }
+
+
+@router.post("/onboarding/state")
+async def webapp_onboarding_state(
+    body: WebAppOnboardingStateBody,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    """Persist onboarding progress for the current session user."""
+    tg_id = _get_tg_id_from_bearer(request)
+    if not tg_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"code": "UNAUTHORIZED", "message": "Invalid session"},
+        )
+    user = await _get_or_create_webapp_user(db, tg_id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"code": "USER_NOT_FOUND", "message": "User not found"},
+        )
+    incoming_step = max(0, min(_WEBAPP_ONBOARDING_MAX_STEP, int(body.step)))
+    current_step = user.onboarding_step if user.onboarding_step is not None else 0
+    user.onboarding_step = max(current_step, incoming_step)
+    user.onboarding_version = max(int(user.onboarding_version or 1), int(body.version))
+
+    should_complete = bool(body.completed)
+    if should_complete or user.onboarding_completed_at is not None:
+        user.onboarding_completed_at = user.onboarding_completed_at or datetime.now(timezone.utc)
+        user.onboarding_step = _WEBAPP_ONBOARDING_MAX_STEP
+
+    await db.commit()
+    await db.refresh(user)
+    return {"onboarding": _serialize_onboarding_state(user)}
 
 
 class WebAppTelemetryBody(BaseModel):
@@ -175,12 +279,27 @@ async def webapp_telemetry(
         )
     result = await db.execute(select(User).where(User.tg_id == tg_id))
     user = result.scalar_one_or_none()
+    payload = body.payload or {}
     await log_funnel_event(
         db,
         event_type=body.event_type,
         user_id=user.id if user else None,
-        payload=body.payload or {},
+        payload=payload,
     )
+    if body.event_type == "web_vital" and isinstance(payload, dict):
+        name = str(payload.get("name") or "")[:32]
+        unit = str(payload.get("unit") or "ms").lower()
+        try:
+            value = float(payload.get("value") or 0)
+        except (TypeError, ValueError):
+            value = None
+        if name and value is not None and math.isfinite(value) and value >= 0:
+            route = payload.get("route")
+            route_label = str(route)[:200] if route else "unknown"
+            if unit == "score":
+                frontend_web_vital_score.labels(app="miniapp", name=name, route=route_label).observe(value)
+            else:
+                frontend_web_vital_ms.labels(app="miniapp", name=name, route=route_label).observe(value)
     await db.commit()
     return {"ok": True}
 
@@ -267,8 +386,7 @@ async def webapp_issue_device(
         raise HTTPException(
             status_code=401, detail={"code": "UNAUTHORIZED", "message": "Invalid session"}
         )
-    user_result = await db.execute(select(User).where(User.tg_id == tg_id))
-    user = user_result.scalar_one_or_none()
+    user = await _get_or_create_webapp_user(db, tg_id)
     if not user:
         raise HTTPException(
             status_code=404, detail={"code": "USER_NOT_FOUND", "message": "User not found"}
@@ -309,7 +427,15 @@ async def webapp_issue_device(
             status_code=400,
             detail={"code": "NO_ACTIVE_SUBSCRIPTION", "message": "No active subscription"},
         )
-    adapter = request.app.state.node_runtime_adapter
+    adapter = getattr(request.app.state, "node_runtime_adapter", None)
+    if adapter is None:
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "code": "NODE_RUNTIME_UNAVAILABLE",
+                "message": "Device issuance is temporarily unavailable. Try again later.",
+            },
+        )
     from app.services.topology_engine import TopologyEngine
 
     engine = TopologyEngine(adapter)
@@ -340,7 +466,10 @@ async def webapp_issue_device(
                 detail={
                     "code": "SERVER_NOT_SYNCED",
                     "message": "Server key not verified; run sync or fix discovery.",
-                    "details": {"server_id": getattr(e, "server_id", ""), "reason": getattr(e, "reason", "")},
+                    "details": {
+                        "server_id": getattr(e, "server_id", ""),
+                        "reason": getattr(e, "reason", ""),
+                    },
                 },
             ) from e
         if isinstance(e, LoadBalancerError):
@@ -349,16 +478,42 @@ async def webapp_issue_device(
             raise HTTPException(
                 status_code=502, detail={"code": "NODE_PEER_FAILED", "message": str(e)}
             )
+        if isinstance(e, ConfigValidationError):
+            msg = (
+                "; ".join(getattr(e, "errors", [str(e)])) if getattr(e, "errors", None) else str(e)
+            )
+            raise HTTPException(
+                status_code=400,
+                detail={"code": "CONFIG_VALIDATION_FAILED", "message": msg[:500]},
+            ) from e
         if isinstance(e, ValueError):
             raise HTTPException(
                 status_code=400,
                 detail={"code": "ISSUE_FAILED", "message": str(e).replace("_", " ")},
-            )
-        raise
-    await db.commit()
-    await invalidate_devices_summary_cache()
-    await invalidate_devices_list_cache()
-    await db.refresh(out.device)
+            ) from e
+        logging.getLogger(__name__).exception("webapp_issue_device unhandled error")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "code": "INTERNAL_ERROR",
+                "message": "Could not add device. Please try again or contact support.",
+            },
+        ) from e
+    try:
+        await db.commit()
+        await invalidate_devices_summary_cache()
+        await invalidate_devices_list_cache()
+        await db.refresh(out.device)
+    except Exception as commit_err:
+        await db.rollback()
+        logging.getLogger(__name__).exception("webapp_issue_device commit/invalidate failed")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "code": "INTERNAL_ERROR",
+                "message": "Could not add device. Please try again or contact support.",
+            },
+        ) from commit_err
     return WebAppIssueDeviceResponse(
         device_id=out.device.id,
         config=out.config_awg,
@@ -451,7 +606,9 @@ async def webapp_referral_stats(request: Request, db: AsyncSession = Depends(get
     rewarded = rewarded_row[0] if rewarded_row is not None else 0
     earned_days = int(rewarded_row[1]) if rewarded_row is not None else 0
     pending_result = await db.execute(
-        select(func.count()).select_from(Referral).where(
+        select(func.count())
+        .select_from(Referral)
+        .where(
             Referral.referrer_user_id == user.id,
             Referral.reward_applied_at.is_(None),
         )
@@ -542,6 +699,38 @@ class WebAppPaymentStatusOut(BaseModel):
     valid_until: datetime | None = None
 
 
+async def _create_telegram_invoice_link(
+    title: str,
+    description: str,
+    payload: str,
+    star_count: int,
+) -> str:
+    """Call Telegram Bot API createInvoiceLink. Returns invoice URL or empty string if token missing/fail."""
+    token = (getattr(settings, "telegram_bot_token", None) or "").strip()
+    if not token:
+        return ""
+    url = f"https://api.telegram.org/bot{token}/createInvoiceLink"
+    body = {
+        "title": title[:32],
+        "description": description[:255],
+        "payload": payload[:128],
+        "provider_token": "",
+        "currency": "XTR",
+        "prices": [{"label": title[:32] or "VPN", "amount": max(1, star_count)}],
+    }
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            r = await client.post(url, json=body)
+            if r.status_code != 200:
+                return ""
+            data = r.json()
+            if isinstance(data.get("result"), str):
+                return data["result"]
+            return ""
+    except Exception:
+        return ""
+
+
 @router.post("/payments/create-invoice")
 async def webapp_create_invoice(
     request: Request,
@@ -554,8 +743,7 @@ async def webapp_create_invoice(
         raise HTTPException(
             status_code=401, detail={"code": "UNAUTHORIZED", "message": "Invalid session"}
         )
-    user_result = await db.execute(select(User).where(User.tg_id == tg_id))
-    user = user_result.scalar_one_or_none()
+    user = await _get_or_create_webapp_user(db, tg_id)
     if not user:
         raise HTTPException(
             status_code=404, detail={"code": "USER_NOT_FOUND", "message": "User not found"}
@@ -604,9 +792,10 @@ async def webapp_create_invoice(
         )
         db.add(sub)
         await db.flush()
+    is_free = float(plan.price_amount or 0) <= 0
     server_result = await db.execute(select(Server).where(Server.is_active.is_(True)).limit(1))
     server = server_result.scalar_one_or_none()
-    if not server:
+    if not server and not is_free:
         raise HTTPException(
             status_code=503,
             detail={"code": "SERVER_NOT_AVAILABLE", "message": "No server available"},
@@ -618,7 +807,7 @@ async def webapp_create_invoice(
         user_id=user.id,
         subscription_id=sub.id,
         provider="telegram_stars",
-        status="pending",
+        status="completed" if is_free else "pending",
         amount=plan.price_amount,
         currency=plan.price_currency,
         external_id=external_id,
@@ -626,6 +815,10 @@ async def webapp_create_invoice(
     )
     db.add(payment)
     await db.flush()
+    if is_free and sub.status != "active":
+        sub.status = "active"
+        sub.valid_from = now
+        sub.valid_until = now + timedelta(days=plan.duration_days or 365)
     await log_funnel_event(
         db,
         event_type="plan_selected",
@@ -635,17 +828,30 @@ async def webapp_create_invoice(
     miniapp_events_total.labels(event="plan_selected").inc()
     await db.commit()
     await db.refresh(payment)
-    star_count = max(1, int(plan.price_amount))
+    await db.refresh(sub)
+    star_count = 0 if is_free else max(1, int(plan.price_amount))
+    title = plan.name or "VPN"
+    description = f"VPN plan, {plan.duration_days} days"
+    invoice_link = ""
+    if not is_free:
+        invoice_link = await _create_telegram_invoice_link(
+            title=title,
+            description=description,
+            payload=payment.id,
+            star_count=star_count,
+        )
     return {
         "invoice_id": payment.id,
         "payment_id": payment.id,
-        "title": plan.name or "VPN",
-        "description": f"VPN plan, {plan.duration_days} days",
+        "title": title,
+        "description": description,
         "currency": "XTR",
         "star_count": star_count,
         "payload": payment.id,
-        "server_id": server.id,
+        "server_id": server.id if server else "",
         "subscription_id": sub.id,
+        "invoice_link": invoice_link,
+        "free_activation": is_free,
     }
 
 
@@ -680,6 +886,65 @@ async def webapp_payment_status(
         status=payment.status,
         plan_id=sub.plan_id if sub else None,
         valid_until=sub.valid_until if sub and sub.valid_until else None,
+    )
+
+
+class WebAppTrialStartOut(BaseModel):
+    subscription_id: str
+    device_id: str
+    trial_ends_at: str  # ISO datetime
+
+
+@router.post("/trial/start", response_model=WebAppTrialStartOut)
+async def webapp_trial_start(request: Request, db: AsyncSession = Depends(get_db)):
+    """Start free trial: one trial per user, creates active sub + one device. Bearer required."""
+    tg_id = _get_tg_id_from_bearer(request)
+    if not tg_id:
+        raise HTTPException(
+            status_code=401, detail={"code": "UNAUTHORIZED", "message": "Invalid session"}
+        )
+    user = await _get_or_create_webapp_user(db, tg_id)
+    if not user:
+        raise HTTPException(
+            status_code=404, detail={"code": "USER_NOT_FOUND", "message": "User not found"}
+        )
+    adapter = getattr(request.app.state, "node_runtime_adapter", None)
+    if adapter is None:
+        raise HTTPException(
+            status_code=503,
+            detail={"code": "UNAVAILABLE", "message": "Trial not available"},
+        )
+    from app.services.topology_engine import TopologyEngine
+    from app.services.trial_service import start_trial
+
+    engine = TopologyEngine(adapter)
+    try:
+        result = await start_trial(
+            db,
+            tg_id=int(tg_id),
+            get_topology=engine.get_topology,
+            runtime_adapter=adapter,
+        )
+    except ValueError as e:
+        code = str(e).replace(" ", "_").lower()[:32]
+        if "trial_already_used" in code:
+            raise HTTPException(
+                status_code=409,
+                detail={"code": "TRIAL_ALREADY_USED", "message": "Trial already used"},
+            ) from e
+        if "trial_plan_not_found" in code:
+            raise HTTPException(
+                status_code=503,
+                detail={"code": "TRIAL_PLAN_NOT_FOUND", "message": "No trial plan configured"},
+            ) from e
+        raise HTTPException(
+            status_code=400, detail={"code": "BAD_REQUEST", "message": str(e).replace("_", " ")}
+        ) from e
+    await db.commit()
+    return WebAppTrialStartOut(
+        subscription_id=result.subscription_id,
+        device_id=result.device_id,
+        trial_ends_at=result.trial_ends_at.isoformat(),
     )
 
 

@@ -1,4 +1,4 @@
-"""Drop servers.integration_type (Outline removal).
+"""Drop servers.integration_type (schema cleanup).
 
 Revision ID: 036
 Revises: 035

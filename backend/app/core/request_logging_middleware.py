@@ -8,7 +8,12 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 
 from app.core.config import settings
-from app.core.logging_config import extra_for_event, request_id_ctx, trace_id_ctx
+from app.core.logging_config import (
+    correlation_id_ctx,
+    extra_for_event,
+    request_id_ctx,
+    trace_id_ctx,
+)
 from app.core.prometheus_middleware import path_template
 
 _log = logging.getLogger(__name__)
@@ -31,14 +36,13 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
     """Assign request_id, log api.request.start/end with event taxonomy."""
 
     async def dispatch(self, request: Request, call_next):
-        request_id = (
-            request.headers.get("X-Request-ID")
-            or request.headers.get("X-Trace-ID")
-            or str(uuid.uuid4())
-        )
+        request_id = request.headers.get("X-Request-ID") or str(uuid.uuid4())
+        correlation_id = request.headers.get("X-Correlation-ID") or request_id
         token = request_id_ctx.set(request_id)
-        trace_token = trace_id_ctx.set(request_id)  # trace_id = request_id when no OTel
+        trace_token = trace_id_ctx.set(correlation_id)
+        correlation_token = correlation_id_ctx.set(correlation_id)
         request.state.request_id = request_id
+        request.state.correlation_id = correlation_id
         route = path_template(request.url.path)
         client_ip = _client_ip(request)
         _log.info(
@@ -53,6 +57,8 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         start = time.perf_counter()
         try:
             response = await call_next(request)
+            response.headers["X-Request-ID"] = request_id
+            response.headers["X-Correlation-ID"] = correlation_id
             duration_ms = (time.perf_counter() - start) * 1000
             admin_id = getattr(request.state, "audit_admin_id", None)
             extra_dict = extra_for_event(
@@ -100,3 +106,4 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         finally:
             request_id_ctx.reset(token)
             trace_id_ctx.reset(trace_token)
+            correlation_id_ctx.reset(correlation_token)

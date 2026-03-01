@@ -1,4 +1,4 @@
-"""servers.integration_type for AWG vs Outline.
+"""servers.integration_type (legacy schema; removed in 036).
 
 Revision ID: 033
 Revises: 032

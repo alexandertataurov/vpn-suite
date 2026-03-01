@@ -39,11 +39,15 @@ async def main() -> int:
         # Payments reference user and subscription; delete before users so we control order.
         deleted_events = await session.execute(delete(PaymentEvent))
         deleted_payments = await session.execute(delete(Payment))
-        print(f"Deleted {deleted_events.rowcount} payment_events, {deleted_payments.rowcount} payments.")
+        print(
+            f"Deleted {deleted_events.rowcount} payment_events, {deleted_payments.rowcount} payments."
+        )
 
         deleted_redemptions = await session.execute(delete(PromoRedemption))
         deleted_referrals = await session.execute(delete(Referral))
-        print(f"Deleted {deleted_redemptions.rowcount} promo_redemptions, {deleted_referrals.rowcount} referrals.")
+        print(
+            f"Deleted {deleted_redemptions.rowcount} promo_redemptions, {deleted_referrals.rowcount} referrals."
+        )
 
         deleted_subs = await session.execute(delete(Subscription))
         print(f"Deleted {deleted_subs.rowcount} subscriptions.")

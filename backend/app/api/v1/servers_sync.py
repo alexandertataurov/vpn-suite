@@ -2,7 +2,7 @@
 
 import time
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -11,6 +11,10 @@ from app.core.config import settings
 from app.core.constants import PERM_SERVERS_READ, PERM_SERVERS_WRITE
 from app.core.database import get_db
 from app.core.error_responses import not_found_404
+from app.core.idempotency import (
+    get_cached_idempotency_response,
+    store_idempotency_response,
+)
 from app.core.logging_config import request_id_ctx
 from app.core.metrics import (
     server_snapshot_staleness_seconds,
@@ -32,6 +36,7 @@ async def trigger_server_sync(
     request: Request,
     server_id: str,
     body: ServerSyncRequest,
+    idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
     db: AsyncSession = Depends(get_db),
     admin=Depends(require_permission(PERM_SERVERS_WRITE)),
 ):
@@ -40,6 +45,9 @@ async def trigger_server_sync(
     server = result.scalar_one_or_none()
     if not server:
         raise not_found_404("Server", server_id)
+    cached = await get_cached_idempotency_response("servers.sync", server_id, idempotency_key)
+    if cached and isinstance(cached.get("body"), dict):
+        return ServerSyncResponse(**cached["body"])
     rid = getattr(request.state, "request_id", None) or request_id_ctx.get() or ""
     admin_id = str(admin.id) if hasattr(admin, "id") else None
 
@@ -62,7 +70,14 @@ async def trigger_server_sync(
             request_id=rid,
         )
         await db.commit()
-        return ServerSyncResponse(request_id=rid, job_id="", action_id=action.id)
+        response = ServerSyncResponse(request_id=rid, job_id="", action_id=action.id)
+        await store_idempotency_response(
+            "servers.sync",
+            server_id,
+            idempotency_key,
+            response.model_dump(),
+        )
+        return response
 
     job_id = await start_sync(db, server_id, body.mode, rid or None, admin_id)
     await db.commit()
@@ -82,7 +97,14 @@ async def trigger_server_sync(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail=f"Sync failed: {err or 'unknown'}. request_id={rid}",
         )
-    return ServerSyncResponse(request_id=rid, job_id=job_id)
+    response = ServerSyncResponse(request_id=rid, job_id=job_id)
+    await store_idempotency_response(
+        "servers.sync",
+        server_id,
+        idempotency_key,
+        response.model_dump(),
+    )
+    return response
 
 
 @servers_sync_router.get("/{server_id}/sync/{job_id}", response_model=ServerSyncJobStatus)

@@ -34,6 +34,7 @@ class RotateObfuscationHOut(BaseModel):
     h4: int
     action_id: str
 
+
 servers_actions_router = APIRouter()
 
 
@@ -56,14 +57,14 @@ async def rotate_server_obfuscation_h(
     admin_id = str(admin.id) if hasattr(admin, "id") else ""
     await rate_limit_server_actions(request, server_id, admin_id)
     rid = getattr(request.state, "request_id", None) or request_id_ctx.get()
-    H1, H2, H3, H4 = generate_h_params()
-    server.amnezia_h1, server.amnezia_h2, server.amnezia_h3, server.amnezia_h4 = H1, H2, H3, H4
+    h1, h2, h3, h4 = generate_h_params()
+    server.amnezia_h1, server.amnezia_h2, server.amnezia_h3, server.amnezia_h4 = h1, h2, h3, h4
     await db.flush()
     action = await create_action(
         db,
         server_id=server_id,
         type="apply_obfuscation_h",
-        payload={"h1": H1, "h2": H2, "h3": H3, "h4": H4},
+        payload={"h1": h1, "h2": h2, "h3": h3, "h4": h4},
         requested_by=admin_id,
         correlation_id=rid,
     )
@@ -73,11 +74,11 @@ async def rotate_server_obfuscation_h(
         action="server.rotate_obfuscation_h",
         resource_type="server",
         resource_id=server_id,
-        old_new={"h1": H1, "h2": H2, "h3": H3, "h4": H4, "action_id": action.id},
+        old_new={"h1": h1, "h2": h2, "h3": h3, "h4": h4, "action_id": action.id},
         request_id=rid,
     )
     await db.commit()
-    return RotateObfuscationHOut(h1=H1, h2=H2, h3=H3, h4=H4, action_id=action.id)
+    return RotateObfuscationHOut(h1=h1, h2=h2, h3=h3, h4=h4, action_id=action.id)
 
 
 @servers_actions_router.post(

@@ -3,9 +3,7 @@
 import time
 from contextvars import ContextVar
 
-_db_request_context: ContextVar[dict | None] = ContextVar(
-    "db_request_context", default=None
-)
+_db_request_context: ContextVar[dict | None] = ContextVar("db_request_context", default=None)
 
 
 def set_request_context() -> None:

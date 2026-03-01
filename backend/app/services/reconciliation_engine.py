@@ -25,10 +25,12 @@ try:
         vpn_peers_readded_total,
         vpn_reconciliation_drift,
         vpn_reconciliation_duration_seconds,
+        vpn_reconciliation_errors_total,
         vpn_reconciliation_runs_total,
     )
 except Exception:
     vpn_reconciliation_runs_total = None  # type: ignore[assignment]
+    vpn_reconciliation_errors_total = None  # type: ignore[assignment]
     vpn_reconciliation_drift = None  # type: ignore[assignment]
     vpn_reconciliation_duration_seconds = None  # type: ignore[assignment]
     vpn_peers_expected = None  # type: ignore[assignment]
@@ -40,6 +42,7 @@ except Exception:
     vpn_peers_expired_active_count = None  # type: ignore[assignment]
 
 _log = logging.getLogger(__name__)
+
 
 @dataclass
 class ReconciliationDiff:
@@ -53,7 +56,9 @@ class ReconciliationResult:
     peers_added: int = 0
     peers_removed: int = 0
     peers_updated: int = 0
-    peers_added_pubkeys: list[str] = field(default_factory=list)  # successfully added, for Device update
+    peers_added_pubkeys: list[str] = field(
+        default_factory=list
+    )  # successfully added, for Device update
     errors: list[str] = field(default_factory=list)
     duration_ms: float = 0.0
 
@@ -161,14 +166,49 @@ async def apply_diff(
 
     if settings.reconciliation_read_only:
         for p in diff.peers_to_add:
-            _log.warning("Safe Reconcile (Read-Only): Peer found in DB but missing in runtime (Ghost): node_id=%s pubkey=%s", node_id, p.public_key[:16])
+            _log.warning(
+                "Safe Reconcile (Read-Only): Peer found in DB but missing in runtime (Ghost): node_id=%s pubkey=%s",
+                node_id,
+                p.public_key[:16],
+            )
         for p in diff.peers_to_remove:
-            _log.warning("Safe Reconcile (Read-Only): ORPHAN peer found in runtime but not in DB: node_id=%s pubkey=%s", node_id, p[:16])
+            _log.warning(
+                "Safe Reconcile (Read-Only): ORPHAN peer found in runtime but not in DB: node_id=%s pubkey=%s",
+                node_id,
+                p[:16],
+            )
         for p in diff.peers_to_update:
-            _log.warning("Safe Reconcile (Read-Only): Peer drift detected (params mismatch): node_id=%s pubkey=%s", node_id, p.public_key[:16])
-        
+            _log.warning(
+                "Safe Reconcile (Read-Only): Peer drift detected (params mismatch): node_id=%s pubkey=%s",
+                node_id,
+                p.public_key[:16],
+            )
+
         if diff.peers_to_add or diff.peers_to_remove or diff.peers_to_update:
             return result
+
+    # Remove orphans first when enabled, so add_peer won't hit allowed_ips conflict
+    if settings.reconciliation_remove_orphans and diff.peers_to_remove:
+        for pubkey in diff.peers_to_remove:
+            _log.info(
+                "unknown peer on server, removing",
+                extra={"event": "reconcile_quarantine", "node_id": node_id, "pubkey": pubkey[:32]},
+            )
+            try:
+                await adapter.remove_peer(node_id, pubkey)
+                result.peers_removed += 1
+            except Exception as e:
+                if vpn_peer_apply_failures_total is not None:
+                    try:
+                        vpn_peer_apply_failures_total.labels(node_id=node_id, reason="remove").inc()
+                        if vpn_reconciliation_errors_total is not None:
+                            vpn_reconciliation_errors_total.labels(
+                                node_id=node_id, stage="remove"
+                            ).inc()
+                    except Exception:
+                        pass
+                _log.exception("Reconciliation remove_peer failed node_id=%s", node_id)
+                result.errors.append(f"remove {pubkey[:16]}: {e!s}")
 
     for peer in diff.peers_to_add:
         try:
@@ -193,6 +233,8 @@ async def apply_diff(
             if vpn_peer_apply_failures_total is not None:
                 try:
                     vpn_peer_apply_failures_total.labels(node_id=node_id, reason="add").inc()
+                    if vpn_reconciliation_errors_total is not None:
+                        vpn_reconciliation_errors_total.labels(node_id=node_id, stage="add").inc()
                 except Exception:
                     pass
             _log.exception(
@@ -206,24 +248,7 @@ async def apply_diff(
         except Exception:
             pass
 
-    if settings.reconciliation_remove_orphans:
-        for pubkey in diff.peers_to_remove:
-            _log.info(
-                "unknown peer on server, removing",
-                extra={"event": "reconcile_quarantine", "node_id": node_id, "pubkey": pubkey[:32]},
-            )
-            try:
-                await adapter.remove_peer(node_id, pubkey)
-                result.peers_removed += 1
-            except Exception as e:
-                if vpn_peer_apply_failures_total is not None:
-                    try:
-                        vpn_peer_apply_failures_total.labels(node_id=node_id, reason="remove").inc()
-                    except Exception:
-                        pass
-                _log.exception("Reconciliation remove_peer failed node_id=%s", node_id)
-                result.errors.append(f"remove {pubkey[:16]}: {e!s}")
-    else:
+    if not settings.reconciliation_remove_orphans:
         for pubkey in diff.peers_to_remove:
             _log.warning(
                 "ORPHAN peer on server (not in DB); not removing (reconciliation_remove_orphans=false)",
@@ -249,6 +274,10 @@ async def apply_diff(
             if vpn_peer_apply_failures_total is not None:
                 try:
                     vpn_peer_apply_failures_total.labels(node_id=node_id, reason="update").inc()
+                    if vpn_reconciliation_errors_total is not None:
+                        vpn_reconciliation_errors_total.labels(
+                            node_id=node_id, stage="update"
+                        ).inc()
                 except Exception:
                     pass
             _log.exception("Reconciliation update peer failed node_id=%s", node_id)
@@ -289,10 +318,17 @@ async def reconcile_node(
     node_id: str, adapter: NodeRuntimeAdapter, server_ids: list[str] | None = None
 ) -> ReconciliationResult:
     """Reconcile one runtime node by node_id (desired from DB devices, actual from wg runtime).
+    Not allowed in production (only node-agent mutates peers).
 
     server_ids: optional list of server_id values to match devices against (e.g. node_id and
     container_name). When not provided, defaults to [node_id].
     """
+    from app.core.config import settings
+
+    if settings.environment == "production":
+        raise ValueError(
+            "Reconciliation must not run in production; only node-agent mutates peers. Set NODE_DISCOVERY=agent."
+        )
     async with async_session_factory() as session:
         ids = [node_id]
         if server_ids:
@@ -368,8 +404,8 @@ async def reconcile_node(
         if result.peers_added_pubkeys:
             now_applied = datetime.now(timezone.utc)
             device_ids_to_update = [
-                pubkey_to_device_id[pk] 
-                for pk in result.peers_added_pubkeys 
+                pubkey_to_device_id[pk]
+                for pk in result.peers_added_pubkeys
                 if pk in pubkey_to_device_id
             ]
             if device_ids_to_update:
@@ -411,7 +447,13 @@ async def reconcile_node(
 async def reconcile_all_nodes(
     adapter: NodeRuntimeAdapter,
 ) -> list[tuple[str, ReconciliationResult]]:
-    """Reconcile every discovered healthy/degraded AWG node."""
+    """Reconcile every discovered healthy/degraded AWG node. Not allowed in production (node-agent only)."""
+    from app.core.config import settings
+
+    if settings.environment == "production":
+        raise ValueError(
+            "Reconciliation must not run in production; only node-agent mutates peers. Set NODE_DISCOVERY=agent."
+        )
     results: list[tuple[str, ReconciliationResult]] = []
     nodes = await adapter.discover_nodes()
     for node in nodes:
@@ -437,7 +479,9 @@ async def run_reconciliation_loop(get_adapter) -> None:
     from app.core.config import settings
 
     if settings.node_discovery == "agent":
-        _log.info("Reconciliation loop skipped: NODE_DISCOVERY=agent (node-agent applies desired state)")
+        _log.info(
+            "Reconciliation loop skipped: NODE_DISCOVERY=agent (node-agent applies desired state)"
+        )
         while True:
             await asyncio.sleep(3600)
 

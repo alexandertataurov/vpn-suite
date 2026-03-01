@@ -74,6 +74,12 @@ async def test_add_peer_uses_discovered_interface(monkeypatch):
         captured["cmd"] = cmd
         return (0, "")
 
+    async def noop_persist(*_a, **_k):
+        pass
+
+    monkeypatch.setattr("app.services.node_runtime_docker._persist_wg_config", noop_persist)
+    monkeypatch.setattr("app.services.node_runtime_docker._run_command", fake_run_command)
+
     async def fake_discover_nodes():
         return [node]
 
@@ -94,8 +100,9 @@ async def test_add_peer_uses_discovered_interface(monkeypatch):
     async def noop_ensure_route(*_args, **_kwargs):
         pass
 
-    monkeypatch.setattr("app.services.node_runtime_docker._run_command", fake_run_command)
-    monkeypatch.setattr("app.services.node_runtime_docker._ensure_client_subnet_routes", noop_ensure_route)
+    monkeypatch.setattr(
+        "app.services.node_runtime_docker._ensure_client_subnet_routes", noop_ensure_route
+    )
     adapter = DockerNodeRuntimeAdapter(container_filter="amnezia-awg", interface="awg0")
     monkeypatch.setattr(adapter, "discover_nodes", fake_discover_nodes)
     monkeypatch.setattr(adapter, "list_peers", fake_list_peers)

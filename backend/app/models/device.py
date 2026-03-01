@@ -43,9 +43,7 @@ class Device(Base, TimestampMixin):
     apply_status: Mapped[str | None] = mapped_column(
         String(32), nullable=True, default="PENDING_APPLY"
     )
-    last_applied_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    last_applied_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     last_seen_handshake_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )

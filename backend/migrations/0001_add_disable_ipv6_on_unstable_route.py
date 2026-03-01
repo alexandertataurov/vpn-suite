@@ -33,4 +33,3 @@ def downgrade(op: Any) -> None:  # type: ignore[unused-argument]
         op.drop_column("server_profiles", "disable_ipv6_on_unstable_route")  # type: ignore[attr-defined]
     except Exception:
         return
-

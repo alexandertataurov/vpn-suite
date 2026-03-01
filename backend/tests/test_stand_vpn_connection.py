@@ -78,11 +78,10 @@ def test_vpn_config_build_config_emits_valid_wireguard():
 @pytest.mark.asyncio
 async def test_server_issues_correct_config(caplog):
     """Server issue_device returns config_wg with all required sections for VPN connectivity."""
-    from unittest.mock import patch
-
     import uuid
     from datetime import datetime, timedelta, timezone
     from decimal import Decimal
+    from unittest.mock import patch
 
     from app.core.database import async_session_factory, check_db
     from app.models import Plan, Server, Subscription, User

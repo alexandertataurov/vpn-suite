@@ -54,13 +54,11 @@ async def get_churn_risk_list(
     limit: int = Query(50, ge=1, le=200),
 ):
     """High-risk users from churn_risk_scores; revenue at risk = sum(plan value * remaining days/30) for high-risk."""
-    result = (
-        await db.execute(
-            select(ChurnRiskScore)
-            .where(ChurnRiskScore.score >= min_score)
-            .order_by(ChurnRiskScore.computed_at.desc())
-            .limit(limit)
-        )
+    result = await db.execute(
+        select(ChurnRiskScore)
+        .where(ChurnRiskScore.score >= min_score)
+        .order_by(ChurnRiskScore.computed_at.desc())
+        .limit(limit)
     )
     rows = result.scalars().all()
     items = [
@@ -76,18 +74,24 @@ async def get_churn_risk_list(
 
     # Revenue at risk: for high-risk subs, sum (plan monthly value * remaining days / 30)
     from datetime import datetime, timezone
+
     now = datetime.now(timezone.utc)
     sub_ids = [r.subscription_id for r in rows if r.subscription_id]
     revenue_at_risk = 0.0
     if sub_ids:
         subs_plans = (
             await db.execute(
-                select(Subscription.id, Subscription.valid_until, Subscription.plan_id)
-                .where(Subscription.id.in_(sub_ids), Subscription.valid_until > now)
+                select(Subscription.id, Subscription.valid_until, Subscription.plan_id).where(
+                    Subscription.id.in_(sub_ids), Subscription.valid_until > now
+                )
             )
         ).all()
         plan_ids = list({s.plan_id for s in subs_plans})
-        plans = (await db.execute(select(Plan.id, Plan.price_amount, Plan.duration_days).where(Plan.id.in_(plan_ids)))).all()
+        plans = (
+            await db.execute(
+                select(Plan.id, Plan.price_amount, Plan.duration_days).where(Plan.id.in_(plan_ids))
+            )
+        ).all()
         plan_map = {p.id: (float(p.price_amount), p.duration_days or 30) for p in plans}
         for s in subs_plans:
             days_left = (s.valid_until - now).days if s.valid_until else 0
@@ -97,4 +101,6 @@ async def get_churn_risk_list(
             monthly = price * 30.0 / dur
             revenue_at_risk += monthly * (days_left / 30.0)
 
-    return ChurnRiskListOut(items=items, total=len(items), revenue_at_risk=round(revenue_at_risk, 2))
+    return ChurnRiskListOut(
+        items=items, total=len(items), revenue_at_risk=round(revenue_at_risk, 2)
+    )

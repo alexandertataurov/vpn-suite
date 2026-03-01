@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.constants import PERM_CLUSTER_READ
 from app.core.database import get_db
 from app.core.rbac import require_permission
-from app.models import Payment, Plan, Subscription, User
+from app.models import Subscription, User
 
 router = APIRouter(prefix="/admin/cohorts", tags=["admin-cohorts"])
 
@@ -36,7 +36,9 @@ async def _cohort_retention_data(db: AsyncSession, months: int) -> list[CohortRe
         cohort_month = start.strftime("%Y-%m")
         signups = (
             await db.execute(
-                select(func.count()).select_from(User).where(
+                select(func.count())
+                .select_from(User)
+                .where(
                     User.created_at >= start,
                     User.created_at < end,
                 )
@@ -90,6 +92,7 @@ async def export_cohorts_csv(
     """Export cohort retention as CSV."""
     items = await _cohort_retention_data(db, 12)
     import io
+
     buf = io.StringIO()
     buf.write("cohort_month,signups,retained_30d,retention_pct\n")
     for row in items:
@@ -116,7 +119,6 @@ async def export_cohorts_prometheus(
         "# TYPE cohort_retention_pct gauge",
     ]
     for row in items:
-        cohort = row.cohort_month.replace("-", "_")
         lines.append(f'cohort_retention_signups{{cohort="{row.cohort_month}"}} {row.signups}')
         lines.append(f'cohort_retention_retained{{cohort="{row.cohort_month}"}} {row.retained_30d}')
         lines.append(f'cohort_retention_pct{{cohort="{row.cohort_month}"}} {row.retention_pct}')

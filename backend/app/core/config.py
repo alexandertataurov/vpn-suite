@@ -63,6 +63,11 @@ class Settings(BaseSettings):
     restart_confirm_token: str = "confirm_restart"
     block_confirm_token: str = "confirm_block"
     cleanup_db_confirm_token: str = "confirm_cleanup_db"
+    # Dangerous settings controls (.env read/write) for admin UI. Keep disabled in production by default.
+    app_env_editor_enabled: bool = False
+    # Admin frontend telemetry ingest controls.
+    admin_telemetry_events_enabled: bool = True
+    admin_telemetry_sample_rate: float = 1.0
     # Telegram Stars webhook: secret for X-Telegram-Bot-Api-Secret-Token (empty = skip verify in dev)
     telegram_stars_webhook_secret: str = ""
     # Bot API: X-API-Key for /users/by-tg/{tg_id}, issue, reset (empty = only JWT)
@@ -77,7 +82,9 @@ class Settings(BaseSettings):
     node_telemetry_interval_seconds: int = 10
     node_telemetry_cache_ttl_seconds: int = 60
     node_telemetry_concurrency: int = 10  # 0 = sequential; >0 = max concurrent polls per cycle
-    node_telemetry_interval_idle_seconds: int = 0  # when > 0 and no recent snapshot read, use this interval (e.g. 60)
+    node_telemetry_interval_idle_seconds: int = (
+        0  # when > 0 and no recent snapshot read, use this interval (e.g. 60)
+    )
     # Empty = disabled (no Prometheus calls). Set when using monitoring profile (e.g. http://prometheus:9090).
     telemetry_prometheus_url: str = ""
     telemetry_loki_url: str = ""
@@ -126,12 +133,19 @@ class Settings(BaseSettings):
     # real = provision peer via runtime adapter (docker exec wg).
     # agent = control-plane is DB-only; node-agent reconciles peers from desired state.
     node_mode: str = "mock"  # env NODE_MODE; allowed: mock | real | agent
+    # When True (default): if add_peer fails in NODE_MODE=real, keep device with PENDING_APPLY and return config.
+    # User gets config; node-agent or manual sync can add peer later. When False: fail entire issuance.
+    issue_fallback_on_peer_failure: bool = True  # env ISSUE_FALLBACK_ON_PEER_FAILURE
     # Control-plane: topology cache and reconciliation
     topology_cache_ttl_seconds: int = 30
     reconciliation_interval_seconds: int = 60
     reconciliation_read_only: bool = False
-    reconciliation_remove_orphans: bool = False  # When False, do not remove peers missing from DB (log ORPHAN only)
-    handshake_quality_gate_minutes: int = 5  # Mark NO_HANDSHAKE/ERROR if no handshake within X min after apply
+    reconciliation_remove_orphans: bool = (
+        False  # When False, do not remove peers missing from DB (log ORPHAN only)
+    )
+    handshake_quality_gate_minutes: int = (
+        5  # Mark NO_HANDSHAKE/ERROR if no handshake within X min after apply
+    )
     node_discovery: str = "docker"  # docker | agent
     node_scan_interval_seconds: int = 300  # 0 = no periodic scan
     # Control-plane automation loop (failover/rebalance planner)
@@ -173,8 +187,10 @@ class Settings(BaseSettings):
     # VPN endpoint fallback: when node reports only private IP, use this host + node listen_port.
     # Set to PUBLIC_DOMAIN or your VPN server hostname (e.g. vpn.example.com) so Issue Config can derive endpoint.
     vpn_default_host: str = ""
-    # Comma-separated container name prefixes for VPN discovery (e.g. amnezia-awg)
-    docker_vpn_container_prefixes: str = "amnezia-awg"
+    # Comma-separated container name prefixes for VPN discovery (e.g. amnezia-awg, amnezia-wg)
+    docker_vpn_container_prefixes: str = "amnezia-awg,amnezia-wg"
+    # Outline VPN integration is unsupported; this flag is for docs/future-proofing only (default off).
+    feature_outline_legacy: bool = False
 
     @model_validator(mode="after")
     def check_node_mode(self) -> "Settings":
@@ -237,6 +253,8 @@ class Settings(BaseSettings):
             raise ValueError("SERVER_SYNC_MAX_CONCURRENT must be >= 1")
         if self.server_sync_backoff_max_seconds < 60:
             raise ValueError("SERVER_SYNC_BACKOFF_MAX_SECONDS must be >= 60")
+        if not 0.0 <= self.admin_telemetry_sample_rate <= 1.0:
+            raise ValueError("ADMIN_TELEMETRY_SAMPLE_RATE must be within [0, 1]")
         return self
 
     def validate_production_secrets(self) -> None:
@@ -312,6 +330,11 @@ class Settings(BaseSettings):
                 raise ValueError(
                     "Refusing to start: NODE_DISCOVERY=agent/NODE_MODE=agent requires AGENT_SHARED_TOKEN (>=32 chars)."
                 )
+        if self.node_discovery != "agent":
+            raise ValueError(
+                "Production requires NODE_DISCOVERY=agent. "
+                "Do not use NODE_DISCOVERY=docker in production; only node-agent may mutate peers."
+            )
 
 
 settings = Settings()

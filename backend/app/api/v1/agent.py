@@ -17,38 +17,38 @@ import logging
 import secrets as stdlib_secrets
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Query
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.server_cache import invalidate_servers_list_cache
+from app.core.amnezia_config import (
+    DEFAULT_S1,
+    DEFAULT_S2,
+    DEFAULT_Jc,
+    DEFAULT_Jmax,
+    DEFAULT_Jmin,
+)
 from app.core.config import settings
 from app.core.constants import REDIS_KEY_AGENT_HB_PREFIX
 from app.core.database import async_session_factory, get_db
 from app.core.logging_config import request_id_ctx
 from app.core.redaction import redact_for_log
 from app.core.redis_client import get_redis
-from app.core.amnezia_config import (
-    DEFAULT_Jc,
-    DEFAULT_Jmax,
-    DEFAULT_Jmin,
-    DEFAULT_S1,
-    DEFAULT_S2,
-)
 from app.models import Device, Server, ServerProfile
 from app.schemas.agent import (
     AgentAckOut,
     AgentDesiredPeer,
     AgentDesiredStateOut,
     AgentHeartbeatIn,
-    ObfuscationFullOut,
-    ObfuscationHOut,
     AgentV1ActionExecuteIn,
     AgentV1ActionPollOut,
     AgentV1ActionReportIn,
     AgentV1PeerOut,
     AgentV1StatusOut,
     AgentV1TelemetryOut,
+    ObfuscationFullOut,
+    ObfuscationHOut,
 )
 from app.services.agent_action_service import (
     append_log,
@@ -154,7 +154,11 @@ async def agent_heartbeat(
         dumped = payload.model_dump(mode="json")
         await r.set(key, json.dumps(dumped), ex=settings.agent_heartbeat_ttl_seconds)
         if dumped.get("peers"):
-            _log.info("Agent heartbeat stored server_id=%s peers=%s", payload.server_id, len(dumped["peers"]))
+            _log.info(
+                "Agent heartbeat stored server_id=%s peers=%s",
+                payload.server_id,
+                len(dumped["peers"]),
+            )
             # Write device telemetry immediately so Devices page shows data without waiting for poll
             try:
                 dev_r = await db.execute(
@@ -176,7 +180,11 @@ async def agent_heartbeat(
                     pk_to_device_id,
                 )
                 if written:
-                    _log.info("Agent heartbeat wrote telemetry for %s devices server_id=%s", written, payload.server_id)
+                    _log.info(
+                        "Agent heartbeat wrote telemetry for %s devices server_id=%s",
+                        written,
+                        payload.server_id,
+                    )
             except Exception as te:
                 _log.debug("Heartbeat telemetry write failed: %s", te)
     except Exception as exc:
@@ -207,10 +215,12 @@ async def agent_heartbeat(
 
 @router.get("/agent/desired-state", response_model=AgentDesiredStateOut)
 async def agent_desired_state(
+    request: Request,
     server_id: str,
     x_agent_token: str | None = Header(default=None, alias="X-Agent-Token"),
 ):
     _require_agent_token(x_agent_token)
+    correlation_id = getattr(request.state, "request_id", None) or request_id_ctx.get()
     async with async_session_factory() as session:
         r = await session.execute(
             select(Device.public_key, Device.allowed_ips, Device.preshared_key)
@@ -270,6 +280,7 @@ async def agent_desired_state(
         interface_name="awg0",
         revision=rev,
         peers=peers,
+        correlation_id=correlation_id,
         obfuscation_h=obfuscation_h,
         obfuscation_full=obfuscation_full,
     )

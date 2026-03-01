@@ -33,11 +33,12 @@ async def get_payments_monitor(
     """Aggregate payment status counts and webhook error count for dashboard."""
     now = datetime.now(timezone.utc)
     since_24h = now - timedelta(hours=24)
-    since_30d = now - timedelta(days=30)
 
     success_24h = (
         await db.execute(
-            select(func.count()).select_from(Payment).where(
+            select(func.count())
+            .select_from(Payment)
+            .where(
                 Payment.status == "completed",
                 Payment.created_at >= since_24h,
             )
@@ -45,7 +46,9 @@ async def get_payments_monitor(
     ).scalar() or 0
     failed_24h = (
         await db.execute(
-            select(func.count()).select_from(Payment).where(
+            select(func.count())
+            .select_from(Payment)
+            .where(
                 Payment.status == "failed",
                 Payment.created_at >= since_24h,
             )

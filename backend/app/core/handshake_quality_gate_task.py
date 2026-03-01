@@ -54,9 +54,8 @@ async def run_handshake_quality_gate_once() -> int:
                 data = telemetry.get(device_id)
                 if data is None:
                     continue
-                has_handshake = (
-                    data.handshake_latest_at is not None
-                    or (data.handshake_age_sec is not None and data.handshake_age_sec >= 0)
+                has_handshake = data.handshake_latest_at is not None or (
+                    data.handshake_age_sec is not None and data.handshake_age_sec >= 0
                 )
                 if has_handshake:
                     continue
@@ -102,9 +101,8 @@ async def run_handshake_quality_gate_once() -> int:
                 data = telemetry2.get(device_id)
                 if data is None:
                     continue
-                has_handshake = (
-                    data.handshake_latest_at is not None
-                    or (data.handshake_age_sec is not None and data.handshake_age_sec >= 0)
+                has_handshake = data.handshake_latest_at is not None or (
+                    data.handshake_age_sec is not None and data.handshake_age_sec >= 0
                 )
                 if not has_handshake:
                     continue
@@ -137,7 +135,9 @@ async def run_handshake_quality_gate_once() -> int:
 
         if vpn_devices_no_handshake is not None:
             count_result = await session.execute(
-                select(func.count()).select_from(Device).where(
+                select(func.count())
+                .select_from(Device)
+                .where(
                     Device.apply_status.in_(("NO_HANDSHAKE", "ERROR")),
                     Device.revoked_at.is_(None),
                 )

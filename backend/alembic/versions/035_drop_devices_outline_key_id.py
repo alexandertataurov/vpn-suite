@@ -1,4 +1,4 @@
-"""Drop devices.outline_key_id (Outline removal).
+"""Drop devices.outline_key_id (schema cleanup).
 
 Revision ID: 035
 Revises: 034

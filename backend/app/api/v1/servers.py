@@ -48,10 +48,6 @@ from app.services.server_health_service import (
 )
 
 router = APIRouter(prefix="/servers", tags=["servers"])
-router.include_router(servers_crud_router)
-router.include_router(servers_sync_router)
-router.include_router(servers_actions_router)
-router.include_router(servers_telemetry_router)
 logger = logging.getLogger(__name__)
 
 SERVERS_LIST_CACHE_TTL = 15  # seconds
@@ -220,9 +216,8 @@ async def _fetch_servers_list_uncached(
         .group_by(ServerHealthLog.server_id)
         .subquery()
     )
-    stmt_with_last = (
-        select(Server, last_seen_subq.c.last_ts)
-        .outerjoin(last_seen_subq, Server.id == last_seen_subq.c.server_id)
+    stmt_with_last = select(Server, last_seen_subq.c.last_ts).outerjoin(
+        last_seen_subq, Server.id == last_seen_subq.c.server_id
     )
     if stmt.whereclause is not None:
         stmt_with_last = stmt_with_last.where(stmt.whereclause)
@@ -639,3 +634,10 @@ async def update_server_limits(
         speed_limit_mbps=server.speed_limit_mbps,
         max_connections=server.max_connections,
     )
+
+
+# Keep generic "/{server_id}" CRUD routes last to avoid shadowing static routes such as "/device-counts".
+router.include_router(servers_sync_router)
+router.include_router(servers_actions_router)
+router.include_router(servers_telemetry_router)
+router.include_router(servers_crud_router)

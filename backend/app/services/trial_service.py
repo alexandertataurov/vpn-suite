@@ -55,10 +55,12 @@ async def start_trial(
 
     # One trial per user: any subscription with is_trial=True
     existing_trial = await session.execute(
-        select(Subscription).where(
+        select(Subscription)
+        .where(
             Subscription.user_id == user.id,
             Subscription.is_trial.is_(True),
-        ).limit(1)
+        )
+        .limit(1)
     )
     if existing_trial.scalar_one_or_none() is not None:
         raise ValueError("trial_already_used")
@@ -70,7 +72,10 @@ async def start_trial(
         plan = plan_result.scalar_one_or_none()
     if plan is None:
         plan_result = await session.execute(
-            select(Plan).where(Plan.price_amount <= Decimal("0")).order_by(Plan.duration_days.asc()).limit(1)
+            select(Plan)
+            .where(Plan.price_amount <= Decimal("0"))
+            .order_by(Plan.duration_days.asc())
+            .limit(1)
         )
         plan = plan_result.scalar_one_or_none()
     if plan is None:

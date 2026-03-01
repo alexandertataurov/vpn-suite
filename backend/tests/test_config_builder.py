@@ -149,7 +149,9 @@ def test_awg_config_emits_i1_i5_uppercase():
     )
     for key in ("I1", "I2", "I3", "I4", "I5"):
         assert f"{key} = " in cfg, f"Config must contain '{key} = ' (uppercase)"
-        assert f"{key.lower()} = " not in cfg, f"Config must not contain lowercase '{key.lower()} = '"
+        assert (
+            f"{key.lower()} = " not in cfg
+        ), f"Config must not contain lowercase '{key.lower()} = '"
 
 
 def test_legacy_profile_rejects_h_keys():
@@ -408,7 +410,20 @@ def test_build_config_parses_as_ini_section_order():
     assert list(parser.keys()) == ["DEFAULT", "Interface", "Peer"]
     assert parser.has_section("Interface")
     assert parser.has_section("Peer")
-    for key in ("PrivateKey", "Address", "DNS", "Jc", "Jmin", "Jmax", "S1", "S2", "H1", "H2", "H3", "H4"):
+    for key in (
+        "PrivateKey",
+        "Address",
+        "DNS",
+        "Jc",
+        "Jmin",
+        "Jmax",
+        "S1",
+        "S2",
+        "H1",
+        "H2",
+        "H3",
+        "H4",
+    ):
         assert parser.has_option("Interface", key), f"Interface must have {key}"
     for key in ("PublicKey", "Endpoint", "AllowedIPs", "PersistentKeepalive"):
         assert parser.has_option("Peer", key), f"Peer must have {key}"
@@ -418,10 +433,13 @@ def test_build_config_parses_as_ini_section_order():
 _NO_DATE_PATTERNS = ("2024", "2025", "2026", "Generated", "generated_at", "Created:")
 
 
-@pytest.mark.parametrize("profile,obfuscation", [
-    (ConfigProfile.universal_safe, None),
-    (ConfigProfile.awg_2_0_asc, _OBF_AWG),
-])
+@pytest.mark.parametrize(
+    "profile,obfuscation",
+    [
+        (ConfigProfile.universal_safe, None),
+        (ConfigProfile.awg_2_0_asc, _OBF_AWG),
+    ],
+)
 def test_build_config_contains_no_year_or_date(profile, obfuscation):
     kwargs = dict(
         interface=InterfaceFields(private_key=_GOLDEN_PRIV, address="10.8.1.2/32", dns="1.1.1.1"),
@@ -433,4 +451,6 @@ def test_build_config_contains_no_year_or_date(profile, obfuscation):
     cfg = build_config(**kwargs)
     for pat in _NO_DATE_PATTERNS:
         assert pat not in cfg, f"Config must not contain {pat!r}"
-    assert not any(line.strip().startswith("#") or line.strip().startswith(";") for line in cfg.splitlines())
+    assert not any(
+        line.strip().startswith("#") or line.strip().startswith(";") for line in cfg.splitlines()
+    )

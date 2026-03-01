@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -10,17 +9,17 @@ class NodeLiveState(BaseModel):
     """Compact per-node live state for dashboards."""
 
     node_id: str
-    name: Optional[str] = None
-    region: Optional[str] = None
+    name: str | None = None
+    region: str | None = None
     status: str = "unknown"
-    heartbeat_age_s: Optional[float] = None
-    peer_count: Optional[int] = None
-    rx_bytes: Optional[int] = None
-    tx_bytes: Optional[int] = None
-    cpu_pct: Optional[float] = None
-    ram_pct: Optional[float] = None
+    heartbeat_age_s: float | None = None
+    peer_count: int | None = None
+    rx_bytes: int | None = None
+    tx_bytes: int | None = None
+    cpu_pct: float | None = None
+    ram_pct: float | None = None
     stale: bool = False
-    incident_flags: List[str] = Field(default_factory=list)
+    incident_flags: list[str] = Field(default_factory=list)
 
 
 class ClusterLiveSummary(BaseModel):
@@ -42,7 +41,6 @@ class ClusterLiveSnapshot(BaseModel):
     ts: float
     updated_at: datetime
     summary: ClusterLiveSummary
-    nodes: Dict[str, NodeLiveState]
+    nodes: dict[str, NodeLiveState]
     mode: str = "normal"  # normal|degraded|circuit_open
-    degradation_reason: Optional[str] = None
-
+    degradation_reason: str | None = None

@@ -97,22 +97,38 @@ async def _fetch_one_server(
         peers_list = hb.get("peers") if hb else None
         if not isinstance(peers_list, list):
             if hb and _log.isEnabledFor(logging.INFO):
-                _log.info("Telemetry agent server_id=%s heartbeat has no peers list (keys=%s)", server_id, list(hb.keys())[:20])
+                _log.info(
+                    "Telemetry agent server_id=%s heartbeat has no peers list (keys=%s)",
+                    server_id,
+                    list(hb.keys())[:20],
+                )
         if hb and isinstance(peers_list, list):
             now_ts = int(datetime.now(timezone.utc).timestamp())
             for p in peers_list:
                 pk = (p.get("public_key") or "").strip() if isinstance(p, dict) else ""
                 if pk:
                     age = p.get("last_handshake_age_sec")
-                    hs_ts = (now_ts - int(age)) if isinstance(age, (int, float)) and age is not None else 0
-                    raw_peers.append({
-                        "public_key": (pk.replace("\n", "").replace("\r", "") or pk),
-                        "allowed_ips": p.get("allowed_ips") or "",
-                        "last_handshake": hs_ts if hs_ts > 0 else 0,
-                        "transfer_rx": p.get("rx_bytes") or 0,
-                        "transfer_tx": p.get("tx_bytes") or 0,
-                    })
-            online = sum(1 for q in raw_peers if isinstance(q.get("last_handshake"), int) and q["last_handshake"] > 0 and (now_ts - q["last_handshake"]) <= 180)
+                    hs_ts = (
+                        (now_ts - int(age))
+                        if isinstance(age, int | float) and age is not None
+                        else 0
+                    )
+                    raw_peers.append(
+                        {
+                            "public_key": (pk.replace("\n", "").replace("\r", "") or pk),
+                            "allowed_ips": p.get("allowed_ips") or "",
+                            "last_handshake": hs_ts if hs_ts > 0 else 0,
+                            "transfer_rx": p.get("rx_bytes") or 0,
+                            "transfer_tx": p.get("tx_bytes") or 0,
+                        }
+                    )
+            online = sum(
+                1
+                for q in raw_peers
+                if isinstance(q.get("last_handshake"), int)
+                and q["last_handshake"] > 0
+                and (now_ts - q["last_handshake"]) <= 180
+            )
             total_rx = sum(int(q.get("transfer_rx") or 0) for q in raw_peers)
             total_tx = sum(int(q.get("transfer_tx") or 0) for q in raw_peers)
             data = {
@@ -123,7 +139,9 @@ async def _fetch_one_server(
                 "last_updated": _serialize_dt(datetime.now(timezone.utc)),
             }
     if data is None and adapter is not None:
-        data, raw_peers = await _poll_server(server_id, runtime_adapter=adapter, node_id_override=node_id)
+        data, raw_peers = await _poll_server(
+            server_id, runtime_adapter=adapter, node_id_override=node_id
+        )
     return (server_id, data, raw_peers)
 
 
@@ -160,10 +178,11 @@ async def run_telemetry_poll_loop(get_adapter) -> None:
                         )
                     )
                     dev_rows = dev_r.all()
+
                     def _norm_pk(pk: str | None) -> str:
                         if not pk:
                             return ""
-                        return (pk.strip().replace("\n", "").replace("\r", "") or "")
+                        return pk.strip().replace("\n", "").replace("\r", "") or ""
 
                     for row in dev_rows:
                         dev_id, pubkey, srv_id = row[0], row[1], row[2]
@@ -251,7 +270,8 @@ async def run_telemetry_poll_loop(get_adapter) -> None:
                                     handshake_ts=hs if hs > 0 else None,
                                     transfer_rx=int(p.get("transfer_rx") or 0),
                                     transfer_tx=int(p.get("transfer_tx") or 0),
-                                    allowed_ips_on_node=str(p.get("allowed_ips") or "").strip() or None,
+                                    allowed_ips_on_node=str(p.get("allowed_ips") or "").strip()
+                                    or None,
                                     node_reachable=True,
                                 )
                                 if h_ok:
@@ -268,7 +288,12 @@ async def run_telemetry_poll_loop(get_adapter) -> None:
                                     no_handshake_count += 1
                                 if tz:
                                     traffic_zero_count += 1
-                        if raw_peers and matched_this_server == 0 and pk_to_device and _log.isEnabledFor(logging.INFO):
+                        if (
+                            raw_peers
+                            and matched_this_server == 0
+                            and pk_to_device
+                            and _log.isEnabledFor(logging.INFO)
+                        ):
                             sample_peer_pk = (raw_peers[0].get("public_key") or "")[:44]
                             sample_map_keys = list(pk_to_device.keys())[:3]
                             _log.info(

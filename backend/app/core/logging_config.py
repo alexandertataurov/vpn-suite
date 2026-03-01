@@ -8,6 +8,8 @@ from typing import Any
 
 request_id_ctx: ContextVar[str | None] = ContextVar("request_id", default=None)
 trace_id_ctx: ContextVar[str | None] = ContextVar("trace_id", default=None)
+span_id_ctx: ContextVar[str | None] = ContextVar("span_id", default=None)
+correlation_id_ctx: ContextVar[str | None] = ContextVar("correlation_id", default=None)
 
 # Optional static context set at startup (service, env, version)
 _log_context: dict[str, str] = {}
@@ -65,14 +67,30 @@ class JsonFormatter(logging.Formatter):
                 payload[k] = v
         rid = request_id_ctx.get()
         tid = trace_id_ctx.get()
+        sid = span_id_ctx.get()
+        # Fallback: read trace_id/span_id from OTel span when in traced request
+        if not tid or not sid:
+            try:
+                from opentelemetry import trace
+
+                span = trace.get_current_span()
+                if span and span.is_recording():
+                    ctx = span.get_span_context()
+                    if ctx.trace_id and not tid:
+                        tid = format(ctx.trace_id, "032x")
+                    if ctx.span_id and not sid:
+                        sid = format(ctx.span_id, "016x")
+            except Exception:
+                pass
+        cid = correlation_id_ctx.get() or rid or tid
         if rid:
             payload["request_id"] = rid
-            payload["correlation_id"] = rid
-        elif tid:
+        if tid:
             payload["trace_id"] = tid
-            payload["correlation_id"] = tid
-        if tid and not rid:
-            payload["trace_id"] = tid
+        if sid:
+            payload["span_id"] = sid
+        if cid:
+            payload["correlation_id"] = cid
         for key in _EXTRA_KEYS:
             if hasattr(record, key):
                 val = getattr(record, key)

@@ -132,7 +132,7 @@ async def write_device_telemetry(
 def _norm_public_key(pk: str | None) -> str:
     if not pk:
         return ""
-    return (pk.strip().replace("\n", "").replace("\r", "") or "")
+    return pk.strip().replace("\n", "").replace("\r", "") or ""
 
 
 async def write_device_telemetry_from_heartbeat_peers(
@@ -155,7 +155,7 @@ async def write_device_telemetry_from_heartbeat_peers(
         if not dev_id:
             continue
         age = p.get("last_handshake_age_sec")
-        hs_ts = (now_ts - int(age)) if isinstance(age, (int, float)) and age is not None else 0
+        hs_ts = (now_ts - int(age)) if isinstance(age, int | float) and age is not None else 0
         handshake_ts = hs_ts if hs_ts > 0 else None
         rx = int(p.get("rx_bytes") or 0)
         tx = int(p.get("tx_bytes") or 0)
@@ -209,9 +209,7 @@ async def get_device_telemetry_bulk(
             if stored_id is None or str(stored_id) != did:
                 continue
             last_ts = data.get("last_updated_ts")
-            last_updated = (
-                datetime.fromtimestamp(last_ts, tz=timezone.utc) if last_ts else None
-            )
+            last_updated = datetime.fromtimestamp(last_ts, tz=timezone.utc) if last_ts else None
             handshake_ts = data.get("handshake_ts")
             handshake_latest_at = (
                 datetime.fromtimestamp(handshake_ts, tz=timezone.utc)
@@ -248,12 +246,14 @@ async def set_telemetry_summary(
     try:
         redis = get_redis()
         now_ts = int(datetime.now(timezone.utc).timestamp())
-        payload = json.dumps({
-            "handshake_ok_count": handshake_ok_count,
-            "no_handshake_count": no_handshake_count,
-            "traffic_zero_count": traffic_zero_count,
-            "last_updated_ts": now_ts,
-        })
+        payload = json.dumps(
+            {
+                "handshake_ok_count": handshake_ok_count,
+                "no_handshake_count": no_handshake_count,
+                "traffic_zero_count": traffic_zero_count,
+                "last_updated_ts": now_ts,
+            }
+        )
         await redis.set(TELEMETRY_LAST_UPDATED_KEY, str(now_ts), ex=TELEMETRY_SUMMARY_TTL * 2)
         await redis.set(TELEMETRY_SUMMARY_KEY, payload, ex=TELEMETRY_SUMMARY_TTL)
     except Exception as e:

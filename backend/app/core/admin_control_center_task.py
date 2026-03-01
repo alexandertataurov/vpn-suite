@@ -43,7 +43,11 @@ async def _run_abuse_loop() -> None:
                                 vpn_abuse_signals_total.labels(severity=sev).inc(count)
                     except Exception:
                         pass
-                _log.info("abuse_detection run: users_scored=%s signals_created=%s", result.get("users_scored"), result.get("signals_created"))
+                _log.info(
+                    "abuse_detection run: users_scored=%s signals_created=%s",
+                    result.get("users_scored"),
+                    result.get("signals_created"),
+                )
             await asyncio.sleep(ABUSE_INTERVAL_SECONDS)
         except asyncio.CancelledError:
             raise
@@ -58,7 +62,11 @@ async def _run_churn_loop() -> None:
             async with async_session_factory() as session:
                 result = await run_churn_prediction(session)
                 await session.commit()
-                _log.info("churn_prediction run: scored=%s high_risk=%s", result.get("scored"), result.get("high_risk"))
+                _log.info(
+                    "churn_prediction run: scored=%s high_risk=%s",
+                    result.get("scored"),
+                    result.get("high_risk"),
+                )
             await asyncio.sleep(CHURN_INTERVAL_SECONDS)
         except asyncio.CancelledError:
             raise
@@ -73,7 +81,11 @@ async def _run_retention_loop() -> None:
             async with async_session_factory() as session:
                 result = await run_retention_rules(session)
                 await session.commit()
-                _log.info("retention_rules run: rules_evaluated=%s actions_taken=%s", result.get("rules_evaluated"), result.get("actions_taken"))
+                _log.info(
+                    "retention_rules run: rules_evaluated=%s actions_taken=%s",
+                    result.get("rules_evaluated"),
+                    result.get("actions_taken"),
+                )
             await asyncio.sleep(RETENTION_INTERVAL_SECONDS)
         except asyncio.CancelledError:
             raise

@@ -19,7 +19,6 @@ Notes:
 import argparse
 import subprocess
 import sys
-from pathlib import Path
 
 
 def _ping_ok(host: str, mtu: int, count: int = 2, timeout: int = 2) -> bool:
@@ -112,4 +111,3 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

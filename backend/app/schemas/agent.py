@@ -71,6 +71,9 @@ class AgentDesiredStateOut(BaseModel):
     interface_name: str = "awg0"
     revision: str = Field(..., description="Opaque revision for idempotency/caching")
     peers: list[AgentDesiredPeer]
+    correlation_id: str | None = Field(
+        default=None, description="Request/correlation ID for logs and audit"
+    )
     obfuscation_h: ObfuscationHOut | None = Field(
         default=None,
         description="When set, node should apply AWG_H1–H4 and restart AmneziaWG",

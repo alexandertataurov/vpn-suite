@@ -337,7 +337,11 @@ async def fetch_operator_dashboard(time_range: str = "1h") -> dict[str, Any]:
                 sid = n.get("id")
                 if not sid:
                     continue
-                health_val = 1.0 if n.get("health") == "ok" else (0.5 if n.get("health") == "degraded" else 0.0)
+                health_val = (
+                    1.0
+                    if n.get("health") == "ok"
+                    else (0.5 if n.get("health") == "degraded" else 0.0)
+                )
                 telemetry_map[sid] = {
                     "health": health_val,
                     "peers": int(n.get("peers") or 0),
@@ -441,12 +445,18 @@ async def fetch_operator_dashboard(time_range: str = "1h") -> dict[str, Any]:
                             telemetry_map[sid]["rx"] = data.get("total_rx_bytes")
                         if telemetry_map[sid].get("tx") is None:
                             telemetry_map[sid]["tx"] = data.get("total_tx_bytes")
-                        if telemetry_map[sid].get("cpu") is None and data.get("cpu_pct") is not None:
+                        if (
+                            telemetry_map[sid].get("cpu") is None
+                            and data.get("cpu_pct") is not None
+                        ):
                             try:
                                 telemetry_map[sid]["cpu"] = float(data["cpu_pct"])
                             except (TypeError, ValueError):
                                 pass
-                        if telemetry_map[sid].get("ram") is None and data.get("ram_pct") is not None:
+                        if (
+                            telemetry_map[sid].get("ram") is None
+                            and data.get("ram_pct") is not None
+                        ):
                             try:
                                 telemetry_map[sid]["ram"] = float(data["ram_pct"])
                             except (TypeError, ValueError):
@@ -642,7 +652,7 @@ async def fetch_operator_dashboard(time_range: str = "1h") -> dict[str, Any]:
             if range_result and isinstance(range_result[0], dict):
                 values = range_result[0].get("values") or []
                 for item in values:
-                    if not isinstance(item, (list, tuple)) or len(item) < 2:
+                    if not isinstance(item, list | tuple) or len(item) < 2:
                         continue
                     try:
                         ts_float = float(item[0])
@@ -657,6 +667,13 @@ async def fetch_operator_dashboard(time_range: str = "1h") -> dict[str, Any]:
             _log.debug("latency range query failed: %s", e)
 
     last_ts = pts[-1]["ts"] if pts else None
+    # Fallback: when timeseries is empty but Prometheus has data, use Prometheus sample ts
+    if last_ts is None and prom.enabled and results:
+        for name in ("vpn_cluster_load", "api_up", "vpn_peers"):
+            ts = _ts_from_result(results.get(name, []))
+            if ts is not None:
+                last_ts = ts
+                break
     age_s = (now.timestamp() - last_ts) if last_ts else None
     health_strip["freshness"] = _freshness(age_s)
     if last_ts:

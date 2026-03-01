@@ -3,17 +3,31 @@
 import logging
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Body, Depends, Header, HTTPException, Query, Request, status
 from sqlalchemy import String, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.api.v1.device_cache import (
+    devices_list_cache_key,
+    get_devices_list_cached,
+    get_devices_summary_cached,
+    invalidate_devices_list_cache,
+    invalidate_devices_summary_cache,
+    set_devices_list_cached,
+    set_devices_summary_cached,
+)
 from app.core.bot_auth import get_admin_or_bot
 from app.core.config import settings
 from app.core.constants import PERM_CLUSTER_READ, PERM_DEVICES_WRITE
 from app.core.database import get_db
 from app.core.exception_handling import raise_http_for_control_plane_exception
 from app.core.exceptions import WireGuardCommandError
+from app.core.idempotency import (
+    get_cached_idempotency_response,
+    store_idempotency_response,
+)
+from app.core.metrics import config_issue_blocked_total, discovery_not_found_total
 from app.core.rbac import require_permission
 from app.models import Device, IssuedConfig, Server, User
 from app.schemas.device import (
@@ -29,20 +43,9 @@ from app.schemas.device import (
     ResetRequest,
     RevokeRequest,
 )
-from app.core.metrics import config_issue_blocked_total, discovery_not_found_total
 from app.schemas.server import AdminRotatePeerResponse
 from app.services.admin_issue_service import reissue_config_for_device
 from app.services.agent_action_service import create_action
-from app.services.server_live_key_service import ServerNotSyncedError
-from app.api.v1.device_cache import (
-    devices_list_cache_key,
-    get_devices_list_cached,
-    get_devices_summary_cached,
-    invalidate_devices_list_cache,
-    invalidate_devices_summary_cache,
-    set_devices_list_cached,
-    set_devices_summary_cached,
-)
 from app.services.device_telemetry_cache import (
     get_device_telemetry_bulk,
     get_telemetry_last_updated,
@@ -50,6 +53,7 @@ from app.services.device_telemetry_cache import (
     merge_telemetry_into_device,
 )
 from app.services.node_runtime import PeerConfigLike
+from app.services.server_live_key_service import ServerNotSyncedError
 
 _log = logging.getLogger(__name__)
 router = APIRouter(prefix="/devices", tags=["devices"])
@@ -121,7 +125,9 @@ async def list_devices(
             .outerjoin(User, Device.user_id == User.id)
             .options(selectinload(Device.issued_configs))
         )
-        count_stmt = select(func.count()).select_from(Device).outerjoin(User, Device.user_id == User.id)
+        count_stmt = (
+            select(func.count()).select_from(Device).outerjoin(User, Device.user_id == User.id)
+        )
         if user_id is not None:
             stmt = stmt.where(Device.user_id == user_id)
             count_stmt = count_stmt.where(Device.user_id == user_id)
@@ -293,6 +299,9 @@ async def reconcile_device(
         )
     result = await sync_device_peer(request, device_id, db, admin)
     return {"reconciled": True, **result}
+
+
+@router.post("/{device_id}/delete", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_device(
     request: Request,
     device_id: str,
@@ -300,8 +309,8 @@ async def delete_device(
     db: AsyncSession = Depends(get_db),
     admin=Depends(require_permission(PERM_DEVICES_WRITE)),
 ):
-    """Permanently delete a device and its issued configs. Requires confirm_token."""
-    if body.confirm_token != REVOKE_CONFIRM:
+    """Permanently delete a device and its issued configs. Warning-only flow: confirm_token optional."""
+    if body.confirm_token is not None and body.confirm_token != REVOKE_CONFIRM:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid confirmation code",
@@ -577,6 +586,11 @@ async def sync_device_peer(
     admin=Depends(require_permission(PERM_DEVICES_WRITE)),
 ):
     """Re-apply peer on the VPN node (fix wrong allowed_ips or missing peer). NODE_MODE=real and NODE_DISCOVERY=docker only."""
+    if settings.environment == "production":
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="sync-peer is not allowed in production; only node-agent applies peers.",
+        )
     if settings.node_mode != "real":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -594,9 +608,7 @@ async def sync_device_peer(
     if not device:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Device not found")
     if device.revoked_at:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Device is revoked"
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Device is revoked")
     preshared_key = getattr(device, "preshared_key", None) or (
         getattr(device.server, "preshared_key", None) if device.server else None
     )
@@ -645,12 +657,16 @@ async def sync_device_peer(
 async def reissue_device_config(
     request: Request,
     device_id: str,
+    idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
     db: AsyncSession = Depends(get_db),
     admin=Depends(require_permission(PERM_DEVICES_WRITE)),
 ):
     """Reissue config for an existing device (rotate keys, update peer, return new download URLs)."""
     request.state.audit_resource_type = "device"
     request.state.audit_resource_id = device_id
+    cached = await get_cached_idempotency_response("devices.reissue", device_id, idempotency_key)
+    if cached and isinstance(cached.get("body"), dict):
+        return AdminRotatePeerResponse(**cached["body"])
     base_url = str(request.base_url).rstrip("/")
     base_config_url = f"{base_url}/api/v1/admin/configs"
     try:
@@ -667,7 +683,9 @@ async def reissue_device_config(
             discovery_not_found_total.labels(server_id=e.server_id).inc()
         if e.server_id and (settings.node_discovery == "agent" or settings.node_mode == "agent"):
             try:
-                await create_action(db, server_id=e.server_id, type="sync", payload={"mode": "full"})
+                await create_action(
+                    db, server_id=e.server_id, type="sync", payload={"mode": "full"}
+                )
                 await db.commit()
             except Exception:
                 pass
@@ -695,12 +713,28 @@ async def reissue_device_config(
     await db.commit()
     await invalidate_devices_summary_cache()
     await invalidate_devices_list_cache()
-    return AdminRotatePeerResponse(
-        config_awg={"download_url": out.config_awg.download_url, "qr_payload": out.config_awg.qr_payload},
-        config_wg_obf={"download_url": out.config_wg_obf.download_url, "qr_payload": out.config_wg_obf.qr_payload},
-        config_wg={"download_url": out.config_wg.download_url, "qr_payload": out.config_wg.qr_payload},
+    response = AdminRotatePeerResponse(
+        config_awg={
+            "download_url": out.config_awg.download_url,
+            "qr_payload": out.config_awg.qr_payload,
+        },
+        config_wg_obf={
+            "download_url": out.config_wg_obf.download_url,
+            "qr_payload": out.config_wg_obf.qr_payload,
+        },
+        config_wg={
+            "download_url": out.config_wg.download_url,
+            "qr_payload": out.config_wg.qr_payload,
+        },
         request_id=out.request_id,
     )
+    await store_idempotency_response(
+        "devices.reissue",
+        device_id,
+        idempotency_key,
+        response.model_dump(),
+    )
+    return response
 
 
 @router.post("/{device_id}/block")

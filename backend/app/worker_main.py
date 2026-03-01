@@ -9,6 +9,8 @@ from __future__ import annotations
 import asyncio
 import logging
 
+from app.core.admin_control_center_task import run_admin_control_center_loops
+from app.core.anomaly_metrics_task import run_anomaly_metrics_export_loop
 from app.core.config import settings
 from app.core.device_expiry_task import run_device_expiry_loop
 from app.core.docker_alert_polling_task import run_docker_alert_poll_loop
@@ -19,16 +21,14 @@ from app.core.logging_config import configure_logging, extra_for_event, set_log_
 from app.core.node_scan_task import run_node_scan_loop, run_node_scan_once
 from app.core.redaction import redact_for_log
 from app.core.redis_client import check_redis, close_redis, init_redis
-from app.core.anomaly_metrics_task import run_anomaly_metrics_export_loop
 from app.core.revenue_metrics_task import run_revenue_metrics_loop
 from app.core.server_sync_loop import run_server_sync_loop
 from app.core.subscription_expiry_reminder_task import run_subscription_reminder_loop
 from app.core.telemetry_polling_task import run_telemetry_poll_loop
-from app.core.admin_control_center_task import run_admin_control_center_loops
+from app.live_metrics.aggregator_worker import run_live_metrics_aggregator
 from app.services.docker_telemetry_service import DockerTelemetryService
 from app.services.node_runtime import TimingNodeRuntimeAdapter
 from app.services.reconciliation_engine import reconcile_all_nodes, run_reconciliation_loop
-from app.live_metrics.aggregator_worker import run_live_metrics_aggregator
 
 _log = logging.getLogger(__name__)
 
@@ -127,7 +127,15 @@ async def _run_worker_loops() -> None:
         if reminder_task is not None:
             reminder_task.cancel()
         admin_control_center_task.cancel()
-        for t in (limits_task, telemetry_task, recon_task, scan_task, sync_task, handshake_gate_task, live_metrics_task):
+        for t in (
+            limits_task,
+            telemetry_task,
+            recon_task,
+            scan_task,
+            sync_task,
+            handshake_gate_task,
+            live_metrics_task,
+        ):
             if t is not None:
                 t.cancel()
         docker_alert_task.cancel()
@@ -172,4 +180,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

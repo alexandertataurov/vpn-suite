@@ -234,6 +234,17 @@ async def test_webapp_promo_validate_route_exists_not_404(client: AsyncClient):
 
 
 @pytest.mark.asyncio
+async def test_webapp_onboarding_state_route_exists_not_404(client: AsyncClient):
+    """Onboarding contract: canonical state path exists (auth may fail with 401, but not 404)."""
+    r = await client.post(
+        "/api/v1/webapp/onboarding/state",
+        json={"step": 1, "version": 1},
+    )
+    assert r.status_code != 404
+    assert r.status_code in (401, 422)
+
+
+@pytest.mark.asyncio
 async def test_webapp_legacy_invoices_path_is_404(client: AsyncClient):
     """Legacy wrong checkout path must remain absent to avoid silent contract drift."""
     r = await client.post(

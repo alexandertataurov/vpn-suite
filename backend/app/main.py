@@ -2,34 +2,39 @@
 
 import asyncio
 import logging
+import time
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
-from prometheus_client import REGISTRY, generate_latest
+import os
+
+from prometheus_client import REGISTRY, CollectorRegistry, generate_latest, multiprocess
 
 from app.api.v1.actions import router as actions_router
 from app.api.v1.admin_abuse import router as admin_abuse_router
 from app.api.v1.admin_churn import router as admin_churn_router
 from app.api.v1.admin_cohorts import router as admin_cohorts_router
+from app.api.v1.admin_configs import router as admin_configs_router
 from app.api.v1.admin_devops import router as admin_devops_router
 from app.api.v1.admin_payments_monitor import router as admin_payments_monitor_router
 from app.api.v1.admin_pricing import router as admin_pricing_router
 from app.api.v1.admin_promos import router as admin_promos_router
-from app.api.v1.admin_revenue import router as admin_revenue_router
 from app.api.v1.admin_retention import router as admin_retention_router
-from app.api.v1.app_settings import router as app_settings_router
-from app.api.v1.admin_configs import router as admin_configs_router
+from app.api.v1.admin_revenue import router as admin_revenue_router
 from app.api.v1.agent import router as agent_router
 from app.api.v1.analytics import router as analytics_router
+from app.api.v1.app_settings import router as app_settings_router
 from app.api.v1.audit import router as audit_router
 from app.api.v1.auth import router as auth_router
 from app.api.v1.bot import router as bot_router
 from app.api.v1.cluster import router as cluster_router
 from app.api.v1.control_plane import router as control_plane_router
 from app.api.v1.devices import router as devices_router
+from app.api.v1.devices_stream import router as devices_stream_router
+from app.api.v1.live_metrics import router as live_metrics_router
 from app.api.v1.log import router as log_router
 from app.api.v1.overview import router as overview_router
 from app.api.v1.payments import router as payments_router
@@ -38,10 +43,9 @@ from app.api.v1.plans import router as plans_router
 from app.api.v1.servers import router as servers_router
 from app.api.v1.servers_peers import router as servers_peers_router
 from app.api.v1.servers_stream import router as servers_stream_router
-from app.api.v1.live_metrics import router as live_metrics_router
 from app.api.v1.subscriptions import router as subscriptions_router
-from app.api.v1.telemetry_snapshot import router as telemetry_snapshot_router
 from app.api.v1.telemetry_docker import router as telemetry_docker_router
+from app.api.v1.telemetry_snapshot import router as telemetry_snapshot_router
 from app.api.v1.users import router as users_router
 from app.api.v1.webapp import router as webapp_router
 from app.api.v1.webhooks import router as webhooks_router
@@ -49,12 +53,9 @@ from app.api.v1.wg import router as wg_router
 from app.core.audit_middleware import AuditMiddleware
 from app.core.config import settings
 from app.core.database import check_db
-from app.core.device_expiry_task import run_device_expiry_loop
-from app.core.docker_alert_polling_task import run_docker_alert_poll_loop
-from app.core.handshake_quality_gate_task import run_handshake_quality_gate_loop
+from app.core.db_metrics_middleware import DbMetricsMiddleware
 from app.core.error_responses import error_body, http_exception_to_error_response
 from app.core.health_check_task import run_health_check_loop
-from app.core.limits_check_task import run_limits_check_loop
 from app.core.logging_config import (
     configure_logging,
     extra_for_event,
@@ -62,19 +63,14 @@ from app.core.logging_config import (
     set_log_context,
 )
 from app.core.metrics import http_errors_total, vpn_suite_info
-from app.core.node_scan_task import run_node_scan_loop, run_node_scan_once
-from app.core.otel_tracing import setup_otel_tracing
-from app.core.db_metrics_middleware import DbMetricsMiddleware
 from app.core.prometheus_middleware import PrometheusMiddleware, path_template
 from app.core.rate_limit import GlobalAPIRateLimitMiddleware
 from app.core.redaction import redact_for_log
 from app.core.redis_client import check_redis, close_redis, init_redis
 from app.core.request_logging_middleware import RequestLoggingMiddleware
-from app.core.server_sync_loop import run_server_sync_loop
-from app.core.telemetry_polling_task import run_telemetry_poll_loop
+from app.observability import init_otel
 from app.services.docker_telemetry_service import DockerTelemetryService
 from app.services.node_runtime import TimingNodeRuntimeAdapter
-from app.services.reconciliation_engine import reconcile_all_nodes, run_reconciliation_loop
 
 _log = logging.getLogger(__name__)
 # Single source of truth for API version (RC: 0.1.0-rc.1; traceability with CHANGELOG and release-checklist)
@@ -92,6 +88,7 @@ vpn_suite_info.labels(version=API_VERSION).set(1)
 async def _generic_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     """Return stable 500 in unified error shape; log full context server-side (P0). Rate-limited."""
     rid = getattr(request.state, "request_id", None) or request_id_ctx.get()
+    cid = getattr(request.state, "correlation_id", None) or rid
     path_tpl = path_template(request.url.path)
     http_errors_total.labels(path_template=path_tpl, error_type="INTERNAL_ERROR").inc()
     from app.core.error_log_rate_limiter import should_log_error
@@ -109,6 +106,7 @@ async def _generic_exception_handler(request: Request, exc: Exception) -> JSONRe
         message="Internal server error",
         status_code=500,
         request_id=rid,
+        correlation_id=cid,
     )
     return JSONResponse(status_code=500, content=body)
 
@@ -118,6 +116,7 @@ async def _validation_exception_handler(
 ) -> JSONResponse:
     """Return unified 422 error shape for validation errors."""
     rid = getattr(request.state, "request_id", None) or request_id_ctx.get()
+    cid = getattr(request.state, "correlation_id", None) or rid
     path_tpl = path_template(request.url.path)
     http_errors_total.labels(path_template=path_tpl, error_type="VALIDATION_ERROR").inc()
     body = error_body(
@@ -126,6 +125,7 @@ async def _validation_exception_handler(
         status_code=422,
         details={"errors": exc.errors()},
         request_id=rid,
+        correlation_id=cid,
     )
     return JSONResponse(status_code=422, content=body)
 
@@ -202,8 +202,10 @@ app = FastAPI(
 app.add_exception_handler(HTTPException, http_exception_to_error_response)
 app.add_exception_handler(RequestValidationError, _validation_exception_handler)
 app.add_exception_handler(Exception, _generic_exception_handler)
-# CORS: explicit origins from env; no * in prod (security)
+# CORS: explicit origins from env; no * in prod (security). In dev with empty list, allow miniapp dev server.
 _origins = [o.strip() for o in settings.cors_allow_origins.split(",") if o.strip()]
+if not _origins and settings.environment.lower() == "development":
+    _origins = ["http://localhost:5175", "http://127.0.0.1:5175"]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_origins,
@@ -242,6 +244,8 @@ app.include_router(actions_router, prefix="/api/v1")
 app.include_router(servers_peers_router, prefix="/api/v1")
 app.include_router(admin_configs_router, prefix="/api/v1")
 app.include_router(users_router, prefix="/api/v1")
+# Stream before devices_router so GET /devices/stream is not matched by other routes
+app.include_router(devices_stream_router, prefix="/api/v1")
 app.include_router(devices_router, prefix="/api/v1")
 app.include_router(plans_router, prefix="/api/v1")
 app.include_router(subscriptions_router, prefix="/api/v1")
@@ -256,23 +260,27 @@ app.include_router(webapp_router, prefix="/api/v1")
 # Compatibility alias for exact /api/telemetry/docker/* contract.
 app.include_router(telemetry_docker_router, prefix="/api", include_in_schema=False)
 
-setup_otel_tracing(app, settings.otel_traces_endpoint)
+init_otel(app, service_version=API_VERSION)
 
 
 @app.get("/metrics")
 def metrics():
     """Prometheus scrape endpoint. No auth (scrape from internal network)."""
-    return Response(
-        content=generate_latest(REGISTRY),
-        media_type="text/plain; charset=utf-8",
-    )
+    # If PROMETHEUS_MULTIPROC_DIR is set, aggregate metrics from all workers.
+    if os.getenv("PROMETHEUS_MULTIPROC_DIR"):
+        registry = CollectorRegistry()
+        multiprocess.MultiProcessCollector(registry)
+        payload = generate_latest(registry)
+    else:
+        payload = generate_latest(REGISTRY)
+    return Response(content=payload, media_type="text/plain; charset=utf-8")
 
 
 @app.get("/health")
 def health():
     """Liveness: returns 200 when process is up. node_mode: mock (no node call) or real."""
     return {"status": "ok", "node_mode": settings.node_mode}
-import time
+
 
 _ready_cache_ts = 0.0
 _ready_cache_score = 1.0
@@ -294,7 +302,7 @@ async def health_ready(request: Request):
                 now = time.monotonic()
                 if now - _ready_cache_ts > 15.0:
                     from app.services.topology_engine import TopologyEngine
-    
+
                     engine = TopologyEngine(adapter)
                     topo = await engine.get_topology()
                     if topo.nodes:
@@ -307,11 +315,13 @@ async def health_ready(request: Request):
                     from app.core.error_responses import error_body
 
                     rid = request_id_ctx.get()
+                    cid = getattr(request.state, "correlation_id", None) or rid
                     body = error_body(
                         code="SERVICE_UNAVAILABLE",
                         message="Cluster unhealthy",
                         status_code=503,
                         request_id=rid,
+                        correlation_id=cid,
                         details={"cluster_health_score": topo.health_score},
                     )
                     body["status"] = "degraded"
@@ -322,11 +332,13 @@ async def health_ready(request: Request):
     from app.core.error_responses import error_body
 
     rid = request_id_ctx.get()
+    cid = getattr(request.state, "correlation_id", None) or rid
     body = error_body(
         code="SERVICE_UNAVAILABLE",
         message="Database or Redis unavailable",
         status_code=503,
         request_id=rid,
+        correlation_id=cid,
         details={
             "database": "ok" if db_ok else "error",
             "redis": "ok" if redis_ok else "error",

@@ -2,24 +2,27 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import ChurnRiskScore, Device, Server, Subscription
+from app.models import ChurnRiskScore, Subscription
 
 
 async def run_churn_prediction(session: AsyncSession) -> dict:
     """Compute churn risk score for active subscriptions; persist to churn_risk_scores. Returns summary."""
     now = datetime.now(timezone.utc)
-    since_14d = now - timedelta(days=14)
 
     # Active subscriptions with valid_until > now
     subs = (
         await session.execute(
-            select(Subscription.id, Subscription.user_id, Subscription.valid_until, Subscription.created_at)
-            .where(
+            select(
+                Subscription.id,
+                Subscription.user_id,
+                Subscription.valid_until,
+                Subscription.created_at,
+            ).where(
                 Subscription.status == "active",
                 Subscription.valid_until > now,
                 Subscription.paused_at.is_(None),
@@ -34,7 +37,12 @@ async def run_churn_prediction(session: AsyncSession) -> dict:
     high_risk_count = 0
 
     for sub in subs:
-        sub_id, user_id, valid_until, created_at = sub.id, sub.user_id, sub.valid_until, sub.created_at
+        sub_id, user_id, valid_until, created_at = (
+            sub.id,
+            sub.user_id,
+            sub.valid_until,
+            sub.created_at,
+        )
         days_until_expiry = (valid_until - now).days if valid_until else 0
         sub_age_days = (now - created_at).days if created_at else 0
 

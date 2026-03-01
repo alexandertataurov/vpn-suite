@@ -8,8 +8,8 @@ from pydantic import BaseModel
 from app.core.config import settings
 from app.core.constants import PERM_CLUSTER_READ
 from app.core.database import check_db
-from app.core.redis_client import check_redis
 from app.core.rbac import require_permission
+from app.core.redis_client import check_redis
 
 router = APIRouter(prefix="/admin/devops", tags=["admin-devops"])
 

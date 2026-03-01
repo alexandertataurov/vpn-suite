@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import socket
 
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
@@ -14,7 +15,12 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 _log = logging.getLogger(__name__)
 
 
-def setup_otel_tracing(app, endpoint: str) -> None:
+def setup_otel_tracing(
+    app,
+    endpoint: str,
+    service_version: str | None = None,
+    environment: str | None = None,
+) -> None:
     """Configure OTLP trace export and instrument FastAPI. Call once after app creation."""
     if not endpoint or not endpoint.strip():
         return
@@ -40,10 +46,23 @@ def setup_otel_tracing(app, endpoint: str) -> None:
         _log.warning("OTEL collector unreachable (tracing disabled): %s", e)
         return
     try:
-        resource = Resource.create({"service.name": "admin-api"})
+        resource = Resource.create(
+            {
+                "service.name": "admin-api",
+                "service.version": service_version or os.environ.get("API_VERSION", "0.0.0"),
+                "deployment.environment": environment or os.environ.get("ENVIRONMENT", "default"),
+                "host.id": os.environ.get("HOSTNAME", "unknown"),
+            }
+        )
         provider = TracerProvider(resource=resource)
         exporter = OTLPSpanExporter(endpoint=endpoint, insecure=True)
-        provider.add_span_processor(BatchSpanProcessor(exporter))
+        provider.add_span_processor(
+            BatchSpanProcessor(
+                exporter,
+                max_export_batch_size=512,
+                schedule_delay_millis=100,
+            )
+        )
         from opentelemetry import trace
 
         trace.set_tracer_provider(provider)

@@ -23,7 +23,7 @@ from app.core.database import async_session_factory
 from app.core.node_scan_task import run_node_scan_once
 from app.models import Server
 from app.services.node_runtime_docker import DockerNodeRuntimeAdapter
-from app.services.reconciliation_engine import reconcile_all_nodes
+from app.services.reconciliation_engine import reconcile_all_nodes, reconcile_node
 
 ADAPTER = DockerNodeRuntimeAdapter(container_filter="amnezia-awg", interface="awg0")
 
@@ -53,6 +53,35 @@ async def _resync() -> None:
             r.errors[:3],
         )
     logger.info("Resync done. Nodes reconciled: %s", len(results))
+
+
+async def _reconcile_one(server_id: str, dry_run: bool = False) -> None:
+    """Reconcile a single node by server_id. With --dry-run only compute diff (no apply)."""
+    from app.core.config import settings
+
+    if settings.environment == "production":
+        logger.error("Reconciliation must not run in production; only node-agent mutates peers.")
+        sys.exit(1)
+    server = await _get_server(server_id)
+    if not server:
+        logger.error("Server not found: %s", server_id)
+        sys.exit(1)
+    if dry_run:
+        # reconcile_node in read_only is not exposed; run full reconcile (apply_diff is inside reconcile_node).
+        logger.info(
+            "Dry-run: would reconcile node_id=%s (run without --dry-run to apply)", server_id
+        )
+        return
+    result = await reconcile_node(server_id, ADAPTER)
+    logger.info(
+        "%s: peers_added=%s peers_removed=%s peers_updated=%s errors=%s duration_ms=%.0f",
+        server_id,
+        result.peers_added,
+        result.peers_removed,
+        result.peers_updated,
+        result.errors[:5],
+        result.duration_ms,
+    )
 
 
 async def _list() -> None:
@@ -203,17 +232,23 @@ def _parse_int(s: str | None) -> int | None:
 def main() -> None:
     if len(sys.argv) < 2:
         logger.error(
-            "Usage: node_ops.py {sync|resync|list|check|telemetry|limits-apply|undrain|public-key} "
-            "[server_id] [key_or_traffic_gb...]",
+            "Usage: node_ops.py {sync|resync|reconcile|list|check|telemetry|limits-apply|undrain|public-key} "
+            "[server_id] [--dry-run|key_or_traffic_gb...]",
         )
         sys.exit(1)
     sub = sys.argv[1].lower()
     node_id = sys.argv[2] if len(sys.argv) > 2 else None
+    dry_run = len(sys.argv) > 3 and sys.argv[3] == "--dry-run"
     key_arg = sys.argv[3].strip() if len(sys.argv) > 3 and sub == "public-key" else None
     if sub == "sync":
         asyncio.run(_sync())
     elif sub == "resync":
         asyncio.run(_resync())
+    elif sub == "reconcile":
+        if not node_id:
+            logger.error("reconcile requires server_id")
+            sys.exit(1)
+        asyncio.run(_reconcile_one(node_id, dry_run=dry_run))
     elif sub == "list":
         asyncio.run(_list())
     elif sub == "check":

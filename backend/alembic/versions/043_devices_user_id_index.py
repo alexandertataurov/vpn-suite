@@ -24,4 +24,3 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     op.drop_index("idx_devices_user_id", table_name="devices")
-

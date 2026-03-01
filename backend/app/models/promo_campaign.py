@@ -19,6 +19,8 @@ class PromoCampaign(Base, TimestampMixin):
     discount_percent: Mapped[int] = mapped_column(Integer, nullable=False)
     valid_from: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     valid_until: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    target_rule: Mapped[str | None] = mapped_column(String(64), nullable=True)  # expiry_soon, win_back
+    target_rule: Mapped[str | None] = mapped_column(
+        String(64), nullable=True
+    )  # expiry_soon, win_back
     max_redemptions: Mapped[int | None] = mapped_column(Integer, nullable=True)
     extra_params: Mapped[dict | None] = mapped_column(JSONB, nullable=True)

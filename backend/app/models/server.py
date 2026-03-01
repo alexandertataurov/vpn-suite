@@ -21,7 +21,9 @@ class Server(Base, TimestampMixin):
         String(256), nullable=True
     )  # VPN host:port e.g. vpn.example.com:47604
     public_key: Mapped[str | None] = mapped_column(Text, nullable=True)
-    preshared_key: Mapped[str | None] = mapped_column(Text, nullable=True)  # optional WG preshared key for issued configs
+    preshared_key: Mapped[str | None] = mapped_column(
+        Text, nullable=True
+    )  # optional WG preshared key for issued configs
     amnezia_h1: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     amnezia_h2: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     amnezia_h3: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
@@ -39,7 +41,9 @@ class Server(Base, TimestampMixin):
     public_key_synced_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
-    key_status: Mapped[str | None] = mapped_column(String(32), nullable=True)  # verified | unverified | not_found
+    key_status: Mapped[str | None] = mapped_column(
+        String(32), nullable=True
+    )  # verified | unverified | not_found
     auto_sync_enabled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     auto_sync_interval_sec: Mapped[int] = mapped_column(Integer, default=60, nullable=False)
     ops_notes: Mapped[str | None] = mapped_column(Text, nullable=True)

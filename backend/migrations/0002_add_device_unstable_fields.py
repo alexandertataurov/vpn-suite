@@ -29,4 +29,3 @@ def downgrade(op: Any) -> None:  # type: ignore[unused-argument]
         op.drop_column("devices", "connection_profile")  # type: ignore[attr-defined]
     except Exception:
         return
-

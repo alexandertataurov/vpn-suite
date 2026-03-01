@@ -63,6 +63,7 @@ async def _update_revenue_gauges() -> None:
         if redis_latency_seconds is not None:
             try:
                 from app.core.redis_client import get_redis
+
                 r = get_redis()
                 if r:
                     t0 = time.perf_counter()

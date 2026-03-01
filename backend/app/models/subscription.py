@@ -25,12 +25,8 @@ class Subscription(Base, TimestampMixin):
     device_limit: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
     status: Mapped[str] = mapped_column(String(32), default="active", nullable=False)
     is_trial: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    trial_ends_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
-    paused_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    trial_ends_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    paused_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     pause_reason: Mapped[str | None] = mapped_column(String(64), nullable=True)
     reminder_3d_sent_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True

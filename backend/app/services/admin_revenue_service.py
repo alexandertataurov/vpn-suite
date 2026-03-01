@@ -8,7 +8,7 @@ from decimal import Decimal
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import ChurnSurvey, Device, FunnelEvent, Payment, Plan, Referral, Subscription, User
+from app.models import ChurnSurvey, Device, FunnelEvent, Payment, Plan, Referral, Subscription
 
 
 async def get_revenue_overview(session: AsyncSession) -> dict:
@@ -85,7 +85,9 @@ async def get_revenue_overview(session: AsyncSession) -> dict:
     # Trial started 30d
     trial_started_30d = (
         await session.execute(
-            select(func.count()).select_from(FunnelEvent).where(
+            select(func.count())
+            .select_from(FunnelEvent)
+            .where(
                 FunnelEvent.event_type == "trial_started",
                 FunnelEvent.created_at >= since_30d,
             )
@@ -107,14 +109,18 @@ async def get_revenue_overview(session: AsyncSession) -> dict:
 
     # Avg subscription length (days): from subscriptions that ended (valid_until in past) or active
     sub_duration_result = (
-        await session.execute(
-            select(
-                func.extract("epoch", func.now() - Subscription.valid_from).label("days"),
+        (
+            await session.execute(
+                select(
+                    func.extract("epoch", func.now() - Subscription.valid_from).label("days"),
+                )
+                .select_from(Subscription)
+                .where(Subscription.status == "active", Subscription.valid_until > now)
             )
-            .select_from(Subscription)
-            .where(Subscription.status == "active", Subscription.valid_until > now)
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
     avg_sub_length_days = 0.0
     if sub_duration_result:
         days_list = [float(r.days) / 86400.0 for r in sub_duration_result if r.days is not None]
@@ -161,7 +167,9 @@ async def get_revenue_overview(session: AsyncSession) -> dict:
     # Churn rate (30d): churn_surveys count / (active at start of 30d approx) — use churn count
     churn_count_30d = (
         await session.execute(
-            select(func.count()).select_from(ChurnSurvey).where(
+            select(func.count())
+            .select_from(ChurnSurvey)
+            .where(
                 ChurnSurvey.created_at >= since_30d,
             )
         )
@@ -177,7 +185,8 @@ async def get_revenue_overview(session: AsyncSession) -> dict:
     ).scalar() or 0
     churn_rate = (
         round(100.0 * churn_count_30d / max(subscriptions_active, 1), 2)
-        if subscriptions_active else 0.0
+        if subscriptions_active
+        else 0.0
     )
     renewal_rate = (
         round(100.0 * renewal_count_30d / subscriptions_active, 2) if subscriptions_active else 0.0
@@ -186,14 +195,18 @@ async def get_revenue_overview(session: AsyncSession) -> dict:
     # Referral: active referrers (distinct referrer_user_id with reward_applied in 30d or pending)
     active_referrers = (
         await session.execute(
-            select(func.count(func.distinct(Referral.referrer_user_id))).select_from(Referral).where(
+            select(func.count(func.distinct(Referral.referrer_user_id)))
+            .select_from(Referral)
+            .where(
                 Referral.created_at >= since_30d,
             )
         )
     ).scalar() or 0
     referral_paid_30d = (
         await session.execute(
-            select(func.count()).select_from(Referral).where(
+            select(func.count())
+            .select_from(Referral)
+            .where(
                 Referral.reward_applied_at.isnot(None),
                 Referral.created_at >= since_30d,
             )
@@ -209,13 +222,17 @@ async def get_revenue_overview(session: AsyncSession) -> dict:
     )
     # Earned bonus days: sum reward_days where reward_applied_at in 30d
     ref_bonus_result = (
-        await session.execute(
-            select(Referral.reward_days).where(
-                Referral.reward_applied_at.isnot(None),
-                Referral.reward_applied_at >= since_30d,
+        (
+            await session.execute(
+                select(Referral.reward_days).where(
+                    Referral.reward_applied_at.isnot(None),
+                    Referral.reward_applied_at >= since_30d,
+                )
             )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
     earned_bonus_days = sum(r.reward_days for r in ref_bonus_result) if ref_bonus_result else 0
 
     # Churn by reason
@@ -265,7 +282,7 @@ async def get_revenue_overview(session: AsyncSession) -> dict:
 
 async def get_revenue_daily_series(session: AsyncSession, days: int = 30) -> list[dict]:
     """Revenue by day (completed payments) for the last `days` days. Returns [{date: YYYY-MM-DD, revenue: float}]."""
-    from sqlalchemy import cast, Date
+    from sqlalchemy import Date, cast
 
     now = datetime.now(timezone.utc)
     since = now - timedelta(days=days)

@@ -17,8 +17,8 @@ ROOT = _BACKEND_ROOT.parent
 
 
 def _openapi_spec_path() -> Path | None:
-    for base in (ROOT / "docs", _BACKEND_ROOT / "docs"):
-        p = base / "api" / "openapi.yaml"
+    for base in (ROOT / "openapi", ROOT / "docs", _BACKEND_ROOT / "docs"):
+        p = base / "openapi.yaml" if base.name == "openapi" else base / "api" / "openapi.yaml"
         if p.exists():
             return p
     return None
@@ -46,6 +46,8 @@ def _code_paths() -> set[tuple[str, str]]:
     for route in app.routes:
         if not isinstance(route, APIRoute):
             continue
+        if getattr(route, "include_in_schema", True) is False:
+            continue  # Exclude compatibility aliases (e.g. /api/telemetry without /v1)
         methods = [m for m in route.methods if m not in {"HEAD", "OPTIONS"}]
         for m in methods:
             out.add((m, _norm_path(route.path)))

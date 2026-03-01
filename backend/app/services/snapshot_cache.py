@@ -135,7 +135,9 @@ async def set_snapshot_meta(payload: dict[str, Any], env: str = DEFAULT_ENV) -> 
         _log.debug("Snapshot meta write failed: %s", e)
 
 
-async def get_all_snapshots(env: str = DEFAULT_ENV) -> tuple[dict | None, dict | None, dict | None, dict | None]:
+async def get_all_snapshots(
+    env: str = DEFAULT_ENV,
+) -> tuple[dict | None, dict | None, dict | None, dict | None]:
     """Return (nodes, devices, sessions, meta) from cache. Any may be None if missing."""
     nodes = await get_snapshot_nodes(env)
     devices = await get_snapshot_devices(env)

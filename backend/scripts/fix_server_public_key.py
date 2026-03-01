@@ -28,7 +28,9 @@ def _get_adapter():
     if settings.node_discovery == "docker":
         from app.services.node_runtime_docker import DockerNodeRuntimeAdapter
 
-        prefixes = getattr(settings, "docker_vpn_container_prefixes", "amnezia-awg") or "amnezia-awg"
+        prefixes = (
+            getattr(settings, "docker_vpn_container_prefixes", "amnezia-awg") or "amnezia-awg"
+        )
         return DockerNodeRuntimeAdapter(container_filter=prefixes, interface="awg0")
     if settings.node_discovery == "agent":
         from app.services.node_runtime_agent import AgentNodeRuntimeAdapter
@@ -103,7 +105,7 @@ async def _reissue_server(server_id: str, adapter) -> None:
     for d in devices:
         async with async_session_factory() as session:
             try:
-                out = await reissue_config_for_device(
+                await reissue_config_for_device(
                     session,
                     device_id=d.id,
                     issued_by_admin_id=None,
@@ -122,7 +124,9 @@ async def main() -> int:
     if server_id:
         adapter = _get_adapter()
         if settings.node_discovery == "agent":
-            logger.info("Syncing in agent mode: use Admin or API to trigger sync; running reissue only.")
+            logger.info(
+                "Syncing in agent mode: use Admin or API to trigger sync; running reissue only."
+            )
             await _reissue_server(server_id, adapter)
             return 0
         if not await _sync_one(server_id, adapter):

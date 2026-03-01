@@ -1,13 +1,14 @@
 """Set vpn_endpoint on server(s). Usage: python set_server_vpn_endpoint.py <host> <port> [server_id].
 If server_id omitted, updates all servers. Example: python set_server_vpn_endpoint.py 185.139.228.171 45790
 """
+
 import asyncio
 import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from sqlalchemy import select, update
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 

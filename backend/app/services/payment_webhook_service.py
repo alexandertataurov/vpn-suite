@@ -42,8 +42,7 @@ async def _apply_payment_success_effects(
     subscription_id = payment.subscription_id
     payload = payload_for_promo or payment.webhook_payload or {}
     sub_result = await session.execute(
-        select(Subscription)
-        .where(
+        select(Subscription).where(
             Subscription.id == subscription_id,
             Subscription.user_id == int(user_id),
         )
@@ -125,9 +124,7 @@ async def _apply_payment_success_effects(
     promo_code_str = (payload.get("promo_code") or "").strip() or None
     if promo_code_str:
         promo_result = await session.execute(
-            select(PromoCode).where(
-                PromoCode.code == promo_code_str, PromoCode.status == "active"
-            )
+            select(PromoCode).where(PromoCode.code == promo_code_str, PromoCode.status == "active")
         )
         promo = promo_result.scalar_one_or_none()
         if promo:

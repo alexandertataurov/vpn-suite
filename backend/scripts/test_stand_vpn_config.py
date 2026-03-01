@@ -4,6 +4,7 @@ Run from repo root: cd backend && python scripts/test_stand_vpn_config.py
 Or: pytest tests/test_stand_vpn_connection.py -v -s --log-cli-level=DEBUG
 With --issue: also checks that server can issue a valid client config (DB required).
 """
+
 import argparse
 import asyncio
 import logging
@@ -29,10 +30,13 @@ def _load_dotenv() -> None:
     if _ENV_FILE.exists():
         try:
             from dotenv import load_dotenv
+
             load_dotenv(_ENV_FILE)
         except ImportError:
             pass
 
+
+from app.core.config import Settings
 from app.core.config_builder import (
     ConfigProfile,
     InterfaceFields,
@@ -40,7 +44,6 @@ from app.core.config_builder import (
     build_config,
     generate_wg_keypair,
 )
-from app.core.config import Settings
 
 LOG = logging.getLogger("vpn_test_stand")
 
@@ -116,7 +119,9 @@ def _validate_issued_config(cfg: str, name: str, endpoint: str) -> list[str]:
     return errs
 
 
-async def _run_issue_check(settings: Settings) -> tuple[bool, list[str], dict[str, str] | None, str | None]:
+async def _run_issue_check(
+    settings: Settings,
+) -> tuple[bool, list[str], dict[str, str] | None, str | None]:
     """Issue a device via issue_service; validate all 3 config types. Uses a generated server keypair so connectivity test can run a local WG server. Returns (ok, errors, {awg, wg_obf, wg} or None, server_private_key_b64 or None)."""
     errors: list[str] = []
     try:
@@ -130,6 +135,7 @@ async def _run_issue_check(settings: Settings) -> tuple[bool, list[str], dict[st
         errors.append("DB unreachable (skip --issue or start postgres)")
         return False, errors, None, None
     from unittest.mock import patch
+
     now = datetime.now(timezone.utc)
     endpoint = (settings.vpn_default_host or "vpn.example.com") + ":47604"
     server_priv, server_pub = generate_wg_keypair()
@@ -182,15 +188,27 @@ async def _run_issue_check(settings: Settings) -> tuple[bool, list[str], dict[st
     for key, cfg in configs.items():
         LOG.debug("issue_device returned config_%s %s bytes", key, len(cfg))
         errors.extend(_validate_issued_config(cfg, f"config_{key}", endpoint))
-    return len(errors) == 0, errors, configs if not errors else None, server_priv if not errors else None
+    return (
+        len(errors) == 0,
+        errors,
+        configs if not errors else None,
+        server_priv if not errors else None,
+    )
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="VPN config test stand (debug logs)")
     ap.add_argument("--log-file", default=None, help="Also write logs to this file")
     ap.add_argument("--no-env", action="store_true", help="Skip loading .env (use current env)")
-    ap.add_argument("--issue", action="store_true", help="Also check server issues valid config (DB required)")
-    ap.add_argument("--output-dir", metavar="DIR", default=None, help="With --issue: write all 3 configs (issued_awg.conf, issued_wg_obf.conf, issued_wg.conf) to this dir")
+    ap.add_argument(
+        "--issue", action="store_true", help="Also check server issues valid config (DB required)"
+    )
+    ap.add_argument(
+        "--output-dir",
+        metavar="DIR",
+        default=None,
+        help="With --issue: write all 3 configs (issued_awg.conf, issued_wg_obf.conf, issued_wg.conf) to this dir",
+    )
     args = ap.parse_args()
     if not args.no_env:
         _load_dotenv()
@@ -199,8 +217,10 @@ def main() -> int:
     LOG.info("VPN test stand started (cwd=%s)", os.getcwd())
     try:
         settings = Settings()
-        LOG.info("Settings loaded: environment=%s node_mode=%s", settings.environment, settings.node_mode)
-    except Exception as e:
+        LOG.info(
+            "Settings loaded: environment=%s node_mode=%s", settings.environment, settings.node_mode
+        )
+    except Exception:
         LOG.exception("Failed to load Settings")
         return 1
 
@@ -212,7 +232,9 @@ def main() -> int:
         return 1
 
     if args.issue:
-        LOG.info("Running issue check (server issues all 3 config types: AmneziaWG, WG+obfuscation, Plain WG)...")
+        LOG.info(
+            "Running issue check (server issues all 3 config types: AmneziaWG, WG+obfuscation, Plain WG)..."
+        )
         issue_ok, issue_errs, configs, server_priv = asyncio.run(_run_issue_check(settings))
         if not issue_ok:
             for e in issue_errs:
@@ -223,7 +245,11 @@ def main() -> int:
         if args.output_dir and configs and server_priv:
             out_dir = Path(args.output_dir)
             out_dir.mkdir(parents=True, exist_ok=True)
-            for name, path in (("awg", "issued_awg.conf"), ("wg_obf", "issued_wg_obf.conf"), ("wg", "issued_wg.conf")):
+            for name, path in (
+                ("awg", "issued_awg.conf"),
+                ("wg_obf", "issued_wg_obf.conf"),
+                ("wg", "issued_wg.conf"),
+            ):
                 p = out_dir / path
                 p.write_text(configs[name], encoding="utf-8")
                 LOG.info("Wrote %s to %s", name, p)

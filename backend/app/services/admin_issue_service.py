@@ -14,18 +14,15 @@ from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.amnezia_config import (
-    build_amnezia_client_config,
-    build_standard_wg_client_config,
-    build_wg_obfuscated_config,
+    _select_awg_profile,
     generate_wg_keypair,
     get_obfuscation_params,
 )
-from app.core.amnezia_config import _select_awg_profile
 from app.core.config import settings
 from app.core.config_builder import (
+    DEFAULT_DNS,
     ConfigProfile,
     ConfigValidationError,
-    DEFAULT_DNS,
     generate_preshared_key,
 )
 from app.core.exceptions import WireGuardCommandError
@@ -45,7 +42,6 @@ from app.services.address_allocator import allocate_address_for_device
 from app.services.node_endpoint_utils import get_endpoint_from_runtime, is_endpoint_private
 from app.services.node_runtime import NodeRuntimeAdapter, PeerConfigLike
 from app.services.server_live_key_service import (
-    ServerNotSyncedError,
     _heartbeat_container_id,
     live_key_fetch,
 )
@@ -156,6 +152,7 @@ async def admin_issue_peer(
     fallback = _heartbeat_container_id(getattr(server, "api_endpoint", None), server_id)
     db_key = (getattr(server, "public_key", None) or "").strip() or None
     db_key_synced_at = getattr(server, "public_key_synced_at", None)
+    # Block issuance/reissue if server key unknown/unverified (ServerNotSyncedError).
     live = await live_key_fetch(
         server_id,
         runtime_adapter,
@@ -166,6 +163,7 @@ async def admin_issue_peer(
     server_public_key = live.public_key
     if server_public_key != (server.public_key or "").strip():
         from app.core.metrics import server_key_mismatch_total
+
         server_key_mismatch_total.labels(server_id=server_id).inc()
         server.public_key = server_public_key
         await session.flush()
@@ -274,8 +272,6 @@ async def admin_issue_peer(
                 client_keepalive = max(10, min(60, int(raw)))
             except (TypeError, ValueError):
                 pass
-    server_keepalive = 15
-
     private_key_b64, public_key_b64 = generate_wg_keypair()
     config_hash = _config_hash(public_key_b64, private_key_b64)
     now = datetime.now(timezone.utc)
@@ -297,7 +293,9 @@ async def admin_issue_peer(
                 command="wg show",
                 output="node_not_synced",
             ) from exc
-        if not runtime_obf or not all(runtime_obf.get(k) is not None for k in ("H1", "H2", "H3", "H4")):
+        if not runtime_obf or not all(
+            runtime_obf.get(k) is not None for k in ("H1", "H2", "H3", "H4")
+        ):
             raise WireGuardCommandError(
                 "Node obfuscation params unavailable (H1–H4 missing)",
                 command="wg show",
@@ -353,7 +351,11 @@ async def admin_issue_peer(
             endpoint = f"{default_host}:{port}"
             _config_log.info(
                 "Replaced private endpoint with VPN_DEFAULT_HOST for issued config",
-                extra={"event": "config.endpoint_override", "server_id": server_id, "endpoint": endpoint},
+                extra={
+                    "event": "config.endpoint_override",
+                    "server_id": server_id,
+                    "endpoint": endpoint,
+                },
             )
         else:
             _config_log.warning(
@@ -408,9 +410,7 @@ async def admin_issue_peer(
         raise
 
     awg_profile = _select_awg_profile(obfuscation)
-    protocol_version = (
-        "awg_20" if awg_profile == ConfigProfile.awg_2_0_asc else "awg_legacy"
-    )
+    protocol_version = "awg_20" if awg_profile == ConfigProfile.awg_2_0_asc else "awg_legacy"
     obfuscation_profile_json: str | None = None
     if obfuscation:
         obfuscation_profile_json = json.dumps(
@@ -430,10 +430,14 @@ async def admin_issue_peer(
         issued_at=now,
         revoked_at=None,
         issued_by_admin_id=issued_by_admin_id,
-        apply_status="CREATED" if (settings.node_mode == "real" and settings.node_discovery != "agent") else "PENDING_APPLY",
+        apply_status="CREATED"
+        if (settings.node_mode == "real" and settings.node_discovery != "agent")
+        else "PENDING_APPLY",
         protocol_version=protocol_version,
         obfuscation_profile=obfuscation_profile_json,
-        connection_profile="restrictive" if first_profile and getattr(first_profile, "disable_ipv6_on_unstable_route", False) else "default",
+        connection_profile="restrictive"
+        if first_profile and getattr(first_profile, "disable_ipv6_on_unstable_route", False)
+        else "default",
     )
     session.add(device)
     await session.flush()
@@ -622,6 +626,7 @@ async def admin_rotate_peer(
     fallback = _heartbeat_container_id(getattr(server, "api_endpoint", None), server_id)
     db_key = (getattr(server, "public_key", None) or "").strip() or None
     db_key_synced_at = getattr(server, "public_key_synced_at", None)
+    # Block issuance/reissue if server key unknown/unverified (ServerNotSyncedError).
     live = await live_key_fetch(
         server_id,
         runtime_adapter,
@@ -632,6 +637,7 @@ async def admin_rotate_peer(
     server_public_key = live.public_key
     if server_public_key != (server.public_key or "").strip():
         from app.core.metrics import server_key_mismatch_total
+
         server_key_mismatch_total.labels(server_id=server_id).inc()
         server.public_key = server_public_key
         await session.flush()
@@ -715,7 +721,9 @@ async def admin_rotate_peer(
             _config_log.warning(
                 "Reissue: node peer removal failed (continuing), server_id=%s pubkey=%s error=%s",
                 server_id,
-                (old_public_key[:16] + "…") if len(old_public_key or "") > 16 else (old_public_key or ""),
+                (old_public_key[:16] + "…")
+                if len(old_public_key or "") > 16
+                else (old_public_key or ""),
                 redact_for_log(str(exc)),
             )
 
@@ -738,7 +746,9 @@ async def admin_rotate_peer(
                 command="wg show",
                 output="node_not_synced",
             ) from exc
-        if not runtime_obf or not all(runtime_obf.get(k) is not None for k in ("H1", "H2", "H3", "H4")):
+        if not runtime_obf or not all(
+            runtime_obf.get(k) is not None for k in ("H1", "H2", "H3", "H4")
+        ):
             raise WireGuardCommandError(
                 "Node obfuscation params unavailable (H1–H4 missing)",
                 command="wg show",
@@ -794,17 +804,20 @@ async def admin_rotate_peer(
             endpoint = f"{default_host}:{port}"
             _config_log.info(
                 "Replaced private endpoint with VPN_DEFAULT_HOST (rotate)",
-                extra={"event": "config.endpoint_override", "server_id": server_id, "endpoint": endpoint},
+                extra={
+                    "event": "config.endpoint_override",
+                    "server_id": server_id,
+                    "endpoint": endpoint,
+                },
             )
     # Rotate: keep existing tunnel IP; client [Interface] Address = /32 to match peer on server
     if device.allowed_ips:
         allowed_ips_val = device.allowed_ips
     else:
-        _, allowed_ips_val = await allocate_address_for_device(
-            session, server_id, request_params
-        )
+        _, allowed_ips_val = await allocate_address_for_device(session, server_id, request_params)
     if server_public_key != (server.public_key or "").strip():
         from app.core.metrics import server_key_mismatch_total
+
         server_key_mismatch_total.labels(server_id=server_id).inc()
         server.public_key = server_public_key
         await session.flush()

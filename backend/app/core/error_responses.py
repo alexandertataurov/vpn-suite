@@ -12,10 +12,13 @@ def error_body(
     status_code: int = 500,
     details: dict | None = None,
     request_id: str | None = None,
+    correlation_id: str | None = None,
 ) -> dict:
     meta: dict = {"timestamp": datetime.now(timezone.utc).isoformat(), "code": status_code}
     if request_id:
         meta["request_id"] = request_id
+    if correlation_id:
+        meta["correlation_id"] = correlation_id
     return {
         "success": False,
         "data": None,
@@ -66,11 +69,13 @@ def http_exception_to_error_response(request: Request, exc: Exception) -> JSONRe
 
     http_errors_total.labels(path_template=path_template(request.url.path), error_type=code).inc()
     rid = getattr(request.state, "request_id", None)
+    cid = getattr(request.state, "correlation_id", None)
     body = error_body(
         code=code,
         message=message,
         status_code=exc.status_code,
         details=details if isinstance(details, dict) else None,
         request_id=rid,
+        correlation_id=cid,
     )
     return JSONResponse(status_code=exc.status_code, content=body)

@@ -17,9 +17,9 @@ class DbMetricsMiddleware(BaseHTTPMiddleware):
         count, total_sec = get_and_reset()
         if count > 0:
             path_tpl = path_template(request.url.path)
-            db_queries_per_request.labels(
-                method=request.method, path_template=path_tpl
-            ).observe(count)
+            db_queries_per_request.labels(method=request.method, path_template=path_tpl).observe(
+                count
+            )
             db_time_per_request_seconds.labels(
                 method=request.method, path_template=path_tpl
             ).observe(total_sec)

@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.v1.device_cache import invalidate_devices_list_cache, invalidate_devices_summary_cache
 from app.core.config import settings
 from app.core.constants import PERM_CLUSTER_WRITE
 from app.core.database import get_db
@@ -16,7 +17,6 @@ from app.core.exceptions import LoadBalancerError, WireGuardCommandError
 from app.core.rbac import require_permission
 from app.models import Device
 from app.schemas.device import IssueResponse
-from app.api.v1.device_cache import invalidate_devices_list_cache, invalidate_devices_summary_cache
 from app.services.issue_service import issue_device
 from app.services.server_live_key_service import ServerNotSyncedError
 from app.services.topology_engine import TopologyEngine

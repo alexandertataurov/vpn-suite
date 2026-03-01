@@ -11,9 +11,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.constants import PERM_CLUSTER_READ
 from app.core.database import get_db
-from app.core.redis_client import get_redis
 from app.core.rbac import require_permission
-from app.services.admin_revenue_service import get_revenue_overview, get_revenue_daily_series
+from app.core.redis_client import get_redis
+from app.services.admin_revenue_service import get_revenue_daily_series, get_revenue_overview
 
 router = APIRouter(prefix="/admin/revenue", tags=["admin-revenue"])
 
