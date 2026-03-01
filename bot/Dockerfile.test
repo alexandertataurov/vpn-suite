@@ -1,17 +1,13 @@
-# Test image: install dev deps and run pytest. Build from repo root: docker build -f bot/Dockerfile.test .
-FROM python:3.12-slim
-
+# syntax=docker/dockerfile:1
+ARG PYTHON_IMAGE=python:3.12.8-slim
+FROM ${PYTHON_IMAGE}
 WORKDIR /app
-
+RUN addgroup --system app && adduser --system --ingroup app app
 COPY bot/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-RUN pip install --no-cache-dir pytest pytest-asyncio
-
-COPY bot/ .
-
-ENV PYTHONUNBUFFERED=1
-ENV BOT_USERNAME=TestBot
-ENV SUPPORT_HANDLE=@TestSupport
-
+RUN --mount=type=cache,target=/root/.cache/pip \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 pip install --no-cache-dir -r requirements.txt pytest pytest-asyncio
+COPY --chown=app:app bot/ .
+USER app
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
 CMD ["python", "-m", "pytest", "tests/", "-v"]

@@ -1,0 +1,20 @@
+#!/bin/sh
+set -eu
+
+: "${ALERTMANAGER_SLACK_WEBHOOK_URL:?set ALERTMANAGER_SLACK_WEBHOOK_URL}"
+: "${PAGERDUTY_KEY:?set PAGERDUTY_KEY}"
+
+SLACK_CHANNEL_CRITICAL="${ALERTMANAGER_SLACK_CHANNEL_CRITICAL:-#alerts-critical}"
+SLACK_CHANNEL_WARNING="${ALERTMANAGER_SLACK_CHANNEL_WARNING:-#alerts}"
+
+CONFIG_IN="/etc/alertmanager/alertmanager.yml"
+CONFIG_OUT="/tmp/alertmanager.yml"
+
+sed \
+  -e "s|\\${ALERTMANAGER_SLACK_WEBHOOK_URL}|${ALERTMANAGER_SLACK_WEBHOOK_URL}|g" \
+  -e "s|\\${PAGERDUTY_KEY}|${PAGERDUTY_KEY}|g" \
+  -e "s|\\${ALERTMANAGER_SLACK_CHANNEL_CRITICAL:-#alerts-critical}|${SLACK_CHANNEL_CRITICAL}|g" \
+  -e "s|\\${ALERTMANAGER_SLACK_CHANNEL_WARNING:-#alerts}|${SLACK_CHANNEL_WARNING}|g" \
+  "$CONFIG_IN" > "$CONFIG_OUT"
+
+exec /bin/alertmanager --config.file="$CONFIG_OUT" --log.level="${ALERTMANAGER_LOG_LEVEL:-info}"

@@ -19,6 +19,7 @@ services:
   admin-api:
     environment:
       - OTEL_TRACES_ENDPOINT=otel-collector:4317
+      - WEB_CONCURRENCY=1
 
   telegram-vpn-bot:
     environment:
@@ -60,7 +61,7 @@ services:
 
   victoria-metrics:
     <<: [*service_default, *resource_medium]
-    image: victoriametrics/victoria-metrics:latest
+    image: ${VICTORIA_METRICS_IMAGE:?set VICTORIA_METRICS_IMAGE}
     command:
       - "-retentionPeriod=90d"
       - "-storageDataPath=/storage"
@@ -74,6 +75,8 @@ services:
       - monitoring
 
   prometheus:
+    networks:
+      - vpn-suite-app
     ports:
       - "127.0.0.1:${PROMETHEUS_HOST_PORT:-19090}:9090"
     depends_on:
@@ -115,7 +118,7 @@ services:
 
   tempo:
     <<: [*service_default, *resource_medium]
-    image: grafana/tempo:2.3.1
+    image: ${TEMPO_IMAGE:?set TEMPO_IMAGE}
     command: ["-config.file=/etc/tempo/tempo.yaml"]
     volumes:
       - ./config/monitoring/tempo/tempo.yaml:/etc/tempo/tempo.yaml:ro
@@ -128,8 +131,8 @@ services:
       - monitoring
 
   otel-collector:
-    <<: [*service_default, *resource_small]
-    image: otel/opentelemetry-collector-contrib:0.91.0
+    <<: [*service_default, *resource_medium]
+    image: ${OTEL_COLLECTOR_IMAGE:?set OTEL_COLLECTOR_IMAGE}
     command: ["--config=/etc/otel-collector/config.yaml"]
     volumes:
       - ./config/monitoring/otel-collector/config.yaml:/etc/otel-collector/config.yaml:ro
@@ -138,13 +141,15 @@ services:
       - "127.0.0.1:4318:4318"
     depends_on:
       - tempo
+      - victoria-metrics
     networks:
       - vpn-suite-app
     profiles:
       - monitoring
 
   prometheus-archive:
-    image: amazon/aws-cli:2
+    <<: [*resource_small]
+    image: ${AWS_CLI_IMAGE:?set AWS_CLI_IMAGE}
     env_file:
       - ${ENV_FILE:-.env}
     command: ["sh", "-c", "/scripts/archive-prometheus-to-s3.sh"]
@@ -155,7 +160,8 @@ services:
       - archive
 
   loki-archive:
-    image: amazon/aws-cli:2
+    <<: [*resource_small]
+    image: ${AWS_CLI_IMAGE:?set AWS_CLI_IMAGE}
     env_file:
       - ${ENV_FILE:-.env}
     command: ["sh", "-c", "/scripts/archive-loki-to-s3.sh"]
@@ -166,7 +172,8 @@ services:
       - archive
 
   tempo-archive:
-    image: amazon/aws-cli:2
+    <<: [*resource_small]
+    image: ${AWS_CLI_IMAGE:?set AWS_CLI_IMAGE}
     env_file:
       - ${ENV_FILE:-.env}
     command: ["sh", "-c", "/scripts/archive-tempo-to-s3.sh"]

@@ -18,16 +18,26 @@ groups:
         for: 1m
         labels:
           severity: critical
+          affected_service: admin-api
         annotations:
           summary: "Admin API is down"
+          runbook_url: "https://github.com/your-org/vpn-suite/blob/main/docs/ops/runbook.md"
+          dashboard_url: "https://grafana.example.com/d/vpn-overview"
 
       - alert: HighErrorRate
-        expr: rate(http_requests_total{status_class="5xx"}[5m]) > 0.05
-        for: 2m
+        expr: |
+          (sum(rate(http_requests_total{status_class="5xx"}[1m]))
+          /
+          (sum(rate(http_requests_total[1m])) + 1e-9)) > 0.01
+          and sum(rate(http_requests_total[1m])) > 0
+        for: 1m
         labels:
-          severity: warning
+          severity: critical
+          affected_service: admin-api
         annotations:
-          summary: "High 5xx rate on admin-api"
+          summary: "Error rate >1% on admin-api"
+          runbook_url: "https://github.com/your-org/vpn-suite/blob/main/docs/ops/runbook.md"
+          dashboard_url: "https://grafana.example.com/d/vpn-overview"
 
       - alert: AdminPathsHighErrorRate
         expr: |
@@ -81,13 +91,257 @@ groups:
         annotations:
           summary: "95th percentile latency > 2s"
 
+      - alert: WebappAuthErrorRateHigh
+        expr: |
+          sum(rate(http_requests_total{job="admin-api", path_template="/api/v1/webapp/auth", status_class="5xx"}[5m]))
+          /
+          (sum(rate(http_requests_total{job="admin-api", path_template="/api/v1/webapp/auth"}[5m])) + 1e-9)
+          > 0.02
+        for: 5m
+        labels:
+          severity: warning
+          affected_service: webapp
+        annotations:
+          summary: "WebApp auth 5xx rate > 2%"
+          description: "WebApp auth is failing. Check admin-api logs and auth config."
+          runbook_url: "https://github.com/your-org/vpn-suite/blob/main/docs/ops/runbook.md"
+          dashboard_url: "https://grafana.example.com/d/vpn-suite-observability"
+
+      - alert: WebappAuthLatencyHigh
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum(rate(http_request_duration_seconds_bucket{job="admin-api", path_template="/api/v1/webapp/auth"}[5m])) by (le)
+          ) > 1
+        for: 5m
+        labels:
+          severity: warning
+          affected_service: webapp
+        annotations:
+          summary: "WebApp auth latency p95 > 1s"
+          description: "WebApp auth latency is high. Check DB, Telegram validation, and token signing."
+          runbook_url: "https://github.com/your-org/vpn-suite/blob/main/docs/ops/runbook.md"
+          dashboard_url: "https://grafana.example.com/d/vpn-suite-observability"
+
+      - alert: FrontendErrorSpike
+        expr: sum(rate(frontend_errors_total[5m])) by (app) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Frontend error spike"
+          description: "Frontend error reports exceed 0.1/s for app={{ $labels.app }}. Check recent deploys and error logs."
+          runbook_url: "https://github.com/your-org/vpn-suite/blob/main/docs/ops/runbook.md"
+          dashboard_url: "https://grafana.example.com/d/vpn-suite-observability"
+
+      # Payments SLO: 99% webhook processing success (error budget 1%).
+      - alert: PaymentsErrorBudgetBurnFast
+        expr: |
+          (
+            sum(rate(payment_webhook_total{status="failed"}[5m]))
+            /
+            (sum(rate(payment_webhook_total[5m])) + 1e-9)
+          ) / 0.01 > 14.4
+        for: 5m
+        labels:
+          severity: critical
+          slo: payments
+        annotations:
+          summary: "Payments error budget burn fast (99% SLO)"
+          description: "Fast-burn: payment webhook failures exceed 14.4x budget."
+          runbook_url: "https://github.com/your-org/vpn-suite/blob/main/docs/ops/runbook.md"
+
+      - alert: PaymentsErrorBudgetBurnSlow
+        expr: |
+          (
+            sum(rate(payment_webhook_total{status="failed"}[30m]))
+            /
+            (sum(rate(payment_webhook_total[30m])) + 1e-9)
+          ) / 0.01 > 6
+        for: 30m
+        labels:
+          severity: warning
+          slo: payments
+        annotations:
+          summary: "Payments error budget burn slow (99% SLO)"
+          description: "Slow-burn: sustained payment webhook failures."
+          runbook_url: "https://github.com/your-org/vpn-suite/blob/main/docs/ops/runbook.md"
+
+      # Provisioning SLO: 99% issuance success (error budget 1%).
+      - alert: ProvisioningErrorBudgetBurnFast
+        expr: |
+          (
+            sum(rate(vpn_admin_issue_total{status="failure"}[5m]))
+            /
+            (sum(rate(vpn_admin_issue_total[5m])) + 1e-9)
+          ) / 0.01 > 14.4
+        for: 5m
+        labels:
+          severity: critical
+          slo: provisioning
+        annotations:
+          summary: "Provisioning error budget burn fast (99% SLO)"
+          description: "Fast-burn: issuance failures exceed 14.4x budget."
+          runbook_url: "https://github.com/your-org/vpn-suite/blob/main/docs/ops/runbook.md"
+
+      - alert: ProvisioningErrorBudgetBurnSlow
+        expr: |
+          (
+            sum(rate(vpn_admin_issue_total{status="failure"}[30m]))
+            /
+            (sum(rate(vpn_admin_issue_total[30m])) + 1e-9)
+          ) / 0.01 > 6
+        for: 30m
+        labels:
+          severity: warning
+          slo: provisioning
+        annotations:
+          summary: "Provisioning error budget burn slow (99% SLO)"
+          description: "Slow-burn: sustained issuance failures."
+          runbook_url: "https://github.com/your-org/vpn-suite/blob/main/docs/ops/runbook.md"
+
+      # SLO burn alerts (admin-api)
+      # Error budget: 0.5% (99.5% success). Burn rate thresholds: 14.4 (fast) / 6 (slow).
+      - alert: AdminApiErrorBudgetBurnFast
+        expr: |
+          (
+            sum(rate(http_requests_total{job="admin-api", status_class="5xx"}[5m]))
+            /
+            (sum(rate(http_requests_total{job="admin-api"}[5m])) + 1e-9)
+          ) / 0.005 > 14.4
+        for: 5m
+        labels:
+          severity: critical
+          slo: availability
+        annotations:
+          summary: "Admin API error budget burn fast (99.5% SLO)"
+          description: "Fast-burn: 5m window exceeds 14.4x budget. Investigate spikes and recent deploys."
+
+      - alert: AdminApiErrorBudgetBurnSlow
+        expr: |
+          (
+            sum(rate(http_requests_total{job="admin-api", status_class="5xx"}[30m]))
+            /
+            (sum(rate(http_requests_total{job="admin-api"}[30m])) + 1e-9)
+          ) / 0.005 > 6
+        for: 30m
+        labels:
+          severity: warning
+          slo: availability
+        annotations:
+          summary: "Admin API error budget burn slow (99.5% SLO)"
+          description: "Slow-burn: 30m window exceeds 6x budget. Investigate sustained error rate."
+
+      # Latency SLO: 99% of requests under 1s (error budget 1%).
+      - alert: AdminApiLatencyBudgetBurnFast
+        expr: |
+          (
+            1 - (
+              sum(rate(http_request_duration_seconds_bucket{job="admin-api", le="1"}[5m]))
+              /
+              sum(rate(http_request_duration_seconds_bucket{job="admin-api", le="+Inf"}[5m]))
+            )
+          ) / 0.01 > 14.4
+        for: 5m
+        labels:
+          severity: critical
+          slo: latency
+        annotations:
+          summary: "Admin API latency budget burn fast (99% <1s)"
+          description: "Fast-burn: 5m window exceeds 14.4x latency budget. Check DB/cache saturation."
+
+      - alert: AdminApiLatencyBudgetBurnSlow
+        expr: |
+          (
+            1 - (
+              sum(rate(http_request_duration_seconds_bucket{job="admin-api", le="1"}[30m]))
+              /
+              sum(rate(http_request_duration_seconds_bucket{job="admin-api", le="+Inf"}[30m]))
+            )
+          ) / 0.01 > 6
+        for: 30m
+        labels:
+          severity: warning
+          slo: latency
+        annotations:
+          summary: "Admin API latency budget burn slow (99% <1s)"
+          description: "Slow-burn: 30m window exceeds 6x latency budget. Investigate regressions."
+
+      - alert: FrontendLcpP75High
+        expr: |
+          histogram_quantile(
+            0.75,
+            sum(rate(frontend_web_vital_ms_bucket{name="LCP"}[10m])) by (le, app, route, name)
+          ) > 2500
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Frontend LCP p75 > 2.5s"
+          description: "LCP p75 for {{ $labels.app }} {{ $labels.route }} is above 2.5s (name={{ $labels.name }})."
+
+      - alert: FrontendInpP75High
+        expr: |
+          histogram_quantile(
+            0.75,
+            sum(rate(frontend_web_vital_ms_bucket{name="INP"}[10m])) by (le, app, route, name)
+          ) > 200
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Frontend INP p75 > 200ms"
+          description: "INP p75 for {{ $labels.app }} {{ $labels.route }} is above 200ms (name={{ $labels.name }})."
+
+      - alert: FrontendClsP75High
+        expr: |
+          histogram_quantile(
+            0.75,
+            sum(rate(frontend_web_vital_score_bucket{name="CLS"}[10m])) by (le, app, route, name)
+          ) > 0.1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Frontend CLS p75 > 0.1"
+          description: "CLS p75 for {{ $labels.app }} {{ $labels.route }} is above 0.1 (name={{ $labels.name }})."
+
+      - alert: FrontendTtfbP75High
+        expr: |
+          histogram_quantile(
+            0.75,
+            sum(rate(frontend_web_vital_ms_bucket{name="TTFB"}[10m])) by (le, app, route, name)
+          ) > 800
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Frontend TTFB p75 > 800ms"
+          description: "TTFB p75 for {{ $labels.app }} {{ $labels.route }} is above 800ms (name={{ $labels.name }})."
+
+      - alert: FrontendFcpP75High
+        expr: |
+          histogram_quantile(
+            0.75,
+            sum(rate(frontend_web_vital_ms_bucket{name="FCP"}[10m])) by (le, app, route, name)
+          ) > 1800
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Frontend FCP p75 > 1.8s"
+          description: "FCP p75 for {{ $labels.app }} {{ $labels.route }} is above 1.8s (name={{ $labels.name }})."
+
       - alert: VpnNoSchedulableNodes
         expr: absent(vpn_nodes_total) or sum(vpn_nodes_total{status=~"healthy|degraded"}) < 1
         for: 1m
         labels:
           severity: critical
+          affected_service: vpn-cluster
         annotations:
           summary: "No healthy/degraded VPN nodes are schedulable"
+          runbook_url: "https://github.com/your-org/vpn-suite/blob/main/docs/ops/runbook.md"
+          dashboard_url: "https://grafana.example.com/d/vpn-overview"
 
       - alert: VpnNodeHealthLow
         expr: vpn_node_health < 0.5
@@ -255,8 +509,35 @@ groups:
 
   - name: docker-telemetry
     rules:
+      - alert: OtelReceiverRefusedSpans
+        expr: sum(rate(otelcol_receiver_refused_spans[5m])) > 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "OTel collector is refusing spans"
+          description: "Collector backpressure is dropping spans. Check otel-collector memory and sampling."
+
+      - alert: LokiRequestErrors
+        expr: sum(rate(loki_request_errors_total[5m])) > 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Loki is returning request errors"
+          description: "Loki query/push errors detected. Check Loki health and storage."
+
+      - alert: PromtailDroppedEntries
+        expr: sum(rate(promtail_client_dropped_entries_total[5m])) > 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Promtail dropped log entries"
+          description: "Promtail is dropping log entries; log pipeline is losing data."
+
       - alert: DockerContainerHighCPUWarning
-        expr: sum by (id, name) (rate(container_cpu_usage_seconds_total[5m])) * 100 > 85
+        expr: sum by (id, name) (rate(container_cpu_usage_seconds_total{container_label_com_docker_compose_project="vpn-suite"}[5m])) * 100 > 85
         for: 5m
         labels:
           severity: warning
@@ -264,7 +545,7 @@ groups:
           summary: "Container CPU usage is above 85%"
 
       - alert: DockerContainerHighCPUCritical
-        expr: sum by (id, name) (rate(container_cpu_usage_seconds_total[5m])) * 100 > 95
+        expr: sum by (id, name) (rate(container_cpu_usage_seconds_total{container_label_com_docker_compose_project="vpn-suite"}[5m])) * 100 > 95
         for: 3m
         labels:
           severity: critical
@@ -272,7 +553,7 @@ groups:
           summary: "Container CPU usage is above 95%"
 
       - alert: DockerContainerHighMemoryWarning
-        expr: (sum by (id, name) (container_memory_working_set_bytes) / clamp_min(sum by (id, name) (container_spec_memory_limit_bytes), 1)) * 100 > 90
+        expr: (sum by (id, name) (container_memory_working_set_bytes{container_label_com_docker_compose_project="vpn-suite"}) / clamp_min(sum by (id, name) (container_spec_memory_limit_bytes{container_label_com_docker_compose_project="vpn-suite"}), 1)) * 100 > 90
         for: 5m
         labels:
           severity: warning
@@ -280,7 +561,7 @@ groups:
           summary: "Container memory usage is above 90%"
 
       - alert: DockerContainerHighMemoryCritical
-        expr: (sum by (id, name) (container_memory_working_set_bytes) / clamp_min(sum by (id, name) (container_spec_memory_limit_bytes), 1)) * 100 > 97
+        expr: (sum by (id, name) (container_memory_working_set_bytes{container_label_com_docker_compose_project="vpn-suite"}) / clamp_min(sum by (id, name) (container_spec_memory_limit_bytes{container_label_com_docker_compose_project="vpn-suite"}), 1)) * 100 > 97
         for: 3m
         labels:
           severity: critical
@@ -329,7 +610,17 @@ groups:
           severity: warning
         annotations:
           summary: "Host disk pressure on root filesystem (disk near full)"
-          description: "Less than 15% disk space available on root. See runbook-restart-rotate-profile.md."
+          description: "Less than 15% disk space available on root. Postgres may PANIC with 'No space left on device'. Free space: docker system prune, remove old backups. See docs/ops/runbook.md 'Postgres PANIC'."
+
+      - alert: DiskSpaceCritical
+        expr: (node_filesystem_avail_bytes{mountpoint="/"} / clamp_min(node_filesystem_size_bytes{mountpoint="/"}, 1)) < 0.05
+        for: 5m
+        labels:
+          severity: critical
+          affected_service: postgres
+        annotations:
+          summary: "Host disk critical (<5% free)"
+          description: "Postgres and other services may fail. Immediate: df -h; docker system prune -af; rotate logs."
 
       # Cert expiring: optional; requires control-plane to expose cert_expiry_timestamp_seconds or similar
       # - alert: AgentCertExpiringSoon
@@ -349,7 +640,7 @@ groups:
           severity: warning
         annotations:
           summary: "MRR dropped more than 15% vs 7d max"
-          description: "Current MRR {{ $value }} is below 85% of 7d max. Server ID: {{ $labels.server_id | default \"N/A\" }}."
+          description: "Current MRR {{ $value }} is below 85% of 7d max. Server ID: {{ or $labels.server_id \"N/A\" }}."
 
       - alert: PaymentFailureSpike
         expr: |
@@ -377,7 +668,7 @@ groups:
           severity: critical
         annotations:
           summary: "CPU > 85% for 5 min on {{ $labels.instance }}"
-          description: "Node {{ $labels.node_id | default \"N/A\" }}. Value: {{ $value }}%."
+          description: "Node {{ or $labels.node_id \"N/A\" }}. Value: {{ $value }}%."
 
       - alert: WireguardHandshakeStaleSpike
         expr: wireguard_peers > 0 and (wireguard_peers_handshake_stale_count / wireguard_peers) > 0.2
@@ -386,7 +677,7 @@ groups:
           severity: warning
         annotations:
           summary: "More than 20% of peers have stale handshake (>5m)"
-          description: "Server ID: {{ $labels.server_id | default \"N/A\" }}."
+          description: "Server ID: {{ or $labels.server_id \"N/A\" }}."
 
       - alert: WgExporterNodeNotDiscovered
         expr: absent(up{job="wg-exporter"}) and count(up{job="admin-api"}) >= 1

@@ -1,6 +1,7 @@
-# OpenTelemetry Collector — traces pipeline
+# OpenTelemetry Collector — traces, metrics, logs (hot-path, 100ms batch)
 # Receives OTLP from admin-api, telegram-vpn-bot (when instrumented).
-# Metrics: Prometheus scrapes directly; OTEL does not scrape metrics.
+# Metrics: OTLP push + Prometheus scrape; metrics -> prometheusremotewrite -> VictoriaMetrics
+# Logs: OTLP -> Loki. Traces: OTLP -> Tempo.
 
 receivers:
   otlp:
@@ -11,16 +12,43 @@ receivers:
         endpoint: 0.0.0.0:4318
 
 processors:
-  batch:
-    timeout: 5s
-    send_batch_size: 1024
   memory_limiter:
     check_interval: 1s
-    limit_mib: 512
+    limit_mib: 448
+  tail_sampling:
+    decision_wait: 10s
+    num_traces: 200
+    expected_new_traces_per_sec: 10
+    policies:
+      - name: errors
+        type: status_code
+        status_code:
+          status_codes: [ERROR]
+      - name: slow
+        type: latency
+        latency:
+          threshold_ms: 2000
+      - name: baseline
+        type: probabilistic
+        probabilistic:
+          sampling_percentage: 10
+  batch/fast:
+    timeout: 100ms
+    send_batch_size: 512
 
 exporters:
   otlp/tempo:
     endpoint: tempo:4317
+    tls:
+      insecure: true
+  prometheusremotewrite/victoriametrics:
+    endpoint: http://victoria-metrics:8428/api/v1/write
+    tls:
+      insecure: true
+    resource_to_telemetry_conversion:
+      enabled: true
+  loki:
+    endpoint: http://loki:3100/loki/api/v1/push
     tls:
       insecure: true
 
@@ -28,5 +56,13 @@ service:
   pipelines:
     traces:
       receivers: [otlp]
-      processors: [memory_limiter, batch]
+      processors: [memory_limiter, tail_sampling, batch/fast]
       exporters: [otlp/tempo]
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, batch/fast]
+      exporters: [prometheusremotewrite/victoriametrics]
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, batch/fast]
+      exporters: [loki]

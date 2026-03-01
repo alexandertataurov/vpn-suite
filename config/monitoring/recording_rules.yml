@@ -19,3 +19,17 @@ groups:
         expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, path_template))
       - record: http_request_duration_seconds:p99
         expr: histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, path_template))
+
+  - name: frontend_web_vitals
+    interval: 2m
+    rules:
+      - record: frontend_web_vital_lcp_ms:p75
+        expr: histogram_quantile(0.75, sum(rate(frontend_web_vital_ms_bucket{name="LCP"}[10m])) by (le, app, route))
+      - record: frontend_web_vital_inp_ms:p75
+        expr: histogram_quantile(0.75, sum(rate(frontend_web_vital_ms_bucket{name="INP"}[10m])) by (le, app, route))
+      - record: frontend_web_vital_cls:p75
+        expr: histogram_quantile(0.75, sum(rate(frontend_web_vital_score_bucket{name="CLS"}[10m])) by (le, app, route))
+      - record: frontend_web_vital_ttfb_ms:p75
+        expr: histogram_quantile(0.75, sum(rate(frontend_web_vital_ms_bucket{name="TTFB"}[10m])) by (le, app, route))
+      - record: frontend_web_vital_fcp_ms:p75
+        expr: histogram_quantile(0.75, sum(rate(frontend_web_vital_ms_bucket{name="FCP"}[10m])) by (le, app, route))
