@@ -155,7 +155,39 @@ jobs:
 
       - name: Production build (admin + miniapp)
         working-directory: frontend
+        env:
+          VITE_SENTRY_RELEASE: ${{ github.sha }}
+          VITE_SENTRY_ENV: ci
+          VITE_SENTRY_SOURCEMAPS: ${{ secrets.SENTRY_AUTH_TOKEN != '' && '1' || '0' }}
         run: npm run build
+
+      - name: Upload Sentry sourcemaps (admin)
+        if: ${{ secrets.SENTRY_AUTH_TOKEN != '' }}
+        uses: getsentry/action-release@v1
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT_ADMIN }}
+        with:
+          environment: ci
+          version: ${{ github.sha }}
+          sourcemaps: frontend/admin/dist
+          url_prefix: "~/admin"
+          set_commits: "skip"
+
+      - name: Upload Sentry sourcemaps (miniapp)
+        if: ${{ secrets.SENTRY_AUTH_TOKEN != '' }}
+        uses: getsentry/action-release@v1
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT_MINIAPP }}
+        with:
+          environment: ci
+          version: ${{ github.sha }}
+          sourcemaps: frontend/miniapp/dist
+          url_prefix: "~/webapp"
+          set_commits: "skip"
 
       - name: Record bundle size (baseline)
         run: |
