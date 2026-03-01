@@ -1,23 +1,20 @@
 #!/usr/bin/env bash
-# Quality Gate: one command for lint + typecheck + unit tests + build.
-# Optional: API smoke + E2E (set RUN_E2E=1 and ensure API + admin dev server; or use ./manage.sh smoke-staging).
+# Full verify: lint + typecheck + unit tests + build + migrate integrity + config-validate.
+# Set VERIFY_SKIP_DB=1 to skip migrate/pytest (lint/build only).
 set -euo pipefail
+IFS=$'\n\t'
+
+command -v npm >/dev/null 2>&1 || { echo "npm not found" >&2; exit 1; }
+command -v python3 >/dev/null 2>&1 || { echo "python3 not found" >&2; exit 1; }
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
+source scripts/lib/quality_steps.sh
 
-step() { echo; echo "==> $*"; }
-
-# --- Backend ---
-step "Backend: Ruff check"
-(cd backend && ruff check .)
-step "Backend: Ruff format"
-(cd backend && ruff format --check .)
-# Backend migrate + pytest require DATABASE_URL and REDIS_URL. Set VERIFY_SKIP_DB=1 to skip (lint/build only).
+backend_ruff
 if [[ "${VERIFY_SKIP_DB:-0}" != "1" ]]; then
   if [[ -z "${DATABASE_URL:-}" ]]; then
-    export DATABASE_URL="${DATABASE_URL:-postgresql+asyncpg://postgres:postgres@localhost:5432/vpn_admin}"
-    export REDIS_URL="${REDIS_URL:-redis://localhost:6379/0}"
+    export DATABASE_URL="postgresql+asyncpg://postgres:postgres@localhost:5432/vpn_admin" REDIS_URL="${REDIS_URL:-redis://localhost:6379/0}"
   fi
   step "Backend: Migrate (up head)"
   (cd backend && python3 -m alembic upgrade head)
@@ -33,17 +30,9 @@ else
   echo "Skipping backend migrate/pytest and bot pytest (VERIFY_SKIP_DB=1)."
 fi
 
-# --- Frontend ---
 step "Frontend: npm ci"
 (cd frontend && npm ci)
-step "Frontend: Lint"
-(cd frontend && npm run lint)
-step "Frontend: Typecheck"
-(cd frontend && npm run typecheck)
-step "Frontend: Unit tests"
-(cd frontend && npm test -- --run)
-step "Frontend: Build"
-(cd frontend && npm run build)
+frontend_checks
 
 # --- Compose config ---
 # PUBLIC_DOMAIN required by docker-compose; default so config-validate works without it in ENV_FILE.

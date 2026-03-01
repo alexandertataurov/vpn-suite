@@ -1,10 +1,15 @@
 #!/usr/bin/env bash
 # HARDENING: Set chmod 600 on all secret files.
-# Run: sudo ./ops/harden-secrets.sh
+set -euo pipefail
+IFS=$'\n\t'
 
-set -e
-
+[[ $EUID -eq 0 ]] || { echo "Run as root (sudo)"; exit 1; }
 cd "$(dirname "$0")/.."
+umask 077
+
+stat_perm() {
+  stat -c '%a' "$1" 2>/dev/null || stat -f '%A' "$1" 2>/dev/null || echo ""
+}
 
 FIXED=0
 for f in \
@@ -13,16 +18,16 @@ for f in \
   /opt/amnezia/amnezia-awg2/secrets/awg_private_key \
   /opt/amnezia/amnezia-awg2/secrets/node.env \
   ; do
-  [ -e "$f" ] || continue
-  perms=$(stat -c '%a' "$f" 2>/dev/null || stat -f '%A' "$f" 2>/dev/null)
-  if [ "$perms" != "600" ] && [ "$perms" != "400" ]; then
+  [[ -e "$f" ]] || continue
+  perms="$(stat_perm "$f")"
+  if [[ "$perms" != "600" && "$perms" != "400" ]]; then
     chmod 600 "$f"
     echo "chmod 600: $f"
     FIXED=$((FIXED + 1))
   fi
 done
-# Directory: secrets/ and secrets/pki/
+
 for d in secrets secrets/pki; do
-  [ -d "$d" ] && chmod 700 "$d" && echo "chmod 700: $d" && FIXED=$((FIXED + 1))
+  [[ -d "$d" ]] && chmod 700 "$d" && echo "chmod 700: $d" && FIXED=$((FIXED + 1))
 done
 echo "Done. Fixed $FIXED items."

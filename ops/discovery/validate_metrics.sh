@@ -1,54 +1,51 @@
 #!/usr/bin/env bash
 set -euo pipefail
+IFS=$'\n\t'
 
 PROM_URL="${PROM_URL:-http://127.0.0.1:19090}"
 
-fail() {
-  echo "FAIL: $*" >&2
-  exit 1
-}
+need() { command -v "$1" >/dev/null 2>&1 || { echo "missing dependency: $1" >&2; exit 1; }; }
+need curl
+need python3
+
+umask 077
+tmpdir="$(mktemp -d)"
+trap 'rm -rf "$tmpdir"' EXIT
+
+fail() { echo "FAIL: $*" >&2; exit 1; }
 
 query() {
   local q="$1"
-  local tmpq
-  tmpq="$(mktemp)"
-  curl -sS "${PROM_URL}/api/v1/query?query=${q}" -o "${tmpq}"
+  local tmpq="$tmpdir/query.json"
+  curl -sS --max-time 5 "${PROM_URL}/api/v1/query?query=${q}" -o "$tmpq" || true
   python3 - <<PY
 import json,sys
 raw=open("${tmpq}","r",encoding="utf-8").read()
 if not raw.strip():
-    print("")
-    sys.exit(0)
+    print(""); sys.exit(0)
 try:
     data=json.loads(raw)
 except json.JSONDecodeError:
-    print("")
-    sys.exit(0)
+    print(""); sys.exit(0)
 if data.get("status")!="success":
-    print("")
-    sys.exit(0)
+    print(""); sys.exit(0)
 result=data.get("data",{}).get("result",[])
 print(json.dumps(result))
 PY
-  rm -f "${tmpq}"
 }
 
 echo "Checking Prometheus targets..."
-tmp="$(mktemp)"
-trap 'rm -f "${tmp}"' EXIT
-curl -sS "${PROM_URL}/api/v1/targets?state=any" -o "${tmp}"
+tmp="$tmpdir/targets.json"
+curl -sS --max-time 5 "${PROM_URL}/api/v1/targets?state=any" -o "$tmp"
 python3 - <<PY
 import json,sys
 raw=open("${tmp}","r",encoding="utf-8").read()
 if not raw.strip():
-    print("targets empty")
-    sys.exit(1)
+    print("targets empty"); sys.exit(1)
 try:
     data=json.loads(raw)
 except json.JSONDecodeError:
-    print("targets invalid json")
-    print(raw[:200])
-    sys.exit(1)
+    print("targets invalid json"); print(raw[:200]); sys.exit(1)
 active=data.get("data",{}).get("activeTargets",[])
 def health(job):
     for t in active:
@@ -62,13 +59,8 @@ PY
 
 echo "Checking wireguard metrics..."
 wg_up=$(query "wireguard_up")
-if [[ -z "${wg_up}" || "${wg_up}" == "[]" ]]; then
-  fail "wireguard_up missing"
-fi
-
+[[ -n "${wg_up}" && "${wg_up}" != "[]" ]] || fail "wireguard_up missing"
 wg_peers=$(query "wireguard_peers")
-if [[ -z "${wg_peers}" || "${wg_peers}" == "[]" ]]; then
-  fail "wireguard_peers missing"
-fi
+[[ -n "${wg_peers}" && "${wg_peers}" != "[]" ]] || fail "wireguard_peers missing"
 
 echo "OK: wireguard metrics present"

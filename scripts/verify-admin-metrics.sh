@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 # Verify admin metrics/telemetry APIs return real or explicit-unavailable data (no mock/fake).
-# Usage: BASE_URL=http://127.0.0.1:8000 [ADMIN_EMAIL=... ADMIN_PASSWORD=...] ./scripts/verify-admin-metrics.sh
-# Or:   TOKEN=<jwt> BASE_URL=http://127.0.0.1:8000 ./scripts/verify-admin-metrics.sh
 set -euo pipefail
+IFS=$'\n\t'
+
+command -v curl >/dev/null 2>&1 || { echo "curl not found" >&2; exit 1; }
+command -v python3 >/dev/null 2>&1 || { echo "python3 not found" >&2; exit 1; }
+
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 BASE_URL="${BASE_URL:-http://127.0.0.1:8000}"
@@ -43,7 +46,6 @@ fi
 
 if [[ -z "${TOKEN:-}" ]]; then
   echo "No JWT; health-snapshot may require auth (401). Skipping authenticated checks." >&2
-  # Unauthenticated: only /health
   code=$(curl -sS -o /dev/null -w '%{http_code}' "$BASE_URL/health" 2>/dev/null || echo "000")
   [[ "$code" =~ ^2 ]] || { echo "FAIL: GET /health -> $code"; exit 1; }
   echo "OK GET /health"
@@ -53,7 +55,6 @@ fi
 BODY_TMP=$(mktemp)
 trap 'rm -f "$BODY_TMP"' EXIT
 
-# 1) GET /api/v1/overview/health-snapshot — metrics_freshness, real or missing/stale
 echo "Check: GET /api/v1/overview/health-snapshot"
 http_code=$(req_with_code "/api/v1/overview/health-snapshot" "$BODY_TMP")
 json=$(cat "$BODY_TMP")
@@ -72,7 +73,6 @@ else
   echo "OK health-snapshot (metrics_freshness present)"
 fi
 
-# 2) GET /api/v1/analytics/telemetry/services — prometheus_available bool, services list or message
 echo "Check: GET /api/v1/analytics/telemetry/services"
 http_code=$(req_with_code "/api/v1/analytics/telemetry/services" "$BODY_TMP")
 json=$(cat "$BODY_TMP")
@@ -92,7 +92,6 @@ else
   echo "OK analytics/telemetry/services (no fake targets)"
 fi
 
-# 3) GET /api/v1/analytics/metrics/kpis — when prometheus_available false, KPIs must be null (no fabricated numbers)
 echo "Check: GET /api/v1/analytics/metrics/kpis"
 http_code=$(req_with_code "/api/v1/analytics/metrics/kpis" "$BODY_TMP")
 json=$(cat "$BODY_TMP")
@@ -103,7 +102,7 @@ try:
     if 'prometheus_available' not in d: print('fail'); raise SystemExit(0)
     if not d['prometheus_available']:
         if d.get('request_rate_5m') is not None or d.get('error_rate_5m') is not None or d.get('latency_p95_seconds') is not None:
-            print('fail')  # no fake numbers when Prometheus off
+            print('fail')
         else:
             print('ok')
     else:
@@ -117,7 +116,6 @@ else
   echo "OK analytics/metrics/kpis (real or null)"
 fi
 
-# 4) GET /api/v1/overview/operator?time_range=1h — timeseries is list
 echo "Check: GET /api/v1/overview/operator"
 http_code=$(req_with_code "/api/v1/overview/operator?time_range=1h" "$BODY_TMP")
 json=$(cat "$BODY_TMP")
@@ -135,7 +133,6 @@ else
   echo "OK overview/operator (timeseries is list)"
 fi
 
-# 5) GET /api/v1/overview/connection_nodes — nodes from DB
 echo "Check: GET /api/v1/overview/connection_nodes"
 http_code=$(req_with_code "/api/v1/overview/connection_nodes" "$BODY_TMP")
 json=$(cat "$BODY_TMP")

@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
-# Restart core stack (lag recovery). Use when NodeMemoryPressure/NodeSwapHeavy or connections dropping.
-# Usage: ./ops/restart-core-stack.sh
+# Restart core stack (lag recovery).
+set -euo pipefail
+IFS=$'\n\t'
 
-set -e
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-cd "$ROOT"
+[[ -x "$ROOT/manage.sh" ]] || { echo "manage.sh not found in $ROOT" >&2; exit 1; }
+
 "$ROOT/manage.sh" down-core
 "$ROOT/manage.sh" up-core
 echo "Core stack restarted. Check: curl -sf http://localhost/health"

@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 # Release verification: happy-path requests for admin-used endpoints.
-# Saves redacted sample responses to reports/release-api-ui-verification/samples/.
-# Usage: BASE_URL=http://127.0.0.1:8000 [ADMIN_EMAIL=... ADMIN_PASSWORD=...] ./scripts/release_api_happy_path.sh
 set -euo pipefail
+IFS=$'\n\t'
+
+command -v curl >/dev/null 2>&1 || { echo "curl not found" >&2; exit 1; }
+command -v python3 >/dev/null 2>&1 || { echo "python3 not found" >&2; exit 1; }
+
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 BASE_URL="${BASE_URL:-http://127.0.0.1:8000}"
@@ -24,9 +27,9 @@ req() {
   local method="$1" path="$2" out="$3" body="${4:-}"
   local code
   if [[ -n "$body" ]]; then
-    code=$(curl -s -w '%{http_code}' -o "$out" -X "$method" -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d "$body" "$BASE_URL$path" 2>/dev/null || echo "000")
+    code=$(curl -sS --max-time 10 -w '%{http_code}' -o "$out" -X "$method" -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d "$body" "$BASE_URL$path" 2>/dev/null || echo "000")
   else
-    code=$(curl -s -w '%{http_code}' -o "$out" -X "$method" -H "Authorization: Bearer $TOKEN" "$BASE_URL$path" 2>/dev/null || echo "000")
+    code=$(curl -sS --max-time 10 -w '%{http_code}' -o "$out" -X "$method" -H "Authorization: Bearer $TOKEN" "$BASE_URL$path" 2>/dev/null || echo "000")
   fi
   echo "$code"
 }
@@ -42,13 +45,11 @@ fi
 ADMIN_EMAIL="${ADMIN_EMAIL:-admin@example.com}"
 ADMIN_PASSWORD="${ADMIN_PASSWORD:-admin}"
 
-# Health (no auth)
-curl -s -o "$SAMPLES/health.json" "$BASE_URL/health" 2>/dev/null || true
-code_health=$(curl -s -o /dev/null -w '%{http_code}' "$BASE_URL/health" 2>/dev/null || echo "000")
+curl -sS --max-time 10 -o "$SAMPLES/health.json" "$BASE_URL/health" 2>/dev/null || true
+code_health=$(curl -sS --max-time 10 -o /dev/null -w '%{http_code}' "$BASE_URL/health" 2>/dev/null || echo "000")
 echo "GET /health -> $code_health" | tee -a "$RESULTS"
 
-# Login
-login_resp=$(curl -s -X POST "$BASE_URL/api/v1/auth/login" -H "Content-Type: application/json" -d "{\"email\":\"$ADMIN_EMAIL\",\"password\":\"$ADMIN_PASSWORD\"}" 2>/dev/null || echo "{}")
+login_resp=$(curl -sS --max-time 10 -X POST "$BASE_URL/api/v1/auth/login" -H "Content-Type: application/json" -d "{\"email\":\"$ADMIN_EMAIL\",\"password\":\"$ADMIN_PASSWORD\"}" 2>/dev/null || echo "{}")
 echo "$login_resp" | redact > "$SAMPLES/auth_login.json"
 TOKEN=$(echo "$login_resp" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('access_token') or d.get('data',{}).get('access_token') or '')" 2>/dev/null || true)
 code_login=$(echo "$login_resp" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('meta',{}).get('code') or (200 if d.get('access_token') else 401))" 2>/dev/null || echo "401")
@@ -59,7 +60,6 @@ if [[ -z "$TOKEN" ]]; then
   exit 0
 fi
 
-# Authenticated GETs (path -> sample filename)
 declare -a get_endpoints=(
   "/api/v1/overview:overview"
   "/api/v1/overview/dashboard_timeseries:overview_timeseries"
@@ -88,7 +88,6 @@ for entry in "${get_endpoints[@]}"; do
   [[ -f "$SAMPLES/${name}.json" ]] && redact < "$SAMPLES/${name}.json" > "$SAMPLES/${name}.json.tmp" && mv "$SAMPLES/${name}.json.tmp" "$SAMPLES/${name}.json"
 done
 
-# Servers list may have items; get first server id for detail/sync if present
 SERVER_ID=$(python3 -c "
 import json
 try:

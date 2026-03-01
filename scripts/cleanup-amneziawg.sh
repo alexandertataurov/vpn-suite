@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Clean up all AmneziaWG containers, volumes, images, and host files.
-# Run on host with Docker access.
-set -e
+set -euo pipefail
+IFS=$'\n\t'
+
+[[ "${FORCE:-0}" == "1" ]] || { echo "Set FORCE=1 to proceed (destructive)." >&2; exit 1; }
 
 echo "=== Stopping amnezia-awg* containers ==="
 for c in $(docker ps -a --format '{{.Names}}' | grep -E '^amnezia-awg' || true); do
@@ -27,7 +29,6 @@ systemctl daemon-reload 2>/dev/null || true
 
 echo "=== Removing host /etc/amnezia/amneziawg ==="
 rm -rf /etc/amnezia/amneziawg 2>/dev/null || true
-# Remove /etc/amnezia if empty
 rmdir /etc/amnezia 2>/dev/null || true
 
 echo "=== Done ==="

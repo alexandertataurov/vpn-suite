@@ -1,18 +1,17 @@
 #!/usr/bin/env bash
 # Agent-mode troubleshooting: Redis heartbeats, env consistency, node-agent status.
-# Run from project root.
-
 set -euo pipefail
+IFS=$'\n\t'
 cd "$(dirname "$0")/.."
 
+command -v docker >/dev/null 2>&1 || { echo "docker not found" >&2; exit 1; }
+
 echo "=== 1. Redis agent heartbeats ==="
-docker exec vpn-suite-redis-1 redis-cli KEYS "agent:hb:*" 2>/dev/null || echo "(redis not running)"
-for key in $(docker exec vpn-suite-redis-1 redis-cli KEYS "agent:hb:*" 2>/dev/null || true); do
-  [ -z "$key" ] && continue
-  echo "  $key:"
-  docker exec vpn-suite-redis-1 redis-cli GET "$key" 2>/dev/null | head -c 300
-  echo ""
-done
+if docker exec vpn-suite-redis-1 redis-cli PING >/dev/null 2>&1; then
+  docker exec vpn-suite-redis-1 redis-cli --scan --pattern "agent:hb:*" 2>/dev/null | head -n 50
+else
+  echo "(redis not running)"
+fi
 
 echo ""
 echo "=== 2. Control-plane env (NODE_DISCOVERY, REDIS_URL) ==="

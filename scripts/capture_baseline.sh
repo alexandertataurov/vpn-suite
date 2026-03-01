@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Baseline capture for /admin: network (curl), backend logs. Run with stack up.
-# Browser items (console, Web Vitals) — run manually in Chrome DevTools.
+# Baseline capture for /admin: network (curl), backend logs.
 set -euo pipefail
+IFS=$'\n\t'
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 BASE_URL="${BASE_URL:-http://127.0.0.1:8000}"
@@ -24,11 +24,15 @@ fi
 if [[ -z "${ADMIN_EMAIL:-}" || -z "${ADMIN_PASSWORD:-}" ]]; then
   log "Skip: ADMIN_EMAIL/ADMIN_PASSWORD not set"
 else
-  TOKEN=$(curl -s -X POST "$BASE_URL/api/v1/auth/login" -H "Content-Type: application/json" -d "{\"email\":\"$ADMIN_EMAIL\",\"password\":\"$ADMIN_PASSWORD\"}" | python3 -c "import sys,json; print(json.load(sys.stdin).get('access_token',''))" 2>/dev/null)
-  if [[ -z "$TOKEN" ]]; then log "Login failed"; else
+  TOKEN="$(curl -sS --max-time 10 -X POST "$BASE_URL/api/v1/auth/login" -H "Content-Type: application/json" -d "{\"email\":\"$ADMIN_EMAIL\",\"password\":\"$ADMIN_PASSWORD\"}" | python3 -c "import sys,json; print(json.load(sys.stdin).get('access_token',''))" 2>/dev/null)"
+  if [[ -z "$TOKEN" ]]; then
+    log "Login failed"
+  else
     AUTH="Authorization: Bearer $TOKEN"
+    tmp="$(mktemp)"
+    trap 'rm -f "$tmp"' EXIT
     for path in /api/v1/overview /api/v1/audit?limit=5 /api/v1/servers /api/v1/control-plane/automation/status /api/v1/control-plane/events?limit=5 /api/v1/telemetry/docker/hosts; do
-      r=$(curl -s -w "\n%{http_code}\t%{time_total}\t%{size_download}" -H "$AUTH" "$BASE_URL$path" -o /tmp/baseline_body)
+      r=$(curl -sS --max-time 10 -w "\n%{http_code}\t%{time_total}\t%{size_download}" -H "$AUTH" "$BASE_URL$path" -o "$tmp")
       code=$(echo "$r" | tail -1 | cut -f1)
       time=$(echo "$r" | tail -1 | cut -f2)
       size=$(echo "$r" | tail -1 | cut -f3)

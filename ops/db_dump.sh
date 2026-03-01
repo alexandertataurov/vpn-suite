@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
+IFS=$'\n\t'
 cd "$(dirname "$0")/.."
 
+log() { printf '%s\n' "$*" >&2; }
+
 ENV_FILE="${ENV_FILE:-.env}"
+[[ -f "$ENV_FILE" ]] || { log "ENV_FILE not found: $ENV_FILE"; exit 1; }
 
 DC=(env ENV_FILE="$ENV_FILE" docker compose --env-file "$ENV_FILE" -f docker-compose.yml)
 
@@ -14,27 +18,27 @@ umask 077
 mkdir -p "$OUT_DIR"
 
 OUT_FILE="$OUT_DIR/pgdump_${TS}.dump"
+TMP_FILE="${OUT_FILE}.tmp"
 
-# Custom format (-Fc) is compressed and suitable for pg_restore.
-"${DC[@]}" exec -T postgres sh -ec 'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Fc -Z 6' >"$OUT_FILE"
+CID="$(${DC[@]} ps -q postgres || true)"
+[[ -n "$CID" ]] || { log "postgres container is not running"; exit 1; }
+
+"${DC[@]}" exec -T postgres sh -ec 'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Fc -Z 6' >"$TMP_FILE"
+mv "$TMP_FILE" "$OUT_FILE"
 chmod 600 "$OUT_FILE" || true
 
-# Best-effort retention (keep newest N).
+export OUT_DIR
 python3 - <<'PY' || true
 import os
 from pathlib import Path
-
-out_dir = Path(os.environ["OUT_DIR"])
+out_dir = Path(os.environ.get("OUT_DIR", "backups/postgres"))
 keep = int(os.environ.get("RETENTION_COUNT", "14"))
 if keep <= 0:
     raise SystemExit(0)
-
 files = sorted(out_dir.glob("pgdump_*.dump"), key=lambda p: p.stat().st_mtime, reverse=True)
 for p in files[keep:]:
-    try:
-        p.unlink()
-    except Exception:
-        pass
+    try: p.unlink()
+    except Exception: pass
 PY
 
-echo "$OUT_FILE"
+log "$OUT_FILE"

@@ -1,0 +1,9 @@
+[Unit]
+Description=VPN Suite - scheduled monitoring config backups (daily)
+
+[Timer]
+OnCalendar=*-*-* 04:00:00 UTC
+Persistent=true
+
+[Install]
+WantedBy=timers.target

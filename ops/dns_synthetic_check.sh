@@ -1,10 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
+IFS=$'\n\t'
 
 DOMAIN="${1:-vpn.vega.llc}"
 EXPECT_IPV4="${2:-}"
 HEALTH_URL="${3:-https://$DOMAIN/health}"
 RESOLVERS=(1.1.1.1 8.8.8.8 9.9.9.9)
+
+need() { command -v "$1" >/dev/null 2>&1 || { echo "missing dependency: $1" >&2; exit 1; }; }
+need dig
+need curl
+
+umask 077
+tmp="$(mktemp)"
+trap 'rm -f "$tmp"' EXIT
 
 fail=0
 now_utc=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
@@ -25,11 +34,11 @@ for r in "${RESOLVERS[@]}"; do
   echo "resolver=$r status=OK a_record=$ans"
 done
 
-if ! curl -fsS --max-time 10 "$HEALTH_URL" >/tmp/dns_synthetic_health.json; then
+if ! curl -fsS --max-time 10 "$HEALTH_URL" >"$tmp"; then
   echo "health status=FAIL reason=request_failed url=$HEALTH_URL"
   fail=1
 else
-  echo "health status=OK url=$HEALTH_URL body=$(head -c 200 /tmp/dns_synthetic_health.json)"
+  echo "health status=OK url=$HEALTH_URL body=$(head -c 200 "$tmp")"
 fi
 
 if [[ "$fail" -ne 0 ]]; then

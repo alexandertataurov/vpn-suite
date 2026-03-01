@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # Bring up WireGuard with issued config, curl external IP, bring down.
-# Usage: sudo ./scripts/vpn_connectivity_check.sh /path/to/client.conf
-# Optional: EXPECTED_EXIT_IP=1.2.3.4 (fail if exit IP does not match)
 set -euo pipefail
+IFS=$'\n\t'
+
+command -v wg-quick >/dev/null 2>&1 || { echo "wg-quick not found" >&2; exit 1; }
+command -v curl >/dev/null 2>&1 || { echo "curl not found" >&2; exit 1; }
 
 CONFIG_FILE="${1:?Usage: $0 /path/to/client.conf}"
 CURL_TIMEOUT="${CURL_TIMEOUT:-15}"

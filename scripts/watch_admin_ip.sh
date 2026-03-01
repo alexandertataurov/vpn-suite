@@ -1,5 +1,7 @@
 #!/usr/bin/env sh
-set -euo pipefail
+set -eu
+
+command -v docker >/dev/null 2>&1 || { echo "docker not found" >&2; exit 1; }
 
 ENV_FILE="${ENV_FILE:-/work/.env}"
 PROJECT="${COMPOSE_PROJECT_NAME:-vpn-suite}"
@@ -16,19 +18,15 @@ update_and_restart() {
   ip="$(ENV_FILE="$ENV_FILE" "$UPDATE_SCRIPT" 2>&1 || true)"
   if [ -n "$ip" ]; then
     docker restart "$REVERSE_CONTAINER" >/dev/null 2>&1 || true
-    now="$(date +%s)"
-    echo "$now" > /tmp/admin_ip_watcher.ok
+    date +%s > /tmp/admin_ip_watcher.ok
     echo "admin-api ip pinned: $ip"
   else
     echo "admin-api ip update failed" >&2
   fi
 }
 
-# Initial sync on start
 update_and_restart
 
-# Keep healthcheck fresh even when no restarts happen
-# (healthcheck expects a recent timestamp in /tmp/admin_ip_watcher.ok)
 (
   while true; do
     date +%s > /tmp/admin_ip_watcher.ok
@@ -36,7 +34,6 @@ update_and_restart
   done
 ) &
 
-# Watch admin-api container start events and re-pin
 docker events --filter "container=${ADMIN_CONTAINER}" --filter event=start --format '{{.Status}} {{.ID}}' | \
 while read -r _ _; do
   update_and_restart

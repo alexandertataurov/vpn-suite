@@ -4,6 +4,11 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
+command -v docker >/dev/null 2>&1 || { echo "docker not found" >&2; exit 1; }
+command -v curl >/dev/null 2>&1 || { echo "curl not found" >&2; exit 1; }
+command -v python3 >/dev/null 2>&1 || { echo "python3 not found" >&2; exit 1; }
+command -v rg >/dev/null 2>&1 || { echo "rg not found" >&2; exit 1; }
+
 ENV_FILE="${ENV_FILE:-}"
 source scripts/lib/env.sh
 resolve_env_file

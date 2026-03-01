@@ -21,12 +21,11 @@ if [ -z "$ip" ]; then
   exit 1
 fi
 
+tmp="$(mktemp)"
 if grep -q '^ADMIN_API_IP=' "$ENV_FILE"; then
-  tmp="${ENV_FILE}.tmp"
   grep -v '^ADMIN_API_IP=' "$ENV_FILE" > "$tmp"
   printf "ADMIN_API_IP=%s\n" "$ip" >> "$tmp"
-  cat "$tmp" > "$ENV_FILE"
-  rm -f "$tmp"
+  mv "$tmp" "$ENV_FILE"
 else
   printf "\nADMIN_API_IP=%s\n" "$ip" >> "$ENV_FILE"
 fi

@@ -4,6 +4,13 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
+command -v docker >/dev/null 2>&1 || { echo "docker not found" >&2; exit 1; }
+command -v curl >/dev/null 2>&1 || { echo "curl not found" >&2; exit 1; }
+command -v python3 >/dev/null 2>&1 || { echo "python3 not found" >&2; exit 1; }
+command -v npm >/dev/null 2>&1 || { echo "npm not found" >&2; exit 1; }
+
+umask 077
+
 AUDIT_PROJECT="${AUDIT_PROJECT:-vpn-suite-audit}"
 SOURCE_PG_CONTAINER="${SOURCE_PG_CONTAINER:-vpn-suite-postgres-1}"
 
