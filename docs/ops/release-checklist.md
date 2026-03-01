@@ -18,6 +18,9 @@
 - [ ] `SECRET_KEY` — уникальный, ≥32 символов (`openssl rand -base64 32`)
 - [ ] `ADMIN_PASSWORD` — не дефолт
 - [ ] `POSTGRES_PASSWORD` — сильный пароль
+- [ ] `AGENT_SHARED_TOKEN` — уникальный (и совпадает с node env)
+- [ ] `GRAFANA_ADMIN_PASSWORD` — не дефолт
+- [ ] `ALERTMANAGER_IMAGE` задан (без `latest`)
 - [ ] `BAN_CONFIRM_TOKEN`, `REVOKE_CONFIRM_TOKEN`, `BLOCK_CONFIRM_TOKEN`, `RESTART_CONFIRM_TOKEN` — заданы нестандартные значения (иначе старт с ENVIRONMENT=production упадёт)
 - [ ] Telegram Stars: `TELEGRAM_STARS_WEBHOOK_SECRET` задан; webhook проверяет заголовок
 - [ ] **Secrets on disk:** Не коммитить `.env` и `secrets/` (node `secrets/node.env` с `AGENT_SHARED_TOKEN` — отдельно). На хосте: `chmod 600` для `.env` и файлов в `secrets/`. Единственный источник конфига — `.env`.
@@ -27,6 +30,7 @@
 - [ ] `BOT_TOKEN`, `BOT_API_KEY` заданы в `.env` сервиса bot
 - [ ] `BOT_USERNAME` задан (без @) — иначе реферальные ссылки не работают
 - [ ] `SUPPORT_LINK` или `SUPPORT_HANDLE` заданы для команды /support (иначе показывается @support)
+- [ ] Webhook: `BOT_WEBHOOK_URL` и `BOT_WEBHOOK_PATH` заданы при использовании webhook‑режима
 - [ ] Команды бота синхронизированы при старте (`set_my_commands`); при необходимости обновить список в `bot/commands.py`
 
 ## 3. Инфраструктура

@@ -9,6 +9,7 @@
 | PUBLIC_DOMAIN | Reverse-proxy hostname (e.g. localhost, vpn.example.com) |
 | POSTGRES_PASSWORD | Postgres password |
 | GRAFANA_ADMIN_PASSWORD | Grafana (monitoring profile) |
+| ALERTMANAGER_IMAGE | Alertmanager image tag (required by compose) |
 
 ## Required for Admin API (backend)
 
@@ -26,8 +27,11 @@
 
 | Variable | Purpose |
 |----------|---------|
+| BOT_TOKEN | Bot token (Telegram) |
+| BOT_API_KEY | Internal API key for bot (if used) |
 | BOT_USERNAME / VITE_TELEGRAM_BOT_USERNAME | Bot @username (docker-compose passes latter to BOT_USERNAME) |
 | SUPPORT_HANDLE | Support handle (e.g. @support) |
+| SUPPORT_LINK | Optional deep link for support |
 
 ## Required in Production (validate_production_secrets)
 
@@ -40,6 +44,15 @@
 | RESTART_CONFIRM_TOKEN | 16 |
 | REVOKE_CONFIRM_TOKEN | 16 |
 | AGENT_SHARED_TOKEN | 32 (when NODE_MODE=agent or NODE_DISCOVERY=agent) |
+
+## Required for Observability Compose (docker-compose.observability.yml)
+
+| Variable | Purpose |
+|----------|---------|
+| VICTORIA_METRICS_IMAGE | VictoriaMetrics image tag |
+| TEMPO_IMAGE | Tempo image tag |
+| OTEL_COLLECTOR_IMAGE | OpenTelemetry Collector image tag |
+| AWS_CLI_IMAGE | AWS CLI image tag (archive jobs) |
 
 ## Node-Agent (per-node env, e.g. amnezia/amnezia-awg2/secrets/node.env)
 
