@@ -74,6 +74,26 @@ async def live_key_fetch(
     if settings.node_discovery == "agent" or settings.node_mode == "agent":
         try:
             r = get_redis()
+        except RuntimeError as e:
+            fpk = (fallback_public_key or "").strip()
+            if "not initialized" in str(e).lower() and fpk and len(fpk) >= 43:
+                _log.warning(
+                    "LiveKeyFetch agent: Redis not initialized; using DB fallback for server_id=%s (e.g. one-off script)",
+                    server_id,
+                )
+                now = datetime.now(timezone.utc)
+                return LiveKeyResult(
+                    public_key=fpk,
+                    node_id=server_id,
+                    synced_at=now,
+                    fingerprint=_fingerprint(fpk),
+                )
+            _log.debug(
+                "LiveKeyFetch agent: Redis not initialized, fallback_public_key=%s",
+                "set" if fpk else "empty",
+            )
+            raise ServerNotSyncedError(server_id, f"heartbeat read failed: {e!s}") from e
+        try:
             # Prefer heartbeat keyed by container name (api_endpoint) when present — matches actual node.
             ids_to_try = []
             if heartbeat_fallback_ids:

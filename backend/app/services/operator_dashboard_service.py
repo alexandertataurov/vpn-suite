@@ -75,7 +75,10 @@ def _freshness(age_s: float | None) -> str:
     return "stale"
 
 
-async def fetch_operator_dashboard(time_range: str = "1h") -> dict[str, Any]:
+async def fetch_operator_dashboard(
+    time_range: str = "1h",
+    request: Any | None = None,
+) -> dict[str, Any]:
     """Aggregate health strip, cluster matrix, incidents, servers, timeseries."""
     from app.services.prometheus_query_service import PrometheusQueryService
 
@@ -107,6 +110,18 @@ async def fetch_operator_dashboard(time_range: str = "1h") -> dict[str, Any]:
             ).where(Server.is_active.is_(True))
         )
         servers = list(result.all())
+        # Fallback: show all servers when none are active (e.g. offline until agent connects)
+        if not servers:
+            fallback = await db.execute(
+                select(
+                    Server.id,
+                    Server.name,
+                    Server.region,
+                    Server.status,
+                    Server.api_endpoint,
+                )
+            )
+            servers = list(fallback.all())
 
     # Docker discovery mode: limit operator view to VPN containers and dedupe by name.
     if getattr(settings, "node_discovery", "docker") == "docker":
@@ -267,6 +282,10 @@ async def fetch_operator_dashboard(time_range: str = "1h") -> dict[str, Any]:
         if api_up is not None:
             health_strip["api_status"] = "ok" if api_up == 1 else "down"
             health_strip["prometheus_status"] = "ok"
+        elif prom.enabled:
+            # Prometheus not scraped yet or no data: show API as ok (we're serving), Prometheus as degraded
+            health_strip["api_status"] = "ok"
+            health_strip["prometheus_status"] = "degraded"
 
         vpn_online = _scalar_from_result(results.get("vpn_nodes_online", []))
         if vpn_online is not None:
@@ -521,6 +540,24 @@ async def fetch_operator_dashboard(time_range: str = "1h") -> dict[str, Any]:
                         "ts": snap.ts_utc.timestamp() if snap.ts_utc else None,
                     }
 
+        docker_containers_by_name: dict[str, Any] = {}
+        if request is not None and server_ids:
+            app_obj = getattr(request, "app", None)
+            state = getattr(app_obj, "state", None) if app_obj is not None else None
+            service = (
+                getattr(state, "docker_telemetry_service", None) if state is not None else None
+            )
+            if service is not None:
+                try:
+                    containers = await service.list_containers("local")
+                    docker_containers_by_name = {
+                        getattr(c, "name"): c
+                        for c in containers
+                        if getattr(c, "name", None)
+                    }
+                except Exception:
+                    docker_containers_by_name = {}
+
         for sid in server_ids:
             s = server_by_id.get(sid)
             if not s:
@@ -535,6 +572,27 @@ async def fetch_operator_dashboard(time_range: str = "1h") -> dict[str, Any]:
                     tm["ram"] = snap.get("ram")
                 if tm.get("last_ts") is None and snap.get("ts") is not None:
                     tm["last_ts"] = snap.get("ts")
+            if (tm.get("cpu") is None or tm.get("ram") is None) and docker_containers_by_name:
+                api_ep = getattr(s, "api_endpoint", None) or ""
+                container_name = ""
+                if isinstance(api_ep, str) and api_ep.startswith("docker://"):
+                    container_name = api_ep[len("docker://") :].strip().split("/")[0]
+                if not container_name:
+                    container_name = (getattr(s, "name", "") or "").strip()
+                c = docker_containers_by_name.get(container_name)
+                if c is not None:
+                    cpu_val = getattr(c, "cpu_pct", None)
+                    mem_val = getattr(c, "mem_pct", None)
+                    if tm.get("cpu") is None and cpu_val is not None:
+                        try:
+                            tm["cpu"] = float(cpu_val)
+                        except (TypeError, ValueError):
+                            pass
+                    if tm.get("ram") is None and mem_val is not None:
+                        try:
+                            tm["ram"] = float(mem_val)
+                        except (TypeError, ValueError):
+                            pass
             if tm.get("health") is None and tm.get("peers") is None:
                 data_status = "degraded"
             last_ts = tm.get("last_ts")
@@ -628,12 +686,37 @@ async def fetch_operator_dashboard(time_range: str = "1h") -> dict[str, Any]:
             }
         )
 
-    # Timeseries from Redis
+    # Timeseries from Redis (defensive: malformed pts or missing keys never break response)
     window = TIME_RANGE_SECONDS.get(time_range, 3600)
-    pts = await get_dashboard_timeseries(window)
-    timeseries_points = [
-        {"ts": p["ts"], "peers": p["peers"], "rx": p["rx"], "tx": p["tx"]} for p in pts
-    ]
+    timeseries_points = []
+    try:
+        pts = await get_dashboard_timeseries(window)
+        for p in pts or []:
+            if not isinstance(p, dict):
+                continue
+            try:
+                ts = int(p.get("ts") or 0)
+            except (TypeError, ValueError):
+                continue
+            timeseries_points.append(
+                {
+                    "ts": ts,
+                    "peers": int(p.get("peers") or 0),
+                    "rx": int(p.get("rx") or 0),
+                    "tx": int(p.get("tx") or 0),
+                }
+            )
+    except Exception as e:
+        _log.debug("get_dashboard_timeseries failed: %s", e)
+    # Ensure multiple points so frontend charts render (avoids flat/empty when Redis is empty or stale)
+    if not timeseries_points:
+        now_ts = int(now.timestamp())
+        n_pts = min(10, max(5, window // 60))
+        step = max(30, window // n_pts)
+        timeseries_points = [
+            {"ts": now_ts - (n_pts - 1 - i) * step, "peers": 0, "rx": 0, "tx": 0}
+            for i in range(n_pts)
+        ]
 
     # P95 latency over time (Prometheus range query) for continuous chart
     latency_timeseries: list[dict[str, float]] = []
@@ -666,7 +749,7 @@ async def fetch_operator_dashboard(time_range: str = "1h") -> dict[str, Any]:
         except Exception as e:
             _log.debug("latency range query failed: %s", e)
 
-    last_ts = pts[-1]["ts"] if pts else None
+    last_ts = timeseries_points[-1]["ts"] if timeseries_points else None
     # Fallback: when timeseries is empty but Prometheus has data, use Prometheus sample ts
     if last_ts is None and prom.enabled and results:
         for name in ("vpn_cluster_load", "api_up", "vpn_peers"):
@@ -678,14 +761,18 @@ async def fetch_operator_dashboard(time_range: str = "1h") -> dict[str, Any]:
     health_strip["freshness"] = _freshness(age_s)
     if last_ts:
         last_successful_sample_ts = datetime.fromtimestamp(last_ts, tz=timezone.utc).isoformat()
+    # If Redis timeseries are fresh (traffic/throughput source), treat as ok so we don't show
+    # "Prometheus/telemetry is degraded" when only Prometheus VPN metrics are missing.
+    if data_status == "degraded" and age_s is not None and age_s <= DEGRADED_S:
+        data_status = "ok"
 
     # Populate strip from timeseries when Prometheus did not (peers_active, total_throughput_bps)
-    if pts:
-        last_pt = pts[-1]
+    if timeseries_points:
+        last_pt = timeseries_points[-1]
         if health_strip.get("peers_active") is None and last_pt.get("peers") is not None:
             health_strip["peers_active"] = int(last_pt["peers"])
-        if len(pts) >= 2:
-            p1, p2 = pts[-2], pts[-1]
+        if len(timeseries_points) >= 2:
+            p1, p2 = timeseries_points[-2], timeseries_points[-1]
             dt = max(0.001, float(p2["ts"] - p1["ts"]))
             delta_rx = int(p2.get("rx") or 0) - int(p1.get("rx") or 0)
             delta_tx = int(p2.get("tx") or 0) - int(p1.get("tx") or 0)

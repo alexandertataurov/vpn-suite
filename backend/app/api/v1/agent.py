@@ -18,7 +18,7 @@ import secrets as stdlib_secrets
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request
-from sqlalchemy import select
+from sqlalchemy import or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.server_cache import invalidate_servers_list_cache
@@ -185,8 +185,33 @@ async def agent_heartbeat(
                         written,
                         payload.server_id,
                     )
+                # Peers on node -> mark device apply_status=APPLIED so config content/download can succeed
+                dev_ids = [
+                    pk_to_device_id[_norm_public_key(str(p.get("public_key") or ""))]
+                    for p in dumped["peers"]
+                    if isinstance(p, dict)
+                    and _norm_public_key(str(p.get("public_key") or "")) in pk_to_device_id
+                ]
+                if dev_ids:
+                    await db.execute(
+                        update(Device)
+                        .where(
+                            Device.id.in_(dev_ids),
+                            or_(
+                                Device.apply_status.is_(None),
+                                Device.apply_status.notin_(("APPLIED", "VERIFIED")),
+                            ),
+                        )
+                        .values(apply_status="APPLIED", last_applied_at=now)
+                    )
+                    await db.commit()
             except Exception as te:
-                _log.debug("Heartbeat telemetry write failed: %s", te)
+                _log.warning(
+                    "Heartbeat telemetry/apply_status update failed server_id=%s: %s",
+                    payload.server_id,
+                    te,
+                    exc_info=True,
+                )
     except Exception as exc:
         raise HTTPException(
             status_code=503,
@@ -367,6 +392,7 @@ async def agent_v1_peers(
                 last_handshake_age_sec=p.get("last_handshake_age_sec"),
                 rx_bytes=p.get("rx_bytes") or 0,
                 tx_bytes=p.get("tx_bytes") or 0,
+                rtt_ms=p.get("rtt_ms"),
             )
         )
     return out

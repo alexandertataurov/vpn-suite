@@ -19,6 +19,7 @@ from app.models.plan_bandwidth_policy import PlanBandwidthPolicy
 from app.models.port_allocation import PortAllocation
 from app.models.price_history import PriceHistory
 from app.models.profile_issue import ProfileIssue
+from app.models.one_time_download import OneTimeDownloadToken
 from app.models.promo_campaign import PromoCampaign
 from app.models.promo_code import PromoCode
 from app.models.promo_redemption import PromoRedemption
@@ -73,4 +74,5 @@ __all__ = [
     "PromoCode",
     "PromoRedemption",
     "ChurnSurvey",
+    "OneTimeDownloadToken",
 ]

@@ -718,6 +718,13 @@ class DockerNodeRuntimeAdapter(NodeRuntimeAdapter):
         total_rx = sum(int(p.get("transfer_rx") or 0) for p in peers)
         total_tx = sum(int(p.get("transfer_tx") or 0) for p in peers)
         health_score = _compute_health(peers, latency_ms=latency_ms)
+        # Connected peers: recent handshakes only (same 180s window as health computation).
+        now_ts = int(datetime.now(timezone.utc).timestamp())
+        active_peers = 0
+        for p in peers:
+            hs = int(p.get("last_handshake") or 0)
+            if hs > 0 and (now_ts - hs) <= 180:
+                active_peers += 1
 
         return NodeMetadata(
             node_id=node_id,
@@ -733,6 +740,7 @@ class DockerNodeRuntimeAdapter(NodeRuntimeAdapter):
             endpoint_ip=internal_ip,
             internal_ip=internal_ip,
             peer_count=len(peers),
+            active_peers=active_peers,
             total_rx_bytes=total_rx,
             total_tx_bytes=total_tx,
             status=_node_status(health_score),

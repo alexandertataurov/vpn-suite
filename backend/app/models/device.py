@@ -75,3 +75,6 @@ class Device(Base, TimestampMixin):
     issued_configs: Mapped[list["IssuedConfig"]] = relationship(
         "IssuedConfig", back_populates="device", cascade="all, delete-orphan"
     )
+    download_tokens: Mapped[list["OneTimeDownloadToken"]] = relationship(
+        "OneTimeDownloadToken", back_populates="device", cascade="all, delete-orphan"
+    )

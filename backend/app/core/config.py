@@ -36,8 +36,10 @@ class Settings(BaseSettings):
     # When True, reject refresh when Redis blocklist check fails (fail-closed). Default False = fail-open.
     refresh_blocklist_fail_closed: bool = False
     # Global API rate limit (per IP): requests per window; 0 = disabled
-    api_rate_limit_per_minute: int = 200
+    api_rate_limit_per_minute: int = 600
     api_rate_limit_window_seconds: int = 60
+    # Comma-separated IPs/CIDRs to exempt from API rate limit. Use "private" for localhost + private ranges.
+    api_rate_limit_exempt_ips: str = "127.0.0.1,::1"
     ban_confirm_token: str = "confirm_ban"
     idempotency_ttl_seconds: int = 86400  # 24h
     revoke_confirm_token: str = "confirm_revoke"

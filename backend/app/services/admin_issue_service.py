@@ -18,6 +18,7 @@ from app.core.amnezia_config import (
     generate_wg_keypair,
     get_obfuscation_params,
 )
+from app.core.amnezia_vpn_key import encode_awg_conf_vpn_key, sanitize_awg_conf
 from app.core.config import settings
 from app.core.config_builder import (
     DEFAULT_DNS,
@@ -25,6 +26,7 @@ from app.core.config_builder import (
     ConfigValidationError,
     generate_preshared_key,
 )
+from app.core.amnezia_vpn_key import encode_awg_conf_vpn_key
 from app.core.exceptions import WireGuardCommandError
 from app.core.redaction import redact_for_log
 from app.core.security import encrypt_config
@@ -56,6 +58,7 @@ DOWNLOAD_TOKEN_TTL_DAYS = 1
 class ConfigEntry(NamedTuple):
     download_url: str
     qr_payload: str
+    amnezia_vpn_key: str | None = None
 
 
 class AdminIssueResult(NamedTuple):
@@ -278,59 +281,44 @@ async def admin_issue_peer(
 
     params_no_h = await request_params_with_server_h(session, server, request_params)
     obfuscation = get_obfuscation_params(params_no_h)
-    if settings.node_mode == "real" and settings.node_discovery != "agent":
-        if runtime_adapter is None or not hasattr(runtime_adapter, "get_obfuscation_from_node"):
-            raise WireGuardCommandError(
-                "Node obfuscation is required for NODE_MODE=real",
-                command="wg show",
-                output="node_not_synced",
-            )
+    if runtime_adapter is not None and hasattr(runtime_adapter, "get_obfuscation_from_node"):
         try:
             runtime_obf = await runtime_adapter.get_obfuscation_from_node(server_id)
-        except Exception as exc:
-            raise WireGuardCommandError(
-                "Failed to fetch node obfuscation params",
-                command="wg show",
-                output="node_not_synced",
-            ) from exc
-        if not runtime_obf or not all(
-            runtime_obf.get(k) is not None for k in ("H1", "H2", "H3", "H4")
-        ):
-            raise WireGuardCommandError(
-                "Node obfuscation params unavailable (H1–H4 missing)",
-                command="wg show",
-                output="node_not_synced",
+        except Exception:
+            runtime_obf = None
+        if runtime_obf and all(runtime_obf.get(k) is not None for k in ("H1", "H2", "H3", "H4")):
+            h1, h2, h3, h4 = (
+                int(runtime_obf.get("H1")),
+                int(runtime_obf.get("H2")),
+                int(runtime_obf.get("H3")),
+                int(runtime_obf.get("H4")),
             )
-        h1 = int(runtime_obf.get("H1"))
-        h2 = int(runtime_obf.get("H2"))
-        h3 = int(runtime_obf.get("H3"))
-        h4 = int(runtime_obf.get("H4"))
-        changed = (
-            getattr(server, "amnezia_h1", None) != h1
-            or getattr(server, "amnezia_h2", None) != h2
-            or getattr(server, "amnezia_h3", None) != h3
-            or getattr(server, "amnezia_h4", None) != h4
-        )
-        if changed:
-            server.amnezia_h1, server.amnezia_h2, server.amnezia_h3, server.amnezia_h4 = (
-                h1,
-                h2,
-                h3,
-                h4,
+            changed = (
+                getattr(server, "amnezia_h1", None) != h1
+                or getattr(server, "amnezia_h2", None) != h2
+                or getattr(server, "amnezia_h3", None) != h3
+                or getattr(server, "amnezia_h4", None) != h4
             )
-            await session.flush()
-            _config_log.info(
-                "Resynced H1–H4 from node",
-                extra={
-                    "event": "resync_h_params",
-                    "server_id": server_id,
-                    "H1": h1,
-                    "H2": h2,
-                    "H3": h3,
-                    "H4": h4,
-                },
-            )
-        obfuscation = {**obfuscation, **runtime_obf}
+            if changed:
+                server.amnezia_h1, server.amnezia_h2, server.amnezia_h3, server.amnezia_h4 = (
+                    h1,
+                    h2,
+                    h3,
+                    h4,
+                )
+                await session.flush()
+                _config_log.info(
+                    "Resynced H1–H4 from node",
+                    extra={
+                        "event": "resync_h_params",
+                        "server_id": server_id,
+                        "H1": h1,
+                        "H2": h2,
+                        "H3": h3,
+                        "H4": h4,
+                    },
+                )
+            obfuscation = {**obfuscation, **runtime_obf}
     preshared_key = None
     if request_params:
         preshared_key = request_params.get("preshared_key") or request_params.get(
@@ -409,6 +397,9 @@ async def admin_issue_peer(
         )
         raise
 
+    config_awg_snippet = sanitize_awg_conf(config_awg_snippet)
+
+    config_awg_snippet = sanitize_awg_conf(config_awg_snippet)
     awg_profile = _select_awg_profile(obfuscation)
     protocol_version = "awg_20" if awg_profile == ConfigProfile.awg_2_0_asc else "awg_legacy"
     obfuscation_profile_json: str | None = None
@@ -547,19 +538,25 @@ async def admin_issue_peer(
         pass  # node-agent applies from desired-state; apply_status stays PENDING_APPLY until sync
 
     base = base_config_url.rstrip("/")
+
+    amnezia_vpn_key = encode_awg_conf_vpn_key(config_awg_snippet)
+
     return AdminIssueResult(
         device=device,
         config_awg=ConfigEntry(
             download_url=f"{base}/{token_awg}/download",
             qr_payload=config_awg_snippet,
+            amnezia_vpn_key=amnezia_vpn_key,
         ),
         config_wg_obf=ConfigEntry(
             download_url=f"{base}/{token_wg_obf}/download",
             qr_payload=config_wg_obf_snippet,
+            amnezia_vpn_key=None,
         ),
         config_wg=ConfigEntry(
             download_url=f"{base}/{token_wg}/download",
             qr_payload=config_wg_snippet,
+            amnezia_vpn_key=None,
         ),
         request_id="",
         peer_created=peer_created,
@@ -731,59 +728,44 @@ async def admin_rotate_peer(
     config_hash = _config_hash(public_key_b64, public_key_b64)
     params_no_h = await request_params_with_server_h(session, server, request_params)
     obfuscation = get_obfuscation_params(params_no_h)
-    if settings.node_mode == "real" and settings.node_discovery != "agent":
-        if runtime_adapter is None or not hasattr(runtime_adapter, "get_obfuscation_from_node"):
-            raise WireGuardCommandError(
-                "Node obfuscation is required for NODE_MODE=real",
-                command="wg show",
-                output="node_not_synced",
-            )
+    if runtime_adapter is not None and hasattr(runtime_adapter, "get_obfuscation_from_node"):
         try:
             runtime_obf = await runtime_adapter.get_obfuscation_from_node(server_id)
-        except Exception as exc:
-            raise WireGuardCommandError(
-                "Failed to fetch node obfuscation params",
-                command="wg show",
-                output="node_not_synced",
-            ) from exc
-        if not runtime_obf or not all(
-            runtime_obf.get(k) is not None for k in ("H1", "H2", "H3", "H4")
-        ):
-            raise WireGuardCommandError(
-                "Node obfuscation params unavailable (H1–H4 missing)",
-                command="wg show",
-                output="node_not_synced",
+        except Exception:
+            runtime_obf = None
+        if runtime_obf and all(runtime_obf.get(k) is not None for k in ("H1", "H2", "H3", "H4")):
+            h1, h2, h3, h4 = (
+                int(runtime_obf.get("H1")),
+                int(runtime_obf.get("H2")),
+                int(runtime_obf.get("H3")),
+                int(runtime_obf.get("H4")),
             )
-        h1 = int(runtime_obf.get("H1"))
-        h2 = int(runtime_obf.get("H2"))
-        h3 = int(runtime_obf.get("H3"))
-        h4 = int(runtime_obf.get("H4"))
-        changed = (
-            getattr(server, "amnezia_h1", None) != h1
-            or getattr(server, "amnezia_h2", None) != h2
-            or getattr(server, "amnezia_h3", None) != h3
-            or getattr(server, "amnezia_h4", None) != h4
-        )
-        if changed:
-            server.amnezia_h1, server.amnezia_h2, server.amnezia_h3, server.amnezia_h4 = (
-                h1,
-                h2,
-                h3,
-                h4,
+            changed = (
+                getattr(server, "amnezia_h1", None) != h1
+                or getattr(server, "amnezia_h2", None) != h2
+                or getattr(server, "amnezia_h3", None) != h3
+                or getattr(server, "amnezia_h4", None) != h4
             )
-            await session.flush()
-            _config_log.info(
-                "Resynced H1–H4 from node",
-                extra={
-                    "event": "resync_h_params",
-                    "server_id": server_id,
-                    "H1": h1,
-                    "H2": h2,
-                    "H3": h3,
-                    "H4": h4,
-                },
-            )
-        obfuscation = {**obfuscation, **runtime_obf}
+            if changed:
+                server.amnezia_h1, server.amnezia_h2, server.amnezia_h3, server.amnezia_h4 = (
+                    h1,
+                    h2,
+                    h3,
+                    h4,
+                )
+                await session.flush()
+                _config_log.info(
+                    "Resynced H1–H4 from node",
+                    extra={
+                        "event": "resync_h_params",
+                        "server_id": server_id,
+                        "H1": h1,
+                        "H2": h2,
+                        "H3": h3,
+                        "H4": h4,
+                    },
+                )
+            obfuscation = {**obfuscation, **runtime_obf}
     preshared_key = None
     if request_params:
         preshared_key = request_params.get("preshared_key") or request_params.get(
@@ -942,18 +924,24 @@ async def admin_rotate_peer(
     await session.flush()
 
     base = base_config_url.rstrip("/")
+
+    amnezia_vpn_key = encode_awg_conf_vpn_key(config_awg_snippet)
+
     return AdminRotateResult(
         config_awg=ConfigEntry(
             download_url=f"{base}/{token_awg}/download",
             qr_payload=config_awg_snippet,
+            amnezia_vpn_key=amnezia_vpn_key,
         ),
         config_wg_obf=ConfigEntry(
             download_url=f"{base}/{token_wg_obf}/download",
             qr_payload=config_wg_obf_snippet,
+            amnezia_vpn_key=None,
         ),
         config_wg=ConfigEntry(
             download_url=f"{base}/{token_wg}/download",
             qr_payload=config_wg_snippet,
+            amnezia_vpn_key=None,
         ),
         request_id="",
     )

@@ -1,9 +1,14 @@
 """Unified API error shape: { success, data, error: { code, message }, meta }."""
 
+import logging
 from datetime import datetime, timezone
 
 from fastapi import HTTPException, Request
 from fastapi.responses import JSONResponse
+
+from app.core.logging_config import extra_for_event
+from app.core.metrics import http_errors_total
+from app.core.prometheus_middleware import path_template
 
 
 def error_body(
@@ -64,10 +69,21 @@ def http_exception_to_error_response(request: Request, exc: Exception) -> JSONRe
     else:
         code = _STATUS_TO_CODE.get(exc.status_code, "ERROR")
         message = exc.detail if isinstance(exc.detail, str) else str(exc.detail)
-    from app.core.metrics import http_errors_total
-    from app.core.prometheus_middleware import path_template
-
-    http_errors_total.labels(path_template=path_template(request.url.path), error_type=code).inc()
+    path_tpl = path_template(request.url.path)
+    http_errors_total.labels(path_template=path_tpl, error_type=code).inc()
+    if exc.status_code == 429:
+        logging.getLogger(__name__).info(
+            "429 rate limit",
+            extra=extra_for_event(
+                event="http.429",
+                route=path_tpl,
+                status_code=429,
+                error_code=code,
+                error_kind="rate_limit",
+                error_severity="warn",
+                error_retryable=True,
+            ),
+        )
     rid = getattr(request.state, "request_id", None)
     cid = getattr(request.state, "correlation_id", None)
     body = error_body(

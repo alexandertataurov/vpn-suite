@@ -138,6 +138,19 @@ async def _fetch_one_server(
                 "total_tx_bytes": total_tx or None,
                 "last_updated": _serialize_dt(datetime.now(timezone.utc)),
             }
+        elif hb:
+            # Heartbeat has no peers list: use top-level total_rx_bytes/total_tx_bytes/peer_count
+            # so dashboard timeseries (Cluster throughput, Traffic bytes) get data.
+            total_rx = int(hb.get("total_rx_bytes") or 0)
+            total_tx = int(hb.get("total_tx_bytes") or 0)
+            peer_count = int(hb.get("peer_count") or 0)
+            data = {
+                "peers_count": peer_count,
+                "online_count": peer_count,
+                "total_rx_bytes": total_rx or None,
+                "total_tx_bytes": total_tx or None,
+                "last_updated": _serialize_dt(datetime.now(timezone.utc)),
+            }
     if data is None and adapter is not None:
         data, raw_peers = await _poll_server(
             server_id, runtime_adapter=adapter, node_id_override=node_id
@@ -160,21 +173,47 @@ async def run_telemetry_poll_loop(get_adapter) -> None:
                 await asyncio.sleep(INTERVAL)
                 continue
             async with async_session_factory() as session:
-                r = await session.execute(
-                    select(Server.id, Server.api_endpoint).where(Server.is_active.is_(True))
-                )
-                servers = r.all()
+                # Fetch all servers to build stable alias mapping (devices may reference old/inactive ids).
+                r_all = await session.execute(select(Server.id, Server.api_endpoint, Server.is_active))
+                all_servers = r_all.all()
+                servers = [(sid, ep) for (sid, ep, is_active) in all_servers if bool(is_active)]
                 server_ids = [s[0] for s in servers]
                 # In agent mode include server_ids that have heartbeats in Redis (devices may be under that id)
                 if settings.node_discovery == "agent" and _agent_heartbeat_server_ids:
                     hb_ids = await _agent_heartbeat_server_ids()
                     if hb_ids:
                         server_ids = list(set(server_ids) | hb_ids)
+                # Map node identifiers (e.g. docker:<container_id>) back to canonical Server.id.
+                # Devices may be stored under either identifier depending on issuance mode and discovery.
+                alias_to_canonical: dict[str, str] = {}
+                if all_servers:
+                    # Prefer an active server id as canonical for a given api_endpoint.
+                    endpoint_to_canonical: dict[str, str] = {}
+                    for sid, api_endpoint, is_active in all_servers:
+                        ep = str(api_endpoint or "")
+                        if not ep:
+                            continue
+                        if bool(is_active):
+                            endpoint_to_canonical[ep] = str(sid)
+                        else:
+                            endpoint_to_canonical.setdefault(ep, str(sid))
+                    for sid, api_endpoint, _ in all_servers:
+                        canonical = str(sid)
+                        ep = str(api_endpoint or "")
+                        if ep and ep in endpoint_to_canonical:
+                            canonical = endpoint_to_canonical[ep]
+                        alias_to_canonical[str(sid)] = canonical
+                        node_id = node_id_from_docker_api_endpoint(ep) or str(sid)
+                        alias_to_canonical[str(node_id)] = canonical
+                if server_ids:
+                    for sid in server_ids:
+                        alias_to_canonical.setdefault(str(sid), str(sid))
                 pk_to_device: dict[str, tuple[str, str]] = {}
                 if server_ids:
+                    server_aliases = list(set(alias_to_canonical.keys()))
                     dev_r = await session.execute(
                         select(Device.id, Device.public_key, Device.server_id).where(
-                            Device.server_id.in_(server_ids), Device.revoked_at.is_(None)
+                            Device.server_id.in_(server_aliases), Device.revoked_at.is_(None)
                         )
                     )
                     dev_rows = dev_r.all()
@@ -189,7 +228,11 @@ async def run_telemetry_poll_loop(get_adapter) -> None:
                         if pubkey and srv_id:
                             pk = _norm_pk(pubkey)
                             if pk:
-                                pk_to_device[f"{srv_id}:{pk}"] = (dev_id, srv_id)
+                                srv = str(srv_id)
+                                canonical = alias_to_canonical.get(srv, srv)
+                                # Store under both ids so peer telemetry can match regardless of which id is used.
+                                pk_to_device[f"{srv}:{pk}"] = (dev_id, srv)
+                                pk_to_device[f"{canonical}:{pk}"] = (dev_id, canonical)
                     if dev_rows and not pk_to_device and _log.isEnabledFor(logging.INFO):
                         _log.info(
                             "Telemetry poll: %s active devices for server_ids %s but none had public_key (sample pubkey len=%s)",
@@ -201,6 +244,8 @@ async def run_telemetry_poll_loop(get_adapter) -> None:
             cluster_seen_pubkeys: set[str] = set()
             cluster_rx = 0
             cluster_tx = 0
+            cluster_online = 0
+            cluster_online_sources = 0
             h_ok_count = 0
             no_handshake_count = 0
             traffic_zero_count = 0
@@ -246,6 +291,14 @@ async def run_telemetry_poll_loop(get_adapter) -> None:
                         tx = data.get("total_tx_bytes") or 0
                         cluster_rx += rx
                         cluster_tx += tx
+                        if "online_count" in data and data.get("online_count") is not None:
+                            try:
+                                online_val = int(data.get("online_count"))  # type: ignore[arg-type]
+                            except (TypeError, ValueError):
+                                online_val = None
+                            if online_val is not None:
+                                cluster_online += max(online_val, 0)
+                                cluster_online_sources += 1
                         vpn_node_traffic_rx_bytes.labels(server_id=server_id).set(rx)
                         vpn_node_traffic_tx_bytes.labels(server_id=server_id).set(tx)
                         telemetry_poll_server_success_total.labels(server_id=server_id).inc()
@@ -264,12 +317,21 @@ async def run_telemetry_poll_loop(get_adapter) -> None:
                                 matched_this_server += 1
                                 dev_id, _ = pk_to_device[composite]
                                 hs = int(p.get("last_handshake") or 0)
+                                rtt_raw = p.get("rtt_ms")
+                                rtt_ms = (
+                                    int(rtt_raw)
+                                    if rtt_raw is not None and isinstance(rtt_raw, (int, float))
+                                    else None
+                                )
+                                if rtt_ms is not None and (rtt_ms < 0 or rtt_ms > 60000):
+                                    rtt_ms = None
                                 h_ok, no_h, tz = await write_device_telemetry(
                                     dev_id,
                                     server_id,
                                     handshake_ts=hs if hs > 0 else None,
                                     transfer_rx=int(p.get("transfer_rx") or 0),
                                     transfer_tx=int(p.get("transfer_tx") or 0),
+                                    rtt_ms=rtt_ms,
                                     allowed_ips_on_node=str(p.get("allowed_ips") or "").strip()
                                     or None,
                                     node_reachable=True,
@@ -312,15 +374,19 @@ async def run_telemetry_poll_loop(get_adapter) -> None:
                     telemetry_poll_server_failures_total.labels(
                         server_id=server_id, reason=type(e).__name__
                     ).inc()
-            cluster_peers = len(cluster_seen_pubkeys)
-            if servers:
-                await _push_dashboard_timeseries(redis, cluster_peers, cluster_rx, cluster_tx)
+            if cluster_online_sources > 0:
+                cluster_peers_connected = int(cluster_online)
+            else:
+                cluster_peers_connected = len(cluster_seen_pubkeys)
+            # Push whenever we polled, or when there was nothing to poll (no servers, no heartbeats)
+            # so the dashboard gets a steady stream of points and shows 0 B/s instead of stale/empty.
+            await _push_dashboard_timeseries(redis, cluster_peers_connected, cluster_rx, cluster_tx)
             await set_telemetry_summary(h_ok_count, no_handshake_count, traffic_zero_count)
             _log.info(
-                "Telemetry poll done servers=%s devices_in_map=%s peers_total=%s handshake_ok=%s no_handshake=%s traffic_zero=%s",
+                "Telemetry poll done servers=%s devices_in_map=%s peers_connected=%s handshake_ok=%s no_handshake=%s traffic_zero=%s",
                 len(servers),
                 len(pk_to_device),
-                cluster_peers,
+                cluster_peers_connected,
                 h_ok_count,
                 no_handshake_count,
                 traffic_zero_count,

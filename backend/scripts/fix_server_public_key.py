@@ -1,10 +1,10 @@
 """Run server sync to refresh Server.public_key from node; optionally reissue all devices on a server.
 
-After fixing server_sync_service to prefer node.public_key over DB, run this so the DB is updated.
-Then reissue devices so they get configs with the correct server key.
+After SECRET_KEY or server WireGuard key rotation: reissue devices so configs decrypt (new key)
+and contain the current server key (VPN connects).
 
 Usage (from repo root):
-  ./manage.sh fix-server-public-key              # sync all active servers (docker mode only)
+  ./manage.sh fix-server-public-key              # sync all servers (docker), then reissue ALL devices
   ./manage.sh fix-server-public-key <server_id>  # sync that server, then reissue its devices
 """
 
@@ -16,6 +16,7 @@ from sqlalchemy import select
 
 from app.core.config import settings
 from app.core.database import async_session_factory
+from app.core.redis_client import close_redis, init_redis
 from app.models import Device, Server
 from app.services.admin_issue_service import reissue_config_for_device
 from app.services.server_sync_service import run_sync_for_server, start_sync
@@ -120,21 +121,36 @@ async def _reissue_server(server_id: str, adapter) -> None:
 
 async def main() -> int:
     # Called as: python scripts/fix_server_public_key.py [server_id]
-    server_id = (sys.argv[1] if len(sys.argv) > 1 else "").strip() or None
-    if server_id:
+    try:
+        await init_redis()
+    except Exception as e:
+        logger.warning("Redis init failed (one-off script): %s; reissue may use DB key fallback", e)
+    try:
+        server_id = (sys.argv[1] if len(sys.argv) > 1 else "").strip() or None
         adapter = _get_adapter()
-        if settings.node_discovery == "agent":
-            logger.info(
-                "Syncing in agent mode: use Admin or API to trigger sync; running reissue only."
-            )
+        if server_id:
+            if settings.node_discovery == "agent":
+                logger.info(
+                    "Syncing in agent mode: use Admin or API to trigger sync; running reissue only."
+                )
+                await _reissue_server(server_id, adapter)
+                return 0
+            if not await _sync_one(server_id, adapter):
+                return 1
             await _reissue_server(server_id, adapter)
             return 0
-        if not await _sync_one(server_id, adapter):
-            return 1
-        await _reissue_server(server_id, adapter)
+        # No server_id: sync all (docker only), then reissue all devices on all servers
+        await _sync_all()
+        async with async_session_factory() as session:
+            r = await session.execute(
+                select(Server).where(Server.is_active.is_(True)).order_by(Server.created_at.asc())
+            )
+            servers = r.scalars().all()
+        for s in servers:
+            await _reissue_server(s.id, adapter)
         return 0
-    await _sync_all()
-    return 0
+    finally:
+        await close_redis()
 
 
 if __name__ == "__main__":

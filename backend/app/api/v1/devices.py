@@ -28,12 +28,15 @@ from app.core.idempotency import (
     store_idempotency_response,
 )
 from app.core.metrics import config_issue_blocked_total, discovery_not_found_total
+from app.core.one_time_download import create_one_time_token
 from app.core.rbac import require_permission
 from app.models import Device, IssuedConfig, Server, User
 from app.schemas.device import (
     BlockRequest,
     BulkRevokeOut,
     BulkRevokeRequest,
+    ConfigHealthDeviceEntry,
+    ConfigHealthOut,
     DeleteRequest,
     DeviceLimitUpdate,
     DeviceList,
@@ -235,6 +238,9 @@ async def devices_summary(
     unused_configs = unused_r.scalar() or 0
     t_summary = await get_telemetry_summary()
     telemetry_last_updated = await get_telemetry_last_updated()
+    # When worker has not run yet or key expired, show "now" so Devices page shows a time instead of "—"
+    if telemetry_last_updated is None:
+        telemetry_last_updated = datetime.now(timezone.utc)
     out = DeviceSummaryOut(
         total=total,
         active=active,
@@ -248,6 +254,76 @@ async def devices_summary(
     )
     await set_devices_summary_cached(out)
     return out
+
+
+@router.get("/config-health", response_model=ConfigHealthOut)
+async def get_config_health(
+    db: AsyncSession = Depends(get_db),
+    limit: int = Query(500, ge=1, le=2000),
+    _admin=Depends(require_permission(PERM_CLUSTER_READ)),
+):
+    """Advanced config health: per-device reconciliation status and devices needing attention."""
+    r = await db.execute(
+        select(Device, User.email)
+        .outerjoin(User, Device.user_id == User.id)
+        .where(Device.revoked_at.is_(None))
+        .order_by(Device.issued_at.desc())
+        .limit(limit)
+    )
+    rows = r.all()
+    device_ids = [row[0].id for row in rows]
+    telemetry_map = await get_device_telemetry_bulk(device_ids) if device_ids else {}
+    telemetry_last = await get_telemetry_last_updated()
+
+    by_recon: dict[str, int] = {"ok": 0, "needs_reconcile": 0, "broken": 0}
+    no_telemetry = 0
+    needs_attention: list[ConfigHealthDeviceEntry] = []
+
+    for device, user_email in rows:
+        status_val = "suspended" if device.suspended_at else "active"
+        telemetry = telemetry_map.get(str(device.id))
+        configs = []  # not loaded; use defaults
+        device_dict = {
+            "revoked_at": device.revoked_at,
+            "allowed_ips": device.allowed_ips,
+            "has_consumed_config": False,
+            "has_pending_config": False,
+        }
+        if telemetry:
+            merged = merge_telemetry_into_device(device_dict, telemetry)
+            if merged:
+                recon = merged.reconciliation_status
+                by_recon[recon] = by_recon.get(recon, 0) + 1
+                reason = merged.telemetry_reason
+                if not reason and recon == "broken":
+                    reason = "Invalid allowed_ips"
+                if recon in ("broken", "needs_reconcile"):
+                    needs_attention.append(
+                        ConfigHealthDeviceEntry(
+                            device_id=device.id,
+                            server_id=device.server_id,
+                            user_email=user_email,
+                            device_name=device.device_name,
+                            status=status_val,
+                            reconciliation_status=recon,
+                            config_state=merged.config_state,
+                            reason=reason,
+                            handshake_age_sec=merged.handshake_age_sec,
+                            peer_present=merged.peer_present,
+                            node_health=merged.node_health,
+                        )
+                    )
+            else:
+                no_telemetry += 1
+        else:
+            no_telemetry += 1
+
+    return ConfigHealthOut(
+        by_reconciliation=by_recon,
+        no_telemetry_count=no_telemetry,
+        devices_needing_attention=needs_attention[:100],
+        telemetry_last_updated=telemetry_last,
+    )
 
 
 @router.get("/{device_id}", response_model=DeviceOut)
@@ -291,11 +367,46 @@ async def reconcile_device(
     db: AsyncSession = Depends(get_db),
     admin=Depends(require_permission(PERM_DEVICES_WRITE)),
 ):
-    """Re-apply peer on the node (sync allowed_ips, ensure peer present). Alias for sync-peer. NODE_MODE=real only."""
+    """Re-apply peer on the node (sync allowed_ips, ensure peer present). NODE_MODE=real: direct sync. NODE_MODE=agent: queue sync action."""
+    if settings.node_mode == "agent" or settings.node_discovery == "agent":
+        result = await db.execute(
+            select(Device.server_id).where(Device.id == device_id, Device.revoked_at.is_(None))
+        )
+        row = result.scalar_one_or_none()
+        if not row or not row[0]:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Device not found or revoked",
+            )
+        server_id = row[0]
+        srv = await db.execute(select(Server).where(Server.id == server_id))
+        if not srv.scalar_one_or_none():
+            # Fallback: device's server_id stale (e.g. vpn-node-1 from seed); use any active Server (from heartbeat)
+            fallback = await db.execute(
+                select(Server.id).where(Server.is_active.is_(True)).limit(1)
+            )
+            alt = fallback.scalar_one_or_none()
+            if alt:
+                server_id = alt if isinstance(alt, str) else alt[0]
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail={
+                        "code": "SERVER_NOT_FOUND",
+                        "message": "No Server in DB. Ensure node-agent has sent a heartbeat.",
+                    },
+                )
+        await create_action(db, server_id=server_id, type="sync", payload={"mode": "full"})
+        await db.commit()
+        return {
+            "reconciled": True,
+            "status": "sync_queued",
+            "message": "Sync action queued for node-agent; try config download shortly.",
+        }
     if settings.node_mode != "real":
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Reconcile requires NODE_MODE=real",
+            detail="Reconcile requires NODE_MODE=real (or NODE_MODE=agent for sync queuing)",
         )
     result = await sync_device_peer(request, device_id, db, admin)
     return {"reconciled": True, **result}
@@ -705,10 +816,16 @@ async def reissue_device_config(
     except WireGuardCommandError as e:
         raise_http_for_control_plane_exception(e)
     except Exception as exc:
-        _log.exception("Reissue failed for device_id=%s: %s", device_id, exc)
+        rid = getattr(request.state, "request_id", None)
+        _log.exception(
+            "Reissue failed device_id=%s request_id=%s: %s",
+            device_id,
+            rid or "-",
+            exc,
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Reissue failed; check server logs.",
+            detail="Reissue failed. Use request_id from this response to find the error in server logs.",
         ) from exc
     await db.commit()
     await invalidate_devices_summary_cache()
@@ -717,14 +834,17 @@ async def reissue_device_config(
         config_awg={
             "download_url": out.config_awg.download_url,
             "qr_payload": out.config_awg.qr_payload,
+            "amnezia_vpn_key": out.config_awg.amnezia_vpn_key,
         },
         config_wg_obf={
             "download_url": out.config_wg_obf.download_url,
             "qr_payload": out.config_wg_obf.qr_payload,
+            "amnezia_vpn_key": out.config_wg_obf.amnezia_vpn_key,
         },
         config_wg={
             "download_url": out.config_wg.download_url,
             "qr_payload": out.config_wg.qr_payload,
+            "amnezia_vpn_key": out.config_wg.amnezia_vpn_key,
         },
         request_id=out.request_id,
     )
@@ -735,6 +855,48 @@ async def reissue_device_config(
         response.model_dump(),
     )
     return response
+
+
+@router.get("/{device_id}/awg/download-link")
+async def get_awg_download_link(
+    device_id: str,
+    db: AsyncSession = Depends(get_db),
+    _admin=Depends(require_permission(PERM_DEVICES_WRITE)),
+):
+    """Create one-time download link for AmneziaWG AWG config."""
+    result = await db.execute(select(Device).where(Device.id == device_id))
+    device = result.scalar_one_or_none()
+    if not device or device.revoked_at is not None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Device not found")
+
+    # Ensure there is at least one AWG-issued config; we'll resolve latest at download time.
+    cfg_result = await db.execute(
+        select(IssuedConfig.id)
+        .where(IssuedConfig.device_id == device_id, IssuedConfig.profile_type == "awg")
+        .limit(1)
+    )
+    if cfg_result.scalar_one_or_none() is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Device has no issued AmneziaWG config",
+        )
+
+    ttl = getattr(settings, "awg_download_token_ttl_seconds", 600) or 600
+    try:
+        token = await create_one_time_token(db, device_id=device_id, kind="awg_conf", ttl_seconds=ttl)
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Device not found")
+
+    public_host = getattr(settings, "public_domain", None) or getattr(
+        settings, "vpn_default_host", ""
+    )
+    if not public_host:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="PUBLIC_DOMAIN or VPN_DEFAULT_HOST must be set for download links",
+        )
+    url = f"https://{public_host}/d/{token}"
+    return {"url": url, "expires_in": ttl}
 
 
 @router.post("/{device_id}/block")

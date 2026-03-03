@@ -161,7 +161,7 @@ async def test_fetch_operator_dashboard_prometheus_failure_returns_degraded(monk
     out = await svc.fetch_operator_dashboard("1h")
 
     assert out["data_status"] == "degraded"
-    assert out["health_strip"]["prometheus_status"] == "down"
+    assert out["health_strip"]["prometheus_status"] == "degraded"
     assert out["timeseries"]
 
 
@@ -232,6 +232,11 @@ async def test_fetch_operator_dashboard_empty_timeseries_does_not_force_degraded
     out = await svc.fetch_operator_dashboard("1h")
 
     assert out["data_status"] == "ok"
-    assert out["timeseries"] == []
+    # Service fills placeholder points when get_dashboard_timeseries returns []
+    assert len(out["timeseries"]) >= 5
+    assert all(
+        p.get("peers", 0) == 0 and p.get("rx", 0) == 0 and p.get("tx", 0) == 0
+        for p in out["timeseries"]
+    )
     assert out["health_strip"]["freshness"] in ("fresh", "degraded")  # derived from Prometheus ts
     assert out["last_successful_sample_ts"] is not None  # from Prometheus fallback

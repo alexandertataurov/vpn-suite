@@ -8,6 +8,7 @@ from fastapi.responses import Response
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.core.constants import PERM_CLUSTER_READ
 from app.core.database import get_db
 from app.core.error_responses import not_found_404
@@ -20,6 +21,21 @@ from app.models import Device, IssuedConfig
 
 # Config may only be delivered when peer is applied on server (no-drift invariant).
 APPLIED_OR_VERIFIED = ("APPLIED", "VERIFIED")
+# In agent mode: block only explicit failures (ERROR, FAILED_APPLY); allow all else.
+BLOCKED_IN_AGENT = ("ERROR", "FAILED_APPLY")
+
+
+def _peer_applied_ok(device: Device | None) -> bool:
+    """True if device is applied (or acceptable in agent mode)."""
+    if not device:
+        return False
+    st = (device.apply_status or "").strip()
+    if st in APPLIED_OR_VERIFIED:
+        return True
+    if settings.node_mode == "agent" or settings.node_discovery == "agent":
+        return st not in BLOCKED_IN_AGENT
+    return False
+
 
 router = APIRouter(prefix="/admin/configs", tags=["admin-configs"])
 _log = logging.getLogger(__name__)
@@ -44,7 +60,7 @@ async def get_issued_config_content(
         )
     dev_result = await db.execute(select(Device).where(Device.id == issued.device_id))
     device = dev_result.scalar_one_or_none()
-    if not device or (device.apply_status or "").strip() not in APPLIED_OR_VERIFIED:
+    if not _peer_applied_ok(device):
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail={
@@ -56,10 +72,19 @@ async def get_issued_config_content(
         raise not_found_404("Config", issued_config_id)
     try:
         content = decrypt_config(issued.config_encrypted)
-    except Exception:
+    except Exception as e:
+        _log.warning(
+            "Config decryption failed for issued_config_id=%s: %s",
+            issued_config_id,
+            type(e).__name__,
+            exc_info=True,
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Config decryption failed",
+            detail={
+                "code": "DECRYPT_FAILED",
+                "message": "Config was encrypted with a different key (e.g. after SECRET_KEY rotation). Reissue this device's config in Admin (Devices → device → Reissue) and use the new download link.",
+            },
         )
     return {"content": content}
 
@@ -79,10 +104,10 @@ async def _resolve_config(token: str, db: AsyncSession) -> IssuedConfig | None:
 
 
 async def _require_peer_applied(issued: IssuedConfig, db: AsyncSession, endpoint: str) -> None:
-    """Raise 503 PEER_NOT_APPLIED if device apply_status not in APPLIED/VERIFIED."""
+    """Raise 503 PEER_NOT_APPLIED if device not applied (agent mode: PENDING_APPLY allowed)."""
     dev_result = await db.execute(select(Device).where(Device.id == issued.device_id))
     device = dev_result.scalar_one_or_none()
-    if not device or (device.apply_status or "").strip() not in APPLIED_OR_VERIFIED:
+    if not _peer_applied_ok(device):
         config_download_total.labels(endpoint=endpoint, status="peer_not_applied").inc()
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -123,11 +148,20 @@ async def download_config(
         raise not_found_404("Config", None)
     try:
         config_text = decrypt_config(issued.config_encrypted)
-    except Exception:
+    except Exception as e:
         config_download_total.labels(endpoint="download", status="decrypt_error").inc()
+        _log.warning(
+            "Config decryption failed on download issued=%s: %s",
+            issued.id,
+            type(e).__name__,
+            exc_info=True,
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Config decryption failed",
+            detail={
+                "code": "DECRYPT_FAILED",
+                "message": "Config was encrypted with a different key (e.g. after SECRET_KEY rotation). Reissue this device's config in Admin and use the new download link.",
+            },
         )
     # Mark consumed
     issued.consumed_at = datetime.now(timezone.utc)
@@ -173,11 +207,20 @@ async def get_config_qr(
         raise not_found_404("Config", None)
     try:
         qr_payload = decrypt_config(issued.config_encrypted)
-    except Exception:
+    except Exception as e:
         config_download_total.labels(endpoint="qr", status="decrypt_error").inc()
+        _log.warning(
+            "Config decryption failed on qr issued=%s: %s",
+            issued.id,
+            type(e).__name__,
+            exc_info=True,
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Config decryption failed",
+            detail={
+                "code": "DECRYPT_FAILED",
+                "message": "Config was encrypted with a different key (e.g. after SECRET_KEY rotation). Reissue this device's config in Admin and use the new download link.",
+            },
         )
     config_download_total.labels(endpoint="qr", status="success").inc()
     return {"qr_payload": qr_payload}

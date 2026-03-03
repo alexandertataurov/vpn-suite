@@ -22,10 +22,13 @@ TELEMETRY_SUMMARY_TTL = 300
 HANDSHAKE_OK_SEC = 120  # 2 min
 
 try:
-    # Optional Prometheus metrics for per-device handshake age.
-    from app.core.metrics import vpn_peer_last_handshake_age_seconds
+    from app.core.metrics import (
+        vpn_peer_last_handshake_age_seconds,
+        vpn_peer_rtt_ms,
+    )
 except Exception:  # pragma: no cover - metrics not critical for core logic
     vpn_peer_last_handshake_age_seconds = None  # type: ignore[assignment]
+    vpn_peer_rtt_ms = None  # type: ignore[assignment]
 
 
 def _valid_allowed_ips(allowed_ips: str | None) -> bool:
@@ -45,7 +48,9 @@ def compute_reconciliation_status(
     handshake_age_sec: int | None,
     node_health: NodeHealthStatus,
 ) -> ReconciliationStatus:
-    """Compute reconciliation_status from device + cache row."""
+    """Compute reconciliation_status from device + cache row.
+    needs_reconcile only when reconcile can fix it: peer missing or node offline.
+    Stale handshake (peer present) is ok - reconcile is a no-op, client must connect."""
     if revoked:
         return "needs_reconcile" if peer_present else "ok"
     if not _valid_allowed_ips(allowed_ips_db):
@@ -54,8 +59,7 @@ def compute_reconciliation_status(
         return "needs_reconcile"
     if not peer_present:
         return "needs_reconcile"
-    if handshake_age_sec is not None and handshake_age_sec > HANDSHAKE_OK_SEC:
-        return "needs_reconcile"
+    # peer_present and online: ok. Stale handshake is not fixable by reconcile.
     return "ok"
 
 
@@ -84,6 +88,7 @@ async def write_device_telemetry(
     handshake_ts: int | None = None,
     transfer_rx: int = 0,
     transfer_tx: int = 0,
+    rtt_ms: float | int | None = None,
     allowed_ips_on_node: str | None = None,
     node_reachable: bool = True,
 ) -> tuple[bool, bool, bool]:
@@ -95,6 +100,11 @@ async def write_device_telemetry(
     h_ok = _handshake_ok(handshake_ts, handshake_age_sec)
     no_h = not h_ok and (handshake_ts is None or handshake_ts == 0)
     tz = (transfer_rx or 0) + (transfer_tx or 0) == 0
+    rtt_float: float | None = None
+    if rtt_ms is not None and isinstance(rtt_ms, (int, float)):
+        v = float(rtt_ms)
+        if 0 <= v <= 60000:
+            rtt_float = v
     payload = {
         "device_id": device_id,
         "server_id": server_id,
@@ -102,6 +112,7 @@ async def write_device_telemetry(
         "handshake_age_sec": handshake_age_sec,
         "transfer_rx_bytes": transfer_rx,
         "transfer_tx_bytes": transfer_tx,
+        "rtt_ms": rtt_float,
         "allowed_ips_on_node": allowed_ips_on_node or None,
         "peer_present": True,
         "node_health": "online" if node_reachable else "offline",
@@ -117,14 +128,18 @@ async def write_device_telemetry(
     # Export handshake age to Prometheus (best-effort).
     if vpn_peer_last_handshake_age_seconds is not None:
         try:
-            # Use -1 to denote "no handshake yet" when age is unknown.
             age_val = handshake_age_sec if handshake_age_sec is not None else -1
             vpn_peer_last_handshake_age_seconds.labels(
                 device_id=device_id,
                 server_id=server_id,
             ).set(age_val)
         except Exception:
-            # Metrics must not break telemetry writes.
+            pass
+    # Export RTT when present (from node agent).
+    if vpn_peer_rtt_ms is not None and rtt_float is not None:
+        try:
+            vpn_peer_rtt_ms.labels(server_id=server_id, device_id=device_id).set(rtt_float)
+        except Exception:
             pass
     return (h_ok, no_h, tz)
 
@@ -159,6 +174,12 @@ async def write_device_telemetry_from_heartbeat_peers(
         handshake_ts = hs_ts if hs_ts > 0 else None
         rx = int(p.get("rx_bytes") or 0)
         tx = int(p.get("tx_bytes") or 0)
+        rtt_ms_raw = p.get("rtt_ms")
+        rtt_ms: float | None = None
+        if rtt_ms_raw is not None and isinstance(rtt_ms_raw, (int, float)):
+            v = float(rtt_ms_raw)
+            if 0 <= v <= 60000:
+                rtt_ms = v
         allowed_ips = (p.get("allowed_ips") or "").strip() or None
         try:
             await write_device_telemetry(
@@ -167,6 +188,7 @@ async def write_device_telemetry_from_heartbeat_peers(
                 handshake_ts=handshake_ts,
                 transfer_rx=rx,
                 transfer_tx=tx,
+                rtt_ms=rtt_ms,
                 allowed_ips_on_node=allowed_ips,
                 node_reachable=True,
             )
@@ -222,6 +244,7 @@ async def get_device_telemetry_bulk(
                 handshake_age_sec=data.get("handshake_age_sec"),
                 transfer_rx_bytes=data.get("transfer_rx_bytes"),
                 transfer_tx_bytes=data.get("transfer_tx_bytes"),
+                rtt_ms=data.get("rtt_ms"),
                 endpoint=data.get("endpoint"),
                 allowed_ips_on_node=data.get("allowed_ips_on_node"),
                 peer_present=bool(data.get("peer_present")),
@@ -286,6 +309,25 @@ async def get_telemetry_last_updated() -> datetime | None:
         return None
 
 
+def _reason_for_needs_reconcile(
+    *,
+    revoked: bool,
+    peer_present: bool,
+    handshake_age_sec: int | None,
+    node_health: str,
+) -> str | None:
+    """Return a specific reason when reconciliation_status is needs_reconcile."""
+    if revoked and peer_present:
+        return "Revoked but peer still on node; run Reconcile to remove."
+    if node_health == "offline":
+        return "Node offline; cannot reach peer."
+    if not peer_present:
+        return "Peer not on node; run Reconcile to add."
+    if handshake_age_sec is not None and handshake_age_sec > HANDSHAKE_OK_SEC:
+        return "Client hasn't connected recently; ensure VPN client is online."
+    return "Config and peer state out of sync; run Reconcile."
+
+
 def merge_telemetry_into_device(
     device: dict[str, Any],
     telemetry: DeviceTelemetryOut | None,
@@ -305,18 +347,27 @@ def merge_telemetry_into_device(
         node_health=telemetry.node_health,
     )
     config_state = compute_config_state(has_consumed, has_pending)
+    reason = telemetry.telemetry_reason
+    if recon == "needs_reconcile" and not reason:
+        reason = _reason_for_needs_reconcile(
+            revoked=revoked,
+            peer_present=telemetry.peer_present,
+            handshake_age_sec=telemetry.handshake_age_sec,
+            node_health=telemetry.node_health,
+        )
     return DeviceTelemetryOut(
         device_id=telemetry.device_id,
         handshake_latest_at=telemetry.handshake_latest_at,
         handshake_age_sec=telemetry.handshake_age_sec,
         transfer_rx_bytes=telemetry.transfer_rx_bytes,
         transfer_tx_bytes=telemetry.transfer_tx_bytes,
+        rtt_ms=telemetry.rtt_ms,
         endpoint=telemetry.endpoint,
         allowed_ips_on_node=telemetry.allowed_ips_on_node,
         peer_present=telemetry.peer_present,
         node_health=telemetry.node_health,
         config_state=config_state,
         reconciliation_status=recon,
-        telemetry_reason=telemetry.telemetry_reason,
+        telemetry_reason=reason,
         last_updated=telemetry.last_updated,
     )

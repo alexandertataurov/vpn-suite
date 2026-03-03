@@ -152,62 +152,43 @@ async def issue_device(
             pass
     params_no_h = await request_params_with_server_h(session, server, request_params)
     obfuscation = get_obfuscation_params(params_no_h)
-    # NODE_MODE=real: H1–H4 (и остальные obfuscation-параметры) всегда берём с ноды.
-    if settings.node_mode == "real" and settings.node_discovery != "agent":
-        if runtime_adapter is None or not hasattr(runtime_adapter, "get_obfuscation_from_node"):
-            raise WireGuardCommandError(
-                "Node obfuscation is required for NODE_MODE=real",
-                command="wg show",
-                output="node_not_synced",
-            )
+    # Reverse sync: issued configs use H1–H4 from AmneziaWG server when available (docker exec or agent heartbeat).
+    if runtime_adapter is not None and hasattr(runtime_adapter, "get_obfuscation_from_node"):
         try:
             runtime_obf = await runtime_adapter.get_obfuscation_from_node(resolved_server_id)
-        except Exception as exc:
-            raise WireGuardCommandError(
-                "Failed to fetch node obfuscation params",
-                command="wg show",
-                output="node_not_synced",
-            ) from exc
-        if not runtime_obf or not all(
-            runtime_obf.get(k) is not None for k in ("H1", "H2", "H3", "H4")
-        ):
-            raise WireGuardCommandError(
-                "Node obfuscation params unavailable (H1–H4 missing)",
-                command="wg show",
-                output="node_not_synced",
+        except Exception:
+            runtime_obf = None
+        if runtime_obf and all(runtime_obf.get(k) is not None for k in ("H1", "H2", "H3", "H4")):
+            h1 = int(runtime_obf.get("H1"))
+            h2 = int(runtime_obf.get("H2"))
+            h3 = int(runtime_obf.get("H3"))
+            h4 = int(runtime_obf.get("H4"))
+            changed = (
+                getattr(server, "amnezia_h1", None) != h1
+                or getattr(server, "amnezia_h2", None) != h2
+                or getattr(server, "amnezia_h3", None) != h3
+                or getattr(server, "amnezia_h4", None) != h4
             )
-        # Resync DB cache of H1–H4 from runtime so control-plane and node stay aligned.
-        h1 = int(runtime_obf.get("H1"))
-        h2 = int(runtime_obf.get("H2"))
-        h3 = int(runtime_obf.get("H3"))
-        h4 = int(runtime_obf.get("H4"))
-        changed = (
-            getattr(server, "amnezia_h1", None) != h1
-            or getattr(server, "amnezia_h2", None) != h2
-            or getattr(server, "amnezia_h3", None) != h3
-            or getattr(server, "amnezia_h4", None) != h4
-        )
-        if changed:
-            server.amnezia_h1, server.amnezia_h2, server.amnezia_h3, server.amnezia_h4 = (
-                h1,
-                h2,
-                h3,
-                h4,
-            )
-            await session.flush()
-            _config_log.info(
-                "Resynced H1–H4 from node",
-                extra={
-                    "event": "resync_h_params",
-                    "server_id": resolved_server_id,
-                    "H1": h1,
-                    "H2": h2,
-                    "H3": h3,
-                    "H4": h4,
-                },
-            )
-        # Runtime obfuscation wins over profile/DB for all overlapping keys.
-        obfuscation = {**obfuscation, **runtime_obf}
+            if changed:
+                server.amnezia_h1, server.amnezia_h2, server.amnezia_h3, server.amnezia_h4 = (
+                    h1,
+                    h2,
+                    h3,
+                    h4,
+                )
+                await session.flush()
+                _config_log.info(
+                    "Resynced H1–H4 from node",
+                    extra={
+                        "event": "resync_h_params",
+                        "server_id": resolved_server_id,
+                        "H1": h1,
+                        "H2": h2,
+                        "H3": h3,
+                        "H4": h4,
+                    },
+                )
+            obfuscation = {**obfuscation, **runtime_obf}
     dns = None
     if request_params and request_params.get("dns"):
         dns = (

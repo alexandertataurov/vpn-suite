@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql import func
 
 from app.core.config import settings
 from app.core.database import get_db
@@ -33,7 +34,13 @@ security = HTTPBearer(auto_error=False)
 
 
 async def get_admin_by_email(session: AsyncSession, email: str) -> AdminUser | None:
-    result = await session.execute(select(AdminUser).where(AdminUser.email == email))
+    """Look up admin by email (case-insensitive)."""
+    norm = (email or "").strip().lower()
+    if not norm:
+        return None
+    result = await session.execute(
+        select(AdminUser).where(func.lower(AdminUser.email) == norm)
+    )
     return result.scalar_one_or_none()
 
 
@@ -43,7 +50,13 @@ async def login(
     body: LoginRequest,
     db: AsyncSession = Depends(get_db),
 ):
-    user = await get_admin_by_email(db, body.email)
+    email = (body.email or "").strip().lower()
+    if not email:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Email is required",
+        )
+    user = await get_admin_by_email(db, email)
     if not user or not verify_password(body.password, user.password_hash):
         auth_failures_total.labels(reason="invalid_credentials").inc()
         ip = request.client.host if request.client else None

@@ -9,6 +9,7 @@ from typing import Any
 from app.core.config import settings
 from app.core.metrics import live_node_staleness_seconds, live_queue_depth
 from app.core.redis_client import get_redis
+from app.core.telemetry_polling_task import push_dashboard_timeseries
 from app.live_metrics.models import ClusterLiveSnapshot, ClusterLiveSummary, NodeLiveState
 from app.live_metrics.redis_store import set_degradation_mode, write_cluster_snapshot
 from app.services.snapshot_cache import (
@@ -156,6 +157,14 @@ async def run_live_metrics_aggregator() -> None:
             if snapshot is not None:
                 await write_cluster_snapshot(snapshot)
                 await set_degradation_mode(mode)
+                # Populate dashboard timeseries so GET /overview/operator has fresh TX/RX/peers
+                # when live_obs is enabled and telemetry_poll_loop is not running (e.g. agent mode).
+                s = snapshot.summary
+                await push_dashboard_timeseries(
+                    cluster_peers=s.total_peers,
+                    cluster_rx=s.total_rx_bytes,
+                    cluster_tx=s.total_tx_bytes,
+                )
         except asyncio.CancelledError:
             _log.info("Live metrics aggregator cancelled")
             raise

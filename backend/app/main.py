@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+import os
 import time
 from contextlib import asynccontextmanager
 
@@ -9,8 +10,6 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
-import os
-
 from prometheus_client import REGISTRY, CollectorRegistry, generate_latest, multiprocess
 
 from app.api.v1.actions import router as actions_router
@@ -50,6 +49,7 @@ from app.api.v1.users import router as users_router
 from app.api.v1.webapp import router as webapp_router
 from app.api.v1.webhooks import router as webhooks_router
 from app.api.v1.wg import router as wg_router
+from app.api.public_download import router as public_download_router
 from app.core.audit_middleware import AuditMiddleware
 from app.core.config import settings
 from app.core.database import check_db
@@ -182,9 +182,34 @@ async def lifespan(app: FastAPI):
     # Background loops moved to dedicated worker process (app.worker_main).
     # The API process still performs light health checks for its own dependencies.
     health_task = asyncio.create_task(run_health_check_loop(lambda: app.state.node_runtime_adapter))
+
+    async def _topology_refresh_loop() -> None:
+        """Refresh topology periodically so /metrics exposes vpn_* and (agent) Redis timeseries gets points."""
+        from app.services.topology_engine import TopologyEngine
+
+        interval = max(30, getattr(settings, "topology_cache_ttl_seconds", 60))
+        await asyncio.sleep(10)  # let startup settle
+        while True:
+            try:
+                adapter = getattr(app.state, "node_runtime_adapter", None)
+                if adapter is not None:
+                    engine = TopologyEngine(adapter)
+                    await engine.get_topology()
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                _log.debug("Topology refresh failed: %s", e)
+            await asyncio.sleep(interval)
+
+    topology_task = asyncio.create_task(_topology_refresh_loop())
     try:
         yield
     finally:
+        topology_task.cancel()
+        try:
+            await topology_task
+        except asyncio.CancelledError:
+            pass
         health_task.cancel()
         try:
             await health_task
@@ -259,6 +284,7 @@ app.include_router(bot_router, prefix="/api/v1")
 app.include_router(webapp_router, prefix="/api/v1")
 # Compatibility alias for exact /api/telemetry/docker/* contract.
 app.include_router(telemetry_docker_router, prefix="/api", include_in_schema=False)
+app.include_router(public_download_router)
 
 init_otel(app, service_version=API_VERSION)
 

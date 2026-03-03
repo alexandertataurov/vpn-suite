@@ -267,6 +267,20 @@ class ServerPeersOut(BaseModel):
     node_reachable: bool = True  # False when node connection failed
 
 
+class NodeObfuscationOut(BaseModel):
+    """AmneziaWG obfuscation from node (wg show). Issued configs use these when available."""
+
+    H1: int | None = None
+    H2: int | None = None
+    H3: int | None = None
+    H4: int | None = None
+    S1: int | None = None
+    S2: int | None = None
+    Jc: int | None = None
+    Jmin: int | None = None
+    Jmax: int | None = None
+
+
 class ServerTelemetryOut(BaseModel):
     peers_count: int
     online_count: int
@@ -279,6 +293,9 @@ class ServerTelemetryOut(BaseModel):
     container_name: str | None = None
     agent_version: str | None = None
     reported_status: str | None = None  # healthy | degraded | unhealthy | unknown
+    node_obfuscation: NodeObfuscationOut | None = (
+        None  # From heartbeat (wg show); current H1–H4 on node
+    )
 
 
 class BlockPeerRequest(BaseModel):
@@ -351,6 +368,8 @@ class ConfigEntryOut(BaseModel):
 
     download_url: str
     qr_payload: str
+    # Optional Amnezia vpn:// key for clients that expect text-key import.
+    amnezia_vpn_key: str | None = None
 
 
 class AdminIssuePeerPeerOut(BaseModel):

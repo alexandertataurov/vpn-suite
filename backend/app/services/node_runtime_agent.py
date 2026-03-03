@@ -112,6 +112,18 @@ class AgentNodeRuntimeAdapter(NodeRuntimeAdapter):
         """Return empty list; peer counts come from heartbeat in discover_nodes."""
         return []
 
+    async def get_obfuscation_from_node(self, node_id: str) -> dict | None:
+        """Return obfuscation (H1–H4, S1, S2, Jc, etc.) from latest agent heartbeat. Node = server_id."""
+        hb = await _get_heartbeat(node_id)
+        if not hb:
+            return None
+        obf = hb.get("obfuscation")
+        if not isinstance(obf, dict):
+            return None
+        if not all(obf.get(k) is not None for k in ("H1", "H2", "H3", "H4")):
+            return None
+        return obf
+
     async def get_node_for_sync(self, server_id: str) -> NodeMetadata | None:
         """Fetch node metadata for manual sync (includes inactive servers)."""
         async with async_session_factory() as session:

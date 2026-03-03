@@ -36,16 +36,22 @@ async def seed(session: AsyncSession) -> None:
         session.add(role)
         await session.flush()
 
-    result = await session.execute(select(AdminUser).where(AdminUser.email == settings.admin_email))
-    if result.scalar_one_or_none():
-        return
-
     from app.core.security import get_password_hash
+
+    admin_email = (settings.admin_email or "").strip().lower()
+    if not admin_email:
+        logger.warning("ADMIN_EMAIL is empty; skipping admin user seed")
+        return
+    result = await session.execute(select(AdminUser).where(AdminUser.email == admin_email))
+    existing = result.scalar_one_or_none()
+    if existing:
+        existing.password_hash = get_password_hash(settings.admin_password)
+        return
 
     session.add(
         AdminUser(
             id=uuid4_hex(),
-            email=settings.admin_email,
+            email=admin_email,
             password_hash=get_password_hash(settings.admin_password),
             role_id=role.id,
         )

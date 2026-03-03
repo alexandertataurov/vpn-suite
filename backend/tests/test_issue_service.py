@@ -83,7 +83,7 @@ async def test_issue_device_merges_runtime_obfuscation_into_config(monkeypatch):
 
     user_id, sub_id, server_id = await _create_issue_device_fixture()
 
-    runtime_obf = {"S1": 1, "S2": 2}
+    runtime_obf = {"S1": 1, "S2": 2, "H1": 10, "H2": 20, "H3": 30, "H4": 40}
     mock_adapter = AsyncMock()
     mock_adapter.get_obfuscation_from_node = AsyncMock(return_value=runtime_obf)
 

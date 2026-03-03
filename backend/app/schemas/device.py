@@ -43,13 +43,19 @@ class IssueResponse(StrictSchema):
 
 
 class DeviceTelemetryOut(BaseModel):
-    """Per-device telemetry from cache (handshake, rx/tx, reconciliation)."""
+    """Per-device telemetry from cache (handshake, rx/tx, RTT, reconciliation).
+
+    rtt_ms is a float in milliseconds as reported by node-agent; the control-plane does
+    not round or bucket it so that downstream dashboards can apply their own
+    aggregation.
+    """
 
     device_id: str
     handshake_latest_at: datetime | None = None
     handshake_age_sec: int | None = None
     transfer_rx_bytes: int | None = None
     transfer_tx_bytes: int | None = None
+    rtt_ms: float | None = None  # Round-trip time (ms); from node agent when available (e.g. ping to tunnel IP)
     endpoint: str | None = None
     allowed_ips_on_node: str | None = None
     peer_present: bool = False
@@ -181,3 +187,28 @@ class BulkRevokeOut(BaseModel):
     revoked: int
     skipped: int
     errors: list[str]
+
+
+class ConfigHealthDeviceEntry(BaseModel):
+    """Per-device entry in config health report."""
+
+    device_id: str
+    server_id: str
+    user_email: str | None = None
+    device_name: str | None = None
+    status: str  # active | revoked | suspended
+    reconciliation_status: str  # ok | needs_reconcile | broken
+    config_state: str  # issued | used | pending
+    reason: str | None = None  # telemetry_reason or derived
+    handshake_age_sec: int | None = None
+    peer_present: bool = False
+    node_health: str = "unknown"
+
+
+class ConfigHealthOut(BaseModel):
+    """Advanced config health report."""
+
+    by_reconciliation: dict[str, int]  # broken, needs_reconcile, ok
+    no_telemetry_count: int
+    devices_needing_attention: list[ConfigHealthDeviceEntry]
+    telemetry_last_updated: datetime | None = None

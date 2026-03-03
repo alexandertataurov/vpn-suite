@@ -123,7 +123,7 @@ async def get_revenue_overview(session: AsyncSession) -> dict:
     )
     avg_sub_length_days = 0.0
     if sub_duration_result:
-        days_list = [float(r.days) / 86400.0 for r in sub_duration_result if r.days is not None]
+        days_list = [float(r) / 86400.0 for r in sub_duration_result if r is not None]
         avg_sub_length_days = round(sum(days_list) / len(days_list), 1) if days_list else 0.0
 
     # Subscription health: expiring in 3d, 30d, expired today

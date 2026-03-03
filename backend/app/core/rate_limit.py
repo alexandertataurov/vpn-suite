@@ -1,5 +1,6 @@
 """Rate limit: login by IP; global API by IP. Fail-open if Redis down."""
 
+import ipaddress
 import logging
 
 from fastapi import HTTPException, Request
@@ -22,14 +23,64 @@ LOGIN_WINDOW = settings.login_rate_window_seconds
 API_LIMIT = settings.api_rate_limit_per_minute
 API_WINDOW = settings.api_rate_limit_window_seconds
 
+# Built-in "private" networks (localhost + RFC1918). Used when api_rate_limit_exempt_ips contains "private".
+_PRIVATE_NETWORKS = (
+    ipaddress.ip_network("127.0.0.0/8"),
+    ipaddress.ip_network("::1/128"),
+    ipaddress.ip_network("10.0.0.0/8"),
+    ipaddress.ip_network("172.16.0.0/12"),
+    ipaddress.ip_network("192.168.0.0/16"),
+)
+
+
+def _client_ip(request: StarletteRequest) -> str:
+    """Client IP: X-Forwarded-For first, then X-Real-IP, then request.client."""
+    forwarded = request.headers.get("X-Forwarded-For")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    real = request.headers.get("X-Real-IP")
+    if real:
+        return real.strip()
+    return request.client.host if request.client else "unknown"
+
+
+def _is_exempt_from_api_rate_limit(ip_str: str) -> bool:
+    """True if ip_str is in api_rate_limit_exempt_ips (list or 'private' for private ranges)."""
+    raw = (getattr(settings, "api_rate_limit_exempt_ips", "") or "").strip()
+    if not raw:
+        return False
+    parts = [p.strip() for p in raw.split(",") if p.strip()]
+    try:
+        ip = ipaddress.ip_address(ip_str)
+    except ValueError:
+        return False
+    for part in parts:
+        if part.lower() == "private":
+            for net in _PRIVATE_NETWORKS:
+                if ip in net:
+                    return True
+            continue
+        try:
+            if "/" in part:
+                if ip in ipaddress.ip_network(part):
+                    return True
+            else:
+                if ip == ipaddress.ip_address(part):
+                    return True
+        except ValueError:
+            continue
+    return False
+
 
 class GlobalAPIRateLimitMiddleware(BaseHTTPMiddleware):
-    """Per-IP rate limit for /api/v1 (and /api/*). Skip if api_rate_limit_per_minute is 0. Fail-open if Redis down."""
+    """Per-IP rate limit for /api/v1 (and /api/*). Skip if api_rate_limit_per_minute is 0 or IP exempt. Fail-open if Redis down."""
 
     async def dispatch(self, request: StarletteRequest, call_next):
         if API_LIMIT <= 0 or not request.url.path.startswith("/api/"):
             return await call_next(request)
-        ip = request.client.host if request.client else "unknown"
+        ip = _client_ip(request)
+        if _is_exempt_from_api_rate_limit(ip):
+            return await call_next(request)
         key = f"{KEY_PREFIX_API}{ip}"
         try:
             r = get_redis()
@@ -38,7 +89,6 @@ class GlobalAPIRateLimitMiddleware(BaseHTTPMiddleware):
                 await r.expire(key, API_WINDOW)
             if n > API_LIMIT:
                 rid = getattr(request.state, "request_id", None) or request_id_ctx.get()
-                client_ip = request.client.host if request.client else None
                 _security_log.info(
                     "rate limit hit",
                     extra=extra_for_event(
@@ -47,7 +97,8 @@ class GlobalAPIRateLimitMiddleware(BaseHTTPMiddleware):
                         error_kind="rate_limit",
                         error_severity="warn",
                         error_retryable=True,
-                        ip=client_ip,
+                        ip=ip,
+                        route=request.url.path[:128] if request.url.path else None,
                     ),
                 )
                 body = error_body(
@@ -85,6 +136,7 @@ async def rate_limit_login_failure(request: Request) -> None:
                     error_severity="warn",
                     error_retryable=True,
                     ip=client_ip,
+                    route=request.url.path[:128] if request.url.path else None,
                 ),
             )
             raise HTTPException(

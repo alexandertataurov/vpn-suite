@@ -21,6 +21,7 @@ from app.core.redis_client import get_redis
 from app.models import AgentAction, AgentActionLog, Server, ServerSnapshot
 from app.schemas.action import ServerLogLineOut, ServerLogsOut
 from app.schemas.server import (
+    NodeObfuscationOut,
     ServersTelemetrySummaryOut,
     ServerTelemetryEntry,
     ServerTelemetryOut,
@@ -357,6 +358,22 @@ async def get_server_telemetry(
                         age = p.get("last_handshake_age_sec")
                         if isinstance(age, int | float) and age >= 0 and int(age) <= 180:
                             online_count += 1
+                obf = hb.get("obfuscation")
+                node_obf = None
+                if isinstance(obf, dict) and all(
+                    obf.get(k) is not None for k in ("H1", "H2", "H3", "H4")
+                ):
+                    node_obf = NodeObfuscationOut(
+                        H1=obf.get("H1"),
+                        H2=obf.get("H2"),
+                        H3=obf.get("H3"),
+                        H4=obf.get("H4"),
+                        S1=obf.get("S1"),
+                        S2=obf.get("S2"),
+                        Jc=obf.get("Jc"),
+                        Jmin=obf.get("Jmin"),
+                        Jmax=obf.get("Jmax"),
+                    )
                 return ServerTelemetryOut(
                     peers_count=int(hb.get("peer_count") or 0),
                     online_count=online_count,
@@ -368,6 +385,7 @@ async def get_server_telemetry(
                     container_name=str(hb.get("container_name") or "").strip() or None,
                     agent_version=str(hb.get("agent_version") or "").strip() or None,
                     reported_status=str(hb.get("status") or "").strip() or None,
+                    node_obfuscation=node_obf,
                 )
         return ServerTelemetryOut(
             peers_count=0,

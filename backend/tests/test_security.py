@@ -212,6 +212,30 @@ async def test_api_rate_limit_under_limit_returns_401_not_429():
     # If rate limit applied and was exceeded we'd get 429; one request is under default limit
 
 
+def test_api_rate_limit_exempt_ips_private(monkeypatch):
+    """Exempt 'private' includes localhost and RFC1918."""
+    from app.core import config
+    from app.core.rate_limit import _is_exempt_from_api_rate_limit
+
+    monkeypatch.setattr(config.settings, "api_rate_limit_exempt_ips", "private")
+    assert _is_exempt_from_api_rate_limit("127.0.0.1") is True
+    assert _is_exempt_from_api_rate_limit("10.1.2.3") is True
+    assert _is_exempt_from_api_rate_limit("172.16.0.1") is True
+    assert _is_exempt_from_api_rate_limit("192.168.1.1") is True
+    assert _is_exempt_from_api_rate_limit("8.8.8.8") is False
+
+
+def test_api_rate_limit_exempt_ips_explicit(monkeypatch):
+    """Exempt explicit IPs/CIDRs."""
+    from app.core import config
+    from app.core.rate_limit import _is_exempt_from_api_rate_limit
+
+    monkeypatch.setattr(config.settings, "api_rate_limit_exempt_ips", "127.0.0.1,10.0.0.0/8")
+    assert _is_exempt_from_api_rate_limit("127.0.0.1") is True
+    assert _is_exempt_from_api_rate_limit("10.5.5.5") is True
+    assert _is_exempt_from_api_rate_limit("172.16.0.1") is False
+
+
 @pytest.mark.asyncio
 async def test_webhook_body_size_limit_413():
     """Webhook body over 1MB returns 413 (DoS mitigation)."""

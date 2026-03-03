@@ -145,6 +145,18 @@ vpn_peer_unstable_events_total = Counter(
     ["reason"],
 )
 
+# Per-peer RTT (from node agent ping to tunnel IP; only when agent reports rtt_ms)
+vpn_peer_rtt_ms = Gauge(
+    "vpn_peer_rtt_ms",
+    "Per-peer RTT in milliseconds (from node agent).",
+    ["server_id", "device_id"],
+)
+vpn_peer_rtt_failures_total = Counter(
+    "vpn_peer_rtt_failures_total",
+    "RTT measurement failures (timeout/no response) as reported by node agent.",
+    ["server_id"],
+)
+
 # Bot funnel (spec: bot_conversion_rate; use funnel_events_total + PromQL for rate)
 funnel_events_total = Counter(
     "funnel_events_total",
@@ -566,5 +578,7 @@ def update_topology_metrics(topo) -> None:
         vpn_node_traffic_tx_bytes.labels(server_id=n.node_id).set(int(n.total_tx_bytes or 0))
     for st, count in status_counts.items():
         vpn_nodes_total.labels(status=st).set(count)
+    if not status_counts:
+        vpn_nodes_total.labels(status="unknown").set(0)
     total_peers = sum(n.peer_count for n in topo.nodes)
     vpn_peers_total.labels(status="active").set(total_peers)

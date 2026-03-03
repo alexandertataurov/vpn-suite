@@ -29,6 +29,12 @@ class AgentHeartbeatIn(BaseModel):
     ts_utc: datetime = Field(..., description="Agent timestamp UTC")
     # Per-peer telemetry for device list (public_key, allowed_ips, last_handshake_age_sec, rx_bytes, tx_bytes)
     peers: list[dict] | None = Field(default=None, description="Per-peer telemetry from node")
+    # Runtime AmneziaWG obfuscation params from `wg show <iface>` (H1–H4, S1/S2, Jc/Jmin/Jmax).
+    # Control-plane persists this in Redis and uses it when issuing/reissuing configs.
+    obfuscation: dict[str, int | str] | None = Field(
+        default=None,
+        description="Runtime obfuscation values from node heartbeat",
+    )
 
 
 class AgentAckOut(BaseModel):
@@ -115,6 +121,7 @@ class AgentV1PeerOut(BaseModel):
     last_handshake_age_sec: int | None = None
     rx_bytes: int = 0
     tx_bytes: int = 0
+    rtt_ms: int | None = None  # Round-trip time (ms); agent may measure e.g. via ping to tunnel IP
 
 
 class AgentV1ActionExecuteIn(BaseModel):

@@ -119,7 +119,12 @@ class TopologyEngine:
         nodes = await self._adapter.discover_nodes()
         await self._sync_discovered_nodes(nodes)
         total_capacity = sum(n.max_peers for n in nodes)
-        current_load = sum(n.peer_count for n in nodes)
+        # For cluster "load" and dashboard peers, prefer active/connected peers
+        # when available, falling back to total peer_count only when necessary.
+        current_load = sum(
+            (n.active_peers if getattr(n, "active_peers", None) is not None else n.peer_count)
+            for n in nodes
+        )
         load_factor = current_load / total_capacity if total_capacity else 0.0
         load_index = load_factor
         capacity_score = (
@@ -164,15 +169,15 @@ class TopologyEngine:
             update_topology_metrics(topology)
         except Exception as e:
             _log.debug("Metrics update failed: %s", e)
-        if settings.node_discovery == "agent":
-            try:
-                await push_dashboard_timeseries(
-                    current_load,
-                    sum(n.total_rx_bytes or 0 for n in nodes),
-                    sum(n.total_tx_bytes or 0 for n in nodes),
-                )
-            except Exception as e:
-                _log.debug("Dashboard timeseries push failed: %s", e)
+        # Push dashboard timeseries so frontend has data in both agent and docker mode.
+        try:
+            await push_dashboard_timeseries(
+                current_load,
+                sum(n.total_rx_bytes or 0 for n in nodes),
+                sum(n.total_tx_bytes or 0 for n in nodes),
+            )
+        except Exception as e:
+            _log.debug("Dashboard timeseries push failed: %s", e)
         try:
             redis = get_redis()
             await redis.setex(

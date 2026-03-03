@@ -24,13 +24,12 @@ USAGE
 _optional() {
   local label="$1"
   shift
-  local errf
-  errf="$(mktemp)"
-  trap 'rm -f "$errf"' RETURN
-  if ! "$@" 2> "$errf"; then
+  _OPTIONAL_ERRF="${TMPDIR:-/tmp}/optional-$$.err"
+  trap 'rm -f "${_OPTIONAL_ERRF:-}"' RETURN
+  if ! "$@" 2> "$_OPTIONAL_ERRF"; then
     log WARN "Optional step failed (${label}): $*"
     log WARN "stderr (last 30 lines):"
-    tail -n 30 "$errf" >&2 || true
+    [[ -f "${_OPTIONAL_ERRF:-}" ]] && tail -n 30 "$_OPTIONAL_ERRF" >&2 || true
     FAILED_SUBSYSTEMS+=("$label")
     if [[ "$STRICT" == "1" ]]; then
       exit 1
@@ -68,8 +67,8 @@ if [[ -z "${DOCKER_GID:-}" ]]; then
   [[ -n "${_gid:-}" ]] && export DOCKER_GID="$_gid"
 fi
 
-DC=(env ENV_FILE="$ENV_FILE" docker compose --env-file "$ENV_FILE")
-DC_OBS=(env ENV_FILE="$ENV_FILE" docker compose -f docker-compose.yml -f docker-compose.observability.yml --env-file "$ENV_FILE")
+DC=(env ENV_FILE="$ENV_FILE" docker compose --env-file "$ENV_FILE" --profile docker-telemetry)
+DC_OBS=(env ENV_FILE="$ENV_FILE" docker compose -f docker-compose.yml -f docker-compose.observability.yml --env-file "$ENV_FILE" --profile docker-telemetry)
 AUDIT_PROJECT="${AUDIT_PROJECT:-vpn-suite-audit}"
 DC_AUDIT=(docker compose -p "$AUDIT_PROJECT" -f docker-compose.audit.yml --env-file "$ENV_FILE")
 MONITORING_SERVICES=(victoria-metrics prometheus alertmanager cadvisor node-exporter loki promtail grafana discovery-runner wg-exporter tempo otel-collector)

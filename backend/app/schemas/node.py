@@ -36,6 +36,9 @@ class NodeMetadata(BaseModel):
     endpoint_ip: str = ""  # external IP/host for clients
     internal_ip: str = ""  # Docker/internal network IP if applicable
     peer_count: int = 0
+    # Optional: active/connected peers (recent handshakes). When present, prefer this
+    # over peer_count for "connected peers" views like dashboard timeseries.
+    active_peers: int | None = None
     total_rx_bytes: int = 0
     total_tx_bytes: int = 0
     mtu: int = 1420

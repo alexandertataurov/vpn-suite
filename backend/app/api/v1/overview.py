@@ -325,6 +325,7 @@ async def get_connection_nodes(
 
 @router.get("/overview/operator")
 async def get_overview_operator(
+    request: Request,
     time_range: str = Query("1h"),
     _admin=Depends(require_permission(PERM_CLUSTER_READ)),
 ):
@@ -337,4 +338,4 @@ async def get_overview_operator(
         )
     from app.services.operator_dashboard_service import fetch_operator_dashboard
 
-    return await fetch_operator_dashboard(time_range=time_range)
+    return await fetch_operator_dashboard(time_range=time_range, request=request)

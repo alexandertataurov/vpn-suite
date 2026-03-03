@@ -17,14 +17,17 @@ Security notes:
 
 from __future__ import annotations
 
+import ipaddress
 import json
 import os
+import random
 import re
 import uuid
 import signal
 import subprocess
 import threading
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -209,6 +212,174 @@ METRIC_HTTP_REQUEST_LATENCY_SECONDS = Histogram(
     ["endpoint", "method"],
     buckets=(0.05, 0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0),
 )
+
+# Per-peer RTT (real measurement from node via ping to tunnel IP). Names align with control-plane.
+METRIC_PEER_RTT_MS = Gauge(
+    "vpn_peer_rtt_ms",
+    "Per-peer RTT from ping to tunnel IP (ms); only active peers.",
+    ["node", "peer"],
+)
+METRIC_PEER_RTT_FAILURES = Counter(
+    "vpn_peer_rtt_failures_total",
+    "RTT ping failures (timeout or error)",
+    ["node"],
+)
+
+# RTT cache: (container_id, public_key) -> rtt_ms (float) or None. Updated by RTT worker.
+_RTT_CACHE: dict[tuple[str, str], float | None] = {}
+_RTT_CACHE_LOCK = threading.Lock()
+_RTT_ACTIVE_AGE_SEC = 180  # Only measure peers with handshake < 3 min
+
+
+def _rtt_tunnel_subnet() -> tuple[ipaddress.IPv4Network | None, str]:
+    """Parse RTT_TUNNEL_CIDR (e.g. 10.8.0.0/16). Returns (network, raw_cidr)."""
+    cidr = (os.getenv("RTT_TUNNEL_CIDR", "10.8.0.0/16") or "10.8.0.0/16").strip()
+    try:
+        net = ipaddress.ip_network(cidr, strict=False)
+        if isinstance(net, ipaddress.IPv4Network):
+            return net, cidr
+    except ValueError:
+        pass
+    return None, cidr
+
+
+def _ip_in_subnet(ip_str: str, network: ipaddress.IPv4Network | None) -> bool:
+    if not network:
+        return False
+    try:
+        addr = ipaddress.ip_address(ip_str.strip())
+        if isinstance(addr, ipaddress.IPv4Address):
+            return addr in network
+    except ValueError:
+        pass
+    return False
+
+
+def _extract_tunnel_ip(allowed_ips: str, network: ipaddress.IPv4Network | None) -> str | None:
+    """Extract first IPv4 from allowed_ips that lies in the tunnel subnet. No shell, validated."""
+    if not allowed_ips or not network:
+        return None
+    for part in (p.strip() for p in allowed_ips.split(",") if p.strip()):
+        if "/" in part:
+            ip_part = part.split("/")[0].strip()
+        else:
+            ip_part = part
+        if not ip_part or not re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", ip_part):
+            continue
+        if _ip_in_subnet(ip_part, network):
+            return ip_part
+    return None
+
+
+def _parse_ping_time_ms(output: str) -> float | None:
+    """Parse 'time=23.4 ms' or 'time = 23.4 ms' from ping output. Returns None if not found."""
+    for line in (output or "").splitlines():
+        m = re.search(r"time[=\s]+([0-9.]+)\s*ms", line, re.IGNORECASE)
+        if m:
+            try:
+                v = float(m.group(1))
+                return v if v >= 0 else None
+            except ValueError:
+                pass
+    return None
+
+
+def _ping_peer_rtt(container_id: str, ip: str, timeout_sec: float) -> float | None:
+    """Run ping inside container to tunnel IP. Returns RTT in ms or None. No shell, args only."""
+    try:
+        container_id = _sanitize_container(container_id)
+        timeout_arg = str(max(1, min(5, int(timeout_sec))))
+        cmd = ["docker", "exec", container_id, "ping", "-c", "1", "-W", timeout_arg, ip]
+        code, out, _ = _run(cmd, timeout=timeout_sec + 2.0)
+        if code != 0:
+            return None
+        return _parse_ping_time_ms(out)
+    except Exception:
+        return None
+
+
+def _rtt_worker_loop(
+    container_filter: str,
+    explicit_container: str | None,
+    iface: str,
+    docker_timeout: float,
+    scan_interval_sec: float,
+    max_concurrent: int,
+    ping_timeout_sec: float,
+) -> None:
+    """Background loop: every scan_interval_sec (+ jitter) measure RTT for active peers. Non-blocking."""
+    network, _ = _rtt_tunnel_subnet()
+    if not network:
+        return
+    while True:
+        try:
+            time.sleep(scan_interval_sec + random.uniform(0, 2))
+        except Exception:
+            break
+        try:
+            containers = _pick_containers(container_filter, explicit_container, timeout=docker_timeout)
+        except Exception:
+            continue
+        tasks: list[tuple[str, str, str, str]] = []  # (container_id, container_name, public_key, ip)
+        now_ts = int(_now_utc().timestamp())
+        for c in containers:
+            try:
+                rt = _runtime_state(
+                    container=c.container_id,
+                    display_name=c.name,
+                    iface=iface,
+                    docker_timeout=docker_timeout,
+                    active_age_sec=_RTT_ACTIVE_AGE_SEC,
+                )
+                if not rt.ok or not rt.peers:
+                    continue
+                for p in rt.peers:
+                    if p.last_handshake_ts <= 0:
+                        continue
+                    age = now_ts - p.last_handshake_ts
+                    if age > _RTT_ACTIVE_AGE_SEC:
+                        continue
+                    ip = _extract_tunnel_ip(p.allowed_ips, network)
+                    if ip:
+                        tasks.append((c.container_id, c.name, p.public_key, ip))
+            except Exception:
+                continue
+        if not tasks:
+            continue
+        # Limit concurrency; process in batches of max_concurrent
+        results: list[tuple[str, str, str, float | None]] = []
+        with ThreadPoolExecutor(max_workers=max_concurrent) as ex:
+            futures = {
+                ex.submit(_ping_peer_rtt, cid, ip, ping_timeout_sec): (cid, cname, pk, ip)
+                for cid, cname, pk, ip in tasks
+            }
+            for fut in as_completed(futures, timeout=ping_timeout_sec * 2 + 10):
+                cid, cname, pk, _ = futures[fut]
+                try:
+                    rtt = fut.result()
+                    results.append((cid, cname, pk, rtt))
+                except Exception:
+                    results.append((cid, cname, pk, None))
+        with _RTT_CACHE_LOCK:
+            for cid, cname, pk, rtt in results:
+                key = (cid, pk)
+                _RTT_CACHE[key] = rtt
+                if rtt is not None:
+                    METRIC_PEER_RTT_MS.labels(node=cname, peer=pk[:12]).set(rtt)
+                else:
+                    METRIC_PEER_RTT_FAILURES.labels(node=cname).inc()
+            # Prune cache for peers no longer in this scan
+            seen = {(cid, pk) for cid, _, pk, _ in results}
+            for key in list(_RTT_CACHE):
+                if key not in seen:
+                    del _RTT_CACHE[key]
+    return None
+
+
+def _get_peer_rtt_ms(container_id: str, public_key: str) -> float | None:
+    """Return cached RTT (ms) for peer; None if not measured or failed. Never return 0 unless real."""
+    with _RTT_CACHE_LOCK:
+        return _RTT_CACHE.get((container_id, public_key))
 
 
 class _State:
@@ -519,6 +690,46 @@ def _parse_dump(dump: str) -> tuple[str, int, list[Peer]]:
             )
         )
     return public_key, listen_port, peers
+
+
+def _parse_wg_show_obfuscation(output: str) -> dict | None:
+    """Parse `wg show <iface>` human output for H1–H4, S1, S2, Jc, Jmin, Jmax. Keys match backend."""
+    result: dict = {}
+    for line in (output or "").strip().splitlines():
+        line = line.strip()
+        if ":" not in line:
+            continue
+        key, _, val = line.partition(":")
+        key, val = key.strip().lower(), val.strip()
+        if key in ("jc", "jmin", "jmax"):
+            try:
+                result["Jc" if key == "jc" else "Jmin" if key == "jmin" else "Jmax"] = int(val)
+            except ValueError:
+                pass
+        elif key in ("s1", "s2", "s3", "s4"):
+            try:
+                result["S1" if key == "s1" else "S2" if key == "s2" else "S3" if key == "s3" else "S4"] = int(val)
+            except ValueError:
+                pass
+        elif key in ("h1", "h2", "h3", "h4") and val:
+            v = val.strip()
+            if v.isdigit():
+                result["H1" if key == "h1" else "H2" if key == "h2" else "H3" if key == "h3" else "H4"] = int(v)
+    return result if result else None
+
+
+def _get_obfuscation_from_container(
+    container: str, iface: str, docker_timeout: float
+) -> dict | None:
+    """Run wg show <iface> in container and return obfuscation dict (H1–H4, etc.) for heartbeat."""
+    container = _sanitize_container(container)
+    iface = _sanitize_iface(iface)
+    code, out, _ = _run(["docker", "exec", container, "wg", "show", iface], timeout=docker_timeout)
+    if code != 0:
+        code, out, _ = _run(["docker", "exec", container, "awg", "show", iface], timeout=docker_timeout)
+    if code != 0:
+        return None
+    return _parse_wg_show_obfuscation(out)
 
 
 def _runtime_state(
@@ -1088,6 +1299,27 @@ def main() -> int:
     t = threading.Thread(target=_serve_http, args=(http_port,), daemon=True)
     t.start()
 
+    # RTT worker: per-peer ping from node (optional)
+    rtt_enabled = (os.getenv("RTT_ENABLED", "1") or "").strip().lower() in ("1", "true", "yes")
+    rtt_scan_interval = float(os.getenv("RTT_SCAN_INTERVAL_SECONDS", "10"))
+    rtt_max_concurrent = max(1, min(50, _env_int("RTT_MAX_CONCURRENT", 50)))
+    rtt_ping_timeout = max(1, min(5, _env_int("RTT_PING_TIMEOUT_SECONDS", 1)))
+    if rtt_enabled:
+        rtt_thread = threading.Thread(
+            target=_rtt_worker_loop,
+            args=(
+                container_filter,
+                explicit_container,
+                iface,
+                docker_timeout,
+                rtt_scan_interval,
+                rtt_max_concurrent,
+                float(rtt_ping_timeout),
+            ),
+            daemon=True,
+        )
+        rtt_thread.start()
+
     stop = threading.Event()
 
     def _sig(_signo: int, _frame: Any) -> None:
@@ -1185,14 +1417,21 @@ def main() -> int:
                         peers_payload = []
                         for p in rt.peers:
                             age_sec = (now_ts - p.last_handshake_ts) if p.last_handshake_ts else None
-                            peers_payload.append({
+                            entry: dict[str, Any] = {
                                 "public_key": p.public_key,
                                 "allowed_ips": p.allowed_ips or "",
                                 "last_handshake_age_sec": age_sec,
                                 "rx_bytes": p.rx,
                                 "tx_bytes": p.tx,
                                 "endpoint": p.endpoint or "",
-                            })
+                            }
+                            rtt = _get_peer_rtt_ms(container.container_id, p.public_key)
+                            if rtt is not None:
+                                entry["rtt_ms"] = rtt
+                            peers_payload.append(entry)
+                        obf = _get_obfuscation_from_container(
+                            container.container_id, iface, docker_timeout
+                        )
                         hb = {
                             "server_id": sid,
                             "container_name": rt.container_name,
@@ -1213,6 +1452,8 @@ def main() -> int:
                             "ts_utc": _iso_utc(_now_utc()),
                             "peers": peers_payload,
                         }
+                        if obf:
+                            hb["obfuscation"] = obf
                         _heartbeat(session, hb, cid)
                     except Exception as e:
                         # Still register server so it appears in admin (e.g. wrong iface or awg missing)

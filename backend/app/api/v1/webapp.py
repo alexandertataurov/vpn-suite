@@ -297,9 +297,13 @@ async def webapp_telemetry(
             route = payload.get("route")
             route_label = str(route)[:200] if route else "unknown"
             if unit == "score":
-                frontend_web_vital_score.labels(app="miniapp", name=name, route=route_label).observe(value)
+                frontend_web_vital_score.labels(
+                    app="miniapp", name=name, route=route_label
+                ).observe(value)
             else:
-                frontend_web_vital_ms.labels(app="miniapp", name=name, route=route_label).observe(value)
+                frontend_web_vital_ms.labels(app="miniapp", name=name, route=route_label).observe(
+                    value
+                )
     await db.commit()
     return {"ok": True}
 
