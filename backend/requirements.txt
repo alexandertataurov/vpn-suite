@@ -125,7 +125,7 @@ packaging==26.0
     # via opentelemetry-instrumentation
 pillow==12.1.1
     # via qrcode
-prometheus-client==0.20.0
+prometheus-client==0.24.1
     # via -r requirements.in
 protobuf==6.33.5
     # via
