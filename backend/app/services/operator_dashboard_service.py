@@ -23,8 +23,7 @@ from app.core.metrics import (
 from app.core.redis_client import get_redis
 from app.core.telemetry_polling_task import get_dashboard_timeseries
 from app.models import Device, Server, ServerSnapshot
-from app.services.device_telemetry_cache import get_telemetry_summary
-from app.services.snapshot_cache import get_snapshot_nodes
+from app.services.snapshot_cache import get_snapshot_nodes, get_snapshot_devices
 
 _log = logging.getLogger(__name__)
 
@@ -765,19 +764,22 @@ async def fetch_operator_dashboard(
     if data_status == "degraded" and age_s is not None and age_s <= DEGRADED_S:
         data_status = "ok"
 
-    # Prefer handshake-based active session count from telemetry summary when available.
-    # This treats "connected peers" as clients with a fresh handshake, which aligns with
-    # device-level telemetry and avoids counting long-idle peers as live.
+    # Prefer handshake-based active session count from telemetry snapshot when available.
+    # This treats "connected peers" as devices with a recent handshake AND valid allowed_ips,
+    # matching the Telemetry page semantics (devices.summary.handshake_ok).
     try:
-        summary = await get_telemetry_summary()
+        devices_snapshot = await get_snapshot_devices()
     except Exception:
-        summary = {}
-    try:
-        handshake_ok = int(summary.get("handshake_ok_count") or 0)
-    except (TypeError, ValueError):
-        handshake_ok = 0
-    if handshake_ok > 0:
-        health_strip["peers_active"] = handshake_ok
+        devices_snapshot = None
+    if isinstance(devices_snapshot, dict):
+        try:
+            handshake_ok = int(
+                (devices_snapshot.get("summary") or {}).get("handshake_ok") or 0
+            )
+        except (TypeError, ValueError):
+            handshake_ok = 0
+        if handshake_ok > 0:
+            health_strip["peers_active"] = handshake_ok
 
     # Populate strip from timeseries when Prometheus and telemetry summary did not (peers_active, total_throughput_bps)
     if timeseries_points:

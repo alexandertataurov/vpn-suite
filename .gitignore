@@ -85,3 +85,4 @@ Thumbs.db
 # Discovery runtime state
 config/monitoring/discovery/.targets_state.json
 backend/temp_query.py
+.cursor/mcp.json

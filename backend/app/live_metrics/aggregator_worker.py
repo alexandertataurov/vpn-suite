@@ -15,8 +15,9 @@ from app.live_metrics.redis_store import set_degradation_mode, write_cluster_sna
 from app.services.snapshot_cache import (
     DEFAULT_ENV,
     SNAPSHOT_STALE_THRESHOLD_SECONDS,
-    get_snapshot_meta,
-    get_snapshot_nodes,
+  get_snapshot_meta,
+  get_snapshot_nodes,
+  get_snapshot_sessions,
 )
 
 _log = logging.getLogger(__name__)
@@ -160,8 +161,22 @@ async def run_live_metrics_aggregator() -> None:
                 # Populate dashboard timeseries so GET /overview/operator has fresh TX/RX/peers
                 # when live_obs is enabled and telemetry_poll_loop is not running (e.g. agent mode).
                 s = snapshot.summary
+                # For dashboard peers, prefer handshake-based active session count from
+                # sessions snapshot when available; fallback to total_peers.
+                cluster_peers = s.total_peers
+                try:
+                    sessions = await get_snapshot_sessions(DEFAULT_ENV)
+                except Exception:
+                    sessions = None
+                if isinstance(sessions, dict):
+                    try:
+                        active = int(sessions.get("active_sessions") or 0)
+                    except (TypeError, ValueError):
+                        active = 0
+                    if active >= 0:
+                        cluster_peers = active
                 await push_dashboard_timeseries(
-                    cluster_peers=s.total_peers,
+                    cluster_peers=cluster_peers,
                     cluster_rx=s.total_rx_bytes,
                     cluster_tx=s.total_tx_bytes,
                 )

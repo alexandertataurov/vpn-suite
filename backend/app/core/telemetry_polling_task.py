@@ -376,10 +376,10 @@ async def run_telemetry_poll_loop(get_adapter) -> None:
                     telemetry_poll_server_failures_total.labels(
                         server_id=server_id, reason=type(e).__name__
                     ).inc()
-            if cluster_online_sources > 0:
-                cluster_peers_connected = int(cluster_online)
-            else:
-                cluster_peers_connected = len(cluster_seen_pubkeys)
+            # For dashboard peers, prefer handshake-based active session count computed above.
+            # This counts devices with a recent handshake (<= HANDSHAKE_OK_SEC) and valid allowed_ips,
+            # matching the Telemetry snapshot semantics.
+            cluster_peers_connected = int(h_ok_count)
             # Push whenever we polled, or when there was nothing to poll (no servers, no heartbeats)
             # so the dashboard gets a steady stream of points and shows 0 B/s instead of stale/empty.
             await _push_dashboard_timeseries(redis, cluster_peers_connected, cluster_rx, cluster_tx)
