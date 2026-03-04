@@ -178,6 +178,10 @@ Smoke checklist:
 4. Apply host hardening (sysctl, fail2ban, SSH key-only).
 5. Deploy stack via `./manage.sh verify` → `./manage.sh up-core` → `./manage.sh migrate` → `./manage.sh seed`.
 6. Run basic health/smoke checks (health endpoints, Admin UI, at least one test device).
+7. Establish a **reference backup & rollback rehearsal**:
+   - Take a fresh DB backup: `./manage.sh backup-db` (see [runbook.md](runbook.md) and [postgres-safeguards.md](postgres-safeguards.md)).
+   - On a staging or throwaway host, restore from that dump using `./manage.sh restore-db --force <dump>` and re-run health checks.
+   - Document the exact rollback path for this host: which git tag/commit to roll back to, which backup file to restore, and how to re-verify (`./manage.sh verify`, health endpoints, Admin UI login, at least one test device).
 
-✨ **Stretch goal:** capture these steps in your internal runbook with screenshots and exact CIDRs, then rehearse on a staging host before applying to production.
+✨ **Stretch goal:** capture these steps (including backup/restore screenshots and exact CIDRs) in your internal runbook, and rehearse them on a staging host before applying to production.
 

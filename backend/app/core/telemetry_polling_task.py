@@ -455,15 +455,29 @@ async def get_dashboard_timeseries(
         now_ts = int(datetime.now(timezone.utc).timestamp())
         cutoff = now_ts - window_seconds
         raw_list = await redis.zrangebyscore(DASHBOARD_TIMESERIES_KEY, cutoff, "+inf")
-        out = []
+        out: list[dict] = []
         for raw in raw_list:
             try:
                 s = raw.decode("utf-8") if isinstance(raw, bytes) else raw
                 out.append(json.loads(s))
             except (json.JSONDecodeError, TypeError):
                 continue
+        # Sort by timestamp, then collapse multiple samples with the same ts.
+        # Multiple writers (telemetry poller, topology engine, live metrics) may
+        # push cluster snapshots for the same second; for the dashboard we only
+        # want a single point per timestamp to avoid artificial spikes.
         out.sort(key=lambda x: x.get("ts") or 0)
-        return out
+        dedup: dict[int, dict] = {}
+        for pt in out:
+            ts_val = pt.get("ts")
+            try:
+                ts_int = int(ts_val)
+            except (TypeError, ValueError):
+                continue
+            if ts_int <= 0:
+                continue
+            dedup[ts_int] = pt
+        return [dedup_ts for _, dedup_ts in sorted(dedup.items(), key=lambda item: item[0])]
     except Exception:
         return []
 

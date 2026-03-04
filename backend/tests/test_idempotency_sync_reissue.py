@@ -135,9 +135,21 @@ async def test_reissue_idempotency_replay_returns_same_payload(client: AsyncClie
             cached[(scope, resource_id, idempotency_key)] = {"status_code": 200, "body": body}
 
     out = SimpleNamespace(
-        config_awg=SimpleNamespace(download_url="http://cfg/awg", qr_payload="awg"),
-        config_wg_obf=SimpleNamespace(download_url="http://cfg/wg-obf", qr_payload="wg-obf"),
-        config_wg=SimpleNamespace(download_url="http://cfg/wg", qr_payload="wg"),
+        config_awg=SimpleNamespace(
+            download_url="http://cfg/awg",
+            qr_payload="awg",
+            amnezia_vpn_key="awg-key",
+        ),
+        config_wg_obf=SimpleNamespace(
+            download_url="http://cfg/wg-obf",
+            qr_payload="wg-obf",
+            amnezia_vpn_key="wg-obf-key",
+        ),
+        config_wg=SimpleNamespace(
+            download_url="http://cfg/wg",
+            qr_payload="wg",
+            amnezia_vpn_key="wg-key",
+        ),
         request_id="req-service-1",
     )
 

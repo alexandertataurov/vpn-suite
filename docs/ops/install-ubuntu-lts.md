@@ -83,10 +83,10 @@ For the full list, see [ops/required-secrets.md](required-secrets.md).
 From `/opt/vpn-suite`:
 
 ```bash
-./manage.sh verify         # lint + migrations + frontend checks + config-validate
-./manage.sh up-core        # admin-api, postgres, redis, reverse-proxy, bot
-./manage.sh migrate        # apply DB migrations
-./manage.sh seed           # create initial admin user
+./manage.sh verify          # lint + migrations + frontend checks + config-validate
+./manage.sh up-core         # admin-api, postgres, redis, reverse-proxy, bot
+./manage.sh migrate         # apply DB migrations
+./manage.sh seed            # create initial admin user
 ```
 
 Optional monitoring:
@@ -94,6 +94,14 @@ Optional monitoring:
 ```bash
 ./manage.sh up-monitoring  # Prometheus, Grafana, Loki, etc.
 ```
+
+For a **one-command bootstrap** on a fresh lab/staging host, you can also use:
+
+```bash
+./manage.sh bootstrap
+```
+
+This wraps verification, migrations, seeding, and agent-mode setup. For production, prefer the explicit step-by-step flow above plus the [Hardening Reference](hardening-reference-ubuntu.md).
 
 Validation (on the host):
 
