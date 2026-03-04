@@ -1,3 +1,4 @@
+/* eslint-disable react/forbid-dom-props */
 import { useEffect, useRef, type ReactNode } from "react";
 import { cn } from "../../utils/cn";
 

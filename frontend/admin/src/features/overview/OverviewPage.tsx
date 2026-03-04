@@ -197,10 +197,16 @@ export function OverviewPage() {
   }, [refetch, refetchOperator]);
 
   const strip = operatorData?.health_strip;
-  const servers = operatorData?.servers ?? [];
+  const servers = useMemo(
+    () => operatorData?.servers ?? [],
+    [operatorData?.servers]
+  );
   const timeseries = operatorData?.timeseries ?? [];
   const latencyTs = operatorData?.latency_timeseries ?? [];
-  const incidents = operatorData?.incidents ?? [];
+  const incidents = useMemo(
+    () => operatorData?.incidents ?? [],
+    [operatorData?.incidents]
+  );
 
   const { topTraffic, topCpu, maxTrafficBps, maxCpuPct } = useMemo(() => {
     const t = [...servers].sort((a, b) => (b.throughput_bps ?? 0) - (a.throughput_bps ?? 0)).slice(0, 5);

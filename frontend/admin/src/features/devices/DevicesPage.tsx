@@ -701,7 +701,6 @@ export function DevicesPage() {
               const first = list.items[0];
               const subId = first?.subscription_id;
               const hint = subId ? `Example subscription: ${subId}` : undefined;
-              // eslint-disable-next-line no-alert
               window.alert(
                 [
                   "To add a new device, go to the Users page, open a user, and use the 'Issue device' panel.",
@@ -711,7 +710,6 @@ export function DevicesPage() {
                   .join("\n\n")
               );
             } else {
-              // eslint-disable-next-line no-alert
               window.alert(
                 "To add a new device, go to the Users page, open a user, and use the 'Issue device' panel."
               );

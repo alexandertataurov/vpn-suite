@@ -9,6 +9,7 @@
  * - Alignment: text = left; numeric = right + tabular-nums; actions = right
  * - Overflow: truncate + title; table-layout: fixed; sticky header: yes
  */
+/* eslint-disable react/forbid-dom-props */
 import type { ReactNode } from "react";
 import { cn } from "../../utils/cn";
 import { Button } from "../buttons/Button";

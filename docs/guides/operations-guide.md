@@ -6,14 +6,17 @@ Consolidated ops reference for VPN Suite control plane and AmneziaWG nodes.
 
 ## Quick reference
 
-| Task | Command / Doc |
-|------|---------------|
-| Start core stack | `./manage.sh up-core` |
-| Agent mode bootstrap | `./manage.sh bootstrap` or [agent-mode-one-server.md](../ops/agent-mode-one-server.md) |
-| Prod bootstrap | `./ops/bootstrap-prod.sh` |
-| Backup DB | `./manage.sh backup-db` |
-| Restore DB | `./manage.sh restore-db --force <dump>` |
-| Rotate agent token | `./ops/rotate-agent-token.sh` |
+
+| Task                                                  | Command / Doc                                                                          |
+| ----------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| Start core stack                                      | `./manage.sh up-core`                                                                  |
+| Agent mode bootstrap                                  | `./manage.sh bootstrap` or [agent-mode-one-server.md](../ops/agent-mode-one-server.md) |
+| Prod bootstrap                                        | `./ops/bootstrap-prod.sh`                                                              |
+| Backup DB                                             | `./manage.sh backup-db`                                                                |
+| Restore DB                                            | `./manage.sh restore-db --force <dump>`                                                |
+| Rotate agent token                                    | `./ops/rotate-agent-token.sh`                                                          |
+| First install (Ubuntu LTS, single-node control plane) | [ops/install-ubuntu-lts.md](../ops/install-ubuntu-lts.md)                              |
+
 
 ---
 
@@ -58,3 +61,4 @@ Consolidated ops reference for VPN Suite control plane and AmneziaWG nodes.
 
 - [ops/release-checklist.md](../ops/release-checklist.md)
 - [ops/quality-gates.md](../ops/quality-gates.md)
+

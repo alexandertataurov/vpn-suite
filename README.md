@@ -8,6 +8,8 @@
 
 VPN Suite runs the control plane for AmneziaWG (WireGuard-compatible) VPN nodes and a Telegram bot for user signup, subscriptions (Telegram Stars), and device issuance. It targets operators who need a single dashboard for servers, devices, telemetry, and billing.
 
+> **Release status:** Public Beta for homelab / power users. See [docs/marketing/public-beta-launch-outline.md](docs/marketing/public-beta-launch-outline.md) for launch plan and current limitations.
+
 ## Features
 
 - **Admin API (FastAPI):** JWT auth, RBAC, audit log, CRUD for servers, users, subscriptions, plans, devices

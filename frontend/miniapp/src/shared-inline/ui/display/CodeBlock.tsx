@@ -1,3 +1,4 @@
+/* eslint-disable react/forbid-dom-props */
 import type { CSSProperties, ReactNode } from "react";
 import { cn } from "../../utils/cn";
 

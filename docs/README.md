@@ -23,6 +23,7 @@
 | Secrets / env | [ops/required-secrets.md](ops/required-secrets.md) |
 | Runbook (prod, backups, agent) | [ops/runbook.md](ops/runbook.md) |
 | Release & quality gates | [ops/release-checklist.md](ops/release-checklist.md) · [ops/quality-gates.md](ops/quality-gates.md) · [security/hardening.md](security/hardening.md) |
+| Production hardening (Ubuntu LTS reference) | [ops/hardening-reference-ubuntu.md](ops/hardening-reference-ubuntu.md) |
 | Codebase layout | [codebase-map.md](codebase-map.md) |
 | Agent mode setup | [ops/agent-mode-one-server.md](ops/agent-mode-one-server.md) |
 | DoD / MVP | [backlog/dod-mvp.md](backlog/dod-mvp.md) |

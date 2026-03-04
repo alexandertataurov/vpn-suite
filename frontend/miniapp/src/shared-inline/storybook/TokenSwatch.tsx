@@ -1,3 +1,4 @@
+/* eslint-disable react/forbid-dom-props */
 import { useCallback, useState, type CSSProperties } from "react";
 
 interface TokenSwatchProps {

@@ -1,3 +1,4 @@
+/* eslint-disable react/forbid-dom-props */
 import { useMemo, useRef, type CSSProperties, type ReactNode } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { cn } from "../../utils/cn";
