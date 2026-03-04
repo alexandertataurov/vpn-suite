@@ -300,12 +300,13 @@ html[data-theme="consumer-dark"] {
   --miniapp-space-6: var(--spacing-12);
 
   /* Typography contract: Display / H1 / H2 / H3 / Body / Caption */
-  --miniapp-text-display-size: 32px;
-  --miniapp-text-h1-size: 24px;
-  --miniapp-text-h2-size: 18px;
-  --miniapp-text-h3-size: 16px;
-  --miniapp-text-body-size: 14px;
-  --miniapp-text-caption-size: 12px;
+  /* Typography contract (Display / H1 / H2 / H3 / Body / Caption), scaled up ~20% */
+  --miniapp-text-display-size: 38px;
+  --miniapp-text-h1-size: 29px;
+  --miniapp-text-h2-size: 22px;
+  --miniapp-text-h3-size: 19px;
+  --miniapp-text-body-size: 17px;
+  --miniapp-text-caption-size: 14px;
 
   --miniapp-leading-display: 1.25;
   --miniapp-leading-heading: 1.3333333333;
@@ -445,10 +446,10 @@ html {
   --letter-spacing-wide: 0.025em;
   --letter-spacing-wider: 0.05em;
   --letter-spacing-widest: 0.1em;
-  --font-size-12: 12px;
-  --font-size-13: 13px;
-  --font-size-14: 14px;
-  --font-size-16: 16px;
+  --font-size-12: 14px;
+  --font-size-13: 16px;
+  --font-size-14: 17px;
+  --font-size-16: 19px;
   /* Legacy font sizes (deprecated) */
   --font-size-xs: 12px;
   --font-size-sm: 13px;
@@ -658,18 +659,18 @@ html {
   --chart-series-3: var(--color-gray-400);
   --chart-series-4: var(--color-gray-300);
   /* Brief typography (design ref: 16px base, tracking-tight headings) */
-  --text-xs: 12px;
-  --text-xs-line: 16px;
-  --text-sm: 13px;
-  --text-sm-line: 18px;
-  --text-base: 14px;
-  --text-base-line: 20px;
-  --text-lg: 16px;
-  --text-lg-line: 20px;
-  --text-xl: 16px;
-  --text-xl-line: 20px;
-  --text-2xl: 16px;
-  --text-2xl-line: 20px;
+  --text-xs: 14px;
+  --text-xs-line: 18px;
+  --text-sm: 16px;
+  --text-sm-line: 20px;
+  --text-base: 17px;
+  --text-base-line: 22px;
+  --text-lg: 19px;
+  --text-lg-line: 24px;
+  --text-xl: 19px;
+  --text-xl-line: 24px;
+  --text-2xl: 19px;
+  --text-2xl-line: 24px;
   --font-family: var(--font-sans);
   --font-normal: 400;
   --font-medium: 500;
@@ -1193,12 +1194,12 @@ html[data-theme="consumer-dark"] {
   --miniapp-space-5: var(--spacing-10);
   --miniapp-space-6: var(--spacing-12);
 
-  --miniapp-text-display-size: 32px;
-  --miniapp-text-h1-size: 24px;
-  --miniapp-text-h2-size: 18px;
-  --miniapp-text-h3-size: 16px;
-  --miniapp-text-body-size: 14px;
-  --miniapp-text-caption-size: 12px;
+  --miniapp-text-display-size: 38px;
+  --miniapp-text-h1-size: 29px;
+  --miniapp-text-h2-size: 22px;
+  --miniapp-text-h3-size: 19px;
+  --miniapp-text-body-size: 17px;
+  --miniapp-text-caption-size: 14px;
 
   --miniapp-leading-display: 1.25;
   --miniapp-leading-heading: 1.3333333333;

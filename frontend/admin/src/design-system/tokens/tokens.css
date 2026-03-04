@@ -64,20 +64,20 @@
   --font-mono: "IBM Plex Mono", monospace;
   --font-sans: "IBM Plex Sans", sans-serif;
 
-  /* Typography scale (IBM Plex) */
-  --text-2xs: 10px;
-  --text-xs: 11px;
-  --text-sm: 12px;
-  --text-base: 13px;
-  --text-md: 14px;
-  --text-lg: 16px;
-  --text-xl: 19px;
-  --text-2xl: 23px;
-  --text-3xl: 29px;
-  --text-4xl: 37px;
-  --text-5xl: 49px;
-  --text-6xl: 65px;
-  --text-7xl: 81px;
+  /* Typography scale (IBM Plex) — scaled up further for readability */
+  --text-2xs: 13px;
+  --text-xs: 14px;
+  --text-sm: 16px;
+  --text-base: 18px;
+  --text-md: 19px;
+  --text-lg: 21px;
+  --text-xl: 25px;
+  --text-2xl: 30px;
+  --text-3xl: 38px;
+  --text-4xl: 48px;
+  --text-5xl: 64px;
+  --text-6xl: 84px;
+  --text-7xl: 104px;
 
   --leading-none: 1;
   --leading-tight: 1.2;
@@ -118,11 +118,11 @@
   --elevation-1: none;
   --elevation-2: none;
 
-  --font-size-xs: 0.75rem;
-  --font-size-sm: 0.875rem;
-  --font-size-base: 1rem;
-  --font-size-lg: 1.125rem;
-  --font-size-xl: 1.25rem;
+  --font-size-xs: 0.9rem;
+  --font-size-sm: 1.05rem;
+  --font-size-base: 1.2rem;
+  --font-size-lg: 1.35rem;
+  --font-size-xl: 1.5rem;
   --line-height-tight: 1.25;
   --line-height-normal: 1.5;
   --line-height-relaxed: 1.75;

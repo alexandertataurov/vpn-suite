@@ -169,15 +169,6 @@ class TopologyEngine:
             update_topology_metrics(topology)
         except Exception as e:
             _log.debug("Metrics update failed: %s", e)
-        # Push dashboard timeseries so frontend has data in both agent and docker mode.
-        try:
-            await push_dashboard_timeseries(
-                current_load,
-                sum(n.total_rx_bytes or 0 for n in nodes),
-                sum(n.total_tx_bytes or 0 for n in nodes),
-            )
-        except Exception as e:
-            _log.debug("Dashboard timeseries push failed: %s", e)
         try:
             redis = get_redis()
             await redis.setex(
