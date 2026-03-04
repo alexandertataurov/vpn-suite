@@ -39,10 +39,14 @@ async def main() -> None:
         __import__("app.core.config", fromlist=["settings"]).settings, "redis_url", None
     )
     if not redis_url:
-        print("Set REDIS_URL (e.g. redis://localhost:6379/0) or run from admin-api container.", file=sys.stderr)
+        print(
+            "Set REDIS_URL (e.g. redis://localhost:6379/0) or run from admin-api container.",
+            file=sys.stderr,
+        )
         sys.exit(1)
     try:
         from redis.asyncio import Redis
+
         r = Redis.from_url(redis_url, decode_responses=True)
     except Exception as e:
         print(f"Redis connect failed: {e}", file=sys.stderr)
@@ -54,7 +58,10 @@ async def main() -> None:
         if server_id_filter and k == f"{REDIS_KEY_AGENT_HB_PREFIX}{server_id_filter}":
             break
 
-    if server_id_filter and not any(k.endswith(server_id_filter) or k == f"{REDIS_KEY_AGENT_HB_PREFIX}{server_id_filter}" for k in keys):
+    if server_id_filter and not any(
+        k.endswith(server_id_filter) or k == f"{REDIS_KEY_AGENT_HB_PREFIX}{server_id_filter}"
+        for k in keys
+    ):
         keys = [f"{REDIS_KEY_AGENT_HB_PREFIX}{server_id_filter}"]
 
     if not keys:
@@ -80,15 +87,23 @@ async def main() -> None:
             total_rx = int(hb.get("total_rx_bytes") or 0)
             total_tx = int(hb.get("total_tx_bytes") or 0)
             print(f"\n=== Server: {sid} ===")
-            print(f"  Peers: {peer_count}  |  RX: {_fmt_bytes(total_rx)}  |  TX: {_fmt_bytes(total_tx)}")
-            print(f"  Container: {hb.get('container_name') or '—'}  |  Status: {hb.get('status') or '—'}")
+            print(
+                f"  Peers: {peer_count}  |  RX: {_fmt_bytes(total_rx)}  |  TX: {_fmt_bytes(total_tx)}"
+            )
+            print(
+                f"  Container: {hb.get('container_name') or '—'}  |  Status: {hb.get('status') or '—'}"
+            )
             peers = hb.get("peers")
             if isinstance(peers, list) and peers:
                 print("  --- Per peer ---")
                 for p in peers:
                     if not isinstance(p, dict):
                         continue
-                    pk = (p.get("public_key") or "")[:20] + "..." if (p.get("public_key") or "") else "—"
+                    pk = (
+                        (p.get("public_key") or "")[:20] + "..."
+                        if (p.get("public_key") or "")
+                        else "—"
+                    )
                     rx = int(p.get("rx_bytes") or 0)
                     tx = int(p.get("tx_bytes") or 0)
                     age = p.get("last_handshake_age_sec")
@@ -97,7 +112,9 @@ async def main() -> None:
                         if isinstance(age, int | float) and age is not None and age >= 0
                         else "no handshake"
                     )
-                    print(f"    {pk}  RX: {_fmt_bytes(rx)}  TX: {_fmt_bytes(tx)}  handshake: {age_s}")
+                    print(
+                        f"    {pk}  RX: {_fmt_bytes(rx)}  TX: {_fmt_bytes(tx)}  handshake: {age_s}"
+                    )
     finally:
         await r.aclose()
     print()

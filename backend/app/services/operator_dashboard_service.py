@@ -551,9 +551,7 @@ async def fetch_operator_dashboard(
                 try:
                     containers = await service.list_containers("local")
                     docker_containers_by_name = {
-                        getattr(c, "name"): c
-                        for c in containers
-                        if getattr(c, "name", None)
+                        getattr(c, "name"): c for c in containers if getattr(c, "name", None)
                     }
                 except Exception:
                     docker_containers_by_name = {}

@@ -55,7 +55,9 @@ class DeviceTelemetryOut(BaseModel):
     handshake_age_sec: int | None = None
     transfer_rx_bytes: int | None = None
     transfer_tx_bytes: int | None = None
-    rtt_ms: float | None = None  # Round-trip time (ms); from node agent when available (e.g. ping to tunnel IP)
+    rtt_ms: float | None = (
+        None  # Round-trip time (ms); from node agent when available (e.g. ping to tunnel IP)
+    )
     endpoint: str | None = None
     allowed_ips_on_node: str | None = None
     peer_present: bool = False

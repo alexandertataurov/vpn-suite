@@ -74,4 +74,3 @@ async def download_awg_config_via_token(
         "Referrer-Policy": "no-referrer",
     }
     return Response(content=config_text, media_type=headers["Content-Type"], headers=headers)
-

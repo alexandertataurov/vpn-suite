@@ -882,7 +882,9 @@ async def get_awg_download_link(
 
     ttl = getattr(settings, "awg_download_token_ttl_seconds", 600) or 600
     try:
-        token = await create_one_time_token(db, device_id=device_id, kind="awg_conf", ttl_seconds=ttl)
+        token = await create_one_time_token(
+            db, device_id=device_id, kind="awg_conf", ttl_seconds=ttl
+        )
     except ValueError:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Device not found")
 

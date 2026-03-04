@@ -38,9 +38,7 @@ async def get_admin_by_email(session: AsyncSession, email: str) -> AdminUser | N
     norm = (email or "").strip().lower()
     if not norm:
         return None
-    result = await session.execute(
-        select(AdminUser).where(func.lower(AdminUser.email) == norm)
-    )
+    result = await session.execute(select(AdminUser).where(func.lower(AdminUser.email) == norm))
     return result.scalar_one_or_none()
 
 

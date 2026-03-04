@@ -54,4 +54,3 @@ async def test_awg_download_link_flow(async_session: AsyncSession):
     # Therefore, keep this as a smoke test that /d/<token> returns a 4xx for an obviously bad token.
     resp = client.get("/d/invalid-token")
     assert resp.status_code in (400, 410, 404)
-

@@ -174,7 +174,9 @@ async def run_telemetry_poll_loop(get_adapter) -> None:
                 continue
             async with async_session_factory() as session:
                 # Fetch all servers to build stable alias mapping (devices may reference old/inactive ids).
-                r_all = await session.execute(select(Server.id, Server.api_endpoint, Server.is_active))
+                r_all = await session.execute(
+                    select(Server.id, Server.api_endpoint, Server.is_active)
+                )
                 all_servers = r_all.all()
                 servers = [(sid, ep) for (sid, ep, is_active) in all_servers if bool(is_active)]
                 server_ids = [s[0] for s in servers]

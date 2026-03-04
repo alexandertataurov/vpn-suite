@@ -4,6 +4,7 @@ Usage: cat your.conf | python qr_from_config.py [out.png]
   Or:  python qr_from_config.py config.conf [out.png]
 No default config (avoids committing secrets). Config from stdin or file only.
 """
+
 import sys
 
 import qrcode

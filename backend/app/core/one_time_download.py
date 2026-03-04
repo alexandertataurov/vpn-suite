@@ -85,4 +85,3 @@ async def verify_and_consume_one_time_token(
     item.consumed_at = now
     await session.commit()
     return {"device_id": item.device_id, "kind": item.kind}
-

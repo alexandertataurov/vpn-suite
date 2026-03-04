@@ -241,5 +241,3 @@ def sanitize_awg_conf(conf_text: str) -> str:
 
     # Always end with a single trailing newline for POSIX-style configs
     return "\n".join(normalized).rstrip("\n") + "\n"
-
-

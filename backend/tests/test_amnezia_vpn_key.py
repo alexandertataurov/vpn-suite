@@ -153,4 +153,3 @@ PersistentKeepalive = 15
     cont = decoded["containers"][0]
     awg = cont["awg"]
     assert "protocol_version" not in awg
-

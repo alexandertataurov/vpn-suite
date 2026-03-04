@@ -18,8 +18,9 @@ from __future__ import annotations
 import re
 import sys
 from collections import Counter
+from collections.abc import Iterable, Mapping
 from pathlib import Path
-from typing import Iterable, List, Mapping, TypedDict
+from typing import TypedDict
 
 
 class ParsedAlert(TypedDict):
@@ -159,8 +160,8 @@ _ALERT_TEMPLATES: Mapping[str, Mapping[str, str]] = {
 }
 
 
-def parse_alerts(lines: Iterable[str]) -> List[ParsedAlert]:
-    alerts: List[ParsedAlert] = []
+def parse_alerts(lines: Iterable[str]) -> list[ParsedAlert]:
+    alerts: list[ParsedAlert] = []
     for line in lines:
         m = _LINE_RE.search(line)
         if not m:
@@ -218,4 +219,3 @@ def main(argv: list[str]) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main(sys.argv))
-

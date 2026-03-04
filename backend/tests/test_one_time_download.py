@@ -23,7 +23,9 @@ async def test_one_time_token_lifecycle(async_session: AsyncSession):
     async_session.add(device)
     await async_session.commit()
 
-    token = await create_one_time_token(async_session, device_id=device.id, kind="awg_conf", ttl_seconds=600)
+    token = await create_one_time_token(
+        async_session, device_id=device.id, kind="awg_conf", ttl_seconds=600
+    )
     assert token
 
     # First verification succeeds
@@ -56,7 +58,9 @@ async def test_one_time_token_expired(async_session: AsyncSession):
     async_session.add(device)
     await async_session.commit()
 
-    token = await create_one_time_token(async_session, device_id=device.id, kind="awg_conf", ttl_seconds=1)
+    token = await create_one_time_token(
+        async_session, device_id=device.id, kind="awg_conf", ttl_seconds=1
+    )
     assert token
 
     # Manually backdate expires_at
@@ -69,4 +73,3 @@ async def test_one_time_token_expired(async_session: AsyncSession):
 
     payload = await verify_and_consume_one_time_token(async_session, token=token)
     assert payload is None
-

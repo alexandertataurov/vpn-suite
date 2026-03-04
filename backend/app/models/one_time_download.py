@@ -23,4 +23,3 @@ class OneTimeDownloadToken(Base, TimestampMixin):
     consumed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     device: Mapped["Device"] = relationship("Device", back_populates="download_tokens")
-

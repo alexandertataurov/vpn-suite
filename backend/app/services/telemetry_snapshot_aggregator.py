@@ -143,11 +143,7 @@ async def run_snapshot_aggregator(env: str = DEFAULT_ENV) -> None:
             down_count += 1
         rx = int(telem.get("total_rx_bytes") or 0) if telem else 0
         tx = int(telem.get("total_tx_bytes") or 0) if telem else 0
-        peers = (
-            int(telem.get("online_count") or telem.get("peers_count") or 0)
-            if telem
-            else 0
-        )
+        peers = int(telem.get("online_count") or telem.get("peers_count") or 0) if telem else 0
         node_entries.append(
             {
                 "id": sid,

@@ -20,7 +20,9 @@ def upgrade() -> None:
     op.create_table(
         "one_time_download_tokens",
         sa.Column("id", sa.String(length=32), primary_key=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
         sa.Column("token_hash", sa.String(length=64), nullable=False),
         sa.Column("device_id", sa.String(length=32), nullable=False),
         sa.Column("kind", sa.String(length=32), nullable=False),
@@ -50,4 +52,3 @@ def downgrade() -> None:
     op.drop_index("ix_one_time_download_tokens_device_id", table_name="one_time_download_tokens")
     op.drop_index("ix_one_time_download_tokens_token_hash", table_name="one_time_download_tokens")
     op.drop_table("one_time_download_tokens")
-
