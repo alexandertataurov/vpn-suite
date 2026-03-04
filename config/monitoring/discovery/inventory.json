@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-03-04T08:41:25.888452+00:00",
+  "timestamp": "2026-03-04T09:23:06.291466+00:00",
   "nodes": [
     {
       "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
-      "node_id": "docker:6b8128a53ebd",
+      "node_id": "docker:ea9dc5010069",
       "source": "docker",
       "kind": "unknown",
       "classification": {
@@ -20,9 +20,9 @@
       "evidence": [
         "no_match"
       ],
-      "container_id": "6b8128a53ebd",
+      "container_id": "ea9dc5010069",
       "image": "vpn-suite-reverse-proxy:local",
-      "created": "2026-03-04T08:39:47.498216114Z",
+      "created": "2026-03-04T08:42:43.604830836Z",
       "ports": [
         {
           "port": 2019,
@@ -46,20 +46,20 @@
         }
       ],
       "mounts": [
+        "/etc/caddy/agent_ca.pem",
+        "/data",
         "/etc/caddy/Caddyfile",
         "/srv/root",
         "/srv/webapp",
         "/srv/admin",
-        "/srv/storybook",
-        "/etc/caddy/agent_ca.pem",
-        "/data"
+        "/srv/storybook"
       ],
       "interface": null,
       "public_key": null
     },
     {
       "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
-      "node_id": "docker:b1d85cd219f9",
+      "node_id": "docker:8a2a8e83e305",
       "source": "docker",
       "kind": "unknown",
       "classification": {
@@ -76,9 +76,9 @@
       "evidence": [
         "no_match"
       ],
-      "container_id": "b1d85cd219f9",
+      "container_id": "8a2a8e83e305",
       "image": "vpn-suite-admin-api",
-      "created": "2026-03-04T08:39:36.667899651Z",
+      "created": "2026-03-04T08:42:33.10495036Z",
       "ports": [
         {
           "port": 8000,
@@ -217,8 +217,8 @@
         }
       ],
       "mounts": [
-        "/etc/redis/redis.conf",
-        "/data"
+        "/data",
+        "/etc/redis/redis.conf"
       ],
       "interface": null,
       "public_key": null
@@ -335,11 +335,11 @@
         }
       ],
       "mounts": [
+        "/app/secrets/agent_client_cert.pem",
         "/app/secrets/agent_client_key.pem",
         "/app/secrets/agent_ca.pem",
         "/var/run/docker.sock",
-        "/etc/vpn-suite/node-id",
-        "/app/secrets/agent_client_cert.pem"
+        "/etc/vpn-suite/node-id"
       ],
       "interface": null,
       "public_key": null
@@ -487,8 +487,8 @@
         }
       ],
       "mounts": [
-        "/etc/tempo/tempo.yaml",
-        "/var/tempo"
+        "/var/tempo",
+        "/etc/tempo/tempo.yaml"
       ],
       "interface": null,
       "public_key": null
@@ -599,11 +599,11 @@
         }
       ],
       "mounts": [
+        "/srv/root",
         "/srv/webapp",
         "/srv/admin",
         "/data",
-        "/etc/caddy/Caddyfile",
-        "/srv/root"
+        "/etc/caddy/Caddyfile"
       ],
       "interface": null,
       "public_key": null
@@ -739,9 +739,9 @@
         }
       ],
       "mounts": [
+        "/etc/alertmanager/alertmanager.yml",
         "/etc/alertmanager/entrypoint.sh",
-        "/alertmanager",
-        "/etc/alertmanager/alertmanager.yml"
+        "/alertmanager"
       ],
       "interface": null,
       "public_key": null
@@ -775,11 +775,11 @@
         }
       ],
       "mounts": [
-        "/rootfs",
-        "/var/run",
         "/sys",
         "/var/lib/docker",
-        "/dev/disk"
+        "/dev/disk",
+        "/rootfs",
+        "/var/run"
       ],
       "interface": null,
       "public_key": null
@@ -813,12 +813,12 @@
         }
       ],
       "mounts": [
-        "/etc/prometheus/prometheus.yml",
-        "/etc/prometheus/alert_rules.yml",
-        "/etc/prometheus/alerts",
         "/etc/prometheus/recording_rules.yml",
         "/etc/prometheus/file_sd",
-        "/prometheus"
+        "/prometheus",
+        "/etc/prometheus/prometheus.yml",
+        "/etc/prometheus/alert_rules.yml",
+        "/etc/prometheus/alerts"
       ],
       "interface": null,
       "public_key": null
@@ -883,10 +883,10 @@
       "created": "2026-03-01T14:10:54.419552667Z",
       "ports": [],
       "mounts": [
-        "/var/log",
         "/etc/promtail/config.yml",
         "/promtail",
-        "/var/lib/docker/containers"
+        "/var/lib/docker/containers",
+        "/var/log"
       ],
       "interface": null,
       "public_key": null

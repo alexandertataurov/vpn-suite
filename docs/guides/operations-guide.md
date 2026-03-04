@@ -62,3 +62,58 @@ Consolidated ops reference for VPN Suite control plane and AmneziaWG nodes.
 - [ops/release-checklist.md](../ops/release-checklist.md)
 - [ops/quality-gates.md](../ops/quality-gates.md)
 
+---
+
+## 6. Public Beta — Launch Day Checklist
+
+Owner is the operator running the control plane unless noted otherwise.
+
+1. **Docs and install guide up-to-date**
+   - Owner: docs/ops.
+   - Commands/docs:
+     - Confirm `git status` clean on `main` and tagged release created.
+     - Re-run [docs/ops/install-ubuntu-lts.md](../ops/install-ubuntu-lts.md) on a fresh VM and update if anything changed.
+2. **Quality gates green**
+   - Owner: backend/frontend.
+   - Command: `./manage.sh check` (lint/tests/build) and `./manage.sh verify` (migrate integrity + config-validate).
+   - Expected: both commands exit 0.
+3. **Reference deployment hardened under light real traffic**
+   - Owner: ops.
+   - Docs:
+     - [docs/ops/hardening-reference-ubuntu.md](../ops/hardening-reference-ubuntu.md)
+     - [docs/ops/runbook.md](../ops/runbook.md) (backups + restore).
+   - Manual test:
+     - At least one AmneziaWG node attached via agent mode.
+     - At least one real device connected and passing traffic.
+4. **Grafana dashboards and alerts sane**
+   - Owner: ops/observability.
+   - Commands/docs:
+     - `./manage.sh up-monitoring`
+     - Validate [docs/observability/validation.md](../observability/validation.md) and [docs/observability/launch-kpis.md](../observability/launch-kpis.md).
+   - Manual test:
+     - Dashboards show:
+       - Control plane healthy.
+       - Telemetry pipeline running (poll runs and snapshot staleness acceptable).
+     - Minimal launch alerts:
+       - Fire when you intentionally stop admin-api or Postgres.
+       - Stay quiet under normal light traffic (no constant noise).
+5. **Announcement assets ready**
+   - Owner: marketing/maintainer.
+   - Docs:
+     - [docs/marketing/public-beta-announcement.md](../marketing/public-beta-announcement.md)
+     - [docs/marketing/public-beta-launch-outline.md](../marketing/public-beta-launch-outline.md)
+   - Manual check:
+     - Post text proofread.
+     - Links to README, install, hardening, and docs verified.
+6. **Demo video recorded**
+   - Owner: maintainer.
+   - Script: [docs/marketing/public-beta-demo-script.md](../marketing/public-beta-demo-script.md).
+   - Manual check:
+     - Video uploaded (unlisted or public).
+     - URLs added to README/docs where appropriate.
+7. **Support surfaces ready**
+   - Owner: ops/maintainer.
+   - Manual check:
+     - GitHub Issues templates/labels in place.
+     - Telegram operator channel (and optional support chat) created, with links documented in `README.md` and marketing docs.
+

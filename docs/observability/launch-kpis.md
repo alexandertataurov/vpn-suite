@@ -33,6 +33,14 @@ Goal: “How many operators got from `git clone` to a working control plane with
   - Optional: dashboard traffic:
     - `vpn_node_traffic_rx_bytes`, `vpn_node_traffic_tx_bytes`.
 
+**Suggested targets for Public Beta:**
+
+- At least **1 reference deployment** (your own) with:
+  - `vpn_suite_info{version="<tag>"}` == 1
+  - ≥ 1 healthy/degraded Server
+  - ≥ 1 active Device that has sent traffic in the last 24h.
+- For early adopters, aim for **≥70%** of operators who start install to reach “first device connected” within 1 day.
+
 **How to instrument:**
 
 - Add a simple Grafana panel:
@@ -72,6 +80,14 @@ Example Grafana panels:
   - `increase(funnel_events_total{event_type="start"}[1d])`
   - `increase(funnel_events_total{event_type="issue"}[1d])`
 
+**Suggested targets for Week 1:**
+
+- Admin activity:
+  - At least **3 distinct admin logins** in the first week for your own deployment.
+  - For early adopters, see at least **some admin actions** (issues/revokes/rotations) rather than “abandoned after install”.
+- Funnel:
+  - Ratio `issue` / `start` for funnel events ≥ **30%** (operators who start the flow should usually reach issuance).
+
 ### 2.2 Device & Tunnel Health
 
 **Metrics:**
@@ -106,6 +122,15 @@ Use these for:
 - “Active subscriptions (timeseries)” — `vpn_revenue_subscriptions_active`.
 - “Payments by plan” — `increase(vpn_revenue_payment_total[30d]) by (plan_id)`.
 - “Churn reasons (30d)” — `increase(vpn_revenue_churn_total[30d]) by (reason)`.
+
+**Suggested targets for Month 1:**
+
+- Retention:
+  - `vpn_revenue_renewal_total` indicates at least **80%** of subscriptions renew once, when active subs > 10.
+  - Churn reasons from `vpn_revenue_churn_total` dominated by “experimentation ended” rather than “unreliable”.
+- Stability:
+  - No more than **1 critical incident per month** that requires taking the control plane fully offline.
+  - Alert noise low enough that operators do not mute the minimal launch alert set.
 
 ### 3.2 Errors & Incidents
 
@@ -161,4 +186,15 @@ Track responses in your own tooling and correlate them with:
 
 - Error/incident history from Prometheus.
 - Adoption metrics (issues, devices, nodes).
+
+**Practical setup for Public Beta:**
+
+- Create a pinned message in the Telegram operator channel (or a short form) with the three questions above.
+- After launch, pick a simple review cadence (e.g. weekly for the first month):
+  - Export or summarize responses.
+  - Compare against:
+    - Activation metrics (first-device success).
+    - Week 1 usage (admin actions, funnel events).
+    - Month 1 retention and incident history.
+  - Capture 2–3 “top pains” and 1–2 “least missed” features to drive the next iteration.
 

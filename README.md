@@ -6,9 +6,9 @@
 
 ## Overview
 
-VPN Suite runs the control plane for AmneziaWG (WireGuard-compatible) VPN nodes and a Telegram bot for user signup, subscriptions (Telegram Stars), and device issuance. It targets operators who need a single dashboard for servers, devices, telemetry, and billing.
+VPN Suite runs the control plane for AmneziaWG (WireGuard-compatible) VPN nodes and a Telegram bot for user signup, subscriptions (Telegram Stars), and device issuance. It targets a **technically capable homelab / small-ops operator** who wants a single dashboard for servers, devices, telemetry, and billing rather than a generic consumer VPN.
 
-> **Release status:** Public Beta for homelab / power users. See [docs/marketing/public-beta-launch-outline.md](docs/marketing/public-beta-launch-outline.md) for launch plan and current limitations.
+> **Release status:** Public Beta for homelab / power users running their own AmneziaWG/WireGuard clusters. See [docs/marketing/public-beta-launch-outline.md](docs/marketing/public-beta-launch-outline.md) for launch plan, current limitations, and who this is *not* for.
 
 ## Features
 
@@ -41,9 +41,11 @@ cp .env.example .env
 ## Installation
 
 - **Requirements:** Docker and Docker Compose, Bash. For agent mode: `DOCKER_GID` on nodes.
+- **First install (Ubuntu LTS, single-node control plane):** [docs/ops/install-ubuntu-lts.md](docs/ops/install-ubuntu-lts.md)
 - **Clone and configure:** Copy `.env.example` to `.env`, set required variables (see [Configuration](#configuration)).
 - **Start core:** `./manage.sh up-core`. Optional: `./manage.sh up-monitoring` for Prometheus/Grafana/Loki.
 - **Migrations and seed:** `./manage.sh migrate`, `./manage.sh seed` (and `./manage.sh seed-agent-server` if using agent).
+- **Hardening baseline (Ubuntu LTS reference):** [docs/ops/hardening-reference-ubuntu.md](docs/ops/hardening-reference-ubuntu.md)
 - **Production:** Use `NODE_DISCOVERY=agent` and `NODE_MODE=agent`; run node-agent on each VPN host via `./manage.sh up-agent`. See [docs/ops/agent-mode-one-server.md](docs/ops/agent-mode-one-server.md).
 
 ## Configuration
@@ -99,6 +101,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for design-system contract (tokens, compo
 
 - [docs/README.md](docs/README.md) — full doc index
 - [docs/guides/](docs/guides/README.md) — ops, observability, development guides
+- [docs/ops/runbook.md](docs/ops/runbook.md) — production runbook (start/stop, backups, troubleshooting)
 - [AGENTS.MD](AGENTS.MD) — architecture and constraints (for agents)
 
 ## Stack

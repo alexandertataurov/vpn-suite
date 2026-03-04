@@ -132,6 +132,38 @@ Expected:
 - **Reissue device:** Use API `POST /api/v1/devices/{device_id}/reissue` with admin auth. Blocks with 409 if server key not verified; run server:sync first if needed.
 - **Support bundle:** `./manage.sh support-bundle [--output DIR]` collects bounded service logs (admin-api, admin-worker), Redis agent heartbeat keys list, and manifest. For last N audit events use `GET /api/v1/audit?limit=N` with admin auth.
 
+## Day-2 incidents (common patterns)
+
+- **Telemetry pipeline stalled**
+  - Symptom: dashboards show stale data; alerts `TelemetryPipelineStalled` fire; `vpn_server_snapshot_staleness_seconds` keeps growing.
+  - Checks:
+    - `./manage.sh up-monitoring` and `curl -sS http://127.0.0.1:${PROMETHEUS_HOST_PORT:-19090}/-/ready`
+    - `curl -sS http://127.0.0.1:8000/metrics | rg 'telemetry_poll_runs_total|vpn_server_snapshot_staleness_seconds'`
+    - `docker compose logs admin-worker --since 15m | rg 'telemetry|snapshot|error'`
+  - Fix:
+    - Restart telemetry worker container; verify `telemetry_poll_runs_total` increases and staleness drops.
+    - For a single server: `./manage.sh server:sync <server_id>` and refresh `/admin/servers` + Grafana node health dashboards.
+
+- **Node drift / peers mismatch**
+  - Symptom: devices appear active in Admin but no traffic; alerts `VpnPeersDrift` / `VpnPeersAllMissing` or `VpnDevicesNoHandshake` fire.
+  - Checks:
+    - Admin: open server detail and compare desired vs runtime peers.
+    - Prometheus: `vpn_peers_expected`, `vpn_peers_present`, `vpn_devices_no_handshake`.
+    - Node: `wg show` or AmneziaWG UI for actual peers.
+  - Fix:
+    - Run `./manage.sh server:reconcile <server_id>` (agent mode preferred) and monitor drift metrics.
+    - If keys are out of sync, run `./manage.sh server:sync <server_id>` then reissue affected devices.
+
+- **Payments failing**
+  - Symptom: alerts `PaymentWebhookFailureRate` / `PaymentsErrorBudgetBurn*` fire; operators report missing activations.
+  - Checks:
+    - Grafana payment health dashboard (webhook rate by status).
+    - Prometheus: `payment_webhook_total` and `vpn_revenue_payment_total`.
+    - Admin logs: `docker compose logs admin-api --since 30m | rg 'payment|telegram_stars|webhook'`.
+  - Fix:
+    - Confirm `TELEGRAM_STARS_WEBHOOK_SECRET` and bot token in `.env`.
+    - Replay a single webhook from provider if supported; monitor that `payment_webhook_total{status="processed"}` increases and alerts clear.
+
 ## Rollback and feature-flag mitigations
 
 - **Disable env editor:** `APP_ENV_EDITOR_ENABLED=0`

@@ -3,16 +3,8 @@
 # p95 latency for /api/v1/servers: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{path_template=~"/api/v1/servers.*"}[5m])) by (le, path_template))
 groups:
   - name: vpn-suite
+    # Minimal launch alert set: control-plane, DB/Redis, schedulable nodes, telemetry pipeline.
     rules:
-      - alert: ScrapeTargetDown
-        expr: up == 0
-        for: 5m
-        labels:
-          severity: warning
-        annotations:
-          summary: "Scrape target is down"
-          description: "Prometheus target is down for >5m (job={{ $labels.job }}, instance={{ $labels.instance }}). Check /api/v1/targets and service logs."
-
       - alert: AdminApiDown
         expr: up{job="admin-api"} == 0
         for: 1m
@@ -24,187 +16,54 @@ groups:
           runbook_url: "https://github.com/your-org/vpn-suite/blob/main/docs/ops/runbook.md"
           dashboard_url: "https://grafana.example.com/d/vpn-overview"
 
-      - alert: HighErrorRate
+      # Control-plane degraded: readiness failures on /health/ready.
+      - alert: AdminApiReadinessFailures
+        expr: rate(http_errors_total{path_template="/health/ready", error_type="INTERNAL_ERROR"}[5m]) > 0
+        for: 5m
+        labels:
+          severity: warning
+          affected_service: admin-api
+        annotations:
+          summary: "Admin API readiness failures on /health/ready"
+          description: "Readiness check is failing for >5m. Check admin-api logs and DB/Redis connectivity."
+
+      # DB / Redis unavailable: derived from readiness and DB health metrics.
+      - alert: DbOrRedisUnavailable
         expr: |
-          (sum(rate(http_requests_total{status_class="5xx"}[1m]))
-          /
-          (sum(rate(http_requests_total[1m])) + 1e-9)) > 0.01
-          and sum(rate(http_requests_total[1m])) > 0
+          http_errors_total{path_template="/health/ready", error_type="INTERNAL_ERROR"} > 0
+        for: 5m
+        labels:
+          severity: critical
+          affected_service: database
+        annotations:
+          summary: "DB or Redis unavailable according to readiness checks"
+          description: "Control-plane readiness failing due to storage dependencies. Check Postgres and Redis containers and logs."
+
+      # No schedulable nodes: vpn_nodes_total absent or no healthy/degraded nodes.
+      - alert: VpnNoSchedulableNodes
+        expr: absent(vpn_nodes_total) or sum(vpn_nodes_total{status=~"healthy|degraded"}) < 1
         for: 1m
         labels:
           severity: critical
-          affected_service: admin-api
+          affected_service: vpn-cluster
         annotations:
-          summary: "Error rate >1% on admin-api"
-          runbook_url: "https://github.com/your-org/vpn-suite/blob/main/docs/ops/runbook.md"
-          dashboard_url: "https://grafana.example.com/d/vpn-overview"
-
-      - alert: AdminPathsHighErrorRate
-        expr: |
-          sum(rate(http_requests_total{job="admin-api", status_class="5xx", path_template=~"/api/v1/(overview|servers|audit|cluster|control-plane|telemetry).*"}[5m]))
-          /
-          sum(rate(http_requests_total{job="admin-api", path_template=~"/api/v1/(overview|servers|audit|cluster|control-plane|telemetry).*"}[5m])) > 0.05
-        for: 2m
-        labels:
-          severity: warning
-        annotations:
-          summary: "High 5xx rate on admin key paths (overview, servers, audit, cluster, control-plane, telemetry)"
-
-      - alert: ServersAPIHigh5xxRate
-        expr: |
-          sum(rate(http_requests_total{path_template=~"/api/v1/servers.*", status_class="5xx"}[5m])) > 0.01
-        for: 2m
-        labels:
-          severity: warning
-        annotations:
-          summary: "Servers API 5xx rate exceeds threshold"
-          description: "Servers list/detail endpoint 5xx rate > 0.01/s. Check admin-api logs. Use request_id from error responses for correlation."
-
-      - alert: OverviewOperatorHigh5xxRate
-        expr: |
-          sum(rate(http_requests_total{path_template="/api/v1/overview/operator", status_class="5xx"}[5m])) > 0.005
-        for: 2m
-        labels:
-          severity: warning
-        annotations:
-          summary: "Operator overview endpoint 5xx rate exceeds threshold"
-          description: "GET /api/v1/overview/operator is failing. Check operator dashboard logs and request_id."
-
-      - alert: OverviewOperatorPrometheusDegraded
-        expr: |
-          sum(increase(prometheus_query_failures_total{query_name=~"core_batch_empty|api_up|vpn_nodes_online|vpn_cluster_load|vpn_peers|error_rate|latency_p50"}[5m])) >= 5
-        for: 2m
-        labels:
-          severity: warning
-        annotations:
-          summary: "Operator overview telemetry is degraded"
-          description: "Prometheus queries for /api/v1/overview/operator are repeatedly failing or returning empty core data."
-
-      - record: servers_api_p95_latency_seconds
-        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{path_template=~"/api/v1/servers.*"}[5m])) by (le, path_template))
-
-      # Scoped to critical paths to avoid false positives from heavy list/export endpoints.
-      - alert: HighLatency
-        expr: |
-          histogram_quantile(0.95,
-            sum(rate(http_request_duration_seconds_bucket{job="admin-api", path_template=~"/api/v1/servers.*|/health|/api/v1/cluster.*"}[5m])) by (le)
-          ) > 2
-        for: 5m
-        labels:
-          severity: warning
-        annotations:
-          summary: "95th percentile latency > 2s (critical paths: servers, health, cluster)"
-          runbook_url: "https://vpn.vega.llc/docs/ops/runbook.md"
+          summary: "No healthy/degraded VPN nodes are schedulable"
+          description: "Scheduler cannot place new peers. Check node discovery, health, and agent connectivity."
+          runbook_url: "https://vpn.vega.llc/docs/ops/runbook.md#vpn-cluster"
           dashboard_url: "https://vpn.vega.llc/grafana/d/vpn-overview"
 
-      - alert: WebappAuthErrorRateHigh
+      # Telemetry pipeline stalled: polling loop not running or snapshots stale.
+      - alert: TelemetryPipelineStalled
         expr: |
-          sum(rate(http_requests_total{job="admin-api", path_template="/api/v1/webapp/auth", status_class="5xx"}[5m]))
-          /
-          (sum(rate(http_requests_total{job="admin-api", path_template="/api/v1/webapp/auth"}[5m])) + 1e-9)
-          > 0.02
-        for: 5m
+          increase(telemetry_poll_runs_total[10m]) == 0
+          or max(vpn_server_snapshot_staleness_seconds) > 600
+        for: 10m
         labels:
           severity: warning
-          affected_service: webapp
+          affected_service: telemetry
         annotations:
-          summary: "WebApp auth 5xx rate > 2%"
-          description: "WebApp auth is failing. Check admin-api logs and auth config."
-          runbook_url: "https://github.com/your-org/vpn-suite/blob/main/docs/ops/runbook.md"
-          dashboard_url: "https://grafana.example.com/d/vpn-suite-observability"
-
-      - alert: WebappAuthLatencyHigh
-        expr: |
-          histogram_quantile(
-            0.95,
-            sum(rate(http_request_duration_seconds_bucket{job="admin-api", path_template="/api/v1/webapp/auth"}[5m])) by (le)
-          ) > 1
-        for: 5m
-        labels:
-          severity: warning
-          affected_service: webapp
-        annotations:
-          summary: "WebApp auth latency p95 > 1s"
-          description: "WebApp auth latency is high. Check DB, Telegram validation, and token signing."
-          runbook_url: "https://github.com/your-org/vpn-suite/blob/main/docs/ops/runbook.md"
-          dashboard_url: "https://grafana.example.com/d/vpn-suite-observability"
-
-      - alert: FrontendErrorSpike
-        expr: sum(rate(frontend_errors_total[5m])) by (app) > 0.1
-        for: 5m
-        labels:
-          severity: warning
-        annotations:
-          summary: "Frontend error spike"
-          description: "Frontend error reports exceed 0.1/s for app={{ $labels.app }}. Check recent deploys and error logs."
-          runbook_url: "https://github.com/your-org/vpn-suite/blob/main/docs/ops/runbook.md"
-          dashboard_url: "https://grafana.example.com/d/vpn-suite-observability"
-
-      # Payments SLO: 99% webhook processing success (error budget 1%).
-      - alert: PaymentsErrorBudgetBurnFast
-        expr: |
-          (
-            sum(rate(payment_webhook_total{status="failed"}[5m]))
-            /
-            (sum(rate(payment_webhook_total[5m])) + 1e-9)
-          ) / 0.01 > 14.4
-        for: 5m
-        labels:
-          severity: critical
-          slo: payments
-        annotations:
-          summary: "Payments error budget burn fast (99% SLO)"
-          description: "Fast-burn: payment webhook failures exceed 14.4x budget."
-          runbook_url: "https://github.com/your-org/vpn-suite/blob/main/docs/ops/runbook.md"
-
-      - alert: PaymentsErrorBudgetBurnSlow
-        expr: |
-          (
-            sum(rate(payment_webhook_total{status="failed"}[30m]))
-            /
-            (sum(rate(payment_webhook_total[30m])) + 1e-9)
-          ) / 0.01 > 6
-        for: 30m
-        labels:
-          severity: warning
-          slo: payments
-        annotations:
-          summary: "Payments error budget burn slow (99% SLO)"
-          description: "Slow-burn: sustained payment webhook failures."
-          runbook_url: "https://github.com/your-org/vpn-suite/blob/main/docs/ops/runbook.md"
-
-      # Provisioning SLO: 99% issuance success (error budget 1%).
-      - alert: ProvisioningErrorBudgetBurnFast
-        expr: |
-          (
-            sum(rate(vpn_admin_issue_total{status="failure"}[5m]))
-            /
-            (sum(rate(vpn_admin_issue_total[5m])) + 1e-9)
-          ) / 0.01 > 14.4
-        for: 5m
-        labels:
-          severity: critical
-          slo: provisioning
-        annotations:
-          summary: "Provisioning error budget burn fast (99% SLO)"
-          description: "Fast-burn: issuance failures exceed 14.4x budget."
-          runbook_url: "https://github.com/your-org/vpn-suite/blob/main/docs/ops/runbook.md"
-
-      - alert: ProvisioningErrorBudgetBurnSlow
-        expr: |
-          (
-            sum(rate(vpn_admin_issue_total{status="failure"}[30m]))
-            /
-            (sum(rate(vpn_admin_issue_total[30m])) + 1e-9)
-          ) / 0.01 > 6
-        for: 30m
-        labels:
-          severity: warning
-          slo: provisioning
-        annotations:
-          summary: "Provisioning error budget burn slow (99% SLO)"
-          description: "Slow-burn: sustained issuance failures."
-          runbook_url: "https://github.com/your-org/vpn-suite/blob/main/docs/ops/runbook.md"
+          summary: "Telemetry pipeline stalled (no poll runs or snapshots too stale)"
+          description: "Telemetry polling loop has not run in 10m or snapshot staleness > 10m. Check telemetry worker logs and Prometheus targets."
 
       # SLO burn alerts (admin-api)
       # Error budget: 0.5% (99.5% success). Burn rate thresholds: 14.4 (fast) / 6 (slow).
