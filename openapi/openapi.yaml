@@ -4628,6 +4628,96 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/devices/config-health:
+    get:
+      tags:
+      - devices
+      summary: Devices Config Health
+      description: Advanced config health for devices (reconciliation status, telemetry, and attention list).
+      operationId: devices_config_health_api_v1_devices_config_health_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 2000
+          default: 500
+          title: Limit
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/devices/{device_id}/awg/download-link:
+    get:
+      tags:
+      - devices
+      summary: Get AWG Download Link
+      description: Create a one-time download link for an AmneziaWG config for the given device.
+      operationId: get_awg_download_link_api_v1_devices__device_id__awg_download_link_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: device_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Device Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                  expires_in:
+                    type: integer
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /d/{token}:
+    get:
+      tags:
+      - devices
+      summary: Download Config By Token
+      description: Download VPN configuration using a one-time token issued by the control plane.
+      operationId: download_config_by_token_d__token__get
+      parameters:
+      - name: token
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Token
+      responses:
+        '200':
+          description: VPN configuration
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: Not Found
+        '410':
+          description: Gone
   /api/v1/plans:
     post:
       tags:

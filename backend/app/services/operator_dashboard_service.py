@@ -23,6 +23,7 @@ from app.core.metrics import (
 from app.core.redis_client import get_redis
 from app.core.telemetry_polling_task import get_dashboard_timeseries
 from app.models import Device, Server, ServerSnapshot
+from app.services.device_telemetry_cache import get_telemetry_summary
 from app.services.snapshot_cache import get_snapshot_nodes
 
 _log = logging.getLogger(__name__)
@@ -764,7 +765,21 @@ async def fetch_operator_dashboard(
     if data_status == "degraded" and age_s is not None and age_s <= DEGRADED_S:
         data_status = "ok"
 
-    # Populate strip from timeseries when Prometheus did not (peers_active, total_throughput_bps)
+    # Prefer handshake-based active session count from telemetry summary when available.
+    # This treats "connected peers" as clients with a fresh handshake, which aligns with
+    # device-level telemetry and avoids counting long-idle peers as live.
+    try:
+        summary = await get_telemetry_summary()
+    except Exception:
+        summary = {}
+    try:
+        handshake_ok = int(summary.get("handshake_ok_count") or 0)
+    except (TypeError, ValueError):
+        handshake_ok = 0
+    if handshake_ok > 0:
+        health_strip["peers_active"] = handshake_ok
+
+    # Populate strip from timeseries when Prometheus and telemetry summary did not (peers_active, total_throughput_bps)
     if timeseries_points:
         last_pt = timeseries_points[-1]
         if health_strip.get("peers_active") is None and last_pt.get("peers") is not None:

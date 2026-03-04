@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-03-04T08:37:15.863979+00:00",
+  "timestamp": "2026-03-04T08:41:25.888452+00:00",
   "nodes": [
     {
       "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
-      "node_id": "docker:6b824b171233",
+      "node_id": "docker:6b8128a53ebd",
       "source": "docker",
       "kind": "unknown",
       "classification": {
@@ -20,9 +20,9 @@
       "evidence": [
         "no_match"
       ],
-      "container_id": "6b824b171233",
+      "container_id": "6b8128a53ebd",
       "image": "vpn-suite-reverse-proxy:local",
-      "created": "2026-03-04T08:33:01.830353597Z",
+      "created": "2026-03-04T08:39:47.498216114Z",
       "ports": [
         {
           "port": 2019,
@@ -46,20 +46,20 @@
         }
       ],
       "mounts": [
+        "/etc/caddy/Caddyfile",
+        "/srv/root",
         "/srv/webapp",
         "/srv/admin",
         "/srv/storybook",
         "/etc/caddy/agent_ca.pem",
-        "/data",
-        "/etc/caddy/Caddyfile",
-        "/srv/root"
+        "/data"
       ],
       "interface": null,
       "public_key": null
     },
     {
       "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
-      "node_id": "docker:833722674a4e",
+      "node_id": "docker:b1d85cd219f9",
       "source": "docker",
       "kind": "unknown",
       "classification": {
@@ -76,9 +76,9 @@
       "evidence": [
         "no_match"
       ],
-      "container_id": "833722674a4e",
+      "container_id": "b1d85cd219f9",
       "image": "vpn-suite-admin-api",
-      "created": "2026-03-04T08:32:51.327331541Z",
+      "created": "2026-03-04T08:39:36.667899651Z",
       "ports": [
         {
           "port": 8000,
@@ -181,9 +181,9 @@
       "created": "2026-03-04T08:12:02.830728348Z",
       "ports": [],
       "mounts": [
+        "/var/run/docker.sock",
         "/work/scripts",
-        "/work/.env",
-        "/var/run/docker.sock"
+        "/work/.env"
       ],
       "interface": null,
       "public_key": null
@@ -217,8 +217,8 @@
         }
       ],
       "mounts": [
-        "/data",
-        "/etc/redis/redis.conf"
+        "/etc/redis/redis.conf",
+        "/data"
       ],
       "interface": null,
       "public_key": null
@@ -599,11 +599,11 @@
         }
       ],
       "mounts": [
+        "/srv/webapp",
+        "/srv/admin",
         "/data",
         "/etc/caddy/Caddyfile",
-        "/srv/root",
-        "/srv/webapp",
-        "/srv/admin"
+        "/srv/root"
       ],
       "interface": null,
       "public_key": null
@@ -739,9 +739,9 @@
         }
       ],
       "mounts": [
-        "/etc/alertmanager/alertmanager.yml",
         "/etc/alertmanager/entrypoint.sh",
-        "/alertmanager"
+        "/alertmanager",
+        "/etc/alertmanager/alertmanager.yml"
       ],
       "interface": null,
       "public_key": null
@@ -775,11 +775,11 @@
         }
       ],
       "mounts": [
+        "/rootfs",
+        "/var/run",
         "/sys",
         "/var/lib/docker",
-        "/dev/disk",
-        "/rootfs",
-        "/var/run"
+        "/dev/disk"
       ],
       "interface": null,
       "public_key": null
@@ -813,12 +813,12 @@
         }
       ],
       "mounts": [
+        "/etc/prometheus/prometheus.yml",
+        "/etc/prometheus/alert_rules.yml",
         "/etc/prometheus/alerts",
         "/etc/prometheus/recording_rules.yml",
         "/etc/prometheus/file_sd",
-        "/prometheus",
-        "/etc/prometheus/prometheus.yml",
-        "/etc/prometheus/alert_rules.yml"
+        "/prometheus"
       ],
       "interface": null,
       "public_key": null
@@ -883,10 +883,10 @@
       "created": "2026-03-01T14:10:54.419552667Z",
       "ports": [],
       "mounts": [
+        "/var/log",
         "/etc/promtail/config.yml",
         "/promtail",
-        "/var/lib/docker/containers",
-        "/var/log"
+        "/var/lib/docker/containers"
       ],
       "interface": null,
       "public_key": null
