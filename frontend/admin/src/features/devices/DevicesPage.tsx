@@ -96,6 +96,7 @@ interface DeviceDetail extends DeviceListItem {
 interface ConfigEntryOut {
   download_url: string;
   qr_payload: string;
+  amnezia_vpn_key?: string | null;
 }
 
 interface AdminRotatePeerResponse {
@@ -1041,7 +1042,10 @@ export function DevicesPage() {
                             setQrPayload(res.url);
                             setQrTitle("AmneziaWG QR (download .conf)");
                           } catch {
-                            toast.error("Failed to create download link");
+                            showToast({
+                              variant: "danger",
+                              title: "Failed to create download link",
+                            });
                           }
                         }}
                         disabled={actionPending}

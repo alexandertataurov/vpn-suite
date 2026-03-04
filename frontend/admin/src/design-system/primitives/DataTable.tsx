@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 export interface DataTableColumn<T> {
   key: keyof T | string;
   header: string;
+  title?: string;
 }
 
 interface DataTableProps<T extends Record<string, unknown>> {
@@ -25,7 +26,7 @@ export function DataTable<T extends Record<string, unknown>>({
       <thead>
         <tr>
           {columns.map((col) => (
-            <th key={String(col.key)}>
+            <th key={String(col.key)} title={col.title}>
               {col.header}
             </th>
           ))}
