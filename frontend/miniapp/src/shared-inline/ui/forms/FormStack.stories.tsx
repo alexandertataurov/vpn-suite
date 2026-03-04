@@ -3,7 +3,7 @@ import { FormStack } from "./FormStack";
 import { Input } from "./Input";
 
 const meta: Meta<typeof FormStack> = {
-  title: "Primitives/Forms/FormStack",
+  title: "Shared/Primitives/Forms/FormStack",
   component: FormStack,
   parameters: {
     docs: {
@@ -18,7 +18,7 @@ export default meta;
 
 type Story = StoryObj<typeof FormStack>;
 
-export const Overview: Story = {
+export const FormStackOverview: Story = {
   args: {
     children: (
       <>
@@ -29,7 +29,7 @@ export const Overview: Story = {
   },
 };
 
-export const Variants: Story = {
+export const FormStackVariants: Story = {
   render: () => (
     <FormStack>
       <Input label="Name" placeholder="Your name" />
@@ -39,7 +39,7 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
+export const FormStackSizes: Story = {
   render: () => (
     <div className="sb-stack">
       <p className="m-0">Size variants are not exposed; uses tokenized gaps.</p>
@@ -51,7 +51,7 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const FormStackStates: Story = {
   render: () => (
     <FormStack>
       <Input label="Default" placeholder="Enter text" />
@@ -61,7 +61,7 @@ export const States: Story = {
   ),
 };
 
-export const WithLongText: Story = {
+export const FormStackWithLongText: Story = {
   render: () => (
     <FormStack>
       <Input label="Long label for the organization name in the primary region" placeholder="Long placeholder" />
@@ -70,7 +70,7 @@ export const WithLongText: Story = {
   ),
 };
 
-export const DarkMode: Story = {
+export const FormStackDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   render: () => (
     <FormStack>
@@ -80,7 +80,7 @@ export const DarkMode: Story = {
   ),
 };
 
-export const Accessibility: Story = {
+export const FormStackAccessibility: Story = {
   render: () => (
     <FormStack>
       <Input label="Name" placeholder="Your name" />
@@ -89,4 +89,4 @@ export const Accessibility: Story = {
   ),
 };
 
-export const EdgeCases = WithLongText;
+export const FormStackEdgeCases = WithLongText;

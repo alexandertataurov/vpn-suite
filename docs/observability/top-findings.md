@@ -1,4 +1,21 @@
-# Top Findings (Evidence-Based) and Runbook
+# Top Findings — Observability and Latency
+
+Evidence-based findings, detection queries, and latency bottlenecks (2026-02-26).
+
+## Latency bottlenecks (code-level)
+
+| # | Finding | Location | Fix |
+|---|---------|----------|-----|
+| L1 | Triple config build on peer issue | admin_issue_service.py | Extract _build_all_configs() helper, call once |
+| L2 | No server-side pagination on devices | devices.py | Apply limit/offset default; return items + total |
+| L3 | Full table scan on reconciliation per cycle | reconciliation_engine.py | Only reconcile if updated_at > last_sync_time |
+| L4 | Single uvicorn worker | Dockerfile | Add WEB_CONCURRENCY support |
+| L5 | Node telemetry fan-out blocking /telemetry/snapshot | telemetry_snapshot_aggregator.py | Background poll + Redis cache |
+| L6 | Network check on every heartbeat (agent) | node-agent/agent.py | Cache sysctl/iptables 60s |
+| L7 | Devices.tsx full DOM render | Devices.tsx | Add @tanstack/react-virtual |
+| L8 | admin_rotate_peer re-fetches server/profile | admin_issue_service.py | Helper + local caching |
+| L9 | /health/ready instantiates heavy topology | main.py | Cache get_topology() in readiness |
+| L10 | Unify discovery wrapper | — | Drop legacy raw docker ps |
 
 ## Detection queries (LogQL / PromQL)
 

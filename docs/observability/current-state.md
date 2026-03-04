@@ -109,7 +109,15 @@ TRACES:
 
 ---
 
-## 3. Verification Commands
+## 3. Telemetry data path (frontend → backend)
+
+Operator dashboard: Frontend calls `GET /api/v1/overview/operator`; backend uses `TELEMETRY_PROMETHEUS_URL` for Prometheus queries and Redis for timeseries. If Redis is empty, backend returns one synthetic point. See [runbook-observability.md](runbook-observability.md) for troubleshooting "no data".
+
+## 4. Architecture (metrics, logs, traces)
+
+Applications (admin-api, bot) → Prometheus and optional OTLP → OTEL Collector → Tempo. Metrics: Prometheus (file_sd from discovery-runner) → VictoriaMetrics (remote_write). Logs: Docker → Promtail → Loki. Grafana queries Prometheus, Loki, Tempo.
+
+## 5. Verification commands
 
 ```bash
 # List services

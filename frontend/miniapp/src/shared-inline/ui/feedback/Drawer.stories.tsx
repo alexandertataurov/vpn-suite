@@ -4,7 +4,7 @@ import { Drawer } from "./Drawer";
 import { Button } from "../buttons/Button";
 
 const meta: Meta<typeof Drawer> = {
-  title: "Components/Drawer",
+  title: "Shared/Components/Drawer",
   component: Drawer,
   parameters: {
     docs: {
@@ -31,15 +31,15 @@ function DrawerDemo({ open: initial }: { open?: boolean }) {
   );
 }
 
-export const Overview: Story = {
+export const DrawerOverview: Story = {
   render: () => <DrawerDemo open />,
 };
 
-export const Variants: Story = {
+export const DrawerVariants: Story = {
   render: () => <DrawerDemo open />,
 };
 
-export const Sizes: Story = {
+export const DrawerSizes: Story = {
   render: () => (
     <div className="sb-stack">
       <p className="m-0">Size variants are not exposed; width is tokenized.</p>
@@ -48,11 +48,11 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const DrawerStates: Story = {
   render: () => <DrawerDemo open />,
 };
 
-export const WithLongText: Story = {
+export const DrawerWithLongText: Story = {
   render: () => (
     <Drawer open onClose={() => {}} title="Long drawer title for server details">
       <p>Long body copy that should wrap and remain readable without overflowing the drawer container.</p>
@@ -60,13 +60,13 @@ export const WithLongText: Story = {
   ),
 };
 
-export const DarkMode: Story = {
+export const DrawerDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   render: () => <DrawerDemo open />,
 };
 
-export const Accessibility: Story = {
+export const DrawerAccessibility: Story = {
   render: () => <DrawerDemo open />,
 };
 
-export const EdgeCases = WithLongText;
+export const DrawerEdgeCases = WithLongText;

@@ -1,0 +1,14 @@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;500;600;700&family=DM+Mono:wght@300;400;500&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>body,#root{min-height:100vh}</style>
+<script>
+  (function(){
+    var theme = (typeof localStorage !== 'undefined' && localStorage.getItem('vpn-suite-storybook-theme')) || 'dark';
+    var el = document.documentElement;
+    el.setAttribute('data-theme', theme);
+    el.style.colorScheme = theme === 'light' ? 'light' : 'dark';
+    el.classList.toggle('light', theme === 'light');
+    el.classList.toggle('dark', theme !== 'light');
+  })();
+</script>

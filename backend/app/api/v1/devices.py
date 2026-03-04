@@ -282,7 +282,6 @@ async def get_config_health(
     for device, user_email in rows:
         status_val = "suspended" if device.suspended_at else "active"
         telemetry = telemetry_map.get(str(device.id))
-        configs = []  # not loaded; use defaults
         device_dict = {
             "revoked_at": device.revoked_at,
             "allowed_ips": device.allowed_ips,

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { Divider } from "./Divider";
 
 const meta: Meta<typeof Divider> = {
-  title: "Primitives/Divider",
+  title: "Shared/Primitives/Divider",
   component: Divider,
   parameters: {
     docs: {
@@ -22,7 +22,7 @@ export default meta;
 
 type Story = StoryObj<typeof Divider>;
 
-export const Overview: Story = {
+export const DividerOverview: Story = {
   render: () => (
     <div className="sb-stack">
       <Divider />
@@ -31,7 +31,7 @@ export const Overview: Story = {
   ),
 };
 
-export const Variants: Story = {
+export const DividerVariants: Story = {
   render: () => (
     <div className="sb-stack">
       <Divider tone="subtle" />
@@ -40,7 +40,7 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
+export const DividerSizes: Story = {
   render: () => (
     <div className="sb-stack">
       <p className="m-0">Size variants are not exposed; uses border-width tokens.</p>
@@ -49,11 +49,11 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const DividerStates: Story = {
   render: () => <Divider />,
 };
 
-export const WithLongText: Story = {
+export const DividerWithLongText: Story = {
   render: () => (
     <div className="sb-stack">
       <p className="m-0">Section title with long description that should wrap above divider.</p>
@@ -62,7 +62,7 @@ export const WithLongText: Story = {
   ),
 };
 
-export const Orientation: Story = {
+export const DividerOrientation: Story = {
   render: () => (
     <div className="sb-row">
       <div className="sb-card">
@@ -79,13 +79,13 @@ export const Orientation: Story = {
   ),
 };
 
-export const Accessibility: Story = {
+export const DividerAccessibility: Story = {
   render: () => <Divider aria-label="Section divider" />,
 };
 
-export const DarkMode: Story = {
+export const DividerDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   render: () => <Divider />,
 };
 
-export const EdgeCases = WithLongText;
+export const DividerEdgeCases = WithLongText;

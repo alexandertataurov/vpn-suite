@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { Label } from "./Label";
 
 const meta: Meta<typeof Label> = {
-  title: "Primitives/Label",
+  title: "Shared/Primitives/Label",
   component: Label,
   parameters: {
     docs: {
@@ -17,9 +17,9 @@ export default meta;
 
 type Story = StoryObj<typeof Label>;
 
-export const Overview: Story = { args: { children: "Field label" } };
+export const LabelOverview: Story = { args: { children: "Field label" } };
 
-export const Variants: Story = {
+export const LabelVariants: Story = {
   render: () => (
     <div className="sb-stack">
       <Label>Default label</Label>
@@ -28,7 +28,7 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
+export const LabelSizes: Story = {
   render: () => (
     <div className="sb-stack">
       <p className="m-0">Size variants are not exposed; uses label tokens.</p>
@@ -37,7 +37,7 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const LabelStates: Story = {
   render: () => (
     <div className="sb-stack">
       <Label>Default label</Label>
@@ -46,17 +46,17 @@ export const States: Story = {
   ),
 };
 
-export const WithLongText: Story = {
+export const LabelWithLongText: Story = {
   args: { children: "Long label that should wrap across multiple lines without breaking layout" },
 };
 
-export const Accessibility: Story = {
+export const LabelAccessibility: Story = {
   args: { children: "Field label" },
 };
 
-export const DarkMode: Story = {
+export const LabelDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   args: { children: "Field label" },
 };
 
-export const EdgeCases = WithLongText;
+export const LabelEdgeCases = WithLongText;

@@ -14,8 +14,7 @@ import {
   ActionRow,
   Body,
 } from "../ui";
-import { SessionMissing } from "../components/SessionMissing";
-import { FallbackScreen } from "../components/FallbackScreen";
+import { SessionMissing, FallbackScreen } from "@/components";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { webappApi, useWebappToken } from "../api/client";
 import { useTelegramMainButton } from "../hooks/useTelegramMainButton";
@@ -224,8 +223,8 @@ export function CheckoutPage() {
           <Link to="/plan" className="miniapp-back-link">Back to plan</Link>
         </ActionRow>
         <Panel className="card">
-          <Skeleton height={24} />
-          <Skeleton height={80} />
+          <Skeleton className="skeleton-h-md" />
+          <Skeleton className="skeleton-h-2xl" />
         </Panel>
       </PageScaffold>
     );

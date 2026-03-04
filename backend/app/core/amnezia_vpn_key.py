@@ -20,8 +20,9 @@ import json
 import re
 import struct
 import zlib
+from collections.abc import Mapping
 from configparser import ConfigParser
-from typing import Any, Mapping
+from typing import Any
 
 
 _MAGIC = 0x07C00100

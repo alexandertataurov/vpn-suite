@@ -13,6 +13,11 @@ Single source for VPN Suite frontend: apps, design system, components, tables, t
 | **Table usage** | [tables/tables-guide.md](tables/tables-guide.md) |
 | **E2E / test matrix** | [testing/frontend-test-matrix.md](testing/frontend-test-matrix.md) |
 | **Storybook** | [storybook/](storybook/) |
+| **Adaptive UI** | [adaptive-ui.md](adaptive-ui.md) · [adaptive-ui-test-plan.md](adaptive-ui-test-plan.md) |
+| **Miniapp layout** | [miniapp-layout-architecture.md](miniapp-layout-architecture.md) |
+| **Navigation catalog** | [navigation-patterns-catalog.md](navigation-patterns-catalog.md) |
+| **UI tech spec** | [ui-techspec.md](ui-techspec.md) |
+| **Cleanup audit (historical)** | [cleanup-audit.md](cleanup-audit.md) |
 
 ---
 

@@ -17,4 +17,4 @@ These are **non-breaking** recommendations based on current code behavior.
 ## Additional Notes
 
 - Prefer additive changes with deprecation warnings before removing any fields or endpoints.
-- Update `docs/api/README.md` and `docs/api/openapi.yaml` as part of every migration.
+- Update `docs/api/README.md` and regenerate `openapi/openapi.yaml` (`./manage.sh openapi`) as part of every migration.

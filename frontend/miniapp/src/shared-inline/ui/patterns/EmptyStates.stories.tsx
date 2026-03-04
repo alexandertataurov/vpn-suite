@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { EmptyState, Button } from "@vpn-suite/shared/ui";
 
 const meta: Meta<typeof EmptyState> = {
-  title: "Patterns/EmptyStates",
+  title: "Shared/Patterns/EmptyStates",
   component: EmptyState,
   parameters: {
     docs: {
@@ -17,7 +17,7 @@ export default meta;
 
 type Story = StoryObj<typeof EmptyState>;
 
-export const Overview: Story = {
+export const EmptyStatesOverview: Story = {
   render: () => (
     <div className="sb-grid" data-columns="2">
       <EmptyState title="No servers" description="Add your first VPN node to get started." actions={<Button>Add server</Button>} />
@@ -26,7 +26,7 @@ export const Overview: Story = {
   ),
 };
 
-export const Variants: Story = {
+export const EmptyStatesVariants: Story = {
   render: () => (
     <div className="sb-stack">
       <EmptyState title="No servers" description="Add your first VPN node to get started." />
@@ -35,7 +35,7 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
+export const EmptyStatesSizes: Story = {
   render: () => (
     <div className="sb-stack">
       <p className="m-0">Size variants are not exposed; spacing is tokenized.</p>
@@ -44,13 +44,13 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const EmptyStatesStates: Story = {
   render: () => (
     <EmptyState title="No servers" description="Add your first VPN node to get started." />
   ),
 };
 
-export const WithLongText: Story = {
+export const EmptyStatesWithLongText: Story = {
   render: () => (
     <EmptyState
       title="No telemetry for the selected time range and environment"
@@ -60,17 +60,17 @@ export const WithLongText: Story = {
   ),
 };
 
-export const DarkMode: Story = {
+export const EmptyStatesDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   render: () => (
     <EmptyState title="No servers" description="Add your first VPN node to get started." actions={<Button>Add server</Button>} />
   ),
 };
 
-export const Accessibility: Story = {
+export const EmptyStatesAccessibility: Story = {
   render: () => (
     <EmptyState title="No items" description="Screen readers announce the empty state message." />
   ),
 };
 
-export const EdgeCases = WithLongText;
+export const EmptyStatesEdgeCases = WithLongText;

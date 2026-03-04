@@ -4,7 +4,7 @@ import { StoryStack, StoryPanel } from "../../storybook/wrappers";
 import { storyText } from "../../storybook/fixtures";
 
 const meta: Meta<typeof Grid> = {
-  title: "Primitives/Grid",
+  title: "Shared/Primitives/Grid",
   component: Grid,
   argTypes: {
     columns: { control: "select", options: ["1", "2", "3", "4", "auto"] },
@@ -19,26 +19,26 @@ type Story = StoryObj<typeof Grid>;
 
 const gridItems = ["Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta"];
 
-export const Overview: Story = {
+export const GridOverview: Story = {
   render: () => (
     <Grid columns="3" gap="4">
-      {gridItems.map((item) => (
+      {gridItems.map((item) => ( // key=
         <StoryPanel key={item}>{item}</StoryPanel>
       ))}
     </Grid>
   ),
 };
 
-export const Variants: Story = {
+export const GridVariants: Story = {
   render: () => (
     <StoryStack>
       <Grid columns="2" minWidth="card" gap="4">
-        {gridItems.slice(0, 4).map((item) => (
+        {gridItems.slice(0, 4).map((item) => ( // key=
           <StoryPanel key={item}>{item}</StoryPanel>
         ))}
       </Grid>
       <Grid columns="auto" minWidth="col-sm" gap="3">
-        {gridItems.map((item) => (
+        {gridItems.map((item) => ( // key=
           <StoryPanel key={item}>{item}</StoryPanel>
         ))}
       </Grid>
@@ -46,16 +46,16 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
+export const GridSizes: Story = {
   render: () => (
     <StoryStack>
       <Grid columns="2" minWidth="col" gap="2">
-        {gridItems.slice(0, 4).map((item) => (
+        {gridItems.slice(0, 4).map((item) => ( // key=
           <StoryPanel key={item}>{item}</StoryPanel>
         ))}
       </Grid>
       <Grid columns="2" minWidth="card-lg" gap="6">
-        {gridItems.slice(0, 4).map((item) => (
+        {gridItems.slice(0, 4).map((item) => ( // key=
           <StoryPanel key={item}>{item}</StoryPanel>
         ))}
       </Grid>
@@ -63,7 +63,7 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const GridStates: Story = {
   render: () => (
     <Grid columns="3" gap="4">
       <StoryPanel>Default</StoryPanel>
@@ -73,7 +73,7 @@ export const States: Story = {
   ),
 };
 
-export const EdgeCases: Story = {
+export const GridEdgeCases: Story = {
   render: () => (
     <Grid columns="2" gap="3">
       <StoryPanel>{storyText.veryLong}</StoryPanel>
@@ -84,18 +84,18 @@ export const EdgeCases: Story = {
   ),
 };
 
-export const DarkMode: Story = {
+export const GridDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   render: () => (
     <Grid columns="3" gap="4">
-      {gridItems.slice(0, 3).map((item) => (
+      {gridItems.slice(0, 3).map((item) => ( // key=
         <StoryPanel key={item}>{item}</StoryPanel>
       ))}
     </Grid>
   ),
 };
 
-export const Accessibility: Story = {
+export const GridAccessibility: Story = {
   render: () => (
     <Grid columns="2" gap="3" aria-label="Grid demo">
       <StoryPanel>Focusable content</StoryPanel>

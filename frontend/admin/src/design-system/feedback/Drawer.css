@@ -1,8 +1,0 @@
-.ds-drawer-overlay { position: fixed; inset: 0; z-index: var(--z-9999); background: var(--color-scrim); }
-.ds-drawer-panel { position: absolute; top: 0; right: 0; bottom: 0; display: flex; flex-direction: column; background: var(--color-surface); border-left: 1px solid var(--color-border-default); box-shadow: var(--shadow-elevated); overflow-y: auto; outline: none; }
-.ds-drawer-header { display: flex; justify-content: space-between; align-items: center; padding: var(--space-4); border-bottom: 1px solid var(--color-border-subtle); }
-.ds-drawer-title { margin: 0; font-family: var(--font-display); font-size: var(--text-lg); color: var(--color-text-primary); }
-.ds-drawer-close { padding: var(--space-1); background: none; border: none; color: var(--color-text-muted); cursor: pointer; font-size: 1.25rem; }
-.ds-drawer-close:hover { color: var(--color-text-primary); }
-.ds-drawer-body { padding: var(--space-4); flex: 1; overflow-y: auto; }
-.ds-drawer-footer { padding: var(--space-4); border-top: 1px solid var(--color-border-subtle); }

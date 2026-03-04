@@ -72,6 +72,18 @@ async function parseResponse<T>(res: Response): Promise<T> {
   return data as T;
 }
 
+/** Read 401 response body for user-facing message; fallback to "Session expired". */
+async function parse401Message(res: Response): Promise<string> {
+  try {
+    const text = await res.clone().text();
+    const d = text ? (JSON.parse(text) as { error?: { message?: string } }) : null;
+    if (d?.error?.message) return String(d.error.message);
+  } catch {
+    // ignore
+  }
+  return "Your session expired. Tap Retry to sign in again.";
+}
+
 export function createApiClient(options: ApiClientOptions): ApiClient {
   const { baseUrl, getToken, onUnauthorized } = options;
   const base = baseUrl.replace(/\/$/, "");
@@ -132,7 +144,8 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
 
     if (res.status === 401 && onUnauthorized) {
       await onUnauthorized();
-      throw new ApiError("UNAUTHORIZED", "Session expired", 401);
+      const msg = await parse401Message(res);
+      throw new ApiError("UNAUTHORIZED", msg, 401);
     }
 
     if (!res.ok && RETRY_STATUSES.includes(res.status) && SAFE_METHODS.has(method) && retries < MAX_RETRIES) {
@@ -179,7 +192,8 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
 
     if (res.status === 401 && onUnauthorized) {
       await onUnauthorized();
-      throw new ApiError("UNAUTHORIZED", "Session expired", 401);
+      const msg = await parse401Message(res);
+      throw new ApiError("UNAUTHORIZED", msg, 401);
     }
 
     if (!res.ok && RETRY_STATUSES.includes(res.status) && retries < MAX_RETRIES) {

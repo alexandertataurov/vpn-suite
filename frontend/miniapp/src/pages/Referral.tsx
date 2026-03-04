@@ -24,7 +24,7 @@ import { useWebappToken, webappApi } from "../api/client";
 import { useTelegramMainButton } from "../hooks/useTelegramMainButton";
 import { useTelegramHaptics } from "../hooks/useTelegramHaptics";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
-import { SessionMissing } from "../components/SessionMissing";
+import { SessionMissing } from "@/components";
 
 export function ReferralPage() {
   const { addToast } = useToast();
@@ -106,7 +106,7 @@ export function ReferralPage() {
 
   if (linkError || statsError) {
     return (
-      <PageScaffold>
+      <PageScaffold className="referral-page">
         <PageHeader title="Invite friends" subtitle="Share your link and track rewards" />
         <InlineAlert
           variant="error"
@@ -127,9 +127,9 @@ export function ReferralPage() {
 
   if (linkLoading || !linkData) {
     return (
-      <PageScaffold>
+      <PageScaffold className="referral-page">
         <PageHeader title="Invite friends" subtitle="Share your link and track rewards" />
-        <Skeleton height={100} />
+        <Skeleton className="skeleton-h-3xl" />
       </PageScaffold>
     );
   }
@@ -146,7 +146,7 @@ export function ReferralPage() {
   const nextBonusDays = inviteGoal * 7;
 
   return (
-    <PageScaffold>
+    <PageScaffold className="referral-page">
       <PageHeader title="Invite friends" subtitle="Share your link and track rewards" />
       <ActionRow>
         <Link to="/" className="miniapp-back-link">Back</Link>

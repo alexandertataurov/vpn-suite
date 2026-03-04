@@ -6,7 +6,7 @@ import { webappMeActive, webappMeNoSubscription, webappMeNoDevices, webappMeRevo
 import { Body } from "../ui";
 
 const meta: Meta<typeof DevicesPage> = {
-  title: "Pages/Miniapp/Devices",
+  title: "Miniapp/Pages/Devices",
   component: DevicesPage,
   parameters: {
     layout: "fullscreen",
@@ -26,15 +26,15 @@ const renderPage = (options: Parameters<typeof MockWebappApi>[0]["options"]) => 
   </MockWebappApi>
 );
 
-export const Overview: Story = {
+export const DevicesPageOverview: Story = {
   render: () => renderPage({ mode: "success", me: webappMeActive }),
 };
 
-export const Variants: Story = {
+export const DevicesPageVariants: Story = {
   render: () => renderPage({ mode: "success", me: webappMeNoSubscription }),
 };
 
-export const Sizes: Story = {
+export const DevicesPageSizes: Story = {
   render: () => (
     <div className="sb-stack">
       <Body>Reference layout only; size variants are not exposed.</Body>
@@ -43,16 +43,16 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const DevicesPageStates: Story = {
   render: () => renderPage({ mode: "error" }),
 };
 
-export const WithLongText: Story = {
+export const DevicesPageWithLongText: Story = {
   render: () => renderPage({
     mode: "success",
     me: {
       ...webappMeActive,
-      devices: webappMeActive.devices.map((device) => ({
+      devices: webappMeActive.devices.map((device) => ({ // key=
         ...device,
         device_name: `${device.device_name} — personal laptop with a very long device name`,
       })),
@@ -60,13 +60,13 @@ export const WithLongText: Story = {
   }),
 };
 
-export const DarkMode: Story = {
+export const DevicesPageDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   render: () => renderPage({ mode: "success", me: webappMeNoDevices }),
 };
 
-export const Accessibility: Story = {
+export const DevicesPageAccessibility: Story = {
   render: () => renderPage({ mode: "success", me: webappMeRevokedOnly }),
 };
 
-export const EdgeCases = WithLongText;
+export const DevicesPageEdgeCases = WithLongText;

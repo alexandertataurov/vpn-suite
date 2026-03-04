@@ -1,13 +1,11 @@
 @import "./theme/tokens.css";
-@import "./theme/techspec-tokens.css";
-@import "./theme/breakpoints.css";
 @import "./base.css";
 @import "./layout.css";
 @import "./ui/styles/index.css";
 
 body {
   margin: 0;
-  min-width: 320px;
+  min-width: 20rem;
   min-height: 100vh;
   background: var(--color-bg);
   color: var(--color-text);

@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Shield, Smartphone, Globe } from "lucide-react";
+import { IconShield, IconSmartphone, IconGlobe } from "@/shared-inline/icons";
 import {
   Button,
   InlineAlert,
@@ -20,19 +20,19 @@ const ONBOARDING_STEPS = [
     title: "Private by default",
     body: "Your traffic is encrypted end-to-end so public Wi-Fi and mobile networks stay safe.",
     cta: "Continue",
-    icon: Shield,
+    icon: IconShield,
   },
   {
     title: "Connect every device",
     body: "Add your phone, tablet, or laptop in minutes and keep all your sessions protected.",
     cta: "Continue",
-    icon: Smartphone,
+    icon: IconSmartphone,
   },
   {
     title: "Choose your plan",
     body: "Pick the plan that matches your usage and start secure browsing immediately.",
     cta: "Go to plans",
-    icon: Globe,
+    icon: IconGlobe,
   },
 ] as const;
 

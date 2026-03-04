@@ -1,4 +1,4 @@
-import type { HTMLAttributes } from "react";
+import type { CSSProperties, HTMLAttributes } from "react";
 import { cn } from "../../utils/cn";
 
 export type SkeletonVariant = "default" | "line" | "card" | "list" | "shimmer";
@@ -7,6 +7,8 @@ export interface SkeletonProps extends HTMLAttributes<HTMLDivElement> {
   width?: string | number;
   height?: string | number;
   variant?: SkeletonVariant;
+  /** Prefer className with CSS token-based styles. Use style only for truly dynamic values. */
+  style?: CSSProperties;
 }
 
 const variantClass: Record<SkeletonVariant, string> = {
@@ -27,6 +29,7 @@ export function Skeleton({
   ...props
 }: SkeletonProps) {
   const baseClass = cn("skeleton", variantClass[variant], className);
+  const resolvedStyle = width == null && height == null && !style ? style : { width, height, ...style };
   if (variant === "list" && children) {
     return (
       <div className={baseClass} aria-hidden {...props}>
@@ -37,7 +40,7 @@ export function Skeleton({
   return (
     <div
       className={baseClass}
-      style={{ width, height, ...style }}
+      style={resolvedStyle}
       aria-hidden
       {...props}
     />

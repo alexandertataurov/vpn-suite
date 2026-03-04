@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { Button } from "./Button";
 
 const meta: Meta<typeof Button> = {
-  title: "Primitives/Button",
+  title: "Shared/Primitives/Button",
   component: Button,
   parameters: {
     docs: {
@@ -38,12 +38,12 @@ export default meta;
 
 type Story = StoryObj<typeof Button>;
 
-export const Overview: Story = {
+export const ButtonOverview: Story = {
   args: { children: "Primary action", variant: "primary" },
 };
 
 /** All variants at md size */
-export const Variants: Story = {
+export const ButtonVariants: Story = {
   render: () => (
     <div className="sb-row">
       <Button variant="primary">Primary</Button>
@@ -57,7 +57,7 @@ export const Variants: Story = {
 };
 
 /** All sizes */
-export const Sizes: Story = {
+export const ButtonSizes: Story = {
   render: () => (
     <div className="sb-row">
       <Button size="sm">Small</Button>
@@ -70,13 +70,13 @@ export const Sizes: Story = {
   ),
 };
 
-/** Connect kind = primary CTA, size lg, min 44px */
-export const Connect: Story = {
+/** Connect kind = primary CTA, size lg, min var(--size-touch-target) */
+export const ButtonConnect: Story = {
   args: { children: "Add device", kind: "connect" },
 };
 
 /** Icon before and after text */
-export const WithIcons: Story = {
+export const ButtonWithIcons: Story = {
   render: () => (
     <div className="sb-row">
       <Button startIcon={<span aria-hidden>→</span>}>Next</Button>
@@ -87,12 +87,12 @@ export const WithIcons: Story = {
   ),
 };
 
-export const WithLongText: Story = {
+export const ButtonWithLongText: Story = {
   args: { children: "Primary action with a long label that should stay readable" },
 };
 
 /** Icon-only buttons require aria-label */
-export const IconOnly: Story = {
+export const ButtonIconOnly: Story = {
   render: () => (
     <div className="sb-row sb-row-tight">
       <Button size="icon" variant="ghost" aria-label="Copy">
@@ -105,7 +105,7 @@ export const IconOnly: Story = {
   ),
 };
 
-export const States: Story = {
+export const ButtonStates: Story = {
   render: () => (
     <div className="sb-row">
       <Button>Default</Button>
@@ -115,20 +115,20 @@ export const States: Story = {
   ),
 };
 
-export const Loading: Story = {
+export const ButtonLoading: Story = {
   args: { children: "Save", loading: true },
 };
 
-export const LoadingWithText: Story = {
+export const ButtonLoadingWithText: Story = {
   args: { children: "Save", loading: true, loadingText: "Saving..." },
 };
 
-export const Disabled: Story = {
+export const ButtonDisabled: Story = {
   args: { children: "Disabled", disabled: true },
 };
 
 /** Error context: retry after failed action */
-export const Error: Story = {
+export const ButtonError: Story = {
   render: () => (
     <div className="sb-row">
       <Button variant="secondary">Cancel</Button>
@@ -137,12 +137,12 @@ export const Error: Story = {
   ),
 };
 
-export const FullWidth: Story = {
+export const ButtonFullWidth: Story = {
   args: { children: "Full width", fullWidth: true },
 };
 
 /** Danger confirmation pattern */
-export const DangerConfirmation: Story = {
+export const ButtonDangerConfirmation: Story = {
   render: () => (
     <div className="sb-row">
       <Button variant="ghost">Cancel</Button>
@@ -152,7 +152,7 @@ export const DangerConfirmation: Story = {
 };
 
 /** Accessibility: focus ring, aria-label on icon-only */
-export const Accessibility: Story = {
+export const ButtonAccessibility: Story = {
   render: () => (
     <div className="sb-row">
       <Button>Focus me (Tab)</Button>
@@ -164,13 +164,13 @@ export const Accessibility: Story = {
   ),
 };
 
-export const DarkMode: Story = {
+export const ButtonDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   args: { children: "Primary action", variant: "primary" },
 };
 
 /** Playground: full controls */
-export const Playground: Story = {
+export const ButtonPlayground: Story = {
   args: {
     children: "Button",
     variant: "primary",
@@ -182,4 +182,4 @@ export const Playground: Story = {
   },
 };
 
-export const EdgeCases = WithLongText;
+export const ButtonEdgeCases = WithLongText;

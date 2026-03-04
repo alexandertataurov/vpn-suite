@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { StatusBadge } from "./StatusBadge";
 
 const meta: Meta<typeof StatusBadge> = {
-  title: "Primitives/StatusBadge",
+  title: "Shared/Primitives/StatusBadge",
   component: StatusBadge,
   parameters: {
     docs: {
@@ -23,11 +23,11 @@ export default meta;
 
 type Story = StoryObj<typeof StatusBadge>;
 
-export const Overview: Story = {
+export const StatusBadgeOverview: Story = {
   args: { status: "ok" },
 };
 
-export const Variants: Story = {
+export const StatusBadgeVariants: Story = {
   render: () => (
     <div className="sb-row">
       <StatusBadge status="ok" />
@@ -38,7 +38,7 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
+export const StatusBadgeSizes: Story = {
   render: () => (
     <div className="sb-stack">
       <p className="m-0">Size variants are not exposed; uses badge tokens.</p>
@@ -47,7 +47,7 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const StatusBadgeStates: Story = {
   render: () => (
     <div className="sb-row">
       <StatusBadge status="ok" />
@@ -56,11 +56,11 @@ export const States: Story = {
   ),
 };
 
-export const WithLongText: Story = {
+export const StatusBadgeWithLongText: Story = {
   args: { status: "degraded", label: "Degraded: high latency across regions" },
 };
 
-export const Accessibility: Story = {
+export const StatusBadgeAccessibility: Story = {
   render: () => (
     <div className="sb-row">
       <StatusBadge status="ok" aria-label="System healthy" />
@@ -69,9 +69,9 @@ export const Accessibility: Story = {
   ),
 };
 
-export const DarkMode: Story = {
+export const StatusBadgeDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   args: { status: "ok" },
 };
 
-export const EdgeCases = WithLongText;
+export const StatusBadgeEdgeCases = WithLongText;

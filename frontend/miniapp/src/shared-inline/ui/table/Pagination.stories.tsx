@@ -3,7 +3,7 @@ import { Pagination } from "./Table";
 import { StoryStack, NarrowFrame } from "../../storybook/wrappers";
 
 const meta: Meta<typeof Pagination> = {
-  title: "Components/Pagination",
+  title: "Shared/Components/Pagination",
   component: Pagination,
   argTypes: {
     offset: { control: "number" },
@@ -16,11 +16,11 @@ export default meta;
 
 type Story = StoryObj<typeof Pagination>;
 
-export const Overview: Story = {
+export const PaginationOverview: Story = {
   args: { offset: 0, limit: 25, total: 240, onPage: () => {} },
 };
 
-export const Variants: Story = {
+export const PaginationVariants: Story = {
   render: () => (
     <StoryStack>
       <Pagination offset={0} limit={25} total={240} onPage={() => {}} />
@@ -29,7 +29,7 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
+export const PaginationSizes: Story = {
   render: () => (
     <StoryStack>
       <Pagination offset={0} limit={10} total={100} onPage={() => {}} />
@@ -38,7 +38,7 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const PaginationStates: Story = {
   render: () => (
     <StoryStack>
       <Pagination offset={0} limit={25} total={25} onPage={() => {}} />
@@ -47,7 +47,7 @@ export const States: Story = {
   ),
 };
 
-export const EdgeCases: Story = {
+export const PaginationEdgeCases: Story = {
   render: () => (
     <StoryStack>
       <Pagination offset={0} limit={1} total={9999} onPage={() => {}} />
@@ -58,11 +58,11 @@ export const EdgeCases: Story = {
   ),
 };
 
-export const DarkMode: Story = {
+export const PaginationDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   args: { offset: 0, limit: 25, total: 240, onPage: () => {} },
 };
 
-export const Accessibility: Story = {
+export const PaginationAccessibility: Story = {
   args: { offset: 0, limit: 25, total: 240, onPage: () => {} },
 };

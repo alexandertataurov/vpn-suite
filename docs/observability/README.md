@@ -43,14 +43,16 @@ Index of observability documentation for vpn-suite. For up-to-date external refe
 | [logging-architecture.md](logging-architecture.md) | Logging architecture. |
 | [logging-standard.md](logging-standard.md) | Logging standards and structure. |
 
+## Folder structure
+
+Key paths: `config/monitoring/prometheus.yml`, `alert_rules.yml`, `discovery/` (targets.json), `loki-config.yml`, `promtail-config.yml`, `tempo/`, `otel-collector/config.yaml`, `grafana/provisioning/` and `grafana/dashboards/`. Application metrics: `backend/app/core/metrics.py`, `bot/metrics.py`, `monitoring/wg-exporter/wg_exporter.py`. Discovery: `ops/discovery/`. See [current-state.md](current-state.md) for full inventory.
+
 ## Other
 
 | Doc | Description |
 |-----|-------------|
 | [archive-pipeline.md](archive-pipeline.md) | Long-term archive pipeline (e.g. S3/GCS). |
-| [legacy-removal-plan.md](legacy-removal-plan.md) | Legacy observability removal plan. |
 | [top-findings.md](top-findings.md) | Top findings from observability review. |
-| [diagnostics-upgrade-report.md](diagnostics-upgrade-report.md) | Diagnostics and upgrade report. |
 
 ## Service-specific
 

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { ProgressBar } from "./ProgressBar";
 
 const meta: Meta<typeof ProgressBar> = {
-  title: "Components/ProgressBar",
+  title: "Shared/Components/ProgressBar",
   component: ProgressBar,
   parameters: {
     docs: {
@@ -17,11 +17,11 @@ export default meta;
 
 type Story = StoryObj<typeof ProgressBar>;
 
-export const Overview: Story = {
+export const ProgressBarOverview: Story = {
   args: { value: 50, label: "Progress" },
 };
 
-export const Variants: Story = {
+export const ProgressBarVariants: Story = {
   render: () => (
     <div className="sb-stack">
       <ProgressBar value={25} label="Quarter" />
@@ -31,7 +31,7 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
+export const ProgressBarSizes: Story = {
   render: () => (
     <div className="sb-stack">
       <p className="m-0">Size variants are not exposed; height is token-defined.</p>
@@ -40,7 +40,7 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const ProgressBarStates: Story = {
   render: () => (
     <div className="sb-stack">
       <ProgressBar value={0} label="Empty" />
@@ -50,17 +50,17 @@ export const States: Story = {
   ),
 };
 
-export const WithLongText: Story = {
+export const ProgressBarWithLongText: Story = {
   args: { value: 66, label: "Migration progress for eu-west cluster with extended label" },
 };
 
-export const DarkMode: Story = {
+export const ProgressBarDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   args: { value: 50, label: "Progress" },
 };
 
-export const Accessibility: Story = {
+export const ProgressBarAccessibility: Story = {
   args: { value: 50, label: "Progress bar" },
 };
 
-export const EdgeCases = WithLongText;
+export const ProgressBarEdgeCases = WithLongText;

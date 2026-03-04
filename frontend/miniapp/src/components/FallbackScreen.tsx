@@ -22,10 +22,7 @@ export function FallbackScreen({
             Try again
           </Button>
         )}
-        <a
-          href={contactSupportHref}
-          target="_blank"
-          rel="noopener noreferrer"
+        <a aria-label="Contact support" href={contactSupportHref} target="_blank" rel="noopener noreferrer"
           className={getButtonClassName("secondary", "lg")}
         >
           Contact support

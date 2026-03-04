@@ -1,0 +1,35 @@
+---
+description: Multi-agent workflow — when to use skills and subagents, execution order. See PROMPT.md for the full workflow.
+globs: []
+alwaysApply: true
+---
+
+# Multi-agent workflow (skills and subagents)
+
+Follow the workflow in **PROMPT.md**. Summary:
+
+## Skills to apply
+
+- **team-contract**: Single owner per change; small deployable increments; manual test checklist + rollback note per increment; cross-boundary work = TODO only, no implementation.
+- **system-architect**: Before large changes — RFC, Go/No-Go, rollback/observability/API plans, task breakdown.
+- **observability-engineer**: For telemetry — metrics, logs, correlation IDs, SLOs, runbook snippets.
+- **vpn-suite**: For project layout, services, Docker Compose, deployment, and conventions.
+- **frontend-engineer**: For UI, React/TypeScript, and frontend work.
+
+## Subagents to invoke
+
+- **system-architect-gatekeeper**: Review and architecture note before non-trivial or cross-boundary changes.
+- **orchestrator**: Classify scope, enforce boundaries, create handoff notes for cross-boundary work.
+- **frontend-engineer**: Frontend-only changes.
+- **backend-engineer**: Backend-only changes.
+- **observability-engineer**: Metrics, logs, dashboards, alerts.
+- **ci-watcher** (if available): CI/tooling, workflows, lint config.
+
+## Execution order
+
+1. **For any change**: Apply team-contract first (single owner, small increments, test checklist, rollback note).
+2. **For large or cross-boundary changes**: Run system-architect-gatekeeper, then orchestrator, then implement via the relevant domain subagent(s).
+3. **After implementation**: Run observability-engineer for telemetry when the change affects production behavior.
+4. Keep increments small; each increment must have a manual test checklist.
+
+**Rule**: Do not implement across boundaries (e.g. backend + frontend in one step). Use orchestrator handoff and separate subagent runs. When in doubt, invoke system-architect-gatekeeper before making non-trivial changes.

@@ -11,10 +11,7 @@ import {
   ActionRow,
   Body,
 } from "../ui";
-import { PlanCard } from "../components/PlanCard";
-import { SubscriptionSummaryCard } from "../components/SubscriptionSummaryCard";
-import { FallbackScreen } from "../components/FallbackScreen";
-import { SessionMissing } from "../components/SessionMissing";
+import { PlanCard, SubscriptionSummaryCard, FallbackScreen, SessionMissing } from "@/components";
 import { useSession } from "../hooks/useSession";
 import { useWebappToken, webappApi } from "../api/client";
 import { useTrackScreen } from "../hooks/useTrackScreen";
@@ -57,7 +54,7 @@ export function PlanPage() {
   });
 
   const plans = plansData?.items ?? [];
-  const maxDuration = plans.length ? Math.max(...plans.map((p) => p.duration_days)) : 0;
+  const maxDuration = plans.length ? Math.max(...plans.map((p) => p.duration_days)) : 0; // key=
   let daysLeft = 0;
   if (activeSub) {
     const expiry = new Date(activeSub.valid_until);
@@ -93,39 +90,39 @@ export function PlanPage() {
   if (plans.length === 0) {
     return (
       <PageScaffold>
-        <PageHeader title="Choose Your Plan" subtitle="Cancel anytime. Money-back guarantee." />
-        <Panel className="card">
-          <Body>No plans available at the moment.</Body>
-          <ActionRow>
-            <a
-              href="https://t.me/support"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="miniapp-back-link"
-            >
-              Contact support
-            </a>
-          </ActionRow>
-        </Panel>
+        <div className="content-reveal">
+          <PageHeader title="Choose Your Plan" subtitle="Cancel anytime. Money-back guarantee." />
+          <Panel className="card stagger-item">
+            <Body>No plans available at the moment.</Body>
+            <ActionRow>
+              <a aria-label="Contact support" href="https://t.me/support" target="_blank" rel="noopener noreferrer"
+                className="miniapp-back-link"
+              >
+                Contact support
+              </a>
+            </ActionRow>
+          </Panel>
+        </div>
       </PageScaffold>
     );
   }
 
   return (
     <PageScaffold>
-      <PageHeader title="Choose Your Plan" subtitle="Cancel anytime. Money-back guarantee." />
-      {activeSub && (
-        <SubscriptionSummaryCard
+      <div className="content-reveal">
+        <PageHeader title="Choose Your Plan" subtitle="Cancel anytime. Money-back guarantee." />
+        {activeSub && (
+          <SubscriptionSummaryCard
           planId={activeSub.plan_id}
           daysLeft={daysLeft}
           status="active"
           deviceCount={session?.devices?.filter((d) => !d.revoked_at).length ?? 0}
-          deviceLimit={activeSub.device_limit}
-        />
-      )}
-      {!activeSub && (
-        <Panel className="card">
-          <Body>No active plan. Start a free trial or choose one below.</Body>
+            deviceLimit={activeSub.device_limit}
+          />
+        )}
+        {!activeSub && (
+          <Panel className="card stagger-item">
+            <Body>No active plan. Start a free trial or choose one below.</Body>
           {startTrial.error && (
             <InlineAlert
               variant="error"
@@ -153,8 +150,8 @@ export function PlanPage() {
         </Panel>
       )}
       <PageSection title="Available plans">
-        <div className="miniapp-plan-list">
-          {plans.map((p) => (
+          <div className="miniapp-plan-list">
+          {plans.map((p) => ( // key=
             <PlanCard
               key={p.id}
               id={p.id}
@@ -166,9 +163,10 @@ export function PlanPage() {
               isCurrent={activeSub?.plan_id === p.id}
               onSelect={(planId) => track("cta_click", { cta_name: "select_plan", screen_name: "plan", plan_id: planId })}
             />
-          ))}
-        </div>
-      </PageSection>
+            ))}
+          </div>
+        </PageSection>
+      </div>
     </PageScaffold>
   );
 }

@@ -10,7 +10,7 @@ export interface PrimitiveTextProps extends Omit<HTMLAttributes<HTMLElement>, "c
   children?: ReactNode;
 }
 
-export function Text({ variant = "body", as: Component = "span", className = "", children, ...props }: PrimitiveTextProps) {
+export function PrimitiveText({ variant = "body", as: Component = "span", className = "", children, ...props }: PrimitiveTextProps) {
   return (
     <Component className={cn("ds-text", className)} data-variant={variant} {...props}>
       {children}

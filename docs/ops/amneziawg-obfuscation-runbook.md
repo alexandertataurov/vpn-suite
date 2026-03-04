@@ -9,11 +9,13 @@ AmneziaWG uses obfuscation parameters (Jc, Jmin, Jmax, S1, S2, H1–H4) to reduc
 - **S1, S2, H1–H4**: Must be identical on the server and in every issued client config.
 - **Jc, Jmin, Jmax**: Can differ between client and server; panel defaults are 4, 64, 1024.
 
-## How the panel gets obfuscation
+## How the panel gets obfuscation (reverse sync: server is source of truth)
 
-1. **Runtime sync**: `get_obfuscation_from_node(server_id)` runs `docker exec <node> wg show <iface>` and parses output. Overrides profile defaults.
-2. **User-issued (bot) configs**: Same as admin-issued: when a runtime adapter is available, `issue_service.issue_device` calls `get_obfuscation_from_node(resolved_server_id)` and merges the result over ServerProfile defaults, so bot-issued configs match the running node.
-3. **ServerProfile request_params**: DB fields amnezia_jc, amnezia_jmin, amnezia_jmax, amnezia_s1, amnezia_s2, amnezia_h1–h4.
+1. **Runtime sync**: Issued configs use H1–H4 (and S1, S2, Jc, etc.) from the AmneziaWG server when available:
+   - **NODE_DISCOVERY=docker**: `get_obfuscation_from_node` runs `docker exec <node> wg show <iface>` and parses output.
+   - **NODE_DISCOVERY=agent**: Node-agent includes `obfuscation` (from `wg show <iface>`) in heartbeat; control-plane reads it from Redis and uses it for issuance.
+2. **Fallback**: If the adapter has no obfuscation (e.g. no heartbeat yet, or node unreachable), profile/DB defaults are used.
+3. **ServerProfile request_params**: DB fields amnezia_jc, amnezia_jmin, amnezia_jmax, amnezia_s1, amnezia_s2 (amnezia_h1–h4 from profile are stripped; H always from node when available).
 4. **Defaults (client config)**: Jc=4, Jmin=64, Jmax=1024, S1=S2=H1=H2=H3=H4=0. H3 is only emitted in `awg_2_0_asc` profiles when non-zero.
 
 ## Server [Interface] obfuscation (amnezia-awg2)

@@ -1,5 +1,0 @@
-.ds-pagination { display: flex; align-items: center; gap: var(--space-3); }
-.ds-pagination-btn { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; color: var(--color-text-secondary); background: none; border: 1px solid var(--color-border-default); cursor: pointer; }
-.ds-pagination-btn:hover:not(:disabled) { color: var(--color-text-primary); }
-.ds-pagination-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.ds-pagination-range { font-family: var(--font-data); font-size: var(--text-sm); color: var(--color-text-secondary); }

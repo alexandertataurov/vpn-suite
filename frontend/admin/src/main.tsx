@@ -2,56 +2,45 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ThemeProvider } from "@vpn-suite/shared/theme";
-import { getBaseUrl } from "@vpn-suite/shared/api-client";
-import { TelemetryProvider } from "./context/TelemetryContext";
-import { init as initTelemetry } from "./telemetry";
-import { wireGlobalErrors } from "./telemetry/errors";
-import { initWebVitals } from "./telemetry/webVitals";
-import { initSentry } from "./telemetry/sentry";
+import { createApiClient } from "@/core/api/client";
+import { ApiProvider } from "@/core/api/context";
+import { getBaseUrl } from "@/shared/constants";
+import { useAuthStore } from "@/core/auth/store";
+import { TelemetryProvider } from "@/core/telemetry/provider";
+import { ToastProvider } from "@/design-system";
 import App from "./App";
-import { LiveMetricsProvider } from "./context/LiveMetricsProvider";
-import { DensityProvider } from "./context/DensityContext";
-import { useAuthStore } from "./store/authStore";
 import "./tailwind.css";
+import "./design-system/tokens/tokens.css";
+import "./design-system/primitives/primitives.css";
+import "./design-system/primitives/primitives-extended.css";
+import "./design-system/typography.css";
 import "./admin.css";
-
-const telemetryEnv =
-  typeof import.meta !== "undefined"
-    ? ((import.meta as { env?: { VITE_ADMIN_TELEMETRY_EVENTS_ENABLED?: string; VITE_ADMIN_TELEMETRY_SAMPLE_RATE?: string } }).env ?? {})
-    : {};
-const telemetrySampleRate = Number(telemetryEnv.VITE_ADMIN_TELEMETRY_SAMPLE_RATE ?? "1");
-
-initTelemetry({
-  baseUrl: getBaseUrl,
-  getToken: () => useAuthStore.getState().getAccessToken(),
-  sendFrontendErrors: true,
-  sendEventsBatch: telemetryEnv.VITE_ADMIN_TELEMETRY_EVENTS_ENABLED !== "0",
-  sampleRate: Number.isFinite(telemetrySampleRate) ? telemetrySampleRate : 1,
-});
-initSentry();
-wireGlobalErrors();
-initWebVitals();
+import "./design-system/primitives/primitives-dashboard.css";
 
 const queryClient = new QueryClient({
   defaultOptions: {
-    queries: { retry: 1, refetchOnWindowFocus: false, staleTime: 30000 },
+    queries: { retry: 2, refetchOnWindowFocus: false, staleTime: 30_000 },
   },
+});
+
+const apiClient = createApiClient({
+  baseUrl: getBaseUrl,
+  getToken: () => useAuthStore.getState().getAccessToken(),
+  onUnauthorized: () => useAuthStore.getState().logout(),
+  timeoutMs: 30_000,
 });
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <BrowserRouter basename="/admin">
       <QueryClientProvider client={queryClient}>
-        <TelemetryProvider>
-          <ThemeProvider themes={["starlink", "orbital", "dark", "dim", "light"]} defaultTheme="starlink" storageKey="vpn-suite-admin-theme">
-            <DensityProvider>
-            <LiveMetricsProvider>
+        <ApiProvider client={apiClient}>
+          <TelemetryProvider>
+            <ToastProvider>
               <App />
-            </LiveMetricsProvider>
-            </DensityProvider>
-          </ThemeProvider>
-        </TelemetryProvider>
+            </ToastProvider>
+          </TelemetryProvider>
+        </ApiProvider>
       </QueryClientProvider>
     </BrowserRouter>
   </React.StrictMode>

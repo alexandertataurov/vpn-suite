@@ -3,7 +3,7 @@
  * Renders inside TableContainer wrapper for consistent border, radius, overflow.
  *
  * Table Style Contract (single source of truth):
- * - Row height: comfortable = 48px min; compact = 40px
+ * - Row height: comfortable = var(--table-row-height-md); compact = var(--table-row-height-compact)
  * - Cell padding: token-based
  * - Typography: header = font-size-sm, font-weight-600; body = font-size-sm
  * - Alignment: text = left; numeric = right + tabular-nums; actions = right
@@ -139,7 +139,7 @@ export function Table<T>({
   };
   const toggleAll = () => {
     if (!selection) return;
-    const ids = data.map((r) => keyFn(r));
+    const ids = data.map((r) => keyFn(r)); // key=
     const allSelected = ids.every((id) => selection.selected.has(id));
     selection.onChange(allSelected ? new Set() : new Set(ids));
   };
@@ -160,7 +160,7 @@ export function Table<T>({
                 />
               </th>
             ) : null}
-            {columns.map((col) => (
+            {columns.map((col) => ( // key=
               <th
                 key={col.key}
                 scope="col"
@@ -175,8 +175,7 @@ export function Table<T>({
                 }
               >
                 {col.sortKey && onSort ? (
-                  <button
-                    type="button"
+                  <button type="button"
                     className="ds-table-sort"
                     onClick={() => onSort(col.sortKey ?? col.key)}
                   >
@@ -195,7 +194,7 @@ export function Table<T>({
           </tr>
         </thead>
         <tbody>
-          {data.map((row) => {
+          {data.map((row) => { // key=
             const rowId = keyFn(row);
             const rowClickable = typeof onRowClick === "function";
             const rowClass = cn(
@@ -228,7 +227,7 @@ export function Table<T>({
                     />
                   </td>
                 ) : null}
-                {columns.map((col) => {
+                {columns.map((col) => { // key=
                   const cellClasses = getCellClasses(col);
                   const isActions = col.actions;
                   return renderCellContent(col, row, {

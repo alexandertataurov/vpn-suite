@@ -1,7 +1,7 @@
 # Documentation Consolidation & Unimplemented Tasks Plan
 
 **Created:** 2026-02-23  
-**Updated:** 2026-02-24 (bot, codebase-map, consolidation-plan, naming-conventions, workflow aligned)
+**Updated:** 2026-03 (doc overhaul: ROADMAP/BASELINE/dated release docs removed; FOUNDATIONS_GOVERNANCE, TELEMETRY_OBSERVABILITY_DATA_FLOW, SYSTEM_MAP, observability ARCHITECTURE/FOLDER_STRUCTURE/legacy-removal merged; OpenAPI path unified to openapi/openapi.yaml)
 **Purpose:** Single place for doc structure, consolidation, and unimplemented work.
 
 ---

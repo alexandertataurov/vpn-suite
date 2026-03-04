@@ -1,0 +1,31 @@
+---
+description: Frontend and TypeScript standards — no hex colors, no inline styles, shared-inline icons in miniapp, no circular imports, typed API client, a11y. CI enforces eslint, typecheck, vitest, playwright, storybook guardrails.
+globs: ["frontend/**/*.ts", "frontend/**/*.tsx", "frontend/**/*.css"]
+alwaysApply: false
+---
+
+# Frontend / TypeScript rules
+
+**Project context**: Frontend is React 18, TypeScript, Vite monorepo with workspaces `admin`, `miniapp`, `shared`. Single `:root` token file per app; no hardcoded hex, no inline styles, no direct lucide in miniapp. Use the **frontend-engineer** skill/agent for frontend-only changes.
+
+- **No hardcoded hex colors**: Do not use `#rrggbb` or `#rgb` in TSX, TS, or CSS. Use CSS variables from the token file only.
+  - Wrong: `color: '#333'`, `backgroundColor: '#ffffff'`
+  - Right: `color: 'var(--color-text)'`, Tailwind token-based classes
+
+- **No inline styles**: Do not use `style={{}}` in JSX. Use Tailwind utility classes or CSS modules.
+  - Wrong: `<div style={{ marginTop: 8, color: 'red' }}>`
+  - Right: `<div className="mt-2 text-error">` or a CSS module class
+
+- **Miniapp icons**: In `frontend/miniapp/src`, do not import directly from `lucide-react`. Import only from `@/shared-inline/icons`.
+  - Wrong: `import { ChevronRight } from 'lucide-react'`
+  - Right: `import { IconChevronRight } from '@/shared-inline/icons'`
+
+- **No circular imports**: If adding a new import would create a cycle, restructure (e.g. move shared types to a separate file) instead of adding the import.
+
+- **Exports**: Every new exported symbol (component, hook, util) must be imported somewhere, or have a JSDoc comment explaining it is a public API.
+
+- **API calls**: New API calls must use the existing typed API client. No raw `fetch()` or `axios` calls outside the client layer.
+
+- **Accessibility**: Every interactive element (`button`, `a`, or element with a custom click handler) must have an accessible label (`aria-label`, `aria-labelledby`, or visible text). Images must have `alt`.
+
+CI already runs: eslint, typecheck, vitest, playwright E2E, storybook guardrails. Design checks (no hex, no inline styles, no direct lucide in miniapp, single :root) are enforced in CI. These rules guide AI behavior; run `frontend:check` and `design:check` locally.

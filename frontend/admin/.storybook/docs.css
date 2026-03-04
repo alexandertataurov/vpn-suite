@@ -1,0 +1,436 @@
+/* VPN Suite — Docs use design system tokens (tokens.css, base.css loaded in preview).
+ * Dark default; .light / data-theme="light" for light mode.
+ */
+
+:root {
+  --ds-docs-max: 860px;
+  --ds-radius: var(--space-2);
+  --ds-ease: var(--duration-base) var(--ease-out-expo);
+}
+
+body.docs-docs {
+  color: var(--color-text-primary);
+  background-color: var(--color-bg);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+}
+
+html[data-theme="light"] body.docs-docs,
+body.docs-docs.light,
+body.docs-docs[data-theme="light"] {
+  color: var(--color-text-primary);
+  background-color: var(--color-bg);
+}
+
+/* Scroll */
+html {
+  scroll-behavior: smooth;
+}
+
+body.docs-docs [data-storybook-docs="docs-root"] {
+  max-width: var(--ds-docs-max);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--space-6);
+  padding-right: var(--space-6);
+  line-height: var(--leading-relaxed);
+}
+
+body.docs-docs ::selection {
+  background: var(--color-accent-dim);
+  color: var(--color-text-primary);
+}
+
+body.docs-docs::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+body.docs-docs::-webkit-scrollbar-track {
+  background: transparent;
+}
+body.docs-docs::-webkit-scrollbar-thumb {
+  background: var(--color-border-subtle);
+  border-radius: 2px;
+}
+body.docs-docs::-webkit-scrollbar-thumb:hover {
+  background: var(--color-accent);
+}
+
+/* Headings — design system font and colors */
+body.docs-docs [data-storybook-docs="docs-root"] h1,
+body.docs-docs .sbdocs.sbdocs-h1 {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 600;
+  letter-spacing: var(--letter-spacing-tight);
+  line-height: var(--leading-tight);
+  color: var(--color-text-primary);
+  margin-top: 0;
+  margin-bottom: var(--space-2);
+}
+
+body.docs-docs [data-storybook-docs="docs-root"] h2,
+body.docs-docs .sbdocs.sbdocs-h2 {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin-top: var(--space-10);
+  margin-bottom: var(--space-4);
+  padding-left: var(--space-3);
+  border-left: 3px solid var(--color-accent);
+}
+
+body.docs-docs [data-storybook-docs="docs-root"] h3,
+body.docs-docs .sbdocs.sbdocs-h3 {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  margin-top: var(--space-8);
+  margin-bottom: var(--space-3);
+}
+
+body.docs-docs [data-storybook-docs="docs-root"] h4,
+body.docs-docs .sbdocs.sbdocs-h4 {
+  font-size: var(--text-base);
+  font-weight: 600;
+  margin-top: var(--space-6);
+  margin-bottom: var(--space-2);
+}
+
+body.docs-docs [data-storybook-docs="docs-root"] p,
+body.docs-docs .sbdocs.sbdocs-p {
+  margin-top: 0;
+  margin-bottom: var(--space-4);
+}
+
+body.docs-docs [data-storybook-docs="docs-root"] code:not([class*="prism"]),
+body.docs-docs .sbdocs.sbdocs-code {
+  font-family: var(--font-data);
+  font-size: 0.875em;
+  padding: var(--space-2px) var(--space-2);
+  border-radius: var(--ds-radius);
+  background: var(--color-accent-dim);
+  color: var(--color-text-accent);
+  border: none;
+  transition: background var(--ds-ease), color var(--ds-ease);
+}
+
+body.docs-docs [data-storybook-docs="docs-root"] pre[class*="prism"],
+body.docs-docs .docblock-source {
+  position: relative;
+  background: var(--color-base);
+  border-radius: var(--ds-radius);
+  padding: var(--space-4) 0 var(--space-4) var(--space-12);
+  margin: var(--space-6) 0;
+  overflow-x: auto;
+  border: 1px solid var(--color-border-faint);
+}
+body.docs-docs [data-storybook-docs="docs-root"] pre[class*="prism"]::before,
+body.docs-docs .docblock-source::before {
+  content: attr(data-language);
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  background: var(--color-elevated);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--space-1);
+}
+body.docs-docs .docblock-source button[title="Copy"] {
+  position: absolute;
+  top: var(--space-2);
+  right: 72px;
+  padding: var(--space-1-5) var(--space-3);
+  font-size: var(--text-xs);
+  border-radius: var(--ds-radius);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  border: none;
+  cursor: pointer;
+  transition: background var(--ds-ease), color var(--ds-ease);
+}
+body.docs-docs .docblock-source button[title="Copy"]:hover {
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
+}
+
+body.docs-docs [data-storybook-docs="docs-root"] table,
+body.docs-docs .sbdocs.sbdocs-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: var(--space-6) 0;
+  font-size: var(--text-sm);
+}
+body.docs-docs [data-storybook-docs="docs-root"] thead,
+body.docs-docs .sbdocs.sbdocs-thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--color-elevated);
+}
+body.docs-docs [data-storybook-docs="docs-root"] th,
+body.docs-docs .sbdocs.sbdocs-th {
+  text-align: left;
+  padding: var(--space-3) var(--space-4);
+  font-weight: 600;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+body.docs-docs [data-storybook-docs="docs-root"] td,
+body.docs-docs .sbdocs.sbdocs-td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border-faint);
+}
+body.docs-docs [data-storybook-docs="docs-root"] tbody tr:nth-child(even),
+body.docs-docs .sbdocs.sbdocs-tbody tr:nth-child(even) {
+  background: var(--color-accent-dim);
+}
+body.docs-docs [data-storybook-docs="docs-root"] table code,
+body.docs-docs .sbdocs.sbdocs-table code {
+  background: transparent;
+  padding: 0;
+  color: var(--color-text-accent);
+}
+
+body.docs-docs [data-storybook-docs="docs-root"] blockquote,
+body.docs-docs .sbdocs.sbdocs-blockquote {
+  margin: var(--space-6) 0;
+  padding: var(--space-2) 0 var(--space-2) var(--space-4);
+  border-left: 3px solid var(--color-accent);
+  font-style: italic;
+  color: var(--color-text-muted);
+}
+
+body.docs-docs [data-storybook-docs="docs-root"] a,
+body.docs-docs .sbdocs.sbdocs-a {
+  color: var(--color-text-accent);
+  text-decoration: none;
+  transition: color var(--ds-ease);
+}
+body.docs-docs [data-storybook-docs="docs-root"] a:hover,
+body.docs-docs .sbdocs.sbdocs-a:hover {
+  text-decoration: underline;
+  color: var(--color-accent-bright);
+}
+
+body.docs-docs [data-storybook-docs="docs-root"] a:focus-visible,
+body.docs-docs [data-storybook-docs="docs-root"] button:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+
+body.docs-docs [data-storybook-docs="docs-root"] * {
+  transition-duration: var(--duration-base);
+  transition-timing-function: var(--ease-in-out);
+}
+
+/* ========== Layout doc page (Primitives/Layout/Overview) ========== */
+body.docs-docs [data-storybook-docs="docs-root"]:has(.layout-doc) {
+  max-width: var(--ds-docs-max);
+  padding-left: var(--space-6);
+  padding-right: var(--space-6);
+}
+
+.layout-doc {
+  --layout-doc-content-max: var(--space-768px);
+  --layout-doc-pad: var(--space-10) var(--space-12);
+  font-family: var(--font-body);
+  min-height: 100%;
+}
+
+.layout-doc__main {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: var(--layout-doc-content-max);
+  padding: var(--layout-doc-pad);
+}
+
+.layout-doc__header {
+  margin-bottom: var(--space-10);
+}
+
+.layout-doc__title {
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-2) 0;
+  letter-spacing: var(--letter-spacing-tight);
+}
+
+.layout-doc__subtitle {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  margin: 0 0 var(--space-4) 0;
+}
+
+.layout-doc__description {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  margin: 0;
+  line-height: var(--leading-normal);
+  font-family: var(--font-body);
+}
+
+.layout-doc-section {
+  margin-top: var(--space-12);
+}
+
+.layout-doc-section__heading {
+  font-size: var(--text-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-3) 0;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.layout-doc-section__heading a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.layout-doc-section__heading .layout-doc-section__anchor {
+  opacity: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  transition: opacity var(--duration-base) var(--ease-in-out);
+}
+
+.layout-doc-section__heading:hover .layout-doc-section__anchor {
+  opacity: 1;
+}
+
+.layout-doc-section__rule {
+  height: 1px;
+  background: var(--color-border-faint);
+  border: 0;
+  margin: 0 0 var(--space-4) 0;
+}
+
+.layout-doc-section__description {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--space-6) 0;
+  line-height: var(--leading-relaxed);
+  font-family: var(--font-body);
+}
+
+.layout-doc-section__description .layout-doc-code-chip {
+  background: var(--color-accent-dim);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--space-1);
+  font-family: var(--font-data);
+  font-size: var(--text-sm);
+  padding: var(--space-2px) var(--space-2);
+}
+
+.layout-doc-preview-canvas {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-faint);
+  border-radius: var(--space-2);
+  padding: var(--space-6);
+  margin-bottom: var(--space-6);
+  position: relative;
+}
+
+.layout-doc-preview-canvas__label {
+  font-size: var(--text-2xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+  margin-top: var(--space-3);
+}
+
+.layout-doc-block {
+  background: var(--color-elevated);
+  border-radius: var(--space-1);
+  min-height: var(--size-touch-target);
+}
+
+.layout-doc-block--h-md {
+  min-height: var(--table-row-height-md);
+}
+
+.layout-doc-block--h-bar {
+  min-height: var(--health-bar-height);
+}
+
+.layout-doc-container-demo {
+  border: 1px dashed var(--color-border-subtle);
+  border-radius: var(--space-1);
+  padding: var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+/* Layout doc props table overrides (target PropsTable inside layout-doc) */
+.layout-doc section table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: var(--space-6) 0;
+  font-size: var(--text-sm);
+  background: var(--color-base);
+  border-radius: var(--ds-radius);
+  overflow: hidden;
+}
+
+.layout-doc section table th {
+  text-align: left;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-2xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+}
+
+.layout-doc section table td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--color-border-faint);
+  color: var(--color-text-secondary);
+}
+
+.layout-doc section table tr:nth-child(even) td {
+  background: var(--color-accent-dim);
+}
+
+.layout-doc section table code {
+  background: var(--color-accent-dim);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--space-1);
+  font-family: var(--font-data);
+  font-size: var(--text-sm);
+  padding: var(--space-2px) var(--space-2);
+}
+
+/* Layout doc code block wrapper (copy + language label) */
+.layout-doc-code-wrap {
+  position: relative;
+  background: var(--color-base);
+  border: 1px solid var(--color-border-faint);
+  border-radius: var(--ds-radius);
+  margin: var(--space-6) 0;
+  overflow: hidden;
+}
+
+.layout-doc-code-wrap__lang {
+  position: absolute;
+  top: var(--space-2);
+  left: var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  font-family: var(--font-data);
+}
+
+.layout-doc-code-wrap .docblock-source button[title="Copy"]:hover,
+.layout-doc-code-wrap .layout-doc-copy-btn:hover {
+  color: var(--color-text-primary);
+}

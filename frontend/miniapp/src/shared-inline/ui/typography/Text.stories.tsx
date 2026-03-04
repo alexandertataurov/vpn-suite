@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { Text } from "./Text";
 
 const meta: Meta<typeof Text> = {
-  title: "Primitives/Text",
+  title: "Shared/Primitives/Text",
   component: Text,
   parameters: {
     docs: {
@@ -17,9 +17,9 @@ export default meta;
 
 type Story = StoryObj<typeof Text>;
 
-export const Overview: Story = { args: { children: "Body text" } };
+export const TextOverview: Story = { args: { children: "Body text" } };
 
-export const Variants: Story = {
+export const TextVariants: Story = {
   render: () => (
     <div className="sb-stack">
       <Text variant="body">Body text</Text>
@@ -30,7 +30,7 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
+export const TextSizes: Story = {
   render: () => (
     <div className="sb-stack">
       <p className="m-0">Size variants are not exposed; use variants.</p>
@@ -39,7 +39,7 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const TextStates: Story = {
   render: () => (
     <div className="sb-stack">
       <Text>Default</Text>
@@ -47,17 +47,17 @@ export const States: Story = {
   ),
 };
 
-export const WithLongText: Story = {
+export const TextWithLongText: Story = {
   args: { children: "Long text that should wrap across multiple lines without breaking rhythm." },
 };
 
-export const DarkMode: Story = {
+export const TextDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   args: { children: "Body text" },
 };
 
-export const Accessibility: Story = {
+export const TextAccessibility: Story = {
   args: { children: "Accessible body text" },
 };
 
-export const EdgeCases = WithLongText;
+export const TextEdgeCases = WithLongText;

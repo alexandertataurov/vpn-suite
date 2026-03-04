@@ -2,7 +2,7 @@
 
 This table is generated from FastAPI routes, bot/node-agent HTTP handlers, and reverse-proxy routing. It reflects *code truth*; docs differences are flagged.
 
-**Legend:** `UNDOCUMENTED` = in code but not in canonical OpenAPI (`docs/api/openapi.yaml`). `STALE` = in OpenAPI but not in code.
+**Legend:** `UNDOCUMENTED` = in code but not in canonical OpenAPI (`openapi/openapi.yaml`). `STALE` = in OpenAPI but not in code.
 
 **Note:** `GET /api/v1/dashboard/operator` was removed; use `GET /api/v1/overview/operator` for operator dashboard data. The OpenAPI spec covers **admin-api** only. Bot and node-agent health/metrics endpoints are documented here but are not part of the admin-api OpenAPI.
 

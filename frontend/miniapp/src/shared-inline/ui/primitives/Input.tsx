@@ -8,7 +8,7 @@ export interface PrimitiveInputProps extends Omit<InputHTMLAttributes<HTMLInputE
   invalid?: boolean;
 }
 
-export function Input({ size = "md", invalid, className = "", ...props }: PrimitiveInputProps) {
+export function PrimitiveInput({ size = "md", invalid, className = "", ...props }: PrimitiveInputProps) {
   return (
     <input
       className={cn("ds-input", className)}

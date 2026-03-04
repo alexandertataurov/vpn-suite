@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { Stat } from "./Stat";
 
 const meta: Meta<typeof Stat> = {
-  title: "Components/Stat",
+  title: "Shared/Components/Stat",
   component: Stat,
   parameters: {
     docs: {
@@ -17,11 +17,11 @@ export default meta;
 
 type Story = StoryObj<typeof Stat>;
 
-export const Overview: Story = {
+export const StatOverview: Story = {
   args: { value: "1,234", label: "Total users" },
 };
 
-export const Variants: Story = {
+export const StatVariants: Story = {
   render: () => (
     <div className="sb-row">
       <Stat value="42" unit="ms" label="Latency" />
@@ -31,7 +31,7 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
+export const StatSizes: Story = {
   render: () => (
     <div className="sb-stack">
       <p className="m-0">Size variants are not exposed; uses tokenized type.</p>
@@ -48,17 +48,17 @@ export const States: Story = {
   ),
 };
 
-export const WithLongText: Story = {
+export const StatWithLongText: Story = {
   args: { value: "1,234", label: "Total users in the primary region and secondary edge cluster" },
 };
 
-export const DarkMode: Story = {
+export const StatDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   args: { value: "1,234", label: "Total users" },
 };
 
-export const Accessibility: Story = {
+export const StatAccessibility: Story = {
   args: { value: "1,234", label: "Total users" },
 };
 
-export const EdgeCases = WithLongText;
+export const StatEdgeCases = WithLongText;

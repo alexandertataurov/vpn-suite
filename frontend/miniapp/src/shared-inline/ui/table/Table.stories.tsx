@@ -25,7 +25,7 @@ const columns: Column<SampleRow>[] = [
 ];
 
 const meta: Meta<typeof Table> = {
-  title: "Components/DataTable",
+  title: "Shared/Components/DataTable",
   component: Table,
   parameters: {
     docs: {
@@ -46,7 +46,7 @@ export default meta;
 
 type Story = StoryObj<typeof Table>;
 
-export const Overview: Story = {
+export const TableOverview: Story = {
   render: () => (
     <Table<SampleRow>
       columns={columns}
@@ -57,7 +57,7 @@ export const Overview: Story = {
   ),
 };
 
-export const Variants: Story = {
+export const TableVariants: Story = {
   render: () => (
     <div className="sb-stack">
       <Table<SampleRow>
@@ -76,7 +76,7 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
+export const TableSizes: Story = {
   render: () => (
     <div className="sb-stack">
       <Table<SampleRow>
@@ -89,7 +89,7 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const TableStates: Story = {
   render: () => (
     <Table<SampleRow>
       columns={columns}
@@ -99,7 +99,7 @@ export const States: Story = {
   ),
 };
 
-export const Empty: Story = {
+export const TableEmpty: Story = {
   render: () => (
     <Table<SampleRow>
       columns={columns}
@@ -110,7 +110,7 @@ export const Empty: Story = {
   ),
 };
 
-export const WithSort: Story = {
+export const TableWithSort: Story = {
   render: function WithSortStory() {
     const [sortKey, setSortKey] = useState("name");
     const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
@@ -140,11 +140,11 @@ export const WithSort: Story = {
   },
 };
 
-export const Loading: Story = {
+export const TableLoading: Story = {
   render: () => <TableSkeleton rows={4} columns={5} density="comfortable" />,
 };
 
-export const WithLongText: Story = {
+export const TableWithLongText: Story = {
   render: () => (
     <Table<SampleRow>
       columns={columns}
@@ -156,7 +156,7 @@ export const WithLongText: Story = {
   ),
 };
 
-export const Virtualized: Story = {
+export const TableVirtualized: Story = {
   render: () => {
     const data: SampleRow[] = Array.from({ length: 200 }, (_, i) => ({
       id: String(i + 1),
@@ -175,7 +175,7 @@ export const Virtualized: Story = {
   },
 };
 
-export const DarkMode: Story = {
+export const TableDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   render: () => (
     <Table<SampleRow>
@@ -187,7 +187,7 @@ export const DarkMode: Story = {
   ),
 };
 
-export const Accessibility: Story = {
+export const TableAccessibility: Story = {
   render: () => (
     <Table<SampleRow>
       columns={columns}
@@ -198,4 +198,4 @@ export const Accessibility: Story = {
   ),
 };
 
-export const EdgeCases = WithLongText;
+export const TableEdgeCases = WithLongText;

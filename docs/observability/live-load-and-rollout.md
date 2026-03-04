@@ -52,6 +52,7 @@
 
 #### 2.1 Flags and toggles
 
+- **Required for real-time cluster/server metrics (TX/RX, connections, live stream):** set `LIVE_OBS_ENABLED=true` on admin-worker and build admin with `VITE_LIVE_OBS_ENABLED=1`. Without both, the dashboard uses polling only.
 - Backend:
   - `LIVE_OBS_ENABLED=true` → enables live aggregator in the background worker and SSE router.
   - `live_obs_agg_interval_seconds`, `live_obs_sse_max_connections`, `live_obs_max_event_bytes` control cadence and capacity.

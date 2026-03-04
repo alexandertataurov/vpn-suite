@@ -24,7 +24,7 @@ test.describe("Devices", () => {
     if (count >= 2) {
       await checkboxes.nth(1).click();
       await checkboxes.nth(2).click();
-      await expect(page.getByRole("region", { name: /Bulk actions/i })).toBeVisible({ timeout: 5000 });
+      await expect(page.getByRole("toolbar", { name: /selected/i })).toBeVisible({ timeout: 5000 });
       await expect(page.getByText(/\d+ selected/)).toBeVisible();
       await page.getByRole("button", { name: /Revoke/i }).first().click();
       await expect(page.getByRole("dialog")).toBeVisible({ timeout: 5000 });

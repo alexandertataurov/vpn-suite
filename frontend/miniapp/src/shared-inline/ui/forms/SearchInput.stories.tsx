@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { SearchInput } from "./SearchInput";
 
 const meta: Meta<typeof SearchInput> = {
-  title: "Components/SearchInput",
+  title: "Shared/Components/SearchInput",
   component: SearchInput,
   parameters: {
     docs: {
@@ -17,11 +17,11 @@ export default meta;
 
 type Story = StoryObj<typeof SearchInput>;
 
-export const Overview: Story = {
+export const SearchInputOverview: Story = {
   args: { placeholder: "Search..." },
 };
 
-export const Variants: Story = {
+export const SearchInputVariants: Story = {
   render: () => (
     <div className="sb-stack">
       <SearchInput placeholder="Search servers" />
@@ -30,7 +30,7 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
+export const SearchInputSizes: Story = {
   render: () => (
     <div className="sb-stack">
       <p className="m-0">Size variants are not exposed; uses input tokens.</p>
@@ -39,7 +39,7 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const SearchInputStates: Story = {
   render: () => (
     <div className="sb-stack">
       <SearchInput placeholder="Default" />
@@ -49,17 +49,17 @@ export const States: Story = {
   ),
 };
 
-export const WithLongText: Story = {
+export const SearchInputWithLongText: Story = {
   args: { placeholder: "Search servers across all regions and environments" },
 };
 
-export const DarkMode: Story = {
+export const SearchInputDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   args: { placeholder: "Search..." },
 };
 
-export const Accessibility: Story = {
+export const SearchInputAccessibility: Story = {
   args: { label: "Search servers", placeholder: "Type to search" },
 };
 
-export const EdgeCases = WithLongText;
+export const SearchInputEdgeCases = WithLongText;

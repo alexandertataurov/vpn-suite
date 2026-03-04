@@ -26,7 +26,6 @@ from app.core.config_builder import (
     ConfigValidationError,
     generate_preshared_key,
 )
-from app.core.amnezia_vpn_key import encode_awg_conf_vpn_key
 from app.core.exceptions import WireGuardCommandError
 from app.core.redaction import redact_for_log
 from app.core.security import encrypt_config

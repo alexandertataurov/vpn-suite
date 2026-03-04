@@ -1,4 +1,4 @@
-import { Panel, Caption, Body } from "../ui";
+import { Panel, Caption, Body } from "@/ui";
 
 export interface SubscriptionSummaryCardProps {
   planId: string;
@@ -28,7 +28,7 @@ export function SubscriptionSummaryCard({
 
   return (
     <Panel
-      className={`card instrument-card ${status === "expired" ? "instrument-card--alert" : status === "active" ? "instrument-card--active" : "instrument-card--inactive"} subscription-summary-card subscription-summary-card--status-${status}`}
+      className={`card instrument-card stagger-item ${status === "expired" ? "instrument-card--alert" : status === "active" ? "instrument-card--active" : "instrument-card--inactive"} subscription-summary-card subscription-summary-card--status-${status}`}
     >
       <Caption>Subscription</Caption>
       <Body>

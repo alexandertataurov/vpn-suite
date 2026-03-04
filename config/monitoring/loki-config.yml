@@ -27,12 +27,12 @@ schema_config:
         period: 24h
 
 limits_config:
-  retention_period: 8760h  # 365 days
+  retention_period: 168h  # 7 days
 
 compactor:
   working_directory: /tmp/loki/compactor
   retention_enabled: true
-  retention_delete_delay: 2h
+  retention_delete_delay: 30m
   delete_request_store: filesystem
 
 analytics:

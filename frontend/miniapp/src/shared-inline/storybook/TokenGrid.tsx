@@ -16,7 +16,7 @@ export function TokenGrid({ items, columns = "auto", heightToken }: TokenGridPro
   const columnsAttr = typeof columns === "number" ? String(columns) : undefined;
   return (
     <div className="sb-grid" data-columns={columnsAttr}>
-      {items.map(({ name, cssVar, usage }) => (
+      {items.map(({ name, cssVar, usage }) => ( // key=
         <TokenSwatch key={name} cssVar={cssVar} usage={usage} heightToken={heightToken} />
       ))}
     </div>

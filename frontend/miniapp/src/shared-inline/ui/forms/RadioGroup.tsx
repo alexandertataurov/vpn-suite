@@ -61,7 +61,7 @@ export function RadioGroup({
       ) : null}
 
       <div className="radio-options" data-direction={direction}>
-        {options.map((opt) => {
+        {options.map((opt) => { // key=
           const optionId = `${id}-${opt.value}`;
           const isDisabled = disabled || Boolean(opt.disabled);
           return (
@@ -104,4 +104,3 @@ export function RadioGroup({
     </fieldset>
   );
 }
-

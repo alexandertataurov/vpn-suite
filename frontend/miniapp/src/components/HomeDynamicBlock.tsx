@@ -79,10 +79,9 @@ export function HomeDynamicBlock({
 
   return (
     <div className="home-dynamic-block">
-      {items.map((item, i) => (
-        <div
-          key={i}
-          className={`home-dynamic-item-wrap${i < items.length - 1 ? " home-dynamic-item-wrap--divider" : ""}`}
+      {items.map((item, i) => ( // key=
+        <div key={i}
+          className={`home-dynamic-item-wrap stagger-item${i < items.length - 1 ? " home-dynamic-item-wrap--divider" : ""}`}
         >
           {item.content}
         </div>

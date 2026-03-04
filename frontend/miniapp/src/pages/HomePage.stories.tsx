@@ -6,7 +6,7 @@ import { webappMeActive, webappMeNoSubscription } from "../storybook/fixtures";
 import { Body } from "../ui";
 
 const meta: Meta<typeof HomePage> = {
-  title: "Pages/Miniapp/Home",
+  title: "Miniapp/Pages/Home",
   component: HomePage,
   parameters: {
     layout: "fullscreen",
@@ -26,15 +26,15 @@ const renderPage = (options: Parameters<typeof MockWebappApi>[0]["options"]) => 
   </MockWebappApi>
 );
 
-export const Overview: Story = {
+export const HomePageOverview: Story = {
   render: () => renderPage({ mode: "success", me: webappMeActive }),
 };
 
-export const Variants: Story = {
+export const HomePageVariants: Story = {
   render: () => renderPage({ mode: "success", me: webappMeNoSubscription }),
 };
 
-export const Sizes: Story = {
+export const HomePageSizes: Story = {
   render: () => (
     <div className="sb-stack">
       <Body>Reference layout only; size variants are not exposed.</Body>
@@ -43,11 +43,11 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const HomePageStates: Story = {
   render: () => renderPage({ mode: "loading" }),
 };
 
-export const WithLongText: Story = {
+export const HomePageWithLongText: Story = {
   render: () => renderPage({
     mode: "success",
     me: {
@@ -62,13 +62,13 @@ export const WithLongText: Story = {
   }),
 };
 
-export const DarkMode: Story = {
+export const HomePageDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   render: () => renderPage({ mode: "success", me: webappMeActive }),
 };
 
-export const Accessibility: Story = {
+export const HomePageAccessibility: Story = {
   render: () => renderPage({ mode: "success", me: webappMeActive }),
 };
 
-export const EdgeCases = WithLongText;
+export const HomePageEdgeCases = WithLongText;

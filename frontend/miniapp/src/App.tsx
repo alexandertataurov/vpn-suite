@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { ToastContainer, Skeleton } from "./ui";
 import { TabbedShellLayout, StackFlowLayout } from "./layouts/MiniappLayout";
-import { TelegramThemeBridge } from "./components/TelegramThemeBridge";
+import { TelegramThemeBridge } from "@/components";
 import { useTelemetry } from "./hooks/useTelemetry";
 import { useViewportDimensions } from "./hooks/useViewportDimensions";
 import { useScrollInputIntoView } from "./hooks/useScrollInputIntoView";

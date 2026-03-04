@@ -14,7 +14,7 @@ export interface StatusStripProps extends HTMLAttributes<HTMLDivElement> {
 export function StatusStrip({ items, ...props }: StatusStripProps) {
   return (
     <PrimitiveStack direction="horizontal" gap="2" wrap {...props}>
-      {items.map((item, idx) => (
+      {items.map((item, idx) => ( // key=
         <HealthBadge key={`${item.status}-${idx}`} status={item.status} label={item.label} />
       ))}
     </PrimitiveStack>

@@ -2,6 +2,13 @@
 
 Design system token usage rules and enforcement. All contributors must follow these rules.
 
+## Source of truth
+
+- **Admin:** `frontend/admin/src/design-system/tokens.css`
+- **Miniapp:** `frontend/miniapp/src/shared-inline/theme/tokens.css`
+
+These files define the canonical design tokens (CSS variables). All other layers consume them.
+
 ## Rules
 
 ### 1. No Raw Hex

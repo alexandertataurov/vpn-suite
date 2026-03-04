@@ -13,10 +13,11 @@ jobs:
   smoke-staging-ha:
     # Expected runner labels for staging host with Docker access.
     runs-on: [self-hosted, linux, staging]
+    # Full validation + HA failover can take 60–90 min; 120 is safety margin.
     timeout-minutes: 120
     concurrency:
       group: staging-smoke-ha
-      cancel-in-progress: false
+      cancel-in-progress: false  # Keep: do not cancel in-progress runs on staging.
 
     steps:
       - name: Checkout
@@ -32,9 +33,11 @@ jobs:
           set -euo pipefail
           if [[ -n "${STAGING_DOTENV:-}" ]]; then
             printf '%s\n' "$STAGING_DOTENV" > .env
+            chmod 600 .env
             echo ".env restored from STAGING_DOTENV secret"
           elif [[ -n "${STAGING_ENV_FILE_PATH:-}" && -f "${STAGING_ENV_FILE_PATH}" ]]; then
             cp "${STAGING_ENV_FILE_PATH}" .env
+            chmod 600 .env
             echo ".env copied from STAGING_ENV_FILE_PATH=${STAGING_ENV_FILE_PATH}"
           elif [[ -f .env ]]; then
             echo ".env already present in workspace"
@@ -51,12 +54,19 @@ jobs:
           chmod +x scripts/staging_ha_failover_smoke.sh
 
       - name: Docker preflight
+        env:
+          EXPECTED_ADMIN_CONTAINER: ${{ vars.STAGING_ADMIN_CONTAINER }}
+          EXPECTED_AWG1: ${{ vars.STAGING_AWG_CONTAINER_1 }}
+          EXPECTED_AWG2: ${{ vars.STAGING_AWG_CONTAINER_2 }}
         run: |
           set -euo pipefail
+          ADMIN="${EXPECTED_ADMIN_CONTAINER:-vpn-suite-admin-api-1}"
+          AWG1="${EXPECTED_AWG1:-amnezia-awg}"
+          AWG2="${EXPECTED_AWG2:-amnezia-awg2}"
           docker ps --format '{{.Names}}\t{{.Status}}'
-          docker ps --format '{{.Names}}' | grep -q '^vpn-suite-admin-api-1$'
-          docker ps --format '{{.Names}}' | grep -q '^amnezia-awg$'
-          docker ps --format '{{.Names}}' | grep -q '^amnezia-awg2$'
+          docker ps --format '{{.Names}}' | grep -q "^${ADMIN}$"
+          docker ps --format '{{.Names}}' | grep -q "^${AWG1}$"
+          docker ps --format '{{.Names}}' | grep -q "^${AWG2}$"
 
       - name: Run full staging validation with HA
         if: ${{ inputs.run_full_validation }}

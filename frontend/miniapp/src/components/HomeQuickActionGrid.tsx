@@ -1,12 +1,18 @@
 import { Link } from "react-router-dom";
-import { Plus, Globe, CreditCard, Users, HelpCircle } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import {
+  IconPlus,
+  IconGlobe,
+  IconCreditCard,
+  IconUsers,
+  IconHelpCircle,
+  type IconType,
+} from "@/shared-inline/icons";
 import { useTelegramHaptics } from "../hooks/useTelegramHaptics";
 
 interface QuickAction {
   label: string;
   to: string;
-  icon: LucideIcon;
+  icon: IconType;
 }
 
 export interface HomeQuickActionGridProps {
@@ -23,22 +29,21 @@ export function HomeQuickActionGrid({ hasSub, hasDevices }: HomeQuickActionGridP
           {
             label: hasDevices ? "Get config" : "Add device",
             to: "/devices",
-            icon: Plus,
+            icon: IconPlus,
           },
         ]
-      : [{ label: "Plan", to: "/plan", icon: CreditCard }]),
-    { label: "Servers", to: "/servers", icon: Globe },
-    { label: "Invite", to: "/referral", icon: Users },
-    { label: "Support", to: "/support", icon: HelpCircle },
+      : [{ label: "Plan", to: "/plan", icon: IconCreditCard }]),
+    { label: "Servers", to: "/servers", icon: IconGlobe },
+    { label: "Invite", to: "/referral", icon: IconUsers },
+    { label: "Support", to: "/support", icon: IconHelpCircle },
   ];
 
   return (
     <div className="home-quick-action-grid">
-      {actions.map(({ label, to, icon: Icon }) => (
-        <Link
-          key={to + label}
+      {actions.map(({ label, to, icon: Icon }) => ( // key=
+        <Link key={to + label}
           to={to}
-          className="home-quick-action-card"
+          className="home-quick-action-card stagger-item"
           onClick={() => impact("light")}
         >
           <span className="home-quick-action-icon" aria-hidden>

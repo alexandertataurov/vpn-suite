@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { CopyButton } from "./CopyButton";
 
 const meta: Meta<typeof CopyButton> = {
-  title: "Components/CopyButton",
+  title: "Shared/Components/CopyButton",
   component: CopyButton,
   parameters: {
     docs: {
@@ -22,11 +22,11 @@ export default meta;
 
 type Story = StoryObj<typeof CopyButton>;
 
-export const Overview: Story = {
+export const CopyButtonOverview: Story = {
   args: { value: "text to copy" },
 };
 
-export const Variants: Story = {
+export const CopyButtonVariants: Story = {
   render: () => (
     <div className="sb-row">
       <CopyButton value="config-value-xyz" label="Copy config" />
@@ -35,7 +35,7 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
+export const CopyButtonSizes: Story = {
   render: () => (
     <div className="sb-stack">
       <p className="m-0">Size variants are not exposed; uses button defaults.</p>
@@ -44,7 +44,7 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const CopyButtonStates: Story = {
   render: () => (
     <div className="sb-row">
       <CopyButton value="config-value-xyz" label="Copy" />
@@ -52,17 +52,17 @@ export const States: Story = {
   ),
 };
 
-export const WithLongText: Story = {
+export const CopyButtonWithLongText: Story = {
   args: { value: "very-long-config-id-0123456789-abcdefghijklmnopqrstuvwxyz", label: "Copy config id" },
 };
 
-export const DarkMode: Story = {
+export const CopyButtonDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   args: { value: "config-value-xyz", label: "Copy config" },
 };
 
-export const Accessibility: Story = {
+export const CopyButtonAccessibility: Story = {
   args: { value: "config-value-xyz", label: "Copy config" },
 };
 
-export const EdgeCases = WithLongText;
+export const CopyButtonEdgeCases = WithLongText;

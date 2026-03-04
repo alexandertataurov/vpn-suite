@@ -92,7 +92,11 @@ async def main() -> None:
                     rx = int(p.get("rx_bytes") or 0)
                     tx = int(p.get("tx_bytes") or 0)
                     age = p.get("last_handshake_age_sec")
-                    age_s = f"{age}s ago" if isinstance(age, (int, float)) and age >= 0 else "no handshake"
+                    age_s = (
+                        f"{age}s ago"
+                        if isinstance(age, int | float) and age is not None and age >= 0
+                        else "no handshake"
+                    )
                     print(f"    {pk}  RX: {_fmt_bytes(rx)}  TX: {_fmt_bytes(tx)}  handshake: {age_s}")
     finally:
         await r.aclose()

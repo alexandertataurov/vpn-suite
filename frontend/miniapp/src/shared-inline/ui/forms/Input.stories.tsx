@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { Input } from "./Input";
 
 const meta: Meta<typeof Input> = {
-  title: "Primitives/Input",
+  title: "Shared/Primitives/Input",
   component: Input,
   parameters: {
     docs: {
@@ -18,11 +18,11 @@ export default meta;
 
 type Story = StoryObj<typeof Input>;
 
-export const Overview: Story = {
+export const InputOverview: Story = {
   args: { label: "Email", placeholder: "you@example.com" },
 };
 
-export const Variants: Story = {
+export const InputVariants: Story = {
   render: () => (
     <div className="sb-stack">
       <Input label="Text" placeholder="Enter text" />
@@ -32,7 +32,7 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
+export const InputSizes: Story = {
   render: () => (
     <div className="sb-stack">
       <p className="m-0">Size variants are not exposed; use tokens for density in layout.</p>
@@ -41,7 +41,7 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const InputStates: Story = {
   render: () => (
     <div className="sb-stack">
       <Input label="Default" placeholder="Enter text" />
@@ -52,26 +52,26 @@ export const States: Story = {
 };
 
 /** Error state: invalid input with error message */
-export const Error: Story = {
+export const InputError: Story = {
   args: { label: "Email", error: "Invalid email address", defaultValue: "invalid" },
 };
 
 /** Empty state: placeholder only, no value */
-export const Empty: Story = {
+export const InputEmpty: Story = {
   args: { label: "Search", placeholder: "Search..." },
 };
 
 /** Loading simulation: disabled during async validation */
-export const Loading: Story = {
+export const InputLoading: Story = {
   args: { label: "Checking availability...", disabled: true, defaultValue: "user@example.com" },
 };
 
-export const WithLongText: Story = {
+export const InputWithLongText: Story = {
   args: { label: "Long label that should wrap gracefully on small screens", placeholder: "Long placeholder content" },
 };
 
 /** Accessibility: label, error announcement */
-export const Accessibility: Story = {
+export const InputAccessibility: Story = {
   render: () => (
     <div className="sb-stack">
       <Input label="Labeled input" placeholder="Tab to focus" />
@@ -80,13 +80,13 @@ export const Accessibility: Story = {
   ),
 };
 
-export const DarkMode: Story = {
+export const InputDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   args: { label: "Email", placeholder: "you@example.com" },
 };
 
 /** Playground: full controls */
-export const Playground: Story = {
+export const InputPlayground: Story = {
   args: {
     label: "Label",
     placeholder: "Enter text",
@@ -95,4 +95,4 @@ export const Playground: Story = {
   },
 };
 
-export const EdgeCases = WithLongText;
+export const InputEdgeCases = WithLongText;

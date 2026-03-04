@@ -54,7 +54,8 @@ export function initWebVitals(): void {
   try {
     const po = new PerformanceObserver((list) => {
       const entries = list.getEntries();
-      if (entries.length > 0) lcpEntry = entries[entries.length - 1];
+      const last = entries[entries.length - 1];
+      if (last) lcpEntry = last;
     });
     po.observe({ type: "largest-contentful-paint", buffered: true } as PerformanceObserverInit);
   } catch {

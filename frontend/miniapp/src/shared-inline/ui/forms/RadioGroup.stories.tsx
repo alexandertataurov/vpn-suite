@@ -8,7 +8,7 @@ function StatefulRadioGroup(props: Omit<Parameters<typeof RadioGroup>[0], "value
 }
 
 const meta: Meta<typeof RadioGroup> = {
-  title: "Primitives/RadioGroup",
+  title: "Shared/Primitives/RadioGroup",
   component: RadioGroup,
   parameters: {
     docs: {
@@ -33,7 +33,7 @@ const options = [
   { value: "c", label: "Option C", description: "Optional description text." },
 ] as const;
 
-export const Overview: Story = {
+export const RadioGroupOverview: Story = {
   render: () => {
     return (
       <StatefulRadioGroup
@@ -46,7 +46,7 @@ export const Overview: Story = {
   },
 };
 
-export const Variants: Story = {
+export const RadioGroupVariants: Story = {
   render: () => {
     return (
       <div className="sb-stack">
@@ -68,11 +68,11 @@ export const Variants: Story = {
   },
 };
 
-export const Sizes: Story = {
+export const RadioGroupSizes: Story = {
   render: () => <p className="m-0">Size variants are not exposed; radios use tokenized sizing.</p>,
 };
 
-export const States: Story = {
+export const RadioGroupStates: Story = {
   render: () => {
     return (
       <div className="sb-stack">
@@ -101,7 +101,7 @@ export const States: Story = {
   },
 };
 
-export const WithLongText: Story = {
+export const RadioGroupWithLongText: Story = {
   render: () => {
     return (
       <StatefulRadioGroup
@@ -117,7 +117,7 @@ export const WithLongText: Story = {
   },
 };
 
-export const Accessibility: Story = {
+export const RadioGroupAccessibility: Story = {
   render: () => {
     return (
       <StatefulRadioGroup
@@ -131,7 +131,7 @@ export const Accessibility: Story = {
   },
 };
 
-export const DarkMode: Story = {
+export const RadioGroupDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   render: () => {
     return (
@@ -145,5 +145,5 @@ export const DarkMode: Story = {
   },
 };
 
-export const EdgeCases = WithLongText;
+export const RadioGroupEdgeCases = WithLongText;
 

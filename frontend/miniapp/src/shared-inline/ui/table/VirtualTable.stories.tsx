@@ -24,7 +24,7 @@ const manyRows: SampleRow[] = Array.from({ length: 200 }, (_, i) => ({
 }));
 
 const meta: Meta<typeof VirtualTable> = {
-  title: "Components/DataTable/Virtual",
+  title: "Shared/Components/DataTable/Virtual",
   component: VirtualTable,
   parameters: {
     docs: {
@@ -40,7 +40,7 @@ export default meta;
 
 type Story = StoryObj<typeof VirtualTable>;
 
-export const Overview: Story = {
+export const VirtualTableOverview: Story = {
   render: () => (
     <VirtualTable<SampleRow>
       columns={columns}
@@ -51,7 +51,7 @@ export const Overview: Story = {
   ),
 };
 
-export const Variants: Story = {
+export const VirtualTableVariants: Story = {
   render: () => (
     <div className="sb-stack">
       <VirtualTable<SampleRow>
@@ -71,7 +71,7 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
+export const VirtualTableSizes: Story = {
   render: () => (
     <VirtualTable<SampleRow>
       columns={columns}
@@ -83,7 +83,7 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const VirtualTableStates: Story = {
   render: () => (
     <VirtualTable<SampleRow>
       columns={columns}
@@ -94,7 +94,7 @@ export const States: Story = {
   ),
 };
 
-export const WithLongText: Story = {
+export const VirtualTableWithLongText: Story = {
   render: () => (
     <VirtualTable<SampleRow>
       columns={columns}
@@ -107,7 +107,7 @@ export const WithLongText: Story = {
   ),
 };
 
-export const DarkMode: Story = {
+export const VirtualTableDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   render: () => (
     <VirtualTable<SampleRow>
@@ -119,7 +119,7 @@ export const DarkMode: Story = {
   ),
 };
 
-export const Accessibility: Story = {
+export const VirtualTableAccessibility: Story = {
   render: () => (
     <VirtualTable<SampleRow>
       columns={columns}
@@ -130,4 +130,4 @@ export const Accessibility: Story = {
   ),
 };
 
-export const EdgeCases = WithLongText;
+export const VirtualTableEdgeCases = WithLongText;

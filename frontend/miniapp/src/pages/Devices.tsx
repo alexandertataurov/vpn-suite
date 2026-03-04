@@ -24,8 +24,7 @@ import { useWebappToken, webappApi } from "../api/client";
 import { useTelegramHaptics } from "../hooks/useTelegramHaptics";
 import { useTrackScreen } from "../hooks/useTrackScreen";
 import { useTelemetry } from "../hooks/useTelemetry";
-import { FallbackScreen } from "../components/FallbackScreen";
-import { SessionMissing } from "../components/SessionMissing";
+import { FallbackScreen, SessionMissing } from "@/components";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
 
 export function DevicesPage() {
@@ -108,7 +107,7 @@ export function DevicesPage() {
     return (
       <PageScaffold>
         <PageHeader title="My devices" subtitle="Issue and manage VPN profiles" />
-        <Skeleton height={32} />
+        <Skeleton className="skeleton-h-lg" />
         <SkeletonList lines={3} />
       </PageScaffold>
     );
@@ -116,7 +115,8 @@ export function DevicesPage() {
 
   return (
     <PageScaffold>
-      <PageHeader title="My devices" subtitle="Issue and manage VPN profiles" />
+      <div className="content-reveal">
+        <PageHeader title="My devices" subtitle="Issue and manage VPN profiles" />
       {deviceLimit != null && (
         <Caption tabular>
           Devices: <strong>{activeDevices.length}</strong> / <strong>{deviceLimit}</strong>
@@ -166,7 +166,7 @@ export function DevicesPage() {
         )}
 
         <ul className="device-card-list">
-          {data?.devices?.map((d) => (
+          {data?.devices?.map((d) => ( // key=
             <li key={d.id}>
               <DeviceCard
                 id={d.id}
@@ -205,6 +205,7 @@ export function DevicesPage() {
         variant="danger"
         loading={revokeMutation.isPending}
       />
+      </div>
     </PageScaffold>
   );
 }

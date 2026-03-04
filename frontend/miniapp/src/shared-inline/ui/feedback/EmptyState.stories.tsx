@@ -3,7 +3,7 @@ import { EmptyState } from "./EmptyState";
 import { Button } from "../buttons/Button";
 
 const meta: Meta<typeof EmptyState> = {
-  title: "Primitives/EmptyState",
+  title: "Shared/Primitives/EmptyState",
   component: EmptyState,
   parameters: {
     docs: {
@@ -18,11 +18,11 @@ export default meta;
 
 type Story = StoryObj<typeof EmptyState>;
 
-export const Overview: Story = {
+export const EmptyStateOverview: Story = {
   args: { title: "No items yet" },
 };
 
-export const Variants: Story = {
+export const EmptyStateVariants: Story = {
   render: () => (
     <div className="sb-stack">
       <EmptyState title="No servers" description="Add your first server to get started." />
@@ -35,7 +35,7 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
+export const EmptyStateSizes: Story = {
   render: () => (
     <div className="sb-stack">
       <p className="m-0">Size variants are not exposed; spacing is tokenized.</p>
@@ -44,26 +44,26 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const EmptyStateStates: Story = {
   render: () => (
     <EmptyState title="No items yet" />
   ),
 };
 
-export const WithLongText: Story = {
+export const EmptyStateWithLongText: Story = {
   args: {
     title: "No servers in this region",
     description: "There are currently no servers in this region. Try changing filters or create a new server to begin monitoring telemetry and health status.",
   },
 };
 
-export const Accessibility: Story = {
+export const EmptyStateAccessibility: Story = {
   args: { title: "No items yet", description: "Empty state announces status." },
 };
 
-export const DarkMode: Story = {
+export const EmptyStateDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   args: { title: "No items yet" },
 };
 
-export const EdgeCases = WithLongText;
+export const EmptyStateEdgeCases = WithLongText;

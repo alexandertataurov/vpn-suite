@@ -1,0 +1,203 @@
+/* Primitives tokens (v1.0) — dark terminal aesthetic.
+   Canonical token set lives under `--bg/--surface-*` etc.
+   Some legacy aliases are kept to avoid large-scale breakage while migrating. */
+
+:root {
+  /* ═══════════════════════════════════════════════════════
+     PRIMITIVES TOKENS (canonical)
+     ═══════════════════════════════════════════════════════ */
+
+  --bg: #0d0f10;
+  --surface-0: #0d0f10;
+  --surface-1: #121618;
+  --surface-2: #171b1e;
+  --surface-3: #1d2226;
+  --surface-4: #232a2f;
+  --border-subtle: #1e2428;
+  --border-default: #252b30;
+  --border-bright: #2e363c;
+  --border-focus: #3a8cff;
+
+  --text-primary: #c8d2da;
+  --text-secondary: #8a9aa8;
+  --text-muted: #4e5e6a;
+  --text-dim: #2e3c46;
+  --text-disabled: #313c44;
+  --text-inverse: #0d0f10;
+
+  --success: #3dba6a;
+  --success-dim: rgba(61, 186, 106, 0.08);
+  --success-border: rgba(61, 186, 106, 0.2);
+
+  --warning: #e8a020;
+  --warning-dim: rgba(232, 160, 32, 0.08);
+  --warning-border: rgba(232, 160, 32, 0.2);
+
+  --danger: #e85050;
+  --danger-dim: rgba(232, 80, 80, 0.08);
+  --danger-border: rgba(232, 80, 80, 0.2);
+
+  --info: #4a9ee8;
+  --info-dim: rgba(74, 158, 232, 0.08);
+  --info-border: rgba(74, 158, 232, 0.2);
+
+  --accent: #a070e8;
+  --accent-dim: rgba(160, 112, 232, 0.08);
+  --accent-border: rgba(160, 112, 232, 0.2);
+
+  --interactive: #3a8cff;
+  --interactive-dim: rgba(58, 140, 255, 0.08);
+  --interactive-border: rgba(58, 140, 255, 0.22);
+
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+
+  --r-sm: 2px;
+  --r-md: 3px;
+  --r-lg: 6px;
+
+  --font-mono: "IBM Plex Mono", monospace;
+  --font-sans: "IBM Plex Sans", sans-serif;
+
+  /* Typography scale (IBM Plex) */
+  --text-2xs: 10px;
+  --text-xs: 11px;
+  --text-sm: 12px;
+  --text-base: 13px;
+  --text-md: 14px;
+  --text-lg: 16px;
+  --text-xl: 19px;
+  --text-2xl: 23px;
+  --text-3xl: 29px;
+  --text-4xl: 37px;
+  --text-5xl: 49px;
+  --text-6xl: 65px;
+  --text-7xl: 81px;
+
+  --leading-none: 1;
+  --leading-tight: 1.2;
+  --leading-snug: 1.35;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.65;
+  --leading-loose: 1.8;
+
+  --tracking-tighter: -0.03em;
+  --tracking-tight: -0.01em;
+  --tracking-normal: 0em;
+  --tracking-wide: 0.04em;
+  --tracking-wider: 0.08em;
+  --tracking-widest: 0.15em;
+  --tracking-ultra: 0.22em;
+
+  --scrim: rgba(0, 0, 0, 0.6);
+
+  /* ═══════════════════════════════════════════════════════
+     LEGACY ALIASES (admin app)
+     ═══════════════════════════════════════════════════════ */
+
+  --space-1: var(--sp-1);
+  --space-2: var(--sp-2);
+  --space-3: var(--sp-3);
+  --space-4: var(--sp-4);
+  --space-5: var(--sp-5);
+  --space-6: var(--sp-6);
+  --space-8: var(--sp-8);
+  --space-10: 40px;
+  --space-12: 48px;
+
+  --radius-sm: var(--r-sm);
+  --radius-md: var(--r-md);
+  --radius-lg: var(--r-lg);
+
+  --elevation-0: none;
+  --elevation-1: none;
+  --elevation-2: none;
+
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+
+  --color-bg-base: var(--bg);
+  --color-bg-surface: var(--surface-1);
+  --color-bg-elevated: var(--surface-2);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-border-default: var(--border-default);
+  --color-accent: var(--interactive);
+  --color-status-success: var(--success);
+  --color-status-warning: var(--warning);
+  --color-status-error: var(--danger);
+  --color-scrim: var(--scrim);
+
+  /* ═══════════════════════════════════════════════════════
+     DASHBOARD ALIASES (Primitives v2 dashboard guidelines)
+     These provide the `--s*`, `--bd-*`, `--tx-*` and
+     semantic color names used by the HTML dashboard
+     reference without breaking existing tokens.
+     ═══════════════════════════════════════════════════════ */
+
+  /* Surfaces (dashboard) */
+  --s0: var(--surface-0);
+  --s1: var(--surface-1);
+  --s2: var(--surface-2);
+  --s3: var(--surface-3);
+  --s4: var(--surface-4);
+
+  /* Borders (dashboard) */
+  --bd-sub: var(--border-subtle);
+  --bd-def: var(--border-default);
+  --bd-hi: var(--border-bright);
+  --bd-focus: var(--border-focus);
+
+  /* Text (dashboard) */
+  --tx-pri: var(--text-primary);
+  --tx-sec: var(--text-secondary);
+  --tx-mut: var(--text-muted);
+  --tx-dim: var(--text-dim);
+
+  /* Semantic colors — dashboard naming */
+  --blue: var(--interactive);
+  --blue-d: var(--interactive-dim);
+  --blue-b: var(--interactive-border);
+
+  --green: var(--success);
+  --green-d: var(--success-dim);
+  --green-b: var(--success-border);
+
+  --amber: var(--warning);
+  --amber-d: var(--warning-dim);
+  --amber-b: var(--warning-border);
+
+  --red: var(--danger);
+  --red-d: var(--danger-dim);
+  --red-b: var(--danger-border);
+
+  --violet: var(--accent);
+  --violet-d: var(--accent-dim);
+  --violet-b: var(--accent-border);
+
+  /* Identifiers / node IDs */
+  --teal: #2490b8;
+
+  /* Chart colors */
+  --chart-blue: #4878e8;
+  --chart-violet: #7858d8;
+
+  /* Geometry (dashboard) */
+  --r: var(--r-sm);
+  --rc: var(--r-md);
+}

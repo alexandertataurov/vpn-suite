@@ -3,7 +3,7 @@ import { BulkActionsBar } from "./BulkActionsBar";
 import { Button } from "../buttons/Button";
 
 const meta: Meta<typeof BulkActionsBar> = {
-  title: "Patterns/BulkActionsBar",
+  title: "Shared/Patterns/BulkActionsBar",
   component: BulkActionsBar,
   parameters: {
     docs: {
@@ -18,7 +18,7 @@ export default meta;
 
 type Story = StoryObj<typeof BulkActionsBar>;
 
-export const Overview: Story = {
+export const BulkActionsBarOverview: Story = {
   args: {
     selectedCount: 3,
     onClear: () => {},
@@ -26,7 +26,7 @@ export const Overview: Story = {
   },
 };
 
-export const Variants: Story = {
+export const BulkActionsBarVariants: Story = {
   render: () => (
     <div className="sb-stack">
       <BulkActionsBar
@@ -43,7 +43,7 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
+export const BulkActionsBarSizes: Story = {
   render: () => (
     <div className="sb-stack">
       <p className="m-0">Size variants are not exposed; spacing is tokenized.</p>
@@ -56,7 +56,7 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const BulkActionsBarStates: Story = {
   render: () => (
     <BulkActionsBar
       selectedCount={3}
@@ -66,7 +66,7 @@ export const States: Story = {
   ),
 };
 
-export const WithLongText: Story = {
+export const BulkActionsBarWithLongText: Story = {
   args: {
     selectedCount: 128,
     onClear: () => {},
@@ -74,7 +74,7 @@ export const WithLongText: Story = {
   },
 };
 
-export const DarkMode: Story = {
+export const BulkActionsBarDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   args: {
     selectedCount: 3,
@@ -83,7 +83,7 @@ export const DarkMode: Story = {
   },
 };
 
-export const Accessibility: Story = {
+export const BulkActionsBarAccessibility: Story = {
   args: {
     selectedCount: 3,
     onClear: () => {},
@@ -91,4 +91,4 @@ export const Accessibility: Story = {
   },
 };
 
-export const EdgeCases = WithLongText;
+export const BulkActionsBarEdgeCases = WithLongText;

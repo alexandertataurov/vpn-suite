@@ -6,7 +6,7 @@ import {
   useMemo,
   type ReactNode,
 } from "react";
-import { Shield } from "lucide-react";
+import { IconShield } from "@/shared-inline/icons";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button, InlineAlert, Skeleton, Display, Body } from "../ui";
 import { initTelegramRuntime, useTelegramWebApp } from "../hooks/useTelegramWebApp";
@@ -38,7 +38,7 @@ function BootLoadingScreen({ slowNetwork, onRetry }: { slowNetwork: boolean; onR
     <div className="splash-screen splash-screen--loading hud-bg" role="status" aria-live="polite">
       <div className="splash-screen-content bootstrap-loading-content">
         <span className="splash-screen-logo" aria-hidden>
-          <Shield size={42} strokeWidth={1.5} />
+          <IconShield size={42} strokeWidth={1.5} />
         </span>
         <Skeleton variant="card" className="bootstrap-loading-skeleton" />
         {slowNetwork && (
@@ -67,7 +67,7 @@ function BootErrorScreen({
     <div className="splash-screen hud-bg" role="region" aria-label="Startup error">
       <div className="splash-screen-content">
         <span className="splash-screen-logo" aria-hidden>
-          <Shield size={42} strokeWidth={1.5} />
+          <IconShield size={42} strokeWidth={1.5} />
         </span>
         <InlineAlert variant="error" title={title} message={message} />
         <Button variant="primary" size="lg" className="splash-screen-cta" onClick={onRetry}>
@@ -83,7 +83,7 @@ function BrandSplashScreen() {
     <div className="splash-screen hud-bg" role="region" aria-label="Welcome">
       <div className="splash-screen-content">
         <span className="splash-screen-logo" aria-hidden>
-          <Shield size={48} strokeWidth={1.5} />
+          <IconShield size={48} strokeWidth={1.5} />
         </span>
         <Display as="h1">VPN</Display>
         <Body className="splash-screen-tagline">Secure and private. Starting your onboarding…</Body>

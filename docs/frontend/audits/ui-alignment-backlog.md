@@ -15,16 +15,16 @@ This backlog consolidates the actionable UI/design alignment work across **admin
 ## A. Foundations (tokens, theming, typography)
 
 - [ ] **Consumer theme mapping (miniapp)**: add consumer semantic mappings that keep **semantic token names identical** (`--color-bg`, `--color-text`, `--color-accent`, …) while changing the values for miniapp brand.
-  - **Touches**: `frontend/shared/tokens/colors.json`, `frontend/shared/scripts/build-tokens.js`, `frontend/shared/src/theme/tokens.css` (generated)
+  - **Touches**: `frontend/miniapp/src/shared-inline/theme/tokens.css`
   - **Outcome**: miniapp can use `data-theme="consumer-light"` / `data-theme="consumer-dark"` without hardcoding colors.
 
 - [ ] **Dim theme correctness**: `ThemeProvider` supports `"dim"`, and `tokens/colors.json` defines it, but ensure token build outputs `html[data-theme="dim"] { … }`.
-  - **Touches**: `frontend/shared/scripts/build-tokens.js`
+  - **Touches**: `frontend/admin/src/design-system/tokens/tokens.css`
 
 - [ ] **Theme mounting consistency**: standardize per-app defaults and allowed themes.
   - **Admin**: `dark | light | dim`
   - **Miniapp**: `consumer-light | consumer-dark`
-  - **Touches**: `frontend/shared/src/theme/ThemeProvider.tsx`, `frontend/admin/src/main.tsx`, `frontend/miniapp/src/main.tsx`
+  - **Touches**: `frontend/admin/src/main.tsx`, `frontend/miniapp/src/main.tsx`
 
 ---
 
@@ -32,7 +32,7 @@ This backlog consolidates the actionable UI/design alignment work across **admin
 
 ### Missing primitives that drive divergence
 - [ ] **Radio / RadioGroup** (explicitly missing in inventories; common form need)
-  - **Target**: `frontend/shared/src/ui/forms/RadioGroup.tsx` (or `primitives/RadioGroup.tsx` + wrapper)
+  - **Target**: `frontend/admin/src/design-system/primitives/` (admin) and/or `frontend/miniapp/src/shared-inline/ui/` (miniapp)
   - **DoD**: token-only styling, keyboard accessible, Storybook stories.
 
 - [ ] **Tooltip** (only chart tooltips exist; add if any UI needs it outside charts)
@@ -40,10 +40,10 @@ This backlog consolidates the actionable UI/design alignment work across **admin
 
 ### “Exists but inadequate” (from admin-ui-gap-analysis)
 - [ ] **SearchInput**: replace string className concat with `cn()` and align label/error structure with `Field` where possible.
-  - **File**: `frontend/shared/src/ui/forms/SearchInput.tsx`
+  - **File**: `frontend/admin/src/design-system/primitives/Input.tsx` (or a dedicated SearchInput primitive if still needed)
 
 - [ ] **Select**: add optional loading/empty affordances (keep native select; do not introduce combobox unless needed).
-  - **File**: `frontend/shared/src/ui/forms/Select.tsx`
+  - **File**: `frontend/admin/src/design-system/primitives/` (Select-equivalent) or feature-local wrapper
 
 ### Reuse opportunities (reduce app-local duplication)
 - [ ] **Copy patterns**: ensure ad-hoc clipboard logic is replaced by shared `CopyButton` / `CodeBlock` where applicable.
@@ -53,13 +53,13 @@ This backlog consolidates the actionable UI/design alignment work across **admin
 
 ## C. Tables (enforce canonical system everywhere)
 
-> Canonical kit is in `frontend/shared/src/ui/table/*` and documented in `docs/frontend/tables/*`.
+> Canonical table kit is in `frontend/admin/src/design-system/primitives/` and documented in `docs/frontend/tables/*`.
 
 - [ ] **Servers page**: remove manual table styling drift; ensure selection, density, virtualization, and stale-row styling are all within the unified table system APIs/classes.
-  - **Primary**: `frontend/admin/src/pages/Servers.tsx`, `frontend/admin/src/components/ServerRow.tsx`
+  - **Primary**: `frontend/admin/src/features/servers/ServersPage.tsx`
 
 - [ ] **Telemetry DockerOverview**: confirm grid-table uses unified `data-table-grid-*` styles and shared tokens.
-  - **Primary**: `frontend/admin/src/pages/telemetry/DockerOverviewTable.tsx`
+  - **Primary**: `frontend/admin/src/features/telemetry/TelemetryPage.tsx`
 
 - [ ] **Miniapp tables/empty states**: ensure `.table-empty` and Table components behave consistently under consumer theme.
 

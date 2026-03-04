@@ -2,48 +2,18 @@
 
 Date: 2026-02-21
 
+**Status (2026-03):** legacy document. The admin app was refactored from `pages/*` + `frontend/shared/*` into `features/*` + `core/*` + `design-system/*`. Update any remaining references below accordingly.
+
 ## Inventory (Tables + Routes)
 
-- Dashboard `/` (DashboardPage)
-  - `frontend/admin/src/pages/dashboard/TopIssuesTable.tsx`
-    - API: `Table` + `Column<T>`
-    - Features: truncation, compact density
-    - Sorting: none
-    - Pagination: none
-    - Selection: none
-    - Custom CSS: none beyond shared
-    - Performance: low row count (limit 10)
-  - `frontend/admin/src/pages/dashboard/RecentAuditTable.tsx`
-    - API: `Table` + `Column<T>`
-    - Features: truncation, compact density
-    - Sorting: none
-    - Pagination: none
-    - Selection: none
-    - Custom CSS: none beyond shared
-    - Performance: low row count (limit 10)
+- Overview `/`
+  - `frontend/admin/src/features/overview/OverviewPage.tsx`
 
-- Telemetry `/telemetry` (TelemetryPage)
-  - Docker Services tab
-    - `frontend/admin/src/pages/telemetry/DockerOverviewTable.tsx`
-      - API: `VirtualTable` + `Column<T>`
-      - Features: truncation, numeric alignment, actions, selected row
-      - Sorting: none
-      - Pagination: none
-      - Selection: single row highlight
-      - Custom CSS: shared `.table-*` utilities
-      - Performance: tanstack virtualizer (via `VirtualTable`), ROW_HEIGHT=48, VIEWPORT_HEIGHT=420
-  - VPN Nodes tab
-    - `frontend/admin/src/pages/telemetry/VpnNodesTab.tsx`
-      - API: `Table` + `Column<T>`
-      - Features: numeric/mono/truncate
-      - Sorting: none
-      - Pagination: none
-      - Selection: none
-      - Custom CSS: none beyond shared
-      - Performance: moderate rows (unknown)
+- Telemetry `/telemetry`
+  - `frontend/admin/src/features/telemetry/TelemetryPage.tsx`
 
 - Control Plane `/automation`
-  - `frontend/admin/src/pages/ControlPlane.tsx`
+  - `frontend/admin/src/features/automation/AutomationPage.tsx`
     - API: `Table` + `Column<T>`
     - Features: numeric, truncate
     - Sorting: none
@@ -53,7 +23,7 @@ Date: 2026-02-21
     - Performance: moderate rows (unknown)
 
 - Servers `/servers`
-  - `frontend/admin/src/pages/Servers.tsx`
+  - `frontend/admin/src/features/servers/ServersPage.tsx`
     - API: manual `<table>` inside `TableContainer` (custom row via `ServerRow`)
     - Features: selection (checkbox), density toggle, row click, actions, numeric cells
     - Sorting: external control (FilterBar, not table header)
@@ -62,7 +32,7 @@ Date: 2026-02-21
     - Performance: tanstack virtualizer when `visibleItems.length > 200`
 
 - Server Detail `/servers/:id`
-  - `frontend/admin/src/pages/ServerDetail.tsx`
+  - (no longer present in current admin router; previously `frontend/admin/src/pages/ServerDetail.tsx`)
     - API: `Table` + `Column<T>`
     - Features: truncation, numeric
     - Sorting: none
@@ -72,7 +42,7 @@ Date: 2026-02-21
     - Performance: moderate rows (unknown)
 
 - Users `/users`
-  - `frontend/admin/src/pages/Users.tsx`
+  - `frontend/admin/src/features/users/UsersPage.tsx`
     - API: `VirtualTable` + `Column<T>`
     - Features: sorting, actions, compound user cell, secondary text, virtualization
     - Sorting: `Table` built-in sort UI via `sortKey` + `onSort`
@@ -82,12 +52,12 @@ Date: 2026-02-21
     - Performance: tanstack virtualizer (via `VirtualTable`), maxHeight at 480px for >50 rows
 
 - User Detail `/users/:id`
-  - `frontend/admin/src/pages/UserDetail.tsx`
+  - (no longer present in current admin router; previously `frontend/admin/src/pages/UserDetail.tsx`)
     - API: no table; uses `.table-empty` for empty notices
     - Custom CSS: uses shared `.table-empty`
 
 - Devices `/devices`
-  - `frontend/admin/src/pages/Devices.tsx`
+  - `frontend/admin/src/features/devices/DevicesPage.tsx`
     - API: `Table` + `Column<T>` inside `TableSection`
     - Features: selection (checkbox), truncation, mono, numeric, actions
     - Sorting: none
@@ -96,7 +66,7 @@ Date: 2026-02-21
     - Performance: moderate rows (limit 20, higher for region filter)
 
 - Audit `/audit`
-  - `frontend/admin/src/pages/Audit.tsx`
+  - `frontend/admin/src/features/audit/AuditPage.tsx`
     - API: `Table` + `Column<T>` inside `TableSection`
     - Features: truncate
     - Sorting: none
@@ -105,43 +75,19 @@ Date: 2026-02-21
     - Performance: moderate rows
 
 - Billing `/billing`
-  - `frontend/admin/src/pages/billing/PaymentsTab.tsx`
-    - API: `Table` + `Column<T>` inside `TableSection`
-    - Features: numeric, truncate
-    - Sorting: none
-    - Pagination: `TableSection` pagination
-    - Custom CSS: none beyond shared
-    - Performance: moderate rows
-  - `frontend/admin/src/pages/billing/SubscriptionsTab.tsx`
-    - API: `Table` + `Column<T>` inside `TableSection`
-    - Features: numeric, truncate
-    - Sorting: none
-    - Pagination: `TableSection` pagination
-    - Custom CSS: none beyond shared
-    - Performance: moderate rows
+  - `frontend/admin/src/features/billing/BillingPage.tsx`
   - `/payments` and `/subscriptions` redirect to `/billing?tab=payments` and `/billing?tab=subscriptions`
 
 ## Table-Related Shared Components
 
-- `frontend/shared/src/ui/Table.tsx`
-  - Canonical `Table` + `Column<T>` component
-  - Supports selection, sorting, density, truncation utilities
-- `frontend/shared/src/ui/table/TableContainer.tsx`
-  - Container for borders/overflow
-- `frontend/shared/src/ui/table/TableSkeleton.tsx`
-  - Loading skeleton
-- `frontend/shared/src/ui/TableCell.tsx` + `CellHelpers`
-  - Truncation, numeric, mono utilities
-- `frontend/admin/src/components/TableSection.tsx`
-  - Layout wrapper for header/actions/pagination
+- `frontend/admin/src/design-system/primitives/DataTable.tsx`
+- `frontend/admin/src/design-system/primitives/Table.tsx`
+- `frontend/admin/src/design-system/primitives/VirtualTable.tsx`
 
 ## Custom Table CSS and Page-Specific Patterns
 
-- Shared styles in `frontend/shared/src/ui/styles.css`
-  - `.data-table-*` (row, actions, compound cells, avatar, grid styles)
-  - `.table-*` (base table styles, truncation, numeric, density)
-- Admin styles in `frontend/admin/src/admin.css`
-  - `TableSection` classes: `.ref-table-section*`
+- Admin styles in `frontend/admin/src/design-system/primitives/primitives.css`
+- Admin styles in `frontend/admin/src/design-system/primitives/primitives-dashboard.css`
 - Per-page usage
   - Users: migrated to shared `.table-*` helpers
   - Servers: `.data-table-row`, `.data-table-cell-stale`, `.data-table-snapshot-stale`

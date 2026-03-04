@@ -17,7 +17,7 @@ export interface TabsProps {
   tabClassName?: string;
   /** Prefix for tab/panel ids (default: server). e.g. "billing" -> billing-tab-subscriptions */
   idPrefix?: string;
-  /** sm: min-height 32px, compact padding */
+  /** sm: min-height var(--table-row-height-op), compact padding */
   size?: "sm" | "md";
   "data-testid"?: string;
 }
@@ -79,13 +79,11 @@ export function Tabs({
       className={cn("tabs", size === "sm" && "tabs--sm", className)}
       data-testid={dataTestId}
     >
-      {items.map((item) => (
-        <button
-          key={item.id}
+      {items.map((item) => ( // key=
+        <button key={item.id} type="button"
           ref={(el) => {
             tabRefs.current.set(item.id, el);
           }}
-          type="button"
           role="tab"
           id={`${idPrefix}-tab-${item.id}`}
           aria-selected={value === item.id}

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { Badge } from "./Badge";
 
 const meta: Meta<typeof Badge> = {
-  title: "Primitives/Badge",
+  title: "Shared/Primitives/Badge",
   component: Badge,
   parameters: {
     a11y: { disable: false },
@@ -13,7 +13,7 @@ const meta: Meta<typeof Badge> = {
 export default meta;
 type Story = StoryObj<typeof Badge>;
 
-export const Overview: Story = {
+export const BadgeOverview: Story = {
   render: () => (
     <div className="sb-stack">
       <div className="sb-section">
@@ -56,7 +56,7 @@ export const Overview: Story = {
   ),
 };
 
-export const Variants: Story = {
+export const BadgeVariants: Story = {
   render: () => (
     <div className="sb-row">
       <Badge variant="neutral">Neutral</Badge>
@@ -68,7 +68,7 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
+export const BadgeSizes: Story = {
   render: () => (
     <div className="sb-row">
       <Badge size="sm">Small</Badge>
@@ -77,7 +77,7 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const BadgeStates: Story = {
   render: () => (
     <div className="sb-row">
       <Badge variant="success" className="ds-badge-dot">
@@ -96,7 +96,7 @@ export const States: Story = {
   ),
 };
 
-export const WithLongText: Story = {
+export const BadgeWithLongText: Story = {
   render: () => (
     <div className="sb-row">
       <Badge className="ds-badge-truncate max-w-200">Extremely long badge text that should truncate</Badge>
@@ -105,7 +105,7 @@ export const WithLongText: Story = {
   ),
 };
 
-export const Accessibility: Story = {
+export const BadgeAccessibility: Story = {
   render: () => (
     <div className="sb-row">
       <Badge variant="success" aria-label="Healthy">Healthy</Badge>
@@ -114,7 +114,7 @@ export const Accessibility: Story = {
   ),
 };
 
-export const DarkMode: Story = {
+export const BadgeDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   render: () => (
     <div className="sb-row">
@@ -127,4 +127,4 @@ export const DarkMode: Story = {
   ),
 };
 
-export const EdgeCases = WithLongText;
+export const BadgeEdgeCases = WithLongText;

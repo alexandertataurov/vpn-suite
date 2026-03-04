@@ -4,7 +4,7 @@ Single source of truth for miniapp UI. All visual values from tokens. No inline 
 
 ## Tokens
 
-Defined in `src/styles/tokens.css`:
+Defined in `src/shared-inline/theme/tokens.css`:
 
 | Category | Variables |
 |----------|-----------|
@@ -14,7 +14,7 @@ Defined in `src/styles/tokens.css`:
 | Radius | `--radius-sm`, `--radius-md`, `--radius-lg` |
 | Layout | `--container-max`, `--container-pad`, `--height-header`, `--height-button`, `--app-height`, `--safe-top`, `--safe-bottom` |
 | Z-index | `--z-header`, `--z-nav`, `--z-toast`, `--z-modal` |
-| Breakpoints | `--bp-sm: 600px`, `--bp-md: 900px`, `--bp-lg: 1200px` |
+| Breakpoints | `--bp-xs: 40rem`, `--bp-sm: 64rem`, `--bp-md: 90rem`, `--bp-lg: 120rem` |
 
 **Rule:** No component may introduce a new color/spacing/radius outside tokens.
 

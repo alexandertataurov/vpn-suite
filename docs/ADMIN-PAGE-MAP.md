@@ -49,7 +49,7 @@ Captured from browser at `https://vpn.vega.llc/admin` (authenticated).
 
 ### 1.4 API base URL
 
-**Source:** `frontend/shared/src/api-client/get-base-url.ts`  
+**Source:** `frontend/admin/src/shared/constants.ts` (`getBaseUrl()`)  
 - If `import.meta.env.VITE_API_BASE_URL` is set: use it (trailing slash stripped).
 - Else in browser: `window.location.origin + '/api/v1'`.
 - Else (e.g. SSR): `"/api/v1"`.
@@ -291,7 +291,7 @@ Used across layout and operator CSS (from shared/theme or local):
 
 ## 5. API client — full detail
 
-**File:** `frontend/admin/src/api/client.ts`
+**File:** `frontend/admin/src/core/api/client.ts` (moved from `frontend/admin/src/api/client.ts`)
 
 ### 5.1 Creation
 
@@ -318,7 +318,7 @@ Used across layout and operator CSS (from shared/theme or local):
 
 ### 5.4 Shared createApiClient (summary)
 
-**File:** `frontend/shared/src/api-client/create-client.ts`  
+**File:** `frontend/admin/src/core/api/client.ts`  
 - Builds URL from base + path; adds `Content-Type: application/json`; adds `Authorization: Bearer ${token}` when getToken returns non-null.
 - Timeout via AbortController (composed with optional caller signal); on timeout throws ApiError TIMEOUT; on network error throws NETWORK_UNREACHABLE.
 - On 401 calls `onUnauthorized()` then throws UNAUTHORIZED.
@@ -568,17 +568,18 @@ Used across layout and operator CSS (from shared/theme or local):
 
 ## 7. React Query keys (query-keys.ts) — full list
 
-**File:** `frontend/admin/src/api/query-keys.ts`
+**Current status:** there is **no** central `query-keys.ts` in the admin app. Query keys are **inline arrays** passed to `useApiQuery`.
 
-- **Servers:** `SERVERS_LIST_KEY` = `["servers","list"]`; `SERVERS_LIST_FULL_KEY` = `["servers","list","full","all"]`; `SERVERS_SNAPSHOTS_SUMMARY_KEY`; `SERVERS_LIST_DASHBOARD_KEY` = `["servers","list","dashboard"]`; `serverKey(id)` = `["server",id]`; `serverTelemetryKey(id)`; `serverPeersKey(id)`; `serverActionsKey(id)`; `serverLogsKey(serverId)`; `peersKey(serverId)`; `serversDeviceCountsKey(skip404)`; `serversIpsKey(serverId)`; `auditServerKey(serverId)`.
-- **Dashboard / overview:** `OVERVIEW_KEY`; `DASHBOARD_TIMESERIES_KEY`; `OPERATOR_DASHBOARD_KEY` = `["dashboard","operator"]`; `TELEMETRY_SNAPSHOT_KEY`; `PEERS_LIST_KEY`; `CONNECTION_NODES_KEY`; `CLUSTER_HEALTH_KEY`.
-- **Users:** `USERS_KEY`; `userKey(id)`.
-- **Devices:** `DEVICES_KEY`; `DEVICES_SUMMARY_KEY`.
-- **Audit:** `AUDIT_KEY`.
-- **Billing:** `SUBSCRIPTIONS_KEY`; `PAYMENTS_KEY`.
-- **Control plane:** `CONTROL_PLANE_TOPOLOGY_SUMMARY_KEY`, `CONTROL_PLANE_TOPOLOGY_GRAPH_KEY`, `CONTROL_PLANE_BUSINESS_KEY`, `CONTROL_PLANE_SECURITY_KEY`, `CONTROL_PLANE_ANOMALY_KEY`, `CONTROL_PLANE_AUTOMATION_STATUS_KEY`, `CONTROL_PLANE_EVENTS_KEY`.
-- **App:** `APP_SETTINGS_KEY`.
-- **Telemetry:** `DOCKER_TELEMETRY_KEY`; `TELEMETRY_TOPOLOGY_KEY`; `ANALYTICS_TELEMETRY_SERVICES_KEY`; `ANALYTICS_METRICS_KPIS_KEY`.
+**Helper:** `frontend/admin/src/core/api/useApiQuery.ts`
+
+Examples (current):
+
+- **Servers:** `["servers", "snapshots", "summary"]`
+- **Telemetry snapshot:** `["telemetry", "snapshot"]`
+- **Operator overview:** `["overview", "operator", "1h"]`
+- **Docker containers:** `["telemetry", "docker", "containers"]`
+- **Docker alerts:** `["telemetry", "docker", "alerts"]`
+- **Telemetry services:** `["telemetry", "services"]`
 
 ---
 
@@ -637,7 +638,7 @@ Used across layout and operator CSS (from shared/theme or local):
 
 ### 9.5 Dashboard page (high level)
 
-**File:** `frontend/admin/src/pages/Dashboard.tsx`
+**File:** `frontend/admin/src/features/overview/OverviewPage.tsx` (previously `frontend/admin/src/pages/Dashboard.tsx`)
 
 - **Layout:** `dashboard ref-page dashboard--${settings.density}` (data-testid="dashboard-page"). PageHeader with icon LayoutGrid, title "Dashboard", and actions: Servers (Link), Audit (Link), Telemetry (Link), Resync (ConfirmModal), RefreshButton.
 - **handleRefresh:** Refetches OPERATOR_DASHBOARD_KEY, PEERS_LIST_KEY, CONNECTION_NODES_KEY, AUDIT_KEY, SERVERS_LIST_DASHBOARD_KEY and refreshRegisteredResources; tracks user_action dashboard_refresh; throws if any cache/result error.

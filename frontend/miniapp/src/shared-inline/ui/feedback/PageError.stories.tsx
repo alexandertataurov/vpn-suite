@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { PageError } from "./PageError";
 
 const meta: Meta<typeof PageError> = {
-  title: "Components/PageError",
+  title: "Shared/Components/PageError",
   component: PageError,
   parameters: {
     docs: {
@@ -17,11 +17,11 @@ export default meta;
 
 type Story = StoryObj<typeof PageError>;
 
-export const Overview: Story = {
+export const PageErrorOverview: Story = {
   args: { title: "Something went wrong", message: "An unexpected error occurred." },
 };
 
-export const Variants: Story = {
+export const PageErrorVariants: Story = {
   render: () => (
     <div className="sb-stack">
       <PageError title="Something went wrong" message="An unexpected error occurred." />
@@ -30,7 +30,7 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
+export const PageErrorSizes: Story = {
   render: () => (
     <div className="sb-stack">
       <p className="m-0">Size variants are not exposed; width is tokenized.</p>
@@ -39,21 +39,21 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const PageErrorStates: Story = {
   args: { title: "Failed to load", onRetry: () => {} },
 };
 
-export const WithLongText: Story = {
+export const PageErrorWithLongText: Story = {
   args: { title: "Something went wrong", message: "Long error message that should wrap across multiple lines and remain readable in the page error container." },
 };
 
-export const DarkMode: Story = {
+export const PageErrorDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   args: { title: "Something went wrong", message: "An unexpected error occurred." },
 };
 
-export const Accessibility: Story = {
+export const PageErrorAccessibility: Story = {
   args: { title: "Something went wrong", message: "An unexpected error occurred." },
 };
 
-export const EdgeCases = WithLongText;
+export const PageErrorEdgeCases = WithLongText;

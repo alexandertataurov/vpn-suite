@@ -1,0 +1,77 @@
+name: Design System Integrity
+
+on: [pull_request]
+
+jobs:
+  lint-design-system:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Install deps
+        run: pnpm install --dir frontend
+
+      - name: No hardcoded colors (miniapp)
+        run: |
+          set -euo pipefail
+          COUNT=$(grep -rn "#[0-9a-fA-F]\{3,8\}" frontend/miniapp/src/components frontend/miniapp/src/pages \
+            --include="*.tsx" --include="*.ts" \
+            | grep -vE '^[[:space:]]*//|^[[:space:]]*\*|^[[:space:]]*/\*' | wc -l)
+          [ "$COUNT" -eq 0 ] || (echo "❌ $COUNT hardcoded colors found in miniapp" && exit 1)
+
+      - name: No hardcoded colors (admin)
+        run: |
+          set -euo pipefail
+          COUNT=$(grep -rn "#[0-9a-fA-F]\{3,8\}" frontend/admin/src \
+            --include="*.tsx" --include="*.ts" \
+            | grep -vE '^[[:space:]]*//|^[[:space:]]*\*|^[[:space:]]*/\*' | wc -l)
+          [ "$COUNT" -eq 0 ] || (echo "❌ $COUNT hardcoded colors found in admin" && exit 1)
+
+      - name: No hardcoded colors (shared)
+        run: |
+          set -euo pipefail
+          COUNT=$(grep -rn "#[0-9a-fA-F]\{3,8\}" frontend/shared/src \
+            --include="*.tsx" --include="*.ts" 2>/dev/null \
+            | grep -vE '^[[:space:]]*//|^[[:space:]]*\*|^[[:space:]]*/\*' | wc -l || true)
+          [ "${COUNT:-0}" -eq 0 ] || (echo "❌ $COUNT hardcoded colors found in shared" && exit 1)
+
+      - name: No direct lucide imports
+        run: |
+          COUNT=$(grep -rn "from 'lucide-react'\|from \"lucide-react\"" frontend/miniapp/src \
+            --include="*.tsx" | grep -v "shared-inline/icons.ts" | wc -l)
+          [ "$COUNT" -eq 0 ] || (echo "❌ $COUNT direct lucide imports found" && exit 1)
+
+      - name: No inline styles (miniapp)
+        run: |
+          set -euo pipefail
+          COUNT=$(grep -rn "style={{" frontend/miniapp/src/components frontend/miniapp/src/pages \
+            --include="*.tsx" | wc -l)
+          [ "$COUNT" -eq 0 ] || (echo "❌ $COUNT inline styles found in miniapp" && exit 1)
+
+      - name: No inline styles (admin)
+        run: |
+          set -euo pipefail
+          COUNT=$(grep -rn "style={{" frontend/admin/src --include="*.tsx" | wc -l)
+          [ "$COUNT" -eq 0 ] || (echo "❌ $COUNT inline styles found in admin" && exit 1)
+
+      - name: No inline styles (shared)
+        run: |
+          set -euo pipefail
+          COUNT=$(grep -rn "style={{" frontend/shared/src --include="*.tsx" 2>/dev/null | wc -l) || true
+          [ "${COUNT:-0}" -eq 0 ] || (echo "❌ $COUNT inline styles found in shared" && exit 1)
+
+      - name: Single token source
+        run: |
+          COUNT=$(grep -rln "^:root" frontend/miniapp/src --include="*.css" | wc -l)
+          [ "$COUNT" -eq 1 ] || (echo "❌ $COUNT :root files found (expected 1)" && exit 1)
+
+      - name: TypeScript
+        run: pnpm -C frontend/miniapp run typecheck

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { InlineAlert } from "./InlineAlert";
 
 const meta: Meta<typeof InlineAlert> = {
-  title: "Primitives/Toast-Alert/InlineAlert",
+  title: "Shared/Primitives/Toast-Alert/InlineAlert",
   component: InlineAlert,
   parameters: {
     docs: {
@@ -23,11 +23,11 @@ export default meta;
 
 type Story = StoryObj<typeof InlineAlert>;
 
-export const Overview: Story = {
+export const InlineAlertOverview: Story = {
   args: { variant: "info", title: "Information", message: "This is an info message." },
 };
 
-export const Variants: Story = {
+export const InlineAlertVariants: Story = {
   render: () => (
     <div className="sb-stack">
       <InlineAlert variant="info" title="Information" message="This is an info message." />
@@ -37,7 +37,7 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
+export const InlineAlertSizes: Story = {
   render: () => (
     <div className="sb-stack">
       <p className="m-0">Size variants are not exposed; alert spacing is tokenized.</p>
@@ -46,7 +46,7 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const InlineAlertStates: Story = {
   render: () => (
     <div className="sb-stack">
       <InlineAlert variant="info" title="Information" message="This is an info message." />
@@ -54,7 +54,7 @@ export const States: Story = {
   ),
 };
 
-export const WithLongText: Story = {
+export const InlineAlertWithLongText: Story = {
   args: {
     variant: "warning",
     title: "Telemetry delay",
@@ -62,13 +62,13 @@ export const WithLongText: Story = {
   },
 };
 
-export const DarkMode: Story = {
+export const InlineAlertDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   args: { variant: "info", title: "Information", message: "This is an info message." },
 };
 
-export const Accessibility: Story = {
+export const InlineAlertAccessibility: Story = {
   args: { variant: "error", title: "Error", message: "Something went wrong." },
 };
 
-export const EdgeCases = WithLongText;
+export const InlineAlertEdgeCases = WithLongText;

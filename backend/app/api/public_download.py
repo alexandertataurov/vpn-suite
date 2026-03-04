@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
-
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import Response
 from sqlalchemy import select
@@ -11,12 +9,9 @@ from app.core.database import get_db
 from app.core.error_responses import error_body
 from app.core.rate_limit import rate_limit_config_download
 from app.core.security import decrypt_config
-from app.live_metrics.aggregator_worker import _log  # reuse existing logger if appropriate
-from app.models import Device, IssuedConfig
 from app.core.one_time_download import verify_and_consume_one_time_token
-from app.core.config_builder import ConfigValidationError
-from app.core.config import settings
 from app.core.amnezia_vpn_key import sanitize_awg_conf
+from app.models import Device, IssuedConfig
 
 
 router = APIRouter(tags=["public-download"])

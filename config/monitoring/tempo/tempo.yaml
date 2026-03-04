@@ -15,7 +15,7 @@ ingester:
 
 compactor:
   compaction:
-    block_retention: 8760h  # 365 days
+    block_retention: 168h  # 7 days
 
 storage:
   trace:
@@ -23,5 +23,5 @@ storage:
     local:
       path: /var/tempo/blocks
     pool:
-      max_workers: 100
-      queue_depth: 10000
+      max_workers: 20
+      queue_depth: 2000

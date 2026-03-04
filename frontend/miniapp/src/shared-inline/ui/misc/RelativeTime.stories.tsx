@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { RelativeTime } from "./RelativeTime";
 
 const meta: Meta<typeof RelativeTime> = {
-  title: "Patterns/RelativeTime",
+  title: "Shared/Patterns/RelativeTime",
   component: RelativeTime,
   parameters: {
     docs: {
@@ -17,11 +17,11 @@ export default meta;
 
 type Story = StoryObj<typeof RelativeTime>;
 
-export const Overview: Story = {
+export const RelativeTimeOverview: Story = {
   args: { date: new Date(Date.now() - 5 * 60 * 1000) },
 };
 
-export const Variants: Story = {
+export const RelativeTimeVariants: Story = {
   render: () => (
     <div className="sb-row">
       <RelativeTime date={new Date(Date.now() - 5 * 60 * 1000)} />
@@ -31,7 +31,7 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
+export const RelativeTimeSizes: Story = {
   render: () => (
     <div className="sb-stack">
       <p className="m-0">Size variants are not exposed; uses tokenized text.</p>
@@ -40,23 +40,23 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const RelativeTimeStates: Story = {
   render: () => (
     <RelativeTime date={new Date(Date.now() - 60 * 1000)} updateInterval={5000} />
   ),
 };
 
-export const WithLongText: Story = {
+export const RelativeTimeWithLongText: Story = {
   args: { date: new Date(Date.now() - 60 * 1000), title: "2025-01-01 12:00:00 UTC" },
 };
 
-export const Accessibility: Story = {
+export const RelativeTimeAccessibility: Story = {
   args: { date: new Date(Date.now() - 60 * 1000), title: new Date().toISOString() },
 };
 
-export const DarkMode: Story = {
+export const RelativeTimeDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   args: { date: new Date(Date.now() - 5 * 60 * 1000) },
 };
 
-export const EdgeCases = WithLongText;
+export const RelativeTimeEdgeCases = WithLongText;

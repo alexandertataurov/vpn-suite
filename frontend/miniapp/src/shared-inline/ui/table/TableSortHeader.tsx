@@ -24,8 +24,7 @@ export function TableSortHeader({
 }: TableSortHeaderProps) {
   const indicator = active && sortDir ? (sortDir === "asc" ? " ↑" : " ↓") : "";
   return (
-    <button
-      type="button"
+    <button type="button"
       className={cn("ds-table-sort", className)}
       onClick={onClick}
       aria-sort={active && sortDir ? (sortDir === "asc" ? "ascending" : "descending") : undefined}

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { VisuallyHidden } from "./VisuallyHidden";
 
 const meta: Meta<typeof VisuallyHidden> = {
-  title: "Primitives/VisuallyHidden",
+  title: "Shared/Primitives/VisuallyHidden",
   component: VisuallyHidden,
   parameters: {
     docs: {
@@ -17,11 +17,11 @@ export default meta;
 
 type Story = StoryObj<typeof VisuallyHidden>;
 
-export const Overview: Story = {
+export const VisuallyHiddenOverview: Story = {
   args: { children: "Screen reader only text" },
 };
 
-export const Variants: Story = {
+export const VisuallyHiddenVariants: Story = {
   render: () => (
     <div className="sb-stack">
       <VisuallyHidden>Hidden label</VisuallyHidden>
@@ -30,7 +30,7 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
+export const VisuallyHiddenSizes: Story = {
   render: () => (
     <div className="sb-stack">
       <p className="m-0">Size variants are not exposed; text is visually hidden.</p>
@@ -39,7 +39,7 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const VisuallyHiddenStates: Story = {
   render: () => (
     <div className="sb-stack">
       <VisuallyHidden>Hidden label</VisuallyHidden>
@@ -47,17 +47,17 @@ export const States: Story = {
   ),
 };
 
-export const WithLongText: Story = {
+export const VisuallyHiddenWithLongText: Story = {
   args: { children: "Long screen reader label that should remain hidden visually and readable by assistive tech." },
 };
 
-export const DarkMode: Story = {
+export const VisuallyHiddenDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   args: { children: "Screen reader only text" },
 };
 
-export const Accessibility: Story = {
+export const VisuallyHiddenAccessibility: Story = {
   args: { children: "Screen reader only text" },
 };
 
-export const EdgeCases = WithLongText;
+export const VisuallyHiddenEdgeCases = WithLongText;

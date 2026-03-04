@@ -101,7 +101,7 @@ async def write_device_telemetry(
     no_h = not h_ok and (handshake_ts is None or handshake_ts == 0)
     tz = (transfer_rx or 0) + (transfer_tx or 0) == 0
     rtt_float: float | None = None
-    if rtt_ms is not None and isinstance(rtt_ms, (int, float)):
+    if rtt_ms is not None and isinstance(rtt_ms, int | float):
         v = float(rtt_ms)
         if 0 <= v <= 60000:
             rtt_float = v
@@ -176,7 +176,7 @@ async def write_device_telemetry_from_heartbeat_peers(
         tx = int(p.get("tx_bytes") or 0)
         rtt_ms_raw = p.get("rtt_ms")
         rtt_ms: float | None = None
-        if rtt_ms_raw is not None and isinstance(rtt_ms_raw, (int, float)):
+        if rtt_ms_raw is not None and isinstance(rtt_ms_raw, int | float):
             v = float(rtt_ms_raw)
             if 0 <= v <= 60000:
                 rtt_ms = v

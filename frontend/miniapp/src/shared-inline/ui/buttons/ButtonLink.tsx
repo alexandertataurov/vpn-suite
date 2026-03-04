@@ -8,6 +8,7 @@ export interface ButtonLinkProps {
   size?: ButtonSize;
   kind?: "default" | "connect";
   className?: string;
+  /** Prefer className with CSS token-based styles. Use style only for truly dynamic values. */
   style?: CSSProperties;
   target?: string;
   rel?: string;

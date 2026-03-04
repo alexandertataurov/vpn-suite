@@ -18,11 +18,21 @@
     "test:e2e": "npm run test:e2e -w admin",
     "test:e2e:miniapp": "npm run test:e2e -w miniapp",
     "test:e2e:ui": "npm run test:e2e:ui -w admin",
-    "guardrails": "true"
+    "guardrails": "true",
+    "storybook": "npm run storybook -w admin",
+    "storybook:admin": "npm run storybook -w admin",
+    "storybook:miniapp": "npm run storybook -w miniapp"
   },
   "devDependencies": {
+    "@storybook/addon-essentials": "^8.6.17",
+    "@storybook/addon-links": "^8.6.17",
+    "@storybook/blocks": "^8.6.17",
+    "@storybook/react": "^8.6.17",
+    "@storybook/react-vite": "^8.6.17",
+    "@storybook/test": "^8.6.17",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.0.1",
+    "storybook": "^8.6.17",
     "typescript": "~5.9.3"
   },
   "overrides": {

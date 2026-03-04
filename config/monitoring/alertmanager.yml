@@ -1,6 +1,6 @@
-# VPN Suite Alertmanager. P1 (critical) -> PagerDuty + Slack; P2 (warning) -> Slack only.
+# VPN Suite Alertmanager. P1 (critical) -> Telegram; P2 (warning) -> Telegram.
 # Set runbook_url, dashboard_url, affected_service in alert rules.
-# Env: ALERTMANAGER_SLACK_WEBHOOK_URL, PAGERDUTY_KEY, ALERTMANAGER_TELEGRAM_*.
+# Env: ALERTMANAGER_TELEGRAM_BOT_TOKEN, ALERTMANAGER_TELEGRAM_CHAT_ID.
 
 global:
   resolve_timeout: 5m
@@ -25,32 +25,28 @@ receivers:
     # No-op; use for dev or when no integrations configured.
 
   - name: p1
-    # P1: error rate >1%, critical failures -> PagerDuty + Slack
-    slack_configs:
-      - api_url: ${ALERTMANAGER_SLACK_WEBHOOK_URL}
-        channel: ${ALERTMANAGER_SLACK_CHANNEL_CRITICAL:-#alerts-critical}
+    # P1: critical -> Telegram
+    telegram_configs:
+      - bot_token: ${ALERTMANAGER_TELEGRAM_BOT_TOKEN}
+        chat_id: ${ALERTMANAGER_TELEGRAM_CHAT_ID}
         send_resolved: true
-        title: '[P1] {{ .GroupLabels.alertname }}'
-        text: '{{ range .Alerts }}{{ .Annotations.summary }} — {{ .Annotations.description }}{{ end }}'
-    pagerduty_configs:
-      - routing_key: ${PAGERDUTY_KEY}
-        severity: critical
-        send_resolved: true
-        description: '{{ .GroupLabels.alertname }}'
-        details:
-          summary: '{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}'
-          description: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
-          runbook: '{{ range .Alerts }}{{ .Annotations.runbook_url }}{{ end }}'
-          dashboard: '{{ range .Alerts }}{{ .Annotations.dashboard_url }}{{ end }}'
+        message: |
+          [P1] {{ .GroupLabels.alertname }}
+          {{ range .Alerts }}{{ .Annotations.summary }} — {{ .Annotations.description }}{{ end }}
+          Runbook: {{ range .Alerts }}{{ .Annotations.runbook_url }}{{ end }}
+          Dashboard: {{ range .Alerts }}{{ .Annotations.dashboard_url }}{{ end }}
 
   - name: p2
-    # P2: warning -> Slack only
-    slack_configs:
-      - api_url: ${ALERTMANAGER_SLACK_WEBHOOK_URL}
-        channel: ${ALERTMANAGER_SLACK_CHANNEL_WARNING:-#alerts}
+    # P2: warning -> Telegram
+    telegram_configs:
+      - bot_token: ${ALERTMANAGER_TELEGRAM_BOT_TOKEN}
+        chat_id: ${ALERTMANAGER_TELEGRAM_CHAT_ID}
         send_resolved: true
-        title: '[P2] {{ .GroupLabels.alertname }}'
-        text: '{{ range .Alerts }}{{ .Annotations.summary }} — {{ .Annotations.description }}{{ end }}'
+        message: |
+          [P2] {{ .GroupLabels.alertname }}
+          {{ range .Alerts }}{{ .Annotations.summary }} — {{ .Annotations.description }}{{ end }}
+          Runbook: {{ range .Alerts }}{{ .Annotations.runbook_url }}{{ end }}
+          Dashboard: {{ range .Alerts }}{{ .Annotations.dashboard_url }}{{ end }}
 
 inhibit_rules:
   # When Admin API is down, do not also fire ScrapeTargetDown for admin-api (redundant).

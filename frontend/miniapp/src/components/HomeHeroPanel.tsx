@@ -45,7 +45,7 @@ export function HomeHeroPanel({
 
   return (
     <Panel
-      className={`instrument-card ${connected ? "instrument-card--active" : "instrument-card--inactive"} home-hero-panel home-hero-panel--${connected ? "connected" : "disconnected"}`}
+      className={`instrument-card stagger-item ${connected ? "instrument-card--active" : "instrument-card--inactive"} home-hero-panel home-hero-panel--${connected ? "connected" : "disconnected"}`}
     >
       <H2 className="home-hero-primary tracking-trim" tabular>
         {primaryLabel}

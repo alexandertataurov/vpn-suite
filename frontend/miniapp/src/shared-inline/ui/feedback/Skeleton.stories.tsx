@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { Skeleton, SkeletonLine, SkeletonCard, SkeletonList } from "./Skeleton";
 
 const meta: Meta<typeof Skeleton> = {
-  title: "Primitives/Skeleton",
+  title: "Shared/Primitives/Skeleton",
   component: Skeleton,
   parameters: {
     docs: {
@@ -17,11 +17,11 @@ export default meta;
 
 type Story = StoryObj<typeof Skeleton>;
 
-export const Overview: Story = {
+export const SkeletonOverview: Story = {
   args: { width: "var(--spacing-32)", height: "var(--spacing-6)" },
 };
 
-export const Variants: Story = {
+export const SkeletonVariants: Story = {
   render: () => (
     <div className="sb-stack">
       <Skeleton />
@@ -33,7 +33,7 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
+export const SkeletonSizes: Story = {
   render: () => (
     <div className="sb-stack">
       <Skeleton width="var(--spacing-24)" height="var(--spacing-4)" />
@@ -43,7 +43,7 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const SkeletonStates: Story = {
   render: () => (
     <div className="sb-stack">
       <Skeleton width="var(--spacing-40)" height="var(--spacing-6)" />
@@ -52,17 +52,17 @@ export const States: Story = {
   ),
 };
 
-export const WithLongText: Story = {
+export const SkeletonWithLongText: Story = {
   render: () => <SkeletonLine width="var(--spacing-64)" />,
 };
 
-export const DarkMode: Story = {
+export const SkeletonDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   args: { width: "var(--spacing-32)", height: "var(--spacing-6)" },
 };
 
-export const Accessibility: Story = {
+export const SkeletonAccessibility: Story = {
   render: () => <SkeletonLine width="var(--spacing-40)" aria-hidden />,
 };
 
-export const EdgeCases = WithLongText;
+export const SkeletonEdgeCases = WithLongText;

@@ -1,12 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import type { WebAppServersResponse } from "@vpn-suite/shared/types";
 import { Skeleton, PageScaffold } from "../ui";
-import { HomeHeroPanel } from "../components/HomeHeroPanel";
-import { HomePrimaryActionZone } from "../components/HomePrimaryActionZone";
-import { HomeQuickActionGrid } from "../components/HomeQuickActionGrid";
-import { HomeDynamicBlock } from "../components/HomeDynamicBlock";
-import { FallbackScreen } from "../components/FallbackScreen";
-import { SessionMissing } from "../components/SessionMissing";
+import {
+  HomeHeroPanel,
+  HomePrimaryActionZone,
+  HomeQuickActionGrid,
+  HomeDynamicBlock,
+  FallbackScreen,
+  SessionMissing,
+} from "@/components";
 import { useSession } from "../hooks/useSession";
 import { useWebappToken, webappApi } from "../api/client";
 import { useApiHealth } from "../hooks/useApiHealth";
@@ -73,8 +75,8 @@ export function HomePage() {
   if (isLoading || (error && isFetching)) {
     return (
       <PageScaffold>
-        <Skeleton height={120} className="home-skeleton-hero" />
-        <Skeleton height={48} className="home-skeleton-cta" />
+        <Skeleton className="home-skeleton-hero" />
+        <Skeleton className="home-skeleton-cta" />
         <div className="home-skeleton-grid">
           <Skeleton variant="card" />
           <Skeleton variant="card" />
@@ -101,7 +103,8 @@ export function HomePage() {
 
   return (
     <PageScaffold>
-      <HomeHeroPanel
+      <div className="content-reveal">
+        <HomeHeroPanel
         connected={connected}
         locationLabel={locationLabel}
         planId={activeSub?.plan_id ?? "—"}
@@ -123,6 +126,7 @@ export function HomePage() {
         usedDevices={usedDevices}
         healthError={!!healthError}
       />
+      </div>
     </PageScaffold>
   );
 }

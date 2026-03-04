@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { ButtonLink } from "./ButtonLink";
 
 const meta: Meta<typeof ButtonLink> = {
-  title: "Components/ButtonLink",
+  title: "Shared/Components/ButtonLink",
   component: ButtonLink,
   parameters: {
     docs: {
@@ -22,11 +22,11 @@ export default meta;
 
 type Story = StoryObj<typeof ButtonLink>;
 
-export const Overview: Story = {
+export const ButtonLinkOverview: Story = {
   args: { to: "/", children: "Go home" },
 };
 
-export const Variants: Story = {
+export const ButtonLinkVariants: Story = {
   render: () => (
     <div className="sb-row">
       <ButtonLink to="/" variant="primary">Primary</ButtonLink>
@@ -37,7 +37,7 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
+export const ButtonLinkSizes: Story = {
   render: () => (
     <div className="sb-row">
       <ButtonLink to="/" size="sm">Small</ButtonLink>
@@ -47,7 +47,7 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const ButtonLinkStates: Story = {
   render: () => (
     <div className="sb-stack">
       <ButtonLink to="/" variant="primary">Default</ButtonLink>
@@ -56,17 +56,17 @@ export const States: Story = {
   ),
 };
 
-export const WithLongText: Story = {
+export const ButtonLinkWithLongText: Story = {
   args: { to: "/plans", variant: "primary", children: "Navigate to a long destination name that should wrap" },
 };
 
-export const Accessibility: Story = {
+export const ButtonLinkAccessibility: Story = {
   args: { to: "/", children: "Focus me (Tab)" },
 };
 
-export const DarkMode: Story = {
+export const ButtonLinkDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   args: { to: "/", children: "Go home" },
 };
 
-export const EdgeCases = WithLongText;
+export const ButtonLinkEdgeCases = WithLongText;

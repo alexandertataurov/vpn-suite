@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { LiveIndicator } from "./LiveIndicator";
 
 const meta: Meta<typeof LiveIndicator> = {
-  title: "Components/LiveIndicator",
+  title: "Shared/Components/LiveIndicator",
   component: LiveIndicator,
   parameters: {
     docs: {
@@ -17,9 +17,9 @@ export default meta;
 
 type Story = StoryObj<typeof LiveIndicator>;
 
-export const Overview: Story = { args: { status: "live" } };
+export const LiveIndicatorOverview: Story = { args: { status: "live" } };
 
-export const Variants: Story = {
+export const LiveIndicatorVariants: Story = {
   render: () => (
     <div className="sb-row">
       <LiveIndicator status="live" />
@@ -30,7 +30,7 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
+export const LiveIndicatorSizes: Story = {
   render: () => (
     <div className="sb-stack">
       <p className="m-0">Size variants are not exposed; uses tokenized font size.</p>
@@ -39,7 +39,7 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const LiveIndicatorStates: Story = {
   render: () => (
     <div className="sb-row">
       <LiveIndicator status="live" />
@@ -49,7 +49,7 @@ export const States: Story = {
   ),
 };
 
-export const WithLongText: Story = {
+export const LiveIndicatorWithLongText: Story = {
   render: () => (
     <div className="sb-row">
       <LiveIndicator status="reconnecting" />
@@ -58,13 +58,13 @@ export const WithLongText: Story = {
   ),
 };
 
-export const DarkMode: Story = {
+export const LiveIndicatorDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   args: { status: "live" },
 };
 
-export const Accessibility: Story = {
+export const LiveIndicatorAccessibility: Story = {
   args: { status: "live" },
 };
 
-export const EdgeCases = WithLongText;
+export const LiveIndicatorEdgeCases = WithLongText;

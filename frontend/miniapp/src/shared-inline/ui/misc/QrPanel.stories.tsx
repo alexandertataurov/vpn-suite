@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { QrPanel } from "./QrPanel";
 
 const meta: Meta<typeof QrPanel> = {
-  title: "Components/QrPanel",
+  title: "Shared/Components/QrPanel",
   component: QrPanel,
   parameters: {
     docs: {
@@ -17,11 +17,11 @@ export default meta;
 
 type Story = StoryObj<typeof QrPanel>;
 
-export const Overview: Story = {
+export const QrPanelOverview: Story = {
   args: { value: "https://example.com/config" },
 };
 
-export const Variants: Story = {
+export const QrPanelVariants: Story = {
   render: () => (
     <div className="sb-row">
       <QrPanel value="https://example.com/config" />
@@ -30,7 +30,7 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
+export const QrPanelSizes: Story = {
   render: () => (
     <div className="sb-row">
       <p className="m-0">Size variants should use tokenized values; default size is recommended.</p>
@@ -39,23 +39,23 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const QrPanelStates: Story = {
   render: () => (
     <QrPanel value="https://example.com/config" />
   ),
 };
 
-export const WithLongText: Story = {
+export const QrPanelWithLongText: Story = {
   args: { value: "https://example.com/config?token=very-long-token-value-0123456789-abcdefghijklmnopqrstuvwxyz" },
 };
 
-export const DarkMode: Story = {
+export const QrPanelDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   args: { value: "https://example.com/config" },
 };
 
-export const Accessibility: Story = {
+export const QrPanelAccessibility: Story = {
   args: { value: "https://example.com/config" },
 };
 
-export const EdgeCases = WithLongText;
+export const QrPanelEdgeCases = WithLongText;

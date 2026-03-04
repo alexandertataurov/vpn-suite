@@ -6,12 +6,12 @@ Per-folder walk: purpose, hot paths, waste, quick wins, risky refactors.
 
 ## A) Frontend (React/Vite)
 
-**Purpose:** Admin SPA (`frontend/admin/`), Miniapp (`frontend/miniapp/`), shared (`frontend/shared/`) — UI, types, api-client.
+**Purpose:** Admin SPA (`frontend/admin/`), Miniapp (`frontend/miniapp/`) — UI, types, api-client.
 
 **Hot paths:** Devices page (list + summary polling 90s), Servers (list 60s + stream), Control Plane (multiple queries 15–60s), Server Detail peers tab (3s).
 
 **Findings:**
-1. Devices: VirtualTable only when `displayDevices.length > 50` (`frontend/admin/src/pages/Devices.tsx` ~924). Use VirtualTable for table view whenever page size can be large (e.g. always when viewMode === "table" and data from server is paginated).
+1. Devices: VirtualTable only when `displayDevices.length > 50` (`frontend/admin/src/features/devices/DevicesPage.tsx`). Use VirtualTable for table view whenever page size can be large (e.g. always when viewMode === "table" and data from server is paginated).
 2. Polling: Devices page runs list + summary both at 90s; consider a single “devices list + summary” endpoint or ensure React Query dedupes.
 3. Control Plane: 6+ useQuery with 15–60s refetch; consider one combined “control plane dashboard” endpoint to cut round-trips.
 4. No bundle size gate in CI (added: artifact + record step).

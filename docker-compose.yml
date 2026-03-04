@@ -22,21 +22,22 @@ x-monitoring-default: &monitoring_default
   labels:
     - "com.centurylinklabs.watchtower.enable=false"
 
+# Defaults tuned for ~6GB total (override MEM_* / CPU_* in .env)
 x-resource-tiny: &resource_tiny
   cpus: "${CPU_TINY:-0.1}"
   mem_limit: "${MEM_TINY:-64m}"
 
 x-resource-small: &resource_small
   cpus: "${CPU_SMALL:-0.2}"
-  mem_limit: "${MEM_SMALL:-256m}"
+  mem_limit: "${MEM_SMALL:-192m}"
 
 x-resource-medium: &resource_medium
   cpus: "${CPU_MEDIUM:-0.5}"
-  mem_limit: "${MEM_MEDIUM:-512m}"
+  mem_limit: "${MEM_MEDIUM:-384m}"
 
 x-resource-large: &resource_large
   cpus: "${CPU_LARGE:-1.0}"
-  mem_limit: "${MEM_LARGE:-1g}"
+  mem_limit: "${MEM_LARGE:-768m}"
 
 services:
   admin-api:
@@ -52,6 +53,7 @@ services:
       - DATABASE_URL=${DATABASE_URL}
       - REDIS_URL=${REDIS_URL}
       - SECRET_KEY=${SECRET_KEY}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
       - OTEL_TRACES_ENDPOINT=${OTEL_TRACES_ENDPOINT:-}
       - VPN_DEFAULT_HOST=${VPN_DEFAULT_HOST:-${PUBLIC_DOMAIN}}
     depends_on:
@@ -63,8 +65,6 @@ services:
       - "${DOCKER_GID:-119}"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-    profiles:
-      - docker-telemetry
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2).read()"]
       interval: 30s
@@ -252,10 +252,12 @@ services:
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
       - "--storage.tsdb.path=/prometheus"
-      - "--storage.tsdb.retention.time=30d"
+      - "--storage.tsdb.retention.time=${PROMETHEUS_RETENTION:-15d}"
+      - "--storage.tsdb.retention.size=512MB"
     volumes:
       - ./config/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./config/monitoring/alert_rules.yml:/etc/prometheus/alert_rules.yml:ro
+      - ./config/monitoring/alerts:/etc/prometheus/alerts:ro
       - ./config/monitoring/recording_rules.yml:/etc/prometheus/recording_rules.yml:ro
       - ./config/monitoring/discovery:/etc/prometheus/file_sd:ro
       - prometheus_data:/prometheus
@@ -290,7 +292,7 @@ services:
     image: gcr.io/cadvisor/cadvisor:v0.52.0
     command:
       - "--docker_only=true"
-      - "--housekeeping_interval=30s"
+      - "--housekeeping_interval=60s"
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:ro

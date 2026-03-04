@@ -17,9 +17,7 @@ import {
 import type { WebAppSubscriptionOffersResponse } from "@vpn-suite/shared/types";
 import { useSession } from "../hooks/useSession";
 import { useWebappToken, webappApi } from "../api/client";
-import { DangerZone } from "../components/DangerZone";
-import { FallbackScreen } from "../components/FallbackScreen";
-import { SessionMissing } from "../components/SessionMissing";
+import { DangerZone, FallbackScreen, SessionMissing } from "@/components";
 import { useTrackScreen } from "../hooks/useTrackScreen";
 
 export function SettingsPage() {
@@ -134,8 +132,8 @@ export function SettingsPage() {
 
       {offersLoading && (
         <Panel className="card">
-          <Skeleton height={24} />
-          <Skeleton height={16} />
+          <Skeleton className="skeleton-h-md" />
+          <Skeleton className="skeleton-h-sm" />
         </Panel>
       )}
       {offersError && (

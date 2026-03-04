@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { ErrorState, InlineAlert, PageError } from "@vpn-suite/shared/ui";
 
 const meta: Meta<typeof ErrorState> = {
-  title: "Patterns/ErrorStates",
+  title: "Shared/Patterns/ErrorStates",
   component: ErrorState,
   parameters: {
     docs: {
@@ -17,7 +17,7 @@ export default meta;
 
 type Story = StoryObj<typeof ErrorState>;
 
-export const Overview: Story = {
+export const ErrorStatesOverview: Story = {
   render: () => (
     <div className="sb-stack">
       <InlineAlert variant="error" title="Failed to load" message="Try again in a few minutes." />
@@ -26,7 +26,7 @@ export const Overview: Story = {
   ),
 };
 
-export const Variants: Story = {
+export const ErrorStatesVariants: Story = {
   render: () => (
     <div className="sb-stack">
       <InlineAlert variant="warning" title="Warning" message="This is a warning." />
@@ -36,7 +36,7 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
+export const ErrorStatesSizes: Story = {
   render: () => (
     <div className="sb-stack">
       <p className="m-0">Size variants are not exposed; spacing is tokenized.</p>
@@ -45,13 +45,13 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const ErrorStatesStates: Story = {
   render: () => (
     <ErrorState title="Failed to load" message="Network error." />
   ),
 };
 
-export const PageLevel: Story = {
+export const ErrorStatesPageLevel: Story = {
   render: () => (
     <PageError
       title="Something went wrong"
@@ -61,7 +61,7 @@ export const PageLevel: Story = {
   ),
 };
 
-export const WithLongText: Story = {
+export const ErrorStatesWithLongText: Story = {
   render: () => (
     <ErrorState
       title="Telemetry unavailable for the selected time window"
@@ -71,17 +71,17 @@ export const WithLongText: Story = {
   ),
 };
 
-export const DarkMode: Story = {
+export const ErrorStatesDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   render: () => (
     <ErrorState title="Failed to load" message="Network error." retry={() => {}} />
   ),
 };
 
-export const Accessibility: Story = {
+export const ErrorStatesAccessibility: Story = {
   render: () => (
     <ErrorState title="Error state" message="Announced via role=alert when appropriate." />
   ),
 };
 
-export const EdgeCases = WithLongText;
+export const ErrorStatesEdgeCases = WithLongText;

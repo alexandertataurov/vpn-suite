@@ -4,7 +4,7 @@ import { MiniappLayout } from "./MiniappLayout";
 import { Body } from "../ui";
 
 const meta: Meta<typeof MiniappLayout> = {
-  title: "Pages/Miniapp/Overview",
+  title: "Miniapp/Pages/Overview",
   component: MiniappLayout,
   parameters: {
     router: { disabled: true },
@@ -24,7 +24,7 @@ function StoryText({ text }: { text: string }) {
   return <Body>{text}</Body>;
 }
 
-export const Overview: Story = {
+export const MiniappLayoutOverview: Story = {
   render: () => (
     <MemoryRouter initialEntries={["/"]}>
       <Routes>
@@ -40,7 +40,7 @@ export const Overview: Story = {
   ),
 };
 
-export const Variants: Story = {
+export const MiniappLayoutVariants: Story = {
   render: () => (
     <MemoryRouter initialEntries={["/devices"]}>
       <Routes>
@@ -56,7 +56,7 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
+export const MiniappLayoutSizes: Story = {
   render: () => (
     <div className="sb-stack">
       <Body>Reference layout only; size variants are not exposed.</Body>
@@ -75,7 +75,7 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const MiniappLayoutStates: Story = {
   render: () => (
     <MemoryRouter initialEntries={["/support"]}>
       <Routes>
@@ -91,7 +91,7 @@ export const States: Story = {
   ),
 };
 
-export const WithLongText: Story = {
+export const MiniappLayoutWithLongText: Story = {
   render: () => (
     <MemoryRouter initialEntries={["/"]}>
       <Routes>
@@ -110,7 +110,7 @@ export const WithLongText: Story = {
   ),
 };
 
-export const DarkMode: Story = {
+export const MiniappLayoutDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   render: () => (
     <MemoryRouter initialEntries={["/"]}>
@@ -127,7 +127,7 @@ export const DarkMode: Story = {
   ),
 };
 
-export const Accessibility: Story = {
+export const MiniappLayoutAccessibility: Story = {
   render: () => (
     <MemoryRouter initialEntries={["/"]}>
       <Routes>
@@ -143,4 +143,4 @@ export const Accessibility: Story = {
   ),
 };
 
-export const EdgeCases = WithLongText;
+export const MiniappLayoutEdgeCases = WithLongText;

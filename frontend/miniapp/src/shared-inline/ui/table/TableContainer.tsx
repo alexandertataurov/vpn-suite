@@ -1,6 +1,6 @@
 import { forwardRef, type ReactNode } from "react";
 import { cn } from "../../utils/cn";
-import { Panel as PrimitivePanel } from "../primitives/Panel";
+import { PrimitivePanel } from "../primitives/Panel";
 
 export interface TableContainerProps {
   children: ReactNode;
@@ -8,7 +8,7 @@ export interface TableContainerProps {
   maxHeight?: string | number;
   className?: string;
   "data-testid"?: string;
-  /** For virtualization: forwarded to root div */
+  /** Prefer className with CSS token-based styles. Use style only for truly dynamic values. */
   style?: React.CSSProperties;
 }
 

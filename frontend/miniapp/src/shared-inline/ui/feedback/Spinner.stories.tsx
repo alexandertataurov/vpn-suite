@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { Spinner } from "./Spinner";
 
 const meta: Meta<typeof Spinner> = {
-  title: "Primitives/Spinner",
+  title: "Shared/Primitives/Spinner",
   component: Spinner,
   parameters: {
     docs: {
@@ -17,11 +17,11 @@ export default meta;
 
 type Story = StoryObj<typeof Spinner>;
 
-export const Overview: Story = {
+export const SpinnerOverview: Story = {
   args: { size: "md" },
 };
 
-export const Variants: Story = {
+export const SpinnerVariants: Story = {
   render: () => (
     <div className="sb-row">
       <Spinner size="sm" />
@@ -30,7 +30,7 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
+export const SpinnerSizes: Story = {
   render: () => (
     <div className="sb-row">
       <Spinner size="sm" />
@@ -39,7 +39,7 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const SpinnerStates: Story = {
   render: () => (
     <div className="sb-row">
       <Spinner size="md" />
@@ -47,7 +47,7 @@ export const States: Story = {
   ),
 };
 
-export const WithLongText: Story = {
+export const SpinnerWithLongText: Story = {
   render: () => (
     <div className="sb-row">
       <Spinner size="sm" />
@@ -56,13 +56,13 @@ export const WithLongText: Story = {
   ),
 };
 
-export const DarkMode: Story = {
+export const SpinnerDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   args: { size: "md" },
 };
 
-export const Accessibility: Story = {
+export const SpinnerAccessibility: Story = {
   args: { size: "md", "aria-label": "Loading" },
 };
 
-export const EdgeCases = WithLongText;
+export const SpinnerEdgeCases = WithLongText;

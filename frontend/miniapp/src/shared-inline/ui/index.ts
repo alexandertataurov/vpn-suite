@@ -115,43 +115,43 @@ export type { HealthBadgeProps, HealthBadgeStatus } from "./composites/HealthBad
 export { StatusStrip } from "./composites/StatusStrip";
 export type { StatusStripProps, StatusStripItem } from "./composites/StatusStrip";
 export {
-  Button as PrimitiveButton,
+  PrimitiveButton,
   type PrimitiveButtonProps,
   type PrimitiveButtonSize,
   type PrimitiveButtonVariant,
   type PrimitiveButtonIconPosition,
 } from "./primitives/Button";
 export {
-  Input as PrimitiveInput,
+  PrimitiveInput,
   type PrimitiveInputProps,
   type PrimitiveInputSize,
 } from "./primitives/Input";
 export {
-  Select as PrimitiveSelect,
+  PrimitiveSelect,
   type PrimitiveSelectProps,
   type PrimitiveSelectOption,
   type PrimitiveSelectSize,
 } from "./primitives/Select";
 export {
-  Checkbox as PrimitiveCheckbox,
+  PrimitiveCheckbox,
   type PrimitiveCheckboxProps,
 } from "./primitives/Checkbox";
 export {
-  Label as PrimitiveLabel,
+  PrimitiveLabel,
   type PrimitiveLabelProps,
   type PrimitiveLabelSize,
 } from "./primitives/Label";
 export {
-  Field as PrimitiveField,
+  PrimitiveField,
   type PrimitiveFieldProps,
 } from "./primitives/Field";
 export {
-  Text as PrimitiveText,
+  PrimitiveText,
   type PrimitiveTextProps,
   type PrimitiveTextVariant,
 } from "./primitives/Text";
 export {
-  Heading as PrimitiveHeading,
+  PrimitiveHeading,
   type PrimitiveHeadingProps,
   type PrimitiveHeadingVariant,
 } from "./primitives/Heading";
@@ -169,7 +169,7 @@ export {
   type PrimitiveDividerTone,
 } from "./primitives/Divider";
 export {
-  Panel as PrimitivePanel,
+  PrimitivePanel,
   type PrimitivePanelProps,
   type PrimitivePanelPadding,
   type PrimitivePanelVariant,

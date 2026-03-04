@@ -27,3 +27,7 @@ Structured JSON (structlog). Events: `user_action`, `action_completed`, `action_
 **Deploy:** Staging first → smoke → production → monitor ~1h.
 
 **Post:** Test /start, payment (Stars), metrics.
+
+---
+
+Detailed docs: [bot/release.md](bot/release.md), [bot/production-plan.md](bot/production-plan.md), [bot/bot-menu-architecture.md](bot/bot-menu-architecture.md).

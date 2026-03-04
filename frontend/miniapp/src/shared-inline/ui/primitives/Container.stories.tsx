@@ -4,7 +4,7 @@ import { StoryStack } from "../../storybook/wrappers";
 import { storyText } from "../../storybook/fixtures";
 
 const meta: Meta<typeof Container> = {
-  title: "Primitives/Container",
+  title: "Shared/Primitives/Container",
   component: Container,
   argTypes: {
     size: { control: "select", options: ["sm", "md", "lg"] },
@@ -16,7 +16,7 @@ export default meta;
 
 type Story = StoryObj<typeof Container>;
 
-export const Overview: Story = {
+export const ContainerOverview: Story = {
   render: () => (
     <Container>
       <p className="m-0">Container wraps content with tokenized padding and max width.</p>
@@ -24,7 +24,7 @@ export const Overview: Story = {
   ),
 };
 
-export const Variants: Story = {
+export const ContainerVariants: Story = {
   render: () => (
     <StoryStack>
       <Container size="sm" padding="sm">
@@ -37,7 +37,7 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
+export const ContainerSizes: Story = {
   render: () => (
     <StoryStack>
       <Container size="sm">
@@ -53,7 +53,7 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const ContainerStates: Story = {
   render: () => (
     <Container>
       <p className="m-0">Default state only; containers are structural.</p>
@@ -61,7 +61,7 @@ export const States: Story = {
   ),
 };
 
-export const EdgeCases: Story = {
+export const ContainerEdgeCases: Story = {
   render: () => (
     <StoryStack>
       <Container>
@@ -74,7 +74,7 @@ export const EdgeCases: Story = {
   ),
 };
 
-export const DarkMode: Story = {
+export const ContainerDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   render: () => (
     <Container>
@@ -83,7 +83,7 @@ export const DarkMode: Story = {
   ),
 };
 
-export const Accessibility: Story = {
+export const ContainerAccessibility: Story = {
   render: () => (
     <Container aria-label="Container region">
       <p className="m-0">Use aria-label when container is a meaningful region.</p>

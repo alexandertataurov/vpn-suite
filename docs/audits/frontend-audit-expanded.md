@@ -267,8 +267,8 @@ Repeated 25+ times: `err instanceof ApiError ? err.message : "Generic message"`.
 
 ### PR 1: Remove dead code
 
-- Delete frontend/admin/src/pages/Subscriptions.tsx
-- Delete frontend/admin/src/pages/Payments.tsx
+- (Already removed) `frontend/admin/src/pages/Subscriptions.tsx`
+- (Already removed) `frontend/admin/src/pages/Payments.tsx`
 - Grep for SubscriptionsPage, PaymentsPage — confirm no imports
 - npm run build, npm run typecheck
 - E2E: npm run test:e2e (admin)

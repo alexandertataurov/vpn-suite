@@ -69,6 +69,12 @@ jobs:
       - name: Ruff format
         run: ruff format --check .
 
+      - name: Mypy
+        run: mypy app
+
+      - name: pip-audit
+        run: pip install pip-audit && pip-audit -r requirements.txt
+
       - name: Migrate
         run: python -m alembic upgrade head
 
@@ -109,16 +115,21 @@ jobs:
       security-events: write
     steps:
       - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
       - name: Build admin-api for scan
         env:
           PUBLIC_DOMAIN: ci.invalid
-        run: docker compose build admin-api
+        run: |
+          docker buildx create --use --driver docker-container || true
+          docker buildx build --load \
+            --cache-from type=gha --cache-to type=gha,mode=max \
+            -f backend/Dockerfile -t vpn-suite-admin-api ./backend
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.34.2
         with:
           image-ref: vpn-suite-admin-api
           format: table
-          exit-code: 0
+          exit-code: 1
           severity: CRITICAL,HIGH
 
   frontend-checks:
@@ -191,14 +202,18 @@ jobs:
 
       - name: Record bundle size (baseline)
         run: |
-          du -sb frontend/admin/dist | tee frontend/dist-size.txt
-          echo "Bundle size (admin dist): $(cat frontend/dist-size.txt)"
+          du -sb frontend/admin/dist | tee frontend/dist-size-admin.txt
+          du -sb frontend/miniapp/dist | tee frontend/dist-size-miniapp.txt
+          echo "Bundle size (admin): $(cat frontend/dist-size-admin.txt)"
+          echo "Bundle size (miniapp): $(cat frontend/dist-size-miniapp.txt)"
 
       - name: Upload bundle size artifact
         uses: actions/upload-artifact@v4
         with:
           name: frontend-dist-size
-          path: frontend/dist-size.txt
+          path: |
+            frontend/dist-size-admin.txt
+            frontend/dist-size-miniapp.txt
 
       - name: Storybook check
         working-directory: frontend
@@ -207,6 +222,22 @@ jobs:
       - name: Storybook build
         working-directory: frontend
         run: npm run build-storybook -w shared
+
+      - name: Storybook test runner (admin)
+        timeout-minutes: 5
+        working-directory: frontend
+        run: |
+          npm run storybook -w admin -- --ci --host 127.0.0.1 --port 6006 &
+          for i in $(seq 1 60); do
+            curl -sf http://127.0.0.1:6006/ && break
+            sleep 1
+          done
+          curl -sf http://127.0.0.1:6006/ > /dev/null
+          npm run storybook:test -w admin
+
+      - name: Storybook guardrails (admin)
+        working-directory: frontend/admin
+        run: npm run storybook:guardrails
 
       - name: Token compliance (no raw hex)
         run: bash scripts/check-tokens.sh
@@ -218,11 +249,12 @@ jobs:
         with:
           fetch-depth: 0
       - name: Gitleaks
-        uses: gitleaks/gitleaks-action@v2
+        uses: gitleaks/gitleaks-action@v2.3.9
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   frontend-e2e:
+    needs: [frontend-checks]
     runs-on: ubuntu-latest
     env:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/vpn_admin

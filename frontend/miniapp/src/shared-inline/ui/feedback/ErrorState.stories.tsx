@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { ErrorState } from "./ErrorState";
 
 const meta: Meta<typeof ErrorState> = {
-  title: "Primitives/ErrorState",
+  title: "Shared/Primitives/ErrorState",
   component: ErrorState,
   parameters: {
     docs: {
@@ -17,11 +17,11 @@ export default meta;
 
 type Story = StoryObj<typeof ErrorState>;
 
-export const Overview: Story = {
+export const ErrorStateOverview: Story = {
   args: { title: "Failed to load" },
 };
 
-export const Variants: Story = {
+export const ErrorStateVariants: Story = {
   render: () => (
     <div className="sb-stack">
       <ErrorState title="Failed to load" message="Network error. Check your connection." />
@@ -30,7 +30,7 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
+export const ErrorStateSizes: Story = {
   render: () => (
     <div className="sb-stack">
       <p className="m-0">Size variants are not exposed; spacing is tokenized.</p>
@@ -39,26 +39,26 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const ErrorStateStates: Story = {
   render: () => (
     <ErrorState title="Failed to load" message="Network error." />
   ),
 };
 
-export const WithLongText: Story = {
+export const ErrorStateWithLongText: Story = {
   args: {
     title: "Failed to load telemetry",
     message: "The metrics provider did not respond in time. Retry or check the upstream data source configuration and network status.",
   },
 };
 
-export const Accessibility: Story = {
+export const ErrorStateAccessibility: Story = {
   args: { title: "Failed to load", message: "Error state announces failure." },
 };
 
-export const DarkMode: Story = {
+export const ErrorStateDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   args: { title: "Failed to load" },
 };
 
-export const EdgeCases = WithLongText;
+export const ErrorStateEdgeCases = WithLongText;

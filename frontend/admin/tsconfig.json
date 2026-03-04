@@ -7,11 +7,10 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@vpn-suite/shared": ["./src/shared-inline/index.ts"],
-      "@vpn-suite/shared/theme": ["./src/shared-inline/theme/index.ts"],
-      "@vpn-suite/shared/ui": ["./src/shared-inline/ui/index.ts"],
-      "@vpn-suite/shared/api-client": ["./src/shared-inline/api-client/index.ts"],
-      "@vpn-suite/shared/types": ["./src/shared-inline/types/index.ts"]
+      "@vpn-suite/shared": ["./src/shared/index.ts"],
+      "@vpn-suite/shared/theme": ["./src/shared/theme/index.ts"],
+      "@vpn-suite/shared/api-client": ["./src/shared/api-client/index.ts"],
+      "@vpn-suite/shared/types": ["./src/shared/types/index.ts"]
     }
   },
   "include": ["src/**/*"],

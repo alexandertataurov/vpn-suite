@@ -3,7 +3,11 @@
 **Date:** 2026-02-21  
 **Status:** Post-implementation verification
 
-## Shared UI Components (frontend/shared/src/ui/)
+## Admin design-system primitives (current)
+
+**Current source of truth:** `frontend/admin/src/design-system/primitives/` and `frontend/admin/src/design-system/tokens/tokens.css`.
+
+**Note:** This inventory was originally written against a `frontend/shared/src/ui/` package; that layout is no longer present in the working tree.
 
 | Component | File | Type | Variants | Inline Styles | Arbitrary Tailwind | Refactored |
 |-----------|------|------|----------|---------------|--------------------|------------|

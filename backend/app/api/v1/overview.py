@@ -125,6 +125,12 @@ async def get_health_snapshot(
     points = await get_dashboard_timeseries(window_seconds=3600)
     last_ts = points[-1]["ts"] if points else None
     telemetry_last_at = datetime.fromtimestamp(last_ts, tz=timezone.utc) if last_ts else None
+    last_peers: int | None = None
+    if points:
+        try:
+            last_peers = int(points[-1].get("peers") or 0)
+        except (TypeError, ValueError, AttributeError):
+            last_peers = None
 
     snap_last = (
         await db.execute(
@@ -132,7 +138,7 @@ async def get_health_snapshot(
         )
     ).scalar_one_or_none()
 
-    sessions_active = (
+    db_peers_total = (
         await db.execute(
             select(func.count()).select_from(Device).where(Device.revoked_at.is_(None))
         )
@@ -156,6 +162,8 @@ async def get_health_snapshot(
         degraded_s=max(settings.server_sync_interval_seconds * 6, 600),
     )
     incidents_fresh = telemetry_fresh if telemetry_fresh != "missing" else "unknown"
+    sessions_active = last_peers if last_peers is not None else db_peers_total
+    sessions_fresh = telemetry_fresh if last_peers is not None else "unknown"
 
     out = HealthSnapshotOut(
         telemetry_last_at=telemetry_last_at,
@@ -166,7 +174,7 @@ async def get_health_snapshot(
         metrics_freshness={
             "telemetry": telemetry_fresh,
             "snapshots": snapshot_fresh,
-            "sessions": "fresh",
+            "sessions": sessions_fresh,
             "incidents": incidents_fresh,
         },
         request_id=getattr(request.state, "request_id", None),

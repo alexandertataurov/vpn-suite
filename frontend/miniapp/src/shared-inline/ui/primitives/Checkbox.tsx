@@ -7,7 +7,7 @@ export interface PrimitiveCheckboxProps extends Omit<InputHTMLAttributes<HTMLInp
   indeterminate?: boolean;
 }
 
-export function Checkbox({ label, indeterminate, id, className = "", ...props }: PrimitiveCheckboxProps) {
+export function PrimitiveCheckbox({ label, indeterminate, id, className = "", ...props }: PrimitiveCheckboxProps) {
   const generatedId = useId();
   const checkboxId = id ?? generatedId;
 

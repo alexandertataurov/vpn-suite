@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { StatusStrip } from "./StatusStrip";
 
 const meta: Meta<typeof StatusStrip> = {
-  title: "Patterns/StatusStrip",
+  title: "Shared/Patterns/StatusStrip",
   component: StatusStrip,
 };
 
@@ -10,7 +10,7 @@ export default meta;
 
 type Story = StoryObj<typeof StatusStrip>;
 
-export const Overview: Story = {
+export const StatusStripOverview: Story = {
   args: {
     items: [
       { status: "healthy", label: "Core" },
@@ -20,7 +20,7 @@ export const Overview: Story = {
   },
 };
 
-export const Variants: Story = {
+export const StatusStripVariants: Story = {
   render: () => (
     <div className="sb-stack">
       <StatusStrip items={[{ status: "healthy", label: "Core" }]} />
@@ -30,7 +30,7 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
+export const StatusStripSizes: Story = {
   render: () => (
     <div className="sb-stack">
       <p className="m-0">Size variants are not exposed; spacing is tokenized.</p>
@@ -39,13 +39,13 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const StatusStripStates: Story = {
   render: () => (
     <StatusStrip items={[{ status: "healthy", label: "Core" }, { status: "warning", label: "Edge" }]} />
   ),
 };
 
-export const WithLongText: Story = {
+export const StatusStripWithLongText: Story = {
   args: {
     items: [
       { status: "warning", label: "Edge cluster with extended label" },
@@ -54,7 +54,7 @@ export const WithLongText: Story = {
   },
 };
 
-export const DarkMode: Story = {
+export const StatusStripDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   args: {
     items: [
@@ -65,7 +65,7 @@ export const DarkMode: Story = {
   },
 };
 
-export const Accessibility: Story = {
+export const StatusStripAccessibility: Story = {
   args: {
     items: [
       { status: "healthy", label: "Core" },
@@ -75,4 +75,4 @@ export const Accessibility: Story = {
   },
 };
 
-export const EdgeCases = WithLongText;
+export const StatusStripEdgeCases = WithLongText;

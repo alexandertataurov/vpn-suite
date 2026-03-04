@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { Field } from "./Field";
 
 const meta: Meta<typeof Field> = {
-  title: "Primitives/Field",
+  title: "Shared/Primitives/Field",
   component: Field,
   parameters: {
     docs: {
@@ -23,14 +23,14 @@ export default meta;
 
 type Story = StoryObj<typeof Field>;
 
-export const Overview: Story = {
+export const FieldOverview: Story = {
   args: {
     label: "Field label",
     children: <input type="text" placeholder="Control" className="input" />,
   },
 };
 
-export const Variants: Story = {
+export const FieldVariants: Story = {
   render: () => (
     <div className="sb-stack">
       <Field label="Default">
@@ -43,7 +43,7 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
+export const FieldSizes: Story = {
   render: () => (
     <div className="sb-stack">
       <p className="m-0">Size variants are not exposed; spacing is tokenized.</p>
@@ -54,7 +54,7 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const FieldStates: Story = {
   render: () => (
     <div className="sb-stack">
       <Field label="Default">
@@ -70,7 +70,7 @@ export const States: Story = {
   ),
 };
 
-export const WithLongText: Story = {
+export const FieldWithLongText: Story = {
   render: () => (
     <Field label="Long label for a control that should wrap and remain readable" description="Long description that should wrap across lines without breaking layout">
       <input type="text" placeholder="Control" className="input" />
@@ -78,7 +78,7 @@ export const WithLongText: Story = {
   ),
 };
 
-export const Accessibility: Story = {
+export const FieldAccessibility: Story = {
   args: {
     label: "Field label",
     description: "Help text",
@@ -87,7 +87,7 @@ export const Accessibility: Story = {
   },
 };
 
-export const DarkMode: Story = {
+export const FieldDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   args: {
     label: "Field label",
@@ -95,4 +95,4 @@ export const DarkMode: Story = {
   },
 };
 
-export const EdgeCases = WithLongText;
+export const FieldEdgeCases = WithLongText;

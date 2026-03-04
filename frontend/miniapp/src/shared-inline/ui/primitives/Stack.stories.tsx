@@ -4,7 +4,7 @@ import { StoryPanel, StoryStack } from "../../storybook/wrappers";
 import { storyText } from "../../storybook/fixtures";
 
 const meta: Meta<typeof Stack> = {
-  title: "Primitives/Stack",
+  title: "Shared/Primitives/Stack",
   component: Stack,
   argTypes: {
     direction: { control: "select", options: ["vertical", "horizontal"] },
@@ -19,7 +19,7 @@ export default meta;
 
 type Story = StoryObj<typeof Stack>;
 
-export const Overview: Story = {
+export const StackOverview: Story = {
   render: () => (
     <Stack gap="3">
       <StoryPanel>Alpha</StoryPanel>
@@ -29,7 +29,7 @@ export const Overview: Story = {
   ),
 };
 
-export const Variants: Story = {
+export const StackVariants: Story = {
   render: () => (
     <StoryStack>
       <Stack direction="horizontal" gap="3" align="center">
@@ -44,7 +44,7 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
+export const StackSizes: Story = {
   render: () => (
     <StoryStack>
       <Stack gap="1">
@@ -59,7 +59,7 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const StackStates: Story = {
   render: () => (
     <Stack gap="3">
       <StoryPanel>Default</StoryPanel>
@@ -69,7 +69,7 @@ export const States: Story = {
   ),
 };
 
-export const EdgeCases: Story = {
+export const StackEdgeCases: Story = {
   render: () => (
     <Stack direction="horizontal" gap="2" wrap>
       <StoryPanel>{storyText.longLabel}</StoryPanel>
@@ -79,7 +79,7 @@ export const EdgeCases: Story = {
   ),
 };
 
-export const DarkMode: Story = {
+export const StackDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   render: () => (
     <Stack gap="3">
@@ -89,7 +89,7 @@ export const DarkMode: Story = {
   ),
 };
 
-export const Accessibility: Story = {
+export const StackAccessibility: Story = {
   render: () => (
     <Stack gap="3" aria-label="Stack demo">
       <StoryPanel>Keyboard focus flows by DOM order</StoryPanel>

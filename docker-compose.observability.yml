@@ -88,7 +88,7 @@ services:
       - ./config/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./config/monitoring/alert_rules.yml:/etc/prometheus/alert_rules.yml:ro
       - ./config/monitoring/discovery:/etc/prometheus/file_sd:ro
-      - ./ALERTS:/etc/prometheus/alerts:ro
+      - ./config/monitoring/alerts:/etc/prometheus/alerts:ro
       - ./config/monitoring/recording_rules.yml:/etc/prometheus/recording_rules.yml:ro
       - prometheus_data:/prometheus
     extra_hosts:

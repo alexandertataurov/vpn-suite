@@ -109,9 +109,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
   }
 
   return (
-    <button
-      ref={ref}
-      type="button"
+    <button ref={ref} type="button"
       className={mergedClassName}
       disabled={disabled ?? loading}
       aria-busy={loading}

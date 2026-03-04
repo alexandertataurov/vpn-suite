@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { CodeBlock } from "./CodeBlock";
 
 const meta: Meta<typeof CodeBlock> = {
-  title: "Components/CodeBlock",
+  title: "Shared/Components/CodeBlock",
   component: CodeBlock,
   parameters: {
     docs: {
@@ -17,11 +17,11 @@ export default meta;
 
 type Story = StoryObj<typeof CodeBlock>;
 
-export const Overview: Story = {
+export const CodeBlockOverview: Story = {
   args: { value: "[Server]\nport = 8080\nhost = 0.0.0.0", language: "ini" },
 };
 
-export const Variants: Story = {
+export const CodeBlockVariants: Story = {
   render: () => (
     <div className="sb-stack">
       <CodeBlock value="[Server]\nport = 8080" language="ini" />
@@ -30,7 +30,7 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
+export const CodeBlockSizes: Story = {
   render: () => (
     <div className="sb-stack">
       <p className="m-0">Size variants are not exposed; use maxHeight for scroll.</p>
@@ -39,7 +39,7 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const CodeBlockStates: Story = {
   render: () => (
     <div className="sb-stack">
       <CodeBlock value="vpnctl status" language="text" />
@@ -48,17 +48,17 @@ export const States: Story = {
   ),
 };
 
-export const WithLongText: Story = {
+export const CodeBlockWithLongText: Story = {
   args: { value: "very-long-token-value-without-breaks-0123456789abcdefghijklmnopqrstuvwxyz", wrap: false },
 };
 
-export const DarkMode: Story = {
+export const CodeBlockDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   args: { value: "[Server]\nport = 8080\nhost = 0.0.0.0", language: "ini" },
 };
 
-export const Accessibility: Story = {
+export const CodeBlockAccessibility: Story = {
   args: { value: "vpnctl status", language: "text" },
 };
 
-export const EdgeCases = WithLongText;
+export const CodeBlockEdgeCases = WithLongText;

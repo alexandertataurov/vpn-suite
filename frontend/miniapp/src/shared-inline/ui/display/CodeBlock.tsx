@@ -36,9 +36,9 @@ export function CodeBlock({
           wrap ? "code-block-pre-wrap" : "code-block-pre-nowrap"
         )}
         style={
-          {
-          "--code-block-max-height": maxHeight != null ? `${maxHeight}px` : undefined,
-          } as CSSProperties
+          maxHeight != null
+            ? ({ "--code-block-max-height": `${maxHeight}px` } as CSSProperties)
+            : undefined
         }
         lang={language}
       >

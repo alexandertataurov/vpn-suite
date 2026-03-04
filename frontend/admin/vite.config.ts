@@ -13,11 +13,10 @@ export default defineConfig({
     dedupe: ["react", "react-dom", "react-router-dom"],
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      "@vpn-suite/shared": path.resolve(__dirname, "./src/shared-inline"),
-      "@vpn-suite/shared/theme": path.resolve(__dirname, "./src/shared-inline/theme/index.ts"),
-      "@vpn-suite/shared/ui": path.resolve(__dirname, "./src/shared-inline/ui/index.ts"),
-      "@vpn-suite/shared/api-client": path.resolve(__dirname, "./src/shared-inline/api-client/index.ts"),
-      "@vpn-suite/shared/types": path.resolve(__dirname, "./src/shared-inline/types/index.ts"),
+      "@vpn-suite/shared": path.resolve(__dirname, "./src/shared"),
+      "@vpn-suite/shared/theme": path.resolve(__dirname, "./src/shared/theme/index.ts"),
+      "@vpn-suite/shared/api-client": path.resolve(__dirname, "./src/shared/api-client/index.ts"),
+      "@vpn-suite/shared/types": path.resolve(__dirname, "./src/shared/types/index.ts"),
     },
   },
   server: {
@@ -33,7 +32,7 @@ export default defineConfig({
   build: {
     outDir: "dist",
     sourcemap: enableSourcemap,
-    chunkSizeWarningLimit: 600,
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
         manualChunks: (id) => {

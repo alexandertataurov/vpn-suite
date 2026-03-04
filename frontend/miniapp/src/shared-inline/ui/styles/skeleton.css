@@ -5,7 +5,7 @@
 .skeleton {
   background: linear-gradient(90deg, var(--color-surface) 25%, var(--color-border) 50%, var(--color-surface) 75%);
   background-size: 200% 100%;
-  animation: skeleton 1.2s ease-in-out infinite;
+  animation: skeleton var(--duration-slow) var(--ease-out-soft) infinite;
   border-radius: var(--radius-sm);
   --skeleton-line-height: var(--spacing-4);
   --skeleton-card-height: var(--spacing-24);

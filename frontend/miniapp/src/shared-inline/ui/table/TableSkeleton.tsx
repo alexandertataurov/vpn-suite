@@ -5,7 +5,7 @@ export interface TableSkeletonProps {
   rows?: number;
   /** Number of columns (each gets equal width) */
   columns?: number;
-  /** Row density: compact = 40px, comfortable = 48px */
+  /** Row density: compact = var(--table-row-height-compact), comfortable = var(--table-row-height-md) */
   density?: "compact" | "comfortable";
   className?: string;
   "data-testid"?: string;

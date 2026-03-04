@@ -9,7 +9,7 @@ const items = [
 ];
 
 const meta: Meta<typeof Tabs> = {
-  title: "Primitives/Tabs",
+  title: "Shared/Primitives/Tabs",
   component: Tabs,
   parameters: {
     docs: {
@@ -29,11 +29,11 @@ function TabsDemo() {
   return <Tabs items={items} value={value} onChange={setValue} ariaLabel="Demo tabs" />;
 }
 
-export const Overview: Story = {
+export const TabsOverview: Story = {
   render: () => <TabsDemo />,
 };
 
-export const Variants: Story = {
+export const TabsVariants: Story = {
   render: () => (
     <div className="sb-stack">
       <Tabs items={items} value="tab1" onChange={() => {}} ariaLabel="Default tabs" />
@@ -42,7 +42,7 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
+export const TabsSizes: Story = {
   render: () => (
     <div className="sb-stack">
       <Tabs items={items} value="tab1" onChange={() => {}} ariaLabel="Small tabs" size="sm" />
@@ -51,11 +51,11 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const TabsStates: Story = {
   render: () => <Tabs items={items} value="tab1" onChange={() => {}} ariaLabel="Tabs with disabled" />,
 };
 
-export const WithLongText: Story = {
+export const TabsWithLongText: Story = {
   render: () => (
     <Tabs
       items={[
@@ -69,13 +69,13 @@ export const WithLongText: Story = {
   ),
 };
 
-export const Accessibility: Story = {
+export const TabsAccessibility: Story = {
   render: () => <Tabs items={items} value="tab2" onChange={() => {}} ariaLabel="Keyboard navigable tabs" />,
 };
 
-export const DarkMode: Story = {
+export const TabsDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   render: () => <TabsDemo />,
 };
 
-export const EdgeCases = WithLongText;
+export const TabsEdgeCases = WithLongText;

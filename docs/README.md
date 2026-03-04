@@ -50,6 +50,7 @@
 | Topic | Doc |
 |-------|-----|
 | Architecture, logging, keyboards, release | [bot.md](bot.md) |
+| Release checklist, production plan, menu architecture | [bot/release.md](bot/release.md) · [bot/production-plan.md](bot/production-plan.md) · [bot/bot-menu-architecture.md](bot/bot-menu-architecture.md) |
 
 ## Backlog & planning
 
@@ -96,6 +97,11 @@
 | Topic | Doc |
 |-------|-----|
 | Runbook, agent mode, AmneziaWG, no-traffic troubleshooting | [ops/](ops/) |
+| Config not working | [ops/config-not-working-checklist.md](ops/config-not-working-checklist.md) |
+| Config not found (reissue) | [ops/config-not-found-deep-dive.md](ops/config-not-found-deep-dive.md) |
+| No traffic (handshake OK) | [ops/no-traffic-troubleshooting.md](ops/no-traffic-troubleshooting.md) |
+| Telemetry degraded | [ops/telemetry-degraded-troubleshooting.md](ops/telemetry-degraded-troubleshooting.md) |
+| Miniapp session error | [troubleshooting/miniapp-session-error.md](troubleshooting/miniapp-session-error.md) |
 
 ## Workflow
 
@@ -109,3 +115,4 @@
 - [api/reference.md](api/reference.md) — API reference links  
 - [audits/analytics.md](audits/analytics.md) — funnel events  
 - [audits/baseline.md](audits/baseline.md) — perf baseline capture (admin)  
+- [DOCUMENTATION-OVERHAUL-2026-03.md](DOCUMENTATION-OVERHAUL-2026-03.md) — doc overhaul deliverables (audit, deletion/merge logs, gap report)  

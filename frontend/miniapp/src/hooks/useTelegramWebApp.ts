@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
 let telegramRuntimeInitialized = false;
 
 declare global {
@@ -31,7 +31,27 @@ function getInitDataSync(): { initData: string; isInsideTelegram: boolean } {
 }
 
 export function useTelegramWebApp() {
-  const state = useMemo(getInitDataSync, []);
+  const [state, setState] = useState(getInitDataSync);
+
+  useEffect(() => {
+    if (state.initData) return;
+    if (typeof window === "undefined") return;
+    const tg = window.Telegram?.WebApp;
+    if (!tg) return;
+
+    let attempts = 0;
+    const maxAttempts = 10;
+    const timer = window.setInterval(() => {
+      attempts += 1;
+      const next = getInitDataSync();
+      if (next.initData || attempts >= maxAttempts) {
+        setState(next);
+        window.clearInterval(timer);
+      }
+    }, 100);
+
+    return () => window.clearInterval(timer);
+  }, [state.initData]);
 
   const openLink = (url: string) => {
     if (typeof window === "undefined") return;

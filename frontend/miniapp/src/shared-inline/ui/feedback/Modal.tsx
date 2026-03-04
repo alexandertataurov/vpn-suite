@@ -80,8 +80,7 @@ export function Modal({ open, onClose, title, children, footer, className = "", 
       >
         <div className="modal-header">
           <h2 id="modal-title">{title}</h2>
-          <button
-            type="button"
+          <button type="button"
             className="modal-close"
             onClick={onClose}
             aria-label="Close"

@@ -19,7 +19,7 @@ export interface PrimitiveButtonProps extends Omit<ButtonHTMLAttributes<HTMLButt
   children?: ReactNode;
 }
 
-export const Button = forwardRef<HTMLButtonElement, PrimitiveButtonProps>(function Button(
+export const PrimitiveButton = forwardRef<HTMLButtonElement, PrimitiveButtonProps>(function PrimitiveButton(
   {
     variant = "primary",
     size = "md",

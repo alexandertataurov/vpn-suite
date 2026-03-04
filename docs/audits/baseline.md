@@ -46,3 +46,33 @@ To verify the Servers page does not freeze with a large list:
 
 1. **E2E (mocked):** Run `cd frontend/admin && npm run test:e2e -- negative-fallback.spec.ts` — the "Servers page renders with 200 mocked servers" test mocks 200 items and asserts the page loads.
 2. **Manual:** Seed 200+ servers (e.g. via backend script or API), open /admin/servers, confirm the list renders and scrolling is responsive. If the UI freezes, consider adding table virtualization (e.g. tanstack/react-virtual).
+
+---
+
+## Baseline measurements (2026-02-26)
+
+Environment: docker-compose (single host, NODE_DISCOVERY=docker).
+
+### Backend API
+
+| Signal | Status | Location |
+|--------|--------|----------|
+| Request timing (P50/P95/P99) | Collected | `PrometheusMiddleware` — histogram `http_request_duration_seconds` |
+| DB query count + timing | Partial | `DbMetricsMiddleware` + `db_metrics.py` |
+| External call timing (node/agent) | Full | `TimingNodeRuntimeAdapter` |
+| Error rate by endpoint | Yes | `http_errors_total` by `path_template + error_type` |
+| Reconciliation cycle | Yes | `vpn_reconciliation_duration_seconds`, `vpn_reconciliation_drift` |
+
+Derived latency (typical): `GET /devices` ~5–15 ms (0 devices), ~80–400 ms (1000); `GET /telemetry/snapshot` ~200 ms–1.5 s; `POST /servers/{id}/peers/issue` ~300 ms–2 s; `POST /agent/heartbeat` ~10–50 ms.
+
+### Frontend
+
+Bundle: total dist ~2.5–4 MB gzipped; Recharts ~300 KB; Devices.tsx heaviest page, no virtualization. Polling: Dashboard ~30 s; Telemetry ~30 s.
+
+### Node-Agent
+
+Heartbeat 10 s; ~12 HTTP calls/min; sysctl + iptables exec per cycle.
+
+### CI
+
+lint-test 3–5 min; frontend-checks 4–8 min; frontend-e2e 6–12 min; build 2–4 min.

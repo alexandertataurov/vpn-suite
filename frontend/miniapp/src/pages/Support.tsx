@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { getButtonClassName, PageScaffold, PageHeader, PageSection, Panel, Skeleton, Body, H3 } from "../ui";
-import { TroubleshooterStep } from "../components/TroubleshooterStep";
-import { FallbackScreen } from "../components/FallbackScreen";
-import { SessionMissing } from "../components/SessionMissing";
+import { TroubleshooterStep, FallbackScreen, SessionMissing } from "@/components";
 import { useTrackScreen } from "../hooks/useTrackScreen";
 import { useSession } from "../hooks/useSession";
 import { useWebappToken } from "../api/client";
@@ -99,10 +97,7 @@ export function SupportPage() {
         </Panel>
       </PageSection>
 
-      <a
-        href="https://t.me/support"
-        target="_blank"
-        rel="noopener noreferrer"
+      <a aria-label="Contact support" href="https://t.me/support" target="_blank" rel="noopener noreferrer"
         className={getButtonClassName("primary", "lg", "btn-full-width")}
       >
         Contact support

@@ -24,6 +24,7 @@ scrape_configs:
   - job_name: "admin-api"
     metrics_path: /metrics
     scheme: http
+    scrape_interval: 3s
     file_sd_configs:
       - files: ["/etc/prometheus/file_sd/targets.json"]
     relabel_configs:
@@ -88,6 +89,7 @@ scrape_configs:
   - job_name: "telegram-vpn-bot"
     metrics_path: /metrics
     scheme: http
+    scrape_interval: 3s
     file_sd_configs:
       - files: ["/etc/prometheus/file_sd/targets.json"]
     relabel_configs:
@@ -168,6 +170,7 @@ scrape_configs:
   - job_name: "wg-exporter"
     metrics_path: /metrics
     scheme: http
+    scrape_interval: 3s
     file_sd_configs:
       - files: ["/etc/prometheus/file_sd/targets.json"]
     relabel_configs:

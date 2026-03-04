@@ -18,6 +18,7 @@ export {
 export { useApiErrorToast } from "./utils/useApiErrorToast";
 export * from "./ui/index";
 export * from "./statusMap";
+export * from "./icons";
 export * from "./api-client/index";
 export * from "./types/index";
 export * from "./theme/ThemeProvider";

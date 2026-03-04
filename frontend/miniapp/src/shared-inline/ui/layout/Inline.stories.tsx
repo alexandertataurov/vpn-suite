@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { Inline } from "./Inline";
 
 const meta: Meta<typeof Inline> = {
-  title: "Primitives/Inline",
+  title: "Shared/Primitives/Inline",
   component: Inline,
   parameters: {
     docs: {
@@ -17,7 +17,7 @@ export default meta;
 
 type Story = StoryObj<typeof Inline>;
 
-export const Overview: Story = {
+export const InlineOverview: Story = {
   args: {
     gap: 2,
     children: (
@@ -30,7 +30,7 @@ export const Overview: Story = {
   },
 };
 
-export const Variants: Story = {
+export const InlineVariants: Story = {
   render: () => (
     <div className="sb-stack">
       <Inline gap="2">
@@ -47,7 +47,7 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
+export const InlineSizes: Story = {
   render: () => (
     <div className="sb-stack">
       <p className="m-0">Size variants are controlled by gap tokens.</p>
@@ -60,7 +60,7 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const InlineStates: Story = {
   render: () => (
     <Inline gap="2">
       <span>A</span>
@@ -70,7 +70,7 @@ export const States: Story = {
   ),
 };
 
-export const WithLongText: Story = {
+export const InlineWithLongText: Story = {
   render: () => (
     <Inline gap="2" wrap>
       <span>Long inline item that should wrap</span>
@@ -80,7 +80,7 @@ export const WithLongText: Story = {
   ),
 };
 
-export const DarkMode: Story = {
+export const InlineDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   render: () => (
     <Inline gap="2">
@@ -91,7 +91,7 @@ export const DarkMode: Story = {
   ),
 };
 
-export const Accessibility: Story = {
+export const InlineAccessibility: Story = {
   render: () => (
     <Inline gap="2">
       <span>Inline items</span>
@@ -100,4 +100,4 @@ export const Accessibility: Story = {
   ),
 };
 
-export const EdgeCases = WithLongText;
+export const InlineEdgeCases = WithLongText;

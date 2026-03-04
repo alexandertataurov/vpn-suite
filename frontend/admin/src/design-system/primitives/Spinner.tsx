@@ -1,17 +1,12 @@
-import { cn } from "@vpn-suite/shared";
-
-export interface SpinnerProps {
+interface SpinnerProps {
   className?: string;
+  "aria-label"?: string;
 }
 
-export function Spinner({ className }: SpinnerProps) {
+export function Spinner({ className = "", "aria-label": ariaLabel = "Loading" }: SpinnerProps) {
   return (
-    <span className={cn("ds-spinner", className)} role="status" aria-label="Loading">
-      <span aria-hidden />
-      <span aria-hidden />
-      <span aria-hidden />
+    <span className={`spinner ${className}`.trim()} role="status" aria-label={ariaLabel}>
+      <span className="spinner__dot" aria-hidden />
     </span>
   );
 }
-
-Spinner.displayName = "Spinner";

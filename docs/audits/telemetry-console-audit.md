@@ -9,18 +9,12 @@
 
 | File | Role |
 |------|------|
-| `frontend/admin/src/pages/Telemetry.tsx` | Page container, tabs (docker/vpn) |
-| `frontend/admin/src/pages/telemetry/DockerServicesTab.tsx` | Docker hosts, containers, metrics, logs, alerts |
-| `frontend/admin/src/pages/telemetry/VpnNodesTab.tsx` | Topology summary, server list, per-server telemetry |
-| `frontend/admin/src/pages/telemetry/ContainerDetailsPanel.tsx` | Charts + logs for selected container |
-| `frontend/admin/src/hooks/useDockerTelemetry.ts` | Docker API hooks |
-| `frontend/admin/src/hooks/useServerList.ts` | useServerListForRegion |
-| `frontend/admin/src/api/client.ts` | API client wrapper |
-| `frontend/admin/src/api/query-keys.ts` | DOCKER_TELEMETRY_KEY, TELEMETRY_TOPOLOGY_KEY, telemetryServerKey |
-| `frontend/shared/src/api-client/create-client.ts` | Fetch, timeout 15s, retry 502/503 x2 |
-| `frontend/shared/src/types/admin-api.ts` | ServerTelemetryOut, TopologySummaryOut, HostSummary, ContainerSummary, etc. |
-| `frontend/admin/src/charts/timeseries.ts` | computeTimeseriesStatus, detectStale (step*2 or 20s) |
-| `frontend/admin/src/components/TimeSeriesPanel.tsx` | Live/Stale/Partial/Error badges |
+| `frontend/admin/src/features/telemetry/TelemetryPage.tsx` | Telemetry page (snapshot + docker tables + actions) |
+| `frontend/admin/src/core/api/useApiQuery.ts` | React Query helper (`queryKey` is inline arrays) |
+| `frontend/admin/src/core/api/client.ts` | Fetch-based API client (timeout + retry) |
+| `frontend/admin/src/shared/types/admin-api.ts` | API response types (containers, alerts, servers, etc.) |
+
+**Note (2026-03):** This audit was written against a pre-refactor admin layout (`pages/`, `hooks/`, `api/query-keys.ts`). The current implementation is consolidated under `features/` + `core/` and may not match the older file inventory above.
 
 ---
 
@@ -198,18 +192,9 @@ Label as "inferred" when not from explicit health endpoint.
 
 ### Files changed/added
 
-| File | Change |
-|------|--------|
-| `docs/audits/telemetry-console-audit.md` | Audit baseline + spec |
-| `frontend/admin/src/utils/telemetry-freshness.ts` | **NEW** Freshness constants + computeFreshnessStatus |
-| `frontend/admin/src/utils/telemetry-freshness.test.ts` | **NEW** Unit tests |
-| `frontend/admin/src/components/telemetry/DataSourceHealthStrip.tsx` | **NEW** Health strip UI |
-| `frontend/admin/src/pages/Telemetry.tsx` | Page-level "Refresh now" button |
-| `frontend/admin/src/pages/telemetry/DockerServicesTab.tsx` | DataSourceHealthStrip, offline detection |
-| `frontend/admin/src/pages/telemetry/VpnNodesTab.tsx` | DataSourceHealthStrip, freshness badges, server telemetry error handling |
-| `frontend/admin/src/hooks/useDockerTelemetry.ts` | refetchOnWindowFocus |
-| `frontend/admin/src/charts/timeseries.ts` | STALE_AGE_MS 30s |
-| `frontend/admin/e2e/telemetry-docker.spec.ts` | Tests: Refresh now, Data source health strip |
+This section refers to a pre-refactor implementation. The current Telemetry UI entrypoint is:
+
+- `frontend/admin/src/features/telemetry/TelemetryPage.tsx`
 
 ### Freshness thresholds
 

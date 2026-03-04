@@ -42,3 +42,6 @@ Thumbs.db
 *.log
 *.swp
 *.swo
+
+# Generated migrations — read for context only; do not auto-edit (run alembic revision instead)
+**/alembic/versions/

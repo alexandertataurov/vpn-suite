@@ -25,7 +25,7 @@ export function PlanCard({
 
   return (
     <Panel
-      className={`card instrument-card ${isCurrent ? "instrument-card--active" : "instrument-card--inactive"} plan-card ${isBestValue ? "plan-card-best" : ""} ${isCurrent ? "plan-card-current" : ""}`}
+      className={`card instrument-card stagger-item ${isCurrent ? "instrument-card--active" : "instrument-card--inactive"} plan-card ${isBestValue ? "plan-card-best" : ""} ${isCurrent ? "plan-card-current" : ""}`}
     >
       {isBestValue && (
         <span className="plan-card-badge">Best value</span>

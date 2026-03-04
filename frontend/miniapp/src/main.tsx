@@ -7,7 +7,7 @@ import App from "./App";
 import { initWebVitals } from "./telemetry/webVitals";
 import { wireGlobalErrors } from "./telemetry/errors";
 import { initSentry } from "./telemetry/sentry";
-import "./shared-inline/global.css";
+import "./styles/miniapp-global.css";
 import "./miniapp.css";
 
 initWebVitals();

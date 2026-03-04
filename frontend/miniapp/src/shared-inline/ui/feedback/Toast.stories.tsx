@@ -18,7 +18,7 @@ function ToastDemo() {
 }
 
 const meta: Meta<typeof ToastContainer> = {
-  title: "Primitives/Toast-Alert/Toast",
+  title: "Shared/Primitives/Toast-Alert/Toast",
   component: ToastContainer,
   parameters: {
     docs: {
@@ -39,15 +39,15 @@ export default meta;
 
 type Story = StoryObj<typeof ToastContainer>;
 
-export const Overview: Story = {
+export const ToastOverview: Story = {
   render: () => <ToastDemo />,
 };
 
-export const Variants: Story = {
+export const ToastVariants: Story = {
   render: () => <ToastDemo />,
 };
 
-export const Sizes: Story = {
+export const ToastSizes: Story = {
   render: () => (
     <div className="sb-stack">
       <p className="m-0">Size variants are not exposed; toasts are token-sized.</p>
@@ -56,11 +56,11 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const ToastStates: Story = {
   render: () => <ToastDemo />,
 };
 
-export const WithLongText: Story = {
+export const ToastWithLongText: Story = {
   render: () => {
     const Demo = () => {
       const { addToast } = useToast();
@@ -74,13 +74,13 @@ export const WithLongText: Story = {
   },
 };
 
-export const DarkMode: Story = {
+export const ToastDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   render: () => <ToastDemo />,
 };
 
-export const Accessibility: Story = {
+export const ToastAccessibility: Story = {
   render: () => <ToastDemo />,
 };
 
-export const EdgeCases = WithLongText;
+export const ToastEdgeCases = WithLongText;

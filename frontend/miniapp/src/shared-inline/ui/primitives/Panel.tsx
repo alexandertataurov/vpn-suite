@@ -12,7 +12,7 @@ export interface PrimitivePanelProps extends HTMLAttributes<HTMLElement> {
   children: ReactNode;
 }
 
-export const Panel = forwardRef<HTMLElement, PrimitivePanelProps>(function Panel(
+export const PrimitivePanel = forwardRef<HTMLElement, PrimitivePanelProps>(function PrimitivePanel(
   {
     as: Component = "div",
     variant = "surface",

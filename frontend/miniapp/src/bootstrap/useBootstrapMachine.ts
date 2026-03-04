@@ -7,6 +7,7 @@ import type {
   WebAppOnboardingStateRequest,
   WebAppOnboardingStateResponse,
 } from "@vpn-suite/shared/types";
+import { ApiError } from "@vpn-suite/shared/types";
 import { setWebappToken, useWebappToken, webappApi } from "../api/client";
 import { useSession } from "../hooks/useSession";
 import {
@@ -163,13 +164,24 @@ export function useBootstrapMachine({
           setStartupError(null);
           setPhase("loading_session");
         })
-        .catch((err) => {
-          const isTimeout = err?.code === "TIMEOUT" || err?.message?.includes("timed out");
+        .catch((err: unknown) => {
+          const isTimeout =
+            (err as { code?: string })?.code === "TIMEOUT" ||
+            (err as Error)?.message?.includes("timed out");
+          const rawMessage =
+            err instanceof ApiError ? err.message : undefined;
+          const isInvalidInitData =
+            rawMessage?.toLowerCase().includes("initdata") ||
+            rawMessage?.toLowerCase().includes("init_data") ||
+            (err instanceof ApiError && err.code === "INVALID_INIT_DATA");
+          const message = isTimeout
+            ? "Request timed out. Try again."
+            : isInvalidInitData
+              ? "Open this app from the Telegram bot (menu or /start link). If you already did, close and reopen it from the bot."
+              : rawMessage ?? "Session could not be started. Please try again.";
           setStartupError({
             title: "Session error",
-            message: isTimeout
-              ? "Request timed out. Try again."
-              : "Session could not be started. Please try again.",
+            message,
           });
           setPhase("startup_error");
         });
@@ -190,9 +202,15 @@ export function useBootstrapMachine({
       }
       if (sessionQuery.isLoading) return;
       if (sessionQuery.error) {
+        const err = sessionQuery.error;
+        const isExpired =
+          err instanceof ApiError &&
+          (err.code === "UNAUTHORIZED" || err.statusCode === 401);
         setStartupError({
-          title: "Could not load account status",
-          message: "Please try again or reopen the mini app from the bot.",
+          title: "Session error",
+          message: isExpired
+            ? "Your session expired. Tap Retry to sign in again, or reopen the app from the bot."
+            : "Could not load your account. Tap Retry or reopen the mini app from the bot.",
         });
         setPhase("startup_error");
         return;

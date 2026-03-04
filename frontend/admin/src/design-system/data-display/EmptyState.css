@@ -1,5 +1,0 @@
-.ds-empty-state { padding: var(--space-8); text-align: center; }
-.ds-empty-state__icon { margin-bottom: var(--space-4); color: var(--color-text-muted); }
-.ds-empty-state__title { margin: 0; font-family: var(--font-display); font-size: var(--text-base); color: var(--color-text-primary); }
-.ds-empty-state__description { margin: var(--space-2) 0 0; font-size: var(--text-sm); color: var(--color-text-muted); }
-.ds-empty-state__actions { margin-top: var(--space-4); }

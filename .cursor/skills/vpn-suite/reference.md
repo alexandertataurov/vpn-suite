@@ -42,16 +42,17 @@ Error:
 
 ## Database
 
-- **Panel (MySQL)**: snake_case tables/columns. Migrations in `services/amneziavpnphp/migrations/`; keep reversible where possible.
-- **Bot (SQLite)**: Path from env (`DB_PATH`); schema versioning; document changes that affect panel or shared concepts.
-- **Backups**: Before cutover or schema migrations, backup bot data, panel DB, and monitoring volumes as needed.
+- **Postgres (admin-api):** Primary store; snake_case tables/columns. Migrations in `backend/` (Alembic or project convention); keep reversible where possible.
+- **Redis:** FSM, rate limit, queues, ephemeral state; no persistent schema.
+- **Backups:** Before migrations or rollouts run `./manage.sh backup-db`; see [docs/ops/runbook.md](../../docs/ops/runbook.md).
 
 ## Healthchecks
 
 - Every service must have a Docker healthcheck in compose.
-- **Bot**: `GET /healthz` on port 8090 → 200 OK when ready.
-- **Panel**: `curl http://localhost/` (or dedicated `/health` if added).
-- **Monitoring**: Use built-in endpoints (e.g. Prometheus `/-/healthy`, Grafana `/api/health`).
+- **admin-api:** readiness/liveness endpoints as defined in app (e.g. `/health` or `/ready`).
+- **Bot:** `GET /healthz` (or as configured) → 200 OK when ready.
+- **node-agent:** health endpoint as implemented; control-plane may use it for topology.
+- **Monitoring:** Use built-in endpoints (e.g. Prometheus `/-/healthy`, Grafana `/api/health`).
 - New services: add healthcheck so `depends_on` can use `condition: service_healthy` where appropriate.
 
 ## Docker image naming and versioning
@@ -71,9 +72,10 @@ Error:
   - `dns` — DNS string or list for Interface.
 - Without obfuscation params the config is WireGuard-compatible; with them it is AmneziaWG 1.5.
 
-## Node contract (create_peer)
+## Node contract (create_peer / key verification)
 
-When NODE_MODE=real, issue device calls **POST {api_endpoint}/peers** with JSON: `public_key` (required), optional `allowed_ips`, `dns`, `mtu`. Node must return 200/201/202 on success. On failure the issue request fails so the device is not left without a peer on the node.
+- **Agent mode:** node-agent manages peers on the host; control-plane sends desired state; issuance uses live server key from heartbeat. If server key not in DB → 409 `SERVER_NOT_SYNCED`; run `./manage.sh server:sync <server_id>`.
+- **Docker mode (legacy):** issue device uses Docker runtime to add peer on node (e.g. `docker exec` wg/awg). Node must accept peer add and return success so device is not left without a peer.
 
 ## Security
 

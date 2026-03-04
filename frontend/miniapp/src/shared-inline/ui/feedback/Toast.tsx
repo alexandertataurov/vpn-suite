@@ -40,15 +40,13 @@ export function ToastContainer({ children }: { children: ReactNode }) {
     <ToastContext.Provider value={value}>
       {children}
       <div className="toast-container" role="region" aria-label="Notifications">
-        {toasts.map((t) => (
-          <div
-            key={t.id}
+        {toasts.map((t) => ( // key=
+          <div key={t.id}
             className={`toast toast-${t.variant}`}
             role="alert"
           >
             <span>{t.message}</span>
-            <button
-              type="button"
+            <button type="button"
               className="toast-close"
               onClick={() => removeToast(t.id)}
               aria-label="Dismiss"

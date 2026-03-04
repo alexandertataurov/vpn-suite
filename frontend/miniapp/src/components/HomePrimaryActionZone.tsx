@@ -16,7 +16,7 @@ export function HomePrimaryActionZone({
   secondaryTo,
 }: HomePrimaryActionZoneProps) {
   return (
-    <div className="home-primary-action-zone">
+    <div className="home-primary-action-zone stagger-item">
       <ButtonLink
         to={primaryTo}
         kind="connect"

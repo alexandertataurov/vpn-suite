@@ -4,7 +4,7 @@ import { Modal, ConfirmModal, ConfirmDanger } from "./Modal";
 import { Button } from "../buttons/Button";
 
 const meta: Meta<typeof Modal> = {
-  title: "Components/Modal",
+  title: "Shared/Components/Modal",
   component: Modal,
   parameters: {
     docs: {
@@ -37,11 +37,11 @@ function ModalDemo({ open: initial }: { open?: boolean }) {
   );
 }
 
-export const Overview: Story = {
+export const ModalOverview: Story = {
   render: () => <ModalDemo open />,
 };
 
-export const Variants: Story = {
+export const ModalVariants: Story = {
   render: function ConfirmStory() {
     const [open, setOpen] = useState(true);
     return (
@@ -59,7 +59,7 @@ export const Variants: Story = {
   },
 };
 
-export const States: Story = {
+export const ModalStates: Story = {
   render: function DangerStory() {
     const [open, setOpen] = useState(true);
     return (
@@ -77,7 +77,7 @@ export const States: Story = {
   },
 };
 
-export const Sizes: Story = {
+export const ModalSizes: Story = {
   render: () => (
     <div className="sb-stack">
       <p className="m-0">Size variants are not exposed; modal width is tokenized.</p>
@@ -86,7 +86,7 @@ export const Sizes: Story = {
   ),
 };
 
-export const WithLongText: Story = {
+export const ModalWithLongText: Story = {
   render: () => (
     <Modal open onClose={() => {}} title="Long modal title for environment maintenance window">
       <p>Long body copy that should wrap and remain readable without overflowing the modal container.</p>
@@ -94,13 +94,13 @@ export const WithLongText: Story = {
   ),
 };
 
-export const DarkMode: Story = {
+export const ModalDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   render: () => <ModalDemo open />,
 };
 
-export const Accessibility: Story = {
+export const ModalAccessibility: Story = {
   render: () => <ModalDemo open />,
 };
 
-export const EdgeCases = WithLongText;
+export const ModalEdgeCases = WithLongText;

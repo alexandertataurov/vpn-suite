@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, type CSSProperties } from "react";
 
 interface TokenSwatchProps {
   cssVar: string;
@@ -19,14 +19,15 @@ export function TokenSwatch({ cssVar, usage, heightToken = "--spacing-12", showB
   }, [value]);
 
   const swatchColor = cssVar.startsWith("--") ? `var(${cssVar})` : cssVar;
+  const swatchStyle: CSSProperties = {
+    "--sb-swatch-color": swatchColor,
+    "--sb-swatch-height": resolvedHeight,
+  };
   return (
     <div className="sb-swatch">
       <div
         className={`sb-swatch-block${showBorder ? "" : " sb-swatch-borderless"}`}
-        style={{
-          "--sb-swatch-color": swatchColor,
-          "--sb-swatch-height": resolvedHeight,
-        } as React.CSSProperties}
+        style={swatchStyle}
         onClick={copy}
         onKeyDown={(e) => e.key === "Enter" && copy()}
         role="button"

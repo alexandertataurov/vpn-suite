@@ -2,7 +2,11 @@ import base64
 import json
 import zlib
 
-from app.core.amnezia_vpn_key import encode_amnezia_vpn_key, encode_awg_conf_vpn_key, sanitize_awg_conf
+from app.core.amnezia_vpn_key import (
+    encode_amnezia_vpn_key,
+    encode_awg_conf_vpn_key,
+    sanitize_awg_conf,
+)
 
 
 def _decode_vpn_key(key: str) -> dict:

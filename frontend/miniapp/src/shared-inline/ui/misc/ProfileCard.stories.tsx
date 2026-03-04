@@ -3,7 +3,7 @@ import { ProfileCard } from "./ProfileCard";
 import { Button } from "../buttons/Button";
 
 const meta: Meta<typeof ProfileCard> = {
-  title: "Components/ProfileCard",
+  title: "Shared/Components/ProfileCard",
   component: ProfileCard,
   parameters: {
     docs: {
@@ -18,11 +18,11 @@ export default meta;
 
 type Story = StoryObj<typeof ProfileCard>;
 
-export const Overview: Story = {
+export const ProfileCardOverview: Story = {
   args: { planName: "Pro", validUntil: "2025-12-31", status: "active" },
 };
 
-export const Variants: Story = {
+export const ProfileCardVariants: Story = {
   render: () => (
     <div className="sb-stack">
       <ProfileCard planName="Pro" validUntil="2025-12-31" status="active" />
@@ -31,7 +31,7 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
+export const ProfileCardSizes: Story = {
   render: () => (
     <div className="sb-stack">
       <p className="m-0">Size variants are not exposed; uses card tokens.</p>
@@ -40,7 +40,7 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const ProfileCardStates: Story = {
   render: () => (
     <ProfileCard
       planName="Pro"
@@ -51,7 +51,7 @@ export const States: Story = {
   ),
 };
 
-export const WithLongText: Story = {
+export const ProfileCardWithLongText: Story = {
   args: {
     planName: "Enterprise subscription with extended name",
     validUntil: "2025-12-31",
@@ -59,13 +59,13 @@ export const WithLongText: Story = {
   },
 };
 
-export const DarkMode: Story = {
+export const ProfileCardDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   args: { planName: "Pro", validUntil: "2025-12-31", status: "active" },
 };
 
-export const Accessibility: Story = {
+export const ProfileCardAccessibility: Story = {
   args: { planName: "Pro", validUntil: "2025-12-31", status: "active" },
 };
 
-export const EdgeCases = WithLongText;
+export const ProfileCardEdgeCases = WithLongText;

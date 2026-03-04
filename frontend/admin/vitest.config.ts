@@ -10,11 +10,10 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      "@vpn-suite/shared": path.resolve(__dirname, "./src/shared-inline"),
-      "@vpn-suite/shared/theme": path.resolve(__dirname, "./src/shared-inline/theme/index.ts"),
-      "@vpn-suite/shared/ui": path.resolve(__dirname, "./src/shared-inline/ui/index.ts"),
-      "@vpn-suite/shared/api-client": path.resolve(__dirname, "./src/shared-inline/api-client/index.ts"),
-      "@vpn-suite/shared/types": path.resolve(__dirname, "./src/shared-inline/types/index.ts"),
+      "@vpn-suite/shared": path.resolve(__dirname, "./src/shared"),
+      "@vpn-suite/shared/theme": path.resolve(__dirname, "./src/shared/theme/index.ts"),
+      "@vpn-suite/shared/api-client": path.resolve(__dirname, "./src/shared/api-client/index.ts"),
+      "@vpn-suite/shared/types": path.resolve(__dirname, "./src/shared/types/index.ts"),
     },
   },
   test: {

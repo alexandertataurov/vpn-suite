@@ -2,7 +2,9 @@
 
 ## Inventory Summary
 
-### Shared Package (frontend/shared/src/ui/)
+### Admin design-system primitives (current)
+
+**Note:** `frontend/shared/src/ui/` is not present in the working tree; admin UI primitives live under `frontend/admin/src/design-system/primitives/`.
 
 | Component | Status | Notes |
 |-----------|--------|-------|

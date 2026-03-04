@@ -1,28 +1,34 @@
 # Storybook Conventions
 
+**Full spec:** [STORY-DOCUMENTATION-LAYERS.md](STORY-DOCUMENTATION-LAYERS.md) — Layer 1 (component docs), Layer 2 (story descriptions), Layer 3 (story sets), Layer 5 (naming), Layer 6 (argTypes), and shared data.
+
 ## Story structure
 
-- **Meta title**: Use explicit `title` in Meta (e.g. `"Components/Button"`, `"Foundations/Colors"`). Never rely on path-derived titles.
-- **Story naming**: PascalCase, descriptive (e.g. `AllVariants`, `DisabledState`, `WithError`, `Playground`).
-- **Required**: `tags: ["autodocs"]` for component stories.
-- **Description**: Add `parameters.docs.description.component` for every component.
+- **Meta title**: Use explicit `title` in Meta (e.g. `"Components/Buttons/Button"`, `"Foundations/Color"`). Never rely on path-derived titles.
+- **Story naming**: PascalCase; use Layer 5 names: `AllVariants`, `AllSizes`, `DarkModeVariant`, `InContext`, `EdgeCases`, `Playground`, `ErrorRecovery` (patterns), etc.
+- **Description**: Layer 1 — `parameters.docs.description.component` with `##` sections (Overview, Anatomy, Variants, States, Behavior, Dos and Don'ts, Accessibility, Design tokens, Related). Layer 2 — each story has `parameters.docs.description.story` (What this story shows / When you'd use this / Key props / What to watch / Real product example).
 
 ## Sidebar hierarchy
 
-- `Design System/Introduction` — Intro
-- `Foundations/*` — Colors, Typography, Spacing, Radius, Shadows, Icons, Motion
-- `Components/Buttons/*`, `Components/Inputs/*`, `Components/Data Display/*`, etc. — Nested groups
-- `Patterns/*` — Forms, TablesWithActions, EmptyStates, LoadingStates, ConfirmationFlows
-- `Admin/*` — PageHeader, Breadcrumb, MetricTile, StatusBadge, ServersEmptyState, MiniappLayout
+- `Foundations/*` — Color, Typography, Spacing, Radius, Shadows, Icons, Motion
+- `Components/*` — Grouped into Buttons, Inputs, Navigation, Feedback, Data Display, Overlays, Layout, Misc (see [structure.md](structure.md)).
+- `Patterns/*` — Component and app patterns (EmptyStates, ErrorStates, LoadingStates, BulkActionsBar, MetricRow, etc.).
+- `Navigation/*` — Overview, NavRail, Sidebar, AppShell
+- `Pages/*` — Dashboard, Servers, Telemetry
+
+See [structure.md](structure.md) for full IA.
 
 ## Per-component checklist
 
 - Default story
-- Variants story (if applicable)
-- States (disabled, loading, error)
-- Playground story with full `args` (for complex components)
+- AllVariants / AllSizes / AllStates (as applicable)
+- InContext, EdgeCases
+- Playground with args
+- DarkModeVariant, ResponsiveLayout, Accessibility where useful
+- **Patterns:** WithRealData, ErrorRecovery (for error pattern), Compositions
 
-## Code
+## Code and data
 
-- Use `createMeta` from `frontend/shared/src/storybook/meta.ts` (optional) for consistency.
-- No undocumented components; no ungrouped components; no inconsistent naming.
+- **argTypes:** description, control, table (type, defaultValue, category), options for enums (Layer 6).
+- **Data:** Use `frontend/admin/.storybook/data` for shared fixtures; avoid heavy inline data in stories.
+- No undocumented components; consistent naming (Layer 5).

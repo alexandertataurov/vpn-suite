@@ -6,66 +6,38 @@ Repo-grounded inventory, "what exists vs what should exist" matrix, missing prim
 
 ## 1. Admin routes and pages (source of truth)
 
-Routes defined in `frontend/admin/src/App.tsx`.
+Routes defined in `frontend/admin/src/app/router.tsx` (rendered by `frontend/admin/src/App.tsx`).
 
 | Route | Page file | Major UI blocks |
 |-------|-----------|-----------------|
-| `/login` | `frontend/admin/src/pages/Login.tsx` | Form (email/password), Button, PageError |
-| `/` (Dashboard) | `frontend/admin/src/pages/Dashboard.tsx` | MetricTile grid, TimeSeriesPanel (2 charts), Recent activity list |
-| `/servers` | `frontend/admin/src/pages/Servers.tsx` | FilterBar, virtualized ServerRow list, selection, ServersBulkToolbar, ServerRowDrawer, ConfirmDanger, IssueConfigModal |
-| `/servers/new` | `frontend/admin/src/pages/ServerNew.tsx` | Form (inputs/select), PageHeader, ButtonLink |
-| `/servers/:id` | `frontend/admin/src/pages/ServerDetail.tsx` | PageHeader, tablist (overview/peers/telemetry/actions/logs/config), MetricTile grid, Table (peers/actions), ConfirmDanger (block/rotate/revoke/reset), IssueConfigModal, ServerLogsTab |
-| `/servers/:id/edit` | `frontend/admin/src/pages/ServerEdit.tsx` | Form, PageHeader, inputs, ButtonLink |
-| `/users` | `frontend/admin/src/pages/Users.tsx` | Custom table layout, StatusBadge, Drawer, FilterBar-like filters, Pagination |
-| `/users/:id` | `frontend/admin/src/pages/UserDetail.tsx` | PageHeader, KeyValue-style blocks, table-empty, ButtonLink |
-| `/devices` (Peers) | `frontend/admin/src/pages/Devices.tsx` | TableSection, Table or DeviceCard list, Toolbar, selection, bulk revoke (ConfirmDanger), ConfigContentModal |
-| `/telemetry` | `frontend/admin/src/pages/Telemetry.tsx` | Tab container; sub-panels in `frontend/admin/src/pages/telemetry/` |
-| `/telemetry` (Docker tab) | `frontend/admin/src/pages/telemetry/DockerServicesTab.tsx` | Table, TimeSeriesPanel, DockerOverviewTable |
-| `/telemetry` (Container detail) | `frontend/admin/src/pages/telemetry/ContainerDetailsPanel.tsx` | TimeSeriesPanel (multiple), charts |
-| `/telemetry` (VPN nodes) | `frontend/admin/src/pages/telemetry/VpnNodesTab.tsx` | Table, StatusBadge |
-| `/telemetry` (Logs) | `frontend/admin/src/pages/telemetry/LogsViewer.tsx` | Virtualized log list, copy |
-| `/telemetry` (Alerts) | `frontend/admin/src/pages/telemetry/AlertsPanel.tsx` | Alerts list |
-| `/automation` | `frontend/admin/src/pages/ControlPlane.tsx` | Card, Table, Input, Checkbox, Button, PageError, Skeleton |
-| `/audit` | `frontend/admin/src/pages/Audit.tsx` | TableSection, Table, Pagination, Input, Button, PageError |
-| `/billing` (subscriptions, payments tabs) | `frontend/admin/src/pages/Billing.tsx` + PaymentsTab, SubscriptionsTab | TableSection, Table, Badge, Button, PageError |
-| `/settings` | `frontend/admin/src/pages/Settings.tsx` | Form fields, Button |
-| `/styleguide` | `frontend/admin/src/pages/Styleguide.tsx` | Demo of shared primitives |
+| `/login` | `frontend/admin/src/features/login/LoginPage.tsx` | Auth form |
+| `/` (Overview) | `frontend/admin/src/features/overview/OverviewPage.tsx` | Operator overview widgets |
+| `/servers` | `frontend/admin/src/features/servers/ServersPage.tsx` | Servers snapshot summary + actions |
+| `/telemetry` | `frontend/admin/src/features/telemetry/TelemetryPage.tsx` | Telemetry snapshot + docker containers/alerts |
+| `/users` | `frontend/admin/src/features/users/UsersPage.tsx` | Users list + actions |
+| `/devices` | `frontend/admin/src/features/devices/DevicesPage.tsx` | Devices list + reissue flows |
+| `/automation` | `frontend/admin/src/features/automation/AutomationPage.tsx` | Control-plane automation UI |
+| `/revenue` | `frontend/admin/src/features/revenue/RevenuePage.tsx` | Revenue/operator panels |
+| `/billing` | `frontend/admin/src/features/billing/BillingPage.tsx` | Billing tabs |
+| `/audit` | `frontend/admin/src/features/audit/AuditPage.tsx` | Audit list |
+| `/settings` | `frontend/admin/src/features/settings/SettingsPage.tsx` | Settings |
+| `/styleguide` | `frontend/admin/src/features/styleguide/StyleguidePage.tsx` | Design-system demo |
 
-Layout: `frontend/admin/src/layouts/AdminLayout.tsx` — sidebar nav, region Select, command palette (Ctrl+K), theme toggle, Outlet.
+Layout/root shell: `frontend/admin/src/app/RootLayout.tsx` → `frontend/admin/src/layout/DashboardShell.tsx`.
+
+**Note (2026-03):** The remainder of this document references a pre-refactor file layout (`pages/`, `components/`, `frontend/shared/*`). Treat those references as legacy unless updated elsewhere.
 
 ---
 
-## 2. Shared UI primitive inventory (usage counts)
+## 2. Admin design-system primitive inventory (current)
 
-Counts are file-level (files that import or use the primitive). Source: grep across `frontend/`.
+**Source of truth:**
 
-| Primitive | Location | Usage (files) | Adequacy note |
-|-----------|----------|---------------|----------------|
-| Button | `frontend/shared/src/ui/Button.tsx` | 35+ | Adequate. variant/size/loading, cn(). |
-| Badge | `frontend/shared/src/ui/Badge.tsx` | 6+ | Adequate. |
-| Card | `frontend/shared/src/ui/Card.tsx` | 5+ | Adequate. |
-| Section | `frontend/shared/src/ui/Section.tsx` | 2+ (TableSection, ChartCard) | Adequate. |
-| Table | `frontend/shared/src/ui/Table.tsx` | 11+ | Adequate. columns, sort, selection, keyExtractor. |
-| Pagination | `frontend/shared/src/ui/Table.tsx` | 3+ | Adequate. |
-| Field | `frontend/shared/src/ui/Field.tsx` | Used by Input/Select | Adequate. label + error slot. |
-| Input | `frontend/shared/src/ui/Input.tsx` | 20+ | Adequate. label, error, cn(). |
-| Select | `frontend/shared/src/ui/Select.tsx` | 15+ | Inadequate: no async/search, no empty/loading state. |
-| Checkbox | `frontend/shared/src/ui/Checkbox.tsx` | 5+ | Adequate. |
-| SearchInput | `frontend/shared/src/ui/SearchInput.tsx` | 2+ | Inadequate: string concat for className; duplicates label/error. |
-| Modal | `frontend/shared/src/ui/Modal.tsx` | 8+ | Adequate. |
-| ConfirmModal | `frontend/shared/src/ui/Modal.tsx` | 1 | Adequate. |
-| ConfirmDanger | `frontend/shared/src/ui/Modal.tsx` | 4+ | Adequate. reason + confirm_token. |
-| Drawer | `frontend/shared/src/ui/Drawer.tsx` | 2+ | Adequate. |
-| Skeleton | `frontend/shared/src/ui/Skeleton.tsx` | 24+ | Adequate. |
-| EmptyState | `frontend/shared/src/ui/EmptyState.tsx` | 4+ | Adequate. |
-| ErrorState | `frontend/shared/src/ui/ErrorState.tsx` | 10+ | Adequate. |
-| InlineError | `frontend/shared/src/ui/InlineError.tsx` | — | Adequate. |
-| PageError | `frontend/shared/src/ui/PageError.tsx` | 15+ | Adequate. |
-| ToastContainer / useToast | `frontend/shared/src/ui/Toast.tsx` | 20+ | Adequate. |
-| StatusIndicator | `frontend/shared/src/ui/StatusIndicator.tsx` | — | Adequate. Dot + label; uses string concat (could use cn()). |
-| DeviceCard, ProfileCard, ConnectButton | shared/ui | miniapp/admin | Adequate for current use. |
+- Primitives: `frontend/admin/src/design-system/primitives/`
+- Typography: `frontend/admin/src/design-system/typography.tsx`
+- Tokens: `frontend/admin/src/design-system/tokens/tokens.css`
 
-Utility: `cn()` at `frontend/shared/src/utils/cn.ts` — clsx only (no tailwind-merge). Adequate for current CSS-class-based styling.
+Older references to `frontend/shared/src/ui/*` in historical docs are legacy and should be treated as removed/migrated.
 
 ---
 
@@ -326,7 +298,7 @@ Order: 1 → 2, 3 (parallel) → 4, 5, 6 → 7 → 8, 9 → 10 (optional) → 11
 - **Theme:** Use CSS vars/tokens; no hardcoded hex/rgb in components.
 - **Behavior:** No regressions in servers list, server detail, issue config, or actions.
 - **Tests:** Unit tests for utilities (e.g. RelativeTime); Playwright for critical user flows.
-- **Demo:** Add to `frontend/admin/src/pages/Styleguide.tsx` where it helps operators.
+- **Demo:** Add to `frontend/admin/src/features/styleguide/StyleguidePage.tsx` where it helps operators.
 
 ### Regression checklist (before release)
 

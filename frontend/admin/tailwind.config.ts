@@ -4,7 +4,7 @@ import type { Config } from "tailwindcss";
  * Design tokens for modern infrastructure dashboard (Linear / Vercel / Raycast style).
  * Dark-first, near-black base with subtle layering.
  *
- * Typography: font/size/lineHeight/weight map to shared/theme/tokens.css.
+ * Typography: font/size/lineHeight/weight map to design-system/tokens.css.
  * See docs/frontend/design/typography-tokens.md for Tailwind utility → token mapping.
  */
 export default {
@@ -22,28 +22,21 @@ export default {
         xs: ["var(--font-size-xs)", { lineHeight: "var(--line-height-normal)" }],
         sm: ["var(--font-size-sm)", { lineHeight: "var(--line-height-normal)" }],
         base: ["var(--font-size-base)", { lineHeight: "var(--line-height-normal)" }],
-        lg: ["var(--font-size-lg)", { lineHeight: "var(--line-height-relaxed)" }],
-        xl: ["var(--font-size-xl)", { lineHeight: "var(--line-height-snug)" }],
-        "2xl": ["var(--font-size-2xl)", { lineHeight: "var(--line-height-snug)" }],
+        lg: ["var(--font-size-lg)", { lineHeight: "var(--line-height-normal)" }],
+        xl: ["var(--font-size-xl)", { lineHeight: "var(--line-height-normal)" }],
+        "2xl": ["var(--font-size-2xl)", { lineHeight: "var(--line-height-tight)" }],
         "3xl": ["var(--font-size-3xl)", { lineHeight: "var(--line-height-tight)" }],
-        "4xl": ["var(--font-size-4xl)", { lineHeight: "var(--line-height-tight)" }],
-        "5xl": ["var(--font-size-5xl)", { lineHeight: "var(--line-height-tight)" }],
       },
       lineHeight: {
         tight: "var(--line-height-tight)",
-        snug: "var(--line-height-snug)",
         normal: "var(--line-height-normal)",
-        relaxed: "var(--line-height-relaxed)",
       },
       fontWeight: {
-        normal: "var(--font-weight-normal)",
         medium: "var(--font-weight-medium)",
         semibold: "var(--font-weight-semibold)",
-        bold: "var(--font-weight-bold)",
       },
       letterSpacing: {
         tight: "var(--letter-spacing-tight)",
-        normal: "var(--letter-spacing-normal)",
         wider: "var(--tracking-wider)",
       },
       borderRadius: {
@@ -97,21 +90,15 @@ export default {
         10: "var(--spacing-10)",
         12: "var(--spacing-12)",
         16: "var(--spacing-16)",
-        20: "var(--spacing-20)",
-        24: "var(--spacing-24)",
         32: "var(--spacing-32)",
-        40: "var(--spacing-40)",
-        48: "var(--spacing-48)",
         64: "var(--spacing-64)",
-        px: "var(--spacing-px)",
-        "0.5": "var(--spacing-0-5)",
       },
       screens: {
-        sm: "var(--breakpoint-sm)",
-        md: "var(--breakpoint-md)",
-        lg: "var(--breakpoint-lg)",
-        xl: "var(--breakpoint-xl)",
-        "2xl": "var(--breakpoint-2xl)",
+        sm: "640px",
+        md: "768px",
+        lg: "1024px",
+        xl: "1280px",
+        "2xl": "1536px",
       },
       backgroundImage: {},
       transitionDuration: {

@@ -8,7 +8,7 @@ export interface DrawerProps {
   open: boolean;
   onClose: () => void;
   title?: string;
-  /** Panel width. Default 400px. */
+  /** Panel width. When omitted, uses var(--width-drawer-panel). */
   width?: string | number;
   children: ReactNode;
   className?: string;
@@ -18,7 +18,7 @@ export function Drawer({
   open,
   onClose,
   title,
-  width = 400,
+  width,
   children,
   className = "",
 }: DrawerProps) {
@@ -56,7 +56,8 @@ export function Drawer({
 
   if (!open) return null;
 
-  const w = width != null ? (typeof width === "number" ? `${width}px` : width) : undefined;
+  const widthStyle =
+    width != null ? { width: typeof width === "number" ? `${width}px` : width } : undefined;
 
   return (
     <div
@@ -69,20 +70,15 @@ export function Drawer({
       <div
         ref={panelRef}
         className={cn("drawer-panel", className)}
-        style={w != null ? { width: w } : undefined}
+        style={widthStyle}
         tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="drawer-header">
           {title != null ? <h2 id="drawer-title" className="drawer-title">{title}</h2> : null}
-          <button
-              type="button"
-              className="drawer-close"
-              onClick={onClose}
-              aria-label="Close"
-            >
-              ×
-            </button>
+          <button type="button" className="drawer-close" onClick={onClose} aria-label="Close">
+            ×
+          </button>
         </div>
         <div className="drawer-body">{children}</div>
       </div>

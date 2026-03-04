@@ -3,7 +3,7 @@ import { DeviceCard } from "./DeviceCard";
 import { Button } from "../buttons/Button";
 
 const meta: Meta<typeof DeviceCard> = {
-  title: "Components/DeviceCard",
+  title: "Shared/Components/DeviceCard",
   component: DeviceCard,
   parameters: {
     docs: {
@@ -18,7 +18,7 @@ export default meta;
 
 type Story = StoryObj<typeof DeviceCard>;
 
-export const Overview: Story = {
+export const DeviceCardOverview: Story = {
   args: {
     id: "device-1",
     name: "My Phone",
@@ -28,7 +28,7 @@ export const Overview: Story = {
   },
 };
 
-export const Variants: Story = {
+export const DeviceCardVariants: Story = {
   render: () => (
     <div className="sb-stack">
       <DeviceCard id="device-1" name="My Phone" status="active" issuedAt="2024-01-15" shortId="abc123" />
@@ -37,7 +37,7 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
+export const DeviceCardSizes: Story = {
   render: () => (
     <div className="sb-stack">
       <p className="m-0">Size variants are not exposed; uses card tokens.</p>
@@ -46,7 +46,7 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const DeviceCardStates: Story = {
   render: () => (
     <DeviceCard
       id="device-1"
@@ -58,7 +58,7 @@ export const States: Story = {
   ),
 };
 
-export const WithLongText: Story = {
+export const DeviceCardWithLongText: Story = {
   args: {
     id: "device-1",
     name: "Device name with a very long label that should wrap gracefully",
@@ -68,7 +68,7 @@ export const WithLongText: Story = {
   },
 };
 
-export const DarkMode: Story = {
+export const DeviceCardDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   args: {
     id: "device-1",
@@ -79,7 +79,7 @@ export const DarkMode: Story = {
   },
 };
 
-export const Accessibility: Story = {
+export const DeviceCardAccessibility: Story = {
   args: {
     id: "device-1",
     name: "My Phone",
@@ -88,4 +88,4 @@ export const Accessibility: Story = {
   },
 };
 
-export const EdgeCases = WithLongText;
+export const DeviceCardEdgeCases = WithLongText;

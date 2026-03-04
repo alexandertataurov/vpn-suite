@@ -15,6 +15,11 @@ ignore = ["E501", "UP017"]  # UP017: datetime.UTC is 3.11+; CI uses 3.10
 # Core/services: #region blocks put imports after region start
 "app/core/server_sync_loop.py" = ["E402"]
 "app/services/server_sync_service.py" = ["E402", "I001"]  # I001: single merged snapshot import block
+"alembic/versions/049_one_time_download_tokens.py" = ["I001"]
+"app/api/public_download.py" = ["I001"]
+"app/core/amnezia_vpn_key.py" = ["I001"]
+"app/core/one_time_download.py" = ["I001"]
+"app/main.py" = ["I001"]
 [tool.mypy]
 python_version = "3.12"
 warn_return_any = true

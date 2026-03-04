@@ -1,6 +1,6 @@
 import type { ElementType, HTMLAttributes, ReactNode } from "react";
 import { cn } from "../../utils/cn";
-import { Panel as PrimitivePanel, type PrimitivePanelVariant } from "../primitives/Panel";
+import { PrimitivePanel, type PrimitivePanelVariant } from "../primitives/Panel";
 
 export type PanelVariant = "surface" | "outline" | "glass" | "raised";
 

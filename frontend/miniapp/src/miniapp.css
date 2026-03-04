@@ -124,6 +124,7 @@ body {
   justify-content: center;
   gap: var(--miniapp-space-micro);
   min-height: var(--size-touch-target);
+  padding: var(--miniapp-space-1);
   border-radius: var(--miniapp-radius-control);
   border: var(--border-width-hairline) solid transparent;
   color: var(--color-text-muted);
@@ -132,7 +133,7 @@ body {
     color var(--miniapp-duration-micro) var(--ease-instant),
     background-color var(--miniapp-duration-micro) var(--ease-instant),
     border-color var(--miniapp-duration-micro) var(--ease-instant),
-    transform 100ms var(--ease-mechanical);
+    transform var(--duration-fast) var(--ease-mechanical);
 }
 
 .miniapp-tab-icon {
@@ -264,7 +265,7 @@ body {
   transition:
     background-color var(--miniapp-duration-micro) var(--ease-instant),
     color var(--miniapp-duration-micro) var(--ease-instant),
-    transform 100ms var(--ease-mechanical);
+    transform var(--duration-fast) var(--ease-mechanical);
 }
 
 .btn-kinetic:active {
@@ -391,7 +392,7 @@ body {
     background-color var(--miniapp-duration-micro) var(--ease-instant),
     color var(--miniapp-duration-micro) var(--ease-instant),
     border-color var(--miniapp-duration-micro) var(--ease-instant),
-    transform 100ms var(--ease-mechanical);
+    transform var(--duration-fast) var(--ease-mechanical);
 }
 
 .miniapp-shell .btn::before {
@@ -714,7 +715,7 @@ body {
     background-color var(--miniapp-duration-micro) var(--ease-instant),
     color var(--miniapp-duration-micro) var(--ease-instant),
     border-color var(--miniapp-duration-micro) var(--ease-instant),
-    transform 100ms var(--ease-mechanical);
+    transform var(--duration-fast) var(--ease-mechanical);
 }
 
 .home-quick-action-card:hover {
@@ -775,16 +776,38 @@ body {
 }
 
 .home-dynamic-item-link {
+  position: relative;
   color: var(--color-accent);
   text-decoration: none;
   font-size: var(--miniapp-text-body-size);
   font-weight: var(--miniapp-weight-label);
+}
+.home-dynamic-item-link::after {
+  content: "";
+  position: absolute;
+  inset: -8px;
 }
 
 .home-dynamic-item--warning .home-dynamic-item-text,
 .home-dynamic-item--expiring .home-dynamic-item-text {
   color: var(--color-warning);
 }
+
+.home-skeleton-hero {
+  height: var(--spacing-32);
+}
+
+.home-skeleton-cta {
+  height: var(--spacing-12);
+}
+
+.skeleton-h-sm { height: var(--spacing-md); }
+.skeleton-h-md { height: var(--spacing-lg); }
+.skeleton-h-lg { height: var(--spacing-xl); }
+.skeleton-h-xl { height: var(--spacing-12); }
+.skeleton-h-2xl { height: var(--spacing-20); }
+.skeleton-h-3xl { height: var(--spacing-24); }
+.skeleton-h-hero { height: var(--spacing-32); }
 
 .home-skeleton-grid {
   display: grid;
@@ -795,6 +818,7 @@ body {
 /* Plan */
 .miniapp-plan-list {
   display: grid;
+  grid-template-columns: 1fr;
   gap: var(--miniapp-space-2);
 }
 
@@ -992,10 +1016,29 @@ body {
 }
 
 /* Referral */
+.referral-page {
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+.referral-page .config-block {
+  min-width: 0;
+}
+
+.referral-page .miniapp-action-row--full > * {
+  min-width: 0;
+}
+
 .referral-stats-row {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--miniapp-space-1);
+}
+
+@media (max-width: 360px) {
+  .referral-page .referral-stats-row {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Utilities that remain meaningful */
@@ -1110,7 +1153,7 @@ body {
   animation: miniappPageIn var(--miniapp-duration-page) var(--ease-mechanical);
 }
 
-@media (min-width: 37.5rem) {
+@media (min-width: 600px) {
   .miniapp-main {
     padding-inline: var(--miniapp-space-3);
   }
@@ -1120,7 +1163,7 @@ body {
   }
 
   .miniapp-plan-list {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .miniapp-quick-actions {

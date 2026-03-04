@@ -28,6 +28,15 @@
   },
   {
     "labels": {
+      "sd_job": "node-agent",
+      "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7"
+    },
+    "targets": [
+      "node-agent:9105"
+    ]
+  },
+  {
+    "labels": {
       "sd_job": "telegram-vpn-bot",
       "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7"
     },

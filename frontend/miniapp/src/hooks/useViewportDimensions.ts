@@ -11,10 +11,10 @@ export function useViewportDimensions() {
       const viewportHeight = Math.round(window.visualViewport?.height ?? window.innerHeight);
       root.style.setProperty("--tg-viewport-height", `${viewportHeight}px`);
       root.style.setProperty("--app-height", "var(--tg-viewport-height)");
-      root.style.setProperty("--safe-top", "env(safe-area-inset-top, 0px)");
-      root.style.setProperty("--safe-bottom", "env(safe-area-inset-bottom, 0px)");
-      root.style.setProperty("--safe-left", "env(safe-area-inset-left, 0px)");
-      root.style.setProperty("--safe-right", "env(safe-area-inset-right, 0px)");
+      root.style.setProperty("--safe-top", "env(safe-area-inset-top, 0)");
+      root.style.setProperty("--safe-bottom", "env(safe-area-inset-bottom, 0)");
+      root.style.setProperty("--safe-left", "env(safe-area-inset-left, 0)");
+      root.style.setProperty("--safe-right", "env(safe-area-inset-right, 0)");
     };
     update();
     window.addEventListener("resize", update);

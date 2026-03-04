@@ -6,7 +6,7 @@
 
 | System | Location | Used By | Classes |
 |--------|----------|---------|---------|
-| Shared Table | `frontend/shared/src/ui/Table.tsx` | TopIssuesTable, RecentAuditTable, Devices, Subscriptions, Payments, Audit,  ServerDetail, ControlPlane, VpnNodesTab | `table-wrap`, `table`, `table-empty`, `table-cell-*` |
+| Admin table primitives | `frontend/admin/src/design-system/primitives/Table.tsx` | Admin feature pages | `table-wrap`, `table`, `table-empty`, `table-cell-*` |
 | Raw HTML tables | Servers.tsx, Users.tsx | Servers page, Users page | `ref-users-table-wrap`, `ref-users-table`, `ref-server-row`, `ref-user-row` |
 | Docker div-grid | DockerOverviewTable.tsx | DockerServicesTab | `docker-table-shell`, `docker-table-row`, `docker-table-cell-*` |
 
@@ -29,11 +29,10 @@
 
 | Component | Location | Purpose |
 |-----------|----------|---------|
-| DataTable | `frontend/shared/src/ui/table/DataTable.tsx` | Wrapper: overflow, border, radius |
-| Table | `frontend/shared/src/ui/Table.tsx` | Declarative columns + data |
-| TableSkeleton | `frontend/shared/src/ui/table/TableSkeleton.tsx` | Loading rows |
-| TableSortHeader | `frontend/shared/src/ui/table/TableSortHeader.tsx` | Sortable column header |
-| CellText, CellNumber, CellActions | `frontend/shared/src/ui/table/CellHelpers.tsx` | Cell composition helpers |
+| DataTable | `frontend/admin/src/design-system/primitives/DataTable.tsx` | Wrapper: overflow, border, radius |
+| Table | `frontend/admin/src/design-system/primitives/Table.tsx` | Declarative columns + data |
+| VirtualTable | `frontend/admin/src/design-system/primitives/VirtualTable.tsx` | Virtualized rendering |
+| Skeleton | `frontend/admin/src/design-system/primitives/Skeleton.tsx` | Loading skeleton blocks |
 
 ### Unified Classes
 
@@ -55,14 +54,11 @@
 
 | File | Changes |
 |------|---------|
-| `frontend/shared/src/theme/tokens.css` | Added table tokens |
-| `frontend/shared/src/ui/Table.tsx` | Wraps in DataTable |
-| `frontend/shared/src/ui/styles.css` | Added data-table-* styles |
-| `frontend/shared/src/ui/table/*` | New DataTable, TableSkeleton, TableSortHeader, CellHelpers |
-| `frontend/admin/src/pages/Servers.tsx` | DataTable, TableSkeleton, table class |
-| `frontend/admin/src/pages/Users.tsx` | DataTable, TableSortHeader, data-table-* classes |
-| `frontend/admin/src/pages/telemetry/DockerOverviewTable.tsx` | data-table-grid-* classes |
-| `frontend/admin/src/components/ServerRow.tsx` | data-table-row, data-table-cell-stale |
+| `frontend/admin/src/design-system/tokens/tokens.css` | Table-related tokens |
+| `frontend/admin/src/design-system/primitives/primitives.css` | Table classes and base styles |
+| `frontend/admin/src/features/servers/ServersPage.tsx` | DataTable usage in current servers UI |
+| `frontend/admin/src/features/users/UsersPage.tsx` | DataTable usage in current users UI |
+| `frontend/admin/src/features/telemetry/TelemetryPage.tsx` | DataTable usage in current telemetry UI |
 | `frontend/admin/src/admin.css` | Removed ref-*-table*, docker-table-* |
 
 ---

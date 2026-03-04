@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { HealthBadge } from "./HealthBadge";
 
 const meta: Meta<typeof HealthBadge> = {
-  title: "Components/HealthBadge",
+  title: "Shared/Components/HealthBadge",
   component: HealthBadge,
   parameters: {
     a11y: { disable: false },
@@ -13,7 +13,7 @@ const meta: Meta<typeof HealthBadge> = {
 export default meta;
 type Story = StoryObj<typeof HealthBadge>;
 
-export const Overview: Story = {
+export const HealthBadgeOverview: Story = {
   render: () => (
     <div className="sb-stack">
       <div className="sb-section">
@@ -46,7 +46,7 @@ export const Overview: Story = {
   ),
 };
 
-export const Variants: Story = {
+export const HealthBadgeVariants: Story = {
   render: () => (
     <div className="sb-row">
       <HealthBadge status="healthy" />
@@ -58,7 +58,7 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
+export const HealthBadgeSizes: Story = {
   render: () => (
     <div className="sb-stack">
       <p className="m-0">Size variants are not exposed; uses badge tokens.</p>
@@ -67,7 +67,7 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const HealthBadgeStates: Story = {
   render: () => (
     <div className="sb-row">
       <HealthBadge status="healthy" />
@@ -76,13 +76,13 @@ export const States: Story = {
   ),
 };
 
-export const WithLongText: Story = {
+export const HealthBadgeWithLongText: Story = {
   render: () => (
     <HealthBadge status="unknown" label="Status unavailable from agent due to connectivity issues" />
   ),
 };
 
-export const Accessibility: Story = {
+export const HealthBadgeAccessibility: Story = {
   render: () => (
     <div className="sb-row">
       <HealthBadge status="healthy" aria-label="System healthy" />
@@ -91,7 +91,7 @@ export const Accessibility: Story = {
   ),
 };
 
-export const DarkMode: Story = {
+export const HealthBadgeDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   render: () => (
     <div className="sb-row">
@@ -104,4 +104,4 @@ export const DarkMode: Story = {
   ),
 };
 
-export const EdgeCases = WithLongText;
+export const HealthBadgeEdgeCases = WithLongText;

@@ -10,14 +10,12 @@ Operator-grade control plane for `/admin/servers`. Evidence-based, repo-referenc
 
 | File | Role |
 |------|------|
-| `frontend/admin/src/pages/Servers.tsx` | Main page component |
-| `frontend/admin/src/hooks/useServerList.ts` | Server list query (GET /servers) |
-| `frontend/admin/src/hooks/useServersStream.ts` | SSE live updates (GET /servers/stream) |
-| `frontend/admin/src/components/ServerRow.tsx` | Row with status, last_seen, last_snapshot staleness |
-| `frontend/admin/src/components/ServerRowDrawer.tsx` | Row drawer |
-| `frontend/admin/src/api/query-keys.ts` | SERVERS_LIST_KEY, etc. |
-| `frontend/shared/src/types/admin-api.ts` | ServerOut, ServerList |
-| `frontend/shared/src/api-client/create-client.ts` | api client (15s timeout, 401→onUnauthorized, retry 502/503) |
+| `frontend/admin/src/features/servers/ServersPage.tsx` | Main servers page (snapshot summary + actions) |
+| `frontend/admin/src/core/api/useApiQuery.ts` | React Query helper (`queryKey` is inline arrays) |
+| `frontend/admin/src/core/api/client.ts` | Fetch-based API client (timeout + retry) |
+| `frontend/admin/src/shared/types/admin-api.ts` | Server and snapshot summary response types |
+ 
+**Note (2026-03):** This audit was written against a pre-refactor admin layout (`pages/`, `hooks/`, `api/query-keys.ts`, SSE stream). The current Servers UI is implemented under `features/` + `core/` and may not match older file names and flows in the rest of this document.
 | `backend/app/api/v1/servers.py` | list_servers |
 | `backend/app/api/v1/servers_stream.py` | GET /servers/stream (SSE) |
 | `backend/app/api/v1/servers_crud.py` | GET/PATCH /servers/{id}, DELETE /servers/{id}/ips/{ip_id} |
@@ -191,15 +189,9 @@ Operator-grade control plane for `/admin/servers`. Evidence-based, repo-referenc
 
 ### Files changed
 
-| File | Change |
-|------|--------|
-| `frontend/admin/src/constants/freshness.ts` | New: FRESH_MS, DEGRADED_MS, getFreshnessLevel |
-| `frontend/admin/src/hooks/useServerList.ts` | staleTime 15s, refetchInterval 15s when visible |
-| `frontend/admin/src/hooks/useServersStream.ts` | 60s timeout + clearTimeout in cleanup |
-| `frontend/admin/src/pages/Servers.tsx` | Sync now, Last updated, offline alert, delete flow |
-| `frontend/admin/src/components/ServerRow.tsx` | onDelete prop, React.memo, Delete menu item |
-| `backend/app/api/v1/servers_crud.py` | DELETE /{server_id} (409 if devices exist) |
-| `backend/tests/test_api_integration.py` | test_servers_delete_requires_auth_401 |
+This section refers to a pre-refactor implementation. The current Servers UI entrypoint is:
+
+- `frontend/admin/src/features/servers/ServersPage.tsx`
 
 ### Backend DB compatibility
 

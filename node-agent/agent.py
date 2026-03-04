@@ -825,11 +825,12 @@ def _health_score(rt: RuntimeState) -> tuple[str, float]:
         return "healthy", 1.0
     # Score by active handshake ratio, with a mild penalty for slow exec latency.
     ratio = float(rt.active_peers) / float(max(1, len(rt.peers)))
-    latency_penalty = min(max(rt.latency_ms / 2000.0, 0.0), 0.25)  # 2s => 0.25
+    latency_penalty = min(max((rt.latency_ms or 0) / 2000.0, 0.0), 0.25)  # 2s => 0.25
     score = max(0.0, min(1.0, ratio - latency_penalty + 0.25))
     if score >= 0.9:
         return "healthy", score
-    if score >= 0.5:
+    # 0.45–0.5: treat as degraded so single node remains schedulable when many peers are idle
+    if score >= 0.45:
         return "degraded", score
     return "unhealthy", score
 

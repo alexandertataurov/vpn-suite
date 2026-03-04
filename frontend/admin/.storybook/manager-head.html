@@ -1,0 +1,40 @@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+#storybook-explorer-tree [data-selected="true"] > a { border-left: 3px solid #0EA5E9; padding-left: 13px !important; font-weight: 500; }
+#storybook-explorer-tree .sidebar-item a { padding: 6px 16px; transition: background 150ms ease; }
+/* Indentation by depth (script sets data-sidebar-depth and --sidebar-depth) */
+#storybook-explorer-tree [data-sidebar-depth] { padding-left: calc(12px + var(--sidebar-depth, 0) * 3px) !important; }
+#storybook-explorer-tree a[data-sidebar-depth] { padding-left: calc(12px + var(--sidebar-depth, 0) * 3px) !important; }
+</style>
+<script>
+(function() {
+  function setDepths(tree) {
+    if (!tree || tree.id !== 'storybook-explorer-tree') return;
+    var links = tree.querySelectorAll('a[href*="story"]');
+    links.forEach(function(a) {
+      var row = a.closest('[role="treeitem"], .sidebar-item') || a.parentElement;
+      if (!row || !tree.contains(row)) return;
+      var d = 0, p = row.parentElement;
+      while (p && p !== tree) { d++; p = p.parentElement; }
+      var depth = Math.min(8, d);
+row.setAttribute('data-sidebar-depth', depth);
+row.style.setProperty('--sidebar-depth', String(depth));
+a.setAttribute('data-sidebar-depth', depth);
+a.style.setProperty('--sidebar-depth', String(depth));
+    });
+  }
+  function run() {
+    var tree = document.getElementById('storybook-explorer-tree');
+    if (tree) {
+      setDepths(tree);
+      new MutationObserver(function() { setDepths(tree); }).observe(tree, { childList: true, subtree: true });
+    } else {
+      setTimeout(run, 200);
+    }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run);
+  else run();
+})();
+</script>

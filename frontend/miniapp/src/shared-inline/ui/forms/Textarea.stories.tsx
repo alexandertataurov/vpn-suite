@@ -4,7 +4,7 @@ import { StoryStack, NarrowFrame } from "../../storybook/wrappers";
 import { storyText } from "../../storybook/fixtures";
 
 const meta: Meta<typeof Textarea> = {
-  title: "Primitives/Textarea",
+  title: "Shared/Primitives/Textarea",
   component: Textarea,
   argTypes: {
     disabled: { control: "boolean" },
@@ -16,11 +16,11 @@ export default meta;
 
 type Story = StoryObj<typeof Textarea>;
 
-export const Overview: Story = {
+export const TextareaOverview: Story = {
   args: { label: "Notes", placeholder: "Enter notes" },
 };
 
-export const Variants: Story = {
+export const TextareaVariants: Story = {
   render: () => (
     <StoryStack>
       <Textarea label="Default" placeholder="Default" />
@@ -29,7 +29,7 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
+export const TextareaSizes: Story = {
   render: () => (
     <StoryStack>
       <Textarea label="Rows 3" rows={3} placeholder="3 rows" />
@@ -38,7 +38,7 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const TextareaStates: Story = {
   render: () => (
     <StoryStack>
       <Textarea label="Default" placeholder="Default" />
@@ -48,7 +48,7 @@ export const States: Story = {
   ),
 };
 
-export const EdgeCases: Story = {
+export const TextareaEdgeCases: Story = {
   render: () => (
     <StoryStack>
       <Textarea label="Long label" placeholder={storyText.veryLong} rows={3} />
@@ -60,11 +60,11 @@ export const EdgeCases: Story = {
   ),
 };
 
-export const DarkMode: Story = {
+export const TextareaDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   args: { label: "Notes", placeholder: "Enter notes" },
 };
 
-export const Accessibility: Story = {
+export const TextareaAccessibility: Story = {
   args: { label: "Accessible notes", placeholder: "Tab to focus" },
 };

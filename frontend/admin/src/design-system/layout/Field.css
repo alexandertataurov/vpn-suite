@@ -1,5 +1,0 @@
-.ds-field { margin-bottom: var(--space-4); }
-.ds-field__label { display: block; font-family: var(--font-display); font-size: var(--text-2xs); letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-text-secondary); margin-bottom: var(--space-1); }
-.ds-field__control { margin-top: 0; }
-.ds-field__hint { margin: var(--space-1) 0 0; font-size: var(--text-2xs); color: var(--color-text-muted); }
-.ds-field__error { margin: var(--space-1) 0 0; font-size: var(--text-2xs); color: var(--color-critical-bright); }

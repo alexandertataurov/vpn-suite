@@ -1,60 +1,62 @@
 import type { ReactNode } from "react";
-import { cn } from "@vpn-suite/shared";
 
-export interface AvatarProps {
+type AvatarSize = "sm" | "md" | "lg";
+type AvatarColor = "blue" | "green" | "orange" | "red" | "purple" | "neutral";
+type AvatarStatus = "online" | "away" | "busy" | "offline";
+
+interface AvatarProps {
+  /**
+   * Full name or label; initials will be derived if `children` is not provided.
+   */
   name?: string;
-  src?: string;
-  size?: "sm" | "md" | "lg";
-  className?: string;
   children?: ReactNode;
+  size?: AvatarSize;
+  color?: AvatarColor;
+  status?: AvatarStatus;
+  className?: string;
 }
 
-function initials(name: string): string {
-  return name
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((s) => s[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2) || "?";
+function getInitials(name?: string): string {
+  if (!name) return "";
+  const parts = name.trim().split(/\s+/);
+  if (!parts.length) return "";
+  if (parts.length === 1) return parts[0]!.slice(0, 2).toUpperCase();
+  return (parts[0]![0] ?? "").toUpperCase() + (parts[1]![0] ?? "").toUpperCase();
 }
 
-const SIZE_PX: Record<"sm" | "md" | "lg", number> = { sm: 24, md: 32, lg: 48 };
+export function Avatar({
+  name,
+  children,
+  size = "md",
+  color = "neutral",
+  status,
+  className = "",
+}: AvatarProps) {
+  const baseClasses = ["avatar"];
+  if (size === "sm") baseClasses.push("avatar-sm");
+  if (size === "lg") baseClasses.push("avatar-lg");
+  if (color !== "neutral") baseClasses.push(color);
 
-export function Avatar({ name = "", src, size = "md", className, children }: AvatarProps) {
-  const px = SIZE_PX[size];
-  const init = initials(name);
-  if (children) {
-    return (
-      <div
-        className={cn("ds-avatar", `ds-avatar--${size}`, className)}
-        style={{ width: px, height: px, minWidth: px, minHeight: px }}
-        aria-hidden
-      >
-        {children}
-      </div>
-    );
-  }
-  if (src) {
-    return (
-      <img
-        src={src}
-        alt={name ? `Avatar for ${name}` : ""}
-        className={cn("ds-avatar", `ds-avatar--${size}`, className)}
-        style={{ width: px, height: px, minWidth: px, minHeight: px }}
-      />
-    );
-  }
+  const content = children ?? getInitials(name);
+
   return (
-    <div
-      className={cn("ds-avatar", "ds-avatar--initials", `ds-avatar--${size}`, className)}
-      style={{ width: px, height: px, minWidth: px, minHeight: px }}
-      aria-hidden
-    >
-      {init}
+    <div className={[...baseClasses, className || null].filter(Boolean).join(" ")}>
+      {content}
+      {status && <div className={["avatar-status", status].join(" ")} />}
     </div>
   );
 }
 
-Avatar.displayName = "Avatar";
+interface AvatarGroupProps {
+  children: ReactNode;
+  className?: string;
+}
+
+export function AvatarGroup({ children, className = "" }: AvatarGroupProps) {
+  return (
+    <div className={["avatar-group", className || null].filter(Boolean).join(" ")}>
+      {children}
+    </div>
+  );
+}
+

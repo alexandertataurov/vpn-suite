@@ -83,13 +83,19 @@ groups:
       - record: servers_api_p95_latency_seconds
         expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{path_template=~"/api/v1/servers.*"}[5m])) by (le, path_template))
 
+      # Scoped to critical paths to avoid false positives from heavy list/export endpoints.
       - alert: HighLatency
-        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(http_request_duration_seconds_bucket{job="admin-api", path_template=~"/api/v1/servers.*|/health|/api/v1/cluster.*"}[5m])) by (le)
+          ) > 2
         for: 5m
         labels:
           severity: warning
         annotations:
-          summary: "95th percentile latency > 2s"
+          summary: "95th percentile latency > 2s (critical paths: servers, health, cluster)"
+          runbook_url: "https://vpn.vega.llc/docs/ops/runbook.md"
+          dashboard_url: "https://vpn.vega.llc/grafana/d/vpn-overview"
 
       - alert: WebappAuthErrorRateHigh
         expr: |
@@ -340,16 +346,20 @@ groups:
           affected_service: vpn-cluster
         annotations:
           summary: "No healthy/degraded VPN nodes are schedulable"
-          runbook_url: "https://github.com/your-org/vpn-suite/blob/main/docs/ops/runbook.md"
-          dashboard_url: "https://grafana.example.com/d/vpn-overview"
+          description: "Scheduler cannot place new peers. Check node discovery, health, and agent connectivity."
+          runbook_url: "https://vpn.vega.llc/docs/ops/runbook.md#vpn-cluster"
+          dashboard_url: "https://vpn.vega.llc/grafana/d/vpn-overview"
 
+      # 0.4 aligns with node-agent "degraded" floor (0.45); below 0.4 is truly unhealthy
       - alert: VpnNodeHealthLow
-        expr: vpn_node_health < 0.5
+        expr: vpn_node_health < 0.4
         for: 5m
         labels:
           severity: warning
         annotations:
-          summary: "VPN node health is below 0.5"
+          summary: "VPN node health is below 0.4"
+          runbook_url: "https://vpn.vega.llc/docs/ops/runbook.md"
+          dashboard_url: "https://vpn.vega.llc/grafana/d/vpn-overview"
 
       - alert: VpnNodeUnhealthy
         expr: sum(vpn_nodes_total{status="unhealthy"}) > 0
@@ -358,6 +368,8 @@ groups:
           severity: warning
         annotations:
           summary: "At least one VPN node is unhealthy"
+          runbook_url: "https://vpn.vega.llc/docs/ops/runbook.md"
+          dashboard_url: "https://vpn.vega.llc/grafana/d/vpn-overview"
 
       - alert: VpnClusterLoadHigh
         expr: vpn_cluster_load_index > 0.85
@@ -393,14 +405,17 @@ groups:
           summary: "VPN server has not reported heartbeat in 5+ minutes"
         # Note: requires vpn_node_last_seen_seconds from control-plane or agent. If absent, disable or use Redis-based check.
 
-      # Handshake freshness: node-agent exposes agent_last_handshake_max_age_seconds
+      # Handshake freshness: node-agent exposes agent_last_handshake_max_age_seconds.
+      # 2h threshold reduces noise for idle peers (no WireGuard keepalive); tune in ERRORS_TG.md plan.
       - alert: VpnHandshakeFreshnessCollapse
-        expr: agent_last_handshake_max_age_seconds > 3600
+        expr: agent_last_handshake_max_age_seconds > 7200
         for: 10m
         labels:
           severity: warning
         annotations:
-          summary: "VPN node handshake max age > 1h (peers may appear offline)"
+          summary: "VPN node handshake max age > 2h (peers may appear offline)"
+          runbook_url: "https://vpn.vega.llc/docs/ops/runbook.md"
+          dashboard_url: "https://vpn.vega.llc/grafana/d/vpn-overview"
         # Note: only when node-agent /metrics is scraped by Prometheus.
 
       # State reconciliation: peers expected (from DB) exceed peers present (from wg show)
@@ -593,15 +608,19 @@ groups:
         annotations:
           summary: "Host memory pressure (>90% used)"
           description: "Lag may cause connection drops. Consider: add RAM, tune swap, or restart stack. See docs/security/incident-response-runbook.md 'Server lag'."
+          runbook_url: "https://vpn.vega.llc/docs/security/incident-response-runbook.md#server-lag"
+          dashboard_url: "https://vpn.vega.llc/grafana/d/vpn-suite-observability"
 
       - alert: NodeSwapHeavy
-        expr: (1 - (node_memory_SwapFree_bytes / node_memory_SwapTotal_bytes)) > 0.5 and node_memory_SwapTotal_bytes > 1e9
-        for: 10m
+        expr: (1 - (node_memory_SwapFree_bytes / node_memory_SwapTotal_bytes)) > 0.7 and node_memory_SwapTotal_bytes > 2e9
+        for: 30m
         labels:
           severity: warning
         annotations:
           summary: "Host swap heavily used (>50%, >1GB)"
           description: "Memory pressure; lag and connection drops likely. Add RAM or reduce swap usage. See docs/security/incident-response-runbook.md 'Server lag'."
+          runbook_url: "https://vpn.vega.llc/docs/security/incident-response-runbook.md#server-lag"
+          dashboard_url: "https://vpn.vega.llc/grafana/d/vpn-suite-observability"
 
       - alert: DockerHostDiskPressure
         expr: (node_filesystem_avail_bytes{mountpoint="/"} / clamp_min(node_filesystem_size_bytes{mountpoint="/"}, 1)) < 0.15

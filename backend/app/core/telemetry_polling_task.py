@@ -320,7 +320,7 @@ async def run_telemetry_poll_loop(get_adapter) -> None:
                                 rtt_raw = p.get("rtt_ms")
                                 rtt_ms = (
                                     int(rtt_raw)
-                                    if rtt_raw is not None and isinstance(rtt_raw, (int, float))
+                                    if rtt_raw is not None and isinstance(rtt_raw, int | float)
                                     else None
                                 )
                                 if rtt_ms is not None and (rtt_ms < 0 or rtt_ms > 60000):

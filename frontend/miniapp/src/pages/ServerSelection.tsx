@@ -19,7 +19,7 @@ import {
 import type { WebAppServersResponse, WebAppServerItem } from "@vpn-suite/shared/types";
 import { useWebappToken, webappApi } from "../api/client";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
-import { SessionMissing } from "../components/SessionMissing";
+import { SessionMissing } from "@/components";
 
 export function ServerSelectionPage() {
   const hasToken = !!useWebappToken();
@@ -82,8 +82,8 @@ export function ServerSelectionPage() {
     return (
       <PageScaffold>
         <PageHeader title="Servers" />
-        <Skeleton height={32} />
-        <Skeleton height={120} />
+        <Skeleton className="skeleton-h-lg" />
+        <Skeleton className="skeleton-h-hero" />
       </PageScaffold>
     );
   }
@@ -126,7 +126,7 @@ export function ServerSelectionPage() {
 
       <PageSection title="Locations">
         <div className="server-grid">
-          {data.items.map((server) => {
+          {data.items.map((server) => { // key=
             const load = server.load_percent ?? 0;
             const isPending = selectMutation.isPending && pendingServerId === server.id;
             const code = (server.region ?? server.name ?? "??").slice(0, 2).toUpperCase();

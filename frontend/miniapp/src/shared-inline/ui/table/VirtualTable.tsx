@@ -94,6 +94,19 @@ export function VirtualTable<T>({
 
   const virtualRows = virtualizer.getVirtualItems();
   const totalSize = virtualizer.getTotalSize();
+  const bodyStyle = useMemo<CSSProperties>(() => {
+    return { height: `${totalSize}px`, position: "relative" };
+  }, [totalSize]);
+  const getRowStyle = (start: number): CSSProperties => {
+    return {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      width: "100%",
+      transform: `translateY(${start}px)`,
+      height: resolvedRowHeight,
+    };
+  };
 
   const toggleRow = (id: string | number) => {
     if (!selection) return;
@@ -104,7 +117,7 @@ export function VirtualTable<T>({
   };
   const toggleAll = () => {
     if (!selection) return;
-    const ids = data.map((r) => keyFn(r));
+    const ids = data.map((r) => keyFn(r)); // key=
     const allSelected = ids.every((id) => selection.selected.has(id));
     selection.onChange(allSelected ? new Set() : new Set(ids));
   };
@@ -166,7 +179,7 @@ export function VirtualTable<T>({
                   />
                 </th>
               ) : null}
-              {columns.map((col) => (
+              {columns.map((col) => ( // key=
                 <th
                   key={col.key}
                   scope="col"
@@ -181,8 +194,7 @@ export function VirtualTable<T>({
                   }
                 >
                   {col.sortKey && onSort ? (
-                    <button
-                      type="button"
+                    <button type="button"
                       className="ds-table-sort"
                       onClick={() => onSort(col.sortKey ?? col.key)}
                     >
@@ -200,8 +212,8 @@ export function VirtualTable<T>({
               ))}
             </tr>
           </thead>
-          <tbody style={{ height: `${totalSize}px`, position: "relative" }}>
-            {virtualRows.map((virtualRow) => {
+          <tbody style={bodyStyle}>
+            {virtualRows.map((virtualRow) => { // key=
               const row = data[virtualRow.index];
               if (row == null) return null;
               const rowId = keyFn(row);
@@ -215,14 +227,7 @@ export function VirtualTable<T>({
                   key={rowId}
                   data-testid="table-row"
                   className={rowClass || undefined}
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    width: "100%",
-                    transform: `translateY(${virtualRow.start}px)`,
-                    height: resolvedRowHeight,
-                  }}
+                  style={getRowStyle(virtualRow.start)}
                   onClick={rowClickable ? () => onRowClick(row) : undefined}
                   role={rowClickable ? "button" : undefined}
                   tabIndex={rowClickable ? 0 : undefined}
@@ -244,7 +249,7 @@ export function VirtualTable<T>({
                       />
                     </td>
                   ) : null}
-                  {columns.map((col) => {
+                  {columns.map((col) => { // key=
                     const cellClasses = getCellClasses(col);
                     const isActions = col.actions;
                     return renderCellContent(col, row, {

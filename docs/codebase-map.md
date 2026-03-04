@@ -16,7 +16,18 @@ Precise map of the repository structure, entry points, and responsibilities.
 | `README.md`          | Quick start, key commands, stack summary                                                                                                                                                                              |
 
 
-### 1.1 Operations (agent-only ownership, key verification, support)
+### 1.2 Service inventory (high-level)
+
+| Service | Path | Language | Purpose |
+|---------|------|----------|---------|
+| admin-api | backend/ | Python 3.12 / FastAPI | Control-plane REST API, auth, device issue/revoke, telemetry, payments |
+| admin-frontend | frontend/admin/ | TypeScript / React / Vite | Admin SPA — devices, servers, users, telemetry, billing |
+| miniapp | frontend/miniapp/ | TypeScript / React | Telegram Mini App — subscription & device management |
+| telegram-vpn-bot | bot/ | Python / aiogram 3 | Telegram bot — user self-service, webhooks |
+| node-agent | node-agent/ | Python 3.12 | WireGuard/AmneziaWG node reconciler |
+| reverse-proxy | docker/reverse-proxy/ | Caddy | TLS termination, static frontends, mTLS for agent |
+
+### 1.3 Operations (agent-only ownership, key verification, support)
 
 - **Production:** Must use `NODE_DISCOVERY=agent`; only node-agent mutates WireGuard/AmneziaWG peers. Control-plane with docker discovery refuses to start when `ENVIRONMENT=production`.
 - **Key verification:** Issuance and reissue use live server key from node/heartbeat; block with 409 `SERVER_NOT_SYNCED` if key unknown. Run `./manage.sh server:sync <server_id>` to sync key to DB.

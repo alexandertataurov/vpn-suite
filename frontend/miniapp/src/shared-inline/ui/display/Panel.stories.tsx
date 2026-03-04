@@ -3,7 +3,7 @@ import { Panel, PanelHeader, PanelBody } from "./Panel";
 import { Button } from "../buttons/Button";
 
 const meta: Meta<typeof Panel> = {
-  title: "Primitives/Panel",
+  title: "Shared/Primitives/Panel",
   component: Panel,
   parameters: {
     docs: {
@@ -24,7 +24,7 @@ export default meta;
 
 type Story = StoryObj<typeof Panel>;
 
-export const Overview: Story = {
+export const PanelOverview: Story = {
   render: () => (
     <Panel>
       <PanelHeader title="Panel title" actions={<Button variant="ghost" size="sm">Action</Button>} />
@@ -33,7 +33,7 @@ export const Overview: Story = {
   ),
 };
 
-export const Variants: Story = {
+export const PanelVariants: Story = {
   render: () => (
     <div className="sb-stack">
       <Panel variant="surface">
@@ -52,7 +52,7 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
+export const PanelSizes: Story = {
   render: () => (
     <div className="sb-stack">
       <Panel>
@@ -65,7 +65,7 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const PanelStates: Story = {
   render: () => (
     <Panel>
       <PanelHeader title="Panel title" actions={<Button variant="ghost" size="sm">Action</Button>} />
@@ -74,7 +74,7 @@ export const States: Story = {
   ),
 };
 
-export const WithLongText: Story = {
+export const PanelWithLongText: Story = {
   render: () => (
     <Panel>
       <PanelHeader title="Panel title" />
@@ -85,7 +85,7 @@ export const WithLongText: Story = {
   ),
 };
 
-export const DarkMode: Story = {
+export const PanelDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   render: () => (
     <Panel>
@@ -95,7 +95,7 @@ export const DarkMode: Story = {
   ),
 };
 
-export const Accessibility: Story = {
+export const PanelAccessibility: Story = {
   render: () => (
     <Panel as="section" aria-label="Server details">
       <PanelHeader title="Server details" />
@@ -104,4 +104,4 @@ export const Accessibility: Story = {
   ),
 };
 
-export const EdgeCases = WithLongText;
+export const PanelEdgeCases = WithLongText;

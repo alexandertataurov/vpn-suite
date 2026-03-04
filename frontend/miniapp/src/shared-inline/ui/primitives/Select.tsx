@@ -18,7 +18,7 @@ export interface PrimitiveSelectProps
   onChange: (value: string) => void;
 }
 
-export function Select({ size = "md", invalid, options, value, onChange, className = "", ...props }: PrimitiveSelectProps) {
+export function PrimitiveSelect({ size = "md", invalid, options, value, onChange, className = "", ...props }: PrimitiveSelectProps) {
   return (
     <select
       className={cn("ds-select", className)}
@@ -28,7 +28,7 @@ export function Select({ size = "md", invalid, options, value, onChange, classNa
       onChange={(event) => onChange(event.target.value)}
       {...props}
     >
-      {options.map((opt) => (
+      {options.map((opt) => ( // key=
         <option key={opt.value} value={opt.value} disabled={opt.disabled}>
           {opt.label}
         </option>

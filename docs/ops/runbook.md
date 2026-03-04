@@ -74,8 +74,8 @@ Use this flow when `/admin/telemetry` or `/admin/servers` shows missing/stale me
    - `curl -sS http://127.0.0.1:8000/api/v1/servers/telemetry/summary -H "Authorization: Bearer <ADMIN_JWT>"`
    - `curl -sS http://127.0.0.1:8000/api/v1/telemetry/docker/hosts -H "Authorization: Bearer <ADMIN_JWT>"`
 2. Check Prometheus and recent scrape state:
-   - `curl -sS http://127.0.0.1:9090/-/ready`
-   - `curl -sS 'http://127.0.0.1:9090/api/v1/query?query=up'`
+   - `curl -sS http://127.0.0.1:${PROMETHEUS_HOST_PORT:-19090}/-/ready`
+   - `curl -sS 'http://127.0.0.1:${PROMETHEUS_HOST_PORT:-19090}/api/v1/query?query=up'`
 3. Check telemetry ingest and cache freshness metrics:
    - `curl -sS http://127.0.0.1:8000/metrics | rg 'frontend_telemetry_(events|batches)_total|vpn_server_snapshot_staleness_seconds'`
 4. Check API and worker logs with request/correlation IDs:
@@ -131,6 +131,15 @@ Expected:
 - **Key sync:** If server key in DB is stale or issuance returns `SERVER_NOT_SYNCED`, run `./manage.sh server:sync <server_id>` (runs `fix_server_public_key.py`) so DB gets the live key from node/heartbeat.
 - **Reissue device:** Use API `POST /api/v1/devices/{device_id}/reissue` with admin auth. Blocks with 409 if server key not verified; run server:sync first if needed.
 - **Support bundle:** `./manage.sh support-bundle [--output DIR]` collects bounded service logs (admin-api, admin-worker), Redis agent heartbeat keys list, and manifest. For last N audit events use `GET /api/v1/audit?limit=N` with admin auth.
+
+## Rollback and feature-flag mitigations
+
+- **Disable env editor:** `APP_ENV_EDITOR_ENABLED=0`
+- **Disable or throttle frontend telemetry:** `ADMIN_TELEMETRY_EVENTS_ENABLED=0` or `ADMIN_TELEMETRY_SAMPLE_RATE=<0..1>`
+- **Telemetry ingestion issues:** Set `ADMIN_TELEMETRY_EVENTS_ENABLED=0`; validate with `curl -sS http://127.0.0.1:8000/metrics | rg 'frontend_telemetry_(events|batches)_total'`
+- **Idempotency issues:** Temporarily stop sending `Idempotency-Key` from frontend mutating actions; validate replay behavior before re-enabling
+- **Settings endpoint lock:** Ensure `APP_ENV_EDITOR_ENABLED=0`; keep `settings:dangerous` limited to trusted roles
+- **Verification after rollback:** `BASE_URL=http://127.0.0.1:8000 bash scripts/release_api_happy_path.sh`; confirm `/api/v1/servers/device-counts` 200, `/health` and `/metrics` healthy; check logs for errors
 
 ## Host isolation (production)
 

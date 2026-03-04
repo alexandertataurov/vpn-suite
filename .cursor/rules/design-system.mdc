@@ -1,0 +1,17 @@
+---
+description: Design system — tokens from single :root token file, no extra :root, Tailwind token aliases. Applies to miniapp, shared, and admin design-system.
+globs: ["frontend/miniapp/**", "frontend/shared/**", "frontend/admin/src/design-system/**"]
+alwaysApply: false
+---
+
+# Design system (miniapp + shared)
+
+**Project context**: Token files — admin: `frontend/admin/src/design-system/tokens/tokens.css`; miniapp: `frontend/miniapp/src/styles/miniapp-tokens.css`. Tailwind must use configured token aliases, not raw colors.
+
+- **CSS custom properties**: Any `var(--*)` used in TSX or CSS must be defined in the project's single token file. Admin: `frontend/admin/src/design-system/tokens/tokens.css`. Miniapp: `frontend/miniapp/src/styles/miniapp-tokens.css`. Do not invent new tokens without adding them there first.
+
+- **Single :root**: Do not add a second `:root` block to any CSS file. There is exactly one source of truth for design tokens per app (the token file above). Other CSS files must not define `:root`.
+
+- **Tailwind**: Use the project's configured token aliases (e.g. semantic or design-token-based classes), not raw color names like `bg-red-500`. Prefer tokens that map to the token file.
+
+CI design checks enforce: no hardcoded hex, no inline styles, no direct lucide in miniapp, single :root. Run `design:check` locally.

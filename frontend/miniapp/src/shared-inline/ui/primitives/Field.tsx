@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { cn } from "../../utils/cn";
-import { Label } from "./Label";
+import { PrimitiveLabel } from "./Label";
 
 export interface PrimitiveFieldProps {
   id?: string;
@@ -12,13 +12,13 @@ export interface PrimitiveFieldProps {
   className?: string;
 }
 
-export function Field({ id, label, hint, error, required, children, className = "" }: PrimitiveFieldProps) {
+export function PrimitiveField({ id, label, hint, error, required, children, className = "" }: PrimitiveFieldProps) {
   return (
     <div className={cn("ds-field", className)}>
       {label != null ? (
-        <Label htmlFor={id} required={required}>
+        <PrimitiveLabel htmlFor={id} required={required}>
           {label}
-        </Label>
+        </PrimitiveLabel>
       ) : null}
       {children}
       {error ? (

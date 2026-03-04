@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { InlineError } from "./InlineError";
 
 const meta: Meta<typeof InlineError> = {
-  title: "Primitives/Forms/InlineError",
+  title: "Shared/Primitives/Forms/InlineError",
   component: InlineError,
   parameters: {
     docs: {
@@ -17,11 +17,11 @@ export default meta;
 
 type Story = StoryObj<typeof InlineError>;
 
-export const Overview: Story = {
+export const InlineErrorOverview: Story = {
   args: { message: "This field is required" },
 };
 
-export const Variants: Story = {
+export const InlineErrorVariants: Story = {
   render: () => (
     <div className="sb-stack">
       <InlineError message="This field is required" />
@@ -30,7 +30,7 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
+export const InlineErrorSizes: Story = {
   render: () => (
     <div className="sb-stack">
       <p className="m-0">Size variants are not exposed; uses caption tokens.</p>
@@ -39,7 +39,7 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const InlineErrorStates: Story = {
   render: () => (
     <div className="sb-stack">
       <InlineError message="Error state" />
@@ -47,17 +47,17 @@ export const States: Story = {
   ),
 };
 
-export const WithLongText: Story = {
+export const InlineErrorWithLongText: Story = {
   args: { message: "Long error message that should wrap without breaking layout or overlapping form controls." },
 };
 
-export const DarkMode: Story = {
+export const InlineErrorDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   args: { message: "This field is required" },
 };
 
-export const Accessibility: Story = {
+export const InlineErrorAccessibility: Story = {
   args: { message: "Error announced to screen readers" },
 };
 
-export const EdgeCases = WithLongText;
+export const InlineErrorEdgeCases = WithLongText;

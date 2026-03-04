@@ -9,7 +9,7 @@ export interface PrimitiveLabelProps extends LabelHTMLAttributes<HTMLLabelElemen
   children: ReactNode;
 }
 
-export function Label({ size = "md", required, className = "", children, ...props }: PrimitiveLabelProps) {
+export function PrimitiveLabel({ size = "md", required, className = "", children, ...props }: PrimitiveLabelProps) {
   return (
     <label className={cn("ds-label", className)} data-size={size} {...props}>
       {children}

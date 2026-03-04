@@ -133,9 +133,7 @@ When TELEMETRY_PROMETHEUS_URL unset:
 |------|-------|
 | Backend analytics | [backend/app/api/v1/analytics.py](../../backend/app/api/v1/analytics.py) |
 | Backend overview | [backend/app/api/v1/overview.py](../../backend/app/api/v1/overview.py) |
-| Frontend Telemetry page | [frontend/admin/src/pages/Telemetry.tsx](../../frontend/admin/src/pages/Telemetry.tsx) |
-| ScrapeStatusPanel | [frontend/admin/src/components/telemetry/ScrapeStatusPanel.tsx](../../frontend/admin/src/components/telemetry/ScrapeStatusPanel.tsx) |
-| MetricsKpisPanel | [frontend/admin/src/components/telemetry/MetricsKpisPanel.tsx](../../frontend/admin/src/components/telemetry/MetricsKpisPanel.tsx) |
-| GlobalDataIndicator | [frontend/admin/src/components/GlobalDataIndicator.tsx](../../frontend/admin/src/components/GlobalDataIndicator.tsx) |
-| Operator dashboard | [frontend/admin/src/pages/dashboard/OperatorDashboardContent.tsx](../../frontend/admin/src/pages/dashboard/OperatorDashboardContent.tsx) |
+| Frontend Telemetry page | [frontend/admin/src/features/telemetry/TelemetryPage.tsx](../../frontend/admin/src/features/telemetry/TelemetryPage.tsx) |
+| Frontend API client | [frontend/admin/src/core/api/client.ts](../../frontend/admin/src/core/api/client.ts) |
+| Frontend query helper | [frontend/admin/src/core/api/useApiQuery.ts](../../frontend/admin/src/core/api/useApiQuery.ts) |
 | Observability stack | [docs/release/observability-check.md](../release/observability-check.md) |

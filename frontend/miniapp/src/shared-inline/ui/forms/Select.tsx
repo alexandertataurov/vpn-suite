@@ -61,7 +61,7 @@ export function Select({
           {placeholder}
         </option>
       ) : null}
-      {resolvedOptions.map((opt) => (
+      {resolvedOptions.map((opt) => ( // key=
         <option key={opt.value || opt.label} value={opt.value} disabled={opt.disabled}>
           {opt.label}
         </option>

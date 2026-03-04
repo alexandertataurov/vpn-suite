@@ -1,45 +1,46 @@
 # VPN Suite – Troubleshooting
 
-## Bot cannot reach panel
+**Current stack:** admin-api (FastAPI), Postgres, Redis, reverse-proxy, telegram-vpn-bot, node-agent (optional). No PHP/MySQL panel. See [docs/codebase-map.md](../../docs/codebase-map.md) and [docs/ops/runbook.md](../../docs/ops/runbook.md).
 
-- **Cause**: Wrong URL or not on shared network. Bot must use the internal service name so DNS resolves on the Docker network.
-- **Fix**: When bot and panel run in Docker, set `PANEL_URL=http://amnezia-panel-web` (compose overrides bot .env so the bot uses internal URL). Ensure both services use network `vpn-suite`. If you see "Temporary failure in name resolution" or "Cannot connect to host amnezia-panel-web", the bot was likely using a public URL from .env that is unreachable from inside the container—use the compose override above and recreate the bot. Check `./scripts/debug-vpn.sh` section 4b for Bot->Panel connectivity.
+## Bot cannot reach admin-api
+
+- **Cause:** Wrong URL or not on shared network. Bot must use the internal service name so DNS resolves on the Docker network.
+- **Fix:** Set bot API base URL to admin-api (e.g. `http://admin-api` or as in .env/compose). Ensure both services use the same Docker network. If you see "Temporary failure in name resolution", fix the URL and recreate the bot container.
 
 ## Bot build fails (context / path)
 
-- **Cause**: Bot Dockerfile build context is `/opt`, not `/opt/vpn-suite`. COPY paths in Dockerfile are relative to `/opt`.
-- **Fix**: In Dockerfile, reference app as e.g. `COPY telegram-vpn-bot/ ...` (from /opt). Compose uses `context: /opt`, `dockerfile: /opt/vpn-suite/bot/Dockerfile`.
+- **Cause:** Dockerfile build context or COPY paths don't match compose `context`/`dockerfile`.
+- **Fix:** In Dockerfile use paths relative to the compose build context (e.g. `bot/` if context is repo root). Check `docker-compose.yml` for `context` and `dockerfile`.
 
-## Healthcheck failing (bot / panel / DB)
+## Healthcheck failing (bot / admin-api / postgres)
 
-- **Bot**: Ensure `/healthz` returns 200 quickly; healthcheck runs inside container (e.g. `curl http://127.0.0.1:8090/healthz`). Increase `start_period` if bot starts slowly.
-- **Panel**: Healthcheck is `curl http://localhost/`; ensure web server responds on port 80 inside container.
-- **DB**: `mysqladmin ping`; if DB not ready, panel depends on `condition: service_healthy` so it waits.
+- **Bot:** Ensure health endpoint (e.g. `/healthz`) returns 200; healthcheck runs inside container. Increase `start_period` if bot starts slowly.
+- **admin-api:** Ensure readiness/liveness endpoints return 200; postgres and Redis must be up.
+- **postgres:** Use postgres image healthcheck (e.g. pg_isready); admin-api depends on `condition: service_healthy` where configured.
 
 ## Services not resolving each other by name
 
 - **Cause**: Service not on `vpn-suite` network or compose project mismatch.
 - **Fix**: All services in `docker-compose.yml` must have `networks: - vpn-suite`. Start with same project: `./manage.sh up-all` (or both profiles). Check `docker network inspect vpn-suite`.
 
-## Panel DB connection refused / migration errors
+## Postgres connection refused / migration errors
 
-- **Cause**: DB not healthy yet, wrong host/port, or migration order.
-- **Fix**: Panel uses `DB_HOST=amnezia-panel-db`, `DB_PORT=3306` (internal). Migrations run from `services/amneziavpnphp/migrations/` on init. Ensure volume and env match; check `amnezia-panel-db` logs and health.
+- **Cause:** DB not healthy yet, wrong host/port, or migration order.
+- **Fix:** admin-api uses `DATABASE_URL` (host `postgres` inside compose). Run `./manage.sh migrate` after postgres is healthy. Check postgres logs and `./manage.sh config` for env.
 
 ## Prometheus / Grafana not scraping or no data
 
-- **Cause**: Scrape targets use service names; monitoring stack must be on `vpn-suite` and targets must be up.
-- **Fix**: Confirm `monitoring/prometheus.yml` uses correct job names and service hostnames. Run with `--profile monitoring`; check Prometheus targets UI and Grafana datasource.
+- **Cause:** Scrape targets use service names; monitoring stack and targets must be on the same network and up.
+- **Fix:** Confirm `config/monitoring/prometheus.yml` has correct job names and hostnames. Start with `./manage.sh up-monitoring` (or docker-compose.observability.yml); check Prometheus targets UI and Grafana datasource.
 
-## Cutover / rollback confusion
+## Rollout / rollback
 
-- **Cutover**: Backup first (bot data, panel DB, Grafana/Prometheus). Run `./manage.sh cutover-stop-legacy`, then start vpn-suite (`systemctl start vpn-suite` or `./manage.sh up-all`). Verify all healthchecks and critical paths.
-- **Rollback**: Stop vpn-suite, then `./manage.sh rollback-start-legacy`. Legacy folders are left in place; no automatic backup restore—restore from backups if needed.
+- **Rollout:** Backup first: `./manage.sh backup-db`. Deploy new stack (e.g. `./manage.sh up-core`), run migrate if needed, verify health and `./manage.sh smoke-staging` if applicable.
+- **Rollback:** Document rollback path before rollout. Restore from backup if needed (`./manage.sh restore-db`); see [docs/ops/runbook.md](../../docs/ops/runbook.md).
 
-## Volume or permission errors (panel / bot)
+## Volume or permission errors
 
-- **Panel**: Expects bot data and bot `.env` mounted (`telegram-vpn-bot/data`, `telegram-vpn-bot/.env` under suite). Ensure paths exist and permissions allow container user.
-- **Bot**: Data at `telegram-vpn-bot/data` and logs at `telegram-vpn-bot/logs` under the suite; same permission check.
+- **admin-api / bot / node-agent:** Ensure compose volume mounts and env point to valid paths; container user must have read/write where required. Check `docker compose config` and logs.
 
 ## amnezia-awg not starting or no VPN handshake
 
@@ -53,12 +54,12 @@
 
 ## Sync peers (AmneziaWG)
 
-- **Note**: The AmneziaWG container does not support `wg set`/sync. Add users inside the container with `awguser` and `awgstart`. Panel “Sync peers to VPN” will return a message that sync is not applicable.
+- **Note:** With node-agent, peers are reconciled on the host. With Docker mode, control-plane adds peers via Docker runtime. See [docs/ops/amneziawg-obfuscation-runbook.md](../../docs/ops/amneziawg-obfuscation-runbook.md).
 
-## Sync peers: "docker.sock not available"
+## Docker socket not available
 
-- **Cause**: Panel runs PHP as `www-data`; the host’s `/var/run/docker.sock` is usually `root:docker` (mode 660), so the container’s `www-data` cannot read it unless it is in the same group.
-- **Fix**: Set `DOCKER_GID` to your host’s docker group GID so the panel entrypoint can add `www-data` to that group. On the host run: `getent group docker | cut -d: -f3`, then set in `/opt/vpn-suite/.env`: `DOCKER_GID=<that number>`. Recreate the panel: `docker compose --profile core up -d amnezia-panel-web --force-recreate`.
+- **Cause:** Process that runs `docker exec` (e.g. admin-api) needs Docker socket access; host socket is often `root:docker` (660).
+- **Fix:** Set `DOCKER_GID` in `.env` to host docker GID; recreate service. Prefer **agent mode** (node-agent on each host) in production.
 
 ## VPN: No traffic (DPI blocking)
 
@@ -72,8 +73,8 @@
 
 ## VPN: users cannot connect (VPN server)
 
-- **Cause**: Panel must use the same server public key as the AmneziaWG container, and peers must exist in the container.
-- **Fix**: (1) Get server public key from the container (after `awguser`/`awgstart`) and set it in panel **VPN servers** (Load from container is not supported for AmneziaWG; set manually). (2) Set **Endpoint** to your server hostname or IP and port (e.g. `vpn.example.com:47604`). (3) Ensure UDP 47604 is open on the host/firewall. (4) Add users in the container via `awguser`/`awgstart`; Sync peers to VPN is not supported for AmneziaWG.
+- **Cause:** Control-plane must have the server's live public key; peers must exist on the node. With agent mode, node-agent reconciles peers; key comes from heartbeat.
+- **Fix:** (1) Ensure server key is in DB: run `./manage.sh server:sync <server_id>` if key unknown (409 SERVER_NOT_SYNCED on issue/reissue). (2) Set **vpn_endpoint** (host:port) and ensure UDP is open on host/firewall. (3) With node-agent, ensure desired state includes the peer; with Docker mode, peer is added via control-plane. See [docs/ops/amneziawg-obfuscation-runbook.md](../../docs/ops/amneziawg-obfuscation-runbook.md).
 
 ## VPN: connected but no internet / no traffic
 
@@ -84,34 +85,34 @@
 - **NAT/forward in container**: The AmneziaWG container (metaligh/amneziawg) handles forwarding; ensure `ip_forward=1` and NAT inside the container per image docs.
 - **Check**: Run `./scripts/debug-vpn.sh`; for AmneziaWG, section 5b shows a note that wg CLI is not available and to use awguser/awgstart.
 
-## Admin: issue config / rotate / revoke (operator console)
+## Admin: issue config / rotate / revoke
 
-- **Issue fails (502 / server unreachable)**: Admin API uses Docker runtime to add peer on the node. Ensure `NODE_MODE=real`, Docker socket available to admin-api, and the server (AmneziaWG container) is running. Check `vpn_admin_issue_total{status="failure"}` and logs; use `request_id` from the response to correlate with audit.
-- **Config download 404/410**: One-time token may be expired, already consumed, or invalid. Issue a new config from Servers → Issue config (or rotate peer for a new token).
-- **Audit**: Filter by `request_id` or `resource_id` (server_id) on the Audit page. `request_id` is set on all issue/rotate/revoke responses.
+- **Issue fails (409 SERVER_NOT_SYNCED):** Server's live public key not in DB. Run `./manage.sh server:sync <server_id>` then retry. In agent mode, key comes from node-agent heartbeat.
+- **Issue fails (502 / server unreachable):** With Docker mode ensure Docker socket and node are available. With agent mode ensure node-agent is running and server is healthy.
+- **Config download 404/410:** One-time token expired or already consumed. Issue or reissue config from admin UI.
+- **Audit:** Correlate by `request_id` or `resource_id` (server_id); see audit API and admin Audit page.
 
 ## Admin peer: cannot connect (server-side)
 
-When one admin peer fails to connect (client may show ErrorCode 1200 / crash during connect→disconnect), verify server-side:
+When a device fails to connect, verify server-side:
 
-1. **Peer on node**: Admin's public key must exist in the AmneziaWG container. If `add_peer` failed at issue time, the peer was never added. Check: `docker exec <amnezia-awg-container> wg show awg0` and confirm the admin's public key is listed.
-2. **NODE_MODE=agent**: With agent mode, control-plane does not add peers; node-agent manages them. Ensure the admin device was pushed to the node (check node-agent logs / desired-state).
-3. **Endpoint/port**: Server `vpn_endpoint` must match the actual exposed port (e.g. `vpn.example.com:45790`). Your amnezia-awg2 uses `AWG_PUBLIC_UDP_PORT=45790`; ensure firewall allows UDP 45790.
-4. **Obfuscation match**: AmneziaWG requires matching Jc/Jmin/Jmax/S1/S2/H1–H4. If the config was built from a profile with wrong/missing obfuscation params, handshake will fail. Use `get_obfuscation_from_node` or ensure ServerProfile `request_params` match the running container.
-5. **System operator seeded**: Admin "Issue config" (standalone) uses `system_operator_not_seeded` if User tg_id=0 and Plan "operator" subscription are missing. Fix: `./manage.sh seed-operator` (after migrations).
+1. **Peer on node:** Public key must exist on the node. With agent mode, node-agent reconciles; with Docker mode, issue flow adds peer. Check node (e.g. `wg show` or node-agent logs).
+2. **NODE_MODE=agent:** Control-plane does not add peers; node-agent does. Ensure device is in desired state and node-agent has run reconcile.
+3. **Endpoint/port:** Server `vpn_endpoint` must match actual host:port; firewall must allow UDP.
+4. **Obfuscation match:** AmneziaWG needs matching Jc/Jmin/Jmax/S1/S2/H1–H4; ensure server profile `request_params` match the running node. See [docs/ops/amneziawg-obfuscation-runbook.md](../../docs/ops/amneziawg-obfuscation-runbook.md).
+5. **Operator seeded:** If issue requires operator user/plan, run `./manage.sh seed-operator` (or equivalent seed) after migrations.
 
-## Reviewing AmneziaWG instances
+## Reviewing servers (nodes)
 
-- **What they are**: External Docker containers named `amnezia-awg*` (not in docker-compose). Control-plane discovers them and stores each as a row in `servers`.
-- **CLI**: `./manage.sh node-sync` — discover running containers and sync to DB; `./manage.sh node-list` — list all (id, name, region, status, health_score, draining, api_endpoint); `./manage.sh node-check <server_id>` — health, latency, peer count for one node.
-- **API** (authenticated): `GET /api/v1/cluster/topology`, `GET /api/v1/cluster/nodes` (optional `?status=healthy`), `GET /api/v1/cluster/health`.
-- **Admin UI**: Servers page lists AmneziaWG nodes with status. Ensure `NODE_MODE=real` and admin-api has access to Docker socket for discovery and peer ops.
+- **What they are:** Servers are rows in Postgres; in Docker discovery mode they map to AmneziaWG containers; in agent mode they are registered by node-agent (heartbeat).
+- **CLI:** `./manage.sh server:verify <server_id>`, `./manage.sh server:sync <server_id>`, `./manage.sh server:drift <server_id>`, `./manage.sh server:reconcile <server_id>`. See README and [docs/ops/runbook.md](../../docs/ops/runbook.md).
+- **API:** e.g. `GET /api/v1/servers`, `GET /api/v1/cluster/topology`, cluster health — see OpenAPI `openapi/openapi.yaml`.
+- **Admin UI:** Servers page lists servers and status. Agent mode: no Docker socket on control-plane; node-agent on each host.
 
-## Server sync (snapshot from node)
+## Server sync (key / snapshot from node)
 
-- **Manual sync**: `POST /api/v1/servers/{server_id}/sync` with body `{ "mode": "manual" }` (RBAC: servers:write). Returns `request_id` and `job_id`. Sync fetches peers/health from node, writes `server_snapshots`, updates `Server` (status, health_score, last_snapshot_at). On failure returns 502 with request_id.
-- **Job status**: `GET /api/v1/servers/{server_id}/sync/{job_id}` returns status (pending|running|completed|failed), started_at, finished_at, error. All syncs are audited with request_id.
-- **Auto-sync**: Backend loop runs when `SERVER_SYNC_INTERVAL_SECONDS` > 0 (default 60); jitter 0–15s; max concurrency `SERVER_SYNC_MAX_CONCURRENT` (5); per-server exponential backoff on failure (cap `SERVER_SYNC_BACKOFF_MAX_SECONDS`). Metrics: `vpn_server_sync_total`, `vpn_server_sync_latency_seconds`, `vpn_server_snapshot_staleness_seconds`. See `docs/admin-servers-operator-console-design.md` for full plan.
+- **CLI:** `./manage.sh server:sync <server_id>` — syncs server key and optionally snapshot from node to DB. Required before issue/reissue if server was never synced (avoids 409 SERVER_NOT_SYNCED).
+- **API:** `POST /api/v1/servers/{server_id}/sync` (if implemented) and job status endpoints; see OpenAPI. Backend may run auto-sync when enabled; metrics and intervals in backend config and [docs/observability/](../../docs/observability/).
 
 ## Bandwidth monitoring (bandwhich)
 

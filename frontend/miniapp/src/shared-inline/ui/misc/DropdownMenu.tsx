@@ -113,10 +113,8 @@ export function DropdownMenu({
       className="dropdown-menu-list"
       style={positionStyle}
     >
-      {items.map((item, index) => (
-        <button
-          key={item.id}
-          type="button"
+      {items.map((item, index) => ( // key=
+        <button key={item.id} type="button"
           role="menuitem"
           disabled={item.disabled}
           className={cn("dropdown-menu-item", "btn", "btn-ghost", "btn-sm")}

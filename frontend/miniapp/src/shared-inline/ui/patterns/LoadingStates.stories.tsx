@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { LoadingSkeleton, SkeletonLine, SkeletonCard, Spinner, TableSkeleton } from "@vpn-suite/shared/ui";
 
 const meta: Meta<typeof LoadingSkeleton> = {
-  title: "Patterns/LoadingStates",
+  title: "Shared/Patterns/LoadingStates",
   component: LoadingSkeleton,
   parameters: {
     docs: {
@@ -17,7 +17,7 @@ export default meta;
 
 type Story = StoryObj<typeof LoadingSkeleton>;
 
-export const Overview: Story = {
+export const LoadingStatesOverview: Story = {
   render: () => (
     <div className="sb-stack">
       <div className="sb-row">
@@ -30,7 +30,7 @@ export const Overview: Story = {
   ),
 };
 
-export const Variants: Story = {
+export const LoadingStatesVariants: Story = {
   render: () => (
     <div className="sb-stack">
       <SkeletonLine width="var(--spacing-40)" />
@@ -40,7 +40,7 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
+export const LoadingStatesSizes: Story = {
   render: () => (
     <div className="sb-stack">
       <p className="m-0">Size variants are not exposed; use tokenized widths/heights.</p>
@@ -49,7 +49,7 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const LoadingStatesStates: Story = {
   render: () => (
     <div className="sb-stack">
       <Spinner size="sm" />
@@ -58,11 +58,11 @@ export const States: Story = {
   ),
 };
 
-export const Table: Story = {
+export const LoadingStatesTable: Story = {
   render: () => <TableSkeleton rows={4} columns={5} />, 
 };
 
-export const WithLongText: Story = {
+export const LoadingStatesWithLongText: Story = {
   render: () => (
     <div className="sb-row">
       <Spinner size="sm" />
@@ -71,7 +71,7 @@ export const WithLongText: Story = {
   ),
 };
 
-export const DarkMode: Story = {
+export const LoadingStatesDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   render: () => (
     <div className="sb-stack">
@@ -81,7 +81,7 @@ export const DarkMode: Story = {
   ),
 };
 
-export const Accessibility: Story = {
+export const LoadingStatesAccessibility: Story = {
   render: () => (
     <div className="sb-stack">
       <Spinner size="sm" />
@@ -90,4 +90,4 @@ export const Accessibility: Story = {
   ),
 };
 
-export const EdgeCases = WithLongText;
+export const LoadingStatesEdgeCases = WithLongText;

@@ -8,7 +8,7 @@ const options = [
 ];
 
 const meta: Meta<typeof Select> = {
-  title: "Primitives/Select",
+  title: "Shared/Primitives/Select",
   component: Select,
   parameters: {
     docs: {
@@ -29,7 +29,7 @@ export default meta;
 
 type Story = StoryObj<typeof Select>;
 
-export const Overview: Story = {
+export const SelectOverview: Story = {
   args: {
     options,
     value: "b",
@@ -38,7 +38,7 @@ export const Overview: Story = {
   },
 };
 
-export const Variants: Story = {
+export const SelectVariants: Story = {
   render: () => (
     <div className="sb-stack">
       <Select options={options} value="a" onChange={() => {}} label="Default" />
@@ -47,7 +47,7 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
+export const SelectSizes: Story = {
   render: () => (
     <div className="sb-stack">
       <p className="m-0">Size variants are not exposed; use tokens for density.</p>
@@ -56,7 +56,7 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const SelectStates: Story = {
   render: () => (
     <div className="sb-stack">
       <Select options={options} value="a" onChange={() => {}} label="Default" />
@@ -67,21 +67,21 @@ export const States: Story = {
 };
 
 /** Error state: validation error */
-export const Error: Story = {
+export const SelectError: Story = {
   args: { options, value: "", onChange: () => {}, label: "Region", error: "Please select a region" },
 };
 
 /** Empty state: no options available */
-export const Empty: Story = {
+export const SelectEmpty: Story = {
   args: { options: [], value: "", onChange: () => {}, label: "No options" },
 };
 
 /** Loading simulation: disabled while fetching options */
-export const Loading: Story = {
+export const SelectLoading: Story = {
   args: { options: [{ value: "", label: "Loading..." }], value: "", onChange: () => {}, label: "Region", disabled: true },
 };
 
-export const WithLongText: Story = {
+export const SelectWithLongText: Story = {
   args: {
     options: [
       { value: "long", label: "Long option label that should wrap on small screens" },
@@ -93,7 +93,7 @@ export const WithLongText: Story = {
   },
 };
 
-export const Accessibility: Story = {
+export const SelectAccessibility: Story = {
   args: {
     options,
     value: "c",
@@ -102,9 +102,9 @@ export const Accessibility: Story = {
   },
 };
 
-export const DarkMode: Story = {
+export const SelectDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   args: { options, value: "b", onChange: () => {}, label: "Choose option" },
 };
 
-export const EdgeCases = WithLongText;
+export const SelectEdgeCases = WithLongText;

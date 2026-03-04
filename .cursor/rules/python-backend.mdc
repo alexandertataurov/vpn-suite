@@ -1,0 +1,29 @@
+---
+description: Python backend standards — type hints, FastAPI, Alembic, SQLAlchemy async, vulture, pip-audit. CI enforces ruff, pytest, alembic.
+globs: ["backend/**/*.py", "**/alembic/**"]
+alwaysApply: false
+---
+
+# Python / Backend rules
+
+**Project context**: Backend is Python 3.12, FastAPI, SQLAlchemy async, Alembic, Redis, PostgreSQL. Bot is Python 3.12 + aiogram. Use the **backend-engineer** skill/agent for backend-only changes.
+
+- **Type annotations**: All new functions and methods must have mypy-compatible type annotations (parameters and return type). Do not use `Any` unless explicitly commented with a reason.
+  - Wrong: `def fetch_user(id): return session.query(User).get(id)`
+  - Right: `def fetch_user(session: AsyncSession, id: int) -> User | None: ...`
+
+- **FastAPI + OpenAPI**: When you add or change FastAPI route handlers, run the OpenAPI export and update the committed spec. After adding routes, run `python scripts/export_openapi.py` from `backend/` (or `(cd backend && python3 scripts/export_openapi.py)` from repo root). Commit changes to `openapi/openapi.json` and optionally `openapi/openapi.yaml`.
+
+- **Alembic**: New Alembic migrations must be followed by `alembic check` (from `backend/`) to confirm no un-generated schema changes remain. Do not hand-edit migration files to fix schema drift; create a new revision instead.
+
+- **SQLAlchemy**: Use the async session pattern only. Use `async with session` / `await session.execute(select(...))`. Forbidden: synchronous `session.query()`.
+  - Wrong: `session.query(User).filter(User.id == id).first()`
+  - Right: `(await session.execute(select(User).where(User.id == id))).scalar_one_or_none()`
+
+- **Vulture-clean**: Do not leave unused functions, variables, or imports. Remove them rather than commenting out.
+
+- **pip-audit**: Do not add new dependencies to `requirements.txt` (or requirements-dev) without checking for known CVEs first (e.g. run `pip-audit`).
+
+- **Migrations**: Every new migration must include both `upgrade()` and `downgrade()`. A bare `pass` in `downgrade()` is not acceptable without a comment explaining irreversibility (e.g. data loss).
+
+CI already runs: ruff lint + format, pytest, alembic upgrade + check, pip-audit. These rules guide AI behavior; run `backend:check` locally for the same suite.

@@ -5,7 +5,7 @@ import { StoryStack, NarrowFrame } from "../../storybook/wrappers";
 import { storyText } from "../../storybook/fixtures";
 
 const meta: Meta<typeof TableCell> = {
-  title: "Primitives/TableCell",
+  title: "Shared/Primitives/TableCell",
   component: TableCell,
   argTypes: {
     align: { control: "select", options: ["left", "center", "right"] },
@@ -19,7 +19,7 @@ export default meta;
 
 type Story = StoryObj<typeof TableCell>;
 
-export const Overview: Story = {
+export const TableCellOverview: Story = {
   render: () => (
     <table className="ds-table">
       <tbody>
@@ -34,7 +34,7 @@ export const Overview: Story = {
   ),
 };
 
-export const Variants: Story = {
+export const TableCellVariants: Story = {
   render: () => (
     <table className="ds-table">
       <tbody>
@@ -52,7 +52,7 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
+export const TableCellSizes: Story = {
   render: () => (
     <StoryStack>
       <table className="ds-table">
@@ -73,7 +73,7 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const TableCellStates: Story = {
   render: () => (
     <table className="ds-table">
       <tbody>
@@ -86,7 +86,7 @@ export const States: Story = {
   ),
 };
 
-export const EdgeCases: Story = {
+export const TableCellEdgeCases: Story = {
   render: () => (
     <StoryStack>
       <table className="ds-table">
@@ -109,7 +109,7 @@ export const EdgeCases: Story = {
   ),
 };
 
-export const DarkMode: Story = {
+export const TableCellDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   render: () => (
     <table className="ds-table">
@@ -122,7 +122,7 @@ export const DarkMode: Story = {
   ),
 };
 
-export const Accessibility: Story = {
+export const TableCellAccessibility: Story = {
   render: () => (
     <table className="ds-table" aria-label="Table cell demo">
       <tbody>

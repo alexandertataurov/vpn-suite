@@ -132,7 +132,11 @@ flowchart LR
 - Prefer **drawer/panel** for detail when opened from list; **full page** for direct link.
 - **Escape** closes overlay/drawer/modal; **⌘K** opens command palette.
 
+## Orbital-grade theme
+
+Mission-critical control interfaces (HUD-style): readability over decoration, status at a glance, 2px left accent for selection, token-driven. Set via `html[data-theme="orbital"]` in tokens.css. Spec: surface `--color-surface` #111111, row hover `--color-overlay` #1A1A1A, selection bar `--color-accent` #1E6FFF, `--radius-sm` 2px. Status table: row height 42px, monospace for IDs/values, Badge for status (online/degraded/offline), MiniSparkline for latency. See design-system primitives and `StatusTable.css`.
+
 ## Reference
 
 - Live tokens and components: Admin app → **Settings → Style guide**.
-- Token source: `frontend/shared/src/theme/tokens.css`.
+- Token source: `frontend/admin/src/design-system/tokens.css` (admin); miniapp: `frontend/miniapp/src/shared-inline/theme/tokens.css`.

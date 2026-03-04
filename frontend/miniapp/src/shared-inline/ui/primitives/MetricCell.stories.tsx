@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { MetricCell } from "./MetricCell";
 
 const meta: Meta<typeof MetricCell> = {
-  title: "Primitives/MetricCell",
+  title: "Shared/Primitives/MetricCell",
   component: MetricCell,
   parameters: {
     docs: {
@@ -23,7 +23,7 @@ export default meta;
 
 type Story = StoryObj<typeof MetricCell>;
 
-export const Overview: Story = {
+export const MetricCellOverview: Story = {
   render: () => (
     <table className="ds-table" aria-label="Metric cell example">
       <thead>
@@ -42,7 +42,7 @@ export const Overview: Story = {
   ),
 };
 
-export const Variants: Story = {
+export const MetricCellVariants: Story = {
   render: () => (
     <table className="ds-table" aria-label="Metric cell variants">
       <thead>
@@ -65,7 +65,7 @@ export const Variants: Story = {
   ),
 };
 
-export const Sizes: Story = {
+export const MetricCellSizes: Story = {
   render: () => (
     <div className="sb-stack">
       <p className="m-0">Size variants are not exposed; uses table typography tokens.</p>
@@ -81,7 +81,7 @@ export const Sizes: Story = {
   ),
 };
 
-export const States: Story = {
+export const MetricCellStates: Story = {
   render: () => (
     <table className="ds-table" aria-label="Metric cell states">
       <tbody>
@@ -94,7 +94,7 @@ export const States: Story = {
   ),
 };
 
-export const WithLongText: Story = {
+export const MetricCellWithLongText: Story = {
   render: () => (
     <table className="ds-table" aria-label="Metric cell long text">
       <tbody>
@@ -107,7 +107,7 @@ export const WithLongText: Story = {
   ),
 };
 
-export const Accessibility: Story = {
+export const MetricCellAccessibility: Story = {
   render: () => (
     <table className="ds-table" aria-label="Metric cell accessible">
       <thead>
@@ -126,7 +126,7 @@ export const Accessibility: Story = {
   ),
 };
 
-export const DarkMode: Story = {
+export const MetricCellDarkMode: Story = {
   parameters: { themes: { themeOverride: "dark" } },
   render: () => (
     <table className="ds-table" aria-label="Metric cell dark">
@@ -140,4 +140,4 @@ export const DarkMode: Story = {
   ),
 };
 
-export const EdgeCases = WithLongText;
+export const MetricCellEdgeCases = WithLongText;

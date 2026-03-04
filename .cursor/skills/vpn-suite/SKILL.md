@@ -1,19 +1,22 @@
 ---
-name: project-ops-suite
+name: vpn-suite
 description: Understand, operate, and evolve a unified production system built with Docker Compose (control-plane services + optional external nodes + monitoring). Use when editing core project files, managing deployment, architecture, telemetry, healthchecks, API integrations, rollout, rollback, or troubleshooting across services.
 ---
 
-# Project Operations Suite
+# VPN Suite (AmneziaWG control plane + Telegram sales gateway)
 
 ## When to use this skill
 
 * Editing any file in the main project root
 * Working with:
 
-  * `docker-compose.yml`
+  * `docker-compose.yml`, `docker-compose.observability.yml`
   * `manage.sh`
-  * `services/`
-  * `monitoring/`
+  * `backend/` (admin-api FastAPI)
+  * `frontend/admin/`, `frontend/miniapp/`
+  * `bot/` (Telegram, aiogram)
+  * `node-agent/`
+  * `config/` (caddy, monitoring, redis)
   * backend APIs
   * admin UI
 * Questions about:
@@ -135,33 +138,40 @@ Before migrations or rollouts:
 
 # Standard Stack Model
 
-## Typical Core Services
+## Core Services (VPN Suite)
 
-| Component     | Role                 |
-| ------------- | -------------------- |
-| api-service   | Main backend API     |
-| database      | Primary data store   |
-| cache         | Redis or equivalent  |
-| reverse-proxy | HTTPS entry          |
-| worker        | Background jobs      |
-| monitoring    | Metrics + dashboards |
+| Component     | Role                                      |
+| ------------- | ----------------------------------------- |
+| admin-api     | FastAPI control-plane API (backend/)      |
+| postgres      | Primary data store                        |
+| redis         | FSM, rate limit, queues, ephemeral state  |
+| reverse-proxy | Caddy TLS + static frontends (docker/reverse-proxy/) |
+| telegram-vpn-bot | Sales gateway, payments (bot/)        |
+| node-agent    | Optional; per-node reconciler (node-agent/) |
+| monitoring    | Optional profile: Prometheus, Loki, Grafana, etc. (config/monitoring/) |
 
 ---
 
 # Operational Interface
 
-Use `manage.sh` (or equivalent wrapper) as the **single operational interface**.
+Use `manage.sh` as the **single operational interface**. Key commands (see README.md):
 
-Examples:
-
-* `config` – validate and render configuration
-* `build` – build images
-* `up-core` – start core services
-* `down-core` – stop core services
-* `logs <service>` – follow logs
-* `migrate` – run DB migrations
-* `backup` – snapshot persistent data
-* `rollback` – revert to last stable state
+* `config` / `config-validate` – validate and render configuration
+* `build` / `build-admin` / `build-webapp` – build images
+* `up-core` – start admin-api, postgres, redis, reverse-proxy, bot
+* `up-monitoring` – Prometheus, Loki, Grafana, etc. (profile monitoring)
+* `bootstrap` – core + migrate + seed + seed-agent-server + node-agent (agent mode)
+* `up-agent` – start node-agent (profile agent)
+* `migrate` – run DB migrations; `seed` / `seed-agent-server` – seed data
+* `server:verify` / `server:sync` / `server:reconcile` / `server:drift` – server ops
+* `device:reissue` – reissue device config
+* `check` – quality gate (ruff, pytest, frontend lint/typecheck/test/build)
+* `verify` – full gate (migrate integrity, config-validate)
+* `smoke-staging` – end-to-end validation
+* `backup-db` – Postgres backup to backups/postgres/
+* `openapi` – export OpenAPI to openapi/openapi.yaml
+* `support-bundle` – collect logs, manifest for support
+* `ps` / `logs` – compose status and logs
 
 Raw docker commands should not be default operational advice.
 
