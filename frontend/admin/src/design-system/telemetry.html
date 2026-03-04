@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VPN Vega — Telemetry</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #080c10;
+    --surface:   #0d1117;
+    --surface2:  #111920;
+    --border:    #1c2a35;
+    --border2:   #243040;
+    --text:      #c8d8e8;
+    --muted:     #4a6070;
+    --dim:       #2a3a48;
+
+    --green:     #00e5a0;
+    --green-dim: #00e5a018;
+    --amber:     #f5a623;
+    --amber-dim: #f5a62318;
+    --red:       #ff4757;
+    --red-dim:   #ff475718;
+    --blue:      #38b6ff;
+    --blue-dim:  #38b6ff14;
+    --cyan:      #00d4ff;
+
+    --font-mono: 'IBM Plex Mono', monospace;
+    --font-sans: 'IBM Plex Sans', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  /* ── Layout ── */
+  .layout { display: flex; min-height: 100vh; }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: 200px;
+    min-width: 200px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+
+  .sidebar-logo {
+    padding: 20px 18px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .sidebar-logo .icon {
+    width: 28px; height: 28px;
+    background: var(--green-dim);
+    border: 1px solid var(--green);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--green);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .sidebar-logo .brand {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--text);
+    line-height: 1.2;
+  }
+  .sidebar-logo .sub { color: var(--muted); font-weight: 300; font-size: 10px; }
+
+  .sidebar-section { padding: 14px 0 4px; }
+  .sidebar-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+    padding: 0 18px 6px;
+    text-transform: uppercase;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 7px 18px;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 12.5px;
+    transition: all 0.15s;
+    border-left: 2px solid transparent;
+    text-decoration: none;
+  }
+  .nav-item:hover { color: var(--text); background: var(--surface2); }
+  .nav-item.active {
+    color: var(--green);
+    border-left-color: var(--green);
+    background: var(--green-dim);
+  }
+  .nav-item svg { opacity: 0.7; flex-shrink: 0; }
+  .nav-item.active svg { opacity: 1; }
+
+  .sidebar-bottom {
+    margin-top: auto;
+    border-top: 1px solid var(--border);
+    padding: 12px 0;
+  }
+
+  /* ── Main ── */
+  .main { flex: 1; overflow-x: hidden; }
+
+  /* ── Topbar ── */
+  .topbar {
+    height: 52px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .topbar-title {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    letter-spacing: 0.04em;
+  }
+  .topbar-breadcrumb { color: var(--muted); font-size: 12px; }
+  .topbar-breadcrumb span { color: var(--muted); }
+  .topbar-breadcrumb .sep { margin: 0 6px; opacity: 0.4; }
+  .topbar-spacer { flex: 1; }
+  .topbar-pill {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--green-dim);
+    border: 1px solid var(--green);
+    border-radius: 20px;
+    padding: 3px 10px 3px 7px;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--green);
+    font-weight: 500;
+  }
+  .pulse {
+    width: 6px; height: 6px;
+    background: var(--green);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.7); }
+  }
+  .topbar-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    padding: 5px 10px;
+    color: var(--muted);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: var(--font-mono);
+    letter-spacing: 0.04em;
+  }
+  .topbar-btn:hover { color: var(--text); border-color: var(--border2); background: var(--dim); }
+
+  /* ── Content ── */
+  .content { padding: 24px; }
+
+  /* ── Hero KPIs ── */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .kpi-card:hover { border-color: var(--border2); }
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    border-radius: 8px 8px 0 0;
+  }
+  .kpi-card.green::before { background: var(--green); }
+  .kpi-card.amber::before { background: var(--amber); }
+  .kpi-card.blue::before  { background: var(--blue); }
+  .kpi-card.red::before   { background: var(--red); }
+  .kpi-card.cyan::before  { background: var(--cyan); }
+
+  .kpi-label {
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  .kpi-value {
+    font-family: var(--font-mono);
+    font-size: 22px;
+    font-weight: 600;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .kpi-card.green .kpi-value { color: var(--green); }
+  .kpi-card.amber .kpi-value { color: var(--amber); }
+  .kpi-card.blue  .kpi-value { color: var(--blue); }
+  .kpi-card.red   .kpi-value { color: var(--red); }
+  .kpi-card.cyan  .kpi-value { color: var(--cyan); }
+  .kpi-card.neutral .kpi-value { color: var(--text); }
+
+  .kpi-sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .kpi-sub .good { color: var(--green); }
+  .kpi-sub .warn { color: var(--amber); }
+
+  /* ── Section ── */
+  .section { margin-bottom: 28px; }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .section-title {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+  .section-line {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  .section-count {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 7px;
+  }
+
+  /* ── Table ── */
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  thead tr {
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+  th {
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 9px 14px;
+    text-align: left;
+    white-space: nowrap;
+    font-weight: 500;
+  }
+  td {
+    padding: 9px 14px;
+    font-size: 12px;
+    color: var(--text);
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: var(--surface2); }
+
+  /* Mono cells */
+  .mono { font-family: var(--font-mono); font-size: 11px; }
+  .dim  { color: var(--muted); }
+  .url  { color: var(--blue); font-family: var(--font-mono); font-size: 11px; max-width: 240px; overflow: hidden; text-overflow: ellipsis; }
+
+  /* ── Badges ── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.04em;
+  }
+  .badge-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .badge.up    { background: var(--green-dim); color: var(--green);  border: 1px solid #00e5a030; }
+  .badge.down  { background: var(--red-dim);   color: var(--red);    border: 1px solid #ff475730; }
+  .badge.warn  { background: var(--amber-dim); color: var(--amber);  border: 1px solid #f5a62330; }
+  .badge.info  { background: var(--blue-dim);  color: var(--blue);   border: 1px solid #38b6ff25; }
+  .badge.idle  { background: #1a2535;          color: var(--muted);  border: 1px solid var(--border); }
+
+  .badge.up   .badge-dot { background: var(--green); }
+  .badge.down .badge-dot { background: var(--red); animation: pulse 1.5s ease-in-out infinite; }
+  .badge.warn .badge-dot { background: var(--amber); }
+  .badge.info .badge-dot { background: var(--blue); }
+  .badge.idle .badge-dot { background: var(--muted); }
+
+  /* ── Action button ── */
+  .action-btn {
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    letter-spacing: 0.06em;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+    text-transform: uppercase;
+  }
+  .action-btn.restart {
+    background: var(--red-dim);
+    color: var(--red);
+    border: 1px solid #ff475730;
+  }
+  .action-btn.restart:hover { background: #ff475730; }
+  .action-btn.sync {
+    background: var(--blue-dim);
+    color: var(--blue);
+    border: 1px solid #38b6ff25;
+  }
+  .action-btn.sync:hover { background: #38b6ff25; }
+
+  /* ── Alert severity ── */
+  .sev { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 4px; }
+  .sev.critical { background: var(--red); }
+  .sev.warning  { background: var(--amber); }
+  .sev.info     { background: var(--blue); }
+
+  /* ── Docker sections ── */
+  .docker-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  /* ── Node summary row ── */
+  .node-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .node-row:last-child { border-bottom: none; }
+  .node-name { font-family: var(--font-mono); font-size: 12px; min-width: 130px; }
+  .node-meta { color: var(--muted); font-size: 11.5px; flex: 1; }
+  .stat-chip {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text);
+    padding: 2px 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    min-width: 72px;
+    text-align: center;
+  }
+
+  /* ── Sparkbar ── */
+  .sparkbar {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 20px;
+  }
+  .sparkbar span {
+    width: 3px;
+    background: var(--green);
+    border-radius: 1px;
+    opacity: 0.7;
+    animation: growBar 0.6s ease-out both;
+  }
+  @keyframes growBar {
+    from { transform: scaleY(0); transform-origin: bottom; }
+    to   { transform: scaleY(1); }
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 1200px) {
+    .kpi-grid { grid-template-columns: repeat(3, 1fr); }
+    .docker-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ── Fade in ── */
+  .section, .kpi-grid {
+    animation: fadeUp 0.4s ease-out both;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .section:nth-child(2) { animation-delay: 0.05s; }
+  .section:nth-child(3) { animation-delay: 0.1s; }
+  .section:nth-child(4) { animation-delay: 0.15s; }
+  .section:nth-child(5) { animation-delay: 0.2s; }
+  .section:nth-child(6) { animation-delay: 0.25s; }
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <div class="icon">VG</div>
+      <div class="brand">VPN VEGA<div class="sub">SYS / ADMIN</div></div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Monitor</div>
+      <a class="nav-item" href="#">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Overview
+      </a>
+      <a class="nav-item active" href="#">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Telemetry
+      </a>
+      <a class="nav-item" href="#">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Nodes
+      </a>
+      <a class="nav-item" href="#">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+        Services
+      </a>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Manage</div>
+      <a class="nav-item" href="#">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+        Docker
+      </a>
+      <a class="nav-item" href="#">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Logs
+      </a>
+      <a class="nav-item" href="#">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        Subnets
+      </a>
+      <a class="nav-item" href="#">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+        Revenue
+      </a>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">System</div>
+      <a class="nav-item" href="#">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Settings
+      </a>
+      <a class="nav-item" href="#">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        Billing
+      </a>
+    </div>
+
+    <div class="sidebar-bottom">
+      <div class="nav-item">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg>
+        <span style="font-size:12px; color: var(--muted)">admin</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main -->
+  <div class="main">
+    <!-- Topbar -->
+    <div class="topbar">
+      <div class="topbar-breadcrumb">
+        <span>Console</span><span class="sep">/</span><span style="color:var(--text)">Telemetry</span>
+      </div>
+      <div class="topbar-spacer"></div>
+      <div class="topbar-pill"><div class="pulse"></div>Live</div>
+      <button class="topbar-btn">Settings</button>
+      <button class="topbar-btn">Sign Out</button>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+
+      <!-- KPI Cards -->
+      <div class="kpi-grid">
+        <div class="kpi-card green">
+          <div class="kpi-label">Nodes Online</div>
+          <div class="kpi-value">0/1</div>
+          <div class="kpi-sub"><span class="warn">1 migrated · 0 live</span></div>
+        </div>
+        <div class="kpi-card amber">
+          <div class="kpi-label">Services Healthy</div>
+          <div class="kpi-value">0/32</div>
+          <div class="kpi-sub"><span class="warn">0 stale · 0 down</span></div>
+        </div>
+        <div class="kpi-card neutral">
+          <div class="kpi-label">Instances</div>
+          <div class="kpi-value">5</div>
+          <div class="kpi-sub dim">containers active</div>
+        </div>
+        <div class="kpi-card blue">
+          <div class="kpi-label">Latency</div>
+          <div class="kpi-value">11<span style="font-size:13px;font-weight:300"> ms</span></div>
+          <div class="kpi-sub"><span class="good">▼ nominal</span></div>
+        </div>
+        <div class="kpi-card cyan">
+          <div class="kpi-label">Throughput</div>
+          <div class="kpi-value">328<span style="font-size:13px;font-weight:300"> Mbps</span></div>
+          <div class="kpi-sub dim">outbound</div>
+        </div>
+        <div class="kpi-card neutral">
+          <div class="kpi-label">CPU / RAM</div>
+          <div class="kpi-value">3.4<span style="font-size:13px;font-weight:300">%</span></div>
+          <div class="kpi-sub dim">9.1% mem · 141 kbps in</div>
+        </div>
+      </div>
+
+      <!-- Node Info -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">Nodes — IPv4, RAM, TinCTL</div>
+          <div class="section-line"></div>
+          <div class="section-count">1 node</div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th><th>Region</th><th>IP</th><th>App</th>
+                <th>Check Interval</th><th>Status</th><th>Forwarder</th><th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">annulia.veg</td>
+                <td class="dim">direct</td>
+                <td class="mono">0.4711.cde.MFN30B6A</td>
+                <td class="mono dim">0.128F5A70937780</td>
+                <td class="mono">62.9 GB</td>
+                <td><span class="badge up"><span class="badge-dot"></span>online</span></td>
+                <td><span class="badge info"><span class="badge-dot"></span>finish</span></td>
+                <td><button class="action-btn sync">SYNC</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Telemetry Services -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">Telemetry Services</div>
+          <div class="section-line"></div>
+          <div class="section-count">10 services</div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Service</th><th>Endpoint</th><th>Status</th><th>Last Score</th><th>Last Error</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">admin-api</td>
+                <td class="url">https://admin-api.9800.MRMTB/metrics</td>
+                <td><span class="badge up"><span class="badge-dot"></span>up</span></td>
+                <td class="mono dim">04.05.2026, 17:29:49</td>
+                <td class="dim">—</td>
+              </tr>
+              <tr>
+                <td class="mono">alertmanager</td>
+                <td class="url">https://alertmanager.PKRI/metrics</td>
+                <td><span class="badge up"><span class="badge-dot"></span>up</span></td>
+                <td class="mono dim">04.05.2026, 17:29:48</td>
+                <td class="dim">—</td>
+              </tr>
+              <tr>
+                <td class="mono">cortex</td>
+                <td class="url">https://dak6/cors/RDWD/metrics</td>
+                <td><span class="badge up"><span class="badge-dot"></span>up</span></td>
+                <td class="mono dim">04.05.2026, 17:29:48</td>
+                <td class="dim">—</td>
+              </tr>
+              <tr>
+                <td class="mono">link</td>
+                <td class="url">https://link.9398/metrics</td>
+                <td><span class="badge up"><span class="badge-dot"></span>up</span></td>
+                <td class="mono dim">04.05.2026, 17:29:42</td>
+                <td class="dim">—</td>
+              </tr>
+              <tr>
+                <td class="mono">node-agent</td>
+                <td class="url">https://node-agent.0180/metrics</td>
+                <td><span class="badge up"><span class="badge-dot"></span>up</span></td>
+                <td class="mono dim">04.05.2026, 17:29:50</td>
+                <td class="dim">—</td>
+              </tr>
+              <tr>
+                <td class="mono">node-exporter</td>
+                <td class="url">https://node-exporter.FROM/metrics</td>
+                <td><span class="badge up"><span class="badge-dot"></span>up</span></td>
+                <td class="mono dim">04.05.2026, 17:29:39</td>
+                <td class="dim">—</td>
+              </tr>
+              <tr>
+                <td class="mono">intel.collector</td>
+                <td class="url">https://intel.collector/A380/metrics</td>
+                <td><span class="badge up"><span class="badge-dot"></span>up</span></td>
+                <td class="mono dim">04.05.2026, 17:29:46</td>
+                <td class="dim">—</td>
+              </tr>
+              <tr>
+                <td class="mono">cortex[2]</td>
+                <td class="url">https://cortex2-VRM/metrics</td>
+                <td><span class="badge up"><span class="badge-dot"></span>up</span></td>
+                <td class="mono dim">04.05.2026, 17:29:39</td>
+                <td class="dim">—</td>
+              </tr>
+              <tr>
+                <td class="mono">telegrapher-svc</td>
+                <td class="url">https://telegrapher-ant-8080/metrics</td>
+                <td><span class="badge up"><span class="badge-dot"></span>up</span></td>
+                <td class="mono dim">04.05.2026, 17:29:50</td>
+                <td class="dim">—</td>
+              </tr>
+              <tr>
+                <td class="mono">token</td>
+                <td class="url">https://token.5398/metrics</td>
+                <td><span class="badge up"><span class="badge-dot"></span>up</span></td>
+                <td class="mono dim">04.05.2026, 17:29:01</td>
+                <td class="dim">—</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Docker Alerts + Other Containers (2 col) -->
+      <div class="docker-grid">
+
+        <!-- Alerts -->
+        <div class="section" style="margin-bottom:0">
+          <div class="section-header">
+            <div class="section-title">Docker — Alerts</div>
+            <div class="section-line"></div>
+            <div class="section-count" style="background: var(--red-dim); color: var(--red); border-color:#ff475730">6 critical</div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Alert</th><th>Severity</th><th>Container</th><th>Time</th><th>Action</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span class="sev critical"></span><span class="mono" style="font-size:11px">DockerContainerHealthy</span></td>
+                  <td><span class="badge down"><span class="badge-dot"></span>critical</span></td>
+                  <td class="mono dim" style="font-size:10px">local · proxy 1</td>
+                  <td class="mono dim" style="font-size:10px">04.01.2026</td>
+                  <td><button class="action-btn restart">RESTART</button></td>
+                </tr>
+                <tr>
+                  <td><span class="sev critical"></span><span class="mono" style="font-size:11px">DockerContainerHighMemory</span></td>
+                  <td><span class="badge warn"><span class="badge-dot"></span>warning</span></td>
+                  <td class="mono dim" style="font-size:10px">local · cortex-less: 4</td>
+                  <td class="mono dim" style="font-size:10px">04.01.2026</td>
+                  <td><button class="action-btn restart">RESTART</button></td>
+                </tr>
+                <tr>
+                  <td><span class="sev critical"></span><span class="mono" style="font-size:11px">DockerContainerHighMemory</span></td>
+                  <td><span class="badge warn"><span class="badge-dot"></span>warning</span></td>
+                  <td class="mono dim" style="font-size:10px">local · infra-tempo: 1</td>
+                  <td class="mono dim" style="font-size:10px">04.01.2026</td>
+                  <td><button class="action-btn restart">RESTART</button></td>
+                </tr>
+                <tr>
+                  <td><span class="sev critical"></span><span class="mono" style="font-size:11px">DockerContainerHealthy</span></td>
+                  <td><span class="badge down"><span class="badge-dot"></span>critical</span></td>
+                  <td class="mono dim" style="font-size:10px">local · cottn-cont-cvt</td>
+                  <td class="mono dim" style="font-size:10px">04.01.2026</td>
+                  <td><button class="action-btn restart">RESTART</button></td>
+                </tr>
+                <tr>
+                  <td><span class="sev critical"></span><span class="mono" style="font-size:11px">DockerContainerHealthy</span></td>
+                  <td><span class="badge down"><span class="badge-dot"></span>critical</span></td>
+                  <td class="mono dim" style="font-size:10px">local · cottn-cort-cot</td>
+                  <td class="mono dim" style="font-size:10px">04.01.2026</td>
+                  <td><button class="action-btn restart">RESTART</button></td>
+                </tr>
+                <tr>
+                  <td><span class="sev critical"></span><span class="mono" style="font-size:11px">DockerContainerHealthy</span></td>
+                  <td><span class="badge down"><span class="badge-dot"></span>critical</span></td>
+                  <td class="mono dim" style="font-size:10px">local · air-DmepuSlt$18</td>
+                  <td class="mono dim" style="font-size:10px">04.01.2026</td>
+                  <td><button class="action-btn restart">RESTART</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Other Containers -->
+        <div class="section" style="margin-bottom:0">
+          <div class="section-header">
+            <div class="section-title">Docker — Other Containers</div>
+            <div class="section-line"></div>
+            <div class="section-count">14 running</div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Name</th><th>Image</th><th>Status</th><th>Health</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="mono">cortex2</td>
+                  <td class="dim mono" style="font-size:10px;max-width:140px;overflow:hidden;text-overflow:ellipsis">dea6f1c70cb-c-d4v7e89…</td>
+                  <td><span class="badge up"><span class="badge-dot"></span>running</span></td>
+                  <td><span class="badge idle"><span class="badge-dot"></span>none</span></td>
+                </tr>
+                <tr>
+                  <td class="mono">cosmetic-rep</td>
+                  <td class="dim mono" style="font-size:10px">cosmetic-rep · integer</td>
+                  <td><span class="badge up"><span class="badge-dot"></span>running</span></td>
+                  <td><span class="badge up"><span class="badge-dot"></span>healthy</span></td>
+                </tr>
+                <tr>
+                  <td class="mono">Into_Alonteni</td>
+                  <td class="dim mono" style="font-size:10px">Into_Alonteni · label</td>
+                  <td><span class="badge up"><span class="badge-dot"></span>running</span></td>
+                  <td><span class="badge idle"><span class="badge-dot"></span>none</span></td>
+                </tr>
+                <tr>
+                  <td class="mono">seminar.signer</td>
+                  <td class="dim mono" style="font-size:10px">seminar signer · integer</td>
+                  <td><span class="badge up"><span class="badge-dot"></span>running</span></td>
+                  <td><span class="badge idle"><span class="badge-dot"></span>none</span></td>
+                </tr>
+                <tr>
+                  <td class="mono">monoAlign_Jonfent</td>
+                  <td class="dim mono" style="font-size:10px">monoAlign_Jonfent · label</td>
+                  <td><span class="badge up"><span class="badge-dot"></span>running</span></td>
+                  <td><span class="badge idle"><span class="badge-dot"></span>none</span></td>
+                </tr>
+                <tr>
+                  <td class="mono">admir-Koplery</td>
+                  <td class="dim mono" style="font-size:10px;max-width:140px;overflow:hidden;text-overflow:ellipsis">tob-vyt1b-bthm-…</td>
+                  <td><span class="badge warn"><span class="badge-dot"></span>nothing</span></td>
+                  <td><span class="badge idle"><span class="badge-dot"></span>none</span></td>
+                </tr>
+                <tr>
+                  <td class="mono">contonar</td>
+                  <td class="dim mono" style="font-size:10px;max-width:140px;overflow:hidden;text-overflow:ellipsis">tob-vetr7-atrb7-…</td>
+                  <td><span class="badge up"><span class="badge-dot"></span>running</span></td>
+                  <td><span class="badge up"><span class="badge-dot"></span>healthy</span></td>
+                </tr>
+                <tr>
+                  <td class="mono">colis</td>
+                  <td class="dim mono" style="font-size:10px;max-width:140px;overflow:hidden;text-overflow:ellipsis">dpkm-9sLSd-dk43De…</td>
+                  <td><span class="badge up"><span class="badge-dot"></span>running</span></td>
+                  <td><span class="badge up"><span class="badge-dot"></span>healthy</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Control Plane -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">Docker — Control Plane Services</div>
+          <div class="section-line"></div>
+          <div class="section-count">5 services</div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Container</th><th>Ports</th><th>Image</th><th>State</th><th>Health</th><th>CPU</th><th>RAM</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">admin-api</td>
+                <td class="mono dim">nuffla · Adaio</td>
+                <td class="dim mono" style="font-size:10px">latest</td>
+                <td><span class="badge up"><span class="badge-dot"></span>running</span></td>
+                <td><span class="badge up"><span class="badge-dot"></span>healthy</span></td>
+                <td class="mono dim">6.98</td>
+                <td class="mono dim">56.88</td>
+              </tr>
+              <tr>
+                <td class="mono">admir-api</td>
+                <td class="mono dim">vps · Adaio</td>
+                <td class="dim mono" style="font-size:10px">net 4</td>
+                <td><span class="badge up"><span class="badge-dot"></span>running</span></td>
+                <td><span class="badge up"><span class="badge-dot"></span>healthy</span></td>
+                <td class="mono dim">5.08</td>
+                <td class="mono dim">30.88</td>
+              </tr>
+              <tr>
+                <td class="mono">alertmanager</td>
+                <td class="mono dim">vps · sports · porter</td>
+                <td class="dim mono" style="font-size:10px;max-width:180px;overflow:hidden;text-overflow:ellipsis">dpUm6aSstcs80sdrEm4sh8wr4…</td>
+                <td><span class="badge up"><span class="badge-dot"></span>running</span></td>
+                <td><span class="badge up"><span class="badge-dot"></span>healthy</span></td>
+                <td class="mono dim">0.28</td>
+                <td class="mono dim">0.76</td>
+              </tr>
+              <tr>
+                <td class="mono">process-praxo</td>
+                <td class="mono dim">vps · Adolo</td>
+                <td class="dim mono" style="font-size:10px">local</td>
+                <td><span class="badge up"><span class="badge-dot"></span>running</span></td>
+                <td><span class="badge idle"><span class="badge-dot"></span>none</span></td>
+                <td class="mono dim">0.18</td>
+                <td class="mono dim">7.48</td>
+              </tr>
+              <tr>
+                <td class="mono">telegraph-svc</td>
+                <td class="mono dim">vps · Adanio</td>
+                <td class="dim mono" style="font-size:10px">latest</td>
+                <td><span class="badge up"><span class="badge-dot"></span>running</span></td>
+                <td><span class="badge up"><span class="badge-dot"></span>healthy</span></td>
+                <td class="mono dim">6.08</td>
+                <td class="mono dim">32.38</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Monitoring & Telemetry -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">Docker — Monitoring & Telemetry</div>
+          <div class="section-line"></div>
+          <div class="section-count">9 services</div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Container</th><th>Ports</th><th>Image</th><th>State</th><th>Health</th><th>CPU</th><th>RAM</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">alertmanager-svc</td>
+                <td class="mono dim">vpr-nithe-alertm… : 5</td>
+                <td class="dim mono" style="font-size:10px">latest</td>
+                <td><span class="badge up"><span class="badge-dot"></span>running</span></td>
+                <td><span class="badge idle"><span class="badge-dot"></span>none</span></td>
+                <td class="mono dim">0.08</td>
+                <td class="dim">—</td>
+              </tr>
+              <tr>
+                <td class="mono">nethost</td>
+                <td class="mono dim">vpr-nitha · nethost: 5</td>
+                <td class="dim mono" style="font-size:10px">v0-92.9</td>
+                <td><span class="badge up"><span class="badge-dot"></span>running</span></td>
+                <td><span class="badge up"><span class="badge-dot"></span>healthy</span></td>
+                <td class="mono dim">4.08</td>
+                <td class="dim">—</td>
+              </tr>
+              <tr>
+                <td class="mono">grafana</td>
+                <td class="mono dim">vpr-nitha · grafana: 1</td>
+                <td class="dim mono" style="font-size:10px;max-width:180px;overflow:hidden;text-overflow:ellipsis">sha256:a11d5de097876a5de0dc18…</td>
+                <td><span class="badge up"><span class="badge-dot"></span>running</span></td>
+                <td><span class="badge idle"><span class="badge-dot"></span>none</span></td>
+                <td class="mono dim">0.18</td>
+                <td class="dim">—</td>
+              </tr>
+              <tr>
+                <td class="mono">loki</td>
+                <td class="mono dim">vpr-nitha · loki: 1</td>
+                <td class="dim mono" style="font-size:10px;max-width:180px;overflow:hidden;text-overflow:ellipsis">sha256:d8e1c4d2ab4c5e6f7a8b9c…</td>
+                <td><span class="badge up"><span class="badge-dot"></span>running</span></td>
+                <td><span class="badge idle"><span class="badge-dot"></span>none</span></td>
+                <td class="mono dim">0.38</td>
+                <td class="dim">—</td>
+              </tr>
+              <tr>
+                <td class="mono">new-exporter</td>
+                <td class="mono dim">vpr-nitha · exporter</td>
+                <td class="dim mono" style="font-size:10px;max-width:180px;overflow:hidden;text-overflow:ellipsis">sha256:d8e1c2d3ab4C5de7f8a9b…</td>
+                <td><span class="badge up"><span class="badge-dot"></span>running</span></td>
+                <td><span class="badge idle"><span class="badge-dot"></span>none</span></td>
+                <td class="mono dim">0.18</td>
+                <td class="dim">—</td>
+              </tr>
+              <tr>
+                <td class="mono">new-telemetry</td>
+                <td class="mono dim">vpr · cmd · exporter</td>
+                <td class="dim mono" style="font-size:10px">v0.39.0</td>
+                <td><span class="badge up"><span class="badge-dot"></span>running</span></td>
+                <td><span class="badge idle"><span class="badge-dot"></span>none</span></td>
+                <td class="mono dim">2.38</td>
+                <td class="dim">—</td>
+              </tr>
+              <tr>
+                <td class="mono">EvandPracy</td>
+                <td class="mono dim">vpr-nifha · instances: 1</td>
+                <td class="dim mono" style="font-size:10px;max-width:180px;overflow:hidden;text-overflow:ellipsis">sha256:4d8e1c4d2ab4c5e6f7a8…</td>
+                <td><span class="badge up"><span class="badge-dot"></span>running</span></td>
+                <td><span class="badge idle"><span class="badge-dot"></span>none</span></td>
+                <td class="mono dim">2.38</td>
+                <td class="dim">—</td>
+              </tr>
+              <tr>
+                <td class="mono">tempo</td>
+                <td class="mono dim">vpr-nitha · instances: 1</td>
+                <td class="dim mono" style="font-size:10px">v1.5.1</td>
+                <td><span class="badge up"><span class="badge-dot"></span>running</span></td>
+                <td><span class="badge idle"><span class="badge-dot"></span>none</span></td>
+                <td class="mono dim">9.38</td>
+                <td class="dim">—</td>
+              </tr>
+              <tr>
+                <td class="mono">rdistance</td>
+                <td class="mono dim">vpr-nitha · instances: 1</td>
+                <td class="dim mono" style="font-size:10px;max-width:180px;overflow:hidden;text-overflow:ellipsis">sha256:8b9c0d1e2f3a4b5c6d7e…</td>
+                <td><span class="badge up"><span class="badge-dot"></span>running</span></td>
+                <td><span class="badge idle"><span class="badge-dot"></span>none</span></td>
+                <td class="mono dim">2.38</td>
+                <td class="dim">—</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /layout -->
+</body>
+</html>

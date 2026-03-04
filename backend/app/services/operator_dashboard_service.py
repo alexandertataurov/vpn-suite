@@ -786,14 +786,6 @@ async def fetch_operator_dashboard(
         last_pt = timeseries_points[-1]
         if health_strip.get("peers_active") is None and last_pt.get("peers") is not None:
             health_strip["peers_active"] = int(last_pt["peers"])
-        # For the Peers chart, align the whole series with the current handshake-based
-        # active sessions value so the line does not oscillate between conflicting
-        # sources (Prometheus, snapshot, poller). This makes the chart a visual
-        # representation of \"connected peers now\" over the selected window.
-        peers_now = health_strip.get("peers_active")
-        if isinstance(peers_now, int):
-            for pt in timeseries_points:
-                pt["peers"] = peers_now
         if len(timeseries_points) >= 2:
             p1, p2 = timeseries_points[-2], timeseries_points[-1]
             dt = max(0.001, float(p2["ts"] - p1["ts"]))
