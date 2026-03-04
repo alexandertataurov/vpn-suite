@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-04T08:18:30.150763+00:00",
+  "timestamp": "2026-03-04T08:27:52.973400+00:00",
   "nodes": [
     {
       "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7",
@@ -181,9 +181,9 @@
       "created": "2026-03-04T08:12:02.830728348Z",
       "ports": [],
       "mounts": [
-        "/var/run/docker.sock",
         "/work/scripts",
-        "/work/.env"
+        "/work/.env",
+        "/var/run/docker.sock"
       ],
       "interface": null,
       "public_key": null
@@ -335,11 +335,11 @@
         }
       ],
       "mounts": [
+        "/etc/vpn-suite/node-id",
         "/app/secrets/agent_client_cert.pem",
         "/app/secrets/agent_client_key.pem",
         "/app/secrets/agent_ca.pem",
-        "/var/run/docker.sock",
-        "/etc/vpn-suite/node-id"
+        "/var/run/docker.sock"
       ],
       "interface": null,
       "public_key": null
@@ -599,11 +599,11 @@
         }
       ],
       "mounts": [
-        "/etc/caddy/Caddyfile",
         "/srv/root",
         "/srv/webapp",
         "/srv/admin",
-        "/data"
+        "/data",
+        "/etc/caddy/Caddyfile"
       ],
       "interface": null,
       "public_key": null
@@ -775,11 +775,11 @@
         }
       ],
       "mounts": [
-        "/dev/disk",
         "/rootfs",
         "/var/run",
         "/sys",
-        "/var/lib/docker"
+        "/var/lib/docker",
+        "/dev/disk"
       ],
       "interface": null,
       "public_key": null
@@ -813,12 +813,12 @@
         }
       ],
       "mounts": [
-        "/etc/prometheus/prometheus.yml",
-        "/etc/prometheus/alert_rules.yml",
-        "/etc/prometheus/alerts",
         "/etc/prometheus/recording_rules.yml",
         "/etc/prometheus/file_sd",
-        "/prometheus"
+        "/prometheus",
+        "/etc/prometheus/prometheus.yml",
+        "/etc/prometheus/alert_rules.yml",
+        "/etc/prometheus/alerts"
       ],
       "interface": null,
       "public_key": null

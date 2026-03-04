@@ -259,7 +259,7 @@ export function OverviewPage() {
   const peersNowFromSeries = timeseries.length ? timeseries[timeseries.length - 1]!.peers : null;
   const peersThen = timeseries.length ? timeseries[0]!.peers : null;
   const peersDelta = peersNowFromSeries != null && peersThen != null ? peersNowFromSeries - peersThen : null;
-  const peersCurrent = strip?.peers_active ?? peersNowFromSeries;
+  const peersCurrent = peersNowFromSeries ?? strip?.peers_active ?? data.sessions_active ?? null;
 
   const latencyNow = latencyTs.length ? latencyTs[latencyTs.length - 1]!.latency_ms : null;
   const latencyThen = latencyTs.length ? latencyTs[0]!.latency_ms : null;
@@ -478,7 +478,7 @@ export function OverviewPage() {
           className="edge eb cc"
         >
           {timeseries.length > 1 ? (
-            <OverviewPeersChart points={timeseries} currentPeers={strip?.peers_active ?? null} />
+            <OverviewPeersChart points={timeseries} currentPeers={peersCurrent} />
           ) : (
             <EmptyState message="No peers timeseries yet." />
           )}
