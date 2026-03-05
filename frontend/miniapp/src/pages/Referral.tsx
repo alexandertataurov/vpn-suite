@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import type {
   WebAppReferralMyLinkResponse,
   WebAppReferralStatsResponse,
-} from "@vpn-suite/shared/types";
+} from "@/lib/types";
 import {
   Panel,
   Button,
@@ -12,12 +12,9 @@ import {
   ProgressBar,
   Stat,
   useToast,
-  PageScaffold,
-  PageHeader,
+  PageFrame,
   PageSection,
   ActionRow,
-  Body,
-  Caption,
 } from "../ui";
 import { useQuery } from "@tanstack/react-query";
 import { useWebappToken, webappApi } from "../api/client";
@@ -93,21 +90,27 @@ export function ReferralPage() {
     refetchLink();
     refetchStats();
   }, [refetchLink, refetchStats]);
+  const pageTitle = "Referral Program";
+  const pageSubtitle = "Share your link and track rewards";
+  const backHomeLink = (
+    <Link to="/" className="link-interactive page-anchor-link">
+      Back
+    </Link>
+  );
 
   useTelegramMainButton(null);
 
   if (!hasToken) {
     return (
-      <PageScaffold>
+      <PageFrame title={pageTitle} subtitle={pageSubtitle}>
         <SessionMissing message="Your Telegram session is not active. Tap Reconnect to sign in again, or close and reopen the app from the bot to access referrals." />
-      </PageScaffold>
+      </PageFrame>
     );
   }
 
   if (linkError || statsError) {
     return (
-      <PageScaffold className="referral-page">
-        <PageHeader title="Invite friends" subtitle="Share your link and track rewards" />
+      <PageFrame title={pageTitle} subtitle={pageSubtitle}>
         <InlineAlert
           variant="error"
           title="Referrals temporarily unavailable"
@@ -117,20 +120,17 @@ export function ReferralPage() {
           <Button variant="secondary" size="sm" onClick={handleRetry}>
             Try again
           </Button>
-          <Link to="/" className="miniapp-back-link">
-            Back
-          </Link>
+          {backHomeLink}
         </ActionRow>
-      </PageScaffold>
+      </PageFrame>
     );
   }
 
   if (linkLoading || !linkData) {
     return (
-      <PageScaffold className="referral-page">
-        <PageHeader title="Invite friends" subtitle="Share your link and track rewards" />
+      <PageFrame title={pageTitle} subtitle={pageSubtitle}>
         <Skeleton className="skeleton-h-3xl" />
-      </PageScaffold>
+      </PageFrame>
     );
   }
 
@@ -146,14 +146,11 @@ export function ReferralPage() {
   const nextBonusDays = inviteGoal * 7;
 
   return (
-    <PageScaffold className="referral-page">
-      <PageHeader title="Invite friends" subtitle="Share your link and track rewards" />
-      <ActionRow>
-        <Link to="/" className="miniapp-back-link">Back</Link>
-      </ActionRow>
+    <PageFrame title={pageTitle} subtitle={pageSubtitle}>
+      <ActionRow>{backHomeLink}</ActionRow>
 
-      <PageSection title="Share referral link" description="Invite friends and unlock bonus days.">
-        <Panel className="card instrument-card instrument-card--active">
+      <PageSection title="SHARE LINK" description="Invite friends and unlock bonus days.">
+        <Panel variant="surface" className="card edge eg module-card">
           {!botUsername && (
             <InlineAlert
               variant="warning"
@@ -161,33 +158,37 @@ export function ReferralPage() {
               message="Referral links are unavailable: bot username is not configured."
             />
           )}
-          <Body className="config-block" as="code">{shareUrl || "Unavailable"}</Body>
+          <code className="code-block type-meta">{shareUrl || "Unavailable"}</code>
           <ActionRow fullWidth>
             <Button onClick={handleShare} disabled={!shareUrl || !isOnline}>
-              Share secure access
+              SHARE SECURE ACCESS
             </Button>
           </ActionRow>
         </Panel>
       </PageSection>
 
       {statsData && (
-        <PageSection title="Rewards progress">
-          <Panel className="card instrument-card hud-brackets">
-            <div className="referral-stats-row">
-              <Stat label="Earned days" value={earnedDays.toString()} />
-              <Stat label="Active referrals" value={activeReferrals.toString()} />
-              <Stat label="Pending rewards" value={pendingRewards.toString()} />
+        <PageSection
+          title="REWARD TELEMETRY"
+          action={<span className="chip cn section-meta-chip miniapp-tnum">{inviteProgress}/{inviteGoal}</span>}
+        >
+          <Panel variant="surface" className="card edge eb module-card">
+            <div className="stats-row referral-metrics">
+              <Stat label="EARNED DAYS" value={earnedDays.toString()} />
+              <Stat label="ACTIVE REFERRALS" value={activeReferrals.toString()} />
+              <Stat label="PENDING REWARDS" value={pendingRewards.toString()} />
+              <Stat label="TOTAL REFERRALS" value={totalReferrals.toString()} />
             </div>
-            <Body>
+            <p className="module-note">
               Invite {inviteRemaining} more {inviteRemaining === 1 ? "friend" : "friends"} to unlock {nextBonusDays} bonus days
-            </Body>
+            </p>
             <ProgressBar value={progressPercent} max={100} />
-            <Caption tabular>
+            <p className="type-meta miniapp-tnum">
               {inviteProgress}/{inviteGoal} towards next bonus · Total invites: {totalReferrals}
-            </Caption>
+            </p>
           </Panel>
         </PageSection>
       )}
-    </PageScaffold>
+    </PageFrame>
   );
 }

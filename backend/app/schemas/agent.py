@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class AgentHeartbeatIn(BaseModel):
+    model_config = ConfigDict(extra="allow")  # Accept future agent fields and store in Redis
     """Agent heartbeat payload (no secrets)."""
 
     server_id: str = Field(..., description="Control-plane server_id this agent manages")
@@ -35,6 +36,10 @@ class AgentHeartbeatIn(BaseModel):
         default=None,
         description="Runtime obfuscation values from node heartbeat",
     )
+    # Optional: backend accepts when agent sends them.
+    packet_loss_pct: float | None = Field(default=None, ge=0, le=100)
+    interface_stats: dict[str, int | float] | None = Field(default=None)
+    churn: dict[str, int | float] | None = Field(default=None)
 
 
 class AgentAckOut(BaseModel):
@@ -122,6 +127,7 @@ class AgentV1PeerOut(BaseModel):
     rx_bytes: int = 0
     tx_bytes: int = 0
     rtt_ms: int | None = None  # Round-trip time (ms); agent may measure e.g. via ping to tunnel IP
+    packet_loss_pct: float | None = None  # Agent may send when available
 
 
 class AgentV1ActionExecuteIn(BaseModel):

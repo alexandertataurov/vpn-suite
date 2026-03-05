@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { IconButton } from "@/design-system";
+import { IconButton } from "../../design-system-compat";
 import { List } from "lucide-react";
 import type { TOCHeading } from "./useTOC";
 

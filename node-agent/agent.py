@@ -1429,6 +1429,7 @@ def main() -> int:
                             rtt = _get_peer_rtt_ms(container.container_id, p.public_key)
                             if rtt is not None:
                                 entry["rtt_ms"] = rtt
+                            # packet_loss_pct, interface_stats: add to entry when agent measures them
                             peers_payload.append(entry)
                         obf = _get_obfuscation_from_container(
                             container.container_id, iface, docker_timeout
@@ -1455,6 +1456,7 @@ def main() -> int:
                         }
                         if obf:
                             hb["obfuscation"] = obf
+                        # Optional: packet_loss_pct, interface_stats, churn — add to hb when measured
                         _heartbeat(session, hb, cid)
                     except Exception as e:
                         # Still register server so it appears in admin (e.g. wrong iface or awg missing)

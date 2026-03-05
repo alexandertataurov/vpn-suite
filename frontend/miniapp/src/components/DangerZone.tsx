@@ -1,4 +1,4 @@
-import { Panel, Button, ConfirmModal, H3, Body, ActionRow } from "../ui";
+import { Panel, Button, ConfirmModal, ActionRow } from "../ui";
 import { useState } from "react";
 
 export interface DangerZoneProps {
@@ -33,9 +33,13 @@ export function DangerZone({
 
   return (
     <>
-      <Panel className="card danger-zone">
-        <H3 as="h3" className="danger-zone-title">{title}</H3>
-        <Body className="danger-zone-description">{description}</Body>
+      <Panel variant="surface" className="card edge er kpi">
+        <div className="kpi-top">
+          <span className="kpi-label">Critical Action</span>
+          <span className="chip cr">Destructive</span>
+        </div>
+        <h3 className="type-h4">{title}</h3>
+        <p className="type-body-sm">{description}</p>
         <ActionRow fullWidth>
           <Button
             variant="danger"

@@ -8,15 +8,11 @@ import {
   InlineAlert,
   useToast,
   ProgressBar,
-  PageScaffold,
-  PageHeader,
+  PageFrame,
   PageSection,
   ActionRow,
-  Body,
-  Caption,
-  H3,
 } from "../ui";
-import type { WebAppServersResponse, WebAppServerItem } from "@vpn-suite/shared/types";
+import type { WebAppServersResponse, WebAppServerItem } from "@/lib/types";
 import { useWebappToken, webappApi } from "../api/client";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
 import { SessionMissing } from "@/components";
@@ -46,6 +42,13 @@ export function ServerSelectionPage() {
     },
     onSettled: () => setPendingServerId(null),
   });
+  const pageTitle = "Server Matrix";
+  const pageSubtitle = "Regional routing and load";
+  const backHomeLink = (
+    <Link to="/" className="link-interactive page-anchor-link">
+      Back
+    </Link>
+  );
 
   if (!hasToken) {
     return (
@@ -55,8 +58,7 @@ export function ServerSelectionPage() {
 
   if (error) {
     return (
-      <PageScaffold>
-        <PageHeader title="Servers" />
+      <PageFrame title={pageTitle} subtitle={pageSubtitle}>
         <InlineAlert
           variant="error"
           title="Could not load servers"
@@ -70,21 +72,18 @@ export function ServerSelectionPage() {
           >
             Try again
           </Button>
-          <Link to="/" className="miniapp-back-link">
-            Back
-          </Link>
+          {backHomeLink}
         </ActionRow>
-      </PageScaffold>
+      </PageFrame>
     );
   }
 
   if (isLoading || !data) {
     return (
-      <PageScaffold>
-        <PageHeader title="Servers" />
+      <PageFrame title={pageTitle} subtitle={pageSubtitle}>
         <Skeleton className="skeleton-h-lg" />
         <Skeleton className="skeleton-h-hero" />
-      </PageScaffold>
+      </PageFrame>
     );
   }
 
@@ -99,17 +98,16 @@ export function ServerSelectionPage() {
   };
 
   return (
-    <PageScaffold>
-      <PageHeader title="Servers" subtitle="90+ locations worldwide" />
+    <PageFrame title="Server Matrix" subtitle="90+ locations worldwide">
 
-      <PageSection title="Selection mode" description="Choose automatic routing or lock a preferred location.">
-        <Panel className="card instrument-card instrument-card--inactive">
-          <Body>
+      <PageSection title="ROUTING MODE" description="Choose automatic routing or lock a preferred location.">
+        <Panel variant="surface" className="card edge et module-card">
+          <p className="type-body-sm">
             {data.auto_select
               ? "Automatic server selection is enabled."
               : "Manual server preference is enabled."}
-          </Body>
-          <Caption>We prioritize healthy, low-load servers close to your region.</Caption>
+          </p>
+          <p className="type-meta">We prioritize healthy, low-load servers close to your region.</p>
           <ActionRow fullWidth>
             <Button
               size="sm"
@@ -118,40 +116,43 @@ export function ServerSelectionPage() {
               loading={selectMutation.isPending && pendingServerId === "auto"}
               disabled={!isOnline || (selectMutation.isPending && pendingServerId === "auto")}
             >
-              Use best server
+              USE BEST SERVER
             </Button>
           </ActionRow>
         </Panel>
       </PageSection>
 
-      <PageSection title="Locations">
-        <div className="server-grid">
-          {data.items.map((server) => { // key=
+      <PageSection
+        title="LOCATION POOL"
+        action={<span className="chip cn section-meta-chip miniapp-tnum">{data.items.length} NODES</span>}
+      >
+        <div className="stack">
+          {data.items.map((server) => {
             const load = server.load_percent ?? 0;
             const isPending = selectMutation.isPending && pendingServerId === server.id;
             const code = (server.region ?? server.name ?? "??").slice(0, 2).toUpperCase();
             return (
               <Panel
                 key={server.id}
-                className={`card instrument-card ${server.is_current ? "instrument-card--active" : "instrument-card--inactive"} server-row-card`}
+                variant="surface"
+                className={`card edge card-row ${server.is_current ? "eg" : "et"}`}
               >
-                <span className="server-row-code">{code}</span>
-                <div className="server-row-details">
-                  <H3 as="h3" className="server-row-name tracking-trim data-truncate">
+                <span className="badge badge-sm">{code}</span>
+                <div className="min-w-0">
+                  <h3 className="type-h4 tracking-trim data-truncate">
                     {server.name}
-                  </H3>
-                  <Caption className="server-row-meta" tabular>
+                  </h3>
+                  <p className="type-meta miniapp-tnum">
                     {server.avg_ping_ms != null ? `${Math.round(server.avg_ping_ms)} ms` : "—"}
-                  </Caption>
+                  </p>
                 </div>
-                <div className="server-row-load">
-                  <Caption className="server-row-load-value" tabular>
-                    {Math.round(load)}% load
-                  </Caption>
+                <div className="server-metrics">
+                  <p className="type-meta miniapp-tnum">
+                    {Math.round(load)}% LOAD
+                  </p>
                   <ProgressBar
                     value={load}
                     max={100}
-                    className="server-row-load-bar"
                     aria-label={`${server.name} load ${Math.round(load)}%`}
                   />
                 </div>
@@ -162,13 +163,13 @@ export function ServerSelectionPage() {
                   loading={isPending}
                   disabled={!isOnline || isPending}
                 >
-                  {server.is_current ? "Selected" : "Select"}
+                  {server.is_current ? "SELECTED" : "SELECT"}
                 </Button>
               </Panel>
             );
           })}
         </div>
       </PageSection>
-    </PageScaffold>
+    </PageFrame>
   );
 }

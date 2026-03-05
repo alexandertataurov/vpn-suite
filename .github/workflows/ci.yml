@@ -215,6 +215,33 @@ jobs:
             frontend/dist-size-admin.txt
             frontend/dist-size-miniapp.txt
 
+      - name: Install Chromium (Playwright)
+        working-directory: frontend/admin
+        run: npx playwright install chromium --with-deps
+
+      - name: Serve admin for Lighthouse
+        run: |
+          mkdir -p .serve/admin
+          cp -r frontend/admin/dist/* .serve/admin/
+          npx serve -s .serve -l 4173 &
+          for i in $(seq 1 15); do curl -sf http://127.0.0.1:4173/admin/ > /dev/null && break; sleep 1; done
+
+      - name: Lighthouse accessibility
+        run: |
+          CHROME_PATH=$(find $HOME/.cache/ms-playwright -name chrome -path '*/chrome-linux/chrome' 2>/dev/null | head -1)
+          echo "CHROME_PATH=$CHROME_PATH"
+          npx lighthouse http://127.0.0.1:4173/admin/ --only-categories=accessibility --output=json --output-path=frontend/admin/lighthouse-a11y.json --chrome-flags="--headless --no-sandbox --disable-gpu" --quiet
+          node -e "
+            const fs = require('fs');
+            const p = 'frontend/admin/lighthouse-a11y.json';
+            if (!fs.existsSync(p)) { console.error('Lighthouse report not found'); process.exit(1); }
+            const j = JSON.parse(fs.readFileSync(p, 'utf8'));
+            const s = j.categories?.accessibility?.score;
+            console.log('Accessibility score:', s);
+            if (s == null) { console.error('No accessibility score'); process.exit(1); }
+            process.exit(s >= 0.9 ? 0 : 1);
+          "
+
       - name: Storybook check
         working-directory: frontend
         run: npm run storybook:check -w shared

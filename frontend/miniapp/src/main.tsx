@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ThemeProvider } from "@vpn-suite/shared/theme";
+import { ThemeProvider } from "@/lib/theme";
 import App from "./App";
 import { initWebVitals } from "./telemetry/webVitals";
 import { wireGlobalErrors } from "./telemetry/errors";
@@ -29,7 +29,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <ThemeProvider
-        themes={["consumer-dark"]}
+        themes={["consumer-dark", "consumer-light"]}
         defaultTheme="consumer-dark"
         storageKey="vpn-suite-miniapp-theme"
       >

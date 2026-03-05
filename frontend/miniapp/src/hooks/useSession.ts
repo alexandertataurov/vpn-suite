@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import type { WebAppMeResponse } from "@vpn-suite/shared/types";
+import type { WebAppMeResponse } from "@/lib/types";
 import { webappApi } from "../api/client";
 
 export function useSession(enabled: boolean) {

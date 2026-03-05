@@ -8,16 +8,14 @@ import {
   useToast,
   EmptyState,
   ConfirmModal,
-  PageScaffold,
-  PageHeader,
+  PageFrame,
   PageSection,
   InlineAlert,
   ActionRow,
-  Caption,
 } from "../ui";
-import { getErrorMessage } from "@vpn-suite/shared";
+import { getErrorMessage } from "@/lib";
 import { useTelegramMainButton } from "../hooks/useTelegramMainButton";
-import type { WebAppIssueDeviceResponse } from "@vpn-suite/shared/types";
+import type { WebAppIssueDeviceResponse } from "@/lib/types";
 import { useSession } from "../hooks/useSession";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useWebappToken, webappApi } from "../api/client";
@@ -105,28 +103,31 @@ export function DevicesPage() {
   }
   if (isLoading) {
     return (
-      <PageScaffold>
-        <PageHeader title="My devices" subtitle="Issue and manage VPN profiles" />
+      <PageFrame title="Device Registry" subtitle="Issue and manage VPN client profiles">
         <Skeleton className="skeleton-h-lg" />
         <SkeletonList lines={3} />
-      </PageScaffold>
+      </PageFrame>
     );
   }
 
   return (
-    <PageScaffold>
-      <div className="content-reveal">
-        <PageHeader title="My devices" subtitle="Issue and manage VPN profiles" />
+    <PageFrame title="Device Registry" subtitle="Issue and manage VPN client profiles">
       {deviceLimit != null && (
-        <Caption tabular>
-          Devices: <strong>{activeDevices.length}</strong> / <strong>{deviceLimit}</strong>
-        </Caption>
+        <div className="chips">
+          <span className="chip cn miniapp-tnum">
+            {activeDevices.length} / {deviceLimit} DEVICES
+          </span>
+        </div>
       )}
 
       {issuedConfig && (
         <div ref={configSectionRef}>
-          <PageSection title="Your config" description="Copy and import into AmneziaVPN. This is shown only once.">
-            <Panel className="card">
+          <PageSection
+            title="PROVISIONING OUTPUT"
+            description="Copy and import into AmneziaVPN. This output is shown only once."
+            action={<span className="chip ca section-meta-chip">SENSITIVE</span>}
+          >
+            <Panel variant="surface" className="card edge et module-card">
               {!issuedConfig.peer_created && (
                 <InlineAlert
                   variant="warning"
@@ -134,13 +135,17 @@ export function DevicesPage() {
                   message="Your device is registered. If connection fails, retry later or contact support."
                 />
               )}
-              <pre className="config-block">{issuedConfig.config_awg ?? issuedConfig.config ?? issuedConfig.config_wg_obf ?? issuedConfig.config_wg ?? ""}</pre>
+              <pre className="config-pre">{issuedConfig.config_awg ?? issuedConfig.config ?? issuedConfig.config_wg_obf ?? issuedConfig.config_wg ?? ""}</pre>
             </Panel>
           </PageSection>
         </div>
       )}
 
-      <PageSection title="Devices" description="Add or revoke device profiles.">
+      <PageSection
+        title="REGISTERED CLIENTS"
+        description="Add or revoke device profiles."
+        action={<span className="chip cn section-meta-chip miniapp-tnum">{activeDevices.length} ACTIVE</span>}
+      >
         {issueMutation.isError && (
           <InlineAlert
             variant="error"
@@ -160,12 +165,12 @@ export function DevicesPage() {
               loading={issueMutation.isPending}
               disabled={issueMutation.isPending}
             >
-              {issueMutation.isPending ? "Adding…" : "Add device"}
+              {issueMutation.isPending ? "ADDING…" : "ADD DEVICE"}
             </Button>
           </ActionRow>
         )}
 
-        <ul className="device-card-list">
+        <ul className="stack list-unstyled">
           {data?.devices?.map((d) => ( // key=
             <li key={d.id}>
               <DeviceCard
@@ -177,7 +182,7 @@ export function DevicesPage() {
                 primaryAction={
                   !d.revoked_at ? (
                     <Button variant="ghost" size="sm" onClick={() => setRevokeId(d.id)}>
-                      Revoke
+                      REVOKE
                     </Button>
                   ) : null
                 }
@@ -205,7 +210,6 @@ export function DevicesPage() {
         variant="danger"
         loading={revokeMutation.isPending}
       />
-      </div>
-    </PageScaffold>
+    </PageFrame>
   );
 }

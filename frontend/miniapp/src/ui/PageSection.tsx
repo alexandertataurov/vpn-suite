@@ -1,5 +1,5 @@
 import type { HTMLAttributes, ReactNode } from "react";
-import { H2, Body } from "./Typography";
+import { Body } from "./Typography";
 
 export interface SectionHeaderRowProps extends Omit<HTMLAttributes<HTMLDivElement>, "title"> {
   title?: ReactNode;
@@ -7,6 +7,7 @@ export interface SectionHeaderRowProps extends Omit<HTMLAttributes<HTMLDivElemen
   action?: ReactNode;
 }
 
+/** Doc-only section header row when section has no title (description/action only). */
 export function SectionHeaderRow({
   title,
   description,
@@ -15,14 +16,13 @@ export function SectionHeaderRow({
   ...props
 }: SectionHeaderRowProps) {
   if (!title && !description && !action) return null;
-
   return (
-    <div className={`miniapp-section-header-row ${className}`.trim()} {...props}>
-      <div className="miniapp-section-header-copy">
-        {title ? <H2 as="h2" className="tracking-trim">{title}</H2> : null}
-        {description ? <Body className="miniapp-section-description">{description}</Body> : null}
-      </div>
-      {action ? <div className="miniapp-section-header-action">{action}</div> : null}
+    <div className={`shead ${className}`.trim()} {...props}>
+      <span className="shead-label">{title ?? "\u00A0"}</span>
+      <span className="shead-line" aria-hidden />
+      {(action ?? description) ? (
+        <span className="shead-note">{action ?? description}</span>
+      ) : null}
     </div>
   );
 }
@@ -34,6 +34,7 @@ export interface PageSectionProps extends Omit<HTMLAttributes<HTMLElement>, "tit
   children: ReactNode;
 }
 
+/** Section with design-system shead (label + line + note). */
 export function PageSection({
   title,
   description,
@@ -42,9 +43,26 @@ export function PageSection({
   children,
   ...props
 }: PageSectionProps) {
+  const hasShead = title != null && title !== "";
+  const hasMeta = description || action;
   return (
-    <section className={`miniapp-page-section ${className}`.trim()} {...props}>
-      <SectionHeaderRow title={title} description={description} action={action} />
+    <section className={className.trim() || undefined} {...props}>
+      {hasShead ? (
+        <>
+          <div className="shead">
+            <span className="shead-label">{title}</span>
+            <span className="shead-line" aria-hidden />
+            {action ? <span className="shead-note">{action}</span> : null}
+          </div>
+          {description ? (
+            <div className="type-body-sm">
+              {typeof description === "string" ? description : <Body as="span">{description}</Body>}
+            </div>
+          ) : null}
+        </>
+      ) : hasMeta ? (
+        <SectionHeaderRow title={null} description={description} action={action} />
+      ) : null}
       {children}
     </section>
   );

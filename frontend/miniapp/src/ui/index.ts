@@ -21,23 +21,21 @@ export {
   ToastContainer,
   useToast,
   PrimitiveBadge,
-} from "@vpn-suite/shared/ui";
+} from "@/lib/ui";
 
 export type {
   ButtonVariant,
   ButtonSize,
   ButtonLinkProps,
   InlineAlertProps,
-} from "@vpn-suite/shared/ui";
+} from "@/lib/ui";
 
-export { PageContent } from "./PageContent";
-export type { PageContentProps } from "./PageContent";
 export { PageHeader } from "./PageHeader";
 export type { PageHeaderProps } from "./PageHeader";
-export { Section } from "./Section";
-export type { SectionProps } from "./Section";
 export { PageScaffold } from "./PageScaffold";
 export type { PageScaffoldProps } from "./PageScaffold";
+export { PageFrame } from "./PageFrame";
+export type { PageFrameProps } from "./PageFrame";
 export { PageSection, SectionHeaderRow } from "./PageSection";
 export type { PageSectionProps, SectionHeaderRowProps } from "./PageSection";
 export { ActionRow } from "./ActionRow";

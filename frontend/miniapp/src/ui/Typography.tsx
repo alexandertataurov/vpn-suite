@@ -24,25 +24,25 @@ function renderText(
 }
 
 export function Display(props: MiniappTextProps) {
-  return renderText("miniapp-text-display", { as: "h1", ...props });
+  return renderText("type-display-sm", { as: "h1", ...props });
 }
 
 export function H1(props: MiniappTextProps) {
-  return renderText("miniapp-text-h1", { as: "h1", ...props });
+  return renderText("type-h1", { as: "h1", ...props });
 }
 
 export function H2(props: MiniappTextProps) {
-  return renderText("miniapp-text-h2", { as: "h2", ...props });
+  return renderText("type-h2", { as: "h2", ...props });
 }
 
 export function H3(props: MiniappTextProps) {
-  return renderText("miniapp-text-h3", { as: "h3", ...props });
+  return renderText("type-h3", { as: "h3", ...props });
 }
 
 export function Body(props: MiniappTextProps) {
-  return renderText("miniapp-text-body", { as: "p", ...props });
+  return renderText("type-body", { as: "p", ...props });
 }
 
 export function Caption(props: MiniappTextProps) {
-  return renderText("miniapp-text-caption", { as: "p", ...props });
+  return renderText("type-meta", { as: "p", ...props });
 }

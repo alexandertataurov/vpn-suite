@@ -1,0 +1,42 @@
+/* App-level layout + chart typography glue. Kept minimal; all core typography comes from design-system/tokens + typography utilities. */
+
+.overview-chart__meta-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  text-transform: uppercase;
+  color: var(--tx-mut);
+}
+
+.overview-chart__tooltip-title {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--tx-mut);
+}
+
+/* Overview charts layout — ensure chart containers have height */
+.overview-chart {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  flex: 1;
+  min-height: 0;
+}
+
+.overview-chart__plot {
+  flex: 1;
+  min-height: 220px;
+}
+
+/* Servers widgets grid */
+.servers-page__widgets {
+  margin-bottom: var(--sp-4);
+}
+
+.servers-page__widgets-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--sp-3);
+}

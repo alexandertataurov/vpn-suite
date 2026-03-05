@@ -91,7 +91,7 @@ export function OverviewPeersChart(props: { points: OperatorTimeseriesPoint[]; c
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data}>
             <CartesianGrid
-              stroke="rgba(255,255,255,0.06)"
+              stroke="var(--bd-sub)"
               strokeDasharray="3 3"
               vertical={false}
             />
@@ -101,27 +101,27 @@ export function OverviewPeersChart(props: { points: OperatorTimeseriesPoint[]; c
               domain={["dataMin", "dataMax"]}
               tickFormatter={(v) => formatTimeAxis(Number(v), { tz: "local", rangeMs })}
               tick={{
-                fill: "#28404e",
-                fontSize: 10,
+                fill: "var(--tx-mut)",
+                fontSize: "var(--text-2xs)",
                 fontFamily: "IBM Plex Mono, monospace",
               }}
-              axisLine={{ stroke: "#182030" }}
-              tickLine={{ stroke: "#182030" }}
+              axisLine={{ stroke: "var(--bd-sub)" }}
+              tickLine={{ stroke: "var(--bd-sub)" }}
             />
             <YAxis
               width={40}
               tick={{
-                fill: "#28404e",
-                fontSize: 10,
+                fill: "var(--tx-mut)",
+                fontSize: "var(--text-2xs)",
                 fontFamily: "IBM Plex Mono, monospace",
               }}
-              axisLine={{ stroke: "#182030" }}
-              tickLine={{ stroke: "#182030" }}
+              axisLine={{ stroke: "var(--bd-sub)" }}
+              tickLine={{ stroke: "var(--bd-sub)" }}
               domain={[0, "auto"]}
               allowDecimals={false}
             />
             <Tooltip
-              cursor={{ stroke: "var(--text-muted)" }}
+              cursor={{ stroke: "var(--tx-mut)" }}
               content={<ChartTooltip valueFormatter={(v) => `${Math.round(v)}`} />}
             />
             <Line
@@ -161,7 +161,7 @@ export function OverviewThroughputChart(props: { points: OperatorTimeseriesPoint
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data}>
             <CartesianGrid
-              stroke="rgba(255,255,255,0.06)"
+              stroke="var(--bd-sub)"
               strokeDasharray="3 3"
               vertical={false}
             />
@@ -171,22 +171,22 @@ export function OverviewThroughputChart(props: { points: OperatorTimeseriesPoint
               domain={["dataMin", "dataMax"]}
               tickFormatter={(v) => formatTimeAxis(Number(v), { tz: "local", rangeMs })}
               tick={{
-                fill: "#28404e",
-                fontSize: 10,
+                fill: "var(--tx-mut)",
+                fontSize: "var(--text-2xs)",
                 fontFamily: "IBM Plex Mono, monospace",
               }}
-              axisLine={{ stroke: "#182030" }}
-              tickLine={{ stroke: "#182030" }}
+              axisLine={{ stroke: "var(--bd-sub)" }}
+              tickLine={{ stroke: "var(--bd-sub)" }}
             />
             <YAxis
               width={60}
               tick={{
-                fill: "#28404e",
-                fontSize: 10,
+                fill: "var(--tx-mut)",
+                fontSize: "var(--text-2xs)",
                 fontFamily: "IBM Plex Mono, monospace",
               }}
-              axisLine={{ stroke: "#182030" }}
-              tickLine={{ stroke: "#182030" }}
+              axisLine={{ stroke: "var(--bd-sub)" }}
+              tickLine={{ stroke: "var(--bd-sub)" }}
               domain={[0, "auto"]}
               tickFormatter={(v) => {
                 const n = typeof v === "number" ? v : Number(v);
@@ -194,7 +194,7 @@ export function OverviewThroughputChart(props: { points: OperatorTimeseriesPoint
               }}
             />
             <Tooltip
-              cursor={{ stroke: "var(--text-muted)" }}
+              cursor={{ stroke: "var(--tx-mut)" }}
               content={<ChartTooltip valueFormatter={formatBps} />}
             />
             <Area

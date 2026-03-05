@@ -1,18 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import type { WebAppCreateInvoiceResponse } from "@vpn-suite/shared/types";
+import type { WebAppCreateInvoiceResponse, WebAppPaymentStatusOut } from "@/lib/types";
 import {
   Panel,
   Input,
   Button,
   ButtonLink,
   InlineAlert,
-  PageScaffold,
-  PageHeader,
+  PageFrame,
   Skeleton,
   PageSection,
   ActionRow,
-  Body,
 } from "../ui";
 import { SessionMissing, FallbackScreen } from "@/components";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -23,7 +21,7 @@ import { useHideKeyboard } from "../hooks/useHideKeyboard";
 import { useTrackScreen } from "../hooks/useTrackScreen";
 import { useTelemetry } from "../hooks/useTelemetry";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
-import type { WebAppPaymentStatusOut } from "@vpn-suite/shared/types";
+import { usePayments } from "../hooks/features/usePayments";
 
 const POLL_INTERVAL_MS = 2500;
 const POLL_TIMEOUT_MS = 5 * 60 * 1000;
@@ -46,6 +44,7 @@ export function CheckoutPage() {
   const pollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pollAbortRef = useRef<AbortController | null>(null);
   const { impact, notify } = useTelegramHaptics();
+  const { openInvoice } = usePayments();
   const hideKeyboard = useHideKeyboard();
   useTrackScreen("checkout", null);
   const { track } = useTelemetry(null);
@@ -164,9 +163,8 @@ export function CheckoutPage() {
       }
       const invoiceLink = data.invoice_link ?? data.invoice_url ?? "";
       paymentIdRef.current = data.payment_id;
-      const tg = (window as Window & { Telegram?: { WebApp?: { openInvoice?: (url: string) => void } } }).Telegram?.WebApp;
-      if (tg?.openInvoice && invoiceLink) {
-        tg.openInvoice(invoiceLink);
+      if (invoiceLink) {
+        openInvoice(invoiceLink);
         setPhase("waiting");
         track("payment_start", { plan_id: selectedPlanId });
         pollPaymentStatus(data.payment_id);
@@ -208,6 +206,31 @@ export function CheckoutPage() {
     createInvoice.mutate();
   };
 
+  const paymentPhaseChipClass =
+    phase === "success"
+      ? "cg"
+      : phase === "error" || phase === "timeout"
+        ? "cr"
+        : phase === "waiting" || phase === "creating_invoice"
+          ? "ca"
+          : "cn";
+  const paymentPhaseLabel =
+    phase === "success"
+      ? "SUCCESS"
+      : phase === "error"
+        ? "FAILED"
+        : phase === "timeout"
+          ? "TIMEOUT"
+        : phase === "waiting" || phase === "creating_invoice"
+          ? "PENDING"
+          : "READY";
+  const headerSubtitle = `Plan ${planId ?? "N/A"}`;
+  const backToPlanLink = (
+    <ActionRow>
+      <Link to="/plan" className="link-interactive page-anchor-link">BACK TO PLAN</Link>
+    </ActionRow>
+  );
+
   useTelegramMainButton(null);
 
   if (!hasToken) {
@@ -215,22 +238,19 @@ export function CheckoutPage() {
   }
 
   const plansFetched = !plansLoading && !plansError;
-  if (hasToken && selectedPlanId && plansLoading) {
+  if (selectedPlanId && plansLoading) {
     return (
-      <PageScaffold>
-        <PageHeader title="Checkout" subtitle={`Plan ${planId ?? "N/A"}`} />
-        <ActionRow>
-          <Link to="/plan" className="miniapp-back-link">Back to plan</Link>
-        </ActionRow>
-        <Panel className="card">
+      <PageFrame title="Payment Checkout" subtitle={headerSubtitle}>
+        {backToPlanLink}
+        <Panel className="card edge et">
           <Skeleton className="skeleton-h-md" />
           <Skeleton className="skeleton-h-2xl" />
         </Panel>
-      </PageScaffold>
+      </PageFrame>
     );
   }
 
-  if (hasToken && selectedPlanId && plansError) {
+  if (selectedPlanId && plansError) {
     return (
       <FallbackScreen
         title="Could not load plan"
@@ -242,12 +262,9 @@ export function CheckoutPage() {
 
   if (plansFetched && selectedPlanId && !selectedPlan) {
     return (
-      <PageScaffold>
-        <PageHeader title="Checkout" subtitle={`Plan ${planId ?? "N/A"}`} />
-        <ActionRow>
-          <Link to="/plan" className="miniapp-back-link">Back to plan</Link>
-        </ActionRow>
-        <Panel className="card">
+      <PageFrame title="Payment Checkout" subtitle={headerSubtitle}>
+        {backToPlanLink}
+        <Panel className="card edge et">
           <InlineAlert
             variant="error"
             title="Plan not found"
@@ -255,30 +272,31 @@ export function CheckoutPage() {
           />
           <ActionRow fullWidth>
             <ButtonLink to="/plan" variant="secondary" size="md">
-              Back to plan
+              BACK TO PLAN
             </ButtonLink>
           </ActionRow>
         </Panel>
-      </PageScaffold>
+      </PageFrame>
     );
   }
 
   return (
-    <PageScaffold>
-      <PageHeader title="Checkout" subtitle={`Plan ${planId ?? "N/A"}`} />
-      <ActionRow>
-        <Link to="/plan" className="miniapp-back-link">Back to plan</Link>
-      </ActionRow>
+    <PageFrame title="Payment Checkout" subtitle={headerSubtitle}>
+      {backToPlanLink}
 
-      <PageSection title="Payment" description="Activate your subscription securely via Telegram.">
-        <Panel className="card">
-          <Body tabular>Plan ID: {planId}</Body>
+      <PageSection
+        title="PAYMENT AUTHORIZATION"
+        description="Activate your subscription securely via Telegram."
+        action={<span className={`chip section-meta-chip ${paymentPhaseChipClass}`}>{paymentPhaseLabel}</span>}
+      >
+        <Panel variant="surface" className="card edge et module-card">
+          <p className="type-meta miniapp-tnum">Plan ID: {planId}</p>
           <form
             onSubmit={(e) => {
               e.preventDefault();
               validatePromo.mutate();
             }}
-            className="form-inline"
+            className="form-row"
           >
             <Input placeholder="Promo code" value={promoCode} onChange={(e) => setPromoCode(e.target.value)} />
             <Button
@@ -287,7 +305,7 @@ export function CheckoutPage() {
               size="sm"
               disabled={!selectedPlanId || !promoCode.trim() || validatePromo.isPending}
             >
-              Apply
+              APPLY
             </Button>
           </form>
 
@@ -306,7 +324,7 @@ export function CheckoutPage() {
               size="lg"
               disabled={!planId || !hasToken || !isOnline || phase === "waiting" || phase === "creating_invoice"}
             >
-              {isFreePlan ? "Activate plan" : "Pay with Telegram Stars"}
+              {isFreePlan ? "ACTIVATE PLAN" : "PAY WITH TELEGRAM STARS"}
             </Button>
           </ActionRow>
 
@@ -322,7 +340,6 @@ export function CheckoutPage() {
               variant="info"
               title="Waiting for payment"
               message="Complete the Stars payment in the Telegram sheet to activate your subscription."
-              className="payment-status-waiting"
             />
           )}
           {(phase === "error" || phase === "timeout") && (
@@ -338,13 +355,13 @@ export function CheckoutPage() {
               />
               <ActionRow fullWidth>
                 <Button variant="secondary" size="sm" onClick={handleRetry}>
-                  Try again
+                  TRY AGAIN
                 </Button>
               </ActionRow>
             </>
           )}
         </Panel>
       </PageSection>
-    </PageScaffold>
+    </PageFrame>
   );
 }

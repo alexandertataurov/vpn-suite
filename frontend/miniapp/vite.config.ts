@@ -13,11 +13,7 @@ export default defineConfig({
     dedupe: ["react", "react-dom", "react-router-dom"],
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      "@vpn-suite/shared": path.resolve(__dirname, "./src/shared-inline"),
-      "@vpn-suite/shared/theme": path.resolve(__dirname, "./src/shared-inline/theme/index.ts"),
-      "@vpn-suite/shared/ui": path.resolve(__dirname, "./src/shared-inline/ui/index.ts"),
-      "@vpn-suite/shared/api-client": path.resolve(__dirname, "./src/shared-inline/api-client/index.ts"),
-      "@vpn-suite/shared/types": path.resolve(__dirname, "./src/shared-inline/types/index.ts"),
+      "@/lib": path.resolve(__dirname, "./src/lib"),
     },
   },
   server: {
@@ -33,7 +29,7 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes("node_modules")) return "vendor";
-          if (id.includes("shared")) return "shared";
+          if (id.includes("/src/lib/")) return "lib";
         },
       },
     },

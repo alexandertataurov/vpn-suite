@@ -1,4 +1,4 @@
-import { Panel, ButtonLink, H3, Caption, Body } from "../ui";
+import { Panel, ButtonLink } from "../ui";
 
 export interface PlanCardProps {
   id: string;
@@ -24,28 +24,29 @@ export function PlanCard({
   const checkoutPath = `/plan/checkout/${id}`;
 
   return (
-    <Panel
-      className={`card instrument-card stagger-item ${isCurrent ? "instrument-card--active" : "instrument-card--inactive"} plan-card ${isBestValue ? "plan-card-best" : ""} ${isCurrent ? "plan-card-current" : ""}`}
-    >
-      {isBestValue && (
-        <span className="plan-card-badge">Best value</span>
-      )}
-      <H3 as="h3" className="plan-card-name tracking-trim data-truncate">{name}</H3>
-      <Caption className="plan-card-duration" tabular>
-        {durationDays} days
-      </Caption>
-      <Body className="plan-card-price" tabular>
-        {priceAmount} {priceCurrency}
-      </Body>
+    <Panel variant="surface" className={`card edge kpi ${isCurrent ? "eg" : "et"} stagger-item`}>
+      <div className="kpi-top">
+        <span className="kpi-label">Subscription Tier</span>
+        <span className={`chip ${isCurrent ? "cg" : isBestValue ? "ca" : "cn"}`}>
+          {isCurrent ? "Current" : isBestValue ? "Best Value" : "Available"}
+        </span>
+      </div>
+
+      <div className="kv kv--sm">{name}</div>
+      <p className="kpi-subline miniapp-tnum">{durationDays} day access window</p>
+      <p className="plan-card-price miniapp-tnum">{priceAmount} {priceCurrency}</p>
+
       {!isCurrent && (
-        <ButtonLink
-          to={checkoutPath}
-          variant="primary"
-          size="lg"
-          onClick={() => onSelect?.(id)}
-        >
-          Get {name}
-        </ButtonLink>
+        <div className="action-row action-row--full kpi-actions">
+          <ButtonLink
+            to={checkoutPath}
+            variant="primary"
+            size="lg"
+            onClick={() => onSelect?.(id)}
+          >
+            Select plan
+          </ButtonLink>
+        </div>
       )}
     </Panel>
   );

@@ -1,4 +1,4 @@
-import { Panel, Caption, Body } from "@/ui";
+import { Panel } from "@/ui";
 
 export interface SubscriptionSummaryCardProps {
   planId: string;
@@ -26,30 +26,34 @@ export function SubscriptionSummaryCard({
             ? "1 day left"
             : `${daysLeft} days left`;
 
+  const edgeClass = status === "expired" ? "er" : status === "active" ? "eg" : "et";
+  const stateChipClass = status === "expired" ? "cr" : status === "active" ? "cg" : "cn";
+
   return (
-    <Panel
-      className={`card instrument-card stagger-item ${status === "expired" ? "instrument-card--alert" : status === "active" ? "instrument-card--active" : "instrument-card--inactive"} subscription-summary-card subscription-summary-card--status-${status}`}
-    >
-      <Caption>Subscription</Caption>
-      <Body>
-        {status === "none" ? (
-          "No active plan"
-        ) : (
-          <>
-            Plan <span className="subscription-summary-plan-id">{planId}</span>
-          </>
-        )}
-      </Body>
-      {status !== "none" && (
-        <Caption className={daysLeft <= 7 ? "subscription-summary-warning" : ""}>
-          {daysLabel}
-        </Caption>
-      )}
-      {deviceLimit != null && status === "active" && (
-        <Caption tabular>
-          Devices: <strong>{deviceCount}</strong> / <strong>{deviceLimit}</strong>
-        </Caption>
-      )}
+    <Panel variant="surface" className={`card edge kpi stagger-item ${edgeClass}`}>
+      <div className="kpi-top">
+        <span className="kpi-label">Current Subscription</span>
+        <span className={`chip ${stateChipClass}`}>{daysLabel}</span>
+      </div>
+
+      <div className="kv kv--sm">{status === "none" ? "Inactive" : `Plan ${planId}`}</div>
+
+      <div className="metric-strip">
+        <div className="metric">
+          <span className="metric-label">Status</span>
+          <span className="metric-value">{status.toUpperCase()}</span>
+        </div>
+        <div className="metric">
+          <span className="metric-label">Remaining</span>
+          <span className="metric-value miniapp-tnum">{status === "none" ? "-" : `${Math.max(daysLeft, 0)}d`}</span>
+        </div>
+        <div className="metric">
+          <span className="metric-label">Devices</span>
+          <span className="metric-value miniapp-tnum">
+            {deviceLimit == null || status !== "active" ? `${deviceCount}` : `${deviceCount}/${deviceLimit}`}
+          </span>
+        </div>
+      </div>
     </Panel>
   );
 }

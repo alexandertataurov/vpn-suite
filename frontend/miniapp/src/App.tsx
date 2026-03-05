@@ -1,14 +1,19 @@
 import { lazy, Suspense, useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import { ToastContainer, Skeleton } from "./ui";
-import { TabbedShellLayout, StackFlowLayout } from "./layouts/MiniappLayout";
+import { Skeleton } from "./ui";
+import { ViewportLayout } from "./app/ViewportLayout";
+import { MainButtonReserveProvider } from "./context/MainButtonReserveContext";
+import { TelegramProvider } from "./context/TelegramContext";
 import { TelegramThemeBridge } from "@/components";
 import { useTelemetry } from "./hooks/useTelemetry";
-import { useViewportDimensions } from "./hooks/useViewportDimensions";
 import { useScrollInputIntoView } from "./hooks/useScrollInputIntoView";
 import { useLayoutDebugMode } from "./hooks/useLayoutDebugMode";
 import { useGlobalHapticFeedback } from "./hooks/useGlobalHapticFeedback";
 import { BootstrapController } from "./bootstrap/BootstrapController";
+import { AppRoot } from "./app/AppRoot";
+import { SafeAreaLayer } from "./app/SafeAreaLayer";
+import { OverlayLayer } from "./app/OverlayLayer";
+import { TelegramEventManager } from "./app/TelegramEventManager";
 
 const HomePage = lazy(() => import("./pages/Home").then((m) => ({ default: m.HomePage })));
 const PlanPage = lazy(() => import("./pages/Plan").then((m) => ({ default: m.PlanPage })));
@@ -26,7 +31,6 @@ const OnboardingPage = lazy(() =>
 
 function App() {
   const { track } = useTelemetry();
-  useViewportDimensions();
   useScrollInputIntoView();
   useLayoutDebugMode();
   useGlobalHapticFeedback();
@@ -35,29 +39,38 @@ function App() {
   }, [track]);
 
   return (
-    <ToastContainer>
-      <TelegramThemeBridge />
-      <BootstrapController>
-        <Suspense fallback={<div className="miniapp-loading"><Skeleton height={24} /></div>}>
-          <Routes>
-            <Route element={<StackFlowLayout />}>
-              <Route path="/onboarding" element={<OnboardingPage />} />
-              <Route path="/plan/checkout/:planId" element={<CheckoutPage />} />
-              <Route path="/servers" element={<ServerSelectionPage />} />
-              <Route path="/referral" element={<ReferralPage />} />
-            </Route>
-            <Route element={<TabbedShellLayout />}>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/devices" element={<DevicesPage />} />
-              <Route path="/plan" element={<PlanPage />} />
-              <Route path="/support" element={<SupportPage />} />
-              <Route path="/settings" element={<SettingsPage />} />
-            </Route>
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Suspense>
-      </BootstrapController>
-    </ToastContainer>
+    <AppRoot>
+      <TelegramProvider>
+        <TelegramThemeBridge />
+        <TelegramEventManager />
+        <SafeAreaLayer>
+          <BootstrapController>
+            <MainButtonReserveProvider>
+              <OverlayLayer>
+                <Suspense fallback={<div className="miniapp-loading"><Skeleton height={24} /></div>}>
+                  <Routes>
+                    <Route element={<ViewportLayout mode="stack" />}>
+                      <Route path="/onboarding" element={<OnboardingPage />} />
+                      <Route path="/plan/checkout/:planId" element={<CheckoutPage />} />
+                      <Route path="/servers" element={<ServerSelectionPage />} />
+                      <Route path="/referral" element={<ReferralPage />} />
+                    </Route>
+                    <Route element={<ViewportLayout mode="tabbed" />}>
+                      <Route path="/" element={<HomePage />} />
+                      <Route path="/devices" element={<DevicesPage />} />
+                      <Route path="/plan" element={<PlanPage />} />
+                      <Route path="/support" element={<SupportPage />} />
+                      <Route path="/settings" element={<SettingsPage />} />
+                    </Route>
+                    <Route path="*" element={<Navigate to="/" replace />} />
+                  </Routes>
+                </Suspense>
+              </OverlayLayer>
+            </MainButtonReserveProvider>
+          </BootstrapController>
+        </SafeAreaLayer>
+      </TelegramProvider>
+    </AppRoot>
   );
 }
 

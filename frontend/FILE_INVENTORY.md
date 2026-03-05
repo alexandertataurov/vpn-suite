@@ -16,7 +16,7 @@
 | admin/package.json | config | no | low | keep | none |
 | admin/playwright.config.ts | config | no | low | keep | none |
 | admin/postcss.config.js | config | no | low | keep | none |
-| admin/src/admin.css | style | yes | low | keep | none |
+| admin/src/layout/shell.css | style | yes | low | keep | none |
 | admin/src/api/client.ts | api | yes | high | keep | none |
 | admin/src/api/query-keys.ts | api | yes | low | keep | none |
 | admin/src/App.tsx | core | yes | high | keep | none |

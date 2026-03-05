@@ -5,7 +5,7 @@ const VIEWPORT_HEIGHT = 840;
 
 const CORE_PAGES = [
   { path: "/", ctaLabel: /Connect Now|Get config|Manage Connection/i },
-  { path: "/plan", ctaLabel: /Start free trial|Get\s+\w+|Contact support/i },
+  { path: "/plan", ctaLabel: /Start free trial|Select plan|Current|Contact support/i },
   { path: "/devices", ctaLabel: /Add device/i },
   { path: "/support", ctaLabel: /Contact support/i },
   { path: "/settings", ctaLabel: /Manage devices/i },
@@ -13,8 +13,25 @@ const CORE_PAGES = [
 
 async function injectTelegram(page: Page) {
   await page.addInitScript(() => {
-    (window as unknown as { Telegram?: { WebApp: { initData: string; ready: () => void } } }).Telegram = {
-      WebApp: { initData: "e2e-test", ready: () => {} },
+    const events = new Map<string, Set<() => void>>();
+    (window as unknown as { __tgVerticalSwipesDisabled?: number }).__tgVerticalSwipesDisabled = 0;
+    (window as unknown as { Telegram?: { WebApp: { initData: string; ready: () => void; expand: () => void; disableVerticalSwipes: () => void; onEvent: (event: string, cb: () => void) => void; offEvent: (event: string, cb: () => void) => void } } }).Telegram = {
+      WebApp: {
+        initData: "e2e-test",
+        ready: () => {},
+        expand: () => {},
+        disableVerticalSwipes: () => {
+          (window as unknown as { __tgVerticalSwipesDisabled?: number }).__tgVerticalSwipesDisabled =
+            ((window as unknown as { __tgVerticalSwipesDisabled?: number }).__tgVerticalSwipesDisabled ?? 0) + 1;
+        },
+        onEvent: (event: string, cb: () => void) => {
+          if (!events.has(event)) events.set(event, new Set());
+          events.get(event)?.add(cb);
+        },
+        offEvent: (event: string, cb: () => void) => {
+          events.get(event)?.delete(cb);
+        },
+      },
     };
   });
 }
@@ -127,6 +144,41 @@ async function assertNoTextClipping(page: Page) {
   expect(clippedCount).toBe(0);
 }
 
+async function assertBottomTabsTapTarget(page: Page) {
+  const tabs = page.locator(".miniapp-bottom-nav .miniapp-tab");
+  const count = await tabs.count();
+  if (count === 0) return;
+  for (let index = 0; index < count; index += 1) {
+    const tab = tabs.nth(index);
+    const box = await tab.boundingBox();
+    expect(box).toBeTruthy();
+    expect(box!.height).toBeGreaterThanOrEqual(48);
+    expect(box!.width).toBeGreaterThanOrEqual(48);
+  }
+}
+
+async function assertHeaderAndActionSafe(page: Page) {
+  const header = page.locator(".miniapp-header");
+  await expect(header).toBeVisible();
+  const headerMetrics = await header.evaluate((el) => {
+    const rect = el.getBoundingClientRect();
+    return { top: rect.top, height: rect.height };
+  });
+  expect(headerMetrics.top).toBeGreaterThanOrEqual(-1);
+  expect(headerMetrics.height).toBeGreaterThanOrEqual(56);
+
+  const actionZone = page.locator(".miniapp-bottom-nav-wrap");
+  const actionCount = await actionZone.count();
+  if (actionCount === 0) return;
+  await expect(actionZone).toBeVisible();
+  const actionMetrics = await actionZone.first().evaluate((el) => {
+    const rect = el.getBoundingClientRect();
+    return { bottom: rect.bottom, height: rect.height, viewportHeight: window.innerHeight };
+  });
+  expect(actionMetrics.bottom).toBeLessThanOrEqual(actionMetrics.viewportHeight + 1);
+  expect(actionMetrics.height).toBeGreaterThanOrEqual(72);
+}
+
 async function assertPrimaryCtaVisible(page: Page, ctaLabel: RegExp) {
   const button = page.getByRole("button", { name: ctaLabel });
   const link = page.getByRole("link", { name: ctaLabel });
@@ -149,9 +201,78 @@ test.describe("Miniapp Responsive Layout", () => {
       for (const pageConfig of CORE_PAGES) {
         await goToPath(page, pageConfig.path);
         await assertPrimaryCtaVisible(page, pageConfig.ctaLabel);
+        await assertBottomTabsTapTarget(page);
+        await assertHeaderAndActionSafe(page);
         await assertNoHorizontalOverflow(page);
         await assertNoTextClipping(page);
       }
     }
+  });
+
+  test("pull gesture keeps route stable and does not trigger close-like navigation", async ({ page }) => {
+    await injectTelegram(page);
+    await mockApi(page);
+    await page.setViewportSize({ width: 390, height: VIEWPORT_HEIGHT });
+    await goToPath(page, "/");
+
+    const hasTouchApi = await page.evaluate(
+      () => typeof Touch === "function" && typeof TouchEvent === "function",
+    );
+    test.skip(!hasTouchApi, "Touch API unavailable for desktop profile");
+
+    const beforePath = new URL(page.url()).pathname;
+    await page.evaluate(() => {
+      const scrollNode = document.querySelector(".miniapp-main");
+      if (!(scrollNode instanceof HTMLElement)) return;
+      scrollNode.scrollTop = 0;
+      const makeTouch = (y: number) =>
+        new Touch({
+          identifier: 1,
+          target: scrollNode,
+          clientX: 24,
+          clientY: y,
+          pageX: 24,
+          pageY: y,
+          screenX: 24,
+          screenY: y,
+          radiusX: 2,
+          radiusY: 2,
+          rotationAngle: 0,
+          force: 1,
+        });
+      const start = makeTouch(40);
+      const move = makeTouch(170);
+
+      scrollNode.dispatchEvent(
+        new TouchEvent("touchstart", {
+          touches: [start],
+          targetTouches: [start],
+          changedTouches: [start],
+          bubbles: true,
+          cancelable: true,
+        }),
+      );
+      scrollNode.dispatchEvent(
+        new TouchEvent("touchmove", {
+          touches: [move],
+          targetTouches: [move],
+          changedTouches: [move],
+          bubbles: true,
+          cancelable: true,
+        }),
+      );
+      scrollNode.dispatchEvent(
+        new TouchEvent("touchend", {
+          touches: [],
+          targetTouches: [],
+          changedTouches: [move],
+          bubbles: true,
+          cancelable: true,
+        }),
+      );
+    });
+
+    const afterPath = new URL(page.url()).pathname;
+    expect(afterPath).toBe(beforePath);
   });
 });

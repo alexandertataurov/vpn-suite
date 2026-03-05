@@ -1,5 +1,5 @@
 import { ChevronRight } from "lucide-react";
-import { PrimitiveBadge } from "../../../src/design-system";
+import { PrimitiveBadge } from "../../design-system-compat";
 
 export type RelatedStatus = "stable" | "beta" | "deprecated";
 

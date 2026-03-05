@@ -11,10 +11,9 @@ import {
   Input,
   Modal,
   Skeleton,
-  MetaText,
-  SectionTitle,
-  CardTitle,
-} from "@/design-system";
+} from "@/design-system/primitives";
+import { PageLayout } from "@/layout/PageLayout";
+import { CardTitle, MetaText } from "@/design-system/typography";
 
 interface UserOut {
   id: number;
@@ -301,54 +300,53 @@ export function UsersPage() {
   const canPrev = offset > 0;
   const canNext = offset + limit < total;
 
+  const usersActions = (
+    <>
+      <MetaText className="users-page__pager-meta">
+        {total > 0 ? `${offset + 1}-${Math.min(offset + limit, total)} of ${total}` : "0 users"}
+      </MetaText>
+      <Button type="button" variant="default" disabled={!canPrev} onClick={() => setOffset((v) => Math.max(0, v - limit))}>
+        Prev
+      </Button>
+      <Button type="button" variant="default" disabled={!canNext} onClick={() => setOffset((v) => v + limit)}>
+        Next
+      </Button>
+    </>
+  );
+
   if (isUsersLoading) {
     return (
-      <div className="page users-page">
+      <PageLayout title="Users" pageClass="users-page" hideHeader>
         <Skeleton height={32} width="30%" />
         <Skeleton height={160} />
-      </div>
+      </PageLayout>
     );
   }
 
   if (isUsersError) {
     const message = usersError instanceof Error ? usersError.message : "Failed to load users";
     return (
-      <div className="page users-page">
+      <PageLayout title="Users" pageClass="users-page" hideHeader>
         <ErrorState message={message} onRetry={() => void refetchUsers()} />
-      </div>
+      </PageLayout>
     );
   }
 
   return (
-    <div className="page users-page">
-      <div className="users-page__header">
-        <SectionTitle>Users</SectionTitle>
-        <div className="users-page__pager">
-          <MetaText className="users-page__pager-meta">
-            {total > 0 ? `${offset + 1}-${Math.min(offset + limit, total)} of ${total}` : "0 users"}
-          </MetaText>
-          <Button type="button" variant="default" disabled={!canPrev} onClick={() => setOffset((v) => Math.max(0, v - limit))}>
-            Prev
-          </Button>
-          <Button type="button" variant="default" disabled={!canNext} onClick={() => setOffset((v) => v + limit)}>
-            Next
-          </Button>
-        </div>
-      </div>
-
-      <Card>
+    <PageLayout title="Users" actions={usersActions} pageClass="users-page">
+      <Card variant="outlined">
         <div className="users-page__filters">
           <label className="users-page__filter">
             TG ID
-            <Input value={draft.tgId} onChange={(e) => setDraft((s) => ({ ...s, tgId: e.target.value }))} placeholder="e.g. 123456" />
+            <Input size="sm" value={draft.tgId} onChange={(e) => setDraft((s) => ({ ...s, tgId: e.target.value }))} placeholder="e.g. 123456" />
           </label>
           <label className="users-page__filter">
             Email
-            <Input value={draft.email} onChange={(e) => setDraft((s) => ({ ...s, email: e.target.value }))} placeholder="search email" />
+            <Input size="sm" value={draft.email} onChange={(e) => setDraft((s) => ({ ...s, email: e.target.value }))} placeholder="search email" />
           </label>
           <label className="users-page__filter">
             Phone
-            <Input value={draft.phone} onChange={(e) => setDraft((s) => ({ ...s, phone: e.target.value }))} placeholder="search phone" />
+            <Input size="sm" value={draft.phone} onChange={(e) => setDraft((s) => ({ ...s, phone: e.target.value }))} placeholder="search phone" />
           </label>
           <label className="users-page__filter">
             Status
@@ -392,6 +390,7 @@ export function UsersPage() {
         <section className="users-page__table" aria-label="Users list">
           <div className="data-table-wrap">
           <DataTable
+            density="compact"
             columns={[
               { key: "tg", header: "TG" },
               { key: "email", header: "Email" },
@@ -508,6 +507,7 @@ export function UsersPage() {
                 {userDetail.subscriptions.length > 0 ? (
                   <div className="data-table-wrap">
                   <DataTable
+                    density="compact"
                     columns={[
                       { key: "id", header: "ID" },
                       { key: "plan_id", header: "Plan" },
@@ -565,6 +565,7 @@ export function UsersPage() {
                 {!isUserDevicesLoading && userDevices && userDevices.items.length > 0 ? (
                   <div className="data-table-wrap">
                   <DataTable
+                    density="compact"
                     columns={[
                       { key: "device", header: "Device" },
                       { key: "server_id", header: "Server" },
@@ -658,6 +659,6 @@ export function UsersPage() {
           </Button>
         </div>
       </Modal>
-    </div>
+    </PageLayout>
   );
 }

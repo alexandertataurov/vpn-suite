@@ -39,4 +39,4 @@ export {
 } from "./useServers";
 export { useLoginForm } from "./useLoginForm";
 export { useFormField } from "./useFormField";
-export { useToast } from "@/design-system";
+export { useToast } from "@/design-system/primitives";

@@ -2,8 +2,7 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 import { Highlight, themes } from "prism-react-renderer";
 import { Check } from "lucide-react";
-import { PrimitiveBadge } from "../../../src/design-system";
-import { Button } from "../../../src/design-system";
+import { PrimitiveBadge, Button } from "../../design-system-compat";
 import "../../prism-setup";
 
 export interface CodeBlockProps {

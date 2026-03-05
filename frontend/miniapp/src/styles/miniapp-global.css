@@ -1,20 +1,23 @@
-@import "./miniapp-tokens.css";
-@import "./miniapp-base.css";
-@import "./miniapp-layout.css";
-@import "./miniapp-ui/index.css";
+@import "../lib/theme/tokens.css";
+@import "../lib/base.css";
+@import "../lib/layout.css";
+@import "../lib/ui/styles/index.css";
+@import "./telegram-miniapp-design-system.css";
+@import "./miniapp-typography.css";
 @import "./miniapp-utilities.css";
 
 body {
   margin: 0;
   min-width: var(--miniapp-body-min-width, 20rem);
-  min-height: 100vh;
-  background: var(--color-bg);
-  color: var(--color-text);
-  font-family: var(--font-sans);
-  font-size: var(--text-body, var(--font-size-base));
-  line-height: var(--leading-body, var(--line-height-normal));
+  min-height: var(--app-height, 100svh);
+  background: var(--bg);
+  color: var(--tx-pri);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  line-height: 1.5;
   font-feature-settings: "kern" 1, "liga" 1, "calt" 1, "tnum" 0;
   -webkit-font-smoothing: antialiased;
+  overflow: hidden;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -6,8 +6,8 @@ import type {
   WebAppOnboardingState,
   WebAppOnboardingStateRequest,
   WebAppOnboardingStateResponse,
-} from "@vpn-suite/shared/types";
-import { ApiError } from "@vpn-suite/shared/types";
+} from "@/lib/types";
+import { ApiError } from "@/lib/types";
 import { setWebappToken, useWebappToken, webappApi } from "../api/client";
 import { useSession } from "../hooks/useSession";
 import {

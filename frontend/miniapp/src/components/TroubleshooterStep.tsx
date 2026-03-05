@@ -1,4 +1,4 @@
-import { Panel, Button, Caption, H3, Body, ActionRow } from "../ui";
+import { Panel, Button, ActionRow } from "../ui";
 
 export interface TroubleshooterStepProps {
   stepIndex: number;
@@ -22,20 +22,21 @@ export function TroubleshooterStep({
   onBack,
 }: TroubleshooterStepProps) {
   return (
-    <Panel className="card troubleshooter-step">
-      <Caption>
-        Step {stepIndex} of {totalSteps}
-      </Caption>
-      <H3 as="h3" className="troubleshooter-step-title">{title}</H3>
-      <Body className="troubleshooter-step-body">{body}</Body>
+    <Panel variant="surface" className="card edge et kpi">
+      <div className="kpi-top">
+        <span className="kpi-label">Diagnostic Flow</span>
+        <span className="chip cn">Step {stepIndex}/{totalSteps}</span>
+      </div>
+      <h3 className="type-h4">{title}</h3>
+      <p className="type-body-sm">{body}</p>
       <ActionRow>
         {onBack && backLabel && (
           <Button variant="ghost" size="sm" onClick={onBack}>
-            {backLabel}
+            {backLabel.toUpperCase()}
           </Button>
         )}
         <Button variant="primary" size="sm" onClick={onNext}>
-          {nextLabel}
+          {nextLabel.toUpperCase()}
         </Button>
       </ActionRow>
     </Panel>

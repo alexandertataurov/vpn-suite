@@ -1,5 +1,17 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
+import { useAuthStore } from "@/core/auth/store";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
+import {
+  TopbarAvatar,
+  TopbarBrand,
+  TopbarBtn,
+  TopbarCrumb,
+  TopbarLiveChip,
+  TopbarRight,
+  TopbarRoot,
+  TopbarTime,
+} from "@/design-system";
 
 export function useLiveClock() {
   const [time, setTime] = useState<string>(() =>
@@ -40,6 +52,14 @@ const PATH_TITLES: Record<string, string> = {
   "/styleguide": "Styleguide",
 };
 
+function MenuIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <path d="M1 3h14M1 8h14M1 13h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function getPageLabel(pathname: string): string {
   if (pathname in PATH_TITLES) return PATH_TITLES[pathname] ?? "Admin";
   for (const path of Object.keys(PATH_TITLES)) {
@@ -48,45 +68,38 @@ function getPageLabel(pathname: string): string {
   return "Admin";
 }
 
-export function DashboardTopbar() {
+interface DashboardTopbarProps {
+  onOpenMenu?: () => void;
+}
+
+export function DashboardTopbar({ onOpenMenu }: DashboardTopbarProps) {
   const { pathname } = useLocation();
   const time = useLiveClock();
   const pageLabel = getPageLabel(pathname);
+  const isNarrow = useMediaQuery("(max-width: 768px)");
 
   return (
-    <header className="topbar">
-      <div className="tb-brand">
-        VPN Suite
-        <em>/</em>
-        Admin
-      </div>
-      <div className="tb-crumb">
-        <span>Console</span>
-        <span>›</span>
-        <b>{pageLabel}</b>
-      </div>
-      <div className="tb-right">
-        <span className="tb-time" aria-label="Current time">
-          {time}
-        </span>
-        <div className="live-chip" aria-label="Live status">
-          <div className="ring pulse" />
-          Live
-        </div>
-        <button type="button" className="tb-btn">
-          Refresh
-        </button>
-        <button type="button" className="tb-btn">
-          Settings
-        </button>
-        <div className="tb-avatar" aria-hidden="true">
-          OP
-        </div>
-        <button type="button" className="tb-btn">
+    <TopbarRoot>
+      <TopbarBrand wordmark="VPN Suite" product="Admin" />
+      {isNarrow && onOpenMenu ? (
+        <TopbarBtn aria-label="Open menu" onClick={onOpenMenu}>
+          <MenuIcon />
+        </TopbarBtn>
+      ) : null}
+      {!isNarrow ? <TopbarCrumb segment="Console" page={pageLabel} /> : null}
+      <TopbarRight>
+        <TopbarTime>{time}</TopbarTime>
+        <TopbarLiveChip />
+        <TopbarBtn aria-label="Refresh">Refresh</TopbarBtn>
+        <TopbarBtn aria-label="Settings">Settings</TopbarBtn>
+        <TopbarAvatar initials="OP" />
+        <TopbarBtn
+          aria-label="Sign out"
+          onClick={() => useAuthStore.getState().logout()}
+        >
           Sign out
-        </button>
-      </div>
-    </header>
+        </TopbarBtn>
+      </TopbarRight>
+    </TopbarRoot>
   );
 }
-

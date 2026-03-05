@@ -4,7 +4,7 @@ Single source of truth for miniapp UI. All visual values from tokens. No inline 
 
 ## Tokens
 
-Defined in `src/shared-inline/theme/tokens.css`:
+Defined in `src/lib/theme/tokens.css`:
 
 | Category | Variables |
 |----------|-----------|
@@ -24,24 +24,24 @@ Re-exports from `@vpn-suite/shared/ui`: Button, ButtonLink, Panel, Input, Inline
 
 ## Patterns
 
-- **PageContent** — Page wrapper. Use instead of `<div className="page-content">`.
+- **PageFrame** — Canonical page shell (`PageScaffold + PageHeader`).
+- **PageScaffold** — Page wrapper for section stacking/rhythm.
 - **PageHeader** — Page title + subtitle + optional action.
-- **Section** — Section with optional title and action. Uses tokens only.
+- **PageSection** — Section with title, description, and optional action.
 
 ## Usage
 
 ```tsx
-import { PageContent, PageHeader, Section, Panel, Button } from "../ui";
+import { PageFrame, PageSection, Panel, Button } from "../ui";
 
 function MyPage() {
   return (
-    <PageContent>
-      <PageHeader title="Title" subtitle="Subtitle" />
-      <Section title="Section Title">
+    <PageFrame title="Title" subtitle="Subtitle">
+      <PageSection title="Section Title">
         <Panel className="card">Content</Panel>
-      </Section>
+      </PageSection>
       <Button variant="primary">CTA</Button>
-    </PageContent>
+    </PageFrame>
   );
 }
 ```
@@ -52,9 +52,9 @@ function MyPage() {
 |----|-------|
 | Import from `../ui` | Import from `@vpn-suite/shared/ui` for shared components (ui re-exports them) |
 | Use tokens for spacing/colors | Use arbitrary `px` or hex values |
-| Use PageContent, PageHeader, Section | Use raw divs with layout classes |
+| Use PageFrame, PageSection | Use raw divs with layout classes |
 | Use shared Button, Input, Panel | Use raw `<button>`, `<input>` |
-| Use ProgressBar for load bars | Use inline `style={{ width }}` |
+| Use ProgressBar for load bars | Use CSS / token-based sizing |
 
 ## Enforcement
 

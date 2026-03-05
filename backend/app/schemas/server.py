@@ -259,6 +259,8 @@ class PeerOut(BaseModel):
     traffic_bytes: int | None = None
     status: str = "unknown"  # online, offline, unknown
     issues: list[str] = Field(default_factory=list)  # no_handshake, no_traffic, wrong_allowed_ips
+    rtt_ms: int | None = None  # Round-trip time (ms); from node-agent ping to tunnel IP
+    loss_pct: float | None = None  # Packet loss % when measured
 
 
 class ServerPeersOut(BaseModel):

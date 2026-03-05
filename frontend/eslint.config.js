@@ -47,5 +47,13 @@ export default tseslint.config(
     rules: {
       "react/forbid-dom-props": ["warn", { forbid: ["style"] }],
     },
+  },
+  {
+    files: ["admin/src/features/**/*.tsx"],
+    plugins: { react },
+    rules: {
+      // Dashboard visual guardrail: prefer tokenized CSS classes over inline styles.
+      "react/forbid-dom-props": ["warn", { forbid: ["style"] }],
+    },
   }
 );

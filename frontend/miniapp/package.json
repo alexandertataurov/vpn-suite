@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "design:check": "bash scripts/design-check.sh",
     "lint": "eslint src --ext .ts,.tsx",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "preview": "vite preview",

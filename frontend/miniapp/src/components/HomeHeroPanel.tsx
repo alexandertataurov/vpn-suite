@@ -1,4 +1,4 @@
-import { Panel, H2, Body, Caption } from "../ui";
+import { Panel } from "../ui";
 
 export interface HomeHeroPanelProps {
   connected: boolean;
@@ -19,15 +19,15 @@ export function HomeHeroPanel({
   deviceCount,
   deviceLimit,
 }: HomeHeroPanelProps) {
-  const primaryLabel = connected ? "Connected" : "Not connected";
+  const primaryValue = connected ? "CONNECTED" : "OFFLINE";
 
   let subLine: string;
   if (connected) {
-    subLine = `Location: ${locationLabel}`;
+    subLine = `Gateway: ${locationLabel}`;
   } else if (subStatus === "none") {
-    subLine = "Choose a plan";
+    subLine = "No active subscription";
   } else if (subStatus === "expired") {
-    subLine = "Plan expired";
+    subLine = "Subscription expired";
   } else {
     const daysLabel =
       daysLeft <= 0
@@ -35,27 +35,39 @@ export function HomeHeroPanel({
         : daysLeft === 1
           ? "1 day left"
           : `${daysLeft} days left`;
-    subLine = planId ? `Plan ${planId} · ${daysLabel}` : daysLabel;
+    subLine = `${daysLabel}`;
   }
 
-  const contextLine =
-    subStatus === "active" && deviceLimit != null
-      ? `${deviceCount}/${deviceLimit} devices`
-      : null;
+  const edgeClass = connected ? "eg" : "er";
+  const chipVariant = connected ? "cg" : "cr";
 
   return (
-    <Panel
-      className={`instrument-card stagger-item ${connected ? "instrument-card--active" : "instrument-card--inactive"} home-hero-panel home-hero-panel--${connected ? "connected" : "disconnected"}`}
-    >
-      <H2 className="home-hero-primary tracking-trim" tabular>
-        {primaryLabel}
-      </H2>
-      <Body className="home-hero-sub">{subLine}</Body>
-      {contextLine && (
-        <Caption className="home-hero-context" tabular>
-          {contextLine}
-        </Caption>
-      )}
+    <Panel variant="surface" className={`card edge kpi stagger-item ${edgeClass}`}>
+      <div className="kpi-top">
+        <span className="kpi-label">Network State</span>
+        <span className={`chip ${chipVariant}`}>{connected ? "Connected" : "Offline"}</span>
+      </div>
+      <div className="kv">{primaryValue}</div>
+      <p className="kpi-subline">{subLine}</p>
+
+      <div className="metric-strip">
+        <div className="metric">
+          <span className="metric-label">Plan</span>
+          <span className="metric-value data-truncate">{subStatus === "none" ? "None" : planId}</span>
+        </div>
+        <div className="metric">
+          <span className="metric-label">Expires</span>
+          <span className="metric-value miniapp-tnum">
+            {subStatus === "none" ? "-" : daysLeft <= 0 ? "Today" : `${daysLeft}d`}
+          </span>
+        </div>
+        <div className="metric">
+          <span className="metric-label">Devices</span>
+          <span className="metric-value miniapp-tnum">
+            {deviceLimit == null ? `${deviceCount}` : `${deviceCount}/${deviceLimit}`}
+          </span>
+        </div>
+      </div>
     </Panel>
   );
 }

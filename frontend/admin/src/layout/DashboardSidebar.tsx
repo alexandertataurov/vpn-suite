@@ -1,4 +1,11 @@
-import { Link, useLocation } from "react-router-dom";
+import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
+import {
+  SidebarNavFooter,
+  SidebarNavLink,
+  SidebarNavRoot,
+  SidebarNavSection,
+} from "../design-system";
 
 interface SidebarItem {
   to: string;
@@ -161,8 +168,20 @@ const ITEMS: SidebarItem[] = [
   },
 ];
 
-export function DashboardSidebar() {
+interface DashboardSidebarProps {
+  isOverlayOpen?: boolean;
+  onCloseOverlay?: () => void;
+}
+
+export function DashboardSidebar({
+  isOverlayOpen = false,
+  onCloseOverlay,
+}: DashboardSidebarProps) {
   const { pathname } = useLocation();
+
+  useEffect(() => {
+    if (isOverlayOpen && onCloseOverlay) onCloseOverlay();
+  }, [pathname, isOverlayOpen, onCloseOverlay]);
 
   const isActive = (to: string) => {
     if (to === "/") return pathname === "/" || pathname === "";
@@ -170,44 +189,50 @@ export function DashboardSidebar() {
   };
 
   return (
-    <aside className="sidebar">
-      <span className="sb-section">Monitor</span>
+    <>
+      {isOverlayOpen && onCloseOverlay ? (
+        <button
+          type="button"
+          className="sidebar-overlay-backdrop"
+          onClick={onCloseOverlay}
+          aria-label="Close menu"
+        />
+      ) : null}
+      <SidebarNavRoot className={isOverlayOpen ? "sidebar--overlay" : undefined}>
+      <SidebarNavSection>Monitor</SidebarNavSection>
       {ITEMS.filter((i) => i.section === "Monitor").map((item) => (
-        <Link
+        <SidebarNavLink
           key={item.to}
           to={item.to}
-          className={`nav-a${isActive(item.to) ? " on" : ""}`}
-        >
-          {item.icon}
-          {item.label}
-          {item.badgeCount && item.badgeCount > 0 ? (
-            <span className="nb">{item.badgeCount}</span>
-          ) : null}
-        </Link>
+          label={item.label}
+          icon={item.icon}
+          badgeCount={item.badgeCount}
+          isActive={isActive(item.to)}
+        />
       ))}
 
-      <span className="sb-section">Config</span>
+      <SidebarNavSection>Config</SidebarNavSection>
       {ITEMS.filter((i) => i.section === "Config").map((item) => (
-        <Link
+        <SidebarNavLink
           key={item.to}
           to={item.to}
-          className={`nav-a${isActive(item.to) ? " on" : ""}`}
-        >
-          {item.icon}
-          {item.label}
-        </Link>
+          label={item.label}
+          icon={item.icon}
+          isActive={isActive(item.to)}
+        />
       ))}
 
-      <div className="sb-foot">
+      <SidebarNavFooter>
         <div className="sb-foot-row">
           <div className="dot" />
           v2.4.1 · All systems
         </div>
-        <div className="sb-foot-row" style={{ color: "var(--tx-dim)" }}>
+        <div className="sb-foot-row sb-foot-row--dim">
           Uptime 14d 6h 22m
         </div>
-      </div>
-    </aside>
+      </SidebarNavFooter>
+    </SidebarNavRoot>
+    </>
   );
 }
 

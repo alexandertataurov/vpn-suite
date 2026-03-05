@@ -8,7 +8,7 @@ export interface ActionRowProps extends HTMLAttributes<HTMLDivElement> {
 export function ActionRow({ className = "", children, fullWidth = false, ...props }: ActionRowProps) {
   return (
     <div
-      className={`miniapp-action-row ${fullWidth ? "miniapp-action-row--full" : ""} ${className}`.trim()}
+      className={`action-row ${fullWidth ? "action-row--full" : ""} ${className}`.trim()}
       {...props}
     >
       {children}

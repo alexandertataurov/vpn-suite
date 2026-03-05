@@ -27,5 +27,9 @@ export function TableCell({
   header,
 }: { children: ReactNode; className?: string; header?: boolean }) {
   const Tag = header ? "th" : "td";
-  return <Tag className={className}>{children}</Tag>;
+  return (
+    <Tag className={className} scope={header ? "col" : undefined}>
+      {children}
+    </Tag>
+  );
 }

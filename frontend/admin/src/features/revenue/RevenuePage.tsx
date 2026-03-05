@@ -1,10 +1,11 @@
-import { SectionTitle, MetaText } from "@/design-system";
+import { PageLayout } from "@/layout/PageLayout";
 
 export function RevenuePage() {
   return (
-    <div className="page revenue-page">
-      <SectionTitle>Revenue</SectionTitle>
-      <MetaText>Revenue — Phase 1 placeholder.</MetaText>
-    </div>
+    <PageLayout
+      title="Revenue"
+      description="Revenue — Phase 1 placeholder."
+      pageClass="revenue-page"
+    />
   );
 }

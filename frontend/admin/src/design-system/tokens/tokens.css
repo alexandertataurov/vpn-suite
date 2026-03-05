@@ -4,50 +4,90 @@
 
 :root {
   /* ═══════════════════════════════════════════════════════
-     PRIMITIVES TOKENS (canonical)
+     PRIMITIVES TOKENS (canonical) — design-system.md
+     Surfaces: elevation via color; never box-shadow in-page.
      ═══════════════════════════════════════════════════════ */
 
-  --bg: #0d0f10;
-  --surface-0: #0d0f10;
-  --surface-1: #121618;
-  --surface-2: #171b1e;
-  --surface-3: #1d2226;
-  --surface-4: #232a2f;
-  --border-subtle: #1e2428;
-  --border-default: #252b30;
-  --border-bright: #2e363c;
-  --border-focus: #3a8cff;
+  --bg: #0c0e10;
+  --s0: #0e1114;
+  --s1: #111518;
+  --s2: #161b1f;
+  --s3: #1b2126;
+  --s4: #202830;
 
-  --text-primary: #c8d2da;
-  --text-secondary: #8a9aa8;
-  --text-muted: #4e5e6a;
-  --text-dim: #2e3c46;
-  --text-disabled: #313c44;
+  --surface-0: var(--s0);
+  --surface-1: var(--s1);
+  --surface-2: var(--s2);
+  --surface-3: var(--s3);
+  --surface-4: var(--s4);
+
+  --bd-sub: #161d22;
+  --bd-def: #1e272e;
+  --bd-hi: #28343c;
+  --bd-focus: #3a8cff;
+
+  --border-subtle: var(--bd-sub);
+  --border-default: var(--bd-def);
+  --border-bright: var(--bd-hi);
+  --border-focus: var(--bd-focus);
+
+  --tx-pri: #d0dce6;
+  --tx-sec: #8aa4b4;
+  --tx-mut: #4a6274;
+  --tx-dim: #2a3a44;
+
+  --text-primary: var(--tx-pri);
+  --text-secondary: var(--tx-sec);
+  --text-muted: var(--tx-mut);
+  --text-dim: var(--tx-dim);
+  --text-disabled: #5a6570;
   --text-inverse: #0d0f10;
 
-  --success: #3dba6a;
-  --success-dim: rgba(61, 186, 106, 0.08);
-  --success-border: rgba(61, 186, 106, 0.2);
+  /* Semantic triplets: color + -d (≈8% fill) + -b (≈18% border) */
+  --blue: #3a8cff;
+  --blue-d: rgba(58, 140, 255, 0.07);
+  --blue-b: rgba(58, 140, 255, 0.18);
+  --interactive: var(--blue);
+  --interactive-dim: var(--blue-d);
+  --interactive-border: var(--blue-b);
+  --interactive-hover: #5aa0ff;
+  --interactive-active: #2a7aef;
+  --focus-ring: rgba(58, 140, 255, 0.2);
+  --focus-glow: rgba(58, 140, 255, 0.12);
 
-  --warning: #e8a020;
-  --warning-dim: rgba(232, 160, 32, 0.08);
-  --warning-border: rgba(232, 160, 32, 0.2);
+  --green: #32b05a;
+  --green-d: rgba(50, 176, 90, 0.07);
+  --green-b: rgba(50, 176, 90, 0.18);
+  --success: var(--green);
+  --success-dim: var(--green-d);
+  --success-border: var(--green-b);
 
-  --danger: #e85050;
-  --danger-dim: rgba(232, 80, 80, 0.08);
-  --danger-border: rgba(232, 80, 80, 0.2);
+  --amber: #d49018;
+  --amber-d: rgba(212, 144, 24, 0.07);
+  --amber-b: rgba(212, 144, 24, 0.18);
+  --warning: var(--amber);
+  --warning-dim: var(--amber-d);
+  --warning-border: var(--amber-b);
+
+  --red: #d04040;
+  --red-d: rgba(208, 64, 64, 0.07);
+  --red-b: rgba(208, 64, 64, 0.18);
+  --danger: var(--red);
+  --danger-dim: var(--red-d);
+  --danger-border: var(--red-b);
 
   --info: #4a9ee8;
   --info-dim: rgba(74, 158, 232, 0.08);
-  --info-border: rgba(74, 158, 232, 0.2);
+  --info-border: rgba(74, 158, 232, 0.22);
 
-  --accent: #a070e8;
-  --accent-dim: rgba(160, 112, 232, 0.08);
-  --accent-border: rgba(160, 112, 232, 0.2);
+  --violet: #7850cc;
+  --violet-d: rgba(120, 80, 204, 0.07);
+  --violet-b: rgba(120, 80, 204, 0.18);
+  --accent: var(--violet);
+  --accent-dim: var(--violet-d);
+  --accent-border: var(--violet-b);
 
-  --interactive: #3a8cff;
-  --interactive-dim: rgba(58, 140, 255, 0.08);
-  --interactive-border: rgba(58, 140, 255, 0.22);
+  --teal: #2490b8;
 
   --sp-1: 4px;
   --sp-2: 8px;
@@ -57,6 +97,8 @@
   --sp-6: 24px;
   --sp-8: 32px;
 
+  --r: 2px;
+  --rc: 3px;
   --r-sm: 2px;
   --r-md: 3px;
   --r-lg: 6px;
@@ -64,20 +106,20 @@
   --font-mono: "IBM Plex Mono", monospace;
   --font-sans: "IBM Plex Sans", sans-serif;
 
-  /* Typography scale (IBM Plex) — reduced ~10% toward original */
-  --text-2xs: 10px;
+  /* Typography scale (IBM Plex) — small sizes raised for readability (min 12px) */
+  --text-2xs: 12px;
   --text-xs: 11px;
   --text-sm: 12px;
   --text-base: 13px;
-  --text-md: 14px;
-  --text-lg: 16px;
-  --text-xl: 19px;
-  --text-2xl: 22px;
-  --text-3xl: 29px;
-  --text-4xl: 37px;
-  --text-5xl: 49px;
-  --text-6xl: 65px;
-  --text-7xl: 80px;
+  --text-md: 13px;
+  --text-lg: 15px;
+  --text-xl: 18px;
+  --text-2xl: 21px;
+  --text-3xl: 28px;
+  --text-4xl: 36px;
+  --text-5xl: 48px;
+  --text-6xl: 64px;
+  --text-7xl: 79px;
 
   --leading-none: 1;
   --leading-tight: 1.2;
@@ -95,6 +137,21 @@
   --tracking-ultra: 0.22em;
 
   --scrim: rgba(0, 0, 0, 0.6);
+  --overlay-subtle: rgba(255, 255, 255, 0.02);
+
+  /* Overlay backdrops (modal, drawer) — design-system: overlays only */
+  --backdrop: rgba(5, 6, 8, 0.75);
+  --backdrop-strong: rgba(5, 6, 8, 0.8);
+
+  /* Overlay panel shadows (modals, toasts, popovers, datepicker) — no in-page use */
+  --shadow-overlay: 0 24px 64px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.03);
+  --shadow-overlay-sm: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.03);
+  --shadow-overlay-md: 0 12px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.03);
+  --shadow-overlay-lg: 0 32px 80px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.04);
+  --shadow-overlay-floating: 0 16px 40px rgba(0, 0, 0, 0.5);
+  --shadow-overlay-floating-sm: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-drawer-r: -24px 0 64px rgba(0, 0, 0, 0.6);
+  --shadow-drawer-l: 24px 0 64px rgba(0, 0, 0, 0.6);
 
   /* ═══════════════════════════════════════════════════════
      LEGACY ALIASES (admin app)
@@ -144,60 +201,37 @@
   --color-scrim: var(--scrim);
 
   /* ═══════════════════════════════════════════════════════
-     DASHBOARD ALIASES (Primitives v2 dashboard guidelines)
-     These provide the `--s*`, `--bd-*`, `--tx-*` and
-     semantic color names used by the HTML dashboard
-     reference without breaking existing tokens.
+     DASHBOARD / LEGACY ALIASES (existing consumers)
      ═══════════════════════════════════════════════════════ */
 
-  /* Surfaces (dashboard) */
-  --s0: var(--surface-0);
-  --s1: var(--surface-1);
-  --s2: var(--surface-2);
-  --s3: var(--surface-3);
-  --s4: var(--surface-4);
-
-  /* Borders (dashboard) */
-  --bd-sub: var(--border-subtle);
-  --bd-def: var(--border-default);
-  --bd-hi: var(--border-bright);
-  --bd-focus: var(--border-focus);
-
-  /* Text (dashboard) */
-  --tx-pri: var(--text-primary);
-  --tx-sec: var(--text-secondary);
-  --tx-mut: var(--text-muted);
-  --tx-dim: var(--text-dim);
-
-  /* Semantic colors — dashboard naming */
-  --blue: var(--interactive);
-  --blue-d: var(--interactive-dim);
-  --blue-b: var(--interactive-border);
-
-  --green: var(--success);
-  --green-d: var(--success-dim);
-  --green-b: var(--success-border);
-
-  --amber: var(--warning);
-  --amber-d: var(--warning-dim);
-  --amber-b: var(--warning-border);
-
-  --red: var(--danger);
-  --red-d: var(--danger-dim);
-  --red-b: var(--danger-border);
-
-  --violet: var(--accent);
-  --violet-d: var(--accent-dim);
-  --violet-b: var(--accent-border);
-
-  /* Identifiers / node IDs */
-  --teal: #2490b8;
-
-  /* Chart colors */
   --chart-blue: #4878e8;
   --chart-violet: #7858d8;
 
-  /* Geometry (dashboard) */
-  --r: var(--r-sm);
-  --rc: var(--r-md);
+  /* System status widget tokens (ops dashboard) */
+  /* Surfaces and borders */
+  --border: var(--border-default);
+  --border2: var(--border-bright);
+
+  /* Text aliases for widgets */
+  --text: var(--text-primary);
+  --muted: var(--text-muted);
+  --dim: var(--text-dim);
+
+  /* Widget font aliases */
+  --mono: var(--font-mono);
+  --sans: var(--font-sans);
+
+  /* Additional semantic colors */
+  --purple: var(--accent);
+  --cyan: #00d4ff;
+
+  /* Badge / chip alpha variants */
+  --badge-green-bg: var(--success-dim);
+  --badge-green-border: var(--success-border);
+  --badge-amber-bg: var(--warning-dim);
+  --badge-amber-border: var(--warning-border);
+  --badge-red-bg: var(--danger-dim);
+  --badge-red-border: var(--danger-border);
+  --badge-blue-bg: var(--info-dim);
+  --badge-blue-border: var(--info-border);
 }

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { getButtonClassName, PageScaffold, PageHeader, PageSection, Panel, Skeleton, Body, H3 } from "../ui";
+import { getButtonClassName, PageFrame, PageSection, Panel, Skeleton } from "../ui";
 import { TroubleshooterStep, FallbackScreen, SessionMissing } from "@/components";
 import { useTrackScreen } from "../hooks/useTrackScreen";
 import { useSession } from "../hooks/useSession";
@@ -48,10 +48,9 @@ export function SupportPage() {
 
   if (isLoading) {
     return (
-      <PageScaffold>
-        <PageHeader title="Support" subtitle="Troubleshooting and help" />
+      <PageFrame title="Support Console" subtitle="Troubleshooting and help">
         <Skeleton variant="card" />
-      </PageScaffold>
+      </PageFrame>
     );
   }
 
@@ -66,10 +65,13 @@ export function SupportPage() {
   }
 
   return (
-    <PageScaffold>
-      <PageHeader title="Support" subtitle="Troubleshooting and help" />
+    <PageFrame title="Support Console" subtitle="Troubleshooting and help">
 
-      <PageSection title="Troubleshooter" description="Follow the flow to fix common connection issues.">
+      <PageSection
+        title="DIAGNOSTIC FLOW"
+        description="Follow the flow to fix common connection issues."
+        action={<span className="chip cn section-meta-chip">STEP {step + 1}/{totalSteps}</span>}
+      >
         <TroubleshooterStep
           stepIndex={step + 1}
           totalSteps={totalSteps}
@@ -82,19 +84,21 @@ export function SupportPage() {
         />
       </PageSection>
 
-      <PageSection title="FAQ" description="High-value quick answers.">
-        <Panel className="card hud-brackets">
-          <H3 as="h3">Installation</H3>
-          <Body>
-            Subscribe to a plan, add a device, download the config, then import it in AmneziaVPN.
-          </Body>
-        </Panel>
-        <Panel className="card hud-brackets">
-          <H3 as="h3">Privacy & security</H3>
-          <Body>
-            Treat each config as a secret. If compromised, revoke the device in Devices and issue a new one.
-          </Body>
-        </Panel>
+      <PageSection title="OPERATOR FAQ" description="High-value quick answers.">
+        <div className="faq-grid">
+          <Panel className="card edge et module-card module-card--tight">
+            <h3 className="type-h4">INSTALLATION</h3>
+            <p className="type-body-sm">
+              Subscribe to a plan, add a device, download the config, then import it in AmneziaVPN.
+            </p>
+          </Panel>
+          <Panel className="card edge et module-card module-card--tight">
+            <h3 className="type-h4">PRIVACY & SECURITY</h3>
+            <p className="type-body-sm">
+              Treat each config as a secret. If compromised, revoke the device in Devices and issue a new one.
+            </p>
+          </Panel>
+        </div>
       </PageSection>
 
       <a aria-label="Contact support" href="https://t.me/support" target="_blank" rel="noopener noreferrer"
@@ -102,6 +106,6 @@ export function SupportPage() {
       >
         Contact support
       </a>
-    </PageScaffold>
+    </PageFrame>
   );
 }

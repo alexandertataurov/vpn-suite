@@ -8,7 +8,7 @@ export interface PageHeaderProps extends HTMLAttributes<HTMLDivElement> {
   children?: ReactNode;
 }
 
-/** Page header. Uses tokens only. */
+/** Page head per design system (.ph). */
 export function PageHeader({
   title,
   subtitle,
@@ -18,13 +18,13 @@ export function PageHeader({
   ...props
 }: PageHeaderProps) {
   return (
-    <div className={`miniapp-page-header ${className}`.trim()} {...props}>
-      <div className="miniapp-page-header-copy">
-        <H1 as="h1" className="tracking-trim data-truncate">{title}</H1>
-        {subtitle && <Body className="miniapp-page-subtitle">{subtitle}</Body>}
+    <header className={`ph ${className}`.trim()} {...props}>
+      <div>
+        <H1 as="h1" className="ph-title tracking-trim data-truncate">{title}</H1>
+        {subtitle && <div className="ph-meta"><Body as="span">{subtitle}</Body></div>}
         {children}
       </div>
-      {action}
-    </div>
+      {action ? <div className="ph-actions">{action}</div> : null}
+    </header>
   );
 }

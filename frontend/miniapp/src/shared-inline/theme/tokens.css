@@ -1,6 +1,0 @@
-@import "../../styles/miniapp-tokens.css";
-
-html {
-  --width-drawer-panel: 25rem;
-  --code-block-max-height: 400px;
-}

@@ -4,10 +4,24 @@ import { ChevronRight } from "lucide-react";
 import { Card } from "./Card";
 import { CardTitle, Caption } from "../typography";
 
+/** Left-edge accent per design-system: category of data (sessions=blue, health=green, incidents=amber, errors=red, latency=violet, cluster=teal) */
+export type WidgetEdgeAccent = "blue" | "green" | "amber" | "red" | "violet" | "teal";
+
+const EDGE_CLASS: Record<WidgetEdgeAccent, string> = {
+  blue: "eb",
+  green: "eg",
+  amber: "ea",
+  red: "er",
+  violet: "ev",
+  teal: "et",
+};
+
 interface WidgetProps {
   title: ReactNode;
   subtitle?: ReactNode;
   variant?: "default" | "kpi";
+  /** Left-edge accent for KPI cards (design-system Section 4). Only applied when variant="kpi". */
+  edge?: WidgetEdgeAccent;
   className?: string;
   headerRight?: ReactNode;
   /** Link target for drill-down; adds "View" link in header when set */
@@ -27,6 +41,7 @@ export function Widget({
   title,
   subtitle,
   variant = "default",
+  edge,
   className,
   headerRight,
   href,
@@ -35,9 +50,12 @@ export function Widget({
   children,
 }: WidgetProps) {
   const isInteractive = interactive || !!href || !!onClick;
+  const edgeClass = variant === "kpi" && edge ? EDGE_CLASS[edge] : null;
   const rootClassName = cx(
     "widget",
     variant === "kpi" && "kpi",
+    variant === "kpi" && edge && "edge",
+    edgeClass,
     isInteractive && "widget--interactive",
     className
   );
@@ -110,6 +128,10 @@ export function Widget({
     );
   }
 
-  return <Card className={rootClassName}>{inner}</Card>;
+  return (
+    <Card variant={isInteractive ? "interactive" : "default"} className={rootClassName}>
+      {inner}
+    </Card>
+  );
 }
 

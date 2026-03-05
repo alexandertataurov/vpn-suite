@@ -12,7 +12,6 @@ from app.core.config import settings
 from app.core.database import async_session_factory
 from app.core.metrics import update_topology_metrics
 from app.core.redis_client import get_redis
-from app.core.telemetry_polling_task import push_dashboard_timeseries
 from app.models import Server
 from app.schemas.node import ClusterTopology, NodeMetadata
 

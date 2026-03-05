@@ -16,21 +16,17 @@ export function HomePrimaryActionZone({
   secondaryTo,
 }: HomePrimaryActionZoneProps) {
   return (
-    <div className="home-primary-action-zone stagger-item">
+    <div className="primary-action-zone">
       <ButtonLink
         to={primaryTo}
         kind="connect"
-        className="home-primary-cta"
+        className="btn-full-width"
         onClick={onPrimaryClick}
       >
         {primaryLabel}
       </ButtonLink>
-      {secondaryLabel && secondaryTo && (
-        <ButtonLink
-          to={secondaryTo}
-          variant="secondary"
-          className="home-secondary-cta"
-        >
+      {secondaryLabel != null && secondaryTo != null && (
+        <ButtonLink to={secondaryTo} variant="secondary" className="btn-full-width">
           {secondaryLabel}
         </ButtonLink>
       )}

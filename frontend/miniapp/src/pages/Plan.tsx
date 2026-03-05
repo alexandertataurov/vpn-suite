@@ -3,13 +3,11 @@ import { useNavigate } from "react-router-dom";
 import {
   Panel,
   Skeleton,
-  PageScaffold,
-  PageHeader,
+  PageFrame,
   PageSection,
   Button,
   InlineAlert,
   ActionRow,
-  Body,
 } from "../ui";
 import { PlanCard, SubscriptionSummaryCard, FallbackScreen, SessionMissing } from "@/components";
 import { useSession } from "../hooks/useSession";
@@ -80,50 +78,42 @@ export function PlanPage() {
 
   if (sessionLoading || plansLoading) {
     return (
-      <PageScaffold>
-        <PageHeader title="Plan" />
+      <PageFrame title="Subscription Console" subtitle="Plans, trial, and renewal controls">
         <Skeleton variant="card" />
-      </PageScaffold>
+      </PageFrame>
     );
   }
 
   if (plans.length === 0) {
     return (
-      <PageScaffold>
-        <div className="content-reveal">
-          <PageHeader title="Choose Your Plan" subtitle="Cancel anytime. Money-back guarantee." />
-          <Panel className="card stagger-item">
-            <Body>No plans available at the moment.</Body>
-            <ActionRow>
-              <a aria-label="Contact support" href="https://t.me/support" target="_blank" rel="noopener noreferrer"
-                className="miniapp-back-link"
-              >
-                Contact support
-              </a>
-            </ActionRow>
-          </Panel>
-        </div>
-      </PageScaffold>
+      <PageFrame title="Subscription Console" subtitle="Cancel anytime. Money-back guarantee.">
+        <Panel variant="surface" className="card edge et stagger-item module-card">
+          <p className="type-body-sm">No plans available at the moment.</p>
+          <ActionRow>
+            <a aria-label="Contact support" href="https://t.me/support" target="_blank" rel="noopener noreferrer" className="link-interactive">
+              CONTACT SUPPORT
+            </a>
+          </ActionRow>
+        </Panel>
+      </PageFrame>
     );
   }
 
   return (
-    <PageScaffold>
-      <div className="content-reveal">
-        <PageHeader title="Choose Your Plan" subtitle="Cancel anytime. Money-back guarantee." />
-        {activeSub && (
-          <SubscriptionSummaryCard
+    <PageFrame title="Subscription Console" subtitle="Cancel anytime. Money-back guarantee.">
+      {activeSub != null && (
+        <SubscriptionSummaryCard
           planId={activeSub.plan_id}
           daysLeft={daysLeft}
           status="active"
           deviceCount={session?.devices?.filter((d) => !d.revoked_at).length ?? 0}
-            deviceLimit={activeSub.device_limit}
-          />
-        )}
-        {!activeSub && (
-          <Panel className="card stagger-item">
-            <Body>No active plan. Start a free trial or choose one below.</Body>
-          {startTrial.error && (
+          deviceLimit={activeSub.device_limit}
+        />
+      )}
+      {activeSub == null && (
+        <Panel variant="surface" className="card edge et stagger-item module-card">
+          <p className="type-body-sm">No active subscription. Start a trial or choose a plan below.</p>
+          {startTrial.error != null && (
             <InlineAlert
               variant="error"
               title="Trial"
@@ -144,14 +134,17 @@ export function PlanPage() {
               disabled={startTrial.isPending}
               onClick={() => startTrial.mutate()}
             >
-              Start free trial
+              START FREE TRIAL
             </Button>
           </ActionRow>
         </Panel>
       )}
-      <PageSection title="Available plans">
-          <div className="miniapp-plan-list">
-          {plans.map((p) => ( // key=
+      <PageSection
+        title="AVAILABLE TIERS"
+        action={<span className="chip cn section-meta-chip miniapp-tnum">{plans.length} TIERS</span>}
+      >
+        <div className="stack">
+          {plans.map((p) => (
             <PlanCard
               key={p.id}
               id={p.id}
@@ -163,10 +156,9 @@ export function PlanPage() {
               isCurrent={activeSub?.plan_id === p.id}
               onSelect={(planId) => track("cta_click", { cta_name: "select_plan", screen_name: "plan", plan_id: planId })}
             />
-            ))}
-          </div>
-        </PageSection>
-      </div>
-    </PageScaffold>
+          ))}
+        </div>
+      </PageSection>
+    </PageFrame>
   );
 }

@@ -20,7 +20,6 @@ import {
   SegmentedMeter,
   Skeleton,
   Slider,
-  Spinner,
   Stepper,
   Table,
   TableBody,
@@ -33,7 +32,18 @@ import {
   TabsTrigger,
   Timeline,
   useToast,
-} from "@/design-system";
+} from "@/design-system/primitives";
+import { PageLayout } from "@/layout/PageLayout";
+
+const spacing = {
+  gap2: "var(--sp-2)",
+  gap3: "var(--sp-3)",
+  gap4: "var(--sp-4)",
+  gap6: "var(--sp-6)",
+  gap8: "var(--sp-8)",
+  mt2: "var(--sp-2)",
+  mt6: "var(--sp-6)",
+} as const;
 
 export function StyleguidePage() {
   const [modalOpen, setModalOpen] = useState(false);
@@ -97,23 +107,21 @@ export function StyleguidePage() {
   }, [commandItems, commandQuery]);
 
   return (
-    <div className="page styleguide-page">
-      <div className="flex items-baseline justify-between gap-4">
-        <h2>Primitives Styleguide</h2>
+    <PageLayout
+      title="Primitives Styleguide"
+      description="Visual regression surface for Primitives tokens + components."
+      actions={
         <Button variant="default" onClick={() => setModalOpen(true)}>
           Open modal
         </Button>
-      </div>
-
-      <p className="mt-2 text-[12px] text-[var(--text-secondary)]">
-        Visual regression surface for Primitives tokens + components.
-      </p>
-
-      <div className="mt-6 grid gap-4">
-        <Card>
-          <div className="flex flex-col gap-4">
-            <div className="text-[9px] font-[600] tracking-[0.14em] uppercase text-[var(--text-muted)]">Buttons</div>
-            <div className="flex flex-wrap gap-3">
+      }
+      pageClass="styleguide-page"
+    >
+      <div style={{ marginTop: spacing.mt6, display: "grid", gap: spacing.gap4 }}>
+        <Card variant="elevated">
+          <div style={{ display: "flex", flexDirection: "column", gap: spacing.gap4 }}>
+            <div className="type-meta type-meta--upper">Buttons</div>
+            <div className="flex flex-wrap" style={{ gap: spacing.gap3 }}>
               <Button variant="default">Default</Button>
               <Button variant="primary">Primary</Button>
               <Button variant="solid">Solid</Button>
@@ -125,7 +133,7 @@ export function StyleguidePage() {
                 Disabled
               </Button>
             </div>
-            <div className="flex flex-wrap gap-3 items-center">
+            <div className="flex flex-wrap items-center" style={{ gap: spacing.gap3 }}>
               <Button size="sm" variant="default">
                 Small
               </Button>
@@ -142,13 +150,13 @@ export function StyleguidePage() {
           </div>
         </Card>
 
-        <Card>
-          <div className="flex flex-col gap-4">
-            <div className="text-[9px] font-[600] tracking-[0.14em] uppercase text-[var(--text-muted)]">
+        <Card variant="outlined">
+          <div className="flex flex-col" style={{ gap: spacing.gap4 }}>
+            <div className="type-meta">
               Tabs / Accordion
             </div>
-            <div className="grid gap-6 md:grid-cols-2">
-              <div className="flex flex-col gap-3">
+            <div className="grid md:grid-cols-2" style={{ gap: spacing.gap6 }}>
+              <div className="flex flex-col" style={{ gap: spacing.gap3 }}>
                 <Tabs defaultValue="overview">
                   <TabsList>
                     <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -164,7 +172,7 @@ export function StyleguidePage() {
                   <TabsPanel value="logs">Streaming logs from all nodes.</TabsPanel>
                 </Tabs>
               </div>
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col" style={{ gap: spacing.gap3 }}>
                 <Accordion defaultValue="auth">
                   <AccordionItem value="auth" title="Authentication & API Keys" meta="3 keys">
                     Manage API keys for programmatic access. Rotate every 90 days.
@@ -186,26 +194,40 @@ export function StyleguidePage() {
         </Card>
 
         <Card>
-          <div className="flex flex-col gap-4">
-            <div className="text-[9px] font-[600] tracking-[0.14em] uppercase text-[var(--text-muted)]">Inputs</div>
-            <div className="grid gap-3 md:grid-cols-3">
-              <label className="flex flex-col gap-2 text-[10px] font-[500] tracking-[0.1em] uppercase text-[var(--text-muted)]">
-                Default
+          <div className="flex flex-col" style={{ gap: spacing.gap4 }}>
+            <div className="type-meta">Inputs</div>
+            <div className="grid md:grid-cols-3" style={{ gap: spacing.gap3 }}>
+              <label className="flex flex-col type-meta type-meta--label" style={{ gap: spacing.gap2 }}>
+                Default (md)
                 <Input placeholder="Placeholder" />
               </label>
-              <label className="flex flex-col gap-2 text-[10px] font-[500] tracking-[0.1em] uppercase text-[var(--text-muted)]">
+              <label className="flex flex-col type-meta type-meta--label" style={{ gap: spacing.gap2 }}>
                 Error
                 <Input error placeholder="Invalid" defaultValue="bad_value@" />
               </label>
-              <label className="flex flex-col gap-2 text-[10px] font-[500] tracking-[0.1em] uppercase text-[var(--text-muted)]">
+              <label className="flex flex-col type-meta type-meta--label" style={{ gap: spacing.gap2 }}>
                 Success
                 <Input success placeholder="Valid" defaultValue="ok_value" />
               </label>
             </div>
+            <div className="grid md:grid-cols-3" style={{ gap: spacing.gap3 }}>
+              <label className="flex flex-col type-meta type-meta--label" style={{ gap: spacing.gap2 }}>
+                {'size="sm"'}
+                <Input size="sm" placeholder="Small" />
+              </label>
+              <label className="flex flex-col type-meta type-meta--label" style={{ gap: spacing.gap2 }}>
+                {'size="md"'}
+                <Input size="md" placeholder="Medium" />
+              </label>
+              <label className="flex flex-col type-meta type-meta--label" style={{ gap: spacing.gap2 }}>
+                {'size="lg"'}
+                <Input size="lg" placeholder="Large" />
+              </label>
+            </div>
 
-            <div className="grid gap-3 md:grid-cols-2">
-              <div className="flex flex-col gap-2">
-                <div className="text-[9px] tracking-[0.14em] uppercase text-[var(--text-muted)]">Select</div>
+            <div className="grid md:grid-cols-2" style={{ gap: spacing.gap3 }}>
+              <div className="flex flex-col" style={{ gap: spacing.gap2 }}>
+                <div className="type-meta">Select</div>
                 <div className="select-wrap w-full">
                   <select className="input w-full" defaultValue="">
                     <option value="">— choose environment</option>
@@ -215,8 +237,8 @@ export function StyleguidePage() {
                   </select>
                 </div>
               </div>
-              <div className="flex flex-col gap-2">
-                <div className="text-[9px] tracking-[0.14em] uppercase text-[var(--text-muted)]">Textarea</div>
+              <div className="flex flex-col" style={{ gap: spacing.gap2 }}>
+                <div className="type-meta">Textarea</div>
                 <textarea className="input" placeholder="Multi-line input..." rows={3} />
               </div>
             </div>
@@ -224,17 +246,17 @@ export function StyleguidePage() {
         </Card>
 
         <Card>
-          <div className="flex flex-col gap-4">
-            <div className="text-[9px] font-[600] tracking-[0.14em] uppercase text-[var(--text-muted)]">
+          <div className="flex flex-col" style={{ gap: spacing.gap4 }}>
+            <div className="type-meta">
               Meters / Timeline / Stepper
             </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="flex flex-col gap-3">
+            <div className="grid md:grid-cols-2" style={{ gap: spacing.gap4 }}>
+              <div className="flex flex-col" style={{ gap: spacing.gap3 }}>
                 <Meter label="CPU (avg)" valueLabel="83%" percent={83} variant="warning" />
                 <Meter label="Storage" valueLabel="67 / 100 GB" percent={67} variant="info" />
                 <SegmentedMeter filled={7} total={10} variant="success" />
               </div>
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col" style={{ gap: spacing.gap4 }}>
                 <Stepper
                   steps={[
                     { id: "configure", label: "Configure", subLabel: "Done", state: "completed", marker: "✓" },
@@ -269,18 +291,18 @@ export function StyleguidePage() {
         </Card>
 
         <Card>
-          <div className="flex flex-col gap-4">
-            <div className="text-[9px] font-[600] tracking-[0.14em] uppercase text-[var(--text-muted)]">
+          <div className="flex flex-col" style={{ gap: spacing.gap4 }}>
+            <div className="type-meta">
               Navigation / Identity / Controls
             </div>
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col" style={{ gap: spacing.gap3 }}>
               <Breadcrumb>
                 <BreadcrumbItem href="#">Home</BreadcrumbItem>
                 <BreadcrumbItem href="#">Infrastructure</BreadcrumbItem>
                 <BreadcrumbItem href="#">Clusters</BreadcrumbItem>
                 <BreadcrumbItem>prod-us-east-1</BreadcrumbItem>
               </Breadcrumb>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center" style={{ gap: spacing.gap4 }}>
                 <Avatar name="Marina K." color="green" status="online" />
                 <AvatarGroup>
                   <Avatar name="AB" color="blue" />
@@ -288,8 +310,8 @@ export function StyleguidePage() {
                   <Avatar name="EF" color="red" />
                 </AvatarGroup>
               </div>
-              <div className="flex flex-col gap-2 max-w-[320px]">
-                <span className="text-[10px] tracking-[0.12em] uppercase text-[var(--text-muted)]">
+              <div className="flex flex-col max-w-[320px]" style={{ gap: spacing.gap2 }}>
+                <span className="type-meta">
                   Slider / Date Picker
                 </span>
                 <Slider
@@ -301,9 +323,9 @@ export function StyleguidePage() {
                 </span>
                 <DatePicker value={selectedDate} onChange={setSelectedDate} />
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center" style={{ gap: spacing.gap4 }}>
                 <Pagination page={page} pageCount={18} onPageChange={setPage} />
-                <span className="text-[10px] text-[var(--text-muted)]">
+                <span className="type-meta">
                   Page {page} of 18
                 </span>
               </div>
@@ -312,11 +334,11 @@ export function StyleguidePage() {
         </Card>
 
         <Card>
-          <div className="flex flex-col gap-4">
-            <div className="text-[9px] font-[600] tracking-[0.14em] uppercase text-[var(--text-muted)]">
+          <div className="flex flex-col" style={{ gap: spacing.gap4 }}>
+            <div className="type-meta">
               Overlays / Toasts / Popover
             </div>
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap" style={{ gap: spacing.gap3 }}>
               <Button variant="default" onClick={() => setModalOpen(true)}>
                 Open modal
               </Button>
@@ -352,7 +374,7 @@ export function StyleguidePage() {
                 Open command palette
               </Button>
             </div>
-            <div className="flex flex-wrap gap-4 items-center">
+            <div className="flex flex-wrap items-center" style={{ gap: spacing.gap4 }}>
               <Popover trigger={<Button variant="default">Hover for node details</Button>}>
                 <div className="popover-title">node-prod-07</div>
                 <div className="popover-body">
@@ -360,7 +382,7 @@ export function StyleguidePage() {
                   <br />
                   Region: <code>us-west-2b</code>
                   <br />
-                  Status: <span style={{ color: "var(--warning)" }}>Degraded</span>
+                  Status: <span className="text-warning">Degraded</span>
                 </div>
               </Popover>
             </div>
@@ -368,12 +390,12 @@ export function StyleguidePage() {
         </Card>
 
         <Card>
-          <div className="flex flex-col gap-4">
-            <div className="text-[9px] font-[600] tracking-[0.14em] uppercase text-[var(--text-muted)]">Controls</div>
+          <div className="flex flex-col" style={{ gap: spacing.gap4 }}>
+            <div className="type-meta">Controls</div>
 
-            <div className="flex flex-wrap gap-6 items-start">
-              <div className="flex flex-col gap-2">
-                <div className="text-[9px] tracking-[0.14em] uppercase text-[var(--text-muted)]">Checkbox</div>
+            <div className="flex flex-wrap items-start" style={{ gap: spacing.gap6 }}>
+              <div className="flex flex-col" style={{ gap: spacing.gap2 }}>
+                <div className="type-meta">Checkbox</div>
                 <label className="checkbox-wrap">
                   <input type="checkbox" />
                   <span className="text-[11px] text-[var(--text-secondary)]">Unchecked</span>
@@ -388,8 +410,8 @@ export function StyleguidePage() {
                 </label>
               </div>
 
-              <div className="flex flex-col gap-2">
-                <div className="text-[9px] tracking-[0.14em] uppercase text-[var(--text-muted)]">Radio</div>
+              <div className="flex flex-col" style={{ gap: spacing.gap2 }}>
+                <div className="type-meta">Radio</div>
                 <label className="radio-wrap">
                   <input type="radio" name="styleguide-radio" defaultChecked />
                   <span className="text-[11px] text-[var(--text-secondary)]">Option A</span>
@@ -400,8 +422,8 @@ export function StyleguidePage() {
                 </label>
               </div>
 
-              <div className="flex flex-col gap-2">
-                <div className="text-[9px] tracking-[0.14em] uppercase text-[var(--text-muted)]">Toggle</div>
+              <div className="flex flex-col" style={{ gap: spacing.gap2 }}>
+                <div className="type-meta">Toggle</div>
                 <label className="toggle-wrap">
                   <input type="checkbox" className="toggle-input" />
                   <span className="toggle-track">
@@ -422,9 +444,9 @@ export function StyleguidePage() {
         </Card>
 
         <Card>
-          <div className="flex flex-col gap-4">
-            <div className="text-[9px] font-[600] tracking-[0.14em] uppercase text-[var(--text-muted)]">Badges / Tags / Alerts</div>
-            <div className="flex flex-wrap gap-3 items-center">
+          <div className="flex flex-col" style={{ gap: spacing.gap4 }}>
+            <div className="type-meta">Badges / Tags / Alerts</div>
+            <div className="flex flex-wrap items-center" style={{ gap: spacing.gap3 }}>
               <span className="badge badge-md badge-neutral">Neutral</span>
               <span className="badge badge-md badge-success">
                 <span className="dot pulse" />
@@ -436,10 +458,10 @@ export function StyleguidePage() {
               <span className="badge-count danger">12</span>
               <span className="tag">env:production</span>
               <span className="tag">
-                removable <span className="tag-remove" role="button" aria-label="Remove tag">×</span>
+                removable <button type="button" className="tag-remove" aria-label="Remove tag">×</button>
               </span>
             </div>
-            <div className="grid gap-2">
+            <div className="grid" style={{ gap: spacing.gap2 }}>
               <div className="alert info">
                 <span className="alert-icon">ℹ</span>
                 <div className="alert-body">
@@ -473,18 +495,18 @@ export function StyleguidePage() {
         </Card>
 
         <Card>
-          <div className="flex flex-col gap-4">
-            <div className="text-[9px] font-[600] tracking-[0.14em] uppercase text-[var(--text-muted)]">
+          <div className="flex flex-col" style={{ gap: spacing.gap4 }}>
+            <div className="type-meta">
               Progress / Loading / Table
             </div>
-            <div className="grid gap-2 max-w-[480px]">
+            <div className="grid max-w-[480px]" style={{ gap: spacing.gap2 }}>
               <Progress value={67} variant="info" />
               <Progress value={83} variant="warning" />
               <Progress indeterminate variant="info" />
             </div>
 
-            <div className="flex flex-wrap gap-3 items-center">
-              <Spinner />
+            <div className="flex flex-wrap items-center" style={{ gap: spacing.gap3 }}>
+              <Skeleton width={32} height={32} />
               <Skeleton width={220} height={12} />
               <Skeleton width={120} height={12} />
             </div>
@@ -520,14 +542,25 @@ export function StyleguidePage() {
             </Table>
           </div>
         </Card>
+
+        <Card variant="outlined">
+          <div className="flex flex-col" style={{ gap: spacing.gap3 }}>
+            <div className="type-meta type-meta--upper">
+              Accessibility (WCAG 2.0 AA)
+            </div>
+            <p className="type-body-sm">
+              The admin targets WCAG 2.0 Level AA: keyboard navigation, visible focus, semantic HTML, and ARIA where needed. Design system §13 and the full checklist live in <code className="text-[var(--tx-pri)]">design-system/docs/WCAG_2.0.md</code>.
+            </p>
+          </div>
+        </Card>
       </div>
 
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Modal">
-        <div className="grid gap-3">
-          <p className="text-[12px] text-[var(--text-secondary)]">
+        <div className="grid" style={{ gap: spacing.gap3 }}>
+          <p className="type-body-sm">
             This modal is styled by Primitives tokens and global component CSS.
           </p>
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-end" style={{ gap: spacing.gap2 }}>
             <Button variant="default" onClick={() => setModalOpen(false)}>
               Close
             </Button>
@@ -541,8 +574,10 @@ export function StyleguidePage() {
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         title="Drawer"
+        size="sm"
+        placement="left"
       >
-        <p className="text-[12px] text-[var(--text-secondary)] mb-3">
+        <p className="type-body-sm">
           Side panel for node details or configuration.
         </p>
         <Meter label="CPU" valueLabel="84%" percent={84} variant="warning" />
@@ -555,6 +590,6 @@ export function StyleguidePage() {
         items={filteredCommands}
         onSelect={() => setCommandOpen(false)}
       />
-    </div>
+    </PageLayout>
   );
 }

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { PageTitle } from "@/design-system";
+import { PageTitle } from "@/design-system/typography";
 
 interface MissionBarProps {
   title?: string;

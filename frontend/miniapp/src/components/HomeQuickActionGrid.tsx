@@ -6,14 +6,19 @@ import {
   IconUsers,
   IconHelpCircle,
   type IconType,
-} from "@/shared-inline/icons";
+} from "@/lib/icons";
 import { useTelegramHaptics } from "../hooks/useTelegramHaptics";
 
 interface QuickAction {
   label: string;
+  description: string;
   to: string;
   icon: IconType;
 }
+
+type QuickActionEdge = "e-b" | "e-g" | "e-a" | "e-r";
+type QuickActionTone = "b" | "g" | "a" | "r";
+type StyledQuickAction = QuickAction & { edge: QuickActionEdge; iconTone: QuickActionTone };
 
 export interface HomeQuickActionGridProps {
   hasSub: boolean;
@@ -23,33 +28,74 @@ export interface HomeQuickActionGridProps {
 export function HomeQuickActionGrid({ hasSub, hasDevices }: HomeQuickActionGridProps) {
   const { impact } = useTelegramHaptics();
 
-  const actions: QuickAction[] = [
+  const actions: StyledQuickAction[] = [
     ...(hasSub
       ? [
           {
-            label: hasDevices ? "Get config" : "Add device",
+            label: hasDevices ? "Issue config" : "Add device",
+            description: hasDevices ? "Rebuild or rotate client profile" : "Generate your first secure profile",
             to: "/devices",
             icon: IconPlus,
+            edge: "e-b",
+            iconTone: "b",
           },
-        ]
-      : [{ label: "Plan", to: "/plan", icon: IconCreditCard }]),
-    { label: "Servers", to: "/servers", icon: IconGlobe },
-    { label: "Invite", to: "/referral", icon: IconUsers },
-    { label: "Support", to: "/support", icon: IconHelpCircle },
+        ] satisfies StyledQuickAction[]
+      : [
+          {
+            label: "Get plan",
+            description: "Activate subscription access",
+            to: "/plan",
+            icon: IconCreditCard,
+            edge: "e-b",
+            iconTone: "b",
+          },
+        ] satisfies StyledQuickAction[]),
+    {
+      label: "Servers",
+      description: "Switch routing location",
+      to: "/servers",
+      icon: IconGlobe,
+      edge: "e-g",
+      iconTone: "g",
+    },
+    {
+      label: "Invite",
+      description: "Share link and earn days",
+      to: "/referral",
+      icon: IconUsers,
+      edge: "e-a",
+      iconTone: "a",
+    },
+    {
+      label: "Support",
+      description: "Troubleshoot connection issues",
+      to: "/support",
+      icon: IconHelpCircle,
+      edge: "e-r",
+      iconTone: "r",
+    },
   ];
 
   return (
-    <div className="home-quick-action-grid">
-      {actions.map(({ label, to, icon: Icon }) => ( // key=
-        <Link key={to + label}
+    <div className="ops">
+      {actions.map(({ label, description, to, icon: Icon, edge, iconTone }) => (
+        <Link
+          key={`${to}-${label}`}
           to={to}
-          className="home-quick-action-card stagger-item"
+          className={`op quick-action-card ${edge}`}
           onClick={() => impact("light")}
+          aria-label={label}
         >
-          <span className="home-quick-action-icon" aria-hidden>
-            <Icon size={20} />
+          <span className={`op-ico quick-action-icon ${iconTone}`} aria-hidden>
+            <Icon size={18} strokeWidth={1.6} />
           </span>
-          <span className="home-quick-action-label">{label}</span>
+          <span className="op-body quick-action-content">
+            <span className="op-name quick-action-label">{label}</span>
+            <span className="op-desc quick-action-meta">{description}</span>
+          </span>
+          <span className="op-chev quick-action-chevron" aria-hidden>
+            ›
+          </span>
         </Link>
       ))}
     </div>

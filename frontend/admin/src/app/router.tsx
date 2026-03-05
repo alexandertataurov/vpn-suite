@@ -1,12 +1,39 @@
-import { lazy, Suspense } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { lazy, Suspense, useEffect } from "react";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { RootLayout } from "./RootLayout";
 import { ErrorBoundary } from "@/core/errors/Boundary";
-import { Skeleton } from "@/design-system";
+import { Skeleton } from "@/design-system/primitives";
+
+const BASE_TITLE = "VPN Suite Admin";
+const ROUTE_TITLES: Record<string, string> = {
+  "/": "Overview",
+  "/login": "Login",
+  "/servers": "Servers",
+  "/servers/nodes": "VPN Nodes",
+  "/telemetry": "Telemetry",
+  "/users": "Users",
+  "/devices": "Devices",
+  "/automation": "Automation",
+  "/revenue": "Revenue",
+  "/billing": "Billing",
+  "/audit": "Audit",
+  "/settings": "Settings",
+  "/styleguide": "Styleguide",
+};
+
+function DocumentTitle() {
+  const { pathname } = useLocation();
+  const pageTitle = ROUTE_TITLES[pathname] ?? "Overview";
+  useEffect(() => {
+    document.title = pageTitle === BASE_TITLE ? BASE_TITLE : `${pageTitle} — ${BASE_TITLE}`;
+  }, [pageTitle]);
+  return null;
+}
 
 const LoginPage = lazy(() => import("@/features/login/LoginPage").then((m) => ({ default: m.LoginPage })));
 const OverviewPage = lazy(() => import("@/features/overview/OverviewPage").then((m) => ({ default: m.OverviewPage })));
 const ServersPage = lazy(() => import("@/features/servers/ServersPage").then((m) => ({ default: m.ServersPage })));
+const VpnNodesPage = lazy(() => import("@/features/vpn-nodes/VpnNodesPage").then((m) => ({ default: m.VpnNodesPage })));
 const TelemetryPage = lazy(() => import("@/features/telemetry/TelemetryPage").then((m) => ({ default: m.TelemetryPage })));
 const UsersPage = lazy(() => import("@/features/users/UsersPage").then((m) => ({ default: m.UsersPage })));
 const DevicesPage = lazy(() => import("@/features/devices/DevicesPage").then((m) => ({ default: m.DevicesPage })));
@@ -19,7 +46,7 @@ const StyleguidePage = lazy(() => import("@/features/styleguide/StyleguidePage")
 
 function RouteFallback() {
   return (
-    <div className="shell-loading">
+    <div className="shell-loading" aria-busy="true" aria-label="Loading page">
       <Skeleton height={24} />
     </div>
   );
@@ -27,21 +54,24 @@ function RouteFallback() {
 
 export function AppRouter() {
   return (
-    <Suspense fallback={<RouteFallback />}>
-      <Routes>
+    <>
+      <DocumentTitle />
+      <Suspense fallback={<RouteFallback />}>
+        <Routes>
         <Route path="/login" element={<ErrorBoundary><LoginPage /></ErrorBoundary>} />
         <Route path="/" element={<RootLayout />}>
-          <Route index element={<ErrorBoundary><OverviewPage /></ErrorBoundary>} />
-          <Route path="servers" element={<ErrorBoundary><ServersPage /></ErrorBoundary>} />
-          <Route path="telemetry" element={<ErrorBoundary><TelemetryPage /></ErrorBoundary>} />
-          <Route path="users" element={<ErrorBoundary><UsersPage /></ErrorBoundary>} />
-          <Route path="devices" element={<ErrorBoundary><DevicesPage /></ErrorBoundary>} />
-          <Route path="automation" element={<ErrorBoundary><AutomationPage /></ErrorBoundary>} />
-          <Route path="revenue" element={<ErrorBoundary><RevenuePage /></ErrorBoundary>} />
-          <Route path="billing" element={<ErrorBoundary><BillingPage /></ErrorBoundary>} />
-          <Route path="audit" element={<ErrorBoundary><AuditPage /></ErrorBoundary>} />
-          <Route path="settings" element={<ErrorBoundary><SettingsPage /></ErrorBoundary>} />
-          <Route path="styleguide" element={<ErrorBoundary><StyleguidePage /></ErrorBoundary>} />
+          <Route index element={<OverviewPage />} />
+          <Route path="servers/nodes" element={<ErrorBoundary><VpnNodesPage /></ErrorBoundary>} />
+          <Route path="servers" element={<ServersPage />} />
+          <Route path="telemetry" element={<TelemetryPage />} />
+          <Route path="users" element={<UsersPage />} />
+          <Route path="devices" element={<DevicesPage />} />
+          <Route path="automation" element={<AutomationPage />} />
+          <Route path="revenue" element={<RevenuePage />} />
+          <Route path="billing" element={<BillingPage />} />
+          <Route path="audit" element={<AuditPage />} />
+          <Route path="settings" element={<SettingsPage />} />
+          <Route path="styleguide" element={<StyleguidePage />} />
           <Route path="subscriptions" element={<Navigate to="/billing?tab=subscriptions" replace />} />
           <Route path="payments" element={<Navigate to="/billing?tab=payments" replace />} />
           <Route path="promo" element={<Navigate to="/" replace />} />
@@ -49,6 +79,7 @@ export function AppRouter() {
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </Suspense>
+      </Suspense>
+    </>
   );
 }

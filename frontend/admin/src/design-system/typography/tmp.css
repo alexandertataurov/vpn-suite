@@ -1,0 +1,9 @@
+.type-meta--upper {
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-widest);
+}
+
+.type-meta--label {
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+}

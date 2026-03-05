@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import type { WebAppServersResponse } from "@vpn-suite/shared/types";
-import { Skeleton, PageScaffold } from "../ui";
+import type { WebAppServersResponse } from "@/lib/types";
+import { Skeleton, PageFrame, PageSection } from "../ui";
 import {
   HomeHeroPanel,
   HomePrimaryActionZone,
@@ -35,14 +35,11 @@ export function HomePage() {
   useTrackScreen("home", activeSub?.plan_id ?? null);
 
   const connected = !!(activeSub && activeDevices.length > 0);
-  
-  let locationLabel = "Automatic";
-  if (serversData) {
-    if (!serversData.auto_select) {
-      const currentServer = serversData.items.find(s => s.is_current);
-      if (currentServer) locationLabel = currentServer.name;
-    }
-  }
+  const currentServer = serversData?.items.find((server) => server.is_current);
+  const locationLabel =
+    !serversData || serversData.auto_select
+      ? "Automatic"
+      : (currentServer?.name ?? "Automatic");
 
   const deviceLimit = activeSub?.device_limit ?? null;
   const usedDevices = activeDevices.length;
@@ -50,11 +47,10 @@ export function HomePage() {
   let daysLeft = 0;
   let subStatus: "active" | "expired" | "none" = "none";
   if (activeSub) {
-    subStatus = "active";
-    const expiryDate = new Date(activeSub.valid_until);
-    const now = new Date();
-    daysLeft = Math.max(0, Math.ceil((expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
-    if (daysLeft <= 0) subStatus = "expired";
+    const expiresMs = new Date(activeSub.valid_until).getTime();
+    const remainingDays = Math.ceil((expiresMs - Date.now()) / (1000 * 60 * 60 * 24));
+    daysLeft = Math.max(0, remainingDays);
+    subStatus = remainingDays <= 0 ? "expired" : "active";
   }
 
   const primaryLabel = activeSub
@@ -74,16 +70,22 @@ export function HomePage() {
 
   if (isLoading || (error && isFetching)) {
     return (
-      <PageScaffold>
-        <Skeleton className="home-skeleton-hero" />
-        <Skeleton className="home-skeleton-cta" />
-        <div className="home-skeleton-grid">
+      <PageFrame title="Mission Control" subtitle="Live account and network telemetry">
+        <PageSection title="NETWORK STATUS">
           <Skeleton variant="card" />
-          <Skeleton variant="card" />
-          <Skeleton variant="card" />
-          <Skeleton variant="card" />
-        </div>
-      </PageScaffold>
+        </PageSection>
+        <section>
+          <Skeleton className="miniapp-skeleton-cta" />
+        </section>
+        <PageSection title="OPERATIONS">
+          <div className="grid-2">
+            <Skeleton variant="card" />
+            <Skeleton variant="card" />
+            <Skeleton variant="card" />
+            <Skeleton variant="card" />
+          </div>
+        </PageSection>
+      </PageFrame>
     );
   }
 
@@ -102,31 +104,41 @@ export function HomePage() {
   }
 
   return (
-    <PageScaffold>
-      <div className="content-reveal">
+    <PageFrame title="Mission Control" subtitle="Live account and network telemetry">
+      <PageSection
+        title="NETWORK STATUS"
+        action={<span className={`chip section-meta-chip ${connected ? "cg" : "cn"}`}>{connected ? "LIVE" : "IDLE"}</span>}
+      >
         <HomeHeroPanel
-        connected={connected}
-        locationLabel={locationLabel}
-        planId={activeSub?.plan_id ?? "—"}
-        daysLeft={daysLeft}
-        subStatus={subStatus}
-        deviceCount={usedDevices}
-        deviceLimit={deviceLimit}
-      />
+          connected={connected}
+          locationLabel={locationLabel}
+          planId={activeSub?.plan_id ?? "—"}
+          daysLeft={daysLeft}
+          subStatus={subStatus}
+          deviceCount={usedDevices}
+          deviceLimit={deviceLimit}
+        />
+      </PageSection>
       <HomePrimaryActionZone
         primaryLabel={primaryLabel}
         primaryTo={primaryTo}
         onPrimaryClick={handlePrimaryCta}
       />
-      <HomeQuickActionGrid hasSub={!!activeSub} hasDevices={activeDevices.length > 0} />
-      <HomeDynamicBlock
-        daysLeft={daysLeft}
-        hasSub={!!activeSub}
-        deviceLimit={deviceLimit}
-        usedDevices={usedDevices}
-        healthError={!!healthError}
-      />
-      </div>
-    </PageScaffold>
+      <PageSection title="OPERATIONS" action={<span className="chip cn section-meta-chip">4 TASKS</span>}>
+        <HomeQuickActionGrid hasSub={!!activeSub} hasDevices={activeDevices.length > 0} />
+      </PageSection>
+      <PageSection
+        title="SIGNALS"
+        action={<span className={`chip section-meta-chip ${healthError ? "ca" : "cg"}`}>{healthError ? "ATTN" : "CLEAR"}</span>}
+      >
+        <HomeDynamicBlock
+          daysLeft={daysLeft}
+          hasSub={!!activeSub}
+          deviceLimit={deviceLimit}
+          usedDevices={usedDevices}
+          healthError={!!healthError}
+        />
+      </PageSection>
+    </PageFrame>
   );
 }

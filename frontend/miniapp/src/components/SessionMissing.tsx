@@ -1,9 +1,10 @@
 import { useCallback, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button, InlineAlert, PageScaffold, ActionRow } from "../ui";
-import type { WebAppAuthResponse } from "@vpn-suite/shared/types";
+import { Button } from "../ui";
+import type { WebAppAuthResponse } from "@/lib/types";
 import { setWebappToken, webappApi } from "../api/client";
 import { useTelegramWebApp } from "../hooks/useTelegramWebApp";
+import { PageStateScreen } from "./PageStateScreen";
 
 export interface SessionMissingProps {
   message?: string;
@@ -29,15 +30,21 @@ export function SessionMissing({
   }, [initData, queryClient]);
 
   return (
-    <PageScaffold>
-      <InlineAlert variant="warning" title="Session missing" message={message} />
-      {initData ? (
-        <ActionRow fullWidth>
+    <PageStateScreen
+      panelClassName="card edge ea kpi"
+      label="Authentication"
+      chipClassName="chip ca"
+      chipText="Reconnect Required"
+      alertVariant="warning"
+      alertTitle="Session missing"
+      alertMessage={message}
+      actions={
+        initData ? (
           <Button variant="primary" size="lg" onClick={reconnect} loading={loading} disabled={loading}>
             Reconnect
           </Button>
-        </ActionRow>
-      ) : null}
-    </PageScaffold>
+        ) : undefined
+      }
+    />
   );
 }

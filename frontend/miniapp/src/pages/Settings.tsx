@@ -7,14 +7,11 @@ import {
   Skeleton,
   ConfirmModal,
   useToast,
-  PageScaffold,
-  PageHeader,
+  PageFrame,
   PageSection,
   ActionRow,
-  Body,
-  Caption,
 } from "../ui";
-import type { WebAppSubscriptionOffersResponse } from "@vpn-suite/shared/types";
+import type { WebAppSubscriptionOffersResponse } from "@/lib/types";
 import { useSession } from "../hooks/useSession";
 import { useWebappToken, webappApi } from "../api/client";
 import { DangerZone, FallbackScreen, SessionMissing } from "@/components";
@@ -96,63 +93,69 @@ export function SettingsPage() {
   }
   if (isLoading) {
     return (
-      <PageScaffold>
-        <PageHeader title="Settings" subtitle="Preferences and account" />
+      <PageFrame title="Control Settings" subtitle="Preferences and account operations">
         <Skeleton variant="card" />
-      </PageScaffold>
+      </PageFrame>
     );
   }
 
   const activeDevices = data?.devices?.filter((d) => !d.revoked_at) ?? [];
 
   return (
-    <PageScaffold>
-      <PageHeader title="Settings" subtitle="Preferences and account" />
+    <PageFrame title="Control Settings" subtitle="Preferences and account operations">
 
-      <PageSection title="Preferences" description="General miniapp preferences.">
-        <Panel className="card hud-brackets">
-          <Body>Language: System default</Body>
-          <Caption>Notifications: Expiry reminders via bot</Caption>
+      <PageSection
+        title="PREFERENCES"
+        description="General miniapp preferences."
+        action={<span className="chip cn section-meta-chip">LOCAL</span>}
+      >
+        <Panel variant="surface" className="card edge et module-card module-card--tight">
+          <p className="type-body-sm">Language: System default</p>
+          <p className="type-meta">Notifications: Expiry reminders via bot</p>
         </Panel>
       </PageSection>
 
-      <PageSection title="Account actions">
-        <Panel className="card hud-brackets">
-          <Body>Manage devices and referral settings from quick links below.</Body>
+      <PageSection title="ACCOUNT LINKS">
+        <Panel variant="surface" className="card edge et module-card">
+          <p className="type-body-sm">Manage devices and referral settings from quick links below.</p>
           <ActionRow fullWidth>
             <ButtonLink to="/devices" variant="secondary" size="md">
-              Manage devices
+              MANAGE DEVICES
             </ButtonLink>
             <ButtonLink to="/referral" variant="secondary" size="md">
-              Referral link
+              REFERRAL LINK
             </ButtonLink>
           </ActionRow>
         </Panel>
       </PageSection>
 
       {offersLoading && (
-        <Panel className="card">
+        <Panel variant="surface" className="card edge et module-card">
           <Skeleton className="skeleton-h-md" />
           <Skeleton className="skeleton-h-sm" />
         </Panel>
       )}
       {offersError && (
-        <Panel className="card">
-          <Body>Subscription options could not be loaded. Try again later.</Body>
+        <Panel variant="surface" className="card edge et module-card">
+          <p className="type-body-sm">Subscription options could not be loaded. Try again later.</p>
           <ActionRow fullWidth>
             <Button
               variant="secondary"
               size="sm"
               onClick={() => queryClient.invalidateQueries({ queryKey: ["webapp", "subscription", "offers"] })}
             >
-              Try again
+              TRY AGAIN
             </Button>
           </ActionRow>
         </Panel>
       )}
       {offers && !offersError && (offers.can_pause || offers.can_resume) && (
-        <PageSection title="Manage subscription" description={`Loyalty discount: ${offers.discount_percent}%`}>
-          <Panel className="card">
+        <PageSection
+          title="SUBSCRIPTION OPERATIONS"
+          description={`Loyalty discount: ${offers.discount_percent}%`}
+          action={<span className="chip ca section-meta-chip miniapp-tnum">{offers.discount_percent}%</span>}
+        >
+          <Panel variant="surface" className="card edge et module-card">
             <ActionRow fullWidth>
               <Button
                 variant="secondary"
@@ -161,7 +164,7 @@ export function SettingsPage() {
                 loading={pauseMutation.isPending}
                 onClick={() => pauseMutation.mutate()}
               >
-                Pause
+                PAUSE
               </Button>
               <Button
                 variant="secondary"
@@ -170,7 +173,7 @@ export function SettingsPage() {
                 loading={resumeMutation.isPending}
                 onClick={() => resumeMutation.mutate()}
               >
-                Resume
+                RESUME
               </Button>
               <Button
                 variant="danger"
@@ -178,7 +181,7 @@ export function SettingsPage() {
                 onClick={() => setCancelOpen(true)}
                 disabled={cancelMutation.isPending}
               >
-                Cancel subscription
+                CANCEL SUBSCRIPTION
               </Button>
             </ActionRow>
           </Panel>
@@ -187,9 +190,9 @@ export function SettingsPage() {
 
       {activeDevices.length > 0 && (
         <DangerZone
-          title="Reset configs"
+          title="RESET CONFIGS"
           description="Revoke all device configs. You will need to add devices again from the Devices tab."
-          buttonLabel="Reset all configs"
+          buttonLabel="RESET ALL CONFIGS"
           confirmTitle="Reset all configs?"
           confirmMessage="This will revoke every device config. You can add new devices afterward."
           confirmLabel="Reset"
@@ -210,6 +213,6 @@ export function SettingsPage() {
         variant="danger"
         loading={cancelMutation.isPending}
       />
-    </PageScaffold>
+    </PageFrame>
   );
 }

@@ -1,11 +1,10 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { IconShield, IconSmartphone, IconGlobe } from "@/shared-inline/icons";
+import { IconShield, IconSmartphone, IconGlobe } from "@/lib/icons";
 import {
   Button,
   InlineAlert,
-  PageScaffold,
-  PageHeader,
+  PageFrame,
   PageSection,
   Panel,
   ProgressBar,
@@ -73,18 +72,15 @@ export function OnboardingPage() {
   };
 
   return (
-    <PageScaffold className="onboarding-screen">
-      <PageHeader title="Welcome" subtitle={`Step ${stepIndex + 1} of ${ONBOARDING_STEPS.length}`} />
+    <PageFrame title="Boot Sequence" subtitle={`Step ${stepIndex + 1} of ${ONBOARDING_STEPS.length}`}>
       <PageSection>
-        <Panel className="card instrument-card instrument-card--active onboarding-card">
-          <span className="onboarding-icon" aria-hidden>
+        <Panel className="card edge eg">
+          <span aria-hidden>
             <StepIcon size={28} strokeWidth={1.5} />
           </span>
-          <H2 as="h2" className="onboarding-title">
-            {step.title}
-          </H2>
-          <Body className="onboarding-body">{step.body}</Body>
-          <ProgressBar value={progressValue} max={100} className="onboarding-progress" />
+          <H2 as="h2" className="type-h3">{step.title}</H2>
+          <Body className="type-body-sm">{step.body}</Body>
+          <ProgressBar value={progressValue} max={100} />
           {onboardingError && (
             <InlineAlert
               variant="error"
@@ -96,7 +92,6 @@ export function OnboardingPage() {
             <Button
               variant="primary"
               size="lg"
-              className="splash-screen-cta"
               loading={isCompletingOnboarding || isAdvancing}
               disabled={isCompletingOnboarding || isAdvancing}
               onClick={handlePrimaryAction}
@@ -106,6 +101,6 @@ export function OnboardingPage() {
           </ActionRow>
         </Panel>
       </PageSection>
-    </PageScaffold>
+    </PageFrame>
   );
 }
