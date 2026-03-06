@@ -10,4 +10,6 @@ export const Z_INDEX_TOKENS = {
   /** Miniapp shell */
   header: "--z-header",
   nav: "--z-nav",
+  /** Above all UI (e.g. scanline overlay) */
+  scanline: "--z-scanline",
 } as const;

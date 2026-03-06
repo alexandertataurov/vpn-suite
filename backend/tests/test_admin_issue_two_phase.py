@@ -5,6 +5,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
+from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
 import pytest
@@ -54,6 +55,7 @@ async def _fixture_server_user_sub():
         db.add(
             ServerProfile(
                 server_id=server.id,
+                name="default",
                 request_params={"amnezia_s1": 213, "amnezia_s2": 237},
             )
         )
@@ -89,6 +91,13 @@ async def test_admin_issue_peer_two_phase_applied(monkeypatch):
     mock_adapter.add_peer = mock_add_peer
     mock_adapter.list_peers = mock_list_peers
     mock_adapter.ensure_reply_routes = AsyncMock(return_value=None)
+    mock_adapter.get_obfuscation_from_node = AsyncMock(return_value=None)
+    mock_adapter.get_node_for_sync = AsyncMock(
+        return_value=SimpleNamespace(
+            node_id=server_id,
+            public_key="xTIBA5rboUvnH4htodjb6e697QjLERt1NAB4mZqp8Dg=",
+        )
+    )
 
     async with async_session_factory() as session:
         result = await admin_issue_peer(

@@ -1,8 +1,5 @@
-/* Content Library — scrollable page content only. Uses tokens from main design system. */
-:root {
-  --ui: var(--font-sans);
-  --mono: var(--font-mono);
-}
+/* Content Library — scrollable page content only. Uses tokens from main design system.
+   --ui and --mono are defined in miniapp-primitives-aliases.css (loaded before this file). */
 
 /* ----- Stagger (Section 0) ----- */
 .stagger-0 { animation: fadeup 0.4s 0s cubic-bezier(.22,1,.36,1) both; }

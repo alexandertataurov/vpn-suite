@@ -2621,6 +2621,81 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/servers/vpn-nodes:
+    get:
+      tags:
+      - servers
+      summary: Get Servers Vpn Nodes
+      description: Return VPN node cards for operator grid. Uses DB + Redis heartbeat
+        + snapshot.
+      operationId: get_servers_vpn_nodes_api_v1_servers_vpn_nodes_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: region
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Region
+      - name: health
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: 'Filter by health_state: ok | degraded | down'
+          title: Health
+        description: 'Filter by health_state: ok | degraded | down'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VpnNodeCardOut'
+                title: Response Get Servers Vpn Nodes Api V1 Servers Vpn Nodes Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/servers/{server_id}/vpn-node:
+    get:
+      tags:
+      - servers
+      summary: Get Server Vpn Node
+      description: Return full VPN node detail for drilldown (card + peers + interface
+        + system).
+      operationId: get_server_vpn_node_api_v1_servers__server_id__vpn_node_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: server_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Server Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VpnNodeDetailOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/v1/servers/{server_id}/status:
     get:
       tags:
@@ -4228,6 +4303,39 @@ paths:
                 $ref: '#/components/schemas/app__schemas__device__DeviceSummaryOut'
       security:
       - HTTPBearer: []
+  /api/v1/devices/config-health:
+    get:
+      tags:
+      - devices
+      summary: Get Config Health
+      description: 'Advanced config health: per-device reconciliation status and devices
+        needing attention.'
+      operationId: get_config_health_api_v1_devices_config_health_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 2000
+          minimum: 1
+          default: 500
+          title: Limit
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigHealthOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/v1/devices/{device_id}:
     get:
       tags:
@@ -4298,8 +4406,8 @@ paths:
       tags:
       - devices
       summary: Reconcile Device
-      description: Re-apply peer on the node (sync allowed_ips, ensure peer present).
-        Alias for sync-peer. NODE_MODE=real only.
+      description: 'Re-apply peer on the node (sync allowed_ips, ensure peer present).
+        NODE_MODE=real: direct sync. NODE_MODE=agent: queue sync action.'
       operationId: reconcile_device_api_v1_devices__device_id__reconcile_post
       security:
       - HTTPBearer: []
@@ -4595,6 +4703,34 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/devices/{device_id}/awg/download-link:
+    get:
+      tags:
+      - devices
+      summary: Get Awg Download Link
+      description: Create one-time download link for AmneziaWG AWG config.
+      operationId: get_awg_download_link_api_v1_devices__device_id__awg_download_link_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: device_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Device Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/v1/devices/{device_id}/block:
     post:
       tags:
@@ -4628,96 +4764,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /api/v1/devices/config-health:
-    get:
-      tags:
-      - devices
-      summary: Devices Config Health
-      description: Advanced config health for devices (reconciliation status, telemetry, and attention list).
-      operationId: devices_config_health_api_v1_devices_config_health_get
-      security:
-      - HTTPBearer: []
-      parameters:
-      - name: limit
-        in: query
-        required: false
-        schema:
-          type: integer
-          minimum: 1
-          maximum: 2000
-          default: 500
-          title: Limit
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema: {}
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /api/v1/devices/{device_id}/awg/download-link:
-    get:
-      tags:
-      - devices
-      summary: Get AWG Download Link
-      description: Create a one-time download link for an AmneziaWG config for the given device.
-      operationId: get_awg_download_link_api_v1_devices__device_id__awg_download_link_get
-      security:
-      - HTTPBearer: []
-      parameters:
-      - name: device_id
-        in: path
-        required: true
-        schema:
-          type: string
-          title: Device Id
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  url:
-                    type: string
-                  expires_in:
-                    type: integer
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /d/{token}:
-    get:
-      tags:
-      - devices
-      summary: Download Config By Token
-      description: Download VPN configuration using a one-time token issued by the control plane.
-      operationId: download_config_by_token_d__token__get
-      parameters:
-      - name: token
-        in: path
-        required: true
-        schema:
-          type: string
-          title: Token
-      responses:
-        '200':
-          description: VPN configuration
-          content:
-            text/plain:
-              schema:
-                type: string
-        '404':
-          description: Not Found
-        '410':
-          description: Gone
   /api/v1/plans:
     post:
       tags:
@@ -6340,8 +6386,10 @@ paths:
         sessions).
 
 
-        For now, this returns an empty series; future iterations can aggregate from
-        telemetry storage.'
+        Uses per-device telemetry from Redis; currently returns a single aggregate
+        point for the
+
+        requested range.'
       operationId: webapp_usage_api_v1_webapp_usage_get
       parameters:
       - name: range
@@ -6371,6 +6419,20 @@ paths:
       summary: Webapp List Plans
       description: List active plans for Mini App. Bearer session token required.
       operationId: webapp_list_plans_api_v1_webapp_plans_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /api/v1/webapp/debug/test-telegram-config:
+    post:
+      tags:
+      - webapp
+      summary: Webapp Test Telegram Config
+      description: 'Debug helper: send test config message + file to Telegram for
+        current WebApp user.'
+      operationId: webapp_test_telegram_config_api_v1_webapp_debug_test_telegram_config_post
       responses:
         '200':
           description: Successful Response
@@ -6486,6 +6548,44 @@ paths:
           content:
             application/json:
               schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/webapp/payments/history:
+    get:
+      tags:
+      - webapp
+      summary: Webapp Payments History
+      description: Return payment history for current user. Bearer session token required.
+      operationId: webapp_payments_history_api_v1_webapp_payments_history_get
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 50
+          minimum: 1
+          default: 5
+          title: Limit
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+          title: Offset
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebAppBillingHistoryResponse'
         '422':
           description: Validation Error
           content:
@@ -6651,6 +6751,32 @@ paths:
             schema:
               $ref: '#/components/schemas/WebAppSubscriptionCancelBody'
         required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /d/{token}:
+    get:
+      tags:
+      - public-download
+      summary: Download Awg Config Via Token
+      description: 'Public endpoint: single-use AWG config download by opaque token.'
+      operationId: download_awg_config_via_token_d__token__get
+      parameters:
+      - name: token
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Token
       responses:
         '200':
           description: Successful Response
@@ -7208,13 +7334,48 @@ components:
           - type: 'null'
           title: Peers
           description: Per-peer telemetry from node
+        obfuscation:
+          anyOf:
+          - additionalProperties:
+              anyOf:
+              - type: integer
+              - type: string
+            type: object
+          - type: 'null'
+          title: Obfuscation
+          description: Runtime obfuscation values from node heartbeat
+        packet_loss_pct:
+          anyOf:
+          - type: number
+            maximum: 100.0
+            minimum: 0.0
+          - type: 'null'
+          title: Packet Loss Pct
+        interface_stats:
+          anyOf:
+          - additionalProperties:
+              anyOf:
+              - type: integer
+              - type: number
+            type: object
+          - type: 'null'
+          title: Interface Stats
+        churn:
+          anyOf:
+          - additionalProperties:
+              anyOf:
+              - type: integer
+              - type: number
+            type: object
+          - type: 'null'
+          title: Churn
+      additionalProperties: true
       type: object
       required:
       - server_id
       - container_name
       - ts_utc
       title: AgentHeartbeatIn
-      description: Agent heartbeat payload (no secrets).
     AgentV1ActionExecuteIn:
       properties:
         type:
@@ -7300,6 +7461,16 @@ components:
           type: integer
           title: Tx Bytes
           default: 0
+        rtt_ms:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Rtt Ms
+        packet_loss_pct:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Packet Loss Pct
       type: object
       required:
       - public_key
@@ -8030,12 +8201,99 @@ components:
         qr_payload:
           type: string
           title: Qr Payload
+        amnezia_vpn_key:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Amnezia Vpn Key
       type: object
       required:
       - download_url
       - qr_payload
       title: ConfigEntryOut
       description: Download URL and QR payload for a single config format.
+    ConfigHealthDeviceEntry:
+      properties:
+        device_id:
+          type: string
+          title: Device Id
+        server_id:
+          type: string
+          title: Server Id
+        user_email:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: User Email
+        device_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Device Name
+        status:
+          type: string
+          title: Status
+        reconciliation_status:
+          type: string
+          title: Reconciliation Status
+        config_state:
+          type: string
+          title: Config State
+        reason:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Reason
+        handshake_age_sec:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Handshake Age Sec
+        peer_present:
+          type: boolean
+          title: Peer Present
+          default: false
+        node_health:
+          type: string
+          title: Node Health
+          default: unknown
+      type: object
+      required:
+      - device_id
+      - server_id
+      - status
+      - reconciliation_status
+      - config_state
+      title: ConfigHealthDeviceEntry
+      description: Per-device entry in config health report.
+    ConfigHealthOut:
+      properties:
+        by_reconciliation:
+          additionalProperties:
+            type: integer
+          type: object
+          title: By Reconciliation
+        no_telemetry_count:
+          type: integer
+          title: No Telemetry Count
+        devices_needing_attention:
+          items:
+            $ref: '#/components/schemas/ConfigHealthDeviceEntry'
+          type: array
+          title: Devices Needing Attention
+        telemetry_last_updated:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Telemetry Last Updated
+      type: object
+      required:
+      - by_reconciliation
+      - no_telemetry_count
+      - devices_needing_attention
+      title: ConfigHealthOut
+      description: Advanced config health report.
     ConnectionNodeOut:
       properties:
         id:
@@ -8529,6 +8787,12 @@ components:
         plan_id:
           type: string
           title: Plan Id
+        telegram_user:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Telegram User
       type: object
       required:
       - tg_id
@@ -8925,6 +9189,11 @@ components:
           - type: integer
           - type: 'null'
           title: Transfer Tx Bytes
+        rtt_ms:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Rtt Ms
         endpoint:
           anyOf:
           - type: string
@@ -8978,7 +9247,15 @@ components:
       required:
       - device_id
       title: DeviceTelemetryOut
-      description: Per-device telemetry from cache (handshake, rx/tx, reconciliation).
+      description: 'Per-device telemetry from cache (handshake, rx/tx, RTT, reconciliation).
+
+
+        rtt_ms is a float in milliseconds as reported by node-agent; the control-plane
+        does
+
+        not round or bucket it so that downstream dashboards can apply their own
+
+        aggregation.'
     DeviceUpdate:
       properties:
         device_name:
@@ -9211,6 +9488,7 @@ components:
           - sync_action
           - reissue_action
           - incident_action
+          - web_vital
           title: Event
         payload:
           additionalProperties: true
@@ -9843,6 +10121,57 @@ components:
       required:
       - id
       title: NodeEntryOut
+    NodeObfuscationOut:
+      properties:
+        H1:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: H1
+        H2:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: H2
+        H3:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: H3
+        H4:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: H4
+        S1:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: S1
+        S2:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: S2
+        Jc:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Jc
+        Jmin:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Jmin
+        Jmax:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Jmax
+      type: object
+      title: NodeObfuscationOut
+      description: AmneziaWG obfuscation from node (wg show). Issued configs use these
+        when available.
     NodeSummaryOut:
       properties:
         total:
@@ -10166,6 +10495,16 @@ components:
             type: string
           type: array
           title: Issues
+        rtt_ms:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Rtt Ms
+        loss_pct:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Loss Pct
       type: object
       required:
       - public_key
@@ -11229,6 +11568,20 @@ components:
       - action_id
       title: RotateObfuscationHOut
       description: New H1–H4 stored on server; node-agent will apply via action apply_obfuscation_h.
+    RttLossPointOut:
+      properties:
+        ts:
+          type: number
+          title: Ts
+        value:
+          type: number
+          title: Value
+      type: object
+      required:
+      - ts
+      - value
+      title: RttLossPointOut
+      description: Single point for RTT/loss timeseries.
     SecurityMetricsOut:
       properties:
         key_reuse_count:
@@ -12056,6 +12409,10 @@ components:
           - type: string
           - type: 'null'
           title: Reported Status
+        node_obfuscation:
+          anyOf:
+          - $ref: '#/components/schemas/NodeObfuscationOut'
+          - type: 'null'
       type: object
       required:
       - peers_count
@@ -12227,6 +12584,20 @@ components:
           default: false
       type: object
       title: SnapshotMetaOut
+    SparkPointOut:
+      properties:
+        x:
+          type: integer
+          title: X
+        y:
+          type: number
+          title: Y
+      type: object
+      required:
+      - x
+      - y
+      title: SparkPointOut
+      description: Single point for sparkline.
     SubscriptionCreate:
       properties:
         user_id:
@@ -12935,6 +13306,355 @@ components:
       - msg
       - type
       title: ValidationError
+    VpnNodeAlertOut:
+      properties:
+        severity:
+          type: string
+          title: Severity
+        metric:
+          type: string
+          title: Metric
+        value:
+          anyOf:
+          - type: string
+          - type: number
+          - type: integer
+          title: Value
+        baseline:
+          anyOf:
+          - type: string
+          - type: number
+          - type: 'null'
+          title: Baseline
+        since:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: string
+          - type: 'null'
+          title: Since
+        likely_cause:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Likely Cause
+      type: object
+      required:
+      - severity
+      - metric
+      - value
+      title: VpnNodeAlertOut
+      description: Single alert for a VPN node.
+    VpnNodeCardOut:
+      properties:
+        identity:
+          $ref: '#/components/schemas/VpnNodeIdentityOut'
+        kpis:
+          $ref: '#/components/schemas/VpnNodeKpisOut'
+        sparkline_peers:
+          items:
+            $ref: '#/components/schemas/SparkPointOut'
+          type: array
+          title: Sparkline Peers
+        sparkline_rx:
+          items:
+            $ref: '#/components/schemas/SparkPointOut'
+          type: array
+          title: Sparkline Rx
+        sparkline_tx:
+          items:
+            $ref: '#/components/schemas/SparkPointOut'
+          type: array
+          title: Sparkline Tx
+        alerts:
+          items:
+            $ref: '#/components/schemas/VpnNodeAlertOut'
+          type: array
+          maxItems: 3
+          title: Alerts
+      type: object
+      required:
+      - identity
+      title: VpnNodeCardOut
+      description: One VPN node card for grid.
+    VpnNodeDetailOut:
+      properties:
+        card:
+          $ref: '#/components/schemas/VpnNodeCardOut'
+        peers:
+          items:
+            $ref: '#/components/schemas/VpnNodePeerRowOut'
+          type: array
+          title: Peers
+        rtt_timeseries_1h:
+          items:
+            $ref: '#/components/schemas/RttLossPointOut'
+          type: array
+          title: Rtt Timeseries 1H
+        rtt_timeseries_24h:
+          items:
+            $ref: '#/components/schemas/RttLossPointOut'
+          type: array
+          title: Rtt Timeseries 24H
+        loss_timeseries_1h:
+          items:
+            $ref: '#/components/schemas/RttLossPointOut'
+          type: array
+          title: Loss Timeseries 1H
+        interface:
+          anyOf:
+          - $ref: '#/components/schemas/VpnNodeInterfaceOut'
+          - type: 'null'
+        system:
+          anyOf:
+          - $ref: '#/components/schemas/VpnNodeSystemOut'
+          - type: 'null'
+      type: object
+      required:
+      - card
+      title: VpnNodeDetailOut
+      description: Full VPN node payload for drilldown.
+    VpnNodeIdentityOut:
+      properties:
+        node_id:
+          type: string
+          title: Node Id
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Name
+        region:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Region
+        public_ip:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Public Ip
+        tunnel_cidr_or_interface_ip:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Tunnel Cidr Or Interface Ip
+        uptime_node:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Uptime Node
+        uptime_tunnel:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Uptime Tunnel
+        health_state:
+          type: string
+          title: Health State
+          default: ok
+      type: object
+      required:
+      - node_id
+      title: VpnNodeIdentityOut
+      description: Node identity block.
+    VpnNodeInterfaceOut:
+      properties:
+        if_up:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: If Up
+        mtu:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Mtu
+        errors:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Errors
+        drops:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Drops
+      type: object
+      title: VpnNodeInterfaceOut
+      description: Tunnel/interface health.
+    VpnNodeKpisOut:
+      properties:
+        active_peers:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Active Peers
+        peers_max:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Peers Max
+        peers_fullness_pct:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Peers Fullness Pct
+        rx_bps:
+          anyOf:
+          - type: integer
+          - type: number
+          - type: 'null'
+          title: Rx Bps
+        tx_bps:
+          anyOf:
+          - type: integer
+          - type: number
+          - type: 'null'
+          title: Tx Bps
+        rx_1h:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Rx 1H
+        tx_1h:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Tx 1H
+        handshake_health_pct:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Handshake Health Pct
+        rtt_p50_ms:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Rtt P50 Ms
+        rtt_p95_ms:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Rtt P95 Ms
+        loss_p50_pct:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Loss P50 Pct
+        loss_p95_pct:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Loss P95 Pct
+        connects_per_min:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Connects Per Min
+        disconnects_per_min:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Disconnects Per Min
+      type: object
+      title: VpnNodeKpisOut
+      description: Compact KPIs for card.
+    VpnNodePeerRowOut:
+      properties:
+        public_key:
+          type: string
+          title: Public Key
+        peer_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Peer Id
+        device_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Device Name
+        allowed_ips:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Allowed Ips
+        last_handshake_ts:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Last Handshake Ts
+        rx_bytes:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Rx Bytes
+        tx_bytes:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Tx Bytes
+        status:
+          type: string
+          title: Status
+          default: unknown
+        issues:
+          items:
+            type: string
+          type: array
+          title: Issues
+        rtt_ms:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Rtt Ms
+        loss_pct:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Loss Pct
+      type: object
+      required:
+      - public_key
+      title: VpnNodePeerRowOut
+      description: Minimal peer row for drilldown (matches PeerOut shape).
+    VpnNodeSystemOut:
+      properties:
+        cpu_pct:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Cpu Pct
+        ram_pct:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Ram Pct
+        disk_pct:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Disk Pct
+        nic_errs:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Nic Errs
+        container_health:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Container Health
+        ntp_status:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Ntp Status
+      type: object
+      title: VpnNodeSystemOut
+      description: Minimal system metrics that impact VPN.
     WebAppAuthRequest:
       properties:
         init_data:
@@ -12945,6 +13665,60 @@ components:
       type: object
       title: WebAppAuthRequest
       description: Accepts initData (Telegram) or init_data.
+    WebAppBillingHistoryItem:
+      properties:
+        payment_id:
+          type: string
+          title: Payment Id
+        plan_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Plan Id
+        plan_name:
+          type: string
+          title: Plan Name
+        amount:
+          type: number
+          title: Amount
+        currency:
+          type: string
+          title: Currency
+        status:
+          type: string
+          title: Status
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        invoice_ref:
+          type: string
+          title: Invoice Ref
+      type: object
+      required:
+      - payment_id
+      - plan_name
+      - amount
+      - currency
+      - status
+      - created_at
+      - invoice_ref
+      title: WebAppBillingHistoryItem
+    WebAppBillingHistoryResponse:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/WebAppBillingHistoryItem'
+          type: array
+          title: Items
+        total:
+          type: integer
+          title: Total
+      type: object
+      required:
+      - items
+      - total
+      title: WebAppBillingHistoryResponse
     WebAppIssueDeviceResponse:
       properties:
         device_id:
@@ -12992,7 +13766,7 @@ components:
       properties:
         step:
           type: integer
-          maximum: 2.0
+          maximum: 4.0
           minimum: 0.0
           title: Step
         completed:

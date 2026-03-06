@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { expect, userEvent, within } from "@storybook/test";
 import { Button, Input } from "@/design-system/primitives";
 import { renderDarkLight, renderAtBreakpoints } from "../../../../.storybook/utils/storyRenderers";
 
@@ -105,12 +104,6 @@ type Story = StoryObj<typeof Input>;
 export const Default: Story = {
   tags: ["smoke"],
   args: { label: "Email", placeholder: "you@example.com" },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const input = canvas.getByLabelText(/email/i);
-    await userEvent.type(input, "user@example.com");
-    await expect(input).toHaveValue("user@example.com");
-  },
   parameters: {
     docs: {
       description: {

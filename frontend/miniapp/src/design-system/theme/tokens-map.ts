@@ -1,7 +1,9 @@
 /**
- * Canonical token mapping — single source of truth for design system governance.
- * Use this for lint checks and documentation. Components MUST use semantic tokens only.
- *
+ * Canonical token mapping — governance and documentation only.
+ * Use for lint checks; components MUST use semantic tokens only.
+ * PRIMITIVES (radius, shadow, zIndex) may lag tokens/*.ts; authoritative token
+ * lists are in design-system/tokens/*. Consider a drift check (e.g. lint or script)
+ * to keep PRIMITIVES in sync with tokens/radius, tokens/shadows, tokens/zIndex.
  */
 
 /** Primitive tokens — do NOT use directly in components. For composition only. */
@@ -17,7 +19,7 @@ export const PRIMITIVES = {
   spacing: ["0", "1", "2", "3", "4", "5", "6", "8", "10", "12", "16"],
   radius: ["0", "2", "4"],
   shadow: ["none", "sm"],
-  zIndex: ["dropdown", "overlay", "modal", "toast"],
+  zIndex: ["dropdown", "overlay", "modal", "toast", "header", "nav", "scanline"],
   duration: ["instant", "fast", "normal", "slow"],
   easing: ["linear", "in", "out", "in-out", "standard"],
 } as const;

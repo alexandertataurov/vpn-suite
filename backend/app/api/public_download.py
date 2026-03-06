@@ -6,7 +6,6 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.error_responses import error_body
 from app.core.rate_limit import rate_limit_config_download
 from app.core.security import decrypt_config
 from app.core.one_time_download import verify_and_consume_one_time_token
@@ -28,13 +27,13 @@ async def download_awg_config_via_token(
 
     payload = await verify_and_consume_one_time_token(db, token=token)
     if not payload or payload.get("kind") != "awg_conf":
-        body = error_body(
-            code="TOKEN_INVALID_OR_EXPIRED",
-            message="Download link invalid or expired.",
+        raise HTTPException(
             status_code=status.HTTP_410_GONE,
-            request_id=getattr(request.state, "request_id", None),
+            detail={
+                "code": "TOKEN_INVALID_OR_EXPIRED",
+                "message": "Download link invalid or expired.",
+            },
         )
-        raise HTTPException(status_code=status.HTTP_410_GONE, detail=body["message"])
 
     device_id = payload["device_id"]
     dev_result = await db.execute(select(Device).where(Device.id == device_id))

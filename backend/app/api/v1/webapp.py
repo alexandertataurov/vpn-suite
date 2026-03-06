@@ -93,6 +93,12 @@ async def webapp_auth(body: WebAppAuthRequest, db: AsyncSession = Depends(get_db
         )
     tg_id = int(tg_user_id)
     requisites = build_tg_requisites(user)
+    # Preserve explicit False values from Telegram payload
+    if "is_premium" in user:
+        requisites["is_premium"] = bool(user.get("is_premium"))
+    elif "isPremium" in user:
+        requisites["is_premium"] = bool(user.get("isPremium"))
+    requisites.setdefault("is_premium", False)
     # Ensure user exists and upsert meta["tg"] so every auth refreshes requisites
     existing = await db.execute(select(User).where(User.tg_id == tg_id))
     db_user = existing.scalar_one_or_none()
@@ -106,7 +112,7 @@ async def webapp_auth(body: WebAppAuthRequest, db: AsyncSession = Depends(get_db
         result = await db.execute(select(User).where(User.tg_id == tg_id))
         db_user = result.scalar_one_or_none()
     if db_user is not None and requisites:
-        meta = db_user.meta or {}
+        meta = dict(db_user.meta or {})
         meta["tg"] = requisites
         db_user.meta = meta
     await db.commit()

@@ -11,7 +11,7 @@ from typing import Any
 try:
     import docker
 except ModuleNotFoundError:  # pragma: no cover - optional dependency in some test environments
-    docker = None  # type: ignore[assignment]
+    docker = None
 
 from app.core.config import settings
 

@@ -41,7 +41,8 @@ async def get_snapshot_nodes(env: str = DEFAULT_ENV) -> dict[str, Any] | None:
         redis = get_redis()
         raw = await redis.get(snapshot_nodes_key(env))
         if raw:
-            return json.loads(raw)
+            out: dict[str, Any] = json.loads(raw)
+            return out
     except Exception as e:
         _log.debug("Snapshot nodes read failed: %s", e)
     return None
@@ -66,7 +67,8 @@ async def get_snapshot_devices(env: str = DEFAULT_ENV) -> dict[str, Any] | None:
         redis = get_redis()
         raw = await redis.get(snapshot_devices_key(env))
         if raw:
-            return json.loads(raw)
+            out: dict[str, Any] = json.loads(raw)
+            return out
     except Exception as e:
         _log.debug("Snapshot devices read failed: %s", e)
     return None

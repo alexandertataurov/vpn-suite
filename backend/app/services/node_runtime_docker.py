@@ -381,7 +381,12 @@ def _extract_ports(inspect: dict) -> set[tuple[str, int]]:
 
 
 def _extract_mounts(inspect: dict) -> list[str]:
-    return [m.get("Destination") for m in inspect.get("Mounts") or [] if isinstance(m, dict)]
+    mounts = inspect.get("Mounts") or []
+    return [
+        str(m["Destination"])
+        for m in mounts
+        if isinstance(m, dict) and m.get("Destination") is not None
+    ]
 
 
 def _extract_env(inspect: dict) -> dict[str, str]:
@@ -401,8 +406,8 @@ def _extract_entrypoint_cmd(inspect: dict) -> str:
     cfg = inspect.get("Config") or {}
     ep = cfg.get("Entrypoint") or []
     cmd = cfg.get("Cmd") or []
-    a = ep if isinstance(ep, list | tuple) else [ep]
-    b = cmd if isinstance(cmd, list | tuple) else [cmd]
+    a = list(ep) if isinstance(ep, list | tuple) else [ep]
+    b = list(cmd) if isinstance(cmd, list | tuple) else [cmd]
     return " ".join(str(x) for x in a + b).lower()
 
 
@@ -1117,7 +1122,8 @@ class DockerNodeRuntimeAdapter(NodeRuntimeAdapter):
             plan_id = str(policy.get("plan_id") or "")
             if not plan_id:
                 continue
-            rate = _sanitize_mbit(policy.get("rate_mbps"), fallback=1)
+            raw_rate = policy.get("rate_mbps")
+            rate = _sanitize_mbit(int(raw_rate) if raw_rate is not None else 1, fallback=1)
             ceil = _sanitize_mbit(policy.get("ceil_mbps") or rate, fallback=rate)
             if ceil < rate:
                 ceil = rate
@@ -1169,6 +1175,7 @@ class DockerNodeRuntimeAdapter(NodeRuntimeAdapter):
             classid = class_by_plan.get(plan_id)
             if classid is None:
                 continue
+            cid: str = classid
             host_cidrs = _extract_ipv4_host_cidrs(str(binding.get("allowed_ips") or ""))
             if not host_cidrs:
                 skipped_no_host_ip += 1
@@ -1194,7 +1201,7 @@ class DockerNodeRuntimeAdapter(NodeRuntimeAdapter):
                         "dst",
                         cidr,
                         "flowid",
-                        classid,
+                        cid,
                     ]
                 )
                 commands.append(
@@ -1216,7 +1223,7 @@ class DockerNodeRuntimeAdapter(NodeRuntimeAdapter):
                         "src",
                         cidr,
                         "flowid",
-                        classid,
+                        cid,
                     ]
                 )
 
