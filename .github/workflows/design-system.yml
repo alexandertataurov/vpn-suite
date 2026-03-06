@@ -22,8 +22,8 @@ jobs:
       - name: No hardcoded colors (miniapp)
         run: |
           set -euo pipefail
-          COUNT=$(grep -rn "#[0-9a-fA-F]\{3,8\}" frontend/miniapp/src/components frontend/miniapp/src/pages \
-            --include="*.tsx" --include="*.ts" \
+          COUNT=$( (test -d frontend/miniapp/src/components && grep -rn "#[0-9a-fA-F]\{3,8\}" frontend/miniapp/src/components --include="*.tsx" --include="*.ts" || true; \
+            test -d frontend/miniapp/src/pages && grep -rn "#[0-9a-fA-F]\{3,8\}" frontend/miniapp/src/pages --include="*.tsx" --include="*.ts" || true ) \
             | grep -vE '^[[:space:]]*//|^[[:space:]]*\*|^[[:space:]]*/\*' | wc -l)
           [ "$COUNT" -eq 0 ] || (echo "❌ $COUNT hardcoded colors found in miniapp" && exit 1)
 

@@ -11,7 +11,7 @@
     "dev:miniapp": "npm run dev -w miniapp",
     "build:admin": "npm run build -w admin",
     "build:miniapp": "npm run build -w miniapp",
-    "build": "npm run build:admin && npm run build:miniapp",
+    "build": "npm run build:admin && npm run build -w miniapp",
     "lint": "npm run lint -w admin && npm run lint -w miniapp",
     "typecheck": "npm run typecheck -w admin && npm run typecheck -w miniapp",
     "test": "npm run test -w admin",
