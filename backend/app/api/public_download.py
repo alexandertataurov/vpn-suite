@@ -29,7 +29,10 @@ async def download_awg_config_via_token(
     if not payload or payload.get("kind") != "awg_conf":
         raise HTTPException(
             status_code=status.HTTP_410_GONE,
-            detail={"code": "TOKEN_INVALID_OR_EXPIRED", "message": "Download link invalid or expired."},
+            detail={
+                "code": "TOKEN_INVALID_OR_EXPIRED",
+                "message": "Download link invalid or expired.",
+            },
         )
 
     device_id = payload["device_id"]
