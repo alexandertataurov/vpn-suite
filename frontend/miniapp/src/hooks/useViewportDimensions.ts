@@ -25,7 +25,7 @@ function fallbackInsetsFromCss(): SafeAreaInsets {
 }
 
 export function useViewportDimensions() {
-  const { viewportHeight } = useViewport();
+  const { viewportHeight, viewportStableHeight } = useViewport();
   const { safeAreaInset, contentSafeAreaInset } = useSafeAreaInsets();
 
   const safeAreaInsets = useMemo<SafeAreaInsets>(() => {
@@ -44,7 +44,9 @@ export function useViewportDimensions() {
     if (typeof window === "undefined") return;
     const root = document.documentElement;
     root.style.setProperty("--tg-viewport-height", `${viewportHeight}px`);
+    root.style.setProperty("--tg-viewport-stable-height", `${viewportStableHeight}px`);
     root.style.setProperty("--app-height", "var(--tg-viewport-height)");
+    root.style.setProperty("--app-height-stable", "var(--tg-viewport-stable-height)");
 
     if (safeAreaInsets.top || safeAreaInsets.bottom || safeAreaInsets.left || safeAreaInsets.right) {
       root.style.setProperty("--safe-top", `${safeAreaInsets.top}px`);
@@ -58,8 +60,7 @@ export function useViewportDimensions() {
     root.style.setProperty("--safe-bottom", "env(safe-area-inset-bottom, 0px)");
     root.style.setProperty("--safe-left", "env(safe-area-inset-left, 0px)");
     root.style.setProperty("--safe-right", "env(safe-area-inset-right, 0px)");
-  }, [safeAreaInsets, viewportHeight]);
+  }, [safeAreaInsets, viewportHeight, viewportStableHeight]);
 
   return { viewportHeight, safeAreaInsets };
 }
-

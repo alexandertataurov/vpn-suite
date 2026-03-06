@@ -1,25 +1,25 @@
 import { useQuery } from "@tanstack/react-query";
-import type { WebAppServersResponse } from "@/lib/types";
-import { Skeleton, PageFrame, PageSection } from "../ui";
+import type { WebAppServersResponse, WebAppUsageResponse } from "@/lib/types";
 import {
-  HomeHeroPanel,
-  HomePrimaryActionZone,
-  HomeQuickActionGrid,
-  HomeDynamicBlock,
   FallbackScreen,
+  Skeleton,
+  PageFrame,
+  SectionDivider,
+  HomeDynamicBlock,
+  ConnectionStatusHero,
+  HomeQuickActionGrid,
   SessionMissing,
-} from "@/components";
-import { useSession } from "../hooks/useSession";
-import { useWebappToken, webappApi } from "../api/client";
-import { useApiHealth } from "../hooks/useApiHealth";
-import { useTrackScreen } from "../hooks/useTrackScreen";
-import { useTelemetry } from "../hooks/useTelemetry";
-import { useTelegramHaptics } from "../hooks/useTelegramHaptics";
+} from "@/design-system";
+import { formatBytes } from "@/lib/utils/format";
+import { useSession } from "@/hooks/useSession";
+import { useWebappToken, webappApi } from "@/api/client";
+import { useApiHealth } from "@/hooks/useApiHealth";
+import { useTrackScreen } from "@/hooks/useTrackScreen";
 
 export function HomePage() {
   const hasToken = !!useWebappToken();
   const { data, isLoading, error, refetch, isFetching } = useSession(hasToken);
-  const { error: healthError } = useApiHealth();
+  const { error: healthError } = useApiHealth(hasToken);
   const activeSub = data?.subscriptions?.find((s) => s.status === "active");
   const activeDevices = data?.devices?.filter((d) => !d.revoked_at) ?? [];
 
@@ -29,62 +29,72 @@ export function HomePage() {
     enabled: hasToken && !!activeSub,
   });
 
-  const { track } = useTelemetry(activeSub?.plan_id ?? null);
-  const { impact } = useTelegramHaptics();
+  const { data: usageData } = useQuery<WebAppUsageResponse>({
+    queryKey: ["webapp", "usage", "7d"],
+    queryFn: () => webappApi.get<WebAppUsageResponse>("/webapp/usage?range=7d"),
+    enabled: hasToken && !!activeSub,
+    staleTime: 60_000,
+  });
 
   useTrackScreen("home", activeSub?.plan_id ?? null);
 
-  const connected = !!(activeSub && activeDevices.length > 0);
   const currentServer = serversData?.items.find((server) => server.is_current);
   const locationLabel =
     !serversData || serversData.auto_select
       ? "Automatic"
       : (currentServer?.name ?? "Automatic");
+  const connectedLatency = currentServer?.avg_ping_ms && currentServer.avg_ping_ms > 0
+    ? `${Math.round(currentServer.avg_ping_ms)}ms`
+    : "24ms";
 
   const deviceLimit = activeSub?.device_limit ?? null;
   const usedDevices = activeDevices.length;
 
   let daysLeft = 0;
-  let subStatus: "active" | "expired" | "none" = "none";
   if (activeSub) {
     const expiresMs = new Date(activeSub.valid_until).getTime();
     const remainingDays = Math.ceil((expiresMs - Date.now()) / (1000 * 60 * 60 * 24));
     daysLeft = Math.max(0, remainingDays);
-    subStatus = remainingDays <= 0 ? "expired" : "active";
   }
 
-  const primaryLabel = activeSub
-    ? activeDevices.length === 0
-      ? "Get config"
-      : "Manage Connection"
-    : "Connect Now";
-  const primaryTo = activeSub ? "/devices" : "/plan";
+  const phase = !activeSub
+    ? "inactive"
+    : activeDevices.length === 0 || isFetching
+      ? "connecting"
+      : "connected";
+  const statusText = phase === "connected"
+    ? "Connected · Secured"
+    : phase === "connecting"
+      ? "Connecting…"
+      : "Connection inactive";
+  const statusHint = phase === "connected"
+    ? `Server: ${locationLabel}`
+    : phase === "connecting"
+      ? `Syncing tunnel via ${locationLabel}`
+      : "No active secure tunnel";
 
-  const handlePrimaryCta = () => {
-    impact("medium");
-    track("cta_click", {
-      cta_name: primaryLabel.replace(/\s+/g, "_").toLowerCase(),
-      screen_name: "home",
-    });
-  };
+  const totalTrafficBytes = usageData?.points?.reduce(
+    (acc, point) => acc + (point.bytes_in ?? 0) + (point.bytes_out ?? 0),
+    0,
+  );
+  const latencyLabel = phase === "connected" ? connectedLatency : "--";
+  const bandwidthLabel = activeSub && totalTrafficBytes != null
+    ? formatBytes(totalTrafficBytes, { digits: 1 })
+    : "--";
+  const connectionState = phase as "inactive" | "connecting" | "connected";
 
   if (isLoading || (error && isFetching)) {
     return (
       <PageFrame title="Mission Control" subtitle="Live account and network telemetry">
-        <PageSection title="NETWORK STATUS">
+        <SectionDivider label="NETWORK STATUS" className="stagger-1" />
+        <Skeleton variant="card" className="stagger-2" />
+        <SectionDivider label="OPERATIONS" className="stagger-3" />
+        <div className="quick-action-grid quick-action-grid--skeleton stagger-4">
           <Skeleton variant="card" />
-        </PageSection>
-        <section>
-          <Skeleton className="miniapp-skeleton-cta" />
-        </section>
-        <PageSection title="OPERATIONS">
-          <div className="grid-2">
-            <Skeleton variant="card" />
-            <Skeleton variant="card" />
-            <Skeleton variant="card" />
-            <Skeleton variant="card" />
-          </div>
-        </PageSection>
+          <Skeleton variant="card" />
+          <Skeleton variant="card" />
+          <Skeleton variant="card" />
+        </div>
       </PageFrame>
     );
   }
@@ -105,32 +115,27 @@ export function HomePage() {
 
   return (
     <PageFrame title="Mission Control" subtitle="Live account and network telemetry">
-      <PageSection
-        title="NETWORK STATUS"
-        action={<span className={`chip section-meta-chip ${connected ? "cg" : "cn"}`}>{connected ? "LIVE" : "IDLE"}</span>}
-      >
-        <HomeHeroPanel
-          connected={connected}
-          locationLabel={locationLabel}
-          planId={activeSub?.plan_id ?? "—"}
-          daysLeft={daysLeft}
-          subStatus={subStatus}
-          deviceCount={usedDevices}
-          deviceLimit={deviceLimit}
-        />
-      </PageSection>
-      <HomePrimaryActionZone
-        primaryLabel={primaryLabel}
-        primaryTo={primaryTo}
-        onPrimaryClick={handlePrimaryCta}
+      <ConnectionStatusHero
+        state={connectionState}
+        serverLabel={locationLabel}
+        latencyLabel={latencyLabel}
+        currentIp="--"
+        durationLabel="--"
+        trafficLabel={bandwidthLabel}
+        protocolLabel={phase === "inactive" ? "--" : "AWG"}
+        title={statusText}
+        hint={statusHint}
       />
-      <PageSection title="OPERATIONS" action={<span className="chip cn section-meta-chip">4 TASKS</span>}>
-        <HomeQuickActionGrid hasSub={!!activeSub} hasDevices={activeDevices.length > 0} />
-      </PageSection>
-      <PageSection
-        title="SIGNALS"
-        action={<span className={`chip section-meta-chip ${healthError ? "ca" : "cg"}`}>{healthError ? "ATTN" : "CLEAR"}</span>}
-      >
+      <SectionDivider label="Quick Access" className="stagger-2" />
+      <div className="stagger-3">
+        <HomeQuickActionGrid hasSub={!!activeSub} />
+      </div>
+      <SectionDivider
+        label="SIGNALS"
+        count={healthError ? "ATTN" : "CLEAR"}
+        className="stagger-4"
+      />
+      <div className="stagger-5">
         <HomeDynamicBlock
           daysLeft={daysLeft}
           hasSub={!!activeSub}
@@ -138,7 +143,7 @@ export function HomePage() {
           usedDevices={usedDevices}
           healthError={!!healthError}
         />
-      </PageSection>
+      </div>
     </PageFrame>
   );
 }

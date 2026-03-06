@@ -84,9 +84,23 @@ test.describe("Miniapp Startup Deep Links", () => {
             items: [
               {
                 id: "plan-basic",
-                name: "Basic",
+                name: "Standard",
                 duration_days: 30,
                 price_amount: 99,
+                price_currency: "Stars",
+              },
+              {
+                id: "plan-family",
+                name: "Family",
+                duration_days: 60,
+                price_amount: 179,
+                price_currency: "Stars",
+              },
+              {
+                id: "plan-pro",
+                name: "Pro",
+                duration_days: 90,
+                price_amount: 249,
                 price_currency: "Stars",
               },
             ],

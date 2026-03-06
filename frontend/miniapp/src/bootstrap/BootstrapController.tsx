@@ -6,9 +6,9 @@ import {
   useMemo,
   type ReactNode,
 } from "react";
-import { IconShield } from "@/lib/icons";
+import { IconShield } from "@/design-system";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Button, InlineAlert, Skeleton, Display, Body } from "../ui";
+import { Button, InlineAlert, Skeleton, Display, Body } from "@/design-system";
 import { initTelegramRuntime, useTelegramWebApp } from "../hooks/useTelegramWebApp";
 import { useTelegramBackButtonController } from "../hooks/useTelegramBackButtonController";
 import { useBootstrapMachine, type BootPhase } from "./useBootstrapMachine";

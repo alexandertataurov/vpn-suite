@@ -1,0 +1,102 @@
+/* Miniapp palette — single source for consumer-dark/consumer-light. Overrides miniapp-tokens for this app. */
+
+:root,
+html[data-theme="consumer-dark"] {
+  /* Surfaces (default dark) */
+  --color-bg: #07090b;
+  --color-surface: #0b0e12;
+  --color-surface-2: #141b22;
+  /* Borders */
+  --color-border-subtle: rgba(255, 255, 255, 0.05);
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-strong: rgba(255, 255, 255, 0.15);
+  /* Text */
+  --color-text: #dde8f0;
+  --color-text-muted: #6e90a4;
+  --color-text-tertiary: #3b5468;
+  /* Semantic */
+  --color-success: #2ed87a;
+  --color-accent: #4aa8ff;
+  --color-warning: #f0a428;
+  --color-error: #e85858;
+  --color-info: #30b8d8;
+  --color-accent-hover: #4aa8ff;
+  --color-accent-active: #4aa8ff;
+  --color-on-accent: #07090b;
+  --color-focus-ring: rgba(74, 168, 255, 0.22);
+  /* Dim/border variants */
+  --blue-d: rgba(74, 168, 255, 0.08);
+  --blue-b: rgba(74, 168, 255, 0.22);
+  --green-d: rgba(46, 216, 122, 0.08);
+  --green-b: rgba(46, 216, 122, 0.22);
+  --amber-d: rgba(240, 164, 40, 0.08);
+  --amber-b: rgba(240, 164, 40, 0.22);
+  --red-d: rgba(232, 88, 88, 0.08);
+  --red-b: rgba(232, 88, 88, 0.22);
+  /* Glow (card/state) */
+  --green-glow: rgba(46, 216, 122, 0.18);
+  /* Typography */
+  --font-mono: "IBM Plex Mono", monospace;
+  --font-sans: "Space Grotesk", sans-serif;
+  /* Radii */
+  --radius-sm: 12px;
+  --radius-md: 18px;
+  --radius-lg: 22px;
+  /* Miniapp type scale */
+  --text-2xs: 10px;
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-md: 14px;
+  --text-base: 15px;
+  --text-lg: 16px;
+  --text-xl: 20px;
+  --text-2xl: 22px;
+  --text-4xl: 34px;
+  --text-hero: 40px;
+  --size-touch-target: 48px;
+  /* Overlays */
+  --overlay-scrim: rgba(0, 0, 0, 0.65);
+}
+
+html[data-theme="consumer-light"] {
+  color-scheme: light;
+  --color-bg: #f4f7fb;
+  --color-surface: #ffffff;
+  --color-surface-2: #f1f6fb;
+  --color-border-subtle: rgba(16, 34, 53, 0.08);
+  --color-border: rgba(16, 34, 53, 0.13);
+  --color-border-strong: rgba(16, 34, 53, 0.2);
+  --color-text: #102235;
+  --color-text-muted: #3f5d78;
+  --color-text-tertiary: #5f7891;
+  --color-success: #1da45f;
+  --color-accent: #2a82e3;
+  --color-warning: #ba7a12;
+  --color-error: #c14343;
+  --color-info: #177ca4;
+  --color-accent-hover: #1e72cf;
+  --color-accent-active: #1e72cf;
+  --color-on-accent: #ffffff;
+  --color-focus-ring: rgba(42, 130, 227, 0.24);
+  --blue-d: rgba(42, 130, 227, 0.12);
+  --blue-b: rgba(42, 130, 227, 0.24);
+  --green-d: rgba(29, 164, 95, 0.12);
+  --green-b: rgba(29, 164, 95, 0.24);
+  --amber-d: rgba(186, 122, 18, 0.12);
+  --amber-b: rgba(186, 122, 18, 0.24);
+  --red-d: rgba(193, 67, 67, 0.12);
+  --red-b: rgba(193, 67, 67, 0.24);
+  --green-glow: rgba(29, 164, 95, 0.12);
+  --text-2xs: 10px;
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-md: 14px;
+  --text-base: 15px;
+  --text-lg: 16px;
+  --text-xl: 20px;
+  --text-2xl: 22px;
+  --text-4xl: 34px;
+  --text-hero: 40px;
+  --size-touch-target: 48px;
+  --overlay-scrim: rgba(10, 22, 35, 0.42);
+}

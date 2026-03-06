@@ -1,4 +1,4 @@
-import { telegramClient, type TelegramEventName } from "./telegramClient";
+import { telegramClient, type TelegramEventName } from "./telegramCoreClient";
 
 type EventListener = () => void;
 
@@ -43,4 +43,3 @@ export function subscribeTelegramEvent(event: TelegramEventName, listener: Event
     removeDirect();
   };
 }
-

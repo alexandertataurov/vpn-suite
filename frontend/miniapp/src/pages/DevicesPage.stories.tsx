@@ -1,9 +1,14 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { DevicesPage } from "./Devices";
-import { MockWebappApi } from "../storybook/webappMocks";
-import { MiniappFrame } from "../storybook/wrappers";
-import { webappMeActive, webappMeNoSubscription, webappMeNoDevices, webappMeRevokedOnly } from "../storybook/fixtures";
-import { Body } from "../ui";
+import {
+  MockWebappApi,
+  MiniappFrame,
+  webappMeActive,
+  webappMeNoSubscription,
+  webappMeNoDevices,
+  webappMeRevokedOnly,
+} from "@/lib/storybook";
+import { Body } from "@/design-system";
 
 const meta: Meta<typeof DevicesPage> = {
   title: "Miniapp/Pages/Devices",
@@ -69,4 +74,4 @@ export const DevicesPageAccessibility: Story = {
   render: () => renderPage({ mode: "success", me: webappMeRevokedOnly }),
 };
 
-export const DevicesPageEdgeCases = WithLongText;
+export const DevicesPageEdgeCases = DevicesPageWithLongText;

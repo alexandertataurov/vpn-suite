@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { RefObject } from "react";
-import { telegramClient } from "@/telegram/telegramClient";
+import { telegramClient } from "@/telegram/telegramCoreClient";
 import { resolvePullToRefreshProfile } from "@/config/pullToRefresh";
 
 interface PullToRefreshOptions {

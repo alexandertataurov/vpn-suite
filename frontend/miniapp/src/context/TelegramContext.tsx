@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, type ReactNode } from "react";
 import { useViewportDimensions, type SafeAreaInsets } from "../hooks/useViewportDimensions";
 import { useTelegramApp } from "../hooks/telegram";
-import { useTheme, type Theme } from "@/lib/theme";
+import { useTheme, type Theme } from "@/design-system/theme/ThemeProvider";
 
 export type TelegramContextValue = {
   viewportHeight: number;

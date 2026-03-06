@@ -1,23 +1,32 @@
 import { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import type { WebAppSubscriptionOffersResponse } from "@/lib/types";
+import { useSession } from "@/hooks/useSession";
+import { useWebappToken, webappApi } from "@/api/client";
 import {
-  Panel,
-  Button,
-  ButtonLink,
+  FallbackScreen,
   Skeleton,
   ConfirmModal,
   useToast,
   PageFrame,
   PageSection,
-  ActionRow,
-} from "../ui";
-import type { WebAppSubscriptionOffersResponse } from "@/lib/types";
-import { useSession } from "../hooks/useSession";
-import { useWebappToken, webappApi } from "../api/client";
-import { DangerZone, FallbackScreen, SessionMissing } from "@/components";
-import { useTrackScreen } from "../hooks/useTrackScreen";
+  SectionDivider,
+  AccountSummaryHero,
+  DangerZone,
+  MissionAlert,
+  MissionCard,
+  MissionChip,
+  MissionOperationButton,
+  MissionPrimaryButton,
+  MissionSecondaryButton,
+  SessionMissing,
+} from "@/design-system";
+import { useTrackScreen } from "@/hooks/useTrackScreen";
 
 export function SettingsPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const hasToken = !!useWebappToken();
   const queryClient = useQueryClient();
   const { data, isLoading, error } = useSession(hasToken);
@@ -93,106 +102,137 @@ export function SettingsPage() {
   }
   if (isLoading) {
     return (
-      <PageFrame title="Control Settings" subtitle="Preferences and account operations">
+      <PageFrame title="Settings" subtitle="Account and app controls" className="settings-page">
         <Skeleton variant="card" />
       </PageFrame>
     );
   }
 
   const activeDevices = data?.devices?.filter((d) => !d.revoked_at) ?? [];
+  const planLabel = activeSub?.plan_id?.replace(/^plan_/, "") ?? "Free";
 
   return (
-    <PageFrame title="Control Settings" subtitle="Preferences and account operations">
-
-      <PageSection
-        title="PREFERENCES"
-        description="General miniapp preferences."
-        action={<span className="chip cn section-meta-chip">LOCAL</span>}
-      >
-        <Panel variant="surface" className="card edge et module-card module-card--tight">
-          <p className="type-body-sm">Language: System default</p>
-          <p className="type-meta">Notifications: Expiry reminders via bot</p>
-        </Panel>
-      </PageSection>
-
-      <PageSection title="ACCOUNT LINKS">
-        <Panel variant="surface" className="card edge et module-card">
-          <p className="type-body-sm">Manage devices and referral settings from quick links below.</p>
-          <ActionRow fullWidth>
-            <ButtonLink to="/devices" variant="secondary" size="md">
-              MANAGE DEVICES
-            </ButtonLink>
-            <ButtonLink to="/referral" variant="secondary" size="md">
-              REFERRAL LINK
-            </ButtonLink>
-          </ActionRow>
-        </Panel>
-      </PageSection>
+    <PageFrame title="Account" subtitle="Profile and app controls" className="settings-page">
+      <AccountSummaryHero
+        initial="A"
+        name="Account"
+        email="—"
+        memberSince={undefined}
+        badge={<div className="page-hd-badge g">{planLabel}</div>}
+        className="stagger-1"
+      />
+      <SectionDivider label="Preferences" className="stagger-2" />
+      <div className="stagger-3">
+        <MissionCard tone="blue" className="module-card">
+          <div className="data-grid">
+            <div className="data-cell">
+              <div className="dc-key">Language</div>
+              <div className="dc-val teal">System default</div>
+            </div>
+            <div className="data-cell">
+              <div className="dc-key">Notifications</div>
+              <div className="dc-val">Expiry reminders via bot</div>
+            </div>
+          </div>
+        </MissionCard>
+      </div>
+      <SectionDivider label="Account" className="stagger-4" />
+      <div className="stagger-5 ops settings-ops">
+          <MissionOperationButton
+            tone="blue"
+            icon={<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><rect x="5" y="2" width="14" height="20" rx="2" /><path d="M9 7h6M9 11h6M9 15h3" /></svg>}
+            title="Devices"
+            description={activeDevices.length > 0 ? `${activeDevices.length} active` : "No active configs"}
+            onClick={() => navigate("/devices")}
+          />
+          <MissionOperationButton
+            tone="green"
+            icon={<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" /></svg>}
+            title="Plans & billing"
+            description="Manage subscription and renewals"
+            onClick={() => navigate("/plan")}
+          />
+          <MissionOperationButton
+            tone="amber"
+            icon={<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M4 12h16" /><path d="M12 4v16" /><circle cx="12" cy="12" r="8" /></svg>}
+            title="Change server"
+            description="Select route and region"
+            onClick={() => navigate("/servers", { state: { from: location.pathname } })}
+          />
+          <MissionOperationButton
+            tone="blue"
+            icon={<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M10 14L6.5 17.5a3 3 0 1 1-4.2-4.2L5.8 9.8" /><path d="M14 10l3.5-3.5a3 3 0 1 1 4.2 4.2L18.2 14.2" /><path d="M8 16l8-8" /></svg>}
+            title="Referral link"
+            description="Invite friends and earn rewards"
+            onClick={() => navigate("/referral", { state: { from: location.pathname } })}
+          />
+          <MissionOperationButton
+            tone="red"
+            icon={<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="9" /><path d="M12 8v4M12 16v.5" /></svg>}
+            title="Support"
+            description="Troubleshoot connection issues"
+            onClick={() => navigate("/support")}
+          />
+      </div>
 
       {offersLoading && (
-        <Panel variant="surface" className="card edge et module-card">
+        <MissionCard tone="blue" className="module-card">
           <Skeleton className="skeleton-h-md" />
           <Skeleton className="skeleton-h-sm" />
-        </Panel>
+        </MissionCard>
       )}
       {offersError && (
-        <Panel variant="surface" className="card edge et module-card">
-          <p className="type-body-sm">Subscription options could not be loaded. Try again later.</p>
-          <ActionRow fullWidth>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => queryClient.invalidateQueries({ queryKey: ["webapp", "subscription", "offers"] })}
-            >
-              TRY AGAIN
-            </Button>
-          </ActionRow>
-        </Panel>
+        <MissionCard tone="red" className="module-card">
+          <MissionAlert
+            tone="error"
+            title="Subscription options unavailable"
+            message="Subscription options could not be loaded. Try again later."
+          />
+          <div className="btn-row">
+            <MissionSecondaryButton onClick={() => queryClient.invalidateQueries({ queryKey: ["webapp", "subscription", "offers"] })}>
+              Try again
+            </MissionSecondaryButton>
+          </div>
+        </MissionCard>
       )}
       {offers && !offersError && (offers.can_pause || offers.can_resume) && (
         <PageSection
-          title="SUBSCRIPTION OPERATIONS"
+          className="settings-section settings-section--subscription"
+          title="Subscription operations"
           description={`Loyalty discount: ${offers.discount_percent}%`}
-          action={<span className="chip ca section-meta-chip miniapp-tnum">{offers.discount_percent}%</span>}
+          action={<MissionChip tone="amber" className="section-meta-chip miniapp-tnum">{offers.discount_percent}%</MissionChip>}
         >
-          <Panel variant="surface" className="card edge et module-card">
-            <ActionRow fullWidth>
-              <Button
-                variant="secondary"
-                size="md"
+          <MissionCard tone="amber" className="module-card">
+            <div className="btn-row">
+              <MissionSecondaryButton
                 disabled={!offers.can_pause || pauseMutation.isPending}
-                loading={pauseMutation.isPending}
                 onClick={() => pauseMutation.mutate()}
               >
-                PAUSE
-              </Button>
-              <Button
-                variant="secondary"
-                size="md"
+                {pauseMutation.isPending ? "Pausing…" : "Pause"}
+              </MissionSecondaryButton>
+              <MissionSecondaryButton
                 disabled={!offers.can_resume || resumeMutation.isPending}
-                loading={resumeMutation.isPending}
                 onClick={() => resumeMutation.mutate()}
               >
-                RESUME
-              </Button>
-              <Button
-                variant="danger"
-                size="md"
-                onClick={() => setCancelOpen(true)}
-                disabled={cancelMutation.isPending}
-              >
-                CANCEL SUBSCRIPTION
-              </Button>
-            </ActionRow>
-          </Panel>
+                {resumeMutation.isPending ? "Resuming…" : "Resume"}
+              </MissionSecondaryButton>
+            </div>
+            <MissionPrimaryButton
+              tone="danger"
+              onClick={() => setCancelOpen(true)}
+              disabled={cancelMutation.isPending}
+            >
+              Cancel subscription
+            </MissionPrimaryButton>
+          </MissionCard>
         </PageSection>
       )}
 
       {activeDevices.length > 0 && (
         <DangerZone
-          title="RESET CONFIGS"
+          title="Reset configs"
           description="Revoke all device configs. You will need to add devices again from the Devices tab."
-          buttonLabel="RESET ALL CONFIGS"
+          buttonLabel="Reset all configs"
           confirmTitle="Reset all configs?"
           confirmMessage="This will revoke every device config. You can add new devices afterward."
           confirmLabel="Reset"

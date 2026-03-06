@@ -1,32 +1,67 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import type { WebAppCreateInvoiceResponse, WebAppPaymentStatusOut } from "@/lib/types";
 import {
-  Panel,
+  FallbackScreen,
   Input,
-  Button,
-  ButtonLink,
-  InlineAlert,
   PageFrame,
   Skeleton,
   PageSection,
-  ActionRow,
-} from "../ui";
-import { SessionMissing, FallbackScreen } from "@/components";
+  MissionAlert,
+  MissionCard,
+  MissionChip,
+  MissionPrimaryButton,
+  MissionSecondaryButton,
+  MissionSecondaryLink,
+  SessionMissing,
+} from "@/design-system";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { webappApi, useWebappToken } from "../api/client";
-import { useTelegramMainButton } from "../hooks/useTelegramMainButton";
-import { useTelegramHaptics } from "../hooks/useTelegramHaptics";
-import { useHideKeyboard } from "../hooks/useHideKeyboard";
-import { useTrackScreen } from "../hooks/useTrackScreen";
-import { useTelemetry } from "../hooks/useTelemetry";
-import { useOnlineStatus } from "../hooks/useOnlineStatus";
-import { usePayments } from "../hooks/features/usePayments";
+import { webappApi, useWebappToken } from "@/api/client";
+import { useTelegramMainButton } from "@/hooks/useTelegramMainButton";
+import { useTelegramHaptics } from "@/hooks/useTelegramHaptics";
+import { useHideKeyboard } from "@/hooks/useHideKeyboard";
+import { useTrackScreen } from "@/hooks/useTrackScreen";
+import { useTelemetry } from "@/hooks/useTelemetry";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
+import { usePayments } from "@/hooks/features/usePayments";
 
 const POLL_INTERVAL_MS = 2500;
 const POLL_TIMEOUT_MS = 5 * 60 * 1000;
 
 type PaymentPhase = "idle" | "creating_invoice" | "waiting" | "success" | "error" | "timeout";
+type PromoErrorAction = "clear" | "retry";
+
+function resolvePromoValidationError(err: unknown): { message: string; action: PromoErrorAction } {
+  const e = err as Error & { code?: string };
+  switch (e?.code) {
+    case "PROMO_EXPIRED":
+      return {
+        message: "Promo expired for this plan. Remove the code and continue checkout.",
+        action: "clear",
+      };
+    case "PROMO_ALREADY_USED":
+      return {
+        message: "This promo was already used on your account. Remove it and continue checkout.",
+        action: "clear",
+      };
+    case "PROMO_NOT_FOUND":
+      return {
+        message: "Promo code not found for this plan. Check spelling or remove it to continue.",
+        action: "clear",
+      };
+    case "NETWORK_UNREACHABLE":
+    case "TIMEOUT":
+      return {
+        message: "Cannot validate promo right now. Check your connection and try again.",
+        action: "retry",
+      };
+    default:
+      return {
+        message: "Promo code is invalid for the selected plan. Check the code and try again.",
+        action: "retry",
+      };
+  }
+}
 
 export function CheckoutPage() {
   const { planId } = useParams<{ planId: string }>();
@@ -37,6 +72,7 @@ export function CheckoutPage() {
   const isOnline = useOnlineStatus();
   const [promoCode, setPromoCode] = useState("");
   const [promoError, setPromoError] = useState("");
+  const [promoErrorAction, setPromoErrorAction] = useState<PromoErrorAction>("retry");
   const [promoPreview, setPromoPreview] = useState<{ description: string } | null>(null);
   const [phase, setPhase] = useState<PaymentPhase>("idle");
   const [errorMessage, setErrorMessage] = useState("");
@@ -74,10 +110,29 @@ export function CheckoutPage() {
       if (data.valid) {
         setPromoPreview(data.description ? { description: data.description } : null);
         setPromoError("");
-      } else setPromoError("Invalid code");
+      } else {
+        setPromoError("Promo code is invalid for the selected plan. Check the code and try again.");
+        setPromoErrorAction("retry");
+      }
     },
-    onError: () => setPromoError("Invalid code"),
+    onError: (err: unknown) => {
+      const resolved = resolvePromoValidationError(err);
+      setPromoError(resolved.message);
+      setPromoErrorAction(resolved.action);
+    },
   });
+
+  const handlePromoRecovery = () => {
+    if (promoErrorAction === "clear") {
+      setPromoCode("");
+      setPromoPreview(null);
+      setPromoError("");
+      setPromoErrorAction("retry");
+      return;
+    }
+    if (!selectedPlanId || !promoCode.trim()) return;
+    validatePromo.mutate();
+  };
 
   const stopPolling = useCallback(() => {
     if (pollTimeoutRef.current) {
@@ -206,30 +261,25 @@ export function CheckoutPage() {
     createInvoice.mutate();
   };
 
-  const paymentPhaseChipClass =
+  const paymentPhaseTone =
     phase === "success"
-      ? "cg"
+      ? "green"
       : phase === "error" || phase === "timeout"
-        ? "cr"
+        ? "red"
         : phase === "waiting" || phase === "creating_invoice"
-          ? "ca"
-          : "cn";
+          ? "amber"
+          : "neutral";
   const paymentPhaseLabel =
     phase === "success"
-      ? "SUCCESS"
+      ? "Success"
       : phase === "error"
-        ? "FAILED"
+        ? "Failed"
         : phase === "timeout"
-          ? "TIMEOUT"
+          ? "Timeout"
         : phase === "waiting" || phase === "creating_invoice"
-          ? "PENDING"
-          : "READY";
+          ? "Pending"
+          : "Ready";
   const headerSubtitle = `Plan ${planId ?? "N/A"}`;
-  const backToPlanLink = (
-    <ActionRow>
-      <Link to="/plan" className="link-interactive page-anchor-link">BACK TO PLAN</Link>
-    </ActionRow>
-  );
 
   useTelegramMainButton(null);
 
@@ -240,12 +290,11 @@ export function CheckoutPage() {
   const plansFetched = !plansLoading && !plansError;
   if (selectedPlanId && plansLoading) {
     return (
-      <PageFrame title="Payment Checkout" subtitle={headerSubtitle}>
-        {backToPlanLink}
-        <Panel className="card edge et">
+      <PageFrame title="Checkout" subtitle={headerSubtitle}>
+        <MissionCard tone="blue" className="module-card">
           <Skeleton className="skeleton-h-md" />
           <Skeleton className="skeleton-h-2xl" />
-        </Panel>
+        </MissionCard>
       </PageFrame>
     );
   }
@@ -262,35 +311,39 @@ export function CheckoutPage() {
 
   if (plansFetched && selectedPlanId && !selectedPlan) {
     return (
-      <PageFrame title="Payment Checkout" subtitle={headerSubtitle}>
-        {backToPlanLink}
-        <Panel className="card edge et">
-          <InlineAlert
-            variant="error"
+      <PageFrame title="Checkout" subtitle={headerSubtitle}>
+        <MissionCard tone="red" className="module-card">
+          <MissionAlert
+            tone="error"
             title="Plan not found"
             message={`Plan "${selectedPlanId}" is not available. Please choose a plan from the list.`}
           />
-          <ActionRow fullWidth>
-            <ButtonLink to="/plan" variant="secondary" size="md">
-              BACK TO PLAN
-            </ButtonLink>
-          </ActionRow>
-        </Panel>
+          <div className="btn-row">
+            <MissionSecondaryLink to="/plan">Back to plan</MissionSecondaryLink>
+          </div>
+        </MissionCard>
       </PageFrame>
     );
   }
 
   return (
-    <PageFrame title="Payment Checkout" subtitle={headerSubtitle}>
-      {backToPlanLink}
-
+    <PageFrame title="Checkout" subtitle={headerSubtitle}>
       <PageSection
-        title="PAYMENT AUTHORIZATION"
+        title="Payment"
         description="Activate your subscription securely via Telegram."
-        action={<span className={`chip section-meta-chip ${paymentPhaseChipClass}`}>{paymentPhaseLabel}</span>}
+        action={<MissionChip tone={paymentPhaseTone} className="section-meta-chip">{paymentPhaseLabel}</MissionChip>}
       >
-        <Panel variant="surface" className="card edge et module-card">
-          <p className="type-meta miniapp-tnum">Plan ID: {planId}</p>
+        <MissionCard tone="blue" className="module-card">
+          <div className="data-grid">
+            <div className="data-cell">
+              <div className="dc-key">Plan ID</div>
+              <div className="dc-val teal miniapp-tnum">{planId}</div>
+            </div>
+            <div className="data-cell">
+              <div className="dc-key">Mode</div>
+              <div className="dc-val">{isFreePlan ? "Activation" : "Stars payment"}</div>
+            </div>
+          </div>
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -298,69 +351,93 @@ export function CheckoutPage() {
             }}
             className="form-row"
           >
-            <Input placeholder="Promo code" value={promoCode} onChange={(e) => setPromoCode(e.target.value)} />
-            <Button
+            <Input
+              placeholder="Promo code"
+              value={promoCode}
+              onChange={(e) => {
+                setPromoCode(e.target.value);
+                if (promoError) {
+                  setPromoError("");
+                  setPromoErrorAction("retry");
+                }
+              }}
+            />
+            <MissionSecondaryButton
               type="submit"
-              variant="secondary"
-              size="sm"
               disabled={!selectedPlanId || !promoCode.trim() || validatePromo.isPending}
             >
-              APPLY
-            </Button>
+              {validatePromo.isPending ? "Checking…" : "Apply"}
+            </MissionSecondaryButton>
           </form>
 
           {promoPreview && (
-            <InlineAlert variant="info" title="Promo applied" message={promoPreview.description} />
+            <MissionAlert tone="info" title="Promo applied" message={promoPreview.description} />
           )}
           {promoError && (
-            <InlineAlert variant="error" title="Invalid promo code" message={promoError} />
+            <>
+              <MissionAlert tone="error" title="Promo code issue" message={promoError} />
+              <div className="btn-row">
+                <MissionSecondaryButton
+                  type="button"
+                  onClick={handlePromoRecovery}
+                  disabled={validatePromo.isPending}
+                >
+                  {promoErrorAction === "clear" ? "Remove code" : "Try again"}
+                </MissionSecondaryButton>
+              </div>
+            </>
           )}
 
-          <ActionRow fullWidth>
-            <Button
-              variant="primary"
+          <div className="btn-row">
+            <MissionPrimaryButton
               onClick={handlePay}
-              loading={createInvoice.isPending}
-              size="lg"
               disabled={!planId || !hasToken || !isOnline || phase === "waiting" || phase === "creating_invoice"}
             >
-              {isFreePlan ? "ACTIVATE PLAN" : "PAY WITH TELEGRAM STARS"}
-            </Button>
-          </ActionRow>
+              {createInvoice.isPending ? (
+                <>
+                  <svg className="spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
+                    <circle cx="12" cy="12" r="8" strokeOpacity="0.35" />
+                    <path d="M20 12a8 8 0 0 0-8-8" />
+                  </svg>
+                  <span>Preparing…</span>
+                </>
+              ) : (
+                isFreePlan ? "Activate plan" : "Pay with Telegram Stars"
+              )}
+            </MissionPrimaryButton>
+          </div>
 
           {phase === "success" && (
-            <InlineAlert
-              variant="info"
+            <MissionAlert
+              tone="success"
               title="Payment successful"
               message="Your plan has been activated. You can go back to Home or Plan."
             />
           )}
           {(phase === "waiting" || createInvoice.isPending) && (
-            <InlineAlert
-              variant="info"
+            <MissionAlert
+              tone="info"
               title="Waiting for payment"
               message="Complete the Stars payment in the Telegram sheet to activate your subscription."
             />
           )}
           {(phase === "error" || phase === "timeout") && (
             <>
-              <InlineAlert
-                variant="error"
+              <MissionAlert
+                tone="error"
                 title={phase === "timeout" ? "Payment timed out" : "Payment failed"}
-                message={
-                  phase === "timeout"
-                    ? "Payment did not complete in time. You can try again."
-                    : errorMessage || "We could not complete the payment. Please try again or contact support."
-                }
+                message={phase === "timeout"
+                  ? "Payment did not complete in time. You can try again."
+                  : errorMessage || "We could not complete the payment. Please try again or contact support."}
               />
-              <ActionRow fullWidth>
-                <Button variant="secondary" size="sm" onClick={handleRetry}>
-                  TRY AGAIN
-                </Button>
-              </ActionRow>
+              <div className="btn-row">
+                <MissionSecondaryButton onClick={handleRetry}>
+                  Try again
+                </MissionSecondaryButton>
+              </div>
             </>
           )}
-        </Panel>
+        </MissionCard>
       </PageSection>
     </PageFrame>
   );

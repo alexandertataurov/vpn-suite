@@ -1,13 +1,13 @@
 import { useCallback } from "react";
-import { telegramClient } from "@/telegram/telegramClient";
+import { telegramFeatureClient } from "@/telegram/telegramFeatureClient";
 
 export function usePermissions() {
   const requestWriteAccess = useCallback(async () => {
-    return telegramClient.requestWriteAccess();
+    return telegramFeatureClient.requestWriteAccess();
   }, []);
 
   const requestContact = useCallback(async () => {
-    return telegramClient.requestContact();
+    return telegramFeatureClient.requestContact();
   }, []);
 
   const requestLocation = useCallback(async () => {
@@ -23,4 +23,3 @@ export function usePermissions() {
 
   return { requestWriteAccess, requestContact, requestLocation };
 }
-

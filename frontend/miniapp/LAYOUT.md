@@ -144,7 +144,7 @@ Full-screen mini-apps must respect OS and Telegram safe areas. Only the middle s
 
 ## Spacing
 
-8px base grid: use `--sp-*` tokens (8, 16, 24, 32, etc.) from [src/styles/miniapp-tokens.css](src/styles/miniapp-tokens.css).
+8px base grid: use `--sp-*` tokens (8, 16, 24, 32, etc.) from [src/design-system/styles/miniapp-tokens.css](src/design-system/styles/miniapp-tokens.css).
 
 ## Mandatory rules (guidelines compliance)
 
@@ -161,7 +161,7 @@ These rules are mandatory for a stable Telegram Mini-App UI across iOS, Android,
 | **7. Gesture buffers** Top ≈60px, bottom ≈60px, side 16px | `--miniapp-safe-top-min: 60px`; bottom via safe + 20px; horizontal via `--sp-4` (16px) + safe insets. |
 | **8. Touch targets** Min 48×48px; ≥8px between | Primary nav/actions enforce `min-height: 48px`; interactive spacing remains `>= 8px`. |
 | **9. Layout width** Design 375px; max content 420px; center on desktop | Runtime shell/content are constrained to `420px` max and centered on desktop. |
-| **10. Spacing** 8px grid: 8, 16, 24, 32, 40, 48 | `--sp-*` and spacing scale in [miniapp-tokens.css](src/styles/miniapp-tokens.css). |
+| **10. Spacing** 8px grid: 8, 16, 24, 32, 40, 48 | `--sp-*` and spacing scale in [miniapp-tokens.css](src/design-system/styles/miniapp-tokens.css). |
 | **11. Theme** Use `--tg-theme-*` or adapt to Telegram theme | [TelegramThemeBridge](src/components/TelegramThemeBridge.tsx); `data-tg` and theme sync. |
 | **12. Scroll** No full-page scroll; Header fixed, ScrollZone scrolls, ActionZone fixed | Single scroll container (ScrollZone); header and bottom nav fixed. |
 | **13. Performance** Avoid heavy blur, nested scroll, expensive animations | Flat layouts; single scroll; minimal backdrop-filter where used. |

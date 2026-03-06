@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { telegramClient } from "@/telegram/telegramClient";
+import { telegramClient } from "@/telegram/telegramCoreClient";
 import { useTelegramEvent } from "../telegram/useTelegramEvent";
 
 export function useFullscreen() {

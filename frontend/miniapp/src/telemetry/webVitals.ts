@@ -3,7 +3,23 @@
  * Emits webapp telemetry event_type "web_vital" once per metric per page load.
  */
 
-import { webappApi } from "../api/client";
+import { webappApi } from "@/api/client";
+
+/** Layout Shift entry shape (LayoutShift in DOM; not all TS libs narrow it). */
+interface LayoutShiftEntryLike extends PerformanceEntry {
+  value: number;
+  hadRecentInput?: boolean;
+}
+
+/** Event timing entry shape (for INP). */
+interface EventTimingEntryLike {
+  duration?: number;
+  interactionId?: number;
+}
+
+interface PerformanceObserverConstructorWithTypes {
+  supportedEntryTypes?: readonly string[];
+}
 
 const sent = new Set<string>();
 
@@ -65,9 +81,9 @@ export function initWebVitals(): void {
   let clsValue = 0;
   try {
     const po = new PerformanceObserver((list) => {
-      for (const entry of list.getEntries() as PerformanceEntryList) {
-        const e = entry as unknown as { value: number; hadRecentInput?: boolean };
-        if (!e.hadRecentInput) clsValue += e.value || 0;
+      for (const entry of list.getEntries()) {
+        const e = entry as LayoutShiftEntryLike;
+        if ("value" in e && !e.hadRecentInput) clsValue += e.value || 0;
       }
     });
     po.observe({ type: "layout-shift", buffered: true } as PerformanceObserverInit);
@@ -77,12 +93,12 @@ export function initWebVitals(): void {
 
   let inpValue = 0;
   try {
-    const supported = (PerformanceObserver as unknown as { supportedEntryTypes?: string[] }).supportedEntryTypes;
-    if (supported && supported.includes("event")) {
+    const supported = (PerformanceObserver as PerformanceObserverConstructorWithTypes).supportedEntryTypes;
+    if (supported?.includes("event")) {
       const po = new PerformanceObserver((list) => {
         for (const entry of list.getEntries()) {
-          const e = entry as unknown as { duration?: number; interactionId?: number };
-          if (e.interactionId && typeof e.duration === "number") {
+          const e = entry as EventTimingEntryLike;
+          if (e.interactionId != null && typeof e.duration === "number") {
             inpValue = Math.max(inpValue, e.duration);
           }
         }

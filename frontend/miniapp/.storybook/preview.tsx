@@ -1,8 +1,7 @@
 import type { Preview } from "@storybook/react";
 import React from "react";
-import { ThemeProvider } from "../src/lib/theme";
-import "../src/styles/miniapp-global.css";
-import "../src/miniapp.css";
+import { ThemeProvider } from "../src/design-system/theme";
+import "../src/design-system/styles/index.css";
 
 const preview: Preview = {
   decorators: [

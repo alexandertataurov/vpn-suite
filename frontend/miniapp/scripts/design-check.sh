@@ -5,12 +5,17 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SRC="$ROOT/src"
 VIOLATIONS=0
 
-# 1. Only token file may define :root
+# 1. Only token/shell files may define :root
 ROOT_FILES=$(grep -rl "^:root\s*{" "$SRC" --include="*.css" 2>/dev/null || true)
+ALLOWED_ROOT="$SRC/design-system/styles/miniapp-tokens.css $SRC/design-system/styles/miniapp.css $SRC/design-system/styles/miniapp-palette.css"
 if [ -n "$ROOT_FILES" ]; then
   for f in $ROOT_FILES; do
-    if [ "$(realpath "$f")" != "$(realpath "$SRC/styles/miniapp-tokens.css")" ]; then
-      echo "design:check — :root only allowed in miniapp-tokens.css, found in: $f"
+    allowed=
+    for a in $ALLOWED_ROOT; do
+      [ "$(realpath "$f" 2>/dev/null)" = "$(realpath "$a" 2>/dev/null)" ] && allowed=1 && break
+    done
+    if [ -z "$allowed" ]; then
+      echo "design:check — :root only allowed in design-system/styles (miniapp-tokens, miniapp, miniapp-palette), found in: $f"
       VIOLATIONS=$((VIOLATIONS + 1))
     fi
   done

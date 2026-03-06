@@ -1,27 +1,27 @@
 import { useCallback } from "react";
-import { Link } from "react-router-dom";
 import type {
   WebAppReferralMyLinkResponse,
   WebAppReferralStatsResponse,
 } from "@/lib/types";
 import {
-  Panel,
-  Button,
   Skeleton,
-  InlineAlert,
-  ProgressBar,
-  Stat,
   useToast,
   PageFrame,
   PageSection,
-  ActionRow,
-} from "../ui";
+  MissionAlert,
+  MissionCard,
+  MissionChip,
+  MissionModuleHead,
+  MissionPrimaryButton,
+  MissionProgressBar,
+  MissionSecondaryButton,
+  SessionMissing,
+} from "@/design-system";
 import { useQuery } from "@tanstack/react-query";
-import { useWebappToken, webappApi } from "../api/client";
-import { useTelegramMainButton } from "../hooks/useTelegramMainButton";
-import { useTelegramHaptics } from "../hooks/useTelegramHaptics";
-import { useOnlineStatus } from "../hooks/useOnlineStatus";
-import { SessionMissing } from "@/components";
+import { useWebappToken, webappApi } from "@/api/client";
+import { useTelegramMainButton } from "@/hooks/useTelegramMainButton";
+import { useTelegramHaptics } from "@/hooks/useTelegramHaptics";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 
 export function ReferralPage() {
   const { addToast } = useToast();
@@ -90,13 +90,8 @@ export function ReferralPage() {
     refetchLink();
     refetchStats();
   }, [refetchLink, refetchStats]);
-  const pageTitle = "Referral Program";
+  const pageTitle = "Referrals";
   const pageSubtitle = "Share your link and track rewards";
-  const backHomeLink = (
-    <Link to="/" className="link-interactive page-anchor-link">
-      Back
-    </Link>
-  );
 
   useTelegramMainButton(null);
 
@@ -111,17 +106,18 @@ export function ReferralPage() {
   if (linkError || statsError) {
     return (
       <PageFrame title={pageTitle} subtitle={pageSubtitle}>
-        <InlineAlert
-          variant="error"
-          title="Referrals temporarily unavailable"
-          message="We could not load your referral data. Please try again later."
-        />
-        <ActionRow fullWidth>
-          <Button variant="secondary" size="sm" onClick={handleRetry}>
-            Try again
-          </Button>
-          {backHomeLink}
-        </ActionRow>
+        <MissionCard tone="red" className="module-card">
+          <MissionAlert
+            tone="error"
+            title="Referrals temporarily unavailable"
+            message="We could not load your referral data. Please try again later."
+          />
+          <div className="btn-row">
+            <MissionSecondaryButton onClick={handleRetry}>
+              Try again
+            </MissionSecondaryButton>
+          </div>
+        </MissionCard>
       </PageFrame>
     );
   }
@@ -147,46 +143,65 @@ export function ReferralPage() {
 
   return (
     <PageFrame title={pageTitle} subtitle={pageSubtitle}>
-      <ActionRow>{backHomeLink}</ActionRow>
-
-      <PageSection title="SHARE LINK" description="Invite friends and unlock bonus days.">
-        <Panel variant="surface" className="card edge eg module-card">
+      <PageSection title="Share link" description="Invite friends and unlock bonus days.">
+        <MissionCard tone="green" className="module-card">
           {!botUsername && (
-            <InlineAlert
-              variant="warning"
+            <MissionAlert
+              tone="warning"
               title="Bot username missing"
               message="Referral links are unavailable: bot username is not configured."
             />
           )}
+          <MissionModuleHead
+            label="Invite URL"
+            chip={<MissionChip tone="neutral">Secure</MissionChip>}
+          />
           <code className="code-block type-meta">{shareUrl || "Unavailable"}</code>
-          <ActionRow fullWidth>
-            <Button onClick={handleShare} disabled={!shareUrl || !isOnline}>
-              SHARE SECURE ACCESS
-            </Button>
-          </ActionRow>
-        </Panel>
+          <div className="btn-row">
+            <MissionPrimaryButton onClick={handleShare} disabled={!shareUrl || !isOnline}>
+              Share secure access
+            </MissionPrimaryButton>
+            <MissionSecondaryButton onClick={copyToClipboard} disabled={!shareUrl || !isOnline}>
+              Copy link
+            </MissionSecondaryButton>
+          </div>
+        </MissionCard>
       </PageSection>
 
       {statsData && (
         <PageSection
-          title="REWARD TELEMETRY"
-          action={<span className="chip cn section-meta-chip miniapp-tnum">{inviteProgress}/{inviteGoal}</span>}
+          title="Reward progress"
+          action={<MissionChip tone="neutral" className="section-meta-chip miniapp-tnum">{inviteProgress} / {inviteGoal}</MissionChip>}
         >
-          <Panel variant="surface" className="card edge eb module-card">
-            <div className="stats-row referral-metrics">
-              <Stat label="EARNED DAYS" value={earnedDays.toString()} />
-              <Stat label="ACTIVE REFERRALS" value={activeReferrals.toString()} />
-              <Stat label="PENDING REWARDS" value={pendingRewards.toString()} />
-              <Stat label="TOTAL REFERRALS" value={totalReferrals.toString()} />
+          <MissionCard tone="blue" className="module-card">
+            <div className="data-grid three">
+              <div className="data-cell">
+                <div className="dc-key">Earned days</div>
+                <div className="dc-val miniapp-tnum">{earnedDays}</div>
+              </div>
+              <div className="data-cell">
+                <div className="dc-key">Active referrals</div>
+                <div className="dc-val miniapp-tnum">{activeReferrals}</div>
+              </div>
+              <div className="data-cell">
+                <div className="dc-key">Pending rewards</div>
+                <div className="dc-val miniapp-tnum">{pendingRewards}</div>
+              </div>
             </div>
-            <p className="module-note">
+            <div className="data-grid wide">
+              <div className="data-cell">
+                <div className="dc-key">Total referrals</div>
+                <div className="dc-val miniapp-tnum">{totalReferrals}</div>
+              </div>
+            </div>
+            <p className="op-desc type-body-sm">
               Invite {inviteRemaining} more {inviteRemaining === 1 ? "friend" : "friends"} to unlock {nextBonusDays} bonus days
             </p>
-            <ProgressBar value={progressPercent} max={100} />
-            <p className="type-meta miniapp-tnum">
+            <MissionProgressBar percent={progressPercent} staticFill ariaLabel="Referral reward progress" />
+            <p className="dc-key type-meta miniapp-tnum">
               {inviteProgress}/{inviteGoal} towards next bonus · Total invites: {totalReferrals}
             </p>
-          </Panel>
+          </MissionCard>
         </PageSection>
       )}
     </PageFrame>

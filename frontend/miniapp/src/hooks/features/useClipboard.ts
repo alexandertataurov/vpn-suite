@@ -1,15 +1,14 @@
 import { useCallback } from "react";
-import { telegramClient } from "@/telegram/telegramClient";
+import { telegramFeatureClient } from "@/telegram/telegramFeatureClient";
 
 export function useClipboard() {
   const readText = useCallback(async () => {
-    return telegramClient.readClipboardText();
+    return telegramFeatureClient.readClipboardText();
   }, []);
 
   const writeText = useCallback(async (text: string) => {
-    return telegramClient.writeClipboardText(text);
+    return telegramFeatureClient.writeClipboardText(text);
   }, []);
 
   return { readText, writeText };
 }
-

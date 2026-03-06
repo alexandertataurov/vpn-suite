@@ -1,5 +1,6 @@
 import { useCallback } from "react";
-import { telegramClient } from "@/telegram/telegramClient";
+import { telegramClient } from "@/telegram/telegramCoreClient";
+import { telegramFeatureClient } from "@/telegram/telegramFeatureClient";
 
 function buildShareLink(url: string, text?: string): string {
   const qs = new URLSearchParams();
@@ -14,9 +15,8 @@ export function useShare() {
   }, []);
 
   const shareText = useCallback((text: string) => {
-    telegramClient.shareInlineQuery(text);
+    telegramFeatureClient.shareInlineQuery(text);
   }, []);
 
   return { shareLink, shareText };
 }
-

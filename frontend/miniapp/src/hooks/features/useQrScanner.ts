@@ -1,5 +1,5 @@
 import { useCallback, useRef } from "react";
-import { telegramClient } from "@/telegram/telegramClient";
+import { telegramFeatureClient } from "@/telegram/telegramFeatureClient";
 import { subscribeTelegramEvent } from "@/telegram/telegramEvents";
 
 export function useQrScanner() {
@@ -13,14 +13,14 @@ export function useQrScanner() {
   }, []);
 
   const open = useCallback((text?: string) => {
-    telegramClient.showQrScanner(text, (value) => {
+    telegramFeatureClient.showQrScanner(text, (value: string) => {
       handlerRef.current?.(value);
       return true;
     });
   }, []);
 
   const close = useCallback(() => {
-    telegramClient.closeQrScanner();
+    telegramFeatureClient.closeQrScanner();
   }, []);
 
   const onQrTextReceived = useCallback((handler: () => void) => {

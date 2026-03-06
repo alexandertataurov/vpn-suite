@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { telegramClient } from "@/telegram/telegramClient";
+import { telegramClient } from "@/telegram/telegramCoreClient";
 
 let lastImpactAt = 0;
 

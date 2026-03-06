@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from "react";
-import { telegramClient } from "@/telegram/telegramClient";
+import { telegramClient } from "@/telegram/telegramCoreClient";
 import { subscribeTelegramEvent } from "@/telegram/telegramEvents";
 
 export function useMainButton() {

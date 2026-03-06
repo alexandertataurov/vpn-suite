@@ -1,35 +1,70 @@
-import { useCallback } from "react";
+import { useCallback, type ReactNode } from "react";
 import { Outlet, NavLink, useLocation } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  IconHome,
-  IconSmartphone,
-  IconCreditCard,
-  IconHelpCircle,
-  IconUser,
-} from "@/lib/icons";
-import { OfflineBanner } from "@/components";
+import { OfflineBanner } from "@/design-system";
 import { useMainButtonReserve } from "@/context/MainButtonReserveContext";
 import { useTelegramHaptics } from "@/hooks/useTelegramHaptics";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
-import { HeaderZone } from "@/layout/HeaderZone";
-import { ScrollZone } from "@/layout/ScrollZone";
-import { ActionZone } from "@/layout/ActionZone";
+import { HeaderZone, ScrollZone, ActionZone } from "@/design-system";
 
 interface TabItem {
   to: string;
   label: string;
   end: boolean;
-  icon: typeof IconHome;
-  short: string;
+  icon: ReactNode;
 }
 
 const tabs: TabItem[] = [
-  { to: "/", label: "Home", end: true, icon: IconHome, short: "HM" },
-  { to: "/devices", label: "Devices", end: false, icon: IconSmartphone, short: "DV" },
-  { to: "/plan", label: "Plan", end: false, icon: IconCreditCard, short: "PL" },
-  { to: "/support", label: "Support", end: false, icon: IconHelpCircle, short: "SP" },
-  { to: "/settings", label: "Account", end: false, icon: IconUser, short: "AC" },
+  {
+    to: "/",
+    label: "Home",
+    end: true,
+    icon: <path d="M3 12L12 4l9 8v7a1 1 0 0 1-1 1h-5v-5H9v5H4a1 1 0 0 1-1-1z" />,
+  },
+  {
+    to: "/devices",
+    label: "Devices",
+    end: false,
+    icon: (
+      <>
+        <rect x="5" y="2" width="14" height="20" rx="2" />
+        <path d="M9 7h6M9 11h6M9 15h3" />
+      </>
+    ),
+  },
+  {
+    to: "/plan",
+    label: "Plan",
+    end: false,
+    icon: (
+      <>
+        <rect x="2" y="7" width="20" height="14" rx="2" />
+        <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
+      </>
+    ),
+  },
+  {
+    to: "/support",
+    label: "Support",
+    end: false,
+    icon: (
+      <>
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 8v4M12 16v.5" />
+      </>
+    ),
+  },
+  {
+    to: "/settings",
+    label: "Account",
+    end: false,
+    icon: (
+      <>
+        <circle cx="12" cy="8" r="4" />
+        <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+      </>
+    ),
+  },
 ];
 
 function getRouteLabel(pathname: string): string {
@@ -63,6 +98,11 @@ export function TabbedShellLayout() {
     notify("success");
   }, [impact, isOnline, notify, queryClient]);
 
+  const isTabActive = (to: string, end: boolean): boolean => {
+    if (end) return location.pathname === to;
+    return location.pathname === to || location.pathname.startsWith(`${to}/`);
+  };
+
   return (
     <div className="miniapp-shell miniapp-shell--tabbed">
       <OfflineBanner />
@@ -73,25 +113,30 @@ export function TabbedShellLayout() {
         </div>
       </ScrollZone>
       <ActionZone>
-        <nav className="miniapp-bottom-nav" aria-label="Main">
-          {tabs.map(({ to, label, end, short, icon: Icon }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={end}
-              onClick={() => {
-                impact("light");
-                selectionChanged();
-              }}
-              className={({ isActive }) => `miniapp-tab ${isActive ? "miniapp-tab--active" : ""}`}
-            >
-              <span className="miniapp-tab-short" aria-hidden>{short}</span>
-              <span className="miniapp-tab-icon" aria-hidden>
-                <Icon size={18} strokeWidth={1.5} />
-              </span>
-              <span className="miniapp-tab-label">{label}</span>
-            </NavLink>
-          ))}
+        <nav className="bottom-nav miniapp-bottom-nav" role="navigation" aria-label="Main navigation">
+          {tabs.map(({ to, label, end, icon }) => {
+            const active = isTabActive(to, end);
+            return (
+              <NavLink
+                key={to}
+                to={to}
+                end={end}
+                role="tab"
+                aria-selected={active}
+                tabIndex={0}
+                onClick={() => {
+                  impact("light");
+                  selectionChanged();
+                }}
+                className={`nav-item miniapp-tab ${active ? "on miniapp-tab--active" : ""}`}
+              >
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
+                  {icon}
+                </svg>
+                <span className="miniapp-tab-label">{label}</span>
+              </NavLink>
+            );
+          })}
         </nav>
       </ActionZone>
     </div>
@@ -147,4 +192,3 @@ export function ViewportLayout({ mode }: { mode: ViewportLayoutMode }) {
 }
 
 export const MiniappLayout = TabbedShellLayout;
-

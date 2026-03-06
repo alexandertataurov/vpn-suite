@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { telegramClient } from "@/telegram/telegramClient";
+import { telegramClient } from "@/telegram/telegramCoreClient";
 
 type TelegramUser = Record<string, unknown> | undefined;
 type TelegramChat = Record<string, unknown> | undefined;

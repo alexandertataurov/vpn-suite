@@ -1,23 +1,22 @@
 import { useCallback } from "react";
-import { telegramClient } from "@/telegram/telegramClient";
+import { telegramFeatureClient } from "@/telegram/telegramFeatureClient";
 
 export function useCloudStorage() {
   const getItem = useCallback(async (key: string) => {
-    return telegramClient.cloudGetItem(key);
+    return telegramFeatureClient.cloudGetItem(key);
   }, []);
 
   const setItem = useCallback(async (key: string, value: string) => {
-    await telegramClient.cloudSetItem(key, value);
+    await telegramFeatureClient.cloudSetItem(key, value);
   }, []);
 
   const removeItem = useCallback(async (key: string) => {
-    await telegramClient.cloudRemoveItem(key);
+    await telegramFeatureClient.cloudRemoveItem(key);
   }, []);
 
   const getKeys = useCallback(async () => {
-    return telegramClient.cloudGetKeys();
+    return telegramFeatureClient.cloudGetKeys();
   }, []);
 
   return { getItem, setItem, removeItem, getKeys };
 }
-

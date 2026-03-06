@@ -1,9 +1,18 @@
 import { useState } from "react";
-import { getButtonClassName, PageFrame, PageSection, Panel, Skeleton } from "../ui";
-import { TroubleshooterStep, FallbackScreen, SessionMissing } from "@/components";
-import { useTrackScreen } from "../hooks/useTrackScreen";
-import { useSession } from "../hooks/useSession";
-import { useWebappToken } from "../api/client";
+import {
+  FallbackScreen,
+  PageFrame,
+  SectionDivider,
+  SummaryHero,
+  Skeleton,
+  MissionCard,
+  MissionPrimaryAnchor,
+  SessionMissing,
+  TroubleshooterStep,
+} from "@/design-system";
+import { useTrackScreen } from "@/hooks/useTrackScreen";
+import { useSession } from "@/hooks/useSession";
+import { useWebappToken } from "@/api/client";
 
 const TROUBLESHOOTER_STEPS = [
   {
@@ -48,7 +57,7 @@ export function SupportPage() {
 
   if (isLoading) {
     return (
-      <PageFrame title="Support Console" subtitle="Troubleshooting and help">
+      <PageFrame title="Support" subtitle="Fix connection issues quickly">
         <Skeleton variant="card" />
       </PageFrame>
     );
@@ -65,13 +74,21 @@ export function SupportPage() {
   }
 
   return (
-    <PageFrame title="Support Console" subtitle="Troubleshooting and help">
-
-      <PageSection
-        title="DIAGNOSTIC FLOW"
-        description="Follow the flow to fix common connection issues."
-        action={<span className="chip cn section-meta-chip">STEP {step + 1}/{totalSteps}</span>}
-      >
+    <PageFrame title="Support" subtitle="Fix connection issues quickly">
+      <SummaryHero
+        eyebrow="Support Status"
+        title="All Systems Operational"
+        subtitle="No active incidents · Fix connection issues below"
+        edge="e-g"
+        glow="g-green"
+        className="stagger-1"
+      />
+      <SectionDivider
+        label="Troubleshooter"
+        count={`Step ${step + 1}/${totalSteps}`}
+        className="stagger-2"
+      />
+      <div className="stagger-3">
         <TroubleshooterStep
           stepIndex={step + 1}
           totalSteps={totalSteps}
@@ -82,30 +99,31 @@ export function SupportPage() {
           backLabel={step > 0 ? current.backLabel : undefined}
           onBack={step > 0 ? () => setStep((s) => s - 1) : undefined}
         />
-      </PageSection>
-
-      <PageSection title="OPERATOR FAQ" description="High-value quick answers.">
-        <div className="faq-grid">
-          <Panel className="card edge et module-card module-card--tight">
-            <h3 className="type-h4">INSTALLATION</h3>
-            <p className="type-body-sm">
+      </div>
+      <SectionDivider label="FAQ" className="stagger-4" />
+      <div className="faq-grid stagger-5">
+          <MissionCard tone="blue" className="module-card module-card--tight">
+            <h3 className="op-name type-h3">Installation</h3>
+            <p className="op-desc type-body-sm">
               Subscribe to a plan, add a device, download the config, then import it in AmneziaVPN.
             </p>
-          </Panel>
-          <Panel className="card edge et module-card module-card--tight">
-            <h3 className="type-h4">PRIVACY & SECURITY</h3>
-            <p className="type-body-sm">
+          </MissionCard>
+          <MissionCard tone="blue" className="module-card module-card--tight">
+            <h3 className="op-name type-h3">Privacy and security</h3>
+            <p className="op-desc type-body-sm">
               Treat each config as a secret. If compromised, revoke the device in Devices and issue a new one.
             </p>
-          </Panel>
+          </MissionCard>
         </div>
-      </PageSection>
 
-      <a aria-label="Contact support" href="https://t.me/support" target="_blank" rel="noopener noreferrer"
-        className={getButtonClassName("primary", "lg", "btn-full-width")}
+      <MissionPrimaryAnchor
+        aria-label="Contact support"
+        href="https://t.me/support"
+        target="_blank"
+        rel="noopener noreferrer"
       >
-        Contact support
-      </a>
+        Open support chat
+      </MissionPrimaryAnchor>
     </PageFrame>
   );
 }

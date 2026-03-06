@@ -12,5 +12,5 @@
     }
   },
   "include": ["src/**/*"],
-  "exclude": ["src/**/*.stories.tsx", "src/**/*.stories.ts", "src/lib/storybook", "src/lib/ui/__tests__", "src/**/*.test.tsx", "src/**/*.test.ts"]
+  "exclude": ["src/**/*.stories.tsx", "src/**/*.stories.ts", "src/lib/storybook", "src/design-system/ui/__tests__"]
 }

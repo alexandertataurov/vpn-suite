@@ -5,7 +5,7 @@ const VIEWPORT_HEIGHT = 840;
 
 const CORE_PAGES = [
   { path: "/", ctaLabel: /Connect Now|Get config|Manage Connection/i },
-  { path: "/plan", ctaLabel: /Start free trial|Select plan|Current|Contact support/i },
+  { path: "/plan", ctaLabel: /Renew Plan|Select Basic|Select Pro|Current Plan|View all transactions/i },
   { path: "/devices", ctaLabel: /Add device/i },
   { path: "/support", ctaLabel: /Contact support/i },
   { path: "/settings", ctaLabel: /Manage devices/i },
@@ -87,6 +87,37 @@ async function mockApi(page: Page) {
         items: [
           { id: "basic", name: "Basic", duration_days: 30, price_amount: 9, price_currency: "USD" },
           { id: "pro", name: "Pro", duration_days: 90, price_amount: 21, price_currency: "USD" },
+        ],
+      }),
+    });
+  });
+  await page.route("**/api/v1/webapp/payments/history", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        total: 2,
+        items: [
+          {
+            payment_id: "pay-1",
+            plan_id: "basic",
+            plan_name: "Basic",
+            amount: 9,
+            currency: "USD",
+            status: "paid",
+            created_at: nowIso,
+            invoice_ref: "INV-RESP-001",
+          },
+          {
+            payment_id: "pay-2",
+            plan_id: "pro",
+            plan_name: "Pro",
+            amount: 21,
+            currency: "USD",
+            status: "pending",
+            created_at: nowIso,
+            invoice_ref: "INV-RESP-002",
+          },
         ],
       }),
     });

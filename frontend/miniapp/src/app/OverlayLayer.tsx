@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { ToastContainer } from "../ui";
+import { ToastContainer } from "@/design-system";
 
 /**
  * Production layer: system UI above layout (toasts, modals, drawers, loaders).

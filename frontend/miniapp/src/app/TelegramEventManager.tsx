@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { telegramClient, type TelegramEventName } from "@/telegram/telegramClient";
+import { telegramClient, type TelegramEventName } from "@/telegram/telegramCoreClient";
 import { emitTelegramEvent, setTelegramEventManagerActive } from "@/telegram/telegramEvents";
 
 const TELEGRAM_RUNTIME_EVENTS: TelegramEventName[] = [
