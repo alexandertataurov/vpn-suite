@@ -15,7 +15,8 @@ export function formatBytes(bytes: number, options?: { digits?: number }): strin
   return `${Number((bytes / Math.pow(k, i)).toFixed(digits))} ${sizes[i]}`;
 }
 
-export function formatDate(iso: string, _options?: FormatDateTimeOptions): string {
+export function formatDate(iso: string, options?: FormatDateTimeOptions): string {
+  void options;
   try {
     return new Date(iso).toLocaleDateString();
   } catch {
@@ -23,7 +24,8 @@ export function formatDate(iso: string, _options?: FormatDateTimeOptions): strin
   }
 }
 
-export function formatDateLong(iso: string, _options?: FormatDateTimeOptions): string {
+export function formatDateLong(iso: string, options?: FormatDateTimeOptions): string {
+  void options;
   try {
     return new Date(iso).toLocaleDateString(undefined, { dateStyle: "long" });
   } catch {
@@ -31,7 +33,8 @@ export function formatDateLong(iso: string, _options?: FormatDateTimeOptions): s
   }
 }
 
-export function formatDateTime(iso: string, _options?: FormatDateTimeOptions): string {
+export function formatDateTime(iso: string, options?: FormatDateTimeOptions): string {
+  void options;
   try {
     return new Date(iso).toLocaleString();
   } catch {
