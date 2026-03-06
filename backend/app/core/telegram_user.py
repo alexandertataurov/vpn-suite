@@ -44,7 +44,12 @@ def build_tg_requisites(user: dict) -> dict:
     # bool fields
     for key in _TG_BOOL_KEYS:
         camel = "".join(w if i == 0 else w.capitalize() for i, w in enumerate(key.split("_")))
-        raw = user.get(key) or user.get(camel)
+        if key in user:
+            raw = user.get(key)
+        elif camel in user:
+            raw = user.get(camel)
+        else:
+            raw = None
         if raw is not None:
             out[key] = bool(raw)
 

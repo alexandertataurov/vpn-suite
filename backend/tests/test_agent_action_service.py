@@ -33,28 +33,28 @@ async def test_create_action_and_get_pending():
                 requested_by=None,
                 correlation_id="test-req-1",
             )
-        await session.commit()
-        assert action.id
-        assert action.status == "pending"
+            await session.commit()
+            assert action.id
+            assert action.status == "pending"
 
-        pending = await get_pending_action(session, server_id)
-        assert pending is not None
-        assert pending.id == action.id
+            pending = await get_pending_action(session, server_id)
+            assert pending is not None
+            assert pending.id == action.id
 
-        await set_status(session, action.id, "running", started_at=action.requested_at)
-        await session.commit()
+            await set_status(session, action.id, "running", started_at=action.requested_at)
+            await session.commit()
 
-        pending2 = await get_pending_action(session, server_id)
-        assert pending2 is None
+            pending2 = await get_pending_action(session, server_id)
+            assert pending2 is None
 
-        await append_log(session, action.id, level="info", message="done")
-        await set_status(session, action.id, "completed", finished_at=action.requested_at)
-        await session.commit()
+            await append_log(session, action.id, level="info", message="done")
+            await set_status(session, action.id, "completed", finished_at=action.requested_at)
+            await session.commit()
 
-        got = await get_action(session, action.id, load_logs=True)
-        assert got is not None
-        assert got.status == "completed"
-        assert len(got.logs) >= 1
+            got = await get_action(session, action.id, load_logs=True)
+            assert got is not None
+            assert got.status == "completed"
+            assert len(got.logs) >= 1
     except (ConnectionRefusedError, OSError):
         pytest.skip("Postgres not available")
     except Exception as e:

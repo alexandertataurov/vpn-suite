@@ -1,23 +1,52 @@
 from datetime import datetime, timedelta, timezone
+import uuid
 
 import pytest
-from fastapi.testclient import TestClient
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import encrypt_config
 from app.main import app
-from app.models import Device, IssuedConfig
+from app.models import Device, IssuedConfig, Plan, Server, Subscription, User
 from app.models.base import uuid4_hex
 
 
 @pytest.mark.asyncio
 async def test_awg_download_link_flow(async_session: AsyncSession):
+    user = User(tg_id=int(uuid.uuid4().int % 10_000_000_000))
+    async_session.add(user)
+    await async_session.flush()
+    plan = Plan(name="plan", duration_days=30, price_currency="XTR", price_amount=0)
+    async_session.add(plan)
+    await async_session.flush()
+    sub = Subscription(
+        id=uuid4_hex(),
+        user_id=user.id,
+        plan_id=plan.id,
+        valid_from=datetime.now(timezone.utc),
+        valid_until=datetime.now(timezone.utc) + timedelta(days=30),
+        device_limit=5,
+        status="active",
+    )
+    async_session.add(sub)
+    await async_session.flush()
+    server = Server(
+        id=uuid4_hex(),
+        name="srv",
+        region="test",
+        api_endpoint="docker://amnezia-awg",
+        public_key="xTIBA5rboUvnH4htodjb6e697QjLERt1NAB4mZqp8Dg=",
+        vpn_endpoint="vpn.example.com:47604",
+        is_active=True,
+    )
+    async_session.add(server)
+    await async_session.flush()
     device_id = uuid4_hex()
-    server_id = uuid4_hex()
+    server_id = server.id
     device = Device(
         id=device_id,
-        user_id=1,
-        subscription_id="sub",
+        user_id=user.id,
+        subscription_id=sub.id,
         server_id=server_id,
         device_name="awg-device",
         public_key="pub",
@@ -37,20 +66,6 @@ async def test_awg_download_link_flow(async_session: AsyncSession):
     async_session.add(issued)
     await async_session.commit()
 
-    client = TestClient(app)
-
-    # For this test we bypass admin auth by calling the public /d/{token} endpoint directly;
-    # we assume a valid one-time token payload and focus on response headers/body shape.
-    # Here we call the internal decrypt/download via a fake token by stubbing the verify function
-    # in app.core.one_time_download, but in this test we instead hit /admin/configs download to
-    # confirm headers; the dedicated /d/{token} route is exercised indirectly.
-
-    # This test will be shallow: just ensure /d/<token> returns attachment and correct headers
-    # when verify_and_consume_one_time_token returns a valid payload. Integration tests that
-    # exercise token creation live in test_one_time_download.py.
-
-    # Use TestClient to exercise routing; since verify_and_consume_one_time_token depends on DB,
-    # in this unit test we emulate it by calling the router function directly would be complex.
-    # Therefore, keep this as a smoke test that /d/<token> returns a 4xx for an obviously bad token.
-    resp = client.get("/d/invalid-token")
-    assert resp.status_code in (400, 410, 404)
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        resp = await client.get("/d/invalid-token")
+        assert resp.status_code in (400, 410, 404)

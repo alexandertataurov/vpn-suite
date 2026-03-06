@@ -49,6 +49,7 @@ async def _create_issue_device_fixture():
             api_endpoint="docker://amnezia-awg",
             public_key="xTIBA5rboUvnH4htodjb6e697QjLERt1NAB4mZqp8Dg=",
             is_active=True,
+            vpn_endpoint="vpn.example.com:47604",
         )
         db.add(server)
         await db.flush()
@@ -78,7 +79,7 @@ async def test_issue_device_merges_runtime_obfuscation_into_config(monkeypatch):
     monkeypatch.setattr("app.services.issue_service.settings.node_mode", "mock")
     monkeypatch.setattr(
         "app.services.issue_service.live_key_fetch",
-        AsyncMock(side_effect=lambda sid, _: _mock_live_key(sid)),
+        AsyncMock(side_effect=lambda sid, *_args, **_kwargs: _mock_live_key(sid)),
     )
 
     user_id, sub_id, server_id = await _create_issue_device_fixture()
@@ -109,7 +110,7 @@ async def test_issue_device_uses_profile_defaults_when_runtime_returns_none(monk
     monkeypatch.setattr("app.services.issue_service.settings.node_mode", "mock")
     monkeypatch.setattr(
         "app.services.issue_service.live_key_fetch",
-        AsyncMock(side_effect=lambda sid, _: _mock_live_key(sid)),
+        AsyncMock(side_effect=lambda sid, *_args, **_kwargs: _mock_live_key(sid)),
     )
 
     user_id, sub_id, server_id = await _create_issue_device_fixture()
@@ -139,7 +140,7 @@ async def test_issue_device_uses_profile_defaults_when_runtime_raises(monkeypatc
     monkeypatch.setattr("app.services.issue_service.settings.node_mode", "mock")
     monkeypatch.setattr(
         "app.services.issue_service.live_key_fetch",
-        AsyncMock(side_effect=lambda sid, _: _mock_live_key(sid)),
+        AsyncMock(side_effect=lambda sid, *_args, **_kwargs: _mock_live_key(sid)),
     )
 
     user_id, sub_id, server_id = await _create_issue_device_fixture()

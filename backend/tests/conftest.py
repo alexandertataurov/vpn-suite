@@ -1,9 +1,17 @@
 from collections.abc import AsyncGenerator
 
+import asyncio
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import async_session_factory, check_db
+
+
+@pytest.fixture(scope="session")
+def event_loop():
+    loop = asyncio.new_event_loop()
+    yield loop
+    loop.close()
 
 
 @pytest.fixture

@@ -28,13 +28,10 @@ async def download_awg_config_via_token(
 
     payload = await verify_and_consume_one_time_token(db, token=token)
     if not payload or payload.get("kind") != "awg_conf":
-        body = error_body(
-            code="TOKEN_INVALID_OR_EXPIRED",
-            message="Download link invalid or expired.",
+        raise HTTPException(
             status_code=status.HTTP_410_GONE,
-            request_id=getattr(request.state, "request_id", None),
+            detail={"code": "TOKEN_INVALID_OR_EXPIRED", "message": "Download link invalid or expired."},
         )
-        raise HTTPException(status_code=status.HTTP_410_GONE, detail=body["message"])
 
     device_id = payload["device_id"]
     dev_result = await db.execute(select(Device).where(Device.id == device_id))

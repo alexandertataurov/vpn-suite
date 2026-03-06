@@ -23,7 +23,7 @@ class _FakeResult:
         return self._scalar
 
     def scalars(self):
-        return type("_Scalars", (), {"all": lambda: self._rows})()
+        return type("_Scalars", (), {"all": lambda _self: self._rows})()
 
 
 class _FakeSession:
