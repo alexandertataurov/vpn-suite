@@ -1,31 +1,7 @@
 import { useEffect } from "react";
-
-type TgMainButton = {
-  text: string;
-  isVisible: boolean;
-  isEnabled: boolean;
-  show: () => void;
-  hide: () => void;
-  enable: () => void;
-  disable: () => void;
-  showProgress?: () => void;
-  hideProgress?: () => void;
-  onClick?: (cb: () => void) => void;
-  offClick?: (cb: () => void) => void;
-};
-
-function getMainButton(): TgMainButton | undefined {
-  if (typeof window === "undefined") return undefined;
-  return (window as Window & { Telegram?: { WebApp?: { MainButton?: TgMainButton } } }).Telegram?.WebApp?.MainButton;
-}
-
-function triggerLightHaptic() {
-  if (typeof window === "undefined") return;
-  const haptic =
-    (window as Window & { Telegram?: { WebApp?: { HapticFeedback?: { impactOccurred?: (s: string) => void } } } })
-      .Telegram?.WebApp?.HapticFeedback;
-  haptic?.impactOccurred?.("light");
-}
+import { useMainButton } from "./controls/useMainButton";
+import { useHaptics } from "./system/useHaptics";
+import { useMainButtonReserve } from "../context/MainButtonReserveContext";
 
 interface MainButtonOptions {
   text: string;
@@ -36,38 +12,43 @@ interface MainButtonOptions {
 }
 
 export function useTelegramMainButton(options: MainButtonOptions | null) {
-  useEffect(() => {
-    const mb = getMainButton();
-    if (!mb) return;
+  const mainButton = useMainButton();
+  const { impact } = useHaptics();
+  const { setReserve } = useMainButtonReserve();
 
+  useEffect(() => {
+    const visible = options !== null && options?.visible !== false;
+    setReserve(visible);
+  }, [options, setReserve]);
+
+  useEffect(() => {
     if (!options) {
-      mb.hideProgress?.();
-      mb.hide();
+      mainButton.setProgress(false);
+      mainButton.hide();
       return;
     }
 
     const { text, visible = true, enabled = true, loading = false, onClick } = options;
 
-    mb.text = text;
-    if (visible) mb.show();
-    else mb.hide();
+    mainButton.setText(text);
+    if (visible) mainButton.show();
+    else mainButton.hide();
 
-    if (enabled) mb.enable();
-    else mb.disable();
+    if (enabled) mainButton.enable();
+    else mainButton.disable();
 
-    if (loading) mb.showProgress?.();
-    else mb.hideProgress?.();
+    mainButton.setProgress(loading);
 
-    const handler = () => {
-      triggerLightHaptic();
+    const off = mainButton.onClick(() => {
+      impact("light");
       onClick();
-    };
-    mb.onClick?.(handler);
+    });
 
     return () => {
-      mb.offClick?.(handler);
-      mb.hideProgress?.();
-      mb.hide();
+      off();
+      mainButton.setProgress(false);
+      mainButton.hide();
     };
-  }, [options]);
+  }, [impact, mainButton, options]);
 }
+

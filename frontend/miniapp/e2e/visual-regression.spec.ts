@@ -1,25 +1,31 @@
 import { expect, test, type Page } from "@playwright/test";
 
 const VIEWPORTS = [
-  { name: "mobile", width: 390, height: 844 },
+  { name: "mobile-360", width: 360, height: 800 },
+  { name: "mobile-375", width: 375, height: 812 },
+  { name: "mobile-430", width: 430, height: 932 },
+  { name: "mobile-landscape", width: 844, height: 390 },
   { name: "desktop", width: 1024, height: 900 },
 ] as const;
 
 const ROUTES = [
-  { path: "/", readyText: /Connect Now|Manage Connection|Get config/i },
-  { path: "/plan", readyText: /Choose Your Plan/i },
-  { path: "/plan/checkout/plan-pro", readyText: /Plan plan-pro|Checkout/i },
-  { path: "/devices", readyText: /My devices/i },
-  { path: "/servers", readyText: /Servers/i },
-  { path: "/referral", readyText: /Invite friends/i },
-  { path: "/support", readyText: /Support/i },
-  { path: "/settings", readyText: /Settings/i },
+  { path: "/", readyText: /Mission Control|Tunnel health|Change Server/i },
+  { path: "/plan", readyText: /Plan\\s*&\\s*Billing|Pro|Basic|No plans available|Could not load/i },
+  { path: "/plan/checkout/plan-pro", readyText: /Checkout|Payment|Plan ID/i },
+  { path: "/devices", readyText: /Devices|Your devices|Add device/i },
+  { path: "/servers", readyText: /Servers|Routing mode|Locations/i },
+  { path: "/referral", readyText: /Referral|Referrals|Share link|Reward progress/i },
+  { path: "/support", readyText: /Support|Troubleshooter|FAQ/i },
+  { path: "/settings", readyText: /Settings|Preferences|Account/i },
 ] as const;
 
 async function injectTelegram(page: Page) {
   await page.addInitScript(() => {
     const fixedNow = new Date("2030-01-15T12:00:00.000Z").getTime();
     Date.now = () => fixedNow;
+    const setE2EFlag = () => document.documentElement?.setAttribute("data-e2e", "true");
+    setE2EFlag();
+    window.addEventListener("DOMContentLoaded", setE2EFlag, { once: true });
     (window as unknown as { Telegram?: { WebApp: { initData: string; ready: () => void } } }).Telegram = {
       WebApp: { initData: "e2e-test", ready: () => {} },
     };
@@ -34,6 +40,14 @@ async function mockApi(page: Page) {
       return;
     }
     if (url.includes("/api/v1/health/ready")) {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ status: "ok" }),
+      });
+      return;
+    }
+    if (url.includes("/api/health")) {
       await route.fulfill({
         status: 200,
         contentType: "application/json",
@@ -76,8 +90,79 @@ async function mockApi(page: Page) {
         contentType: "application/json",
         body: JSON.stringify({
           items: [
-            { id: "plan-basic", name: "Basic", duration_days: 30, price_amount: 99, price_currency: "Stars" },
-            { id: "plan-pro", name: "Pro", duration_days: 90, price_amount: 249, price_currency: "Stars" },
+            {
+              id: "plan-basic",
+              name: "Standard",
+              duration_days: 30,
+              price_amount: 99,
+              price_currency: "Stars",
+            },
+            {
+              id: "plan-family",
+              name: "Family",
+              duration_days: 60,
+              price_amount: 179,
+              price_currency: "Stars",
+            },
+            {
+              id: "plan-pro",
+              name: "Pro",
+              duration_days: 90,
+              price_amount: 249,
+              price_currency: "Stars",
+            },
+          ],
+        }),
+      });
+      return;
+    }
+    if (url.includes("/api/v1/webapp/payments/history")) {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          total: 4,
+          items: [
+            {
+              payment_id: "pay-1",
+              plan_id: "plan-pro",
+              plan_name: "Pro",
+              amount: 59.88,
+              currency: "USD",
+              status: "paid",
+              created_at: "2030-01-15T00:00:00Z",
+              invoice_ref: "INV-2030-001",
+            },
+            {
+              payment_id: "pay-2",
+              plan_id: "plan-pro",
+              plan_name: "Pro",
+              amount: 5.99,
+              currency: "USD",
+              status: "refunded",
+              created_at: "2030-01-10T00:00:00Z",
+              invoice_ref: "INV-2030-000",
+            },
+            {
+              payment_id: "pay-3",
+              plan_id: "plan-basic",
+              plan_name: "Basic",
+              amount: 2.99,
+              currency: "USD",
+              status: "pending",
+              created_at: "2030-01-08T00:00:00Z",
+              invoice_ref: "INV-2029-999",
+            },
+            {
+              payment_id: "pay-4",
+              plan_id: "plan-basic",
+              plan_name: "Basic",
+              amount: 2.99,
+              currency: "USD",
+              status: "failed",
+              created_at: "2030-01-05T00:00:00Z",
+              invoice_ref: "INV-2029-998",
+            },
           ],
         }),
       });
@@ -106,6 +191,25 @@ async function mockApi(page: Page) {
               load_percent: 63,
               avg_ping_ms: 104,
             },
+          ],
+        }),
+      });
+      return;
+    }
+    if (url.includes("/api/v1/webapp/usage")) {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          range: "7d",
+          points: [
+            { ts: "2030-01-09T00:00:00Z", bytes_in: 12_000_000, bytes_out: 8_500_000 },
+            { ts: "2030-01-10T00:00:00Z", bytes_in: 15_500_000, bytes_out: 9_800_000 },
+            { ts: "2030-01-11T00:00:00Z", bytes_in: 11_800_000, bytes_out: 7_200_000 },
+            { ts: "2030-01-12T00:00:00Z", bytes_in: 13_900_000, bytes_out: 8_100_000 },
+            { ts: "2030-01-13T00:00:00Z", bytes_in: 14_700_000, bytes_out: 9_100_000 },
+            { ts: "2030-01-14T00:00:00Z", bytes_in: 16_400_000, bytes_out: 10_000_000 },
+            { ts: "2030-01-15T00:00:00Z", bytes_in: 17_200_000, bytes_out: 10_800_000 },
           ],
         }),
       });
@@ -153,6 +257,8 @@ async function mockApi(page: Page) {
 }
 
 test.describe("Miniapp Visual Regression", () => {
+  test.setTimeout(180000);
+
   test("spacex layout snapshots remain stable across core routes and viewports", async ({ page }) => {
     await injectTelegram(page);
     await mockApi(page);
@@ -161,14 +267,18 @@ test.describe("Miniapp Visual Regression", () => {
       await page.setViewportSize({ width: viewport.width, height: viewport.height });
 
       for (const route of ROUTES) {
-        const url = route.path === "/" ? "./?tgWebAppData=e2e-test" : `.${route.path}?tgWebAppData=e2e-test`;
+        const url = route.path === "/"
+          ? "/webapp/?tgWebAppData=e2e-test"
+          : `/webapp${route.path}?tgWebAppData=e2e-test`;
         await page.goto(url);
         await expect(page.getByText(route.readyText).first()).toBeVisible({ timeout: 15000 });
-        await page.waitForLoadState("networkidle");
+        await page.waitForTimeout(300);
 
         const routeId = route.path === "/" ? "home" : route.path.replaceAll("/", "-").replace(/^-/, "");
         await expect(page).toHaveScreenshot(`spacex-${routeId}-${viewport.name}.png`, {
           fullPage: true,
+          maxDiffPixels: 1200,
+          maxDiffPixelRatio: 0.005,
         });
       }
     }

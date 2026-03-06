@@ -27,6 +27,7 @@
 | Codebase layout | [codebase-map.md](codebase-map.md) |
 | Agent mode setup | [ops/agent-mode-one-server.md](ops/agent-mode-one-server.md) |
 | DoD / MVP | [backlog/dod-mvp.md](backlog/dod-mvp.md) |
+| Mobile accessibility checklist (WCAG 2.2 A/AA) | [accessibility-checklist.md](accessibility-checklist.md) |
 
 ## API & development
 

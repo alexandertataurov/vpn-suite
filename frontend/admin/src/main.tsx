@@ -7,15 +7,12 @@ import { ApiProvider } from "@/core/api/context";
 import { getBaseUrl } from "@/shared/constants";
 import { useAuthStore } from "@/core/auth/store";
 import { TelemetryProvider } from "@/core/telemetry/provider";
-import { ToastProvider } from "@/design-system";
-import App from "./App";
+import { ToastProvider } from "@/design-system/primitives";
+import { App } from "./App";
 import "./tailwind.css";
-import "./design-system/tokens/tokens.css";
-import "./design-system/primitives/primitives.css";
-import "./design-system/primitives/primitives-extended.css";
-import "./design-system/typography.css";
-import "./admin.css";
-import "./design-system/primitives/primitives-dashboard.css";
+import "./design-system/design-system.css";
+import "./layout/shell.css";
+import "./app/pages.css";
 
 const queryClient = new QueryClient({
   defaultOptions: {

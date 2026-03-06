@@ -4,10 +4,19 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>VPN Suite</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
-      document.documentElement.setAttribute('data-theme', 'consumer-dark');
-      document.documentElement.style.colorScheme = 'dark';
+      const tgColorScheme = window.Telegram?.WebApp?.colorScheme;
+      const prefersLight = window.matchMedia?.('(prefers-color-scheme: light)')?.matches === true;
+      const initialTheme = tgColorScheme
+        ? (tgColorScheme === 'light' ? 'consumer-light' : 'consumer-dark')
+        : (prefersLight ? 'consumer-light' : 'consumer-dark');
+      if (window.Telegram?.WebApp) document.documentElement.setAttribute('data-tg', 'true');
+      document.documentElement.setAttribute('data-theme', initialTheme);
+      document.documentElement.style.colorScheme = initialTheme === 'consumer-light' ? 'light' : 'dark';
     </script>
   </head>
   <body>

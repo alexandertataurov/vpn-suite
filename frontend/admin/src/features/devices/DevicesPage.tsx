@@ -13,14 +13,14 @@ import {
   EmptyState,
   ErrorState,
   Input,
-  KpiValue,
-  MetaText,
   Modal,
-  SectionTitle,
+  SectionHeader,
   Skeleton,
   useToast,
   Widget,
-} from "@/design-system";
+} from "@/design-system/primitives";
+import { PageLayout } from "@/layout/PageLayout";
+import { KpiValue, MetaText } from "@/design-system/typography";
 
 function normalizeConfigForQr(config: string): string {
   // Remove UTF-8 BOM if present, normalize newlines, and ensure no leading whitespace before [Interface]
@@ -580,10 +580,10 @@ export function DevicesPage() {
 
   if (isSummaryLoading || isListLoading) {
     return (
-      <div className="page devices-page">
+      <PageLayout title="Devices" pageClass="devices-page" hideHeader>
         <Skeleton height={32} width="30%" />
         <Skeleton height={160} />
-      </div>
+      </PageLayout>
     );
   }
 
@@ -595,7 +595,7 @@ export function DevicesPage() {
           ? listError.message
           : "Failed to load devices";
     return (
-      <div className="page devices-page">
+      <PageLayout title="Devices" pageClass="devices-page" hideHeader>
         <ErrorState
           message={message}
           onRetry={() => {
@@ -603,16 +603,15 @@ export function DevicesPage() {
             void refetchList();
           }}
         />
-      </div>
+      </PageLayout>
     );
   }
 
   if (!summary || !list) {
     return (
-      <div className="page devices-page">
-      <SectionTitle>Devices</SectionTitle>
+      <PageLayout title="Devices" pageClass="devices-page">
         <EmptyState message="No devices yet." />
-      </div>
+      </PageLayout>
     );
   }
 
@@ -678,6 +677,7 @@ export function DevicesPage() {
         <Button
           type="button"
           variant="default"
+          size="sm"
           onClick={() => setDetailDeviceId(d.id)}
           aria-label={`View ${d.device_name || d.id}`}
         >
@@ -689,41 +689,49 @@ export function DevicesPage() {
 
   const detailHealth = detailDevice ? getDeviceConfigHealth(detailDevice.telemetry) : null;
 
+  const devicesDescription = (
+    <span className="devices-page__updated">
+      Telemetry updated {formatRelative(summary.telemetry_last_updated)}
+    </span>
+  );
+  const devicesActions = (
+    <Button
+      type="button"
+      variant="default"
+      onClick={() => {
+        if (list.items.length > 0) {
+          const first = list.items[0];
+          const subId = first?.subscription_id;
+          const hint = subId ? `Example subscription: ${subId}` : undefined;
+          window.alert(
+            [
+              "To add a new device, go to the Users page, open a user, and use the 'Issue device' panel.",
+              hint,
+            ]
+              .filter(Boolean)
+              .join("\n\n")
+          );
+        } else {
+          window.alert(
+            "To add a new device, go to the Users page, open a user, and use the 'Issue device' panel."
+          );
+        }
+      }}
+    >
+      Add device
+    </Button>
+  );
+
   return (
-    <div className="page devices-page">
-      <div className="devices-page__header">
-        <SectionTitle>Devices</SectionTitle>
-        <Button
-          type="button"
-          variant="default"
-          onClick={() => {
-            if (list.items.length > 0) {
-              const first = list.items[0];
-              const subId = first?.subscription_id;
-              const hint = subId ? `Example subscription: ${subId}` : undefined;
-              window.alert(
-                [
-                  "To add a new device, go to the Users page, open a user, and use the 'Issue device' panel.",
-                  hint,
-                ]
-                  .filter(Boolean)
-                  .join("\n\n")
-              );
-            } else {
-              window.alert(
-                "To add a new device, go to the Users page, open a user, and use the 'Issue device' panel."
-              );
-            }
-          }}
-        >
-          Add device
-        </Button>
-      </div>
-      <MetaText className="devices-page__updated">
-        Telemetry updated {formatRelative(summary.telemetry_last_updated)}
-      </MetaText>
+    <PageLayout
+      title="Devices"
+      description={devicesDescription}
+      actions={devicesActions}
+      pageClass="devices-page"
+    >
+      <SectionHeader label="Summary" size="lg" />
       <div className="kpi-grid devices-page__cards">
-        <Widget title="Total devices" subtitle="inventory" variant="kpi" href="/devices">
+        <Widget title="Total devices" subtitle="inventory" variant="kpi" href="/devices" size="medium">
           <KpiValue as="div" className="kpi__value">
             <AnimatedNumber value={summary.total} />
           </KpiValue>
@@ -732,7 +740,7 @@ export function DevicesPage() {
             <span className="kpi__meta-item">{summary.revoked} revoked</span>
           </div>
         </Widget>
-        <Widget title="Active share" subtitle="fleet" variant="kpi">
+        <Widget title="Active share" subtitle="fleet" variant="kpi" size="medium">
           <KpiValue as="div" className="kpi__value">
             <AnimatedNumber value={activePercent} decimals={1} />%
           </KpiValue>
@@ -742,7 +750,7 @@ export function DevicesPage() {
             </span>
           </div>
         </Widget>
-        <Widget title="Handshake health" subtitle="recent handshake" variant="kpi">
+        <Widget title="Handshake health" subtitle="recent handshake" variant="kpi" size="medium">
           <KpiValue as="div" className="kpi__value">
             <AnimatedNumber value={healthy} />
           </KpiValue>
@@ -755,7 +763,7 @@ export function DevicesPage() {
             )}
           </div>
         </Widget>
-        <Widget title="Traffic" subtitle="recent" variant="kpi">
+        <Widget title="Traffic" subtitle="recent" variant="kpi" size="medium">
           <KpiValue as="div" className="kpi__value">
             <AnimatedNumber value={telemetryNone} />
           </KpiValue>
@@ -763,7 +771,7 @@ export function DevicesPage() {
             <span className="kpi__meta-item">zero traffic devices</span>
           </div>
         </Widget>
-        <Widget title="Config quality" subtitle="configs" variant="kpi">
+        <Widget title="Config quality" subtitle="configs" variant="kpi" size="medium">
           <KpiValue as="div" className="kpi__value">
             <AnimatedNumber value={summary.unused_configs} />
           </KpiValue>
@@ -772,7 +780,13 @@ export function DevicesPage() {
             <span className="kpi__meta-item">{summary.no_allowed_ips} invalid allowed_ips</span>
           </div>
         </Widget>
-        <Widget title="Needs attention" subtitle="config / telemetry" variant="kpi" href="/devices">
+        <Widget
+          title="Needs attention"
+          subtitle="config / telemetry"
+          variant="kpi"
+          href="/devices"
+          size="medium"
+        >
           <KpiValue as="div" className="kpi__value">
             <AnimatedNumber value={attentionCount} />
           </KpiValue>
@@ -827,6 +841,7 @@ export function DevicesPage() {
             {configHealth.devices_needing_attention.length > 0 ? (
               <div className="data-table-wrap">
               <DataTable
+                density="compact"
                 columns={[
                   { key: "device", header: "Device" },
                   { key: "user", header: "User" },
@@ -872,8 +887,10 @@ export function DevicesPage() {
 
       {rows.length > 0 ? (
         <section className="devices-page__table" aria-label="Devices list">
+          <SectionHeader label="Devices" size="lg" />
           <div className="data-table-wrap">
           <DataTable
+            density="compact"
             columns={[
               { key: "name", header: "Device" },
               { key: "user", header: "User" },
@@ -1093,6 +1110,7 @@ export function DevicesPage() {
                 {detailDevice.issued_configs && detailDevice.issued_configs.length > 0 ? (
                   <div className="data-table-wrap">
                   <DataTable
+                    density="compact"
                     columns={[
                       { key: "profile_type", header: "Profile" },
                       { key: "server_id", header: "Server" },
@@ -1109,6 +1127,7 @@ export function DevicesPage() {
                           <Button
                             type="button"
                             variant="ghost"
+                            size="sm"
                             onClick={() => downloadIssuedConfig(c.id)}
                             disabled={actionPending}
                           >
@@ -1117,6 +1136,7 @@ export function DevicesPage() {
                           <Button
                             type="button"
                             variant="ghost"
+                            size="sm"
                             onClick={() => {
                               void handleCopyIssuedConfig(c.id);
                             }}
@@ -1127,6 +1147,7 @@ export function DevicesPage() {
                           <Button
                             type="button"
                             variant="ghost"
+                            size="sm"
                             onClick={() => {
                               void handleShowIssuedConfigQr(c.id);
                             }}
@@ -1272,6 +1293,6 @@ export function DevicesPage() {
           </div>
         )}
       </Modal>
-    </div>
+    </PageLayout>
   );
 }

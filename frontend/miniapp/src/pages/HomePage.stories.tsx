@@ -1,9 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { HomePage } from "./Home";
-import { MockWebappApi } from "../storybook/webappMocks";
-import { MiniappFrame } from "../storybook/wrappers";
-import { webappMeActive, webappMeNoSubscription } from "../storybook/fixtures";
-import { Body } from "../ui";
+import { MockWebappApi, MiniappFrame, webappMeActive, webappMeNoSubscription } from "@/lib/storybook";
+import { Body } from "@/design-system";
 
 const meta: Meta<typeof HomePage> = {
   title: "Miniapp/Pages/Home",
@@ -71,4 +69,4 @@ export const HomePageAccessibility: Story = {
   render: () => renderPage({ mode: "success", me: webappMeActive }),
 };
 
-export const HomePageEdgeCases = WithLongText;
+export const HomePageEdgeCases = HomePageWithLongText;

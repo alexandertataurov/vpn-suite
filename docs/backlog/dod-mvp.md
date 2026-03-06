@@ -5,6 +5,7 @@
 - [ ] Code review (if team); linters clean (ruff, mypy); tests added/updated.
 - [x] Audit log records all mutating operations (Servers, Users, Subscriptions, Devices, Plans, Payments via webhook).
 - [ ] Documentation: OpenAPI updated; `reference.md` if needed.
+- [ ] Accessibility checks completed using [accessibility-checklist.md](../accessibility-checklist.md) (WCAG 2.2 A/AA).
 - [ ] Secrets only in env, never in code.
 
 ## MVP acceptance criteria

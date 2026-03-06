@@ -6,11 +6,10 @@ Two-phase: Phase A = DB commit (Device PENDING_APPLY + IssuedConfig); Phase B = 
 import hashlib
 import json
 import logging
-import secrets
 from datetime import datetime, timedelta, timezone
 from typing import NamedTuple
 
-from sqlalchemy import delete, func, select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.amnezia_config import (
@@ -28,10 +27,8 @@ from app.core.config_builder import (
 )
 from app.core.exceptions import WireGuardCommandError
 from app.core.redaction import redact_for_log
-from app.core.security import encrypt_config
 from app.models import (
     Device,
-    IssuedConfig,
     Plan,
     ProfileIssue,
     Server,
@@ -40,6 +37,7 @@ from app.models import (
     User,
 )
 from app.services.address_allocator import allocate_address_for_device
+from app.services.issued_config_service import persist_issued_configs_with_tokens
 from app.services.node_endpoint_utils import get_endpoint_from_runtime, is_endpoint_private
 from app.services.node_runtime import NodeRuntimeAdapter, PeerConfigLike
 from app.services.server_live_key_service import (
@@ -50,7 +48,6 @@ from app.services.server_obfuscation import request_params_with_server_h
 
 # tg_id for system operator (standalone peers)
 SYSTEM_TG_ID = 0
-TOKEN_BYTES = 32
 DOWNLOAD_TOKEN_TTL_DAYS = 1
 
 
@@ -449,26 +446,19 @@ async def admin_issue_peer(
         else None
     )
 
-    def _create_issued_config(profile_type: str, config_snippet: str) -> tuple[str, str]:
-        token = secrets.token_hex(TOKEN_BYTES)
-        token_hash = hashlib.sha256(token.encode()).hexdigest()
-        config_encrypted = encrypt_config(config_snippet)
-        session.add(
-            IssuedConfig(
-                device_id=device.id,
-                server_id=server_id,
-                profile_type=profile_type,
-                expires_at=expires_at,
-                download_token_hash=token_hash,
-                issued_by_admin_id=issued_by_admin_id,
-                config_encrypted=config_encrypted,
-            )
-        )
-        return token, config_snippet
-
-    token_awg, _ = _create_issued_config("awg", config_awg_snippet)
-    token_wg_obf, _ = _create_issued_config("wg_obf", config_wg_obf_snippet)
-    token_wg, _ = _create_issued_config("wg", config_wg_snippet)
+    tokens = await persist_issued_configs_with_tokens(
+        session,
+        device_id=device.id,
+        server_id=server_id,
+        config_awg=config_awg_snippet,
+        config_wg_obf=config_wg_obf_snippet,
+        config_wg=config_wg_snippet,
+        issued_by_admin_id=issued_by_admin_id,
+        expires_at=expires_at,
+    )
+    token_awg = tokens["awg"]
+    token_wg_obf = tokens["wg_obf"]
+    token_wg = tokens["wg"]
     await session.flush()
 
     # Phase A complete: persist Device + IssuedConfig so config URLs are valid even if apply fails
@@ -896,30 +886,20 @@ async def admin_rotate_peer(
         else None
     )
 
-    # Remove all issued configs for this device so reissue replaces them (one current set per device).
-    await session.execute(delete(IssuedConfig).where(IssuedConfig.device_id == device.id))
-    await session.flush()
-
-    def _create_issued_config(profile_type: str, config_snippet: str) -> tuple[str, str]:
-        token = secrets.token_hex(TOKEN_BYTES)
-        token_hash = hashlib.sha256(token.encode()).hexdigest()
-        config_encrypted = encrypt_config(config_snippet)
-        session.add(
-            IssuedConfig(
-                device_id=device.id,
-                server_id=server_id,
-                profile_type=profile_type,
-                expires_at=expires_at,
-                download_token_hash=token_hash,
-                issued_by_admin_id=issued_by_admin_id,
-                config_encrypted=config_encrypted,
-            )
-        )
-        return token, config_snippet
-
-    token_awg, _ = _create_issued_config("awg", config_awg_snippet)
-    token_wg_obf, _ = _create_issued_config("wg_obf", config_wg_obf_snippet)
-    token_wg, _ = _create_issued_config("wg", config_wg_snippet)
+    tokens = await persist_issued_configs_with_tokens(
+        session,
+        device_id=device.id,
+        server_id=server_id,
+        config_awg=config_awg_snippet,
+        config_wg_obf=config_wg_obf_snippet,
+        config_wg=config_wg_snippet,
+        issued_by_admin_id=issued_by_admin_id,
+        expires_at=expires_at,
+        replace_existing=True,
+    )
+    token_awg = tokens["awg"]
+    token_wg_obf = tokens["wg_obf"]
+    token_wg = tokens["wg"]
     await session.flush()
 
     base = base_config_url.rstrip("/")

@@ -95,10 +95,11 @@ export function CommandPalette({
             placeholder={placeholder}
             value={query}
             onChange={(event) => onQueryChange(event.target.value)}
+            aria-label="Search commands"
           />
           <span className="cmd-kbd">esc</span>
         </div>
-        <div style={{ maxHeight: 320, overflowY: "auto" }}>
+        <div className="cmd-palette-results" role="listbox" aria-label="Commands">
           {items.length === 0 ? (
             <div className="cmd-group-label">No results</div>
           ) : (
@@ -109,6 +110,8 @@ export function CommandPalette({
             return (
               <div
                 key={item.id}
+                role="option"
+                aria-selected={selected}
                 className={["cmd-item", selected ? "selected" : null].filter(Boolean).join(" ")}
                 onMouseDown={(event) => {
                   event.preventDefault();

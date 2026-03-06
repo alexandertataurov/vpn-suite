@@ -1,20 +1,16 @@
 import { useMemo, useState, useCallback, useRef, useEffect } from "react";
 import { useApiQuery } from "@/core/api/useApiQuery";
+import { Button, Drawer, EmptyState, ErrorState, SectionHeader, Skeleton, useToast, Widget, Nbar } from "@/design-system/primitives";
+import { PageLayout } from "@/layout/PageLayout";
+import { BodyText } from "@/design-system/typography";
 import {
-  AnimatedNumber,
-  Badge,
-  BadgeCount,
-  BodyText,
-  Button,
-  EmptyState,
-  ErrorState,
-  KpiValue,
-  MetaText,
-  Modal,
-  Skeleton,
-  Widget,
-} from "@/design-system";
-import { ArrowDownRight, ArrowUpRight, Minus } from "lucide-react";
+  ApiLatencyWidget,
+  ClusterLoadWidget,
+  IncidentsWidget,
+  SessionsWidget,
+  TelemetryWidget,
+} from "@/design-system/widgets";
+import type { ClusterMetricRow, FreshnessState, SparkPoint } from "@/design-system/widgets/widgets.types";
 import { serverStatusToVariant } from "@/shared/statusMap";
 import { OverviewPeersChart, OverviewThroughputChart, type OperatorTimeseriesPoint } from "./OverviewCharts";
 
@@ -58,49 +54,28 @@ interface OperatorDashboard {
   }>;
 }
 
+function getServerStatusVisual(status: string) {
+  const statusVariant = serverStatusToVariant(status);
+  const statusLabel =
+    statusVariant === "danger"
+      ? "offline"
+      : statusVariant === "warning"
+        ? "warning"
+        : "healthy";
+  const statusClass =
+    statusVariant === "danger"
+      ? "off"
+      : statusVariant === "warning"
+        ? "warn"
+        : "ok";
+  return { statusClass, statusLabel };
+}
+
 function formatBps(bps: number): string {
   if (bps == null) return "—";
   if (bps >= 1e6) return `${(bps / 1e6).toFixed(1)} Mbps`;
   if (bps >= 1e3) return `${(bps / 1e3).toFixed(0)} Kbps`;
   return `${bps} bps`;
-}
-
-function formatDelta(delta: number | null, opts?: { invert?: boolean; unit?: string }) {
-  if (delta == null || !Number.isFinite(delta)) {
-    return { dir: "flat" as const, label: "—", valueText: "—" };
-  }
-  const invert = opts?.invert ?? false;
-  const unit = opts?.unit ?? "";
-  const effective = invert ? -delta : delta;
-  const dir = effective > 0 ? ("up" as const) : effective < 0 ? ("down" as const) : ("flat" as const);
-  const abs = Math.abs(delta);
-  const valueText =
-    unit === "%"
-      ? `${abs.toFixed(abs < 1 ? 1 : 0)}%`
-      : unit
-        ? `${abs.toFixed(abs < 1 ? 1 : 0)} ${unit}`.trim()
-        : abs.toFixed(abs < 1 ? 1 : 0);
-  const label = dir === "up" ? "Up" : dir === "down" ? "Down" : "Flat";
-  return { dir, label, valueText };
-}
-
-function DeltaPill(props: { delta: number | null; invert?: boolean; unit?: string; hint?: string }) {
-  const d = formatDelta(props.delta, { invert: props.invert, unit: props.unit });
-  const variant = d.dir === "up" ? "success" : d.dir === "down" ? "warning" : "neutral";
-  return (
-    <Badge
-      variant={variant}
-      size="sm"
-      className="overview-delta"
-      aria-label={props.hint ? `${props.hint}: ${d.label} ${d.valueText}` : `${d.label} ${d.valueText}`}
-      title={props.hint}
-    >
-      <span className="overview-delta__icon" aria-hidden="true">
-        {d.dir === "up" ? <ArrowUpRight size={14} /> : d.dir === "down" ? <ArrowDownRight size={14} /> : <Minus size={14} />}
-      </span>
-      <span className="overview-delta__value">{d.valueText}</span>
-    </Badge>
-  );
 }
 
 function avgPct(values: (number | null)[]): number | null {
@@ -153,10 +128,34 @@ function formatRelative(iso: string | null): string {
   return d.toLocaleDateString();
 }
 
+function telemetryStateFromLastAt(lastAt: string | null): FreshnessState {
+  if (!lastAt) return "dead";
+  const ageMs = Date.now() - new Date(lastAt).getTime();
+  if (ageMs < 120_000) return "fresh";
+  if (ageMs < 600_000) return "stale";
+  return "dead";
+}
+
+function lastSampleLabelFromLastAt(lastAt: string | null): string {
+  if (!lastAt) return "—";
+  const r = formatRelative(lastAt);
+  if (r === "just now") return "JUST NOW";
+  return r.toUpperCase().replace(/\s+/g, " ");
+}
+
+function timeseriesToSparkPoints(
+  points: OperatorTimeseriesPoint[],
+  getY: (p: OperatorTimeseriesPoint) => number
+): SparkPoint[] {
+  if (!points.length) return [];
+  return points.map((p, i) => ({ x: i, y: getY(p) }));
+}
+
 export function OverviewPage() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [refreshLabel, setRefreshLabel] = useState<"Refresh" | "Updating..." | "Updated just now">("Refresh");
   const refreshLabelTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const toast = useToast();
 
   useEffect(() => () => {
     if (refreshLabelTimerRef.current) clearTimeout(refreshLabelTimerRef.current);
@@ -187,6 +186,7 @@ export function OverviewPage() {
     try {
       await Promise.all([refetch(), refetchOperator()]);
       setRefreshLabel("Updated just now");
+      toast.showToast({ variant: "success", title: "Updated", description: "Dashboard data refreshed." });
       refreshLabelTimerRef.current = setTimeout(() => {
         refreshLabelTimerRef.current = null;
         setRefreshLabel("Refresh");
@@ -194,7 +194,7 @@ export function OverviewPage() {
     } catch {
       setRefreshLabel("Refresh");
     }
-  }, [refetch, refetchOperator]);
+  }, [refetch, refetchOperator, toast]);
 
   const strip = operatorData?.health_strip;
   const servers = useMemo(
@@ -230,257 +230,202 @@ export function OverviewPage() {
 
   const lastAt = data?.telemetry_last_at || data?.snapshot_last_at || null;
   const lastUpdatedLabel = useElapsedSince(lastAt);
-  const freshness = data?.metrics_freshness?.telemetry ?? "—";
   const avgCpu = avgPct(servers.map((s) => s.cpu_pct));
   const avgRam = avgPct(servers.map((s) => s.ram_pct));
 
   if (isLoading) {
     return (
-      <div className="page overview-page overview-page--loading" data-testid="dashboard-page">
+      <PageLayout
+        title="Overview"
+        pageClass="overview-page overview-page--loading"
+        dataTestId="dashboard-page"
+        hideHeader
+      >
         <Skeleton height={32} width="40%" className="overview-page__title-skeleton" />
         <Skeleton height={120} />
-      </div>
+      </PageLayout>
     );
   }
 
   if (isError) {
     return (
-      <div className="page overview-page" data-testid="dashboard-page">
+      <PageLayout title="Overview" pageClass="overview-page" dataTestId="dashboard-page" hideHeader>
         <ErrorState
           message={error instanceof Error ? error.message : "Failed to load overview"}
           onRetry={handleRetry}
         />
-      </div>
+      </PageLayout>
     );
   }
 
   if (!data) {
     return (
-      <div className="page overview-page" data-testid="dashboard-page">
+      <PageLayout title="Overview" pageClass="overview-page" dataTestId="dashboard-page" hideHeader>
         <EmptyState message="No overview data yet." />
-      </div>
+      </PageLayout>
     );
   }
 
   const peersNowFromSeries = timeseries.length ? timeseries[timeseries.length - 1]!.peers : null;
   const peersThen = timeseries.length ? timeseries[0]!.peers : null;
-  const peersDelta = peersNowFromSeries != null && peersThen != null ? peersNowFromSeries - peersThen : null;
   const peersCurrent = peersNowFromSeries ?? strip?.peers_active ?? data.sessions_active ?? null;
 
   const latencyNow = latencyTs.length ? latencyTs[latencyTs.length - 1]!.latency_ms : null;
   const latencyThen = latencyTs.length ? latencyTs[0]!.latency_ms : null;
   const latencyDelta = latencyNow != null && latencyThen != null ? latencyNow - latencyThen : null;
 
+  const sessionsData = {
+    mode: "normal" as const,
+    value: strip?.active_sessions ?? data.sessions_active ?? 0,
+    peers: peersCurrent ?? 0,
+    deltaPercent:
+      peersThen != null && peersThen !== 0 && peersNowFromSeries != null
+        ? ((peersNowFromSeries - peersThen) / peersThen) * 100
+        : undefined,
+  };
+
+  const incidentsData = {
+    critical: incidentCounts.critical ?? 0,
+    warning: incidentCounts.warning ?? 0,
+    unhealthyNodes: data.incidents_count,
+  };
+
+  const telemetryData = {
+    state: telemetryStateFromLastAt(lastAt),
+    lastSampleLabel: lastSampleLabelFromLastAt(lastAt),
+    series: timeseriesToSparkPoints(timeseries, (p) => p.peers ?? 0),
+  };
+
+  const latencyData = {
+    errorRate: strip?.error_rate_pct ?? 0,
+    trendDirection: (latencyDelta ?? 0) > 0 ? ("up" as const) : (latencyDelta ?? 0) < 0 ? ("down" as const) : ("flat" as const),
+    trendDeltaMs: Math.abs(latencyDelta ?? 0),
+    p95Ms: latencyNow ?? strip?.avg_latency_ms ?? 0,
+  };
+
+  const clusterMetrics: ClusterMetricRow[] = [
+    { key: "CPU", value: avgCpu != null ? `${avgCpu}%` : "—", percent: avgCpu ?? undefined },
+    { key: "RAM", value: avgRam != null ? `${avgRam}%` : "—", percent: avgRam ?? undefined },
+    { key: "Bandwidth", value: strip ? formatBps(strip.total_throughput_bps ?? 0) : "—" },
+  ];
+  const clusterData = { mode: "grid" as const, metrics: clusterMetrics };
+
+  const overviewDescription = (
+    <>
+      <span className="dot" aria-hidden="true" />
+      <span>Last updated {lastUpdatedLabel}</span>
+      <span className="sep">·</span>
+      <span>
+        Sessions:{" "}
+        {strip?.active_sessions ?? data.sessions_active}
+      </span>
+    </>
+  );
+  const overviewActions = (
+    <>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="act"
+        aria-label="Export"
+        onClick={() => {
+          toast.showToast({ variant: "info", title: "Export", description: "Export not available yet." });
+        }}
+      >
+        Export
+      </Button>
+      <Button
+        variant="default"
+        onClick={handleRefresh}
+        disabled={isRefetching}
+        data-testid="dashboard-refresh"
+        aria-label={refreshLabel}
+        className="act"
+      >
+        {isRefetching && <><Skeleton width={14} height={14} className="btn-loading-skeleton" aria-hidden />{" "}</>}
+        {refreshLabel}
+      </Button>
+      <Button
+        variant="default"
+        onClick={openSettings}
+        data-testid="dashboard-settings"
+        aria-label="Dashboard settings"
+        className="act"
+      >
+        Settings
+      </Button>
+    </>
+  );
+
   return (
-    <div className="page overview-page" data-testid="dashboard-page">
-      <div className="ph">
-        <div>
-          <div className="ph-title">Overview</div>
-          <div className="ph-meta">
-            <div className="dot" />
-            <span>Last updated {lastUpdatedLabel}</span>
-            <span className="sep">·</span>
-            <span>
-              Sessions:{" "}
-              {strip?.active_sessions ?? data.sessions_active}
-            </span>
+    <PageLayout
+      title="Overview"
+      description={overviewDescription}
+      actions={overviewActions}
+      pageClass="overview-page"
+      dataTestId="dashboard-page"
+    >
+      {(incidentCounts.critical ?? 0) > 0 && (
+        <div className="alert danger" role="alert" aria-live="assertive">
+          <span className="alert-icon" aria-hidden>✕</span>
+          <div>
+            <div className="alert-title">Critical incidents</div>
+            <div className="alert-desc">
+              {incidentCounts.critical} critical {incidentCounts.critical === 1 ? "incident" : "incidents"} reported.
+              Check servers and telemetry.
+            </div>
           </div>
         </div>
-        <div className="ph-actions">
-          <Button
-            variant="default"
-            onClick={handleRefresh}
-            disabled={isRefetching}
-            data-testid="dashboard-refresh"
-            aria-label={refreshLabel}
-            className="act"
-          >
-            {refreshLabel}
-          </Button>
-          <Button
-            variant="default"
-            onClick={openSettings}
-            data-testid="dashboard-settings"
-            aria-label="Dashboard settings"
-            className="act"
-          >
-            Settings
-          </Button>
-        </div>
-      </div>
-      <section className="overview-page__kpis" aria-label="Key metrics">
-        <div className="shead">
-          <div className="shead-label">System Status</div>
-          <div className="shead-line" />
-        </div>
+      )}
+      <section className="page-section overview-page__kpis" aria-label="Key metrics">
+        <SectionHeader label="System Status" size="lg" note="Last 1 hour" />
         <div className="kpi-row">
-        <Widget
-          variant="kpi"
-          className="overview-kpi edge eb"
-          title="Sessions"
-          subtitle="vs start of window"
-          href="/servers"
-          headerRight={
-            <DeltaPill
-              delta={peersDelta}
-              hint="Change in peers (last point vs first point)"
-            />
-          }
-        >
-          <KpiValue size="xl" as="div" className="overview-kpi__value">
-            <AnimatedNumber value={strip?.active_sessions ?? data.sessions_active} />
-          </KpiValue>
-          <div className="overview-kpi__meta chips">
-              <span className="chip cn">Peers: {peersCurrent ?? "—"}</span>
-          </div>
-        </Widget>
-
-        <Widget
-          variant="kpi"
-          className="overview-kpi edge ea"
-          title="Incidents"
-          subtitle="live signals"
-          href="/servers"
-          headerRight={
-            <BadgeCount
-              variant={incidents.length > 0 ? "danger" : "neutral"}
-              aria-label="Incident count"
-            >
-              {incidents.length}
-            </BadgeCount>
-          }
-        >
-          <div className="inc-grid" aria-label="Incident summary">
-            <div className="inc-cell">
-              <div className="ic-lbl">Critical</div>
-              <div className="ic-val z">{incidentCounts.critical ?? 0}</div>
-            </div>
-            <div className="inc-cell">
-              <div className="ic-lbl">Warning</div>
-              <div className="ic-val z">{incidentCounts.warning ?? 0}</div>
-            </div>
-            <div className="inc-cell" style={{ gridColumn: "span 2" }}>
-              <div className="ic-lbl">Unhealthy nodes</div>
-              <div className="ic-val w">{data.incidents_count}</div>
-            </div>
-          </div>
-          {incidents.length === 0 && (
-            <MetaText as="p" className="overview-kpi__empty">
-              No active incidents reported.
-            </MetaText>
-          )}
-        </Widget>
-
-        <Widget
-          variant="kpi"
-          className="overview-kpi edge eg"
-          title="Telemetry"
-          subtitle="freshness"
-          href="/telemetry"
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, marginTop: 2 }}>
-            <div
-              className="ring pulse"
-              style={{ color: "var(--green)", width: 7, height: 7 }}
-            />
-            <span
-              style={{
-                fontSize: 26,
-                fontWeight: 600,
-                letterSpacing: "-0.02em",
-                color: "var(--green)",
-              }}
-            >
-              {freshness || "Fresh"}
-            </span>
-          </div>
-          <div className="chips">
-            <span className="chip cg">
-              Last sample: {formatRelative(lastAt)}
-            </span>
-          </div>
-          <div className="spark">
-            <svg viewBox="0 0 200 26" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="sg-telemetry" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#32b05a" stopOpacity=".28" />
-                  <stop offset="100%" stopColor="#32b05a" stopOpacity="0" />
-                </linearGradient>
-              </defs>
-              <path
-                d="M0 18 C25 16 35 5 60 7 C85 9 95 3 120 5 C145 7 155 11 175 9 C185 8 192 7 200 8 L200 26 L0 26 Z"
-                fill="url(#sg-telemetry)"
-                className="cf"
-              />
-              <path
-                d="M0 18 C25 16 35 5 60 7 C85 9 95 3 120 5 C145 7 155 11 175 9 C185 8 192 7 200 8"
-                fill="none"
-                stroke="var(--green)"
-                strokeWidth={1.2}
-                className="cl cl-3"
-              />
-            </svg>
-          </div>
-        </Widget>
-
-        <Widget
-          variant="kpi"
-          className="overview-kpi edge ev"
-          title="API latency"
-          subtitle="p95 · vs start of window"
-          href="/telemetry"
-          headerRight={
-            <DeltaPill
-              delta={latencyDelta}
-              unit="ms"
-              invert
-              hint="Lower latency is better"
-            />
-          }
-        >
-          <KpiValue size="xl" as="div" className="overview-kpi__value">
-            {latencyNow != null ? (
-              <><AnimatedNumber value={latencyNow} /> ms</>
-            ) : strip?.avg_latency_ms != null ? (
-              <><AnimatedNumber value={strip.avg_latency_ms} /> ms</>
-            ) : (
-              "—"
-            )}
-          </KpiValue>
-          <div className="overview-kpi__meta">
-            <span className="overview-kpi__meta-item">Error rate: {strip?.error_rate_pct != null ? `${strip.error_rate_pct}%` : "—"}</span>
-          </div>
-        </Widget>
-
-        <Widget
-          variant="kpi"
-          className="overview-kpi edge et"
-          title="Cluster load"
-          subtitle="CPU/RAM (avg)"
-          href="/telemetry"
-        >
-          <div className="overview-kpi__meta">
-            <span className="overview-kpi__meta-item">CPU: {avgCpu != null ? `${avgCpu}%` : "—"}</span>
-            <span className="overview-kpi__meta-item">RAM: {avgRam != null ? `${avgRam}%` : "—"}</span>
-            <span className="overview-kpi__meta-item">
-              Bandwidth now: {strip ? formatBps(strip.total_throughput_bps ?? 0) : "—"}
-            </span>
-          </div>
-        </Widget>
+          <SessionsWidget
+            data={sessionsData}
+            href="/servers"
+            title="Sessions"
+            subtitle="vs start of window"
+            className="edge eb"
+          />
+          <IncidentsWidget
+            data={incidentsData}
+            href="/servers"
+            title="Incidents"
+            subtitle="live signals"
+            className="edge ea"
+          />
+          <TelemetryWidget
+            data={telemetryData}
+            href="/telemetry"
+            title="Telemetry"
+            subtitle="freshness"
+            className="edge eg"
+          />
+          <ApiLatencyWidget
+            data={latencyData}
+            href="/telemetry"
+            title="API latency"
+            subtitle="p95 · vs start of window"
+            className="edge ev"
+          />
+          <ClusterLoadWidget
+            data={clusterData}
+            href="/telemetry"
+            title="Cluster load"
+            subtitle="CPU/RAM (avg)"
+            className="edge et"
+          />
         </div>
       </section>
 
-      <section aria-label="Live metrics">
-        <div className="shead" style={{ marginTop: 16 }}>
-          <div className="shead-label">Live Metrics</div>
-          <div className="shead-line" />
-          <div className="shead-note">Last 1 hour</div>
-        </div>
+      <section className="page-section overview-page__live" aria-label="Live metrics">
+        <SectionHeader label="Live Metrics" size="lg" note="Last 1 hour" />
         <div className="chart-row">
         <Widget
           title="Peers"
           subtitle="Last 1 hour"
           href="/telemetry"
+          size="medium"
           className="edge eb cc"
         >
           {timeseries.length > 1 ? (
@@ -494,6 +439,7 @@ export function OverviewPage() {
           title="Bandwidth"
           subtitle="Last 1 hour (RX+TX)"
           href="/telemetry"
+          size="medium"
           className="edge ev cc"
         >
           {timeseries.length > 2 ? (
@@ -503,94 +449,90 @@ export function OverviewPage() {
           )}
         </Widget>
 
-        <Widget title="Top nodes" subtitle="By traffic" href="/servers" className="cc">
+        <Widget
+          title="Top nodes"
+          subtitle="By traffic"
+          href="/servers"
+          size="medium"
+          className="edge et cc"
+        >
           {topTraffic.length > 0 ? (
-            <div className="nlist" aria-label="Top nodes by traffic">
+            <ul className="nlist" aria-label="Top nodes by traffic">
               {topTraffic.map((s, idx) => {
                 const rank = idx + 1;
                 const value = s.throughput_bps ?? 0;
                 const max = maxTrafficBps || 0;
                 const pct = max > 0 ? Math.max(0, Math.min(100, (value / max) * 100)) : 0;
-                const statusVariant = serverStatusToVariant(s.status);
-                const statusClass =
-                  statusVariant === "danger"
-                    ? "off"
-                    : statusVariant === "warning"
-                      ? "warn"
-                      : "ok";
+                const { statusClass, statusLabel } = getServerStatusVisual(s.status);
                 return (
-                  <div key={s.id} className="ni">
+                  <li key={s.id} className="ni">
                     <span className="nrank">{rank}</span>
-                    <span className={`nst ${statusClass}`} />
+                    <span
+                      className={`nst ${statusClass}`}
+                      role="img"
+                      aria-label={`Status: ${statusLabel}`}
+                    />
                     <span className="nname">
                       {s.name}
                       {s.region && (
-                        <span className="overview-widget__list-region"> · {s.region}</span>
+                        <span className="type-meta overview-widget__list-region"> · {s.region}</span>
                       )}
                     </span>
                     <span className="nval">
                       {formatBps(value)}
                     </span>
-                    <div className="nbar">
-                      <div className="nbfill" style={{ width: `${pct}%`, background: "var(--chart-blue)" }} />
-                    </div>
-                  </div>
+                    <Nbar pct={pct} variant="blue" />
+                  </li>
                 );
               })}
-            </div>
+            </ul>
           ) : (
             <EmptyState message="No node traffic yet." />
           )}
         </Widget>
 
-        <Widget title="Hot nodes" subtitle="By CPU" href="/servers" className="cc">
+        <Widget
+          title="Hot nodes"
+          subtitle="By CPU"
+          href="/servers"
+          size="medium"
+          className="edge ea cc"
+        >
           {topCpu.length > 0 ? (
-            <div className="nlist" aria-label="Top nodes by CPU">
+            <ul className="nlist" aria-label="Top nodes by CPU">
               {topCpu.map((s, idx) => {
                 const rank = idx + 1;
                 const value = s.cpu_pct ?? 0;
                 const max = maxCpuPct || 0;
                 const pct = max > 0 ? Math.max(0, Math.min(100, (value / max) * 100)) : 0;
-                const statusVariant = serverStatusToVariant(s.status);
-                const statusClass =
-                  statusVariant === "danger"
-                    ? "off"
-                    : statusVariant === "warning"
-                      ? "warn"
-                      : "ok";
+                const { statusClass, statusLabel } = getServerStatusVisual(s.status);
                 const valueClass =
                   value >= 85 ? "nval wc" : value >= 60 ? "nval" : "nval";
                 return (
-                  <div key={s.id} className="ni">
+                  <li key={s.id} className="ni">
                     <span className="nrank">{rank}</span>
-                    <span className={`nst ${statusClass}`} />
+                    <span
+                      className={`nst ${statusClass}`}
+                      role="img"
+                      aria-label={`Status: ${statusLabel}`}
+                    />
                     <span className="nname">
                       {s.name}
                       {s.region && (
-                        <span className="overview-widget__list-region"> · {s.region}</span>
+                        <span className="type-meta overview-widget__list-region"> · {s.region}</span>
                       )}
                     </span>
                     <span className={valueClass}>
                       {s.cpu_pct != null ? `${s.cpu_pct}%` : "—"}
                     </span>
-                    <div className="nbar">
-                      <div
-                        className="nbfill"
-                        style={{
-                          width: `${pct}%`,
-                          background:
-                            value >= 85
-                              ? "var(--red)"
-                              : value >= 60
-                                ? "var(--amber)"
-                                : "var(--chart-blue)",
-                        }}
-                      />
-                    </div>
-                  </div>
+                    <Nbar
+                      pct={pct}
+                      variant={value >= 85 ? "red" : value >= 60 ? "amber" : "blue"}
+                    />
+                  </li>
                 );
               })}
-            </div>
+            </ul>
           ) : (
             <EmptyState message="No CPU telemetry yet." />
           )}
@@ -598,16 +540,17 @@ export function OverviewPage() {
         </div>
       </section>
 
-      <Modal
+      <Drawer
         open={settingsOpen}
         onClose={closeSettings}
         title="Dashboard settings"
+        size="sm"
         data-testid="dashboard-settings-modal"
       >
-        <BodyText className="overview-page__settings-text">
+        <BodyText className="type-body-sm overview-page__settings-text">
           Density, theme, and other preferences (placeholder).
         </BodyText>
-      </Modal>
-    </div>
+      </Drawer>
+    </PageLayout>
   );
 }

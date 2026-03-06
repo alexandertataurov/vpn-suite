@@ -5,7 +5,6 @@ const CLICK_TARGETS = [
   "button",
   ".btn",
   ".miniapp-tab",
-  ".home-quick-action-card",
   "a[data-haptic='light']",
   "[role='button']",
 ].join(", ");

@@ -15,6 +15,7 @@ class BotEventRequest(BaseModel):
 class CreateOrGetSubscriptionRequest(BaseModel):
     tg_id: int
     plan_id: str
+    telegram_user: dict | None = None
 
 
 class CreateOrGetSubscriptionResponse(BaseModel):

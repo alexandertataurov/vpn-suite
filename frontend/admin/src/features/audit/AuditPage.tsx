@@ -1,10 +1,11 @@
-import { SectionTitle, MetaText } from "@/design-system";
+import { PageLayout } from "@/layout/PageLayout";
 
 export function AuditPage() {
   return (
-    <div className="page audit-page">
-      <SectionTitle>Audit log</SectionTitle>
-      <MetaText>Audit — Phase 1 placeholder.</MetaText>
-    </div>
+    <PageLayout
+      title="Audit log"
+      description="Audit — Phase 1 placeholder."
+      pageClass="audit-page"
+    />
   );
 }

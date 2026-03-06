@@ -50,6 +50,133 @@ IDEMPOTENCY_ADMIN_ISSUE_PREFIX = "admin_issue:"
 IDEMPOTENCY_ADMIN_ISSUE_TTL = 86400  # 24h
 
 
+def _peer_issues(
+    allowed_ips: str | None,
+    last_handshake_ts: datetime | None,
+    rx: int,
+    tx: int,
+    now_ts: int,
+) -> list[str]:
+    issues = []
+    if not last_handshake_ts or (now_ts - int(last_handshake_ts.timestamp())) > 180:
+        issues.append("no_handshake")
+    if (rx or 0) + (tx or 0) == 0:
+        issues.append("no_traffic")
+    a = (allowed_ips or "").strip().lower()
+    if not a or a in ("(none)", "none", "0.0.0.0/0, ::/0"):
+        issues.append("wrong_allowed_ips")
+    return issues
+
+
+async def fetch_peers_for_server(
+    server_id: str,
+    db: AsyncSession,
+    request: Request | None,
+) -> tuple[list[PeerOut], bool, bool]:
+    """Return (peers, node_reachable, server_found). Used by GET /peers and VPN node detail."""
+    result = await db.execute(select(Server).where(Server.id == server_id))
+    server = result.scalar_one_or_none()
+    if not server:
+        return [], False, False
+
+    if settings.node_discovery == "agent":
+        hb = await get_agent_heartbeat(server_id)
+        now_ts = int(datetime.now(timezone.utc).timestamp())
+        dev_result = await db.execute(
+            select(Device.id, Device.public_key, Device.device_name).where(
+                Device.server_id == server_id, Device.revoked_at.is_(None)
+            )
+        )
+        pk_to_dev = {row[1]: (row[0], (row[2] or "").strip() or None) for row in dev_result.all()}
+        peers = []
+        hb_peers = hb.get("peers") if isinstance(hb, dict) else None
+        if isinstance(hb_peers, list):
+            for p in hb_peers:
+                if not isinstance(p, dict):
+                    continue
+                pk = str(p.get("public_key") or "")
+                age_sec = p.get("last_handshake_age_sec")
+                last_handshake_ts = None
+                peer_status = "unknown"
+                if isinstance(age_sec, int | float) and age_sec >= 0:
+                    last_handshake_ts = datetime.fromtimestamp(
+                        now_ts - int(age_sec), tz=timezone.utc
+                    )
+                    peer_status = "online" if int(age_sec) <= 180 else "offline"
+                rx = int(p.get("rx_bytes") or 0)
+                tx = int(p.get("tx_bytes") or 0)
+                allowed_ips_str = str(p.get("allowed_ips") or "")
+                dev = pk_to_dev.get(pk)
+                peer_id = dev[0] if dev else None
+                device_name = dev[1] if dev else None
+                issues = _peer_issues(allowed_ips_str, last_handshake_ts, rx, tx, now_ts)
+                rtt_raw = p.get("rtt_ms")
+                rtt_ms = int(rtt_raw) if isinstance(rtt_raw, (int, float)) and rtt_raw >= 0 else None
+                loss_raw = p.get("loss_pct")
+                loss_pct = float(loss_raw) if isinstance(loss_raw, (int, float)) and 0 <= loss_raw <= 100 else None
+                peers.append(
+                    PeerOut(
+                        public_key=pk,
+                        peer_id=peer_id,
+                        device_name=device_name,
+                        allowed_ips=allowed_ips_str,
+                        last_handshake_ts=last_handshake_ts,
+                        rx_bytes=rx,
+                        tx_bytes=tx,
+                        status=peer_status,
+                        issues=issues,
+                        rtt_ms=rtt_ms,
+                        loss_pct=loss_pct,
+                    )
+                )
+        return peers, bool(hb), True
+    if request is None:
+        return [], False, True
+    try:
+        adapter = request.app.state.node_runtime_adapter
+        raw = await adapter.list_peers(server.id)
+        now_ts = int(datetime.now(timezone.utc).timestamp())
+        dev_result = await db.execute(
+            select(Device.id, Device.public_key, Device.device_name).where(
+                Device.server_id == server_id, Device.revoked_at.is_(None)
+            )
+        )
+        pk_to_dev = {row[1]: (row[0], (row[2] or "").strip() or None) for row in dev_result.all()}
+        peers = []
+        for p in raw:
+            pk = str(p.get("public_key") or "")
+            last = int(p.get("last_handshake") or 0)
+            peer_status = "unknown"
+            last_handshake_ts = None
+            if last > 0:
+                last_handshake_ts = datetime.fromtimestamp(last, tz=timezone.utc)
+                peer_status = "online" if (now_ts - last) <= 180 else "offline"
+            rx = int(p.get("transfer_rx") or 0)
+            tx = int(p.get("transfer_tx") or 0)
+            allowed_ips_str = str(p.get("allowed_ips") or "")
+            dev = pk_to_dev.get(pk)
+            peer_id = dev[0] if dev else None
+            device_name = dev[1] if dev else None
+            issues = _peer_issues(allowed_ips_str, last_handshake_ts, rx, tx, now_ts)
+            peers.append(
+                PeerOut(
+                    public_key=pk,
+                    peer_id=peer_id,
+                    device_name=device_name,
+                    allowed_ips=allowed_ips_str,
+                    last_handshake_ts=last_handshake_ts,
+                    rx_bytes=rx,
+                    tx_bytes=tx,
+                    status=peer_status,
+                    issues=issues,
+                )
+            )
+        return peers, True, True
+    except Exception:
+        logger.exception("Get server peers failed")
+        return [], False, True
+
+
 @router.get("/{server_id}/peers-sync")
 async def get_server_peers_sync(
     request: Request,
@@ -348,120 +475,10 @@ async def get_server_peers(
     _admin=Depends(require_permission(PERM_SERVERS_READ)),
 ):
     """Fetch peers from node with pubkey, handshake, rx/tx, status. Returns empty when node unreachable."""
-    result = await db.execute(select(Server).where(Server.id == server_id))
-    server = result.scalar_one_or_none()
-    if not server:
+    peers, node_reachable, server_found = await fetch_peers_for_server(server_id, db, request)
+    if not server_found:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Server not found")
-
-    def _peer_issues(
-        allowed_ips: str | None,
-        last_handshake_ts: datetime | None,
-        rx: int,
-        tx: int,
-        now_ts: int,
-    ) -> list[str]:
-        issues = []
-        if not last_handshake_ts or (now_ts - int(last_handshake_ts.timestamp())) > 180:
-            issues.append("no_handshake")
-        if (rx or 0) + (tx or 0) == 0:
-            issues.append("no_traffic")
-        a = (allowed_ips or "").strip().lower()
-        if not a or a in ("(none)", "none", "0.0.0.0/0, ::/0"):
-            issues.append("wrong_allowed_ips")
-        return issues
-
-    if settings.node_discovery == "agent":
-        hb = await get_agent_heartbeat(server_id)
-        now_ts = int(datetime.now(timezone.utc).timestamp())
-        dev_result = await db.execute(
-            select(Device.id, Device.public_key, Device.device_name).where(
-                Device.server_id == server_id, Device.revoked_at.is_(None)
-            )
-        )
-        pk_to_dev = {row[1]: (row[0], (row[2] or "").strip() or None) for row in dev_result.all()}
-        peers = []
-        hb_peers = hb.get("peers") if isinstance(hb, dict) else None
-        if isinstance(hb_peers, list):
-            for p in hb_peers:
-                if not isinstance(p, dict):
-                    continue
-                pk = str(p.get("public_key") or "")
-                age_sec = p.get("last_handshake_age_sec")
-                last_handshake_ts = None
-                peer_status = "unknown"
-                if isinstance(age_sec, int | float) and age_sec >= 0:
-                    last_handshake_ts = datetime.fromtimestamp(
-                        now_ts - int(age_sec), tz=timezone.utc
-                    )
-                    peer_status = "online" if int(age_sec) <= 180 else "offline"
-                rx = int(p.get("rx_bytes") or 0)
-                tx = int(p.get("tx_bytes") or 0)
-                allowed_ips_str = str(p.get("allowed_ips") or "")
-                dev = pk_to_dev.get(pk)
-                peer_id = dev[0] if dev else None
-                device_name = dev[1] if dev else None
-                issues = _peer_issues(allowed_ips_str, last_handshake_ts, rx, tx, now_ts)
-                peers.append(
-                    PeerOut(
-                        public_key=pk,
-                        peer_id=peer_id,
-                        device_name=device_name,
-                        allowed_ips=allowed_ips_str,
-                        last_handshake_ts=last_handshake_ts,
-                        rx_bytes=rx,
-                        tx_bytes=tx,
-                        status=peer_status,
-                        issues=issues,
-                    )
-                )
-        return ServerPeersOut(
-            peers=peers,
-            total=len(peers),
-            node_reachable=bool(hb),
-        )
-    try:
-        adapter = request.app.state.node_runtime_adapter
-        raw = await adapter.list_peers(server.id)
-        now_ts = int(datetime.now(timezone.utc).timestamp())
-        dev_result = await db.execute(
-            select(Device.id, Device.public_key, Device.device_name).where(
-                Device.server_id == server_id, Device.revoked_at.is_(None)
-            )
-        )
-        pk_to_dev = {row[1]: (row[0], (row[2] or "").strip() or None) for row in dev_result.all()}
-        peers = []
-        for p in raw:
-            pk = str(p.get("public_key") or "")
-            last = int(p.get("last_handshake") or 0)
-            peer_status = "unknown"
-            last_handshake_ts = None
-            if last > 0:
-                last_handshake_ts = datetime.fromtimestamp(last, tz=timezone.utc)
-                peer_status = "online" if (now_ts - last) <= 180 else "offline"
-            rx = int(p.get("transfer_rx") or 0)
-            tx = int(p.get("transfer_tx") or 0)
-            allowed_ips_str = str(p.get("allowed_ips") or "")
-            dev = pk_to_dev.get(pk)
-            peer_id = dev[0] if dev else None
-            device_name = dev[1] if dev else None
-            issues = _peer_issues(allowed_ips_str, last_handshake_ts, rx, tx, now_ts)
-            peers.append(
-                PeerOut(
-                    public_key=pk,
-                    peer_id=peer_id,
-                    device_name=device_name,
-                    allowed_ips=allowed_ips_str,
-                    last_handshake_ts=last_handshake_ts,
-                    rx_bytes=rx,
-                    tx_bytes=tx,
-                    status=peer_status,
-                    issues=issues,
-                )
-            )
-        return ServerPeersOut(peers=peers, total=len(peers), node_reachable=True)
-    except Exception:
-        logger.exception("Get server peers failed")
-        return ServerPeersOut(peers=[], total=0, node_reachable=False)
+    return ServerPeersOut(peers=peers, total=len(peers), node_reachable=node_reachable)
 
 
 @router.post("/{server_id}/peers/block")

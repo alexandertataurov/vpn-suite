@@ -15,9 +15,9 @@ from app.live_metrics.redis_store import set_degradation_mode, write_cluster_sna
 from app.services.snapshot_cache import (
     DEFAULT_ENV,
     SNAPSHOT_STALE_THRESHOLD_SECONDS,
-  get_snapshot_meta,
-  get_snapshot_nodes,
-  get_snapshot_sessions,
+    get_snapshot_meta,
+    get_snapshot_nodes,
+    get_snapshot_sessions,
 )
 
 _log = logging.getLogger(__name__)

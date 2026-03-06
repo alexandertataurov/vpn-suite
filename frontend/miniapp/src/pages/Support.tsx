@@ -1,9 +1,18 @@
 import { useState } from "react";
-import { getButtonClassName, PageScaffold, PageHeader, PageSection, Panel, Skeleton, Body, H3 } from "../ui";
-import { TroubleshooterStep, FallbackScreen, SessionMissing } from "@/components";
-import { useTrackScreen } from "../hooks/useTrackScreen";
-import { useSession } from "../hooks/useSession";
-import { useWebappToken } from "../api/client";
+import {
+  FallbackScreen,
+  PageFrame,
+  SectionDivider,
+  SummaryHero,
+  Skeleton,
+  MissionCard,
+  MissionPrimaryAnchor,
+  SessionMissing,
+  TroubleshooterStep,
+} from "@/design-system";
+import { useTrackScreen } from "@/hooks/useTrackScreen";
+import { useSession } from "@/hooks/useSession";
+import { useWebappToken } from "@/api/client";
 
 const TROUBLESHOOTER_STEPS = [
   {
@@ -48,10 +57,9 @@ export function SupportPage() {
 
   if (isLoading) {
     return (
-      <PageScaffold>
-        <PageHeader title="Support" subtitle="Troubleshooting and help" />
+      <PageFrame title="Support" subtitle="Fix connection issues quickly">
         <Skeleton variant="card" />
-      </PageScaffold>
+      </PageFrame>
     );
   }
 
@@ -66,10 +74,21 @@ export function SupportPage() {
   }
 
   return (
-    <PageScaffold>
-      <PageHeader title="Support" subtitle="Troubleshooting and help" />
-
-      <PageSection title="Troubleshooter" description="Follow the flow to fix common connection issues.">
+    <PageFrame title="Support" subtitle="Fix connection issues quickly">
+      <SummaryHero
+        eyebrow="Support Status"
+        title="All Systems Operational"
+        subtitle="No active incidents · Fix connection issues below"
+        edge="e-g"
+        glow="g-green"
+        className="stagger-1"
+      />
+      <SectionDivider
+        label="Troubleshooter"
+        count={`Step ${step + 1}/${totalSteps}`}
+        className="stagger-2"
+      />
+      <div className="stagger-3">
         <TroubleshooterStep
           stepIndex={step + 1}
           totalSteps={totalSteps}
@@ -80,28 +99,31 @@ export function SupportPage() {
           backLabel={step > 0 ? current.backLabel : undefined}
           onBack={step > 0 ? () => setStep((s) => s - 1) : undefined}
         />
-      </PageSection>
+      </div>
+      <SectionDivider label="FAQ" className="stagger-4" />
+      <div className="faq-grid stagger-5">
+          <MissionCard tone="blue" className="module-card module-card--tight">
+            <h3 className="op-name type-h3">Installation</h3>
+            <p className="op-desc type-body-sm">
+              Subscribe to a plan, add a device, download the config, then import it in AmneziaVPN.
+            </p>
+          </MissionCard>
+          <MissionCard tone="blue" className="module-card module-card--tight">
+            <h3 className="op-name type-h3">Privacy and security</h3>
+            <p className="op-desc type-body-sm">
+              Treat each config as a secret. If compromised, revoke the device in Devices and issue a new one.
+            </p>
+          </MissionCard>
+        </div>
 
-      <PageSection title="FAQ" description="High-value quick answers.">
-        <Panel className="card hud-brackets">
-          <H3 as="h3">Installation</H3>
-          <Body>
-            Subscribe to a plan, add a device, download the config, then import it in AmneziaVPN.
-          </Body>
-        </Panel>
-        <Panel className="card hud-brackets">
-          <H3 as="h3">Privacy & security</H3>
-          <Body>
-            Treat each config as a secret. If compromised, revoke the device in Devices and issue a new one.
-          </Body>
-        </Panel>
-      </PageSection>
-
-      <a aria-label="Contact support" href="https://t.me/support" target="_blank" rel="noopener noreferrer"
-        className={getButtonClassName("primary", "lg", "btn-full-width")}
+      <MissionPrimaryAnchor
+        aria-label="Contact support"
+        href="https://t.me/support"
+        target="_blank"
+        rel="noopener noreferrer"
       >
-        Contact support
-      </a>
-    </PageScaffold>
+        Open support chat
+      </MissionPrimaryAnchor>
+    </PageFrame>
   );
 }

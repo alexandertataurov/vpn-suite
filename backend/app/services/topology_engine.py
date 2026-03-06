@@ -12,7 +12,6 @@ from app.core.config import settings
 from app.core.database import async_session_factory
 from app.core.metrics import update_topology_metrics
 from app.core.redis_client import get_redis
-from app.core.telemetry_polling_task import push_dashboard_timeseries
 from app.models import Server
 from app.schemas.node import ClusterTopology, NodeMetadata
 
@@ -169,15 +168,6 @@ class TopologyEngine:
             update_topology_metrics(topology)
         except Exception as e:
             _log.debug("Metrics update failed: %s", e)
-        # Push dashboard timeseries so frontend has data in both agent and docker mode.
-        try:
-            await push_dashboard_timeseries(
-                current_load,
-                sum(n.total_rx_bytes or 0 for n in nodes),
-                sum(n.total_tx_bytes or 0 for n in nodes),
-            )
-        except Exception as e:
-            _log.debug("Dashboard timeseries push failed: %s", e)
         try:
             redis = get_redis()
             await redis.setex(

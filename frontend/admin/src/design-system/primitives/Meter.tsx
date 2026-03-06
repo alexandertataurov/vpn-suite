@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useId } from "react";
 
 type MeterVariant = "info" | "success" | "warning" | "danger";
 
@@ -15,17 +16,25 @@ interface MeterProps {
 
 export function Meter({ label, valueLabel, percent, variant = "info", className = "" }: MeterProps) {
   const clamped = Math.max(0, Math.min(100, percent));
+  const labelId = useId();
   return (
-    <div className={["meter-wrap", className || null].filter(Boolean).join(" ")}>
-      <div className="meter-label">
+    <div
+      className={["meter-wrap", className || null].filter(Boolean).join(" ")}
+      style={{ ["--meter-pct" as string]: clamped }}
+    >
+      <div className="meter-label" id={labelId}>
         <span>{label}</span>
         <span>{valueLabel}</span>
       </div>
-      <div className="meter-track" role="meter">
-        <div
-          className={["meter-fill", variant].filter(Boolean).join(" ")}
-          style={{ width: `${clamped}%` }}
-        />
+      <div
+        className="meter-track"
+        role="meter"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={clamped}
+        aria-labelledby={labelId}
+      >
+        <div className={["meter-fill", variant].filter(Boolean).join(" ")} />
       </div>
     </div>
   );

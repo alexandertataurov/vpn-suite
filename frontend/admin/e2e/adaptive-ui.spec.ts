@@ -65,7 +65,7 @@ test.describe("Adaptive UI", () => {
   test("Skip link targets main", async ({ page }) => {
     await page.goto("/");
     await page.waitForLoadState("domcontentloaded");
-    const skipLink = page.locator("a.skip-link[href=\"#admin-main\"]");
+    const skipLink = page.locator("a.skip-link[href=\"#main-content\"]");
     await expect(skipLink).toBeVisible();
     await skipLink.focus();
     await expect(skipLink).toBeFocused();

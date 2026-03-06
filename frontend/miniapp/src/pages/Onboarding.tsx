@@ -1,51 +1,72 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type TouchEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { IconShield, IconSmartphone, IconGlobe } from "@/shared-inline/icons";
 import {
-  Button,
-  InlineAlert,
-  PageScaffold,
-  PageHeader,
+  IconShield,
+  IconSmartphone,
+  IconGlobe,
+  PageFrame,
   PageSection,
-  Panel,
-  ProgressBar,
-  H2,
-  Body,
-  ActionRow,
-} from "../ui";
-import { useBootstrapContext } from "../bootstrap/BootstrapController";
+  MissionAlert,
+  MissionCard,
+  MissionChip,
+  MissionModuleHead,
+  MissionPrimaryButton,
+  MissionProgressBar,
+  MissionSecondaryButton,
+} from "@/design-system";
+import { useBootstrapContext } from "@/bootstrap/BootstrapController";
+import { useOpenLink } from "@/hooks/features/useOpenLink";
+import appStoreBadgeUrl from "@/assets/badges/app-store-badge.svg";
+import googlePlayBadgeUrl from "@/assets/badges/google-play-badge.png";
+
+const IOS_APP_URL = "https://apps.apple.com/app/amneziavpn/id1600529900";
+const ANDROID_APP_URL = "https://play.google.com/store/apps/details?id=org.amnezia.vpn";
 
 const ONBOARDING_STEPS = [
   {
-    title: "Private by default",
-    body: "Your traffic is encrypted end-to-end so public Wi-Fi and mobile networks stay safe.",
-    cta: "Continue",
-    icon: IconShield,
-  },
-  {
-    title: "Connect every device",
-    body: "Add your phone, tablet, or laptop in minutes and keep all your sessions protected.",
-    cta: "Continue",
+    id: "install",
+    title: "Install AmneziaVPN",
+    body: "Download the AmneziaVPN app from the App Store or Google Play.",
+    cta: "Next",
     icon: IconSmartphone,
   },
   {
-    title: "Choose your plan",
-    body: "Pick the plan that matches your usage and start secure browsing immediately.",
-    cta: "Go to plans",
+    id: "open",
+    title: "Open AmneziaVPN",
+    body: "Launch the app after installation. You will see the main connection screen.",
+    cta: "Next",
+    icon: IconShield,
+  },
+  {
+    id: "import",
+    title: "Add your VPN configuration",
+    body: 'In AmneziaVPN tap "Add configuration" \u2192 Scan QR or Import config file.',
+    cta: "Next",
     icon: IconGlobe,
+  },
+  {
+    id: "scan",
+    title: "Scan your personal QR code",
+    body: "Use the scanner inside AmneziaVPN. Your connection will be added automatically.",
+    cta: "Next",
+    icon: IconSmartphone,
+  },
+  {
+    id: "connect",
+    title: "Tap Connect",
+    body: "Enable the VPN connection. Status in AmneziaVPN should turn green.",
+    cta: "Open dashboard",
+    icon: IconShield,
   },
 ] as const;
 
 export function OnboardingPage() {
   const navigate = useNavigate();
-  const {
-    onboardingStep,
-    onboardingError,
-    isCompletingOnboarding,
-    setOnboardingStep,
-    completeOnboarding,
-  } = useBootstrapContext();
+  const { openLink } = useOpenLink();
+  const { onboardingStep, onboardingError, isCompletingOnboarding, setOnboardingStep, completeOnboarding } =
+    useBootstrapContext();
   const [isAdvancing, setIsAdvancing] = useState(false);
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
   const stepIndex = useMemo(
     () => Math.max(0, Math.min(ONBOARDING_STEPS.length - 1, onboardingStep)),
@@ -72,40 +93,153 @@ export function OnboardingPage() {
     }
   };
 
+  const handleBack = async () => {
+    if (stepIndex <= 0 || isCompletingOnboarding || isAdvancing) return;
+    setIsAdvancing(true);
+    try {
+      await setOnboardingStep(stepIndex - 1);
+    } finally {
+      setIsAdvancing(false);
+    }
+  };
+
+  const handleTouchStart = (event: TouchEvent<HTMLDivElement>) => {
+    if (event.touches.length !== 1 || isCompletingOnboarding || isAdvancing) return;
+    setTouchStartX(event.touches[0]?.clientX ?? null);
+  };
+
+  const handleTouchEnd = (event: TouchEvent<HTMLDivElement>) => {
+    if (touchStartX == null || isCompletingOnboarding || isAdvancing) return;
+    const deltaX = (event.changedTouches[0]?.clientX ?? touchStartX) - touchStartX;
+    const threshold = 40;
+    if (deltaX <= -threshold && !isLastStep) {
+      void handlePrimaryAction();
+    } else if (deltaX >= threshold && stepIndex > 0) {
+      void handleBack();
+    }
+    setTouchStartX(null);
+  };
+
   return (
-    <PageScaffold className="onboarding-screen">
-      <PageHeader title="Welcome" subtitle={`Step ${stepIndex + 1} of ${ONBOARDING_STEPS.length}`} />
+    <PageFrame title="Welcome">
       <PageSection>
-        <Panel className="card instrument-card instrument-card--active onboarding-card">
-          <span className="onboarding-icon" aria-hidden>
-            <StepIcon size={28} strokeWidth={1.5} />
-          </span>
-          <H2 as="h2" className="onboarding-title">
-            {step.title}
-          </H2>
-          <Body className="onboarding-body">{step.body}</Body>
-          <ProgressBar value={progressValue} max={100} className="onboarding-progress" />
-          {onboardingError && (
-            <InlineAlert
-              variant="error"
-              title="Could not continue"
-              message={onboardingError}
-            />
-          )}
-          <ActionRow fullWidth>
-            <Button
-              variant="primary"
-              size="lg"
-              className="splash-screen-cta"
-              loading={isCompletingOnboarding || isAdvancing}
-              disabled={isCompletingOnboarding || isAdvancing}
-              onClick={handlePrimaryAction}
-            >
-              {step.cta}
-            </Button>
-          </ActionRow>
-        </Panel>
+        <MissionCard
+          tone="blue"
+          className="module-card onboarding-card"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
+          <MissionModuleHead
+            label={`Step ${stepIndex + 1} of ${ONBOARDING_STEPS.length}`}
+            chip={<MissionChip tone="neutral">Onboarding</MissionChip>}
+          />
+          <div className="onboarding-manual stack">
+            <div className="onboarding-header">
+              <div className="onboarding-title-row">
+                <span className="onboarding-icon" aria-hidden>
+                  <StepIcon size={20} strokeWidth={1.6} />
+                </span>
+                <h2 className="op-name type-h3">
+                  {step.title}
+                </h2>
+              </div>
+              <p className="op-desc type-body-sm">{step.body}</p>
+            </div>
+
+            <div className="onboarding-visual">
+              {step.id === "install" ? (
+                <div className="onboarding-store-visual">
+                  <button
+                    type="button"
+                    className="store-badge-link"
+                    aria-label="Get AmneziaVPN on the App Store"
+                    onClick={() => openLink(IOS_APP_URL)}
+                  >
+                    <img src={appStoreBadgeUrl} alt="" className="store-badge store-badge--apple" />
+                  </button>
+                  <button
+                    type="button"
+                    className="store-badge-link"
+                    aria-label="Get AmneziaVPN on Google Play"
+                    onClick={() => openLink(ANDROID_APP_URL)}
+                  >
+                    <img src={googlePlayBadgeUrl} alt="" className="store-badge store-badge--google" />
+                  </button>
+                </div>
+              ) : null}
+              {step.id === "import" ? (
+                <div className="onboarding-flow-diagram">
+                  <span>AmneziaVPN app</span>
+                  <span className="arrow">↓</span>
+                  <span>Add configuration</span>
+                  <span className="arrow">↓</span>
+                  <span>Scan QR · or · Import file</span>
+                </div>
+              ) : null}
+              {step.id === "scan" ? <div className="onboarding-qr-placeholder" aria-hidden /> : null}
+              {step.id === "connect" ? (
+                <div className="onboarding-status-legend" aria-label="Connection status examples">
+                  <span>🟢 Connected</span>
+                  <span>🟡 Connecting</span>
+                  <span>🔴 Disconnected</span>
+                </div>
+              ) : null}
+            </div>
+
+            {onboardingError && (
+              <MissionAlert tone="error" title="Could not continue" message={onboardingError} />
+            )}
+
+            <div className="onboarding-footer">
+              <div className="btn-row">
+                {stepIndex > 0 && (
+                  <MissionSecondaryButton onClick={() => void handleBack()} disabled={isCompletingOnboarding || isAdvancing}>
+                    Back
+                  </MissionSecondaryButton>
+                )}
+                <MissionPrimaryButton
+                  disabled={isCompletingOnboarding || isAdvancing}
+                  onClick={() => void handlePrimaryAction()}
+                >
+                  {isCompletingOnboarding || isAdvancing ? (
+                    <>
+                      <svg className="spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
+                        <circle cx="12" cy="12" r="8" strokeOpacity="0.35" />
+                        <path d="M20 12a8 8 0 0 0-8-8" />
+                      </svg>
+                      <span>Loading…</span>
+                    </>
+                  ) : (
+                    step.cta
+                  )}
+                </MissionPrimaryButton>
+              </div>
+              <div className="onboarding-progress">
+                <MissionProgressBar percent={progressValue} staticFill ariaLabel="Onboarding progress" />
+                <div className="onboarding-dots" role="tablist" aria-label="Onboarding steps">
+                  {ONBOARDING_STEPS.map((item, index) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className={`onboarding-dot${
+                        index === stepIndex ? " onboarding-dot--active" : ""
+                      }`}
+                      role="tab"
+                      aria-selected={index === stepIndex}
+                      aria-current={index === stepIndex ? "step" : undefined}
+                      aria-label={`Go to step ${index + 1}: ${item.title}`}
+                      onClick={() => {
+                        if (index === stepIndex || isCompletingOnboarding || isAdvancing) return;
+                        void setOnboardingStep(index);
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </MissionCard>
       </PageSection>
-    </PageScaffold>
+    </PageFrame>
   );
 }

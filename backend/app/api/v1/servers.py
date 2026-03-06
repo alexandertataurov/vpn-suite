@@ -14,6 +14,7 @@ from app.api.v1.server_utils import (
     _display_is_active,
     get_agent_heartbeat,
 )
+from app.api.v1.servers_peers import fetch_peers_for_server
 from app.api.v1.servers_actions import servers_actions_router
 from app.api.v1.servers_crud import servers_crud_router
 from app.api.v1.servers_sync import servers_sync_router
@@ -42,6 +43,8 @@ from app.schemas.server import (
     ServerStatusOut,
     normalize_server_status,
 )
+from app.schemas.vpn_node import VpnNodeCardOut, VpnNodeDetailOut
+from app.services.vpn_node_service import build_vpn_node_cards, build_vpn_node_detail
 from app.services.server_health_service import (
     get_last_health,
     run_health_check,
@@ -502,6 +505,36 @@ async def get_server_device_counts(
     result = (await db.execute(stmt)).all()
     counts = {str(r.server_id): r.c for r in result}
     return ServerDeviceCountsOut(counts=counts)
+
+
+@router.get("/vpn-nodes", response_model=list[VpnNodeCardOut])
+async def get_servers_vpn_nodes(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    region: str | None = Query(None),
+    health: str | None = Query(None, description="Filter by health_state: ok | degraded | down"),
+    _admin=Depends(require_permission(PERM_SERVERS_READ)),
+):
+    """Return VPN node cards for operator grid. Uses DB + Redis heartbeat + snapshot."""
+    cards = await build_vpn_node_cards(db, request, region=region, health=health)
+    return cards
+
+
+@router.get("/{server_id}/vpn-node", response_model=VpnNodeDetailOut)
+async def get_server_vpn_node(
+    request: Request,
+    server_id: str,
+    db: AsyncSession = Depends(get_db),
+    _admin=Depends(require_permission(PERM_SERVERS_READ)),
+):
+    """Return full VPN node detail for drilldown (card + peers + interface + system)."""
+    peers, _, server_found = await fetch_peers_for_server(server_id, db, request)
+    if not server_found:
+        raise not_found_404("Server", server_id)
+    detail = await build_vpn_node_detail(server_id, db, request, peers)
+    if detail is None:
+        raise not_found_404("Server", server_id)
+    return detail
 
 
 @router.get("/{server_id}/status", response_model=ServerStatusOut)

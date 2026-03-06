@@ -65,3 +65,4 @@
 | Pages share layout shell | ✓ MiniappLayout or miniapp-stack |
 | Spacing from tokens only | ✓ --space-*, --container-pad |
 | Desktop centered, max-width | ✓ 600px max, 90vw at 900px |
+| Accessibility gate | ✓ [docs/accessibility-checklist.md](../accessibility-checklist.md) |

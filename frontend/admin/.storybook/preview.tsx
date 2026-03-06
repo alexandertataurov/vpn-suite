@@ -2,8 +2,8 @@ import type { Preview } from "@storybook/react";
 import React, { Component, type ReactNode } from "react";
 import { withPadding, withMeasure } from "./decorators";
 import { MemoryRouter } from "react-router-dom";
-import { ThemeProvider } from "../src/shared/theme";
-import { ToastContainer } from "../src/design-system";
+import { ThemeProvider } from "./ThemeProviderStub";
+import { ToastProvider } from "../src/design-system";
 import { docsTheme, docsThemeLight } from "./theme";
 import { StoryFrame } from "./StoryFrame";
 import { ThemedDocsContainer } from "./ThemedDocsContainer";
@@ -51,31 +51,8 @@ import {
   ChangelogEntry,
 } from "./components";
 import "../src/tailwind.css";
-import "../src/design-system/tokens.css";
-import "../src/design-system/base.css";
-import "../src/design-system/primitives.css";
-import "../src/design-system/typography.css";
-import "../src/design-system/utilities.css";
-import "../src/design-system/components.css";
-import "../src/design-system/table/Table.css";
-import "../src/design-system/table/TablePrimitives.css";
-import "../src/design-system/data-display/MetricTile.css";
-import "../src/design-system/data-display/Alert.css";
-import "../src/design-system/feedback/Modal.css";
-import "../src/design-system/feedback/Toast.css";
-import "../src/design-system/feedback/InlineAlert.css";
-import "../src/design-system/feedback/PageError.css";
-import "../src/design-system/layout/Card.css";
-import "../src/design-system/navigation/Breadcrumb.css";
-import "../src/design-system/navigation/CommandBar.css";
-import "../src/design-system/navigation/Tabs.css";
-import "../src/design-system/navigation/Pagination.css";
-import "../src/design-system/navigation/FormActions.css";
-import "../src/design-system/layout/Shell.css";
-import "../src/design-system/console/Operator.css";
-import "../src/design-system/console/Dashboard.css";
-import "../src/components/health/HealthStrip.css";
-import "../src/design-system/storybook/foundation.css";
+import "../src/design-system/design-system.css";
+import "../src/layout/shell.css";
 import "./docs.css";
 import "./toc.css";
 
@@ -123,9 +100,9 @@ const preview: Preview = {
             <MemoryRouter initialEntries={["/"]}>
               <ThemeProvider themes={["starlink", "orbital", "dark", "dim", "light"]} defaultTheme={themeKey} storageKey="vpn-suite-storybook-theme">
                 <StoryFrame>
-                  <ToastContainer>
+                  <ToastProvider>
                     {context.parameters?.measure ? withMeasure(Story, context) : <Story />}
-                  </ToastContainer>
+                  </ToastProvider>
                 </StoryFrame>
               </ThemeProvider>
             </MemoryRouter>

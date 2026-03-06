@@ -77,8 +77,14 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       <div className="toast-stack" aria-live="polite" aria-atomic="true">
         {toasts.map((toast) => {
           const showProgress = toast.variant === "info" || toast.variant === "success";
+          const isAlert = toast.variant === "danger" || toast.variant === "warning";
           return (
-            <div key={toast.id} className={["toast", toast.variant].join(" ")}>
+            <div
+              key={toast.id}
+              className={["toast", toast.variant].join(" ")}
+              role={isAlert ? "alert" : "status"}
+              aria-live={isAlert ? "assertive" : "polite"}
+            >
               <span className="toast-icon" aria-hidden="true">
                 {ICONS[toast.variant ?? "info"]}
               </span>
@@ -96,7 +102,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               </button>
               {showProgress && (
                 <div className="toast-progress">
-                  <div className="toast-progress-bar" style={{ animationDuration: "4s" }} />
+                  <div className="toast-progress-bar toast-progress-bar--4s" />
                 </div>
               )}
             </div>

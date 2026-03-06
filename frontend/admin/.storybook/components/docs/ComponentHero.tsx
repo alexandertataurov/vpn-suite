@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Heading, PrimitiveBadge, PrimitiveDivider } from "../../../src/design-system";
+import { Heading, PrimitiveBadge, PrimitiveDivider } from "../../design-system-compat";
 
 export type HeroStatus = "stable" | "beta" | "deprecated" | "new";
 

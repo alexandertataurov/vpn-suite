@@ -5,7 +5,7 @@ import math
 from datetime import datetime, timedelta, timezone
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel, Field, model_validator
 from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
@@ -19,11 +19,14 @@ from app.core.constants import REDIS_KEY_RATELIMIT_ISSUE_PREFIX
 from app.core.database import get_db
 from app.core.metrics import frontend_web_vital_ms, frontend_web_vital_score, miniapp_events_total
 from app.core.redis_client import get_redis
+from app.core.redaction import redact_for_log
 from app.core.security import create_webapp_session_token, decode_token, validate_telegram_init_data
+from app.core.telegram_user import build_tg_requisites
 from app.models import (
     ChurnSurvey,
     Device,
     Payment,
+    PaymentEvent,
     Plan,
     PromoCode,
     PromoRedemption,
@@ -32,7 +35,9 @@ from app.models import (
     Subscription,
     User,
 )
+from app.services.device_telemetry_cache import get_device_telemetry_bulk
 from app.services.funnel_service import log_funnel_event
+from app.services.issued_config_service import persist_issued_configs
 from app.services.issue_service import issue_device
 from app.services.retention_service import (
     pause_subscription,
@@ -45,7 +50,7 @@ router = APIRouter(prefix="/webapp", tags=["webapp"])
 _WEBAPP_SERVER_SELECT_LIMIT = 20
 _WEBAPP_SERVER_SELECT_WINDOW_SECONDS = 60
 _WEBAPP_ONBOARDING_VERSION = 1
-_WEBAPP_ONBOARDING_MAX_STEP = 2
+_WEBAPP_ONBOARDING_MAX_STEP = 4
 
 
 class WebAppAuthRequest(BaseModel):
@@ -87,13 +92,24 @@ async def webapp_auth(body: WebAppAuthRequest, db: AsyncSession = Depends(get_db
             detail={"code": "INVALID_INIT_DATA", "message": "User id missing"},
         )
     tg_id = int(tg_user_id)
-    # Ensure user exists so /me, trial, create-invoice etc. do not return USER_NOT_FOUND
+    requisites = build_tg_requisites(user)
+    # Ensure user exists and upsert meta["tg"] so every auth refreshes requisites
     existing = await db.execute(select(User).where(User.tg_id == tg_id))
-    if existing.scalar_one_or_none() is None:
+    db_user = existing.scalar_one_or_none()
+    if db_user is None:
         await db.execute(
-            pg_insert(User).values(tg_id=tg_id).on_conflict_do_nothing(index_elements=[User.tg_id])
+            pg_insert(User)
+            .values(tg_id=tg_id, meta={"tg": requisites} if requisites else None)
+            .on_conflict_do_nothing(index_elements=[User.tg_id])
         )
-        await db.commit()
+        await db.flush()
+        result = await db.execute(select(User).where(User.tg_id == tg_id))
+        db_user = result.scalar_one_or_none()
+    if db_user is not None and requisites:
+        meta = db_user.meta or {}
+        meta["tg"] = requisites
+        db_user.meta = meta
+    await db.commit()
     ttl = int(settings.webapp_session_expire_seconds)
     token = create_webapp_session_token(tg_id, expire_seconds=ttl)
     return {"session_token": token, "expires_in": ttl}
@@ -194,6 +210,10 @@ async def webapp_me(request: Request, db: AsyncSession = Depends(get_db)):
             "device_name": d.device_name,
             "issued_at": d.issued_at.isoformat(),
             "revoked_at": d.revoked_at.isoformat() if d.revoked_at else None,
+            "last_seen_handshake_at": d.last_seen_handshake_at.isoformat()
+            if d.last_seen_handshake_at
+            else None,
+            "apply_status": d.apply_status,
         }
         for d in user.devices
     ]
@@ -312,11 +332,12 @@ async def webapp_telemetry(
 async def webapp_usage(
     request: Request,
     range: str = "7d",
-    db: AsyncSession = Depends(get_db),  # noqa: ARG001  (reserved for future aggregation)
+    db: AsyncSession = Depends(get_db),
 ):
     """Return simple usage summary for the current user (bytes over time, sessions).
 
-    For now, this returns an empty series; future iterations can aggregate from telemetry storage.
+    Uses per-device telemetry from Redis; currently returns a single aggregate point for the
+    requested range.
     """
     tg_id = _get_tg_id_from_bearer(request)
     if not tg_id:
@@ -329,8 +350,64 @@ async def webapp_usage(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={"code": "BAD_RANGE", "message": "range must be '7d' or '30d'"},
         )
-    # Placeholder: no per-user traffic aggregation yet.
-    return WebAppUsageResponse(points=[], sessions=0, peak_hours=[])
+    # Resolve current user id for this Telegram id.
+    user_result = await db.execute(select(User.id).where(User.tg_id == tg_id))
+    user_id = user_result.scalar_one_or_none()
+    if not user_id:
+        return WebAppUsageResponse(points=[], sessions=0, peak_hours=[])
+
+    # Load non-revoked devices for the user.
+    devices_result = await db.execute(
+        select(Device.id).where(Device.user_id == user_id, Device.revoked_at.is_(None))
+    )
+    device_rows = devices_result.all()
+    device_ids = [str(row[0]) for row in device_rows]
+    if not device_ids:
+        return WebAppUsageResponse(points=[], sessions=0, peak_hours=[])
+
+    telemetry_map = await get_device_telemetry_bulk(device_ids)
+    if not telemetry_map:
+        return WebAppUsageResponse(points=[], sessions=0, peak_hours=[])
+
+    total_rx = 0
+    total_tx = 0
+    sessions = 0
+
+    for telemetry in telemetry_map.values():
+        rx = telemetry.transfer_rx_bytes or 0
+        tx = telemetry.transfer_tx_bytes or 0
+        total_rx += rx
+        total_tx += tx
+
+        age = telemetry.handshake_age_sec
+        if age is not None and 0 <= age <= 120:
+            sessions += 1
+
+    now = datetime.now(timezone.utc)
+    point = WebAppUsagePoint(ts=now, bytes_in=total_rx, bytes_out=total_tx)
+    return WebAppUsageResponse(points=[point], sessions=sessions, peak_hours=[])
+
+
+def _extract_plan_style(name: str) -> tuple[str, str]:
+    """Derive style + clean display name from stored plan name.
+
+    Convention (case-insensitive prefix):
+    - "[promo]" -> "promotional"
+    - "[popular]" -> "popular"
+    - "[normal]" or no prefix -> "normal"
+    """
+    raw = (name or "").strip()
+    lowered = raw.lower()
+    prefixes: list[tuple[str, str]] = [
+        ("[promo]", "promotional"),
+        ("[popular]", "popular"),
+        ("[normal]", "normal"),
+    ]
+    for token, style in prefixes:
+        if lowered.startswith(token):
+            clean = raw[len(token) :].lstrip()
+            return style, clean or raw
+    return "normal", raw
 
 
 @router.get("/plans")
@@ -341,7 +418,12 @@ async def webapp_list_plans(request: Request, db: AsyncSession = Depends(get_db)
         raise HTTPException(
             status_code=401, detail={"code": "UNAUTHORIZED", "message": "Invalid session"}
         )
-    result = await db.execute(select(Plan).order_by(Plan.id))
+    trial_plan_id = (getattr(settings, "trial_plan_id", "") or "").strip()
+    stmt = select(Plan)
+    if trial_plan_id:
+        stmt = stmt.where(Plan.id != trial_plan_id)
+    stmt = stmt.order_by(Plan.price_amount.asc(), Plan.duration_days.asc(), Plan.id.asc())
+    result = await db.execute(stmt)
     plans = result.scalars().all()
     user_result = await db.execute(select(User.id).where(User.tg_id == tg_id))
     user = user_result.scalar_one_or_none()
@@ -353,18 +435,22 @@ async def webapp_list_plans(request: Request, db: AsyncSession = Depends(get_db)
             payload={"source": "webapp"},
         )
         miniapp_events_total.labels(event="pricing_view").inc()
-    return {
-        "items": [
+    items = []
+    for p in plans:
+        style, clean_name = _extract_plan_style(p.name)
+        items.append(
             {
                 "id": p.id,
-                "name": p.name,
+                "name": clean_name or p.id,
                 "duration_days": p.duration_days,
                 "price_currency": p.price_currency,
                 "price_amount": float(p.price_amount),
+                "style": style,
             }
-            for p in plans
-        ],
-        "total": len(plans),
+        )
+    return {
+        "items": items,
+        "total": len(items),
     }
 
 
@@ -379,9 +465,127 @@ class WebAppIssueDeviceResponse(BaseModel):
     peer_created: bool  # True when peer was created on VPN node
 
 
+def _select_delivery_config_text(out: object) -> str:
+    """Pick first available config variant for chat delivery."""
+    for raw in (
+        getattr(out, "config_awg", None),
+        getattr(out, "config_wg_obf", None),
+        getattr(out, "config_wg", None),
+        # Legacy compatibility for alternate issue result shapes.
+        getattr(out, "config", None),
+    ):
+        if isinstance(raw, str) and raw.strip():
+            return raw
+    return ""
+
+
+async def _send_webapp_config_to_telegram(
+    tg_id: int,
+    device_id: str,
+    config_text: str,
+) -> None:
+    """Best-effort: send config text and .conf file to Telegram chat."""
+    token = (getattr(settings, "telegram_bot_token", None) or "").strip()
+    if not token or not config_text:
+        return
+    base_url = f"https://api.telegram.org/bot{token}"
+    log = logging.getLogger(__name__)
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            # Short info message (no full config text) to avoid size limits.
+            try:
+                r_msg = await client.post(
+                    f"{base_url}/sendMessage",
+                    json={
+                        "chat_id": tg_id,
+                        "text": "Your VPN config file is attached below. Keep it safe and do not share it.",
+                    },
+                )
+                if r_msg.status_code != 200:
+                    log.warning(
+                        "webapp_config_send_message_http_failed",
+                        extra={
+                            "status_code": r_msg.status_code,
+                            "body": redact_for_log(r_msg.text[:200]),
+                        },
+                    )
+            except Exception:
+                log.warning("webapp_config_send_message_failed", exc_info=True)
+            filename = f"vpn-config-{(device_id or '')[:8] or 'device'}.conf"
+            try:
+                r_doc = await client.post(
+                    f"{base_url}/sendDocument",
+                    data={"chat_id": str(tg_id)},
+                    files={
+                        "document": (
+                            filename,
+                            config_text.encode("utf-8"),
+                            "text/plain; charset=utf-8",
+                        ),
+                    },
+                )
+                if r_doc.status_code != 200:
+                    log.warning(
+                        "webapp_config_send_document_http_failed",
+                        extra={
+                            "status_code": r_doc.status_code,
+                            "body": redact_for_log(r_doc.text[:200]),
+                        },
+                    )
+            except Exception:
+                log.warning("webapp_config_send_document_failed", exc_info=True)
+    except Exception:
+        log.warning("webapp_config_send_telegram_failed", exc_info=True)
+
+
+@router.post("/debug/test-telegram-config")
+async def webapp_test_telegram_config(request: Request):
+    """Debug helper: send test config message + file to Telegram for current WebApp user."""
+    tg_id = _get_tg_id_from_bearer(request)
+    if not tg_id:
+        raise HTTPException(
+            status_code=401,
+            detail={"code": "UNAUTHORIZED", "message": "Invalid session"},
+        )
+    token = (getattr(settings, "telegram_bot_token", None) or "").strip()
+    if not token:
+        raise HTTPException(
+            status_code=503,
+            detail={"code": "WEBAPP_AUTH_DISABLED", "message": "WebApp auth not configured"},
+        )
+    base_url = f"https://api.telegram.org/bot{token}"
+    test_config = "[Interface]\nPrivateKey = TEST\nAddress = 10.0.0.2/32\n"
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        r_msg = await client.post(
+            f"{base_url}/sendMessage",
+            json={
+                "chat_id": tg_id,
+                "text": "Miniapp debug: test VPN config message. File should follow.",
+            },
+        )
+        r_doc = await client.post(
+            f"{base_url}/sendDocument",
+            data={"chat_id": str(tg_id)},
+            files={
+                "document": (
+                    "vpn-config-test.conf",
+                    test_config.encode("utf-8"),
+                    "text/plain; charset=utf-8",
+                ),
+            },
+        )
+    return {
+        "message_status": r_msg.status_code,
+        "message_body": redact_for_log(r_msg.text[:200]),
+        "document_status": r_doc.status_code,
+        "document_body": redact_for_log(r_doc.text[:200]),
+    }
+
+
 @router.post("/devices/issue", response_model=WebAppIssueDeviceResponse)
 async def webapp_issue_device(
     request: Request,
+    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
 ):
     """Issue a new device for the current user. Bearer session required. Returns one-time config."""
@@ -504,6 +708,14 @@ async def webapp_issue_device(
             },
         ) from e
     try:
+        await persist_issued_configs(
+            db,
+            device_id=out.device.id,
+            server_id=out.device.server_id,
+            config_awg=out.config_awg,
+            config_wg_obf=out.config_wg_obf,
+            config_wg=out.config_wg,
+        )
         await db.commit()
         await invalidate_devices_summary_cache()
         await invalidate_devices_list_cache()
@@ -518,6 +730,20 @@ async def webapp_issue_device(
                 "message": "Could not add device. Please try again or contact support.",
             },
         ) from commit_err
+    config_text = _select_delivery_config_text(out)
+    if config_text:
+        try:
+            background_tasks.add_task(
+                _send_webapp_config_to_telegram,
+                tg_id=tg_id,
+                device_id=out.device.id,
+                config_text=config_text,
+            )
+        except Exception:
+            logging.getLogger(__name__).warning(
+                "webapp_issue_device_schedule_telegram_failed",
+                exc_info=True,
+            )
     return WebAppIssueDeviceResponse(
         device_id=out.device.id,
         config=out.config_awg,
@@ -703,6 +929,33 @@ class WebAppPaymentStatusOut(BaseModel):
     valid_until: datetime | None = None
 
 
+class WebAppBillingHistoryItem(BaseModel):
+    payment_id: str
+    plan_id: str | None = None
+    plan_name: str
+    amount: float
+    currency: str
+    status: str
+    created_at: datetime
+    invoice_ref: str
+
+
+class WebAppBillingHistoryResponse(BaseModel):
+    items: list[WebAppBillingHistoryItem]
+    total: int
+
+
+def _webapp_history_status(payment_status: str, has_refund_event: bool) -> str:
+    if has_refund_event:
+        return "refunded"
+    normalized = (payment_status or "").lower()
+    if normalized == "completed":
+        return "paid"
+    if normalized == "failed":
+        return "failed"
+    return "pending"
+
+
 async def _create_telegram_invoice_link(
     title: str,
     description: str,
@@ -857,6 +1110,84 @@ async def webapp_create_invoice(
         "invoice_link": invoice_link,
         "free_activation": is_free,
     }
+
+
+@router.get("/payments/history", response_model=WebAppBillingHistoryResponse)
+async def webapp_payments_history(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    limit: int = Query(5, ge=1, le=50),
+    offset: int = Query(0, ge=0),
+):
+    """Return payment history for current user. Bearer session token required."""
+    tg_id = _get_tg_id_from_bearer(request)
+    if not tg_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"code": "UNAUTHORIZED", "message": "Invalid session"},
+        )
+    user_result = await db.execute(select(User.id).where(User.tg_id == tg_id))
+    user_id = user_result.scalar_one_or_none()
+    if not user_id:
+        return WebAppBillingHistoryResponse(items=[], total=0)
+
+    total_result = await db.execute(
+        select(func.count()).select_from(Payment).where(Payment.user_id == user_id)
+    )
+    total = int(total_result.scalar_one() or 0)
+
+    rows_result = await db.execute(
+        select(Payment, Subscription, Plan)
+        .join(Subscription, Payment.subscription_id == Subscription.id, isouter=True)
+        .join(Plan, Subscription.plan_id == Plan.id, isouter=True)
+        .where(Payment.user_id == user_id)
+        .order_by(Payment.created_at.desc(), Payment.id.desc())
+        .limit(limit)
+        .offset(offset)
+    )
+    rows = rows_result.all()
+    payment_ids = [payment.id for payment, _subscription, _plan in rows]
+
+    refunded_payment_ids: set[str] = set()
+    if payment_ids:
+        events_result = await db.execute(
+            select(PaymentEvent.payment_id, PaymentEvent.event_type).where(
+                PaymentEvent.payment_id.in_(payment_ids)
+            )
+        )
+        for payment_id, event_type in events_result.all():
+            if "refund" in str(event_type or "").lower():
+                refunded_payment_ids.add(str(payment_id))
+
+    items: list[WebAppBillingHistoryItem] = []
+    for payment, subscription, plan in rows:
+        fallback_plan_name = (
+            plan.name
+            if plan and plan.name
+            else subscription.plan_id
+            if subscription and subscription.plan_id
+            else "Unknown plan"
+        )
+        _style, clean_plan_name = _extract_plan_style(fallback_plan_name)
+        invoice_ref = payment.external_id or payment.id
+        history_status = _webapp_history_status(
+            payment_status=payment.status,
+            has_refund_event=payment.id in refunded_payment_ids,
+        )
+        items.append(
+            WebAppBillingHistoryItem(
+                payment_id=payment.id,
+                plan_id=subscription.plan_id if subscription else None,
+                plan_name=clean_plan_name or fallback_plan_name,
+                amount=float(payment.amount or 0),
+                currency=payment.currency,
+                status=history_status,
+                created_at=payment.created_at,
+                invoice_ref=invoice_ref,
+            )
+        )
+
+    return WebAppBillingHistoryResponse(items=items, total=total)
 
 
 @router.get("/payments/{payment_id}/status", response_model=WebAppPaymentStatusOut)

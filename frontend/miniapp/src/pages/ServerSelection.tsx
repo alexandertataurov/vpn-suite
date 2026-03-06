@@ -1,25 +1,22 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  Panel,
-  Button,
   Skeleton,
-  InlineAlert,
   useToast,
-  ProgressBar,
-  PageScaffold,
-  PageHeader,
+  PageFrame,
   PageSection,
-  ActionRow,
-  Body,
-  Caption,
-  H3,
-} from "../ui";
-import type { WebAppServersResponse, WebAppServerItem } from "@vpn-suite/shared/types";
-import { useWebappToken, webappApi } from "../api/client";
-import { useOnlineStatus } from "../hooks/useOnlineStatus";
-import { SessionMissing } from "@/components";
+  MissionAlert,
+  MissionCard,
+  MissionChip,
+  MissionModuleHead,
+  MissionPrimaryButton,
+  MissionProgressBar,
+  MissionSecondaryButton,
+  SessionMissing,
+} from "@/design-system";
+import type { WebAppServersResponse, WebAppServerItem } from "@/lib/types";
+import { useWebappToken, webappApi } from "@/api/client";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 
 export function ServerSelectionPage() {
   const hasToken = !!useWebappToken();
@@ -46,6 +43,8 @@ export function ServerSelectionPage() {
     },
     onSettled: () => setPendingServerId(null),
   });
+  const pageTitle = "Servers";
+  const pageSubtitle = "Choose route and location";
 
   if (!hasToken) {
     return (
@@ -55,36 +54,29 @@ export function ServerSelectionPage() {
 
   if (error) {
     return (
-      <PageScaffold>
-        <PageHeader title="Servers" />
-        <InlineAlert
-          variant="error"
-          title="Could not load servers"
-          message="We could not load server list. Please try again later."
-        />
-        <ActionRow fullWidth>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => queryClient.invalidateQueries({ queryKey: ["webapp", "servers"] })}
-          >
-            Try again
-          </Button>
-          <Link to="/" className="miniapp-back-link">
-            Back
-          </Link>
-        </ActionRow>
-      </PageScaffold>
+      <PageFrame title={pageTitle} subtitle={pageSubtitle}>
+        <MissionCard tone="red" className="module-card">
+          <MissionAlert
+            tone="error"
+            title="Could not load servers"
+            message="We could not load server list. Please try again later."
+          />
+          <div className="btn-row">
+            <MissionSecondaryButton onClick={() => queryClient.invalidateQueries({ queryKey: ["webapp", "servers"] })}>
+              Try again
+            </MissionSecondaryButton>
+          </div>
+        </MissionCard>
+      </PageFrame>
     );
   }
 
   if (isLoading || !data) {
     return (
-      <PageScaffold>
-        <PageHeader title="Servers" />
+      <PageFrame title={pageTitle} subtitle={pageSubtitle}>
         <Skeleton className="skeleton-h-lg" />
         <Skeleton className="skeleton-h-hero" />
-      </PageScaffold>
+      </PageFrame>
     );
   }
 
@@ -99,76 +91,134 @@ export function ServerSelectionPage() {
   };
 
   return (
-    <PageScaffold>
-      <PageHeader title="Servers" subtitle="90+ locations worldwide" />
-
-      <PageSection title="Selection mode" description="Choose automatic routing or lock a preferred location.">
-        <Panel className="card instrument-card instrument-card--inactive">
-          <Body>
+    <PageFrame title={pageTitle} subtitle={pageSubtitle}>
+      <PageSection title="Routing mode" description="Use automatic routing or lock a preferred location.">
+        <MissionCard tone="blue" className="module-card">
+          <p className="op-desc type-body-sm">
             {data.auto_select
               ? "Automatic server selection is enabled."
               : "Manual server preference is enabled."}
-          </Body>
-          <Caption>We prioritize healthy, low-load servers close to your region.</Caption>
-          <ActionRow fullWidth>
-            <Button
-              size="sm"
-              variant={data.auto_select ? "secondary" : "primary"}
-              onClick={handleAutoSelect}
-              loading={selectMutation.isPending && pendingServerId === "auto"}
-              disabled={!isOnline || (selectMutation.isPending && pendingServerId === "auto")}
-            >
-              Use best server
-            </Button>
-          </ActionRow>
-        </Panel>
+          </p>
+          <p className="op-desc type-body-sm">We prioritize healthy, low-load servers near your region.</p>
+          <div className="btn-row">
+            {data.auto_select ? (
+              <MissionSecondaryButton
+                onClick={handleAutoSelect}
+                disabled={!isOnline || (selectMutation.isPending && pendingServerId === "auto")}
+              >
+                {selectMutation.isPending && pendingServerId === "auto" ? (
+                  <>
+                    <svg className="spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
+                      <circle cx="12" cy="12" r="8" strokeOpacity="0.35" />
+                      <path d="M20 12a8 8 0 0 0-8-8" />
+                    </svg>
+                    <span>Applying…</span>
+                  </>
+                ) : (
+                  "Use best server"
+                )}
+              </MissionSecondaryButton>
+            ) : (
+              <MissionPrimaryButton
+                onClick={handleAutoSelect}
+                disabled={!isOnline || (selectMutation.isPending && pendingServerId === "auto")}
+              >
+                {selectMutation.isPending && pendingServerId === "auto" ? (
+                  <>
+                    <svg className="spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
+                      <circle cx="12" cy="12" r="8" strokeOpacity="0.35" />
+                      <path d="M20 12a8 8 0 0 0-8-8" />
+                    </svg>
+                    <span>Applying…</span>
+                  </>
+                ) : (
+                  "Use best server"
+                )}
+              </MissionPrimaryButton>
+            )}
+          </div>
+        </MissionCard>
       </PageSection>
 
-      <PageSection title="Locations">
-        <div className="server-grid">
-          {data.items.map((server) => { // key=
+      <PageSection
+        title="Locations"
+        action={<MissionChip tone="neutral" className="section-meta-chip miniapp-tnum">{data.items.length} nodes</MissionChip>}
+      >
+        <div className="stack">
+          {data.items.map((server) => {
             const load = server.load_percent ?? 0;
             const isPending = selectMutation.isPending && pendingServerId === server.id;
             const code = (server.region ?? server.name ?? "??").slice(0, 2).toUpperCase();
             return (
-              <Panel
-                key={server.id}
-                className={`card instrument-card ${server.is_current ? "instrument-card--active" : "instrument-card--inactive"} server-row-card`}
-              >
-                <span className="server-row-code">{code}</span>
-                <div className="server-row-details">
-                  <H3 as="h3" className="server-row-name tracking-trim data-truncate">
-                    {server.name}
-                  </H3>
-                  <Caption className="server-row-meta" tabular>
-                    {server.avg_ping_ms != null ? `${Math.round(server.avg_ping_ms)} ms` : "—"}
-                  </Caption>
+              <MissionCard key={server.id} tone={server.is_current ? "green" : "blue"} className="module-card">
+                <MissionModuleHead
+                  label={`Node ${code}`}
+                  chip={<MissionChip tone={server.is_current ? "green" : "neutral"}>{server.is_current ? "Current" : "Available"}</MissionChip>}
+                />
+                <div className="data-grid">
+                  <div className="data-cell">
+                    <div className="dc-key">Location</div>
+                    <div className="dc-val teal">{server.name}</div>
+                  </div>
+                  <div className="data-cell">
+                    <div className="dc-key">Latency</div>
+                    <div className={`dc-val ${server.avg_ping_ms != null ? "green" : "mut"} miniapp-tnum`}>
+                      {server.avg_ping_ms != null ? `${Math.round(server.avg_ping_ms)}ms` : "--"}
+                    </div>
+                  </div>
                 </div>
-                <div className="server-row-load">
-                  <Caption className="server-row-load-value" tabular>
-                    {Math.round(load)}% load
-                  </Caption>
-                  <ProgressBar
-                    value={load}
-                    max={100}
-                    className="server-row-load-bar"
-                    aria-label={`${server.name} load ${Math.round(load)}%`}
+                <div className="server-load">
+                  <div className="module-head">
+                    <span className="dc-key">Load</span>
+                    <span className="dc-val miniapp-tnum">{Math.round(load)}%</span>
+                  </div>
+                  <MissionProgressBar
+                    percent={load}
+                    tone={load >= 85 ? "danger" : load >= 65 ? "warning" : "healthy"}
+                    staticFill
+                    ariaLabel={`${server.name} load ${Math.round(load)}%`}
                   />
                 </div>
-                <Button
-                  size="sm"
-                  variant={server.is_current ? "secondary" : "primary"}
-                  onClick={() => handleSelectServer(server)}
-                  loading={isPending}
-                  disabled={!isOnline || isPending}
-                >
-                  {server.is_current ? "Selected" : "Select"}
-                </Button>
-              </Panel>
+                {server.is_current ? (
+                  <MissionSecondaryButton
+                    onClick={() => handleSelectServer(server)}
+                    disabled={!isOnline || isPending}
+                  >
+                    {isPending ? (
+                      <>
+                        <svg className="spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
+                          <circle cx="12" cy="12" r="8" strokeOpacity="0.35" />
+                          <path d="M20 12a8 8 0 0 0-8-8" />
+                        </svg>
+                        <span>Selecting…</span>
+                      </>
+                    ) : (
+                      "Current"
+                    )}
+                  </MissionSecondaryButton>
+                ) : (
+                  <MissionPrimaryButton
+                    onClick={() => handleSelectServer(server)}
+                    disabled={!isOnline || isPending}
+                  >
+                    {isPending ? (
+                      <>
+                        <svg className="spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
+                          <circle cx="12" cy="12" r="8" strokeOpacity="0.35" />
+                          <path d="M20 12a8 8 0 0 0-8-8" />
+                        </svg>
+                        <span>Selecting…</span>
+                      </>
+                    ) : (
+                      "Select"
+                    )}
+                  </MissionPrimaryButton>
+                )}
+              </MissionCard>
             );
           })}
         </div>
       </PageSection>
-    </PageScaffold>
+    </PageFrame>
   );
 }

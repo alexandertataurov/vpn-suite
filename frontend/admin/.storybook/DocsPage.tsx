@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Description, Canvas, DocsPage as StorybookDocsPage } from "@storybook/blocks";
-import { PrimitiveDivider, Tabs, Button } from "../src/design-system";
+import { PrimitiveDivider, Tabs, Button } from "./design-system-compat";
 import { ThumbsUp, ThumbsDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { DOCS_EDIT_BASE_URL, DEFAULT_DOCS_EDIT_PATH } from "./docsConfig";
 import { ComponentHero } from "./components/docs/ComponentHero";

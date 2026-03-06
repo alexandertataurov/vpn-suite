@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { expect, userEvent, within } from "@storybook/test";
-import { Button, Input } from "@/design-system";
+import { Button, Input } from "@/design-system/primitives";
 import { renderDarkLight, renderAtBreakpoints } from "../../../../.storybook/utils/storyRenderers";
 
 const meta: Meta<typeof Input> = {
@@ -178,13 +178,13 @@ export const AllStates: Story = {
 
 export const InContext: Story = {
   render: () => (
-    <form onSubmit={(e) => e.preventDefault()} style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 360 }}>
+    <div className="sb-form-demo" role="form" aria-label="Server form">
       <Input label="Server name" placeholder="e.g. core-edge-01" description="Unique identifier for this node." />
       <div className="sb-row">
         <Button variant="ghost">Cancel</Button>
         <Button variant="primary">Save</Button>
       </div>
-    </form>
+    </div>
   ),
   parameters: {
     docs: {
@@ -201,8 +201,8 @@ export const InContext: Story = {
 export const WithPrefixSuffix: Story = {
   render: () => (
     <div className="sb-stack">
-      <Input label="Search" placeholder="Search servers..." prefix={<span aria-hidden style={{ opacity: 0.7 }}>🔍</span>} />
-      <Input label="Port" type="number" placeholder="51820" suffix={<span style={{ fontSize: 12, color: "var(--color-text-muted)" }}>UDP</span>} />
+      <Input label="Search" placeholder="Search servers..." prefix={<span className="sb-input-prefix-icon" aria-hidden>🔍</span>} />
+      <Input label="Port" type="number" placeholder="51820" suffix={<span className="sb-input-suffix-unit">UDP</span>} />
     </div>
   ),
   parameters: {
@@ -268,7 +268,7 @@ export const EdgeCases: Story = {
 export const Accessibility: Story = {
   render: () => (
     <div className="sb-stack">
-      <p style={{ margin: 0, fontSize: 12, color: "var(--color-text-muted)" }}>
+      <p className="sb-a11y-note">
         Tab to focus. Label associated; error in aria-describedby.
       </p>
       <Input label="Labeled input" placeholder="Tab to focus" />

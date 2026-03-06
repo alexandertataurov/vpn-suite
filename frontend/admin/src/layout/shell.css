@@ -1,0 +1,268 @@
+/* Shell and layout — primitives tokens only.
+   .shell grid is defined in design-system/primitives/primitives-dashboard.css;
+   do not override it here. */
+
+/* Skip link — visually hidden until focused */
+.skip-link {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  padding: var(--sp-2) var(--sp-4);
+  background: var(--s0);
+  border: 1px solid var(--bd-def);
+  border-radius: 0 0 var(--r);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--tx-pri);
+  text-decoration: none;
+  clip-path: inset(50%);
+  overflow: hidden;
+}
+.skip-link:focus {
+  clip-path: none;
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.shell {
+  position: relative;
+}
+
+/* Fallback for .main when shell uses grid (topbar + sidebar + main) */
+.shell > .main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.shell .main .main__body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.shell .main .page {
+  flex: 1;
+  padding: var(--sp-4);
+  max-width: 1600px;
+  width: 100%;
+  margin: 0 auto;
+  overflow: auto;
+}
+
+.shell__aside {
+  flex-shrink: 0;
+  width: 72px;
+  background: var(--s0);
+  border-right: 1px solid var(--bd-sub);
+}
+
+.shell__main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.shell__content {
+  flex: 1;
+  padding: var(--sp-4);
+  max-width: 1600px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.shell-loading {
+  padding: var(--sp-4);
+}
+
+/* Nav rail — primitives-aligned */
+.nav-rail {
+  padding: var(--sp-2) 0;
+}
+
+.nav-rail__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-rail__link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: var(--sp-3) var(--sp-1);
+  margin: 0 var(--sp-1);
+  color: var(--tx-mut);
+  text-decoration: none;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  border-radius: var(--r);
+  border-left: 2px solid transparent;
+  transition: color 0.1s, background 0.1s, border-color 0.1s;
+}
+
+.nav-rail__link:hover {
+  color: var(--tx-sec);
+  background: var(--s2);
+  border-color: var(--bd-hi);
+}
+
+.nav-rail__link--active {
+  color: var(--blue);
+  background: var(--s2);
+  border-left-color: var(--blue);
+}
+
+.nav-rail__short {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.nav-rail__label {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.100em;
+}
+
+/* Mission bar — primitives */
+.mission-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-2) var(--sp-4);
+  border-bottom: 1px solid var(--bd-sub);
+  background: var(--s1);
+}
+
+.mission-bar__title {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--tx-pri);
+}
+
+.mission-bar__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.shell-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+/* Error boundary — primitives */
+.error-boundary {
+  padding: var(--sp-4);
+  max-width: 480px;
+  margin: var(--sp-4) auto;
+}
+
+.error-boundary__title {
+  margin: 0 0 var(--sp-2);
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--tx-pri);
+}
+
+.error-boundary__message {
+  margin: 0 0 var(--sp-4);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--tx-sec);
+}
+
+.error-boundary__actions {
+  display: flex;
+  gap: var(--sp-2);
+}
+
+.error-boundary__btn {
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--blue-d);
+  color: var(--blue);
+  border: 1px solid var(--blue-b);
+  border-radius: var(--r);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: 0.100em;
+  text-transform: uppercase;
+  transition: background 0.1s, border-color 0.1s, color 0.1s;
+}
+
+.error-boundary__btn:hover {
+  background: var(--s2);
+  border-color: var(--blue-b);
+}
+
+.error-boundary__btn:focus-visible {
+  box-shadow: 0 0 0 2px var(--focus-ring);
+}
+
+/* Page — primitives typography & spacing */
+.page {
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  color: var(--tx-sec);
+}
+
+.page h2 {
+  margin: 0 0 var(--sp-2);
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--tx-pri);
+}
+
+/* Sidebar overlay at 768px — hamburger opens full-width nav over content */
+@media (max-width: 768px) {
+  .sidebar-overlay-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 299;
+    background: rgba(0, 0, 0, 0.4);
+    border: none;
+    padding: 0;
+    cursor: default;
+    font-size: 0;
+  }
+  .sidebar.sidebar--overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 208px;
+    height: 100vh;
+    z-index: 300;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+  .sidebar.sidebar--overlay .sb-section,
+  .sidebar.sidebar--overlay .nav-a span:not(.nb),
+  .sidebar.sidebar--overlay .sb-foot {
+    display: block;
+  }
+  .sidebar.sidebar--overlay .nav-a span:not(.nb) {
+    display: inline;
+  }
+  .sidebar.sidebar--overlay .nav-a {
+    justify-content: flex-start;
+    padding: 6px 16px;
+  }
+}

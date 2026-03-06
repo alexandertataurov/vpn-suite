@@ -6,8 +6,8 @@ import type {
   WebAppOnboardingState,
   WebAppOnboardingStateRequest,
   WebAppOnboardingStateResponse,
-} from "@vpn-suite/shared/types";
-import { ApiError } from "@vpn-suite/shared/types";
+} from "@/lib/types";
+import { ApiError } from "@/lib/types";
 import { setWebappToken, useWebappToken, webappApi } from "../api/client";
 import { useSession } from "../hooks/useSession";
 import {
@@ -16,7 +16,7 @@ import {
   saveOnboardingResume,
 } from "./bootstrapStorage";
 
-const ONBOARDING_MAX_STEP = 2;
+const ONBOARDING_MAX_STEP = 4;
 const ONBOARDING_VERSION = 1;
 const SPLASH_DURATION_MS = 900;
 const STARTUP_SOFT_TIMEOUT_MS = 1_500;

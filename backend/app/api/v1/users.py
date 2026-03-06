@@ -1,8 +1,6 @@
 """Users API: search, get, update (ban with confirm), devices list and issue."""
 
-import hashlib
 import logging
-import secrets
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
 from sqlalchemy import delete, func, or_, select, update
@@ -28,7 +26,6 @@ from app.core.exceptions import LoadBalancerError, WireGuardCommandError
 from app.core.metrics import vpn_config_regen_cap_hits_total
 from app.core.rbac import require_permission
 from app.core.redis_client import get_redis
-from app.core.security import encrypt_config
 from app.models import (
     AbuseSignal,
     ChurnRiskScore,
@@ -50,6 +47,7 @@ from app.schemas.device import DeviceListItemOut, IssueRequest, IssueResponse, U
 from app.schemas.subscription import SubscriptionOut
 from app.schemas.user import UserCreate, UserDetail, UserList, UserOut, UserUpdate
 from app.services.funnel_service import log_funnel_event
+from app.services.issued_config_service import persist_issued_configs
 from app.services.issue_service import issue_device
 from app.services.server_live_key_service import ServerNotSyncedError
 from app.services.topology_engine import TopologyEngine
@@ -430,28 +428,14 @@ async def issue_user_device(
         )
     except (LoadBalancerError, WireGuardCommandError) as e:
         raise_http_for_control_plane_exception(e)
-    await db.commit()
-    # Persist IssuedConfig so admin panel shows configs (same as admin issue flow)
-    _issue_config_token_bytes = 32
-    for profile_type, config_text in [
-        ("awg", out.config_awg),
-        ("wg_obf", out.config_wg_obf),
-        ("wg", out.config_wg),
-    ]:
-        if not config_text:
-            continue
-        token = secrets.token_hex(_issue_config_token_bytes)
-        token_hash = hashlib.sha256(token.encode()).hexdigest()
-        db.add(
-            IssuedConfig(
-                device_id=out.device.id,
-                server_id=out.device.server_id,
-                profile_type=profile_type,
-                download_token_hash=token_hash,
-                config_encrypted=encrypt_config(config_text),
-                issued_by_admin_id=None,
-            )
-        )
+    await persist_issued_configs(
+        db,
+        device_id=out.device.id,
+        server_id=out.device.server_id,
+        config_awg=out.config_awg,
+        config_wg_obf=out.config_wg_obf,
+        config_wg=out.config_wg,
+    )
     await db.commit()
     await invalidate_devices_summary_cache()
     await invalidate_devices_list_cache()

@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { NavBadge, NavLabel } from "@/design-system";
+import { NavBadge, NavLabel } from "@/design-system/typography";
 
 export interface NavItem {
   to: string;

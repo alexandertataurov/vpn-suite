@@ -35,6 +35,18 @@ export function formatDateTime(
   });
 }
 
+/** Relative time: "just now", "5 min ago", "2 h ago", or locale date. */
+export function formatRelative(iso: string | null): string {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  const sec = Math.floor((Date.now() - d.getTime()) / 1000);
+  if (sec < 60) return "just now";
+  if (sec < 3600) return `${Math.floor(sec / 60)} min ago`;
+  if (sec < 86400) return `${Math.floor(sec / 3600)} h ago`;
+  return d.toLocaleDateString();
+}
+
 // --- Chart / numeric formatters ---
 
 export type TimeZoneMode = "local" | "utc";

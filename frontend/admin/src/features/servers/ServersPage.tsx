@@ -1,21 +1,49 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useApiQuery } from "@/core/api/useApiQuery";
 import { useApi } from "@/core/api/context";
 import {
-  AnimatedNumber,
   Badge,
   Button,
   DataTable,
   EmptyState,
   ErrorState,
   Input,
-  MetaText,
   Modal,
-  SectionTitle,
+  SectionHeader,
   Skeleton,
   Widget,
-} from "@/design-system";
-import type { ServerList, ServerOut, ServerSyncResponse } from "@/shared/types/admin-api";
+} from "@/design-system/primitives";
+import {
+  ClusterLoadWidget,
+  IncidentsWidget,
+  ServersSummaryWidget,
+} from "@/design-system/widgets";
+import { VpnNodeDrilldown, VpnNodeGrid } from "@/design-system/widgets/vpn-node";
+import { PageLayout } from "@/layout/PageLayout";
+import { MetaText } from "@/design-system/typography";
+import type {
+  OperatorServerRow,
+  ServerList,
+  ServerOut,
+  ServerSyncResponse,
+} from "@/shared/types/admin-api";
+import type { VpnNodeCard as VpnNodeCardType } from "@/features/vpn-nodes/types";
+import { formatRelative } from "@/shared/utils/format";
+
+/** Operator dashboard slice: servers + incidents (cluster metrics from servers). */
+interface OperatorDashboard {
+  servers: OperatorServerRow[];
+  incidents?: Array<{
+    severity: string;
+    entity: string;
+    metric: string;
+    value: unknown;
+    timestamp: string;
+    status: string;
+    affected_servers?: number;
+    link?: string;
+  }>;
+}
 
 interface ServerSnapshotSummaryEntry {
   cpu_pct: number | null;
@@ -36,15 +64,12 @@ interface ServersSnapshotSummaryOut {
   servers: Record<string, ServerSnapshotSummaryEntry>;
 }
 
-function formatRelative(iso: string | null): string {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "—";
-  const sec = Math.floor((Date.now() - d.getTime()) / 1000);
-  if (sec < 60) return "just now";
-  if (sec < 3600) return `${Math.floor(sec / 60)} min ago`;
-  if (sec < 86400) return `${Math.floor(sec / 3600)} h ago`;
-  return d.toLocaleDateString();
+function formatBps(bps: number): string {
+  if (bps == null) return "—";
+  if (bps >= 1e9) return `${(bps / 1e9).toFixed(1)} Gbps`;
+  if (bps >= 1e6) return `${(bps / 1e6).toFixed(1)} Mbps`;
+  if (bps >= 1e3) return `${(bps / 1e3).toFixed(0)} Kbps`;
+  return `${bps} bps`;
 }
 
 function formatPercent(v: number | null | undefined): string {
@@ -60,6 +85,7 @@ function formatRatio(numerator: number | null | undefined, denominator: number |
 
 export function ServersPage() {
   const [serverFilter, setServerFilter] = useState("");
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
 
   const { data, isLoading, isError, error, refetch } = useApiQuery<ServersSnapshotSummaryOut>(
     ["servers", "snapshots", "summary"],
@@ -67,54 +93,120 @@ export function ServersPage() {
     { retry: 1 }
   );
 
+  const { data: operatorData, refetch: refetchOperator } = useApiQuery<OperatorDashboard>(
+    ["overview", "operator", "1h"],
+    "/overview/operator?time_range=1h",
+    { retry: 1, staleTime: 30_000 }
+  );
+
+  const { data: vpnNodeCards, isLoading: vpnNodesLoading } = useApiQuery<VpnNodeCardType[]>(
+    ["servers", "vpn-nodes"],
+    "/servers/vpn-nodes",
+    { retry: 1, staleTime: 30_000 }
+  );
+
+  const operatorServers = useMemo(() => operatorData?.servers ?? [], [operatorData?.servers]);
+  const incidents = useMemo(() => operatorData?.incidents ?? [], [operatorData?.incidents]);
+  const incidentCounts = useMemo(() => {
+    const by: Record<string, number> = {};
+    for (const i of incidents) {
+      const key = (i.severity || "unknown").toString();
+      by[key] = (by[key] ?? 0) + 1;
+    }
+    return by;
+  }, [incidents]);
+
+  const vpnNodeRegions = useMemo(() => {
+    if (!vpnNodeCards?.length) return [];
+    const set = new Set<string>();
+    vpnNodeCards.forEach((c) => {
+      if (c.identity.region) set.add(c.identity.region);
+    });
+    return Array.from(set).sort();
+  }, [vpnNodeCards]);
+
+  const clusterMetrics = useMemo(() => {
+    const cpuVals = operatorServers.map((s) => s.cpu_pct).filter((v): v is number => v != null && Number.isFinite(v));
+    const ramVals = operatorServers.map((s) => s.ram_pct).filter((v): v is number => v != null && Number.isFinite(v));
+    const avgCpu = cpuVals.length ? Math.round((cpuVals.reduce((a, b) => a + b, 0) / cpuVals.length) * 10) / 10 : null;
+    const avgRam = ramVals.length ? Math.round((ramVals.reduce((a, b) => a + b, 0) / ramVals.length) * 10) / 10 : null;
+    const totalThroughput = operatorServers.reduce((sum, s) => sum + (s.throughput_bps ?? 0), 0);
+    return [
+      { key: "CPU", value: avgCpu != null ? `${avgCpu}%` : "—", percent: avgCpu ?? undefined },
+      { key: "RAM", value: avgRam != null ? `${avgRam}%` : "—", percent: avgRam ?? undefined },
+      { key: "Bandwidth", value: formatBps(totalThroughput) },
+    ];
+  }, [operatorServers]);
+
+  const incidentsData = useMemo(
+    () => ({
+      critical: incidentCounts.critical ?? 0,
+      warning: incidentCounts.warning ?? 0,
+      unhealthyNodes: (incidentCounts.critical ?? 0) + (incidentCounts.warning ?? 0),
+    }),
+    [incidentCounts]
+  );
+
+  const entries = useMemo(() => {
+    if (!data || Object.keys(data.servers).length === 0) return [];
+    return Object.entries(data.servers);
+  }, [data]);
+
+  const { totalServers, totalActivePeers, totalPeers, usedIps, totalIps } = useMemo(() => {
+    let active = 0;
+    let total = 0;
+    let u = 0;
+    let ti = 0;
+    for (const [, e] of entries) {
+      active += e.active_peers ?? 0;
+      total += e.total_peers ?? 0;
+      u += e.used_ips ?? 0;
+      ti += e.total_ips ?? 0;
+    }
+    return {
+      totalServers: entries.length,
+      totalActivePeers: active,
+      totalPeers: total,
+      usedIps: u,
+      totalIps: ti,
+    };
+  }, [entries]);
+
+  const handleRefresh = useCallback(async () => {
+    await Promise.all([refetch(), refetchOperator()]);
+  }, [refetch, refetchOperator]);
+
+  const handleSelectVpnNode = useCallback((nodeId: string) => setSelectedNodeId(nodeId), []);
+  const handleCloseVpnDrilldown = useCallback(() => setSelectedNodeId(null), []);
+
   if (isLoading) {
     return (
-      <div className="page servers-page" data-testid="servers-page">
+      <PageLayout title="Servers" pageClass="servers-page" dataTestId="servers-page" hideHeader>
         <Skeleton height={32} width="30%" />
         <Skeleton height={200} />
-      </div>
+      </PageLayout>
     );
   }
 
   if (isError) {
     return (
-      <div className="page servers-page" data-testid="servers-page">
+      <PageLayout title="Servers" pageClass="servers-page" dataTestId="servers-page" hideHeader>
         <ErrorState
           message={error instanceof Error ? error.message : "Failed to load servers"}
           onRetry={() => refetch()}
         />
-      </div>
+      </PageLayout>
     );
   }
 
   if (!data || Object.keys(data.servers).length === 0) {
     return (
-      <div className="page servers-page" data-testid="servers-page">
-        <SectionTitle>Servers</SectionTitle>
+      <PageLayout title="Servers" pageClass="servers-page" dataTestId="servers-page">
         <div className="table-empty" data-testid="servers-table">
           <EmptyState message="No servers ready yet. Once telemetry snapshots are available, they will appear here." />
         </div>
-      </div>
+      </PageLayout>
     );
-  }
-
-  const entries = Object.entries(data.servers);
-
-  const totalServers = entries.length;
-  const cpuValues = entries.map(([, e]) => e.cpu_pct).filter((v): v is number => v != null);
-  const ramValues = entries.map(([, e]) => e.ram_pct).filter((v): v is number => v != null);
-  const avgCpu = cpuValues.length ? cpuValues.reduce((a, b) => a + b, 0) / cpuValues.length : null;
-  const avgRam = ramValues.length ? ramValues.reduce((a, b) => a + b, 0) / ramValues.length : null;
-
-  let totalActivePeers = 0;
-  let totalPeers = 0;
-  let usedIps = 0;
-  let totalIps = 0;
-  for (const [, e] of entries) {
-    totalActivePeers += e.active_peers ?? 0;
-    totalPeers += e.total_peers ?? 0;
-    usedIps += e.used_ips ?? 0;
-    totalIps += e.total_ips ?? 0;
   }
 
   const rows = (() => {
@@ -127,6 +219,7 @@ export function ServersPage() {
         else statusVariant = "danger";
       }
       return {
+        id: serverId,
         serverId,
         cpu: formatPercent(entry.cpu_pct),
         ram: formatPercent(entry.ram_pct),
@@ -142,38 +235,120 @@ export function ServersPage() {
     return allRows.filter((r) => r.serverId.toLowerCase().includes(q));
   })();
 
+  const tableRows = rows.map((row) => ({
+    id: row.id,
+    serverId: <span className="cell-identifier">{row.serverId}</span>,
+    health: (
+      <Badge variant={row.statusVariant === "neutral" ? "neutral" : row.statusVariant} size="sm">
+        {row.health}
+      </Badge>
+    ),
+    cpu: row.cpu,
+    ram: row.ram,
+    peers: row.peers,
+    ips: row.ips,
+    source: <span className="cell-muted">{row.source}</span>,
+    statusVariant: row.statusVariant,
+  }));
+
   return (
-    <div className="page servers-page" data-testid="servers-page">
-      <SectionTitle>Servers</SectionTitle>
-      <div className="servers-page__summary">
-        <Widget title="Tracked servers" subtitle="snapshot inventory" variant="kpi" href="/servers">
-          <div className="kpi__value">
-            <AnimatedNumber value={rows.length} />
+    <PageLayout
+      title="Servers"
+      pageClass="servers-page"
+      dataTestId="servers-page"
+      description={
+        <>
+          <span className="dot" />
+          <span>{totalServers} servers</span>
+          <span className="sep">·</span>
+          <span>Peers {totalActivePeers}/{totalPeers}</span>
+        </>
+      }
+      actions={
+        <Button type="button" variant="default" onClick={() => void handleRefresh()} aria-label="Refresh">
+          Refresh
+        </Button>
+      }
+    >
+      {(incidentCounts.critical ?? 0) > 0 && (
+        <div className="alert danger" role="alert" aria-live="assertive">
+          <span className="alert-icon" aria-hidden>✕</span>
+          <div>
+            <div className="alert-title">Critical incidents</div>
+            <div className="alert-desc">
+              {incidentCounts.critical} critical {incidentCounts.critical === 1 ? "incident" : "incidents"} reported.
+              Check servers and telemetry.
+            </div>
           </div>
-        </Widget>
-        <Widget title="Avg CPU" subtitle="across reporting servers" variant="kpi" href="/telemetry">
-          <div className="kpi__value">
-            {avgCpu == null ? "—" : <><AnimatedNumber value={avgCpu} decimals={1} />%</>}
-          </div>
-        </Widget>
-        <Widget title="Avg RAM" subtitle="across reporting servers" variant="kpi" href="/telemetry">
-          <div className="kpi__value">
-            {avgRam == null ? "—" : <><AnimatedNumber value={avgRam} decimals={1} />%</>}
-          </div>
-        </Widget>
-        <Widget title="Peers" subtitle="active / total" variant="kpi" href="/telemetry">
-          <div className="kpi__value">
-            {totalPeers === 0 ? "—" : <><AnimatedNumber value={totalActivePeers} />/<AnimatedNumber value={totalPeers} /></>}
-          </div>
-        </Widget>
-        <Widget title="IP capacity" subtitle="used / total" variant="kpi" href="/servers">
-          <div className="kpi__value">
-            {totalIps === 0 ? "—" : <><AnimatedNumber value={usedIps} />/<AnimatedNumber value={totalIps} /></>}
-          </div>
-        </Widget>
-      </div>
+        </div>
+      )}
+      <section className="servers-page__widgets" aria-label="Servers widgets">
+        <SectionHeader label="Servers" size="lg" note="Last 1h" />
+        <div className="servers-page__widgets-row">
+          <ServersSummaryWidget
+            data={{
+              totalServers,
+              totalActivePeers,
+              totalPeers,
+              usedIps,
+              totalIps,
+            }}
+            href="/servers/nodes"
+            title="Servers"
+            subtitle="count · peers · IPs"
+            className="edge et"
+          />
+          <IncidentsWidget
+            data={incidentsData}
+            href="/servers"
+            title="Incidents"
+            subtitle="live signals"
+            className="edge ea"
+          />
+          <ClusterLoadWidget
+            data={{ mode: "grid", metrics: clusterMetrics }}
+            href="/telemetry"
+            title="Cluster load"
+            subtitle="CPU/RAM (avg)"
+            className="edge eg"
+          />
+          <Widget
+            title="Egress cost estimator"
+            subtitle="Placeholder"
+            size="medium"
+            className="edge eb cc"
+          >
+            <p className="servers-page__muted type-meta">
+              Coming soon. Estimate egress cost from traffic and provider rates.
+            </p>
+          </Widget>
+        </div>
+      </section>
+      <section
+        className="servers-page__vpn-nodes"
+        aria-label="VPN nodes"
+        data-testid="servers-page-vpn-nodes"
+      >
+        <SectionHeader label="VPN nodes" size="lg" note="Operator grid · Last 1h" />
+        {vpnNodesLoading ? (
+          <Skeleton height={200} />
+        ) : (
+          <VpnNodeGrid
+            cards={vpnNodeCards ?? []}
+            regions={vpnNodeRegions}
+            onSelectNode={handleSelectVpnNode}
+            showSectionHeader={false}
+          />
+        )}
+      </section>
+      <VpnNodeDrilldown
+        nodeId={selectedNodeId}
+        open={selectedNodeId != null}
+        onClose={handleCloseVpnDrilldown}
+      />
       <div className="servers-page__controls">
         <Input
+          size="sm"
           value={serverFilter}
           onChange={(e) => setServerFilter(e.target.value)}
           placeholder="Filter by server ID"
@@ -185,56 +360,41 @@ export function ServersPage() {
           Showing {rows.length} of {totalServers} servers
         </MetaText>
       </div>
+      <SectionHeader label="Servers" size="lg" />
       <div data-testid="servers-table" className="data-table-wrap">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Server ID</th>
-              <th>CPU</th>
-              <th>RAM</th>
-              <th>Peers (active/total)</th>
-              <th>IPs (used/total)</th>
-              <th>Health</th>
-              <th>Source</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => {
-              const rowClass =
-                row.statusVariant === "neutral" ? "" : `row-${row.statusVariant}`;
-              const badgeVariant =
-                row.statusVariant === "neutral" ? "neutral" : row.statusVariant;
-              return (
-                <tr key={row.serverId} className={rowClass}>
-                  <td>
-                    <span className="cell-primary">{row.serverId}</span>
-                  </td>
-                  <td>{row.cpu}</td>
-                  <td>{row.ram}</td>
-                  <td>{row.peers}</td>
-                  <td>{row.ips}</td>
-                  <td>
-                    <Badge variant={badgeVariant} size="sm">
-                      {row.health}
-                    </Badge>
-                  </td>
-                  <td>
-                    <span className="cell-muted">{row.source}</span>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        <DataTable
+          density="compact"
+          columns={[
+            { key: "serverId", header: "Server ID" },
+            { key: "health", header: "Health" },
+            { key: "cpu", header: "CPU" },
+            { key: "ram", header: "RAM" },
+            { key: "peers", header: "Peers (active/total)" },
+            { key: "ips", header: "IPs (used/total)" },
+            { key: "source", header: "Source" },
+          ]}
+          rows={tableRows}
+          getRowKey={(row) => row.id}
+          getRowClassName={(row) =>
+            row.statusVariant === "neutral" ? undefined : `row-${row.statusVariant}`
+          }
+        />
       </div>
-      <ServersSettingsPanel />
-    </div>
+      <ServersSettingsPanel operatorServers={operatorServers} />
+    </PageLayout>
   );
 }
 
-function ServersSettingsPanel() {
+function ServersSettingsPanel({
+  operatorServers = [],
+}: {
+  /** From /overview/operator; used for per-node RTT/loss in server detail. */
+  operatorServers?: OperatorServerRow[];
+}) {
   const api = useApi();
   const [selectedServer, setSelectedServer] = useState<ServerOut | null>(null);
+  const [serverToDelete, setServerToDelete] = useState<ServerOut | null>(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionPending, setActionPending] = useState(false);
@@ -322,14 +482,21 @@ function ServersSettingsPanel() {
     });
   }, [api, runAction, selectedServer]);
 
-  const handleDelete = useCallback(() => {
+  const handleDeleteClick = useCallback(() => {
     if (!selectedServer) return;
-    // Hard delete; backend protects via 409 when devices reference server.
+    setServerToDelete(selectedServer);
+    setDeleteConfirmText("");
+  }, [selectedServer]);
+
+  const handleDeleteSubmit = useCallback(() => {
+    if (!serverToDelete) return;
     runAction(async () => {
-      await api.request(`/servers/${selectedServer.id}`, { method: "DELETE" });
+      await api.request(`/servers/${serverToDelete.id}`, { method: "DELETE" });
       setSelectedServer(null);
+      setServerToDelete(null);
+      setDeleteConfirmText("");
     });
-  }, [api, runAction, selectedServer]);
+  }, [api, runAction, serverToDelete]);
 
   const handleCreateSubmit = useCallback(() => {
     const body: Record<string, unknown> = {
@@ -379,7 +546,7 @@ function ServersSettingsPanel() {
   if (!data || data.items.length === 0) {
     return (
       <div className="servers-page__settings">
-        <h3 className="servers-page__settings-title">Server settings</h3>
+        <SectionHeader label="Server settings" size="sm" />
         <EmptyState message="No servers defined yet. Use Add server to register a node." />
         <Button type="button" onClick={() => setIsCreateOpen(true)}>
           Add server
@@ -397,7 +564,7 @@ function ServersSettingsPanel() {
     last_seen: formatRelative(s.last_seen_at ?? null),
     provider: s.provider ?? "—",
     actions: (
-      <Button type="button" variant="secondary" onClick={() => handleOpen(s)}>
+      <Button type="button" variant="secondary" size="sm" onClick={() => handleOpen(s)}>
         Manage
       </Button>
     ),
@@ -406,13 +573,15 @@ function ServersSettingsPanel() {
   return (
     <div className="servers-page__settings">
       <div className="servers-page__settings-header">
-        <h3 className="servers-page__settings-title">Server settings</h3>
-        <Button type="button" onClick={() => setIsCreateOpen(true)}>
-          Add server
-        </Button>
+        <SectionHeader label="Server settings" size="lg">
+          <Button type="button" onClick={() => setIsCreateOpen(true)}>
+            Add server
+          </Button>
+        </SectionHeader>
       </div>
       <div className="data-table-wrap">
       <DataTable
+        density="compact"
         columns={[
           { key: "name", header: "Name" },
           { key: "region", header: "Region" },
@@ -466,10 +635,34 @@ function ServersSettingsPanel() {
               <dd>{formatRelative(selectedServer.cert_expires_at ?? null)}</dd>
             </dl>
 
-            <h4 className="servers-page__section-title">Ops</h4>
+            <SectionHeader label="RTT / Loss" size="sm" />
+            <div className="servers-page__detail-rtt">
+              {(() => {
+                const opRow = operatorServers.find((r) => r.id === selectedServer.id);
+                const rtt = opRow?.rtt_ms ?? null;
+                const loss = opRow?.packet_loss_pct ?? null;
+                return (
+                  <>
+                    <p className="servers-page__muted">
+                      {rtt != null || loss != null ? (
+                        <>Current: {rtt != null ? `${Math.round(rtt)} ms` : "—"} RTT
+                          {loss != null ? `, ${loss.toFixed(1)}% loss` : ""}</>
+                      ) : (
+                        "No current RTT/loss from agent."
+                      )}
+                    </p>
+                    <p className="servers-page__muted type-meta">
+                      Per-node RTT/loss timeseries will appear when Prometheus or the aggregator stores them.
+                    </p>
+                  </>
+                );
+              })()}
+            </div>
+
+            <SectionHeader label="Ops" size="sm" />
             <div className="servers-page__ops-grid">
               <label className="servers-page__filter servers-page__filter--full">
-                Ops notes
+                <span className="servers-page__label">Ops notes</span>
                 <textarea
                   className="input servers-page__textarea"
                   value={selectedServer.ops_notes ?? ""}
@@ -483,7 +676,7 @@ function ServersSettingsPanel() {
                 />
               </label>
               <label className="servers-page__filter">
-                Auto sync
+                <span className="servers-page__label">Auto sync</span>
                 <select
                   className="input"
                   value={selectedServer.auto_sync_enabled ? "on" : "off"}
@@ -499,7 +692,7 @@ function ServersSettingsPanel() {
                 </select>
               </label>
               <label className="servers-page__filter">
-                Sync interval (sec)
+                <span className="servers-page__label">Sync interval (sec)</span>
                 <Input
                   type="number"
                   value={selectedServer.auto_sync_interval_sec ?? 60}
@@ -521,7 +714,7 @@ function ServersSettingsPanel() {
                 <Button type="button" variant="secondary" disabled={actionPending} onClick={handleSync}>
                   Sync now
                 </Button>
-                <Button type="button" variant="danger" disabled={actionPending} onClick={handleDelete}>
+                <Button type="button" variant="danger" disabled={actionPending} onClick={handleDeleteClick}>
                   Delete server
                 </Button>
               </div>
@@ -550,7 +743,7 @@ function ServersSettingsPanel() {
         )}
         <div className="servers-page__create-grid">
           <label className="servers-page__filter">
-            ID (optional)
+            <span className="servers-page__label">ID (optional)</span>
             <Input
               value={createForm.id}
               onChange={(e) => setCreateForm((s) => ({ ...s, id: e.target.value }))}
@@ -558,7 +751,7 @@ function ServersSettingsPanel() {
             />
           </label>
           <label className="servers-page__filter">
-            Name
+            <span className="servers-page__label">Name</span>
             <Input
               value={createForm.name}
               onChange={(e) => setCreateForm((s) => ({ ...s, name: e.target.value }))}
@@ -566,7 +759,7 @@ function ServersSettingsPanel() {
             />
           </label>
           <label className="servers-page__filter">
-            Region
+            <span className="servers-page__label">Region</span>
             <Input
               value={createForm.region}
               onChange={(e) => setCreateForm((s) => ({ ...s, region: e.target.value }))}
@@ -574,7 +767,7 @@ function ServersSettingsPanel() {
             />
           </label>
           <label className="servers-page__filter">
-            API endpoint
+            <span className="servers-page__label">API endpoint</span>
             <Input
               value={createForm.api_endpoint}
               onChange={(e) => setCreateForm((s) => ({ ...s, api_endpoint: e.target.value }))}
@@ -582,7 +775,7 @@ function ServersSettingsPanel() {
             />
           </label>
           <label className="servers-page__filter servers-page__filter--full">
-            VPN endpoint (host:port, optional)
+            <span className="servers-page__label">VPN endpoint (host:port, optional)</span>
             <Input
               value={createForm.vpn_endpoint}
               onChange={(e) => setCreateForm((s) => ({ ...s, vpn_endpoint: e.target.value }))}
@@ -603,6 +796,49 @@ function ServersSettingsPanel() {
           </Button>
           <Button type="button" onClick={handleCreateSubmit} disabled={actionPending}>
             Create
+          </Button>
+        </div>
+      </Modal>
+
+      <Modal
+        open={serverToDelete != null}
+        onClose={() => {
+          setServerToDelete(null);
+          setDeleteConfirmText("");
+        }}
+        title="Delete server"
+        variant="danger"
+      >
+        <p className="servers-page__muted">
+          This permanently removes the server from the dashboard. Type <strong>DELETE</strong> to confirm.
+        </p>
+        <label className="servers-page__filter">
+          Confirm
+          <Input
+            value={deleteConfirmText}
+            onChange={(e) => setDeleteConfirmText(e.target.value)}
+            placeholder="DELETE"
+            aria-label="Type DELETE to confirm server deletion"
+          />
+        </label>
+        <div className="servers-page__modal-actions">
+          <Button
+            type="button"
+            variant="default"
+            onClick={() => {
+              setServerToDelete(null);
+              setDeleteConfirmText("");
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            variant="danger"
+            disabled={deleteConfirmText.trim().toUpperCase() !== "DELETE" || actionPending}
+            onClick={handleDeleteSubmit}
+          >
+            Delete server
           </Button>
         </div>
       </Modal>

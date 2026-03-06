@@ -541,6 +541,7 @@ useEffect(() => {
 - [ ] Contrast ≥ 4.5:1 text
 - [ ] Focus visible
 - [ ] `prefers-reduced-motion` respected
+- [ ] Mobile WCAG checklist reviewed: [accessibility-checklist.md](./accessibility-checklist.md)
 
 ### Reliability
 
@@ -551,6 +552,7 @@ useEffect(() => {
 
 - All checklist items pass
 - No P0 bugs
+- Accessibility checklist passes: [accessibility-checklist.md](./accessibility-checklist.md)
 
 ---
 

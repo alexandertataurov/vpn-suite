@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { Button, Toggle } from "../../../src/design-system";
+import { Button, Toggle } from "../../design-system-compat";
 
 export interface ComponentPreviewProps {
   children: ReactNode;

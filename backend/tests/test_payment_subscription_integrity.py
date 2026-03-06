@@ -45,6 +45,39 @@ def _parse_dt(value: str) -> datetime:
 
 
 @pytest.mark.asyncio
+async def test_bot_create_or_get_persists_telegram_user_requisites(client: AsyncClient, monkeypatch):
+    """POST create-or-get with telegram_user stores User.meta['tg'] and returns it in response."""
+    if not await check_db():
+        pytest.skip("DB not available")
+    monkeypatch.setattr(config.settings, "bot_api_key", "test-bot-key")
+    plan = await _create_plan(duration_days=30)
+    tg_id = int(uuid.uuid4().int % 10_000_000_000)
+    telegram_user = {
+        "id": tg_id,
+        "first_name": "Bot",
+        "last_name": "User",
+        "username": "botuser",
+        "language_code": "uk",
+    }
+    r = await client.post(
+        "/api/v1/bot/subscriptions/create-or-get",
+        json={"tg_id": tg_id, "plan_id": plan.id, "telegram_user": telegram_user},
+        headers={"X-API-Key": "test-bot-key"},
+    )
+    assert r.status_code == 200, r.text
+    data = r.json()
+    assert "user" in data
+    assert data["user"].get("meta") is not None
+    tg = data["user"]["meta"].get("tg")
+    assert tg is not None
+    assert tg["id"] == tg_id
+    assert tg["first_name"] == "Bot"
+    assert tg["last_name"] == "User"
+    assert tg["username"] == "botuser"
+    assert tg["language_code"] == "uk"
+
+
+@pytest.mark.asyncio
 async def test_create_or_get_creates_pending_subscription(client: AsyncClient, monkeypatch):
     if not await check_db():
         pytest.skip("DB not available")

@@ -1,10 +1,11 @@
-import { SectionTitle, MetaText } from "@/design-system";
+import { PageLayout } from "@/layout/PageLayout";
 
 export function AutomationPage() {
   return (
-    <div className="page automation-page">
-      <SectionTitle>Automation</SectionTitle>
-      <MetaText>Control plane — Phase 1 placeholder.</MetaText>
-    </div>
+    <PageLayout
+      title="Automation"
+      description="Control plane — Phase 1 placeholder."
+      pageClass="automation-page"
+    />
   );
 }

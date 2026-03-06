@@ -114,6 +114,9 @@ export interface OperatorServerRow {
   last_heartbeat: string | null;
   freshness: "fresh" | "degraded" | "stale" | "unknown";
   to: string;
+  /** Per-node RTT (ms); current value only until timeseries available */
+  rtt_ms?: number | null;
+  packet_loss_pct?: number | null;
 }
 
 export interface OperatorUserSessions {
@@ -601,6 +604,7 @@ export interface UserOut {
   tg_id: number | null;
   email: string | null;
   phone: string | null;
+  meta: Record<string, unknown> | null;
   is_banned: boolean;
   created_at: string;
   updated_at: string;

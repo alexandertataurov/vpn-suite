@@ -1,6 +1,6 @@
 """Validate bot config before startup. Fail fast on missing or invalid values."""
 
-from config import BOT_TOKEN, BOT_USERNAME, SUPPORT_HANDLE, PANEL_URL
+from config import BOT_TOKEN, BOT_USERNAME, SUPPORT_HANDLE, PANEL_URL, MINIAPP_URL
 
 
 def validate_config() -> bool:
@@ -19,6 +19,9 @@ def validate_config() -> bool:
 
     if PANEL_URL and not PANEL_URL.startswith("http"):
         errors.append("PANEL_URL must be valid URL (http or https)")
+
+    if not MINIAPP_URL or not MINIAPP_URL.startswith("http"):
+        errors.append("MINIAPP_URL must be a valid URL (http or https)")
 
     if errors:
         raise ValueError("Config errors: " + ", ".join(errors))

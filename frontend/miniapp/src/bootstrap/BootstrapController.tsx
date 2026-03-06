@@ -6,9 +6,9 @@ import {
   useMemo,
   type ReactNode,
 } from "react";
-import { IconShield } from "@/shared-inline/icons";
+import { IconShield } from "@/design-system";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Button, InlineAlert, Skeleton, Display, Body } from "../ui";
+import { Button, InlineAlert, Skeleton, Display, Body } from "@/design-system";
 import { initTelegramRuntime, useTelegramWebApp } from "../hooks/useTelegramWebApp";
 import { useTelegramBackButtonController } from "../hooks/useTelegramBackButtonController";
 import { useBootstrapMachine, type BootPhase } from "./useBootstrapMachine";
@@ -35,7 +35,7 @@ export function useBootstrapContext(): BootstrapContextValue {
 
 function BootLoadingScreen({ slowNetwork, onRetry }: { slowNetwork: boolean; onRetry: () => void }) {
   return (
-    <div className="splash-screen splash-screen--loading hud-bg" role="status" aria-live="polite">
+    <div className="splash-screen splash-screen--loading" role="status" aria-live="polite">
       <div className="splash-screen-content bootstrap-loading-content">
         <span className="splash-screen-logo" aria-hidden>
           <IconShield size={42} strokeWidth={1.5} />
@@ -64,7 +64,7 @@ function BootErrorScreen({
   onRetry: () => void;
 }) {
   return (
-    <div className="splash-screen hud-bg" role="region" aria-label="Startup error">
+    <div className="splash-screen" role="region" aria-label="Startup error">
       <div className="splash-screen-content">
         <span className="splash-screen-logo" aria-hidden>
           <IconShield size={42} strokeWidth={1.5} />
@@ -80,7 +80,7 @@ function BootErrorScreen({
 
 function BrandSplashScreen() {
   return (
-    <div className="splash-screen hud-bg" role="region" aria-label="Welcome">
+    <div className="splash-screen" role="region" aria-label="Welcome">
       <div className="splash-screen-content">
         <span className="splash-screen-logo" aria-hidden>
           <IconShield size={48} strokeWidth={1.5} />

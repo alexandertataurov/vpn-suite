@@ -23,7 +23,7 @@ from app.core.metrics import (
 from app.core.redis_client import get_redis
 from app.core.telemetry_polling_task import get_dashboard_timeseries
 from app.models import Device, Server, ServerSnapshot
-from app.services.snapshot_cache import get_snapshot_nodes, get_snapshot_devices
+from app.services.snapshot_cache import get_snapshot_devices, get_snapshot_nodes
 
 _log = logging.getLogger(__name__)
 
@@ -516,6 +516,22 @@ async def fetch_operator_dashboard(
                                 telemetry_map[sid]["last_ts"] = dt.timestamp()
                             except (ValueError, TypeError):
                                 pass
+                        if "packet_loss_pct" in hb and hb["packet_loss_pct"] is not None:
+                            try:
+                                telemetry_map[sid]["packet_loss_pct"] = float(hb["packet_loss_pct"])
+                            except (TypeError, ValueError):
+                                pass
+                        peers_list = hb.get("peers") or []
+                        if isinstance(peers_list, list):
+                            rtt_vals = [
+                                float(p["rtt_ms"])
+                                for p in peers_list
+                                if isinstance(p, dict)
+                                and p.get("rtt_ms") is not None
+                                and isinstance(p.get("rtt_ms"), (int, float))
+                            ]
+                            if rtt_vals:
+                                telemetry_map[sid]["rtt_avg_ms"] = sum(rtt_vals) / len(rtt_vals)
                     except (json.JSONDecodeError, TypeError, ValueError):
                         pass
         except Exception:
@@ -618,6 +634,8 @@ async def fetch_operator_dashboard(
                     else None,
                     "freshness": _freshness(age_s),
                     "to": f"/servers/{sid}",
+                    "rtt_ms": tm.get("rtt_avg_ms"),
+                    "packet_loss_pct": tm.get("packet_loss_pct"),
                 }
             )
 
@@ -773,15 +791,13 @@ async def fetch_operator_dashboard(
         devices_snapshot = None
     if isinstance(devices_snapshot, dict):
         try:
-            handshake_ok = int(
-                (devices_snapshot.get("summary") or {}).get("handshake_ok") or 0
-            )
+            handshake_ok = int((devices_snapshot.get("summary") or {}).get("handshake_ok") or 0)
         except (TypeError, ValueError):
             handshake_ok = 0
         if handshake_ok > 0:
             health_strip["peers_active"] = handshake_ok
 
-    # Populate strip from timeseries when Prometheus and telemetry summary did not (peers_active, total_throughput_bps)
+    # Populate strip from timeseries when telemetry sources did not (peers_active, total_throughput_bps)
     if timeseries_points:
         last_pt = timeseries_points[-1]
         if health_strip.get("peers_active") is None and last_pt.get("peers") is not None:

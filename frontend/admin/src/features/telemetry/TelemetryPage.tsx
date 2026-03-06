@@ -3,16 +3,17 @@ import { useApiQuery } from "@/core/api/useApiQuery";
 import { useApi } from "@/core/api/context";
 import {
   AnimatedNumber,
+  Badge,
   Button,
   DataTable,
   EmptyState,
   ErrorState,
-  KpiValue,
-  MetaText,
-  SectionTitle,
+  SectionHeader,
   Skeleton,
   Widget,
-} from "@/design-system";
+} from "@/design-system/primitives";
+import { PageLayout } from "@/layout/PageLayout";
+import { KpiValue, KpiValueUnit } from "@/design-system/typography";
 import type {
   ContainerSummary,
   ContainerSummaryListOut,
@@ -214,31 +215,35 @@ export function TelemetryPage() {
     return byCat;
   }, [dockerActionPendingId, dockerData?.items, handleDockerAction]);
 
+  const monitoringContainers = dockerByCategory["Monitoring & telemetry"] ?? [];
+  const controlPlaneContainers = dockerByCategory["Control-plane services"] ?? [];
+  const otherContainers = dockerByCategory["Other containers"] ?? [];
+
   if (isLoading) {
     return (
-      <div className="page telemetry-page" data-testid="telemetry-page">
+      <PageLayout title="Telemetry" pageClass="telemetry-page" dataTestId="telemetry-page" hideHeader>
         <Skeleton height={32} width="30%" />
         <Skeleton height={120} />
-      </div>
+      </PageLayout>
     );
   }
 
   if (isError) {
     return (
-      <div className="page telemetry-page" data-testid="telemetry-page">
+      <PageLayout title="Telemetry" pageClass="telemetry-page" dataTestId="telemetry-page" hideHeader>
         <ErrorState
           message={error instanceof Error ? error.message : "Failed to load telemetry"}
           onRetry={() => refetch()}
         />
-      </div>
+      </PageLayout>
     );
   }
 
   if (!data) {
     return (
-      <div className="page telemetry-page" data-testid="telemetry-page">
+      <PageLayout title="Telemetry" pageClass="telemetry-page" dataTestId="telemetry-page" hideHeader>
         <EmptyState message="No telemetry data yet." />
-      </div>
+      </PageLayout>
     );
   }
 
@@ -286,18 +291,31 @@ export function TelemetryPage() {
   }
 
   const serverRows = servers.map((s) => ({
-    name: s.name,
-    region: s.region,
-    cpu: s.cpu_pct != null ? `${s.cpu_pct}%` : "—",
-    ram: s.ram_pct != null ? `${s.ram_pct}%` : "—",
-    traffic: formatBytes(s.throughput_bps),
-    status: s.status,
-    freshness: s.freshness,
+    name: <span className="cell-primary">{s.name}</span>,
+    region: <span className="cell-muted">{s.region}</span>,
+    cpu: (
+      <span className="cell-num">
+        {s.cpu_pct != null ? `${s.cpu_pct}%` : "—"}
+      </span>
+    ),
+    ram: (
+      <span className="cell-num">
+        {s.ram_pct != null ? `${s.ram_pct}%` : "—"}
+      </span>
+    ),
+    traffic: <span className="cell-num">{formatBytes(s.throughput_bps)}</span>,
+    status: (
+      <Badge size="sm" variant={statusToVariant(s.status)}>
+        {s.status}
+      </Badge>
+    ),
+    freshness: <span className="cell-muted">{s.freshness}</span>,
     id: s.id,
     actions: (
       <Button
         type="button"
         variant="secondary"
+        size="sm"
         onClick={() => handleNodeSync(s.id)}
         disabled={nodeActionPendingId === s.id}
       >
@@ -308,47 +326,77 @@ export function TelemetryPage() {
 
   const serviceRows =
     servicesData?.services.map((s) => ({
-      job: s.job,
-      instance: s.instance,
-      health: s.health === "up" ? "up" : "down",
-      last_scrape: s.last_scrape ? new Date(s.last_scrape).toLocaleString() : "—",
-      last_error: s.last_error || "—",
+      id: `${s.job}:${s.instance}`,
+      service: <span className="cell-primary">{s.job}</span>,
+      endpoint: (
+        <span className="cell-url cell-mono">
+          {s.instance}
+        </span>
+      ),
+      status: (
+        <Badge size="sm" variant={s.health === "up" ? "success" : "danger"}>
+          {s.health ?? "unknown"}
+        </Badge>
+      ),
+      lastScore: s.last_scrape ? new Date(s.last_scrape).toLocaleString() : "—",
+      lastError: s.last_error || "—",
     })) ?? [];
 
   const alertRows =
-    alertsData?.items.map((a: AlertItem) => ({
-      id: a.id,
-      severity: a.severity,
-      rule: a.rule,
-      host: a.host_id,
-      container: a.container_name || a.container_id || "—",
-      created_at: new Date(a.created_at).toLocaleString(),
-      status: a.status,
-      actions:
-        a.container_id != null ? (
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() => handleDockerAction(a.container_id!, "restart")}
-          >
-            Restart container
-          </Button>
-        ) : (
-          "—"
+    alertsData?.items.map((a: AlertItem) => {
+      const sev = (a.severity || "info").toLowerCase();
+      const sevVariant =
+        sev === "critical" || sev === "error"
+          ? "danger"
+          : sev === "warning"
+            ? "warning"
+            : "info";
+      const containerLabel = `${a.host_id ?? "local"} · ${a.container_name || a.container_id || "—"}`;
+      return {
+        id: a.id,
+        rule: a.rule,
+        severity: (
+          <Badge size="sm" variant={sevVariant}>
+            {a.severity}
+          </Badge>
         ),
-    })) ?? [];
+        container: <span className="cell-muted">{containerLabel}</span>,
+        created_at: new Date(a.created_at).toLocaleString(),
+        actions:
+          a.container_id != null ? (
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => handleDockerAction(a.container_id!, "restart")}
+            >
+              Restart
+            </Button>
+          ) : (
+            "—"
+          ),
+      };
+    }) ?? [];
+
+  const telemetryDescription = (
+    <span className="telemetry-page__updated">
+      Snapshot {formatRelativeFromSeconds(meta.snapshot_ts)} · Freshness {meta.freshness} ·{" "}
+      {meta.incidents_count} incidents · {meta.stale_node_ids.length} stale nodes
+      {meta.partial_failure ? " · partial failure" : ""}
+    </span>
+  );
 
   return (
-    <div className="page telemetry-page" data-testid="telemetry-page">
-      <header className="telemetry-page__header">
-        <SectionTitle className="telemetry-page__title">Telemetry</SectionTitle>
-        <MetaText className="telemetry-page__updated">
-          Snapshot {formatRelativeFromSeconds(meta.snapshot_ts)} · Freshness {meta.freshness}
-        </MetaText>
-      </header>
+    <PageLayout
+      title="Telemetry"
+      description={telemetryDescription}
+      pageClass="telemetry-page"
+      dataTestId="telemetry-page"
+    >
+      <SectionHeader label="Summary" size="lg" note={`Snapshot ${formatRelativeFromSeconds(meta.snapshot_ts)}`} />
       <div className="kpi-grid telemetry-page__cards">
         {nodeSummary && (
-          <Widget title="Nodes" subtitle="cluster status" variant="kpi" href="/servers">
+          <Widget title="Nodes" subtitle="cluster status" variant="kpi" href="/servers" size="medium">
             <KpiValue as="div" className="kpi__value">
               <AnimatedNumber value={nodeSummary.online} />/<AnimatedNumber value={nodeSummary.total} /> online
             </KpiValue>
@@ -359,7 +407,7 @@ export function TelemetryPage() {
           </Widget>
         )}
         {deviceSummary && (
-          <Widget title="Devices" subtitle="handshake + reconcile" variant="kpi" href="/devices">
+          <Widget title="Devices" subtitle="handshake + reconcile" variant="kpi" href="/devices" size="medium">
             <KpiValue as="div" className="kpi__value">
               <AnimatedNumber value={deviceSummary.handshake_ok} />/<AnimatedNumber value={deviceSummary.total} /> healthy
             </KpiValue>
@@ -370,7 +418,7 @@ export function TelemetryPage() {
           </Widget>
         )}
         {sessionsSummary && (
-          <Widget title="Sessions" subtitle="current snapshot" variant="kpi">
+          <Widget title="Sessions" subtitle="current snapshot" variant="kpi" size="medium">
             <KpiValue as="div" className="kpi__value">
               <AnimatedNumber value={sessionsSummary.active_sessions} />
             </KpiValue>
@@ -381,21 +429,24 @@ export function TelemetryPage() {
         )}
         {strip && (
           <>
-            <Widget title="Latency" subtitle="avg" variant="kpi">
-              <KpiValue as="div" className="kpi__value">
-                {strip.avg_latency_ms != null ? (
-                  <><AnimatedNumber value={strip.avg_latency_ms} decimals={0} /> ms</>
-                ) : (
-                  "—"
-                )}
-              </KpiValue>
+            <Widget title="Latency" subtitle="avg" variant="kpi" size="medium">
+              <KpiValueUnit
+                value={
+                  strip.avg_latency_ms != null ? (
+                    <AnimatedNumber value={strip.avg_latency_ms} decimals={0} />
+                  ) : (
+                    "—"
+                  )
+                }
+                unit={strip.avg_latency_ms != null ? "ms" : ""}
+              />
             </Widget>
-            <Widget title="TX/RX" subtitle="current" variant="kpi">
+            <Widget title="TX/RX" subtitle="current" variant="kpi" size="medium">
               <KpiValue as="div" className="kpi__value kpi__value--small">
                 {formatBps(strip.total_throughput_bps ?? 0)}
               </KpiValue>
             </Widget>
-            <Widget title="CPU" subtitle="avg" variant="kpi">
+            <Widget title="CPU" subtitle="avg" variant="kpi" size="medium">
               <KpiValue as="div" className="kpi__value">
                 {avgCpu != null ? (
                   <><AnimatedNumber value={avgCpu} decimals={1} />%</>
@@ -404,7 +455,7 @@ export function TelemetryPage() {
                 )}
               </KpiValue>
             </Widget>
-            <Widget title="RAM" subtitle="avg" variant="kpi">
+            <Widget title="RAM" subtitle="avg" variant="kpi" size="medium">
               <KpiValue as="div" className="kpi__value">
                 {avgRam != null ? (
                   <><AnimatedNumber value={avgRam} decimals={1} />%</>
@@ -413,17 +464,17 @@ export function TelemetryPage() {
                 )}
               </KpiValue>
             </Widget>
-            <Widget title="Avg bandwidth" subtitle="over window" variant="kpi">
+            <Widget title="Avg bandwidth" subtitle="over window" variant="kpi" size="medium">
               <KpiValue as="div" className="kpi__value kpi__value--small">
                 {avgThroughputBps != null ? formatBps(avgThroughputBps) : "—"}
               </KpiValue>
             </Widget>
-            <Widget title="Peak bandwidth" subtitle="over window" variant="kpi">
+            <Widget title="Peak bandwidth" subtitle="over window" variant="kpi" size="medium">
               <KpiValue as="div" className="kpi__value kpi__value--small">
                 {peakThroughputBps != null ? formatBps(peakThroughputBps) : "—"}
               </KpiValue>
             </Widget>
-            <Widget title="Data transfer" subtitle="total" variant="kpi">
+            <Widget title="Data transfer" subtitle="total" variant="kpi" size="medium">
               <KpiValue as="div" className="kpi__value kpi__value--small">
                 {totalBytes != null ? formatBytes(totalBytes) : "—"}
               </KpiValue>
@@ -433,15 +484,16 @@ export function TelemetryPage() {
       </div>
       {serverRows.length > 0 && (
         <section className="telemetry-page__table" aria-label="Per-node telemetry">
-          <h3 className="telemetry-page__section-title">Nodes (CPU, RAM, traffic)</h3>
+          <SectionHeader label="Nodes (CPU, RAM, traffic)" size="lg" />
           <div className="data-table-wrap">
           <DataTable
+            density="compact"
             columns={[
-              { key: "name", header: "Node" },
+              { key: "name", header: "Name" },
               { key: "region", header: "Region" },
               { key: "cpu", header: "CPU" },
               { key: "ram", header: "RAM" },
-              { key: "traffic", header: "Traffic (RX+TX)" },
+              { key: "traffic", header: "Throughput (RX+TX)" },
               { key: "status", header: "Status" },
               { key: "freshness", header: "Freshness" },
               { key: "actions", header: "Actions" },
@@ -454,7 +506,7 @@ export function TelemetryPage() {
       )}
       {servicesData && (
         <section className="telemetry-page__table" aria-label="Telemetry services status">
-          <h3 className="telemetry-page__section-title">Telemetry services</h3>
+          <SectionHeader label="Telemetry services" size="lg" />
           {isServicesLoading && <p className="telemetry-page__subtle">Loading telemetry services…</p>}
           {isServicesError && !isServicesLoading && (
             <p className="telemetry-page__warning" role="status">
@@ -463,17 +515,18 @@ export function TelemetryPage() {
           )}
           {serviceRows.length > 0 && (
             <div className="data-table-wrap">
-            <DataTable
-              columns={[
-                { key: "job", header: "Job" },
-                { key: "instance", header: "Instance" },
-                { key: "health", header: "Health" },
-                { key: "last_scrape", header: "Last scrape" },
-                { key: "last_error", header: "Last error" },
-              ]}
-              rows={serviceRows}
-              getRowKey={(row: { job: string; instance: string }) => `${row.job}:${row.instance}`}
-            />
+              <DataTable
+                density="compact"
+                columns={[
+                  { key: "service", header: "Service" },
+                  { key: "endpoint", header: "Endpoint" },
+                  { key: "status", header: "Status" },
+                  { key: "lastScore", header: "Last score" },
+                  { key: "lastError", header: "Last error" },
+                ]}
+                rows={serviceRows}
+                getRowKey={(row: { id: string }) => row.id}
+              />
             </div>
           )}
           {servicesData.message && (
@@ -483,61 +536,114 @@ export function TelemetryPage() {
           )}
         </section>
       )}
-      {alertsData && (
-        <section className="telemetry-page__table" aria-label="Docker alerts">
-          <h3 className="telemetry-page__section-title">Docker alerts</h3>
-          {isAlertsLoading && <p className="telemetry-page__subtle">Loading alerts…</p>}
-          {isAlertsError && !isAlertsLoading && (
-            <p className="telemetry-page__warning" role="status">
-              Docker alerts unavailable.
-            </p>
-          )}
-          {alertRows.length > 0 ? (
-            <div className="data-table-wrap">
-            <DataTable
-              columns={[
-                { key: "severity", header: "Severity" },
-                { key: "rule", header: "Rule" },
-                { key: "host", header: "Host" },
-                { key: "container", header: "Container" },
-                { key: "created_at", header: "Created" },
-                { key: "status", header: "Status" },
-                { key: "actions", header: "Actions" },
-              ]}
-              rows={alertRows}
-              getRowKey={(row: { id: string }) => row.id}
-            />
-            </div>
-          ) : (
-            !isAlertsLoading && <p className="telemetry-page__subtle">No active Docker alerts.</p>
-          )}
+      {(alertsData || otherContainers.length > 0) && (
+        <section
+          className="telemetry-page__table telemetry-page__docker-grid"
+          aria-label="Docker alerts and containers"
+        >
+          <div className="telemetry-page__docker-column">
+            {alertsData && (
+              <>
+                <h3 className="telemetry-page__section-title">Docker — Alerts</h3>
+                {isAlertsLoading && <p className="telemetry-page__subtle">Loading alerts…</p>}
+                {isAlertsError && !isAlertsLoading && (
+                  <p className="telemetry-page__warning" role="status">
+                    Docker alerts unavailable.
+                  </p>
+                )}
+                {alertRows.length > 0 ? (
+                  <div className="data-table-wrap">
+                    <DataTable
+                      density="compact"
+                      columns={[
+                        { key: "rule", header: "Alert" },
+                        { key: "severity", header: "Severity" },
+                        { key: "container", header: "Container" },
+                        { key: "created_at", header: "Time" },
+                        { key: "actions", header: "Action" },
+                      ]}
+                      rows={alertRows}
+                      getRowKey={(row: { id: string }) => row.id}
+                    />
+                  </div>
+                ) : (
+                  !isAlertsLoading && <p className="telemetry-page__subtle">No active Docker alerts.</p>
+                )}
+              </>
+            )}
+          </div>
+          <div className="telemetry-page__docker-column">
+            {otherContainers.length > 0 && (
+              <>
+                <h3 className="telemetry-page__section-title">Docker — Other containers</h3>
+                <div className="data-table-wrap">
+                  <DataTable
+                    density="compact"
+                    columns={[
+                      { key: "service", header: "Name" },
+                      { key: "image", header: "Image" },
+                      { key: "state", header: "Status" },
+                      { key: "health", header: "Health" },
+                    ]}
+                    rows={otherContainers}
+                    getRowKey={(row: { id: string }) => row.id}
+                  />
+                </div>
+              </>
+            )}
+          </div>
         </section>
       )}
-      {Object.keys(dockerByCategory).length > 0 &&
-        Object.entries(dockerByCategory).map(([category, rows]) => (
-          <section key={category} className="telemetry-page__table" aria-label={`Docker ${category}`}>
-            <h3 className="telemetry-page__section-title">Docker — {category}</h3>
-            <div className="data-table-wrap">
+      {controlPlaneContainers.length > 0 && (
+        <section
+          className="telemetry-page__table"
+          aria-label="Docker control plane services"
+        >
+          <h3 className="telemetry-page__section-title">Docker — Control Plane Services</h3>
+          <div className="data-table-wrap">
             <DataTable
+              density="compact"
               columns={[
-                { key: "service", header: "Service" },
-                { key: "container", header: "Container" },
+                { key: "service", header: "Container" },
+                { key: "ports", header: "Ports" },
                 { key: "image", header: "Image" },
                 { key: "state", header: "State" },
                 { key: "health", header: "Health" },
                 { key: "cpu", header: "CPU" },
-                { key: "mem", header: "Mem" },
-                { key: "rx", header: "RX" },
-                { key: "tx", header: "TX" },
-                { key: "errors", header: "Errors (5m)" },
+                { key: "mem", header: "RAM" },
                 { key: "actions", header: "Actions" },
               ]}
-              rows={rows}
+              rows={controlPlaneContainers}
               getRowKey={(row: { id: string }) => row.id}
             />
-            </div>
-          </section>
-        ))}
+          </div>
+        </section>
+      )}
+      {monitoringContainers.length > 0 && (
+        <section
+          className="telemetry-page__table"
+          aria-label="Docker monitoring and telemetry"
+        >
+          <h3 className="telemetry-page__section-title">Docker — Monitoring &amp; Telemetry</h3>
+          <div className="data-table-wrap">
+            <DataTable
+              density="compact"
+              columns={[
+                { key: "service", header: "Container" },
+                { key: "ports", header: "Ports" },
+                { key: "image", header: "Image" },
+                { key: "state", header: "State" },
+                { key: "health", header: "Health" },
+                { key: "cpu", header: "CPU" },
+                { key: "mem", header: "RAM" },
+                { key: "actions", header: "Actions" },
+              ]}
+              rows={monitoringContainers}
+              getRowKey={(row: { id: string }) => row.id}
+            />
+          </div>
+        </section>
+      )}
       {actionError && (
         <p className="telemetry-page__warning" role="alert">
           {actionError}
@@ -553,7 +659,7 @@ export function TelemetryPage() {
           Stale nodes: {meta.stale_node_ids.join(", ")}
         </p>
       )}
-    </div>
+    </PageLayout>
   );
 }
 
@@ -588,27 +694,46 @@ function buildDockerRow(
   const pending = dockerActionPendingId === c.container_id;
   const service = c.compose_service || c.compose_project || c.name;
   const isRunning = (c.state || "").toLowerCase() === "running";
+  const ports = formatPorts(c.ports);
   return {
     id: c.container_id,
     service,
     container: c.name,
     image: c.image_tag || c.image,
+    ports,
     state: c.state,
-    health: c.health_status,
-    cpu:
-      typeof c.cpu_pct === "number"
-        ? `${c.cpu_pct.toFixed(1)}%`
-        : "—",
-    mem:
-      typeof c.mem_pct === "number"
-        ? `${c.mem_pct.toFixed(1)}%`
-        : "—",
-    rx: formatBytes(c.net_rx_bytes ?? null),
-    tx: formatBytes(c.net_tx_bytes ?? null),
-    errors:
-      typeof c.error_rate_5m === "number"
-        ? `${c.error_rate_5m.toFixed(2)}%`
-        : "—",
+    health: (
+      <Badge size="sm" variant={healthToVariant(c.health_status)}>
+        {c.health_status}
+      </Badge>
+    ),
+    cpu: (
+      <span className="cell-num">
+        {typeof c.cpu_pct === "number" ? `${c.cpu_pct.toFixed(1)}%` : "—"}
+      </span>
+    ),
+    mem: (
+      <span className="cell-num">
+        {typeof c.mem_pct === "number" ? `${c.mem_pct.toFixed(1)}%` : "—"}
+      </span>
+    ),
+    rx: (
+      <span className="cell-num">
+        {formatBytes(c.net_rx_bytes ?? null)}
+      </span>
+    ),
+    tx: (
+      <span className="cell-num">
+        {formatBytes(c.net_tx_bytes ?? null)}
+      </span>
+    ),
+    errors: (
+      <span className="cell-num">
+        {typeof c.error_rate_5m === "number"
+          ? `${c.error_rate_5m.toFixed(2)}%`
+          : "—"}
+      </span>
+    ),
     actions: (
       <div className="telemetry-page__docker-actions">
         {isRunning ? (
@@ -616,6 +741,7 @@ function buildDockerRow(
             <Button
               type="button"
               variant="secondary"
+              size="sm"
               onClick={() => handleDockerAction(c.container_id, "restart")}
               disabled={pending}
             >
@@ -624,6 +750,7 @@ function buildDockerRow(
             <Button
               type="button"
               variant="secondary"
+              size="sm"
               onClick={() => handleDockerAction(c.container_id, "stop")}
               disabled={pending}
             >
@@ -634,6 +761,7 @@ function buildDockerRow(
           <Button
             type="button"
             variant="secondary"
+            size="sm"
             onClick={() => handleDockerAction(c.container_id, "start")}
             disabled={pending}
           >
@@ -643,4 +771,47 @@ function buildDockerRow(
       </div>
     ),
   };
+}
+
+function statusToVariant(
+  status: string | null | undefined
+): "neutral" | "success" | "warning" | "danger" | "info" | "accent" {
+  if (!status) return "neutral";
+  const value = status.toLowerCase();
+  if (value === "online" || value === "up" || value === "running") {
+    return "success";
+  }
+  if (value === "warning" || value === "warn" || value === "degraded") {
+    return "warning";
+  }
+  if (
+    value === "down" ||
+    value === "error" ||
+    value === "critical" ||
+    value === "offline"
+  ) {
+    return "danger";
+  }
+  return "info";
+}
+
+function healthToVariant(
+  health: ContainerSummary["health_status"]
+): "neutral" | "success" | "warning" | "danger" | "info" | "accent" {
+  const value = (health || "").toLowerCase();
+  if (value === "healthy") return "success";
+  if (value === "starting") return "info";
+  if (value === "unhealthy") return "danger";
+  if (value === "none") return "neutral";
+  return "info";
+}
+
+function formatPorts(ports: ContainerSummary["ports"]): string {
+  if (!ports || ports.length === 0) return "—";
+  const mapped = ports.map((p) => {
+    const pub = p.public_port ?? p.private_port;
+    return `${pub}/${p.protocol}`;
+  });
+  const display = mapped.slice(0, 3).join(", ");
+  return mapped.length > 3 ? `${display}, …` : display;
 }

@@ -1,4 +1,4 @@
-import { PrimitiveBadge } from "../../../src/design-system";
+import { PrimitiveBadge } from "../../design-system-compat";
 
 export type ChangelogType = "breaking" | "added" | "fixed" | "deprecated";
 

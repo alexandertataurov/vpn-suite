@@ -2,7 +2,8 @@
 
 TEXTS = {
     "ru": {
-        "welcome": "Добро пожаловать! Подключите VPN за минуту.",
+        "welcome": "Добро пожаловать! Откройте приложение для управления VPN.",
+        "open_app": "Открыть приложение",
         "choose_lang": "Выберите язык / Choose language:",
         "connect_cta": "Подключить",
         "my_cabinet": "Мой кабинет",
@@ -22,7 +23,7 @@ TEXTS = {
         "promo_placeholder": "Введите промокод",
         "reset_device": "Сброс устройства",
         "instruction": "Инструкция",
-        "instruction_text": "AmneziaVPN: Windows https://amnezia.org\niOS https://apps.apple.com/app/amneziavpn\nAndroid https://play.google.com/store/apps/details?id=org.amnezia.vpn\nmacOS https://amnezia.org",
+        "instruction_text": "AmneziaVPN: Windows https://amnezia.org\niOS https://apps.apple.com/app/amneziavpn/id1600529900\nAndroid https://play.google.com/store/apps/details?id=org.amnezia.vpn\nmacOS https://amnezia.org",
         "help_text": "Команды: /start — меню, /status — подписка и устройства, /devices — устройства, /configs — конфиги и сброс, /install — инструкция, /support — поддержка.",
         "error_device_not_found": "Устройство не найдено или уже сброшено.",
         "error_timeout": "Сервис не отвечает. Попробуйте позже.",
@@ -199,7 +200,8 @@ TEXTS = {
         "install_hint_open_connect_short": "Откройте меню Подключить ниже, чтобы получить конфиг.",
     },
     "en": {
-        "welcome": "Welcome! Get VPN in under a minute.",
+        "welcome": "Welcome! Open the app to manage your VPN.",
+        "open_app": "Open App",
         "choose_lang": "Choose language:",
         "connect_cta": "Connect",
         "my_cabinet": "My cabinet",
@@ -219,7 +221,7 @@ TEXTS = {
         "promo_placeholder": "Enter promo code",
         "reset_device": "Reset device",
         "instruction": "Instruction",
-        "instruction_text": "AmneziaVPN: Windows https://amnezia.org\niOS https://apps.apple.com/app/amneziavpn\nAndroid https://play.google.com/store/apps/details?id=org.amnezia.vpn\nmacOS https://amnezia.org",
+        "instruction_text": "AmneziaVPN: Windows https://amnezia.org\niOS https://apps.apple.com/app/amneziavpn/id1600529900\nAndroid https://play.google.com/store/apps/details?id=org.amnezia.vpn\nmacOS https://amnezia.org",
         "help_text": "Commands: /start — main menu, /status — subscription and devices, /devices — devices, /configs — configs and reset, /install — installation guide, /support — contact support.",
         "error_device_not_found": "Device not found or already reset.",
         "error_timeout": "Service is slow. Please try again in a moment.",

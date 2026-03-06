@@ -1,0 +1,119 @@
+/* Primitives design system token aliases (see admin design-system/docs/design-system.md).
+   Maps doc token names to miniapp semantic tokens. Resolves per theme via data-theme. */
+
+:root,
+html[data-theme="dark"],
+html[data-theme="light"],
+html[data-theme="consumer-dark"],
+html[data-theme="consumer-light"],
+html[data-theme="dim"] {
+  /* Surfaces */
+  --bg: var(--color-bg);
+  --s0: var(--color-bg);
+  --s1: var(--color-surface);
+  --s2: var(--color-surface-2);
+  --s3: var(--color-surface-2);
+  --s4: var(--color-surface-2);
+  --surface-1: var(--color-surface);
+  --surface-2: var(--color-surface-2);
+  --surface-3: var(--color-surface-2);
+  --surface-4: var(--color-surface-2);
+
+  /* Borders */
+  --bd-sub: var(--color-border-subtle);
+  --bd-def: var(--color-border);
+  --bd-hi: var(--color-border-strong);
+  --bd-focus: var(--color-focus-ring);
+  --border-default: var(--color-border);
+  --border-bright: var(--color-border-strong);
+  --border-focus: var(--color-focus-ring);
+
+  /* Text */
+  --tx-pri: var(--color-text);
+  --tx-sec: var(--color-text-muted);
+  --tx-mut: var(--color-text-tertiary);
+  --tx-dim: var(--color-text-tertiary);
+  --text-disabled: var(--color-text-tertiary);
+
+  /* Semantic base (blue/green/amber/red/violet/teal) */
+  --blue: var(--color-accent);
+  --green: var(--color-success);
+  --amber: var(--color-warning);
+  --red: var(--color-error);
+  --violet: var(--color-accent);
+  --teal: var(--color-info);
+
+  /* Interactive (dim/border derived for tinted-fill pattern) */
+  --interactive: var(--color-accent);
+  --interactive-dim: color-mix(in oklch, var(--color-accent) 8%, transparent);
+  --interactive-border: color-mix(in oklch, var(--color-accent) 22%, transparent);
+  --interactive-hover: var(--color-accent-hover);
+  --interactive-active: var(--color-accent-active);
+
+  /* Success / warning / danger / info / accent (base + dim + border) */
+  --success: var(--color-success);
+  --success-dim: color-mix(in oklch, var(--color-success) 8%, transparent);
+  --success-border: color-mix(in oklch, var(--color-success) 22%, transparent);
+  --warning: var(--color-warning);
+  --warning-dim: color-mix(in oklch, var(--color-warning) 8%, transparent);
+  --warning-border: color-mix(in oklch, var(--color-warning) 22%, transparent);
+  --danger: var(--color-error);
+  --danger-dim: color-mix(in oklch, var(--color-error) 8%, transparent);
+  --danger-border: color-mix(in oklch, var(--color-error) 22%, transparent);
+  --info: var(--color-info);
+  --info-dim: color-mix(in oklch, var(--color-info) 8%, transparent);
+  --info-border: color-mix(in oklch, var(--color-info) 22%, transparent);
+  --accent: var(--color-accent);
+  --accent-dim: var(--color-primary-subtle, color-mix(in oklch, var(--color-accent) 8%, transparent));
+  --accent-border: color-mix(in oklch, var(--color-accent) 22%, transparent);
+
+  /* Legacy doc names (blue-d, green-b, etc.) for components that reference them */
+  --blue-d: color-mix(in oklch, var(--color-accent) 7%, transparent);
+  --blue-b: color-mix(in oklch, var(--color-accent) 18%, transparent);
+  --green-d: color-mix(in oklch, var(--color-success) 7%, transparent);
+  --green-b: color-mix(in oklch, var(--color-success) 18%, transparent);
+  --amber-d: color-mix(in oklch, var(--color-warning) 7%, transparent);
+  --amber-b: color-mix(in oklch, var(--color-warning) 18%, transparent);
+  --red-d: color-mix(in oklch, var(--color-error) 7%, transparent);
+  --red-b: color-mix(in oklch, var(--color-error) 18%, transparent);
+  --violet-d: color-mix(in oklch, var(--color-accent) 7%, transparent);
+  --violet-b: color-mix(in oklch, var(--color-accent) 18%, transparent);
+
+  /* Focus ring (box-shadow value) */
+  --focus-ring: 0 0 0 2px color-mix(in oklch, var(--color-accent) 20%, transparent);
+
+  /* Geometry */
+  --r: var(--radius-sm);
+  --rc: var(--radius-md);
+  --r-xs: 8px;
+  --r-sm: var(--radius-sm);
+  --r-md: var(--radius-md);
+  --r-lg: var(--radius-lg);
+  --r-full: 999px;
+
+  /* Spacing */
+  --sp-1: var(--spacing-1);
+  --sp-2: var(--spacing-2);
+  --sp-3: var(--spacing-3);
+  --sp-4: var(--spacing-4);
+  --sp-5: var(--spacing-5);
+  --sp-6: var(--spacing-6);
+  --sp-8: var(--spacing-8);
+
+  /* Chart (fallbacks) */
+  --chart-blue: var(--color-accent);
+  --chart-violet: var(--color-accent);
+
+  /* Primitives type scale (doc §3 — optional for components) */
+  --text-2xs: 10px;
+  --text-xs: 11px;
+  --text-sm: 12px;
+  --text-base: 13px;
+  --text-md: 14px;
+  --text-lg: 16px;
+  --text-xl: 19px;
+  --text-2xl: 22px;
+  --text-3xl: 29px;
+  --text-4xl: 37px;
+  --text-hero: 40px;
+}

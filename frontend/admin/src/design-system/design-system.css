@@ -1,0 +1,8 @@
+/* Design system — single entry. Order: tokens → typography → primitives → widgets. */
+@import "./tokens/tokens.css";
+@import "./typography/typography.css";
+@import "./primitives/primitives.css";
+@import "./primitives/primitives-extended.css";
+@import "./primitives/primitives-dashboard.css";
+@import "./widgets/shell/shell.css";
+@import "./widgets/widgets.css";

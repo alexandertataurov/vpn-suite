@@ -51,6 +51,7 @@ backups/
 
 # Validation / CI artifacts
 pre_release_validation_report.txt
+frontend/admin/lighthouse-a11y.json
 
 # Testing / coverage
 .coverage
@@ -81,6 +82,9 @@ secrets/
 # OS
 .DS_Store
 Thumbs.db
+
+# Local serve / dev artifacts
+.serve/
 
 # Discovery runtime state
 config/monitoring/discovery/.targets_state.json

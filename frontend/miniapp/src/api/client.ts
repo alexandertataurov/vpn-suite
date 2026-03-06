@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react";
-import { createApiClient, getBaseUrl } from "@vpn-suite/shared/api-client";
+import { createApiClient, getBaseUrl } from "@/lib/api-client";
 
 let token: string | null = null;
 const listeners = new Set<() => void>();

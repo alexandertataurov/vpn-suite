@@ -2,7 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 
 const serverURL = process.env.PLAYWRIGHT_SERVER_URL || "http://127.0.0.1:5175/";
 const baseURL = process.env.PLAYWRIGHT_BASE_URL || new URL("webapp/", serverURL).toString();
-const webServerMode = process.env.PLAYWRIGHT_WEB_SERVER_MODE || "dev";
+const webServerMode = process.env.PLAYWRIGHT_WEB_SERVER_MODE || "preview";
 
 function getWebServerCommand() {
     if (webServerMode === "dev") {

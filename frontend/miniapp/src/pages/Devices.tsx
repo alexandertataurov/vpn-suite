@@ -1,31 +1,37 @@
 import { useEffect, useRef, useState } from "react";
-import {
-  Panel,
-  Button,
-  DeviceCard,
-  Skeleton,
-  SkeletonList,
-  useToast,
-  EmptyState,
-  ConfirmModal,
-  PageScaffold,
-  PageHeader,
-  PageSection,
-  InlineAlert,
-  ActionRow,
-  Caption,
-} from "../ui";
-import { getErrorMessage } from "@vpn-suite/shared";
-import { useTelegramMainButton } from "../hooks/useTelegramMainButton";
-import type { WebAppIssueDeviceResponse } from "@vpn-suite/shared/types";
-import { useSession } from "../hooks/useSession";
+import { getErrorMessage } from "@/lib/utils/error";
+import { useTelegramMainButton } from "@/hooks/useTelegramMainButton";
+import type { WebAppIssueDeviceResponse } from "@/lib/types";
+import { useSession } from "@/hooks/useSession";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useWebappToken, webappApi } from "../api/client";
-import { useTelegramHaptics } from "../hooks/useTelegramHaptics";
-import { useTrackScreen } from "../hooks/useTrackScreen";
-import { useTelemetry } from "../hooks/useTelemetry";
-import { FallbackScreen, SessionMissing } from "@/components";
-import { useOnlineStatus } from "../hooks/useOnlineStatus";
+import { useWebappToken, webappApi } from "@/api/client";
+import { useTelegramHaptics } from "@/hooks/useTelegramHaptics";
+import { useTrackScreen } from "@/hooks/useTrackScreen";
+import { useTelemetry } from "@/hooks/useTelemetry";
+import {
+  FallbackScreen,
+  Skeleton,
+  useToast,
+  ConfirmModal,
+  PageFrame,
+  SectionDivider,
+  SummaryHero,
+  MissionAlert,
+  MissionCard,
+  MissionChip,
+  MissionModuleHead,
+  MissionOperationArticle,
+  MissionPrimaryButton,
+  MissionSecondaryButton,
+  SessionMissing,
+} from "@/design-system";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
+
+function formatIssuedAt(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "--";
+  return date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+}
 
 export function DevicesPage() {
   const hasToken = !!useWebappToken();
@@ -63,6 +69,55 @@ export function DevicesPage() {
   });
 
   const deviceLimit = activeSub?.device_limit ?? null;
+
+  const configText =
+    issuedConfig?.config_awg ??
+    issuedConfig?.config ??
+    issuedConfig?.config_wg_obf ??
+    issuedConfig?.config_wg ??
+    "";
+
+  const handleDownloadConfig = () => {
+    if (!configText) return;
+    try {
+      const shortId = issuedConfig?.device_id?.slice(0, 8) || "device";
+      const fileName = `vpn-config-${shortId}.conf`;
+      const nav = navigator as Navigator & {
+        canShare?: (data: { files: File[] }) => boolean;
+        share?: (data: { files?: File[]; title?: string }) => Promise<void>;
+      };
+      const mimeType = "application/octet-stream";
+      const file = new File([configText], fileName, { type: mimeType });
+      const canUseShareWithFiles =
+        typeof nav.share === "function" &&
+        typeof nav.canShare === "function" &&
+        nav.canShare({ files: [file] });
+
+      if (canUseShareWithFiles) {
+        void nav
+          .share({
+            files: [file],
+            title: "VPN config",
+          })
+          .then(() => addToast("Config ready to save/share", "success"))
+          .catch(() => addToast("Could not open share sheet. Try download or copy instead.", "error"));
+        return;
+      }
+
+      const blob = new Blob([configText], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName;
+      link.target = "_blank";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch {
+      addToast("Could not download config. Please copy it manually.", "error");
+    }
+  };
 
   const revokeMutation = useMutation({
     mutationFn: async () => {
@@ -105,94 +160,148 @@ export function DevicesPage() {
   }
   if (isLoading) {
     return (
-      <PageScaffold>
-        <PageHeader title="My devices" subtitle="Issue and manage VPN profiles" />
+      <PageFrame title="My devices" subtitle="Add and manage VPN configs">
+        <Skeleton className="skeleton-h-hero" />
         <Skeleton className="skeleton-h-lg" />
-        <SkeletonList lines={3} />
-      </PageScaffold>
+        <Skeleton className="skeleton-h-lg" />
+      </PageFrame>
     );
   }
 
+  const deviceSummary =
+    deviceLimit != null
+      ? `${activeDevices.length} / ${deviceLimit} active`
+      : `${activeDevices.length} device${activeDevices.length === 1 ? "" : "s"}`;
+
   return (
-    <PageScaffold>
-      <div className="content-reveal">
-        <PageHeader title="My devices" subtitle="Issue and manage VPN profiles" />
-      {deviceLimit != null && (
-        <Caption tabular>
-          Devices: <strong>{activeDevices.length}</strong> / <strong>{deviceLimit}</strong>
-        </Caption>
-      )}
+    <PageFrame title="Devices & Access" subtitle="Add and manage VPN configs">
+      <SummaryHero
+        eyebrow="Devices"
+        title={deviceSummary}
+        subtitle={activeDevices.length === 0 ? "Add a device to get your VPN config" : undefined}
+        edge="e-b"
+        glow="g-blue"
+        className="stagger-1"
+      />
 
       {issuedConfig && (
-        <div ref={configSectionRef}>
-          <PageSection title="Your config" description="Copy and import into AmneziaVPN. This is shown only once.">
-            <Panel className="card">
+        <div ref={configSectionRef} className="stagger-2">
+          <SectionDivider label="Your config" count="Sensitive" />
+            <MissionCard tone="amber" className="module-card">
+              <MissionAlert
+                tone="info"
+                title="Shown only once"
+                message="After you leave this screen, the config may no longer be visible. Use Copy or Download now."
+              />
               {!issuedConfig.peer_created && (
-                <InlineAlert
-                  variant="warning"
+                <MissionAlert
+                  tone="warning"
                   title="Server sync pending"
                   message="Your device is registered. If connection fails, retry later or contact support."
                 />
               )}
-              <pre className="config-block">{issuedConfig.config_awg ?? issuedConfig.config ?? issuedConfig.config_wg_obf ?? issuedConfig.config_wg ?? ""}</pre>
-            </Panel>
-          </PageSection>
+              <div className="btn-row">
+                <MissionSecondaryButton
+                  onClick={async () => {
+                    if (!configText) return;
+                    try {
+                      await navigator.clipboard.writeText(configText);
+                      addToast("Config copied to clipboard", "success");
+                    } catch {
+                      addToast("Could not copy config. Please select and copy manually.", "error");
+                    }
+                  }}
+                >
+                  Copy config
+                </MissionSecondaryButton>
+                <MissionSecondaryButton onClick={handleDownloadConfig}>
+                  Download .conf file
+                </MissionSecondaryButton>
+              </div>
+              <pre className="config-pre config-block">{configText}</pre>
+            </MissionCard>
         </div>
       )}
 
-      <PageSection title="Devices" description="Add or revoke device profiles.">
+      <SectionDivider
+        label="Active Devices"
+        count={`${activeDevices.length} online`}
+        className="stagger-3"
+      />
+      <div className="stagger-4">
         {issueMutation.isError && (
-          <InlineAlert
-            variant="error"
+          <MissionAlert
+            tone="error"
             title="Could not add device"
             message={getErrorMessage(issueMutation.error, "Try again or contact support.")}
           />
         )}
         {canAddDevice && (
-          <ActionRow fullWidth>
-            <Button
-              variant="primary"
-              size="lg"
+          <div className="btn-row">
+            <MissionPrimaryButton
               onClick={() => {
                 impact("medium");
                 issueMutation.mutate();
               }}
-              loading={issueMutation.isPending}
               disabled={issueMutation.isPending}
             >
-              {issueMutation.isPending ? "Adding…" : "Add device"}
-            </Button>
-          </ActionRow>
+              {issueMutation.isPending ? (
+                <>
+                  <svg className="spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
+                    <circle cx="12" cy="12" r="8" strokeOpacity="0.35" />
+                    <path d="M20 12a8 8 0 0 0-8-8" />
+                  </svg>
+                  <span>Adding…</span>
+                </>
+              ) : (
+                "Add device"
+              )}
+            </MissionPrimaryButton>
+          </div>
         )}
 
-        <ul className="device-card-list">
-          {data?.devices?.map((d) => ( // key=
-            <li key={d.id}>
-              <DeviceCard
-                id={d.id}
-                name={d.device_name}
-                status={d.revoked_at ? "revoked" : "active"}
-                issuedAt={d.issued_at}
-                shortId={d.id.slice(0, 8)}
-                primaryAction={
-                  !d.revoked_at ? (
-                    <Button variant="ghost" size="sm" onClick={() => setRevokeId(d.id)}>
-                      Revoke
-                    </Button>
-                  ) : null
-                }
+        <div className="ops">
+          {data?.devices?.map((d) => {
+            const isRevoked = !!d.revoked_at;
+            return (
+              <MissionOperationArticle
+                key={d.id}
+                tone={isRevoked ? "red" : "green"}
+                iconTone={isRevoked ? "red" : "green"}
+                icon={(
+                  <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <rect x="5" y="2" width="14" height="20" rx="2" />
+                    <path d="M9 7h6M9 11h6M9 15h3" />
+                  </svg>
+                )}
+                title={d.device_name || d.id.slice(0, 8)}
+                description={(
+                  <span className="miniapp-tnum">
+                    {isRevoked ? "Revoked" : "Active"} · Issued {formatIssuedAt(d.issued_at)}
+                  </span>
+                )}
+                trailing={!isRevoked ? (
+                  <MissionSecondaryButton className="device-row-action" onClick={() => setRevokeId(d.id)}>
+                    Revoke
+                  </MissionSecondaryButton>
+                ) : (
+                  <MissionChip tone="red">Revoked</MissionChip>
+                )}
               />
-            </li>
-          ))}
-        </ul>
+            );
+          })}
+        </div>
 
         {!data?.devices?.length && (
-          <EmptyState
-            title="No devices yet"
-            description="Tap Add device above to get your VPN config for AmneziaVPN."
-          />
+          <MissionCard tone="blue" className="module-card">
+            <MissionModuleHead
+              label="No devices yet"
+              chip={<MissionChip tone="neutral">Empty</MissionChip>}
+            />
+            <p className="op-desc type-body-sm">Tap Add device above to get your VPN config for AmneziaVPN.</p>
+          </MissionCard>
         )}
-      </PageSection>
+      </div>
 
       <ConfirmModal
         open={revokeId !== null}
@@ -205,7 +314,6 @@ export function DevicesPage() {
         variant="danger"
         loading={revokeMutation.isPending}
       />
-      </div>
-    </PageScaffold>
+    </PageFrame>
   );
 }

@@ -7,12 +7,12 @@ interface HealthReadyResponse {
   redis?: string;
 }
 
-export function useApiHealth() {
+export function useApiHealth(enabled = true) {
   return useQuery<HealthReadyResponse>({
     queryKey: ["webapp", "health", "ready"],
     queryFn: () => webappApi.get<HealthReadyResponse>("/health/ready"),
+    enabled,
     staleTime: 60_000,
     retry: 1,
   });
 }
-

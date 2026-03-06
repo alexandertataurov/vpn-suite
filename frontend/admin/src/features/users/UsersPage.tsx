@@ -11,10 +11,27 @@ import {
   Input,
   Modal,
   Skeleton,
-  MetaText,
-  SectionTitle,
-  CardTitle,
-} from "@/design-system";
+} from "@/design-system/primitives";
+import { PageLayout } from "@/layout/PageLayout";
+import { CardTitle, MetaText } from "@/design-system/typography";
+
+/** Telegram user requisites from backend User.meta.tg (WebApp/bot). */
+interface TgRequisites {
+  id?: number;
+  first_name?: string;
+  last_name?: string;
+  username?: string;
+  language_code?: string;
+  is_premium?: boolean;
+  photo_url?: string;
+  allows_write_to_pm?: boolean;
+}
+
+function getTgRequisites(meta: Record<string, unknown> | null | undefined): TgRequisites | null {
+  const tg = meta?.tg;
+  if (!tg || typeof tg !== "object" || Array.isArray(tg)) return null;
+  return tg as TgRequisites;
+}
 
 interface UserOut {
   id: number;
@@ -200,19 +217,25 @@ export function UsersPage() {
 
   const rows = useMemo(() => {
     const items = userList?.items ?? [];
-    return items.map((u) => ({
-      id: String(u.id),
-      tg: u.tg_id,
-      email: u.email ?? "—",
-      phone: u.phone ?? "—",
-      status: u.is_banned ? "banned" : "active",
-      created: formatRelative(u.created_at),
-      actions: (
-        <Button type="button" variant="default" onClick={() => setSelectedUserId(u.id)}>
-          View
-        </Button>
-      ),
-    }));
+    return items.map((u) => {
+      const tg = getTgRequisites(u.meta ?? null);
+      const tgDisplay =
+        tg?.username ? `@${tg.username}` : [tg?.first_name, tg?.last_name].filter(Boolean).join(" ") || "—";
+      return {
+        id: String(u.id),
+        tg: u.tg_id,
+        tg_user: tgDisplay,
+        email: u.email ?? "—",
+        phone: u.phone ?? "—",
+        status: u.is_banned ? "banned" : "active",
+        created: formatRelative(u.created_at),
+        actions: (
+          <Button type="button" variant="default" size="sm" onClick={() => setSelectedUserId(u.id)}>
+            View
+          </Button>
+        ),
+      };
+    });
   }, [userList?.items]);
 
   const userMetaText = useMemo(() => {
@@ -301,54 +324,53 @@ export function UsersPage() {
   const canPrev = offset > 0;
   const canNext = offset + limit < total;
 
+  const usersActions = (
+    <>
+      <MetaText className="users-page__pager-meta">
+        {total > 0 ? `${offset + 1}-${Math.min(offset + limit, total)} of ${total}` : "0 users"}
+      </MetaText>
+      <Button type="button" variant="default" disabled={!canPrev} onClick={() => setOffset((v) => Math.max(0, v - limit))}>
+        Prev
+      </Button>
+      <Button type="button" variant="default" disabled={!canNext} onClick={() => setOffset((v) => v + limit)}>
+        Next
+      </Button>
+    </>
+  );
+
   if (isUsersLoading) {
     return (
-      <div className="page users-page">
+      <PageLayout title="Users" pageClass="users-page" hideHeader>
         <Skeleton height={32} width="30%" />
         <Skeleton height={160} />
-      </div>
+      </PageLayout>
     );
   }
 
   if (isUsersError) {
     const message = usersError instanceof Error ? usersError.message : "Failed to load users";
     return (
-      <div className="page users-page">
+      <PageLayout title="Users" pageClass="users-page" hideHeader>
         <ErrorState message={message} onRetry={() => void refetchUsers()} />
-      </div>
+      </PageLayout>
     );
   }
 
   return (
-    <div className="page users-page">
-      <div className="users-page__header">
-        <SectionTitle>Users</SectionTitle>
-        <div className="users-page__pager">
-          <MetaText className="users-page__pager-meta">
-            {total > 0 ? `${offset + 1}-${Math.min(offset + limit, total)} of ${total}` : "0 users"}
-          </MetaText>
-          <Button type="button" variant="default" disabled={!canPrev} onClick={() => setOffset((v) => Math.max(0, v - limit))}>
-            Prev
-          </Button>
-          <Button type="button" variant="default" disabled={!canNext} onClick={() => setOffset((v) => v + limit)}>
-            Next
-          </Button>
-        </div>
-      </div>
-
-      <Card>
+    <PageLayout title="Users" actions={usersActions} pageClass="users-page">
+      <Card variant="outlined">
         <div className="users-page__filters">
           <label className="users-page__filter">
             TG ID
-            <Input value={draft.tgId} onChange={(e) => setDraft((s) => ({ ...s, tgId: e.target.value }))} placeholder="e.g. 123456" />
+            <Input size="sm" value={draft.tgId} onChange={(e) => setDraft((s) => ({ ...s, tgId: e.target.value }))} placeholder="e.g. 123456" />
           </label>
           <label className="users-page__filter">
             Email
-            <Input value={draft.email} onChange={(e) => setDraft((s) => ({ ...s, email: e.target.value }))} placeholder="search email" />
+            <Input size="sm" value={draft.email} onChange={(e) => setDraft((s) => ({ ...s, email: e.target.value }))} placeholder="search email" />
           </label>
           <label className="users-page__filter">
             Phone
-            <Input value={draft.phone} onChange={(e) => setDraft((s) => ({ ...s, phone: e.target.value }))} placeholder="search phone" />
+            <Input size="sm" value={draft.phone} onChange={(e) => setDraft((s) => ({ ...s, phone: e.target.value }))} placeholder="search phone" />
           </label>
           <label className="users-page__filter">
             Status
@@ -392,8 +414,10 @@ export function UsersPage() {
         <section className="users-page__table" aria-label="Users list">
           <div className="data-table-wrap">
           <DataTable
+            density="compact"
             columns={[
-              { key: "tg", header: "TG" },
+              { key: "tg", header: "TG ID" },
+              { key: "tg_user", header: "TG user" },
               { key: "email", header: "Email" },
               { key: "phone", header: "Phone" },
               { key: "status", header: "Status" },
@@ -471,6 +495,66 @@ export function UsersPage() {
                   </p>
                 )}
 
+                {(() => {
+                  const tg = getTgRequisites(userDetail.meta ?? null);
+                  if (!tg) return null;
+                  return (
+                    <>
+                      <CardTitle as="h3" className="users-page__section-title">
+                        Telegram
+                      </CardTitle>
+                      <dl className="users-page__detail-dl users-page__detail-dl--tg">
+                        {tg.first_name != null && (
+                          <>
+                            <dt>First name</dt>
+                            <dd>{tg.first_name}</dd>
+                          </>
+                        )}
+                        {tg.last_name != null && tg.last_name !== "" && (
+                          <>
+                            <dt>Last name</dt>
+                            <dd>{tg.last_name}</dd>
+                          </>
+                        )}
+                        {tg.username != null && (
+                          <>
+                            <dt>Username</dt>
+                            <dd>@{tg.username}</dd>
+                          </>
+                        )}
+                        {tg.language_code != null && (
+                          <>
+                            <dt>Language</dt>
+                            <dd>{tg.language_code}</dd>
+                          </>
+                        )}
+                        {tg.is_premium != null && (
+                          <>
+                            <dt>Premium</dt>
+                            <dd>{tg.is_premium ? "Yes" : "No"}</dd>
+                          </>
+                        )}
+                        {tg.photo_url != null && (
+                          <>
+                            <dt>Photo</dt>
+                            <dd>
+                              <a href={tg.photo_url} target="_blank" rel="noopener noreferrer">
+                                View
+                              </a>
+                            </dd>
+                          </>
+                        )}
+                        {tg.allows_write_to_pm != null && (
+                          <>
+                            <dt>Allows write to PM</dt>
+                            <dd>{tg.allows_write_to_pm ? "Yes" : "No"}</dd>
+                          </>
+                        )}
+                      </dl>
+                    </>
+                  );
+                })()}
+
                 <CardTitle as="h3" className="users-page__section-title">
                   Profile
                 </CardTitle>
@@ -508,6 +592,7 @@ export function UsersPage() {
                 {userDetail.subscriptions.length > 0 ? (
                   <div className="data-table-wrap">
                   <DataTable
+                    density="compact"
                     columns={[
                       { key: "id", header: "ID" },
                       { key: "plan_id", header: "Plan" },
@@ -565,6 +650,7 @@ export function UsersPage() {
                 {!isUserDevicesLoading && userDevices && userDevices.items.length > 0 ? (
                   <div className="data-table-wrap">
                   <DataTable
+                    density="compact"
                     columns={[
                       { key: "device", header: "Device" },
                       { key: "server_id", header: "Server" },
@@ -658,6 +744,6 @@ export function UsersPage() {
           </Button>
         </div>
       </Modal>
-    </div>
+    </PageLayout>
   );
 }
