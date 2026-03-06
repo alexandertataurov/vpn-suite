@@ -1889,7 +1889,7 @@ body {
 
 /* Shell/runtime tokens only. Spacing/radius/typography from miniapp-tokens.css.
    --z-header/--z-nav match theme/z-index.ts (Z_HEADER, Z_NAV); theme files may override. */
-:root {
+html {
   --topbar-h: 62px;
   --nav-h: 70px;
   --miniapp-shell-max: 420px;
@@ -2866,7 +2866,7 @@ button.op {
 .h-fill.pct-100 { width: 100%; }
 
 /* Mission typography system */
-:root {
+html {
   --typo-display-size: 34px;
   --typo-h1-size: 24px;
   --typo-h2-size: 16px;
@@ -3075,7 +3075,7 @@ button.op {
 }
 
 /* Mobile-first layout polish and responsive grid system */
-:root {
+html {
   --mobile-shell-max: 420px;
   --mobile-gutter: clamp(12px, 4.2vw, 18px);
   --mobile-page-gap: clamp(12px, 3vw, 18px);

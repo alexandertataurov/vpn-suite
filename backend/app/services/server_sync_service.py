@@ -106,7 +106,7 @@ async def build_snapshot_from_node(
     node = None
     get_node_fn = getattr(adapter, "get_node_for_sync", None)
     has_get_node = callable(get_node_fn)
-    if has_get_node:
+    if get_node_fn is not None:
         node = await get_node_fn(server_id)
     # #region agent log
     _agent_log(

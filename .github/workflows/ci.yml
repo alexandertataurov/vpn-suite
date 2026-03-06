@@ -268,16 +268,15 @@ jobs:
 
       - name: Storybook test runner (admin)
         timeout-minutes: 5
-        working-directory: frontend
         run: |
           set -euo pipefail
-          npm run storybook -w admin -- --ci --host 127.0.0.1 --port 6006 &
-          for i in $(seq 1 60); do
-            curl -sf http://127.0.0.1:6006/ && break
+          npx serve -s frontend/admin/storybook-static -l 6006 &
+          for i in $(seq 1 30); do
+            curl -sf http://127.0.0.1:6006/ > /dev/null && break
             sleep 1
           done
-          curl -sf http://127.0.0.1:6006/ > /dev/null
-          npm run storybook:test -w admin
+          curl -sf http://127.0.0.1:6006/ > /dev/null || { echo "Storybook static server did not become ready"; exit 1; }
+          cd frontend && npm run storybook:test -w admin
 
       - name: Storybook guardrails (admin)
         working-directory: frontend/admin

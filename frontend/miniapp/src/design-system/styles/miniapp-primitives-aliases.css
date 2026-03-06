@@ -1,7 +1,7 @@
 /* Primitives design system token aliases (see admin design-system/docs/design-system.md).
    Maps doc token names to miniapp semantic tokens. Resolves per theme via data-theme. */
 
-:root,
+html,
 html[data-theme="dark"],
 html[data-theme="light"],
 html[data-theme="consumer-dark"],
