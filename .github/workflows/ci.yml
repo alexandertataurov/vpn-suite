@@ -93,6 +93,7 @@ jobs:
         run: pytest tests/ --cov=app --cov-report=term-missing -v
 
   build:
+    needs: [lint-test]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -109,6 +110,7 @@ jobs:
           cache-to: type=gha,mode=max
 
   trivy-scan:
+    needs: [lint-test]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -173,7 +175,7 @@ jobs:
         run: npm run build
 
       - name: Upload Sentry sourcemaps (admin)
-        if: ${{ vars.SENTRY_UPLOAD_ENABLED == 'true' }}
+        if: ${{ vars.SENTRY_UPLOAD_ENABLED == 'true' && (github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) }}
         uses: getsentry/action-release@v1
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
@@ -187,7 +189,7 @@ jobs:
           set_commits: "skip"
 
       - name: Upload Sentry sourcemaps (miniapp)
-        if: ${{ vars.SENTRY_UPLOAD_ENABLED == 'true' }}
+        if: ${{ vars.SENTRY_UPLOAD_ENABLED == 'true' && (github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) }}
         uses: getsentry/action-release@v1
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
@@ -221,6 +223,7 @@ jobs:
 
       - name: Serve admin for Lighthouse
         run: |
+          set -euo pipefail
           mkdir -p .serve/admin
           cp -r frontend/admin/dist/* .serve/admin/
           npx serve -s .serve -l 4173 &
@@ -281,8 +284,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   frontend-e2e:
-    needs: [frontend-checks]
+    needs: [lint-test, frontend-checks]
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     env:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/vpn_admin
       REDIS_URL: redis://localhost:6379/0
@@ -352,6 +356,7 @@ jobs:
 
       - name: Wait for API
         run: |
+          set -euo pipefail
           for i in $(seq 1 30); do
             curl -sf http://localhost:8000/health && exit 0
             sleep 1
@@ -382,6 +387,7 @@ jobs:
 
       - name: Wait for admin
         run: |
+          set -euo pipefail
           for i in $(seq 1 60); do
             curl -sf http://localhost:5174/admin/ && exit 0
             sleep 1

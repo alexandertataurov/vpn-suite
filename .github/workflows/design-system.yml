@@ -45,6 +45,7 @@ jobs:
 
       - name: No direct lucide imports
         run: |
+          set -euo pipefail
           COUNT=$(grep -rn "from 'lucide-react'\|from \"lucide-react\"" frontend/miniapp/src \
             --include="*.tsx" | grep -v "shared-inline/icons.ts" | wc -l)
           [ "$COUNT" -eq 0 ] || (echo "❌ $COUNT direct lucide imports found" && exit 1)
@@ -70,6 +71,7 @@ jobs:
 
       - name: Single token source
         run: |
+          set -euo pipefail
           COUNT=$(grep -rln "^:root" frontend/miniapp/src --include="*.css" | wc -l)
           [ "$COUNT" -eq 1 ] || (echo "❌ $COUNT :root files found (expected 1)" && exit 1)
 
