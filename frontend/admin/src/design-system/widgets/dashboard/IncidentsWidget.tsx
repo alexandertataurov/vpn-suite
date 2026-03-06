@@ -33,6 +33,7 @@ export function IncidentsWidget({ data, href, title, subtitle, className }: Inci
       variant="kpi"
       edge="amber"
       headerRight={renderHeaderBadge(state, data)}
+      size="medium"
       className={className}
     >
       <div className="inc-grid" aria-label="Incident summary">

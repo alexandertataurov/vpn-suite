@@ -312,7 +312,12 @@ export function ServersPage() {
             subtitle="CPU/RAM (avg)"
             className="edge eg"
           />
-          <Widget title="Egress cost estimator" subtitle="Placeholder" className="edge eb cc">
+          <Widget
+            title="Egress cost estimator"
+            subtitle="Placeholder"
+            size="medium"
+            className="edge eb cc"
+          >
             <p className="servers-page__muted type-meta">
               Coming soon. Estimate egress cost from traffic and provider rates.
             </p>
@@ -559,7 +564,7 @@ function ServersSettingsPanel({
     last_seen: formatRelative(s.last_seen_at ?? null),
     provider: s.provider ?? "—",
     actions: (
-      <Button type="button" variant="secondary" onClick={() => handleOpen(s)}>
+      <Button type="button" variant="secondary" size="sm" onClick={() => handleOpen(s)}>
         Manage
       </Button>
     ),

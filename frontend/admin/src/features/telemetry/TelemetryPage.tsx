@@ -13,7 +13,7 @@ import {
   Widget,
 } from "@/design-system/primitives";
 import { PageLayout } from "@/layout/PageLayout";
-import { KpiValue } from "@/design-system/typography";
+import { KpiValue, KpiValueUnit } from "@/design-system/typography";
 import type {
   ContainerSummary,
   ContainerSummaryListOut,
@@ -315,6 +315,7 @@ export function TelemetryPage() {
       <Button
         type="button"
         variant="secondary"
+        size="sm"
         onClick={() => handleNodeSync(s.id)}
         disabled={nodeActionPendingId === s.id}
       >
@@ -366,6 +367,7 @@ export function TelemetryPage() {
             <Button
               type="button"
               variant="secondary"
+              size="sm"
               onClick={() => handleDockerAction(a.container_id!, "restart")}
             >
               Restart
@@ -394,7 +396,7 @@ export function TelemetryPage() {
       <SectionHeader label="Summary" size="lg" note={`Snapshot ${formatRelativeFromSeconds(meta.snapshot_ts)}`} />
       <div className="kpi-grid telemetry-page__cards">
         {nodeSummary && (
-          <Widget title="Nodes" subtitle="cluster status" variant="kpi" href="/servers">
+          <Widget title="Nodes" subtitle="cluster status" variant="kpi" href="/servers" size="medium">
             <KpiValue as="div" className="kpi__value">
               <AnimatedNumber value={nodeSummary.online} />/<AnimatedNumber value={nodeSummary.total} /> online
             </KpiValue>
@@ -405,7 +407,7 @@ export function TelemetryPage() {
           </Widget>
         )}
         {deviceSummary && (
-          <Widget title="Devices" subtitle="handshake + reconcile" variant="kpi" href="/devices">
+          <Widget title="Devices" subtitle="handshake + reconcile" variant="kpi" href="/devices" size="medium">
             <KpiValue as="div" className="kpi__value">
               <AnimatedNumber value={deviceSummary.handshake_ok} />/<AnimatedNumber value={deviceSummary.total} /> healthy
             </KpiValue>
@@ -416,7 +418,7 @@ export function TelemetryPage() {
           </Widget>
         )}
         {sessionsSummary && (
-          <Widget title="Sessions" subtitle="current snapshot" variant="kpi">
+          <Widget title="Sessions" subtitle="current snapshot" variant="kpi" size="medium">
             <KpiValue as="div" className="kpi__value">
               <AnimatedNumber value={sessionsSummary.active_sessions} />
             </KpiValue>
@@ -427,21 +429,24 @@ export function TelemetryPage() {
         )}
         {strip && (
           <>
-            <Widget title="Latency" subtitle="avg" variant="kpi">
-              <KpiValue as="div" className="kpi__value">
-                {strip.avg_latency_ms != null ? (
-                  <><AnimatedNumber value={strip.avg_latency_ms} decimals={0} /> ms</>
-                ) : (
-                  "—"
-                )}
-              </KpiValue>
+            <Widget title="Latency" subtitle="avg" variant="kpi" size="medium">
+              <KpiValueUnit
+                value={
+                  strip.avg_latency_ms != null ? (
+                    <AnimatedNumber value={strip.avg_latency_ms} decimals={0} />
+                  ) : (
+                    "—"
+                  )
+                }
+                unit={strip.avg_latency_ms != null ? "ms" : ""}
+              />
             </Widget>
-            <Widget title="TX/RX" subtitle="current" variant="kpi">
+            <Widget title="TX/RX" subtitle="current" variant="kpi" size="medium">
               <KpiValue as="div" className="kpi__value kpi__value--small">
                 {formatBps(strip.total_throughput_bps ?? 0)}
               </KpiValue>
             </Widget>
-            <Widget title="CPU" subtitle="avg" variant="kpi">
+            <Widget title="CPU" subtitle="avg" variant="kpi" size="medium">
               <KpiValue as="div" className="kpi__value">
                 {avgCpu != null ? (
                   <><AnimatedNumber value={avgCpu} decimals={1} />%</>
@@ -450,7 +455,7 @@ export function TelemetryPage() {
                 )}
               </KpiValue>
             </Widget>
-            <Widget title="RAM" subtitle="avg" variant="kpi">
+            <Widget title="RAM" subtitle="avg" variant="kpi" size="medium">
               <KpiValue as="div" className="kpi__value">
                 {avgRam != null ? (
                   <><AnimatedNumber value={avgRam} decimals={1} />%</>
@@ -459,17 +464,17 @@ export function TelemetryPage() {
                 )}
               </KpiValue>
             </Widget>
-            <Widget title="Avg bandwidth" subtitle="over window" variant="kpi">
+            <Widget title="Avg bandwidth" subtitle="over window" variant="kpi" size="medium">
               <KpiValue as="div" className="kpi__value kpi__value--small">
                 {avgThroughputBps != null ? formatBps(avgThroughputBps) : "—"}
               </KpiValue>
             </Widget>
-            <Widget title="Peak bandwidth" subtitle="over window" variant="kpi">
+            <Widget title="Peak bandwidth" subtitle="over window" variant="kpi" size="medium">
               <KpiValue as="div" className="kpi__value kpi__value--small">
                 {peakThroughputBps != null ? formatBps(peakThroughputBps) : "—"}
               </KpiValue>
             </Widget>
-            <Widget title="Data transfer" subtitle="total" variant="kpi">
+            <Widget title="Data transfer" subtitle="total" variant="kpi" size="medium">
               <KpiValue as="div" className="kpi__value kpi__value--small">
                 {totalBytes != null ? formatBytes(totalBytes) : "—"}
               </KpiValue>
@@ -736,6 +741,7 @@ function buildDockerRow(
             <Button
               type="button"
               variant="secondary"
+              size="sm"
               onClick={() => handleDockerAction(c.container_id, "restart")}
               disabled={pending}
             >
@@ -744,6 +750,7 @@ function buildDockerRow(
             <Button
               type="button"
               variant="secondary"
+              size="sm"
               onClick={() => handleDockerAction(c.container_id, "stop")}
               disabled={pending}
             >
@@ -754,6 +761,7 @@ function buildDockerRow(
           <Button
             type="button"
             variant="secondary"
+            size="sm"
             onClick={() => handleDockerAction(c.container_id, "start")}
             disabled={pending}
           >

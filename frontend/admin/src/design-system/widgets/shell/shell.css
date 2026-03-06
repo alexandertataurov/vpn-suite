@@ -3,7 +3,7 @@
 .shell {
   display: grid;
   grid-template-columns: 208px 1fr;
-  grid-template-rows: 42px 1fr;
+  grid-template-rows: 52px 1fr;
   min-height: 100vh;
   background: var(--bg);
   color: var(--tx-pri);
@@ -25,7 +25,7 @@
   grid-column: 1 / -1;
   display: flex;
   align-items: center;
-  height: 42px;
+  height: 52px;
   padding: 0 16px;
   background: var(--s0);
   border-bottom: 1px solid var(--bd-sub);
@@ -103,7 +103,7 @@
 }
 
 .tb-btn {
-  height: 24px;
+  height: 30px;
   padding: 0 10px;
   font: 500 var(--text-2xs) var(--font-mono);
   letter-spacing: 0.08em;
@@ -138,6 +138,19 @@
   justify-content: center;
 }
 
+/* User menu button with avatar + label */
+.tb-user-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tb-user-label {
+  font: 500 var(--text-2xs) var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .sidebar {
   background: var(--s0);
   border-right: 1px solid var(--bd-sub);
@@ -147,8 +160,8 @@
   width: 208px;
   flex-shrink: 0;
   position: sticky;
-  top: 42px;
-  height: calc(100vh - 42px);
+  top: 52px;
+  height: calc(100vh - 52px);
   overflow-y: auto;
 }
 

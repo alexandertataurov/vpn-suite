@@ -90,9 +90,10 @@ export function DashboardTopbar({ onOpenMenu }: DashboardTopbarProps) {
       <TopbarRight>
         <TopbarTime>{time}</TopbarTime>
         <TopbarLiveChip />
-        <TopbarBtn aria-label="Refresh">Refresh</TopbarBtn>
-        <TopbarBtn aria-label="Settings">Settings</TopbarBtn>
-        <TopbarAvatar initials="OP" />
+        <TopbarBtn aria-label="Open user settings" className="tb-user-btn">
+          <TopbarAvatar initials="OP" />
+          <span className="tb-user-label">Settings</span>
+        </TopbarBtn>
         <TopbarBtn
           aria-label="Sign out"
           onClick={() => useAuthStore.getState().logout()}

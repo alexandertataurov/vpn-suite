@@ -4,6 +4,9 @@
  * and map them to CSS classes from `widgets.css`.
  */
 
+/** Semantic sizing for dashboard widgets and panels. See design-principles §16 (Dashboard patterns). */
+export type WidgetSize = "small" | "medium" | "large";
+
 export type WidgetAccent = "green" | "amber" | "red" | "blue" | "purple" | "cyan" | "dim";
 
 export type TrendDirection = "up" | "down" | "flat";

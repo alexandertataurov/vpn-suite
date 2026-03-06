@@ -1,5 +1,6 @@
 import type { LatencyWidgetData } from "../widgets.types";
 import { Widget } from "../../primitives/Widget";
+import { KpiValueUnit } from "../../typography";
 
 interface ApiLatencyWidgetProps {
   data: LatencyWidgetData;
@@ -34,12 +35,10 @@ export function ApiLatencyWidget({
       variant="kpi"
       edge="violet"
       headerRight={<span className="chip cn">{trendLabel}</span>}
+      size="medium"
       className={className}
     >
-      <div className="kv">
-        {formatLatencyValue(data.p95Ms)}
-        <span className="u">ms</span>
-      </div>
+      <KpiValueUnit value={formatLatencyValue(data.p95Ms)} unit="ms" />
 
       {showDistribution && (data.p50Ms != null || data.p99Ms != null) && (
         <div className="chips">

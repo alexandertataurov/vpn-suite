@@ -1,17 +1,6 @@
 import { useMemo, useState, useCallback, useRef, useEffect } from "react";
 import { useApiQuery } from "@/core/api/useApiQuery";
-import {
-  Button,
-  Drawer,
-  EmptyState,
-  ErrorState,
-  LinkButton,
-  SectionHeader,
-  Skeleton,
-  useToast,
-  Widget,
-  Nbar,
-} from "@/design-system/primitives";
+import { Button, Drawer, EmptyState, ErrorState, SectionHeader, Skeleton, useToast, Widget, Nbar } from "@/design-system/primitives";
 import { PageLayout } from "@/layout/PageLayout";
 import { BodyText } from "@/design-system/typography";
 import {
@@ -63,6 +52,23 @@ interface OperatorDashboard {
     affected_servers?: number;
     link?: string;
   }>;
+}
+
+function getServerStatusVisual(status: string) {
+  const statusVariant = serverStatusToVariant(status);
+  const statusLabel =
+    statusVariant === "danger"
+      ? "offline"
+      : statusVariant === "warning"
+        ? "warning"
+        : "healthy";
+  const statusClass =
+    statusVariant === "danger"
+      ? "off"
+      : statusVariant === "warning"
+        ? "warn"
+        : "ok";
+  return { statusClass, statusLabel };
 }
 
 function formatBps(bps: number): string {
@@ -306,7 +312,7 @@ export function OverviewPage() {
 
   const overviewDescription = (
     <>
-      <span className="dot" />
+      <span className="dot" aria-hidden="true" />
       <span>Last updated {lastUpdatedLabel}</span>
       <span className="sep">·</span>
       <span>
@@ -317,19 +323,17 @@ export function OverviewPage() {
   );
   const overviewActions = (
     <>
-      <LinkButton
+      <Button
         variant="ghost"
         size="sm"
-        to="#"
         className="act"
         aria-label="Export"
-        onClick={(e) => {
-          e.preventDefault();
+        onClick={() => {
           toast.showToast({ variant: "info", title: "Export", description: "Export not available yet." });
         }}
       >
         Export
-      </LinkButton>
+      </Button>
       <Button
         variant="default"
         onClick={handleRefresh}
@@ -373,7 +377,7 @@ export function OverviewPage() {
           </div>
         </div>
       )}
-      <section className="overview-page__kpis" aria-label="Key metrics">
+      <section className="page-section overview-page__kpis" aria-label="Key metrics">
         <SectionHeader label="System Status" size="lg" note="Last 1 hour" />
         <div className="kpi-row">
           <SessionsWidget
@@ -414,13 +418,14 @@ export function OverviewPage() {
         </div>
       </section>
 
-      <section aria-label="Live metrics">
+      <section className="page-section overview-page__live" aria-label="Live metrics">
         <SectionHeader label="Live Metrics" size="lg" note="Last 1 hour" />
         <div className="chart-row">
         <Widget
           title="Peers"
           subtitle="Last 1 hour"
           href="/telemetry"
+          size="medium"
           className="edge eb cc"
         >
           {timeseries.length > 1 ? (
@@ -434,6 +439,7 @@ export function OverviewPage() {
           title="Bandwidth"
           subtitle="Last 1 hour (RX+TX)"
           href="/telemetry"
+          size="medium"
           className="edge ev cc"
         >
           {timeseries.length > 2 ? (
@@ -443,25 +449,29 @@ export function OverviewPage() {
           )}
         </Widget>
 
-        <Widget title="Top nodes" subtitle="By traffic" href="/servers" className="edge et cc">
+        <Widget
+          title="Top nodes"
+          subtitle="By traffic"
+          href="/servers"
+          size="medium"
+          className="edge et cc"
+        >
           {topTraffic.length > 0 ? (
-            <div className="nlist" aria-label="Top nodes by traffic">
+            <ul className="nlist" aria-label="Top nodes by traffic">
               {topTraffic.map((s, idx) => {
                 const rank = idx + 1;
                 const value = s.throughput_bps ?? 0;
                 const max = maxTrafficBps || 0;
                 const pct = max > 0 ? Math.max(0, Math.min(100, (value / max) * 100)) : 0;
-                const statusVariant = serverStatusToVariant(s.status);
-                const statusClass =
-                  statusVariant === "danger"
-                    ? "off"
-                    : statusVariant === "warning"
-                      ? "warn"
-                      : "ok";
+                const { statusClass, statusLabel } = getServerStatusVisual(s.status);
                 return (
-                  <div key={s.id} className="ni">
+                  <li key={s.id} className="ni">
                     <span className="nrank">{rank}</span>
-                    <span className={`nst ${statusClass}`} />
+                    <span
+                      className={`nst ${statusClass}`}
+                      role="img"
+                      aria-label={`Status: ${statusLabel}`}
+                    />
                     <span className="nname">
                       {s.name}
                       {s.region && (
@@ -472,36 +482,40 @@ export function OverviewPage() {
                       {formatBps(value)}
                     </span>
                     <Nbar pct={pct} variant="blue" />
-                  </div>
+                  </li>
                 );
               })}
-            </div>
+            </ul>
           ) : (
             <EmptyState message="No node traffic yet." />
           )}
         </Widget>
 
-        <Widget title="Hot nodes" subtitle="By CPU" href="/servers" className="edge ea cc">
+        <Widget
+          title="Hot nodes"
+          subtitle="By CPU"
+          href="/servers"
+          size="medium"
+          className="edge ea cc"
+        >
           {topCpu.length > 0 ? (
-            <div className="nlist" aria-label="Top nodes by CPU">
+            <ul className="nlist" aria-label="Top nodes by CPU">
               {topCpu.map((s, idx) => {
                 const rank = idx + 1;
                 const value = s.cpu_pct ?? 0;
                 const max = maxCpuPct || 0;
                 const pct = max > 0 ? Math.max(0, Math.min(100, (value / max) * 100)) : 0;
-                const statusVariant = serverStatusToVariant(s.status);
-                const statusClass =
-                  statusVariant === "danger"
-                    ? "off"
-                    : statusVariant === "warning"
-                      ? "warn"
-                      : "ok";
+                const { statusClass, statusLabel } = getServerStatusVisual(s.status);
                 const valueClass =
                   value >= 85 ? "nval wc" : value >= 60 ? "nval" : "nval";
                 return (
-                  <div key={s.id} className="ni">
+                  <li key={s.id} className="ni">
                     <span className="nrank">{rank}</span>
-                    <span className={`nst ${statusClass}`} />
+                    <span
+                      className={`nst ${statusClass}`}
+                      role="img"
+                      aria-label={`Status: ${statusLabel}`}
+                    />
                     <span className="nname">
                       {s.name}
                       {s.region && (
@@ -515,10 +529,10 @@ export function OverviewPage() {
                       pct={pct}
                       variant={value >= 85 ? "red" : value >= 60 ? "amber" : "blue"}
                     />
-                  </div>
+                  </li>
                 );
               })}
-            </div>
+            </ul>
           ) : (
             <EmptyState message="No CPU telemetry yet." />
           )}

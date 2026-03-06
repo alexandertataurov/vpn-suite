@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
 import { Card } from "./Card";
 import { CardTitle, Caption } from "../typography";
+import type { WidgetSize } from "../widgets/widgets.types";
 
 /** Left-edge accent per design-system: category of data (sessions=blue, health=green, incidents=amber, errors=red, latency=violet, cluster=teal) */
 export type WidgetEdgeAccent = "blue" | "green" | "amber" | "red" | "violet" | "teal";
@@ -14,6 +15,12 @@ const EDGE_CLASS: Record<WidgetEdgeAccent, string> = {
   red: "er",
   violet: "ev",
   teal: "et",
+};
+
+const SIZE_CLASS: Record<WidgetSize, string> = {
+  small: "ds-widget--sm",
+  medium: "ds-widget--md",
+  large: "ds-widget--lg",
 };
 
 interface WidgetProps {
@@ -30,6 +37,8 @@ interface WidgetProps {
   onClick?: () => void;
   /** Apply interactive hover/focus styles */
   interactive?: boolean;
+  /** Semantic size used by dashboard grids: small, medium, large. */
+  size?: WidgetSize;
   children?: ReactNode;
 }
 
@@ -47,15 +56,18 @@ export function Widget({
   href,
   onClick,
   interactive = false,
+   size,
   children,
 }: WidgetProps) {
   const isInteractive = interactive || !!href || !!onClick;
   const edgeClass = variant === "kpi" && edge ? EDGE_CLASS[edge] : null;
+  const sizeClass = size ? SIZE_CLASS[size] : null;
   const rootClassName = cx(
     "widget",
     variant === "kpi" && "kpi",
     variant === "kpi" && edge && "edge",
     edgeClass,
+    sizeClass,
     isInteractive && "widget--interactive",
     className
   );

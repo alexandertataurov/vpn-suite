@@ -1,5 +1,6 @@
 import type { SessionsWidgetData } from "../widgets.types";
 import { Widget } from "../../primitives/Widget";
+import { KpiValueUnit } from "../../typography";
 
 type SessionsWidgetProps =
   | {
@@ -52,10 +53,7 @@ export function SessionsWidget({ data, href, title, subtitle, className }: Sessi
     </>
   ) : (
     <>
-      <div className="kv">
-        {value}
-        <span className="u">peers</span>
-      </div>
+      <KpiValueUnit value={value} unit="peers" />
 
       <div className="chips">
         <span className="chip cn">{deltaChipLabel}</span>
@@ -80,6 +78,7 @@ export function SessionsWidget({ data, href, title, subtitle, className }: Sessi
       href={showBodyShimmer ? undefined : href}
       variant="kpi"
       edge="blue"
+      size="medium"
       className={className}
     >
       {body}

@@ -87,7 +87,11 @@ export function OverviewPeersChart(props: { points: OperatorTimeseriesPoint[]; c
         </span>
         <span className="overview-chart__unit type-label">connected peers</span>
       </div>
-      <div className="overview-chart__plot" aria-label="Peers timeseries chart">
+      <div
+        className="overview-chart__plot"
+        role="img"
+        aria-label="Peers over time, last 1 hour"
+      >
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data}>
             <CartesianGrid
@@ -157,7 +161,11 @@ export function OverviewThroughputChart(props: { points: OperatorTimeseriesPoint
         <span className="overview-chart__kpi type-data-lg">{lastBps != null ? formatBps(lastBps) : "—"}</span>
         <span className="overview-chart__unit type-label">bandwidth</span>
       </div>
-      <div className="overview-chart__plot" aria-label="Bandwidth timeseries chart">
+      <div
+        className="overview-chart__plot"
+        role="img"
+        aria-label="Bandwidth over time, last 1 hour"
+      >
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data}>
             <CartesianGrid

@@ -265,6 +265,8 @@ The type scale has 8 sizes. Every text element maps to one of them. Here's how t
 | Hint text, body-xs, timestamps | 9px | 400 | 0 | Mixed |
 | Labels, badges, chips, buttons | 8px | 500–600 | +0.100em | **UPPERCASE** |
 
+**WCAG 2.0 AA note:** These pixel values describe the internal type token scale. For production UIs targeting WCAG 2.0 AA, never render text smaller than **12px**; any role that uses 8–11px tokens must be scaled so its effective on-screen size is ≥ 12px.
+
 **The question for every text element is:** What tier does this sit on, and what is its role in the hierarchy?
 
 - Is it naming something? → 8px uppercase label
@@ -725,7 +727,7 @@ Density without structure is noise. The techniques that make high density legibl
 
 There is a floor. Below it, elements become illegible and the density produces errors rather than efficiency. These are the minimum sizes in the system:
 
-- Minimum text: 8px (uppercase, short strings, labels only)
+- Minimum **rendered** text in production: 12px (WCAG 2.0 AA; 8–11px tokens must be scaled so effective size is ≥ 12px)
 - Minimum interactive element: 24×24px
 - Minimum chart height: 118px (the fixed SVG viewBox height)
 - Minimum status dot: 5×5px
@@ -1064,6 +1066,19 @@ See Section 20 for full feedback and notification guidelines.
 ## 16. Dashboard Patterns
 
 Dashboard patterns are higher-level constructs built from primitives. They are not individual components — they are specific, repeatable combinations of components and layout that serve dashboard use cases.
+
+### Widget sizing (small / medium / large)
+
+Dashboard widgets use a simple three-tier sizing system, encoded as the `WidgetSize` type in `widgets.types.ts`:
+
+- **Small (`"small"`)** — single KPI or micro visual. Fits comfortably in a 1×1 tile with one primary value and minimal context (e.g. `KpiNumberWidget`, node sparklines, alert strips).
+- **Medium (`"medium"`)** — standard dashboard card. One primary metric plus 1–3 supporting chips, meters, or a small sparkline (e.g. `SessionsWidget`, `ApiLatencyWidget`, `TelemetryWidget`, `ClusterLoadWidget`, `ServersSummaryWidget`, `IncidentsWidget`).
+- **Large (`"large"`)** — composite or drilldown area. Grids of cards, tables, or stacked panels that take over a major section of the page (e.g. VPN node grid and drilldown panels).
+
+The `Widget` primitive accepts an optional `size` prop (`"small" | "medium" | "large"`), which maps to layout classes (`.ds-widget--sm`, `.ds-widget--md`, `.ds-widget--lg`) and adjusts card min-heights. New dashboard widgets should:
+
+- Default to **medium** unless they are a single KPI/micro visual (then **small**) or a composite/table that owns a major section (then **large**).
+- Use the `size` prop consistently so the grid can rely on it for density and future span rules, instead of hardcoding per-widget layout tweaks.
 
 ### KPI Card
 

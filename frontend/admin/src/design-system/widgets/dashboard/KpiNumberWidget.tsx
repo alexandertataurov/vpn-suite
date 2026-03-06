@@ -14,7 +14,15 @@ interface KpiNumberWidgetProps {
 
 export function KpiNumberWidget({ title, subtitle, href, edge, children, className }: KpiNumberWidgetProps) {
   return (
-    <Widget title={title} subtitle={subtitle} variant="kpi" edge={edge} href={href} className={className}>
+    <Widget
+      title={title}
+      subtitle={subtitle}
+      variant="kpi"
+      edge={edge}
+      href={href}
+      size="small"
+      className={className}
+    >
       <KpiValue as="div" className="kpi__value">
         {children}
       </KpiValue>

@@ -46,6 +46,7 @@
   height: 4px;
   border-radius: 50%;
   background: var(--green);
+  flex-shrink: 0;
 }
 
 .ph-meta .sep {
@@ -157,6 +158,20 @@
   flex-direction: column;
   gap: var(--sp-3);
   min-height: 260px;
+  margin: var(--sp-1);
+}
+
+/* Widget size variants (see WidgetSize type) */
+.card.widget.ds-widget--sm {
+  min-height: 180px;
+}
+
+.card.widget.ds-widget--md {
+  min-height: 260px;
+}
+
+.card.widget.ds-widget--lg {
+  min-height: 320px;
 }
 
 .widget__header {
@@ -289,7 +304,7 @@ div[role="button"].widget--interactive {
   font-weight: 400;
   color: var(--tx-mut);
   letter-spacing: -0.01em;
-  margin-left: 1px;
+  margin-left: var(--sp-1);
 }
 
 /* KPI value & meta (canonical — used by KpiValue, Telemetry, Devices, etc.) */
@@ -566,10 +581,10 @@ div[role="button"].widget--interactive {
   overflow: visible;
 }
 
-/* Chart row layout — 3 area charts + 1 ranked list (252px); doc §11 */
+/* Chart row layout — 2 widgets per row on desktop; doc §11 */
 .chart-row {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr 252px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 3px;
   margin-bottom: 3px;
 }
@@ -678,6 +693,10 @@ div[role="button"].widget--interactive {
   flex-direction: column;
   gap: 2px;
   margin-top: 10px;
+}
+
+.overview-widget__list-region {
+  margin-left: 2px;
 }
 
 .ni {

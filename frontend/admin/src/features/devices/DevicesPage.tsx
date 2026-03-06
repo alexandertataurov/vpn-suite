@@ -677,6 +677,7 @@ export function DevicesPage() {
         <Button
           type="button"
           variant="default"
+          size="sm"
           onClick={() => setDetailDeviceId(d.id)}
           aria-label={`View ${d.device_name || d.id}`}
         >
@@ -730,7 +731,7 @@ export function DevicesPage() {
     >
       <SectionHeader label="Summary" size="lg" />
       <div className="kpi-grid devices-page__cards">
-        <Widget title="Total devices" subtitle="inventory" variant="kpi" href="/devices">
+        <Widget title="Total devices" subtitle="inventory" variant="kpi" href="/devices" size="medium">
           <KpiValue as="div" className="kpi__value">
             <AnimatedNumber value={summary.total} />
           </KpiValue>
@@ -739,7 +740,7 @@ export function DevicesPage() {
             <span className="kpi__meta-item">{summary.revoked} revoked</span>
           </div>
         </Widget>
-        <Widget title="Active share" subtitle="fleet" variant="kpi">
+        <Widget title="Active share" subtitle="fleet" variant="kpi" size="medium">
           <KpiValue as="div" className="kpi__value">
             <AnimatedNumber value={activePercent} decimals={1} />%
           </KpiValue>
@@ -749,7 +750,7 @@ export function DevicesPage() {
             </span>
           </div>
         </Widget>
-        <Widget title="Handshake health" subtitle="recent handshake" variant="kpi">
+        <Widget title="Handshake health" subtitle="recent handshake" variant="kpi" size="medium">
           <KpiValue as="div" className="kpi__value">
             <AnimatedNumber value={healthy} />
           </KpiValue>
@@ -762,7 +763,7 @@ export function DevicesPage() {
             )}
           </div>
         </Widget>
-        <Widget title="Traffic" subtitle="recent" variant="kpi">
+        <Widget title="Traffic" subtitle="recent" variant="kpi" size="medium">
           <KpiValue as="div" className="kpi__value">
             <AnimatedNumber value={telemetryNone} />
           </KpiValue>
@@ -770,7 +771,7 @@ export function DevicesPage() {
             <span className="kpi__meta-item">zero traffic devices</span>
           </div>
         </Widget>
-        <Widget title="Config quality" subtitle="configs" variant="kpi">
+        <Widget title="Config quality" subtitle="configs" variant="kpi" size="medium">
           <KpiValue as="div" className="kpi__value">
             <AnimatedNumber value={summary.unused_configs} />
           </KpiValue>
@@ -779,7 +780,13 @@ export function DevicesPage() {
             <span className="kpi__meta-item">{summary.no_allowed_ips} invalid allowed_ips</span>
           </div>
         </Widget>
-        <Widget title="Needs attention" subtitle="config / telemetry" variant="kpi" href="/devices">
+        <Widget
+          title="Needs attention"
+          subtitle="config / telemetry"
+          variant="kpi"
+          href="/devices"
+          size="medium"
+        >
           <KpiValue as="div" className="kpi__value">
             <AnimatedNumber value={attentionCount} />
           </KpiValue>
@@ -1120,6 +1127,7 @@ export function DevicesPage() {
                           <Button
                             type="button"
                             variant="ghost"
+                            size="sm"
                             onClick={() => downloadIssuedConfig(c.id)}
                             disabled={actionPending}
                           >
@@ -1128,6 +1136,7 @@ export function DevicesPage() {
                           <Button
                             type="button"
                             variant="ghost"
+                            size="sm"
                             onClick={() => {
                               void handleCopyIssuedConfig(c.id);
                             }}
@@ -1138,6 +1147,7 @@ export function DevicesPage() {
                           <Button
                             type="button"
                             variant="ghost"
+                            size="sm"
                             onClick={() => {
                               void handleShowIssuedConfigQr(c.id);
                             }}

@@ -58,6 +58,7 @@ export function ServersSummaryWidget({
       href={href}
       variant="kpi"
       edge="teal"
+      size="medium"
       className={className}
     >
       <div className="cmeters">

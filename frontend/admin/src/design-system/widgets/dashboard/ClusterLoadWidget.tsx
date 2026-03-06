@@ -29,6 +29,7 @@ export function ClusterLoadWidget({ data, href, title, subtitle, className }: Cl
       href={href}
       variant="kpi"
       edge="teal"
+      size="medium"
       className={className}
     >
       <div className="cmeters">

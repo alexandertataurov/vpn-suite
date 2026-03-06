@@ -1,5 +1,21 @@
 /* App-level layout + chart typography glue. Kept minimal; all core typography comes from design-system/tokens + typography utilities. */
 
+/* Overview chart meta (value + unit label) */
+.overview-chart__meta {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+}
+
+.overview-chart__tooltip {
+  padding: 6px 10px;
+  border-radius: var(--r-md);
+  background: var(--s2);
+  border: 1px solid var(--bd-def);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
+  color: var(--tx-pri);
+}
+
 .overview-chart__meta-label {
   font-family: var(--font-mono);
   font-size: var(--text-2xs);
@@ -16,6 +32,10 @@
   color: var(--tx-mut);
 }
 
+.overview-chart__tooltip-value {
+  margin-top: 2px;
+}
+
 /* Overview charts layout — ensure chart containers have height */
 .overview-chart {
   display: flex;
@@ -28,6 +48,19 @@
 .overview-chart__plot {
   flex: 1;
   min-height: 220px;
+}
+
+/* Generic page section layout for dashboard pages */
+.page-section {
+  margin: var(--sp-4) 0;
+}
+
+.page-section:first-of-type {
+  margin-top: 0;
+}
+
+.page-section:last-of-type {
+  margin-bottom: 0;
 }
 
 /* Servers widgets grid */

@@ -39,6 +39,7 @@ export function TelemetryWidget({ data, href, title, subtitle, className }: Tele
       href={href}
       variant="kpi"
       edge="green"
+      size="medium"
       className={className}
     >
       <div className={cx("state-word", stateWordClass)}>

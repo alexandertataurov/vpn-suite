@@ -604,6 +604,7 @@ export interface UserOut {
   tg_id: number | null;
   email: string | null;
   phone: string | null;
+  meta: Record<string, unknown> | null;
   is_banned: boolean;
   created_at: string;
   updated_at: string;

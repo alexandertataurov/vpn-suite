@@ -1,4 +1,4 @@
-import type { HTMLAttributes, ElementType } from "react";
+import type { HTMLAttributes, ElementType, ReactNode } from "react";
 
 type HtmlTag = "div" | "span" | "p" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
 
@@ -54,5 +54,20 @@ export function KpiDelta({ direction, as, className, ...props }: KpiDeltaProps) 
   const Tag = (as ?? "span") as ElementType;
   const directionClass = direction ? `type-delta ${direction}` : "type-delta";
   return <Tag className={cx(directionClass, className)} {...props} />;
+}
+
+interface KpiValueUnitProps extends TypographyProps {
+  value: ReactNode;
+  unit: ReactNode;
+}
+
+export function KpiValueUnit({ value, unit, as, className, ...props }: KpiValueUnitProps) {
+  const Tag = (as ?? "div") as ElementType;
+  return (
+    <Tag className={cx("kv", className)} {...props}>
+      {value}
+      <span className="u">{unit}</span>
+    </Tag>
+  );
 }
 
