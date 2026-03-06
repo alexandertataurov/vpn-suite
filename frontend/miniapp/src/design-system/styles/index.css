@@ -2,6 +2,7 @@
 @import "./miniapp-tokens.css";
 @import "./telegram-miniapp-design-system.css";
 @import "./miniapp-palette.css";
+@import "./miniapp-theme-consumer.css";
 @import "./miniapp-primitives-aliases.css";
 @import "./miniapp.css";
 @import "./content-library.css";

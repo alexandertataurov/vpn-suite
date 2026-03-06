@@ -1,6 +1,9 @@
 /**
  * Design system color tokens. Use semantic tokens in components; do not use primitives directly.
  * CSS source: miniapp-tokens.css, miniapp-primitives-aliases.css.
+ *
+ * Error vs danger: Semantic token is `error` (--color-error). "Danger" is legacy alias:
+ * CSS --danger, .btn-danger, tokens-map SEMANTICS.danger all map to --color-error.
  */
 export const COLOR_TOKENS = {
   /** Page, chrome */

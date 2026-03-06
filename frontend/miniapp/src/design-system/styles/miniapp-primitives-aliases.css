@@ -82,6 +82,10 @@ html[data-theme="dim"] {
   /* Focus ring (box-shadow value) */
   --focus-ring: 0 0 0 2px color-mix(in oklch, var(--color-accent) 20%, transparent);
 
+  /* Font aliases (Content Library and miniapp.css use these) */
+  --ui: var(--font-sans);
+  --mono: var(--font-mono);
+
   /* Geometry */
   --r: var(--radius-sm);
   --rc: var(--radius-md);

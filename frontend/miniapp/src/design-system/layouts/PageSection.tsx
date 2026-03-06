@@ -19,8 +19,8 @@ export function SectionHeaderRow({
   if (!title && !description && !action) return null;
   return (
     <div className={`shead ${className}`.trim()} {...props}>
-      <span className="shead-label">{title ?? "\u00A0"}</span>
-      <span className="shead-line" aria-hidden />
+      <span className="shead-lbl">{title ?? "\u00A0"}</span>
+      <span className="shead-rule" aria-hidden />
       {(action ?? description) ? (
         <span className="shead-note">{action ?? description}</span>
       ) : null}
@@ -52,8 +52,8 @@ export function PageSection({
         {hasShead ? (
           <>
             <div className="shead">
-              <span className="shead-label">{title}</span>
-              <span className="shead-line" aria-hidden />
+              <span className="shead-lbl">{title}</span>
+              <span className="shead-rule" aria-hidden />
               {action ? <span className="shead-note">{action}</span> : null}
             </div>
             {description ? (
