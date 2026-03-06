@@ -1,229 +1,84 @@
-"""Start, language selection, ref_ parsing, pay_ deep link."""
+"""Start command: greeting and one "Open app" Web App button."""
 
-import structlog
-from aiogram import F, Router
+from urllib.parse import urlencode
+
+from aiogram import Router
 from aiogram.filters import CommandStart
-from aiogram.types import Message, CallbackQuery, LabeledPrice
-from aiogram.utils.deep_linking import decode_payload
+from aiogram.types import (
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    MenuButtonWebApp,
+    Message,
+    WebAppInfo,
+)
 
+from config import MINIAPP_URL
 from i18n import t
-from metrics import record_payment_start
-from menus.render import render_menu
-from utils.formatting import is_subscription_effectively_active
+from utils.logging import get_logger
+
+_log = get_logger(__name__)
 
 router = Router()
-_log = structlog.get_logger(__name__)
 
 REF_PREFIX = "ref_"
-PAY_PREFIX = "pay_"
 
 
-def _get_payment_id_from_start(text: str | None) -> str | None:
-    """Extract payment_id from /start pay_<payment_id>."""
+def _get_ref_from_start(text: str | None) -> str | None:
+    """Extract ref code from /start ref_XXX for passing to miniapp."""
     if not text or not text.strip():
         return None
     parts = text.strip().split(maxsplit=1)
     if len(parts) < 2:
         return None
-    payload = parts[1]
-    if payload.startswith(PAY_PREFIX):
-        return payload[len(PAY_PREFIX) :].strip() or None
-    return None
-
-
-def _get_ref_code_from_start(text: str | None) -> str | None:
-    if not text or not text.strip():
-        return None
-    parts = text.strip().split(maxsplit=1)
-    if len(parts) < 2:
-        return None
-    payload = parts[1]
+    payload = parts[1].strip()
     if payload.startswith(REF_PREFIX):
         return payload[len(REF_PREFIX) :].strip() or None
-    try:
-        decoded = decode_payload(payload)
-        if decoded and decoded.startswith(REF_PREFIX):
-            return decoded[len(REF_PREFIX) :].strip() or None
-    except Exception as e:
-        _log.debug("decode_payload_failed", payload=payload[:32], error=str(e))
     return None
+
+
+def _open_app_keyboard(locale: str, ref: str | None) -> InlineKeyboardMarkup | None:
+    """Return Web App keyboard only if MINIAPP_URL is HTTPS (Telegram requirement)."""
+    if not MINIAPP_URL.startswith("https://"):
+        return None
+    url = MINIAPP_URL
+    if ref:
+        url = f"{url}?{urlencode({'ref': ref[:64]})}"
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text=t(locale, "open_app"),
+                    web_app=WebAppInfo(url=url),
+                )
+            ]
+        ]
+    )
 
 
 @router.message(CommandStart())
-async def cmd_start(message: Message, state):
-    payment_id = _get_payment_id_from_start(message.text)
-    if payment_id and message.from_user:
-        from api_client import get_payment_invoice
-        inv_result = await get_payment_invoice(payment_id, message.from_user.id)
-        if inv_result.success and inv_result.data:
-            inv = inv_result.data
-            if inv.get("free_activation") or int(inv.get("star_count", 1)) == 0:
-                locale = (await state.get_data()).get("locale", "en")
-                home_text, home_markup = render_menu("home", locale)
-                await message.answer(t(locale, "subscription_active_use_menu"), reply_markup=home_markup)
-                return
-            title = inv.get("title", "VPN")
-            description = inv.get("description", "VPN plan")
-            payload = inv.get("payload", inv.get("payment_id", ""))
-            star_count = max(1, int(inv.get("star_count", 1)))
-            record_payment_start()
-            await message.answer_invoice(
-                title=title,
-                description=description,
-                payload=payload,
-                provider_token="",
-                currency="XTR",
-                prices=[LabeledPrice(label=title, amount=star_count)],
-            )
-            return
-    ref_code = _get_ref_code_from_start(message.text)
-    data = await state.get_data()
-    locale = data.get("locale")
-    if locale and message.from_user:
-        has_sub = await _user_has_active_sub(message.from_user.id)
-        if has_sub:
-            await state.set_state(None)
-            await state.update_data(
-                add_device_sub_id=None,
-                add_device_user_id=None,
-                add_device_servers=None,
-                add_device_name=None,
-                add_device_type=None,
-                add_device_default_name=None,
-                issued_config_awg=None,
-                issued_config_wg_obf=None,
-                issued_config_wg=None,
-                issued_device_name=None,
-            )
-            welcome = t(locale, "welcome")
-            if ref_code:
-                welcome += "\n\n" + t(locale, "ref_invited")
-                await state.update_data(referral_code=ref_code)
-            await message.answer(welcome)
-            home_text, home_markup = render_menu("home", locale)
-            await message.answer(home_text, reply_markup=home_markup)
-            if message.from_user:
-                from api_client import post_event
-                await post_event("start", message.from_user.id, {"ref": ref_code[:32] if ref_code else None})
-            return
-        from keyboards.revenue import entry_keyboard
-        await message.answer(t(locale, "entry_message"), reply_markup=entry_keyboard(locale))
-        if message.from_user:
-            from api_client import post_event
-            await post_event("start", message.from_user.id, {"ref": ref_code[:32] if ref_code else None})
-        return
-    await state.clear()
-    if ref_code and message.from_user:
-        await state.update_data(referral_code=ref_code)
-        _log.info("user_action", telegram_id=message.from_user.id, action="start_ref", ref=ref_code[:8])
-    if message.from_user:
-        from api_client import post_event
-        await post_event("start", message.from_user.id, {"ref": ref_code[:32] if ref_code else None})
+async def cmd_start(message: Message):
+    locale = "en"
+    ref = _get_ref_from_start(message.text)
+    greeting = t(locale, "welcome")
+    keyboard = _open_app_keyboard(locale, ref)
     await message.answer(
-        t("en", "choose_lang"),
-        reply_markup=_lang_keyboard(),
+        greeting,
+        reply_markup=keyboard,
+        parse_mode=None,
     )
-
-
-def _lang_keyboard():
-    from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="RU", callback_data="lang_ru"), InlineKeyboardButton(text="EN", callback_data="lang_en")],
-    ])
-
-
-@router.callback_query(F.data.startswith("lang_"))
-async def set_lang(callback: CallbackQuery, state):
-    lang = "ru" if callback.data == "lang_ru" else "en"
-    data = await state.get_data()
-    ref_code = data.get("referral_code")
-    await state.update_data(locale=lang)
-    if ref_code and callback.from_user and not data.get("referral_attached"):
-        from api_client import referral_attach
-
-        attach_result = await referral_attach(callback.from_user.id, str(ref_code))
-        if attach_result.success:
-            await state.update_data(referral_attached=True)
-            _log.info(
-                "user_action",
-                telegram_id=callback.from_user.id,
-                action="referral_attached",
-                ref=str(ref_code)[:8],
+    if MINIAPP_URL.startswith("https://") and message.chat:
+        try:
+            await message.bot.set_chat_menu_button(
+                chat_id=message.chat.id,
+                menu_button=MenuButtonWebApp(
+                    text="Open App",
+                    web_app=WebAppInfo(url=MINIAPP_URL),
+                ),
             )
-        else:
+            _log.debug("menu_button_set_chat", chat_id=message.chat.id)
+        except Exception as e:
             _log.warning(
-                "user_action",
-                telegram_id=callback.from_user.id if callback.from_user else None,
-                action="referral_attach_failed",
-                ref=str(ref_code)[:8],
-                error=attach_result.error,
+                "set_chat_menu_button_failed",
+                chat_id=message.chat.id,
+                error=str(e),
             )
-    await callback.answer()
-    has_sub = await _user_has_active_sub(callback.from_user.id) if callback.from_user else False
-    if has_sub:
-        welcome = t(lang, "welcome")
-        if ref_code:
-            welcome += "\n\n" + t(lang, "ref_invited")
-        try:
-            if callback.message and callback.message.text:
-                await callback.message.edit_text(welcome)
-            else:
-                await callback.message.answer(welcome)
-        except Exception as e:
-            _log.debug("edit_text_failed", error=str(e))
-            await callback.message.answer(welcome)
-        home_text, home_markup = render_menu("home", lang)
-        await callback.message.answer(home_text, reply_markup=home_markup)
-    else:
-        from keyboards.revenue import entry_keyboard
-
-        entry_msg = t(lang, "entry_message")
-        try:
-            if callback.message and callback.message.text:
-                await callback.message.edit_text(entry_msg, reply_markup=entry_keyboard(lang))
-            else:
-                await callback.message.answer(entry_msg, reply_markup=entry_keyboard(lang))
-        except Exception as e:
-            _log.debug("edit_text_failed", error=str(e))
-            await callback.message.answer(entry_msg, reply_markup=entry_keyboard(lang))
-
-
-async def _user_has_active_sub(tg_id: int) -> bool:
-    from api_client import get_user_by_tg
-    result = await get_user_by_tg(tg_id)
-    if not result.success or not result.data:
-        return False
-    for sub in result.data.get("subscriptions") or []:
-        if is_subscription_effectively_active(sub):
-            return True
-    return False
-
-
-@router.callback_query(F.data == "menu:main")
-async def menu_main(callback: CallbackQuery, state):
-    """Backward compat: show inline HOME menu (same as nav:home). Clear add_device/issued_config state."""
-    await callback.answer()
-    await state.set_state(None)
-    await state.update_data(
-        add_device_sub_id=None,
-        add_device_user_id=None,
-        add_device_servers=None,
-        add_device_name=None,
-        add_device_type=None,
-        add_device_default_name=None,
-        issued_config_awg=None,
-        issued_config_wg_obf=None,
-        issued_config_wg=None,
-        issued_device_name=None,
-    )
-    data = await state.get_data()
-    locale = data.get("locale", "en")
-    home_text, home_markup = render_menu("home", locale)
-    msg = callback.message
-    if msg:
-        try:
-            await msg.edit_text(home_text, reply_markup=home_markup)
-        except Exception as e:
-            _log.debug("menu_main_edit_failed", error=str(e))
-            await msg.answer(home_text, reply_markup=home_markup)

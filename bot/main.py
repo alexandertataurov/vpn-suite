@@ -9,11 +9,12 @@ setup_logging()
 
 import aiohttp.http_exceptions
 from aiohttp import web
-from aiogram import Bot, Dispatcher
+from aiogram import Bot, Dispatcher, Router
 from metrics import metrics_content_type, metrics_output
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.types import ErrorEvent
 
 from config import (
     BOT_TOKEN,
@@ -22,28 +23,17 @@ from config import (
     BOT_TASKS_CONCURRENCY_LIMIT,
     BOT_WEBHOOK_PATH,
     BOT_WEBHOOK_URL,
+    MINIAPP_URL,
     OTEL_TRACES_ENDPOINT,
     PORT,
     REDIS_URL,
     SUPPORT_HANDLE,
-    PANEL_URL,
 )
 from commands import COMMANDS, register_commands
-from api_client import init_api, close_api
+from aiogram.types import MenuButtonWebApp, WebAppInfo as MenuWebAppInfo
 from utils.config_validator import validate_config
 from middleware.logging import LoggingMiddleware
 from handlers.start import router as start_router
-from handlers.tariffs import router as tariffs_router
-from handlers.trial import router as trial_router
-from handlers.churn import router as churn_router
-from handlers.status import router as status_router
-from handlers.devices import router as devices_router
-from handlers.install import router as install_router
-from handlers.help import router as help_router
-from handlers.support import router as support_router
-from handlers.nav import router as nav_router
-from handlers.menu_actions import router as menu_actions_router
-from handlers.fallback import router as fallback_router
 from otel_tracing import setup_otel_tracing
 
 _log = get_logger(__name__)
@@ -130,64 +120,87 @@ async def run_bot():
     tracing_enabled = setup_otel_tracing(OTEL_TRACES_ENDPOINT)
     global TRACING_ENABLED
     TRACING_ENABLED = tracing_enabled
-    await init_api()
-    try:
-        bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-        await register_commands(bot)
-        banner = (
-            "═══════════════════════════════════\n"
-            f"Bot: @{BOT_USERNAME}\n"
-            f"API: {PANEL_URL}\n"
-            f"Support: {SUPPORT_HANDLE}\n"
-            f"Commands: {len(COMMANDS)} registered\n"
-            "═══════════════════════════════════"
-        )
-        _log.info("startup", banner=banner)
-        if REDIS_URL:
-            from aiogram.fsm.storage.redis import RedisStorage
-            redis = await _ensure_redis(REDIS_URL)
-            if redis:
-                storage = RedisStorage(redis=redis)
-                _log.info("FSM storage: Redis (persists across restarts)")
-            else:
-                storage = MemoryStorage()
-                _log.warning("Redis unavailable after retries; falling back to MemoryStorage")
+    bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+    await register_commands(bot)
+    if MINIAPP_URL.startswith("https://"):
+        try:
+            result = await bot.set_chat_menu_button(
+                menu_button=MenuButtonWebApp(
+                    text="Open App",
+                    web_app=MenuWebAppInfo(url=MINIAPP_URL),
+                )
+            )
+            _log.info("menu_button_set", miniapp_url=MINIAPP_URL, result=result)
+        except Exception as e:
+            _log.error("set_chat_menu_button_failed", error=str(e), exc_info=True)
+            raise
+    else:
+        _log.info("menu_button_skipped", reason="MINIAPP_URL must be HTTPS for Web App button")
+    banner = (
+        "═══════════════════════════════════\n"
+        f"Bot: @{BOT_USERNAME}\n"
+        f"Miniapp: {MINIAPP_URL}\n"
+        f"Support: {SUPPORT_HANDLE}\n"
+        f"Commands: {len(COMMANDS)} registered\n"
+        "═══════════════════════════════════"
+    )
+    _log.info("startup", banner=banner)
+    if REDIS_URL:
+        from aiogram.fsm.storage.redis import RedisStorage
+        redis = await _ensure_redis(REDIS_URL)
+        if redis:
+            storage = RedisStorage(redis=redis)
+            _log.info("FSM storage: Redis (persists across restarts)")
         else:
             storage = MemoryStorage()
-            _log.info("FSM storage: Memory (set REDIS_URL for persistence)")
-        dp = Dispatcher(storage=storage)
-        dp.update.outer_middleware(LoggingMiddleware())
-        dp.include_router(start_router)
-        dp.include_router(nav_router)
-        dp.include_router(menu_actions_router)
-        dp.include_router(tariffs_router)
-        dp.include_router(trial_router)
-        dp.include_router(churn_router)
-        dp.include_router(status_router)
-        dp.include_router(devices_router)
-        dp.include_router(install_router)
-        dp.include_router(help_router)
-        dp.include_router(support_router)
-        dp.include_router(fallback_router)  # last: unknown callbacks → home
-        if BOT_WEBHOOK_URL:
-            await bot.set_webhook(
-                f"{BOT_WEBHOOK_URL.rstrip('/')}{BOT_WEBHOOK_PATH}",
-                allowed_updates=["message", "callback_query", "pre_checkout_query"],
-            )
-            _log.info("webhook_mode", url=f"{BOT_WEBHOOK_URL}{BOT_WEBHOOK_PATH}")
-            app = _make_app(tracing_enabled, webhook_path=BOT_WEBHOOK_PATH, dp=dp, bot=bot)
-            await run_healthz_app(tracing_enabled, app=app)
-            await asyncio.Event().wait()
-        else:
-            await run_healthz_app(tracing_enabled)
-            await dp.start_polling(
-                bot,
-                polling_timeout=BOT_POLLING_TIMEOUT,
-                allowed_updates=["message", "callback_query", "pre_checkout_query"],
-                tasks_concurrency_limit=BOT_TASKS_CONCURRENCY_LIMIT,
-            )
-    finally:
-        await close_api()
+            _log.warning("Redis unavailable after retries; falling back to MemoryStorage")
+    else:
+        storage = MemoryStorage()
+        _log.info("FSM storage: Memory (set REDIS_URL for persistence)")
+    dp = Dispatcher(storage=storage)
+    dp.update.outer_middleware(LoggingMiddleware())
+
+    errors_router = Router()
+
+    @errors_router.error()
+    async def global_error_handler(event: ErrorEvent) -> bool:
+        _log.error(
+            "handler_error",
+            exception=str(event.exception),
+            update_id=event.update.update_id if event.update else None,
+            exc_info=True,
+        )
+        msg = None
+        if event.update and event.update.message:
+            msg = event.update.message
+        elif event.update and event.update.callback_query and event.update.callback_query.message:
+            msg = event.update.callback_query.message
+        if msg:
+            try:
+                await msg.answer("Something went wrong. Please try again later.")
+            except Exception:
+                pass
+        return True
+
+    dp.include_router(start_router)
+    dp.include_router(errors_router)
+    if BOT_WEBHOOK_URL:
+        await bot.set_webhook(
+            f"{BOT_WEBHOOK_URL.rstrip('/')}{BOT_WEBHOOK_PATH}",
+            allowed_updates=["message"],
+        )
+        _log.info("webhook_mode", url=f"{BOT_WEBHOOK_URL}{BOT_WEBHOOK_PATH}")
+        app = _make_app(tracing_enabled, webhook_path=BOT_WEBHOOK_PATH, dp=dp, bot=bot)
+        await run_healthz_app(tracing_enabled, app=app)
+        await asyncio.Event().wait()
+    else:
+        await run_healthz_app(tracing_enabled)
+        await dp.start_polling(
+            bot,
+            polling_timeout=BOT_POLLING_TIMEOUT,
+            allowed_updates=["message"],
+            tasks_concurrency_limit=BOT_TASKS_CONCURRENCY_LIMIT,
+        )
 
 
 if __name__ == "__main__":

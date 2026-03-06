@@ -4,13 +4,7 @@ from aiogram.types import BotCommand
 
 
 COMMANDS = [
-    ("start", "Start bot and show main menu"),
-    ("status", "View your subscription and device status"),
-    ("devices", "Manage your devices"),
-    ("configs", "View devices and get config"),
-    ("install", "Get installation instructions"),
-    ("help", "Get help and FAQ"),
-    ("support", "Contact support team"),
+    ("start", "Start bot and open app"),
 ]
 
 

@@ -17,6 +17,8 @@ if not os.environ.get("BOT_USERNAME"):
     os.environ["BOT_USERNAME"] = "TestBot"
 if not os.environ.get("SUPPORT_HANDLE"):
     os.environ["SUPPORT_HANDLE"] = "@TestSupport"
+if not os.environ.get("MINIAPP_URL"):
+    os.environ["MINIAPP_URL"] = "https://example.com/webapp"
 
 
 @pytest.fixture
