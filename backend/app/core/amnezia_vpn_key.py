@@ -48,7 +48,7 @@ def encode_amnezia_vpn_key(config: Mapping[str, Any]) -> str:
 def encode_awg_conf_vpn_key(conf_text: str) -> str:
     """Build AmneziaVPN-compatible JSON config for an AWG client config and encode as vpn:// key."""
     parser = ConfigParser(interpolation=None)
-    parser.optionxform = str  # preserve case
+    parser.optionxform = str  # type: ignore[method-assign]  # preserve case
     parser.read_string(conf_text)
 
     if "Interface" not in parser or "Peer" not in parser:

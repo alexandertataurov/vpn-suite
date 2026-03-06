@@ -115,7 +115,7 @@ class TimingNodeRuntimeAdapter(NodeRuntimeAdapter):
                 operation="list_peers", adapter=self._adapter_name
             ).observe(time.perf_counter() - start)
 
-    async def get_obfuscation_from_node(self, node_id: str) -> dict | None:  # type: ignore[override]
+    async def get_obfuscation_from_node(self, node_id: str) -> dict | None:
         """Proxy optional get_obfuscation_from_node when underlying adapter supports it.
 
         DockerNodeRuntimeAdapter implements this to read H1–H4 and other AWG params
@@ -124,4 +124,5 @@ class TimingNodeRuntimeAdapter(NodeRuntimeAdapter):
         inner = getattr(self, "_adapter", None)
         if inner is None or not hasattr(inner, "get_obfuscation_from_node"):
             return None
-        return await inner.get_obfuscation_from_node(node_id)
+        result = await inner.get_obfuscation_from_node(node_id)
+        return dict(result) if result is not None else None

@@ -111,21 +111,21 @@ def get_obfuscation_params(profile_request_params: dict[str, Any] | None) -> dic
         "S4": int(profile_request_params.get("amnezia_s4", 0))
         if "amnezia_s4" in profile_request_params
         else 0,
-        "I1": profile_request_params.get("amnezia_i1")
+        "I1": int(profile_request_params.get("amnezia_i1") or 0)
         if "amnezia_i1" in profile_request_params
-        else None,
-        "I2": profile_request_params.get("amnezia_i2")
+        else 0,
+        "I2": int(profile_request_params.get("amnezia_i2") or 0)
         if "amnezia_i2" in profile_request_params
-        else None,
-        "I3": profile_request_params.get("amnezia_i3")
+        else 0,
+        "I3": int(profile_request_params.get("amnezia_i3") or 0)
         if "amnezia_i3" in profile_request_params
-        else None,
-        "I4": profile_request_params.get("amnezia_i4")
+        else 0,
+        "I4": int(profile_request_params.get("amnezia_i4") or 0)
         if "amnezia_i4" in profile_request_params
-        else None,
-        "I5": profile_request_params.get("amnezia_i5")
+        else 0,
+        "I5": int(profile_request_params.get("amnezia_i5") or 0)
         if "amnezia_i5" in profile_request_params
-        else None,
+        else 0,
     }
 
 

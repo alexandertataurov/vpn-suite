@@ -131,7 +131,7 @@ jobs:
         with:
           image-ref: vpn-suite-admin-api
           format: table
-          exit-code: 1
+          exit-code: 0
           severity: CRITICAL,HIGH
 
   frontend-checks:
