@@ -38,7 +38,12 @@ export function VpnNodeSparkline({
   };
 
   const coords = points.map(toCoord);
-  const d = coords.length > 1 ? `M${coords[0][0]},${coords[0][1]} ${coords.slice(1).map(([x, y]) => `L${x},${y}`).join(" ")}` : "";
+  const first = coords[0];
+  const last = coords[coords.length - 1];
+  const d =
+    coords.length > 1 && first != null && last != null
+      ? `M${first[0]},${first[1]} ${coords.slice(1).map(([x, y]) => `L${x},${y}`).join(" ")}`
+      : "";
 
   return (
     <svg
@@ -60,7 +65,7 @@ export function VpnNodeSparkline({
       {d && (
         <>
           <path
-            d={`${d} L${coords[coords.length - 1][0]} ${H} L${coords[0][0]} ${H} Z`}
+            d={last != null && first != null ? `${d} L${last[0]} ${H} L${first[0]} ${H} Z` : d}
             fill={`url(#${gradientId})`}
           />
           <path d={d} fill="none" stroke={stroke} strokeWidth={1.2} />

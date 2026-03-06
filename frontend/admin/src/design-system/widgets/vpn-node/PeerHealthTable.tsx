@@ -4,7 +4,7 @@ import { formatHandshakeAge } from "@/features/vpn-nodes/format";
 import { formatMs, formatPct, dash } from "@/features/vpn-nodes/format";
 import type { VpnNodePeerRow } from "@/features/vpn-nodes/types";
 
-interface PeerTableRow {
+interface PeerTableRow extends Record<string, unknown> {
   public_key: string;
   device_name: string;
   tunnel_ip: string;
@@ -16,7 +16,7 @@ interface PeerTableRow {
   status: string;
 }
 
-const COLUMNS = [
+const PEER_COLUMNS = [
   { key: "device_name" as const, header: "Device", title: "Device label" },
   { key: "tunnel_ip" as const, header: "Tunnel IP", title: "Allowed IPs" },
   { key: "last_handshake_age" as const, header: "Handshake", title: "Last handshake age" },
@@ -52,7 +52,7 @@ export function PeerHealthTable({ peers }: { peers: VpnNodePeerRow[] }) {
 
   return (
     <DataTable<PeerTableRow>
-      columns={COLUMNS}
+      columns={PEER_COLUMNS}
       rows={rows}
       getRowKey={(r) => r.public_key}
       density="compact"

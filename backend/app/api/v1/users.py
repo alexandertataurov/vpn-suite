@@ -47,8 +47,8 @@ from app.schemas.device import DeviceListItemOut, IssueRequest, IssueResponse, U
 from app.schemas.subscription import SubscriptionOut
 from app.schemas.user import UserCreate, UserDetail, UserList, UserOut, UserUpdate
 from app.services.funnel_service import log_funnel_event
-from app.services.issued_config_service import persist_issued_configs
 from app.services.issue_service import issue_device
+from app.services.issued_config_service import persist_issued_configs
 from app.services.server_live_key_service import ServerNotSyncedError
 from app.services.topology_engine import TopologyEngine
 

@@ -111,9 +111,13 @@ async def fetch_peers_for_server(
                 device_name = dev[1] if dev else None
                 issues = _peer_issues(allowed_ips_str, last_handshake_ts, rx, tx, now_ts)
                 rtt_raw = p.get("rtt_ms")
-                rtt_ms = int(rtt_raw) if isinstance(rtt_raw, (int, float)) and rtt_raw >= 0 else None
+                rtt_ms = int(rtt_raw) if isinstance(rtt_raw, int | float) and rtt_raw >= 0 else None
                 loss_raw = p.get("loss_pct")
-                loss_pct = float(loss_raw) if isinstance(loss_raw, (int, float)) and 0 <= loss_raw <= 100 else None
+                loss_pct = (
+                    float(loss_raw)
+                    if isinstance(loss_raw, int | float) and 0 <= loss_raw <= 100
+                    else None
+                )
                 peers.append(
                     PeerOut(
                         public_key=pk,

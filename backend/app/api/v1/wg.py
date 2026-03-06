@@ -17,8 +17,8 @@ from app.core.exceptions import LoadBalancerError, WireGuardCommandError
 from app.core.rbac import require_permission
 from app.models import Device
 from app.schemas.device import IssueResponse
-from app.services.issued_config_service import persist_issued_configs
 from app.services.issue_service import issue_device
+from app.services.issued_config_service import persist_issued_configs
 from app.services.server_live_key_service import ServerNotSyncedError
 from app.services.topology_engine import TopologyEngine
 
