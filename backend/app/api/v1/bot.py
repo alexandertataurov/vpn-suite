@@ -11,8 +11,8 @@ from sqlalchemy.orm import selectinload
 
 from app.core.bot_auth import BotPrincipal, get_admin_or_bot
 from app.core.database import get_db
-from app.core.telegram_user import build_tg_requisites
 from app.core.metrics import vpn_revenue_churn_total
+from app.core.telegram_user import build_tg_requisites
 from app.models import (
     ChurnSurvey,
     Device,

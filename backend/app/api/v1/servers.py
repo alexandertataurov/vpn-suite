@@ -14,9 +14,9 @@ from app.api.v1.server_utils import (
     _display_is_active,
     get_agent_heartbeat,
 )
-from app.api.v1.servers_peers import fetch_peers_for_server
 from app.api.v1.servers_actions import servers_actions_router
 from app.api.v1.servers_crud import servers_crud_router
+from app.api.v1.servers_peers import fetch_peers_for_server
 from app.api.v1.servers_sync import servers_sync_router
 from app.api.v1.servers_telemetry import servers_telemetry_router
 from app.core.bot_auth import get_admin_or_bot
@@ -44,11 +44,11 @@ from app.schemas.server import (
     normalize_server_status,
 )
 from app.schemas.vpn_node import VpnNodeCardOut, VpnNodeDetailOut
-from app.services.vpn_node_service import build_vpn_node_cards, build_vpn_node_detail
 from app.services.server_health_service import (
     get_last_health,
     run_health_check,
 )
+from app.services.vpn_node_service import build_vpn_node_cards, build_vpn_node_detail
 
 router = APIRouter(prefix="/servers", tags=["servers"])
 logger = logging.getLogger(__name__)

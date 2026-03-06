@@ -528,7 +528,7 @@ async def fetch_operator_dashboard(
                                 for p in peers_list
                                 if isinstance(p, dict)
                                 and p.get("rtt_ms") is not None
-                                and isinstance(p.get("rtt_ms"), (int, float))
+                                and isinstance(p.get("rtt_ms"), int | float)
                             ]
                             if rtt_vals:
                                 telemetry_map[sid]["rtt_avg_ms"] = sum(rtt_vals) / len(rtt_vals)

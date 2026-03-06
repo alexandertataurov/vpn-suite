@@ -2,7 +2,7 @@ import type { InputHTMLAttributes } from "react";
 
 type InputSize = "sm" | "md" | "lg";
 
-interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "size"> {
   error?: boolean;
   success?: boolean;
   size?: InputSize;

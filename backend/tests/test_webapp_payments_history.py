@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+import uuid
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
-import uuid
 
 import pytest
 from httpx import ASGITransport, AsyncClient

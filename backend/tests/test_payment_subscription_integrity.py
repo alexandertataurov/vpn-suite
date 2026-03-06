@@ -45,7 +45,9 @@ def _parse_dt(value: str) -> datetime:
 
 
 @pytest.mark.asyncio
-async def test_bot_create_or_get_persists_telegram_user_requisites(client: AsyncClient, monkeypatch):
+async def test_bot_create_or_get_persists_telegram_user_requisites(
+    client: AsyncClient, monkeypatch
+):
     """POST create-or-get with telegram_user stores User.meta['tg'] and returns it in response."""
     if not await check_db():
         pytest.skip("DB not available")

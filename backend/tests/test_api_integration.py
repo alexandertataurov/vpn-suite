@@ -220,9 +220,10 @@ async def test_webapp_auth_persists_tg_requisites_in_meta(
     client: AsyncClient, monkeypatch, async_session
 ):
     """POST /api/v1/webapp/auth with valid init_data stores Telegram user in User.meta['tg']."""
+    from sqlalchemy import select
+
     from app.core import config
     from app.models import User
-    from sqlalchemy import select
 
     tg_id = 987654321
     tg_user = {
@@ -273,8 +274,8 @@ async def test_webapp_auth_persists_tg_requisites_in_meta(
 @pytest.mark.asyncio
 async def test_webapp_debug_test_telegram_config_sends_to_expected_chat(monkeypatch):
     """POST /api/v1/webapp/debug/test-telegram-config uses WebApp tg_id as chat_id."""
-    from app.core import config
     from app.api.v1 import webapp as webapp_module
+    from app.core import config
 
     # Ensure bot token is set so endpoint does not 503.
     monkeypatch.setattr(config.settings, "telegram_bot_token", "TEST_TOKEN")
@@ -426,7 +427,9 @@ async def test_webapp_issue_device_enqueues_telegram_send_background_task(
     async def fake_send_config_to_telegram(tg_id: int, device_id: str, config_text: str):
         sent.append((tg_id, device_id, config_text))
 
-    monkeypatch.setattr(webapp_module, "_send_webapp_config_to_telegram", fake_send_config_to_telegram)
+    monkeypatch.setattr(
+        webapp_module, "_send_webapp_config_to_telegram", fake_send_config_to_telegram
+    )
 
     old_adapter = getattr(app.state, "node_runtime_adapter", None)
     app.state.node_runtime_adapter = object()

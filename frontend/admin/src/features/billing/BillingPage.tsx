@@ -25,7 +25,7 @@ const TABS = [
 
 type PlanStyle = "normal" | "popular" | "promotional";
 
-interface PlanRow {
+interface PlanRow extends Record<string, unknown> {
   id: string;
   name: string;
   duration: string;

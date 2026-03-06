@@ -18,8 +18,8 @@ from app.core.config_builder import ConfigValidationError
 from app.core.constants import REDIS_KEY_RATELIMIT_ISSUE_PREFIX
 from app.core.database import get_db
 from app.core.metrics import frontend_web_vital_ms, frontend_web_vital_score, miniapp_events_total
-from app.core.redis_client import get_redis
 from app.core.redaction import redact_for_log
+from app.core.redis_client import get_redis
 from app.core.security import create_webapp_session_token, decode_token, validate_telegram_init_data
 from app.core.telegram_user import build_tg_requisites
 from app.models import (
@@ -37,8 +37,8 @@ from app.models import (
 )
 from app.services.device_telemetry_cache import get_device_telemetry_bulk
 from app.services.funnel_service import log_funnel_event
-from app.services.issued_config_service import persist_issued_configs
 from app.services.issue_service import issue_device
+from app.services.issued_config_service import persist_issued_configs
 from app.services.retention_service import (
     pause_subscription,
     resume_subscription,

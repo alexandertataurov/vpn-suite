@@ -1,7 +1,5 @@
 """Tests for Telegram user requisites normalization."""
 
-import pytest
-
 from app.core.telegram_user import build_tg_requisites
 
 
