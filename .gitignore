@@ -83,6 +83,9 @@ secrets/
 .DS_Store
 Thumbs.db
 
+# Local serve / dev artifacts
+.serve/
+
 # Discovery runtime state
 config/monitoring/discovery/.targets_state.json
 backend/temp_query.py
