@@ -113,14 +113,20 @@ async def issue_device(
     db_key = (getattr(server, "public_key", None) or "").strip() or None
     db_key_synced_at = getattr(server, "public_key_synced_at", None)
     # Block issuance/reissue if server key unknown/unverified (ServerNotSyncedError).
-    live = await live_key_fetch(
-        resolved_server_id,
-        runtime_adapter,
-        heartbeat_fallback_ids=[fallback] if fallback else None,
-        fallback_public_key=db_key,
-        fallback_public_key_synced_at=db_key_synced_at,
-    )
-    server_public_key = live.public_key
+    # In NODE_MODE=mock, treat DB key as source of truth (no runtime adapter / heartbeats).
+    if settings.node_mode == "mock" and runtime_adapter is None:
+        server_public_key = (server.public_key or "").strip()
+        if not server_public_key:
+            raise ValueError("server_public_key_required")
+    else:
+        live = await live_key_fetch(
+            resolved_server_id,
+            runtime_adapter,
+            heartbeat_fallback_ids=[fallback] if fallback else None,
+            fallback_public_key=db_key,
+            fallback_public_key_synced_at=db_key_synced_at,
+        )
+        server_public_key = live.public_key
     if server_public_key != (server.public_key or "").strip():
         server.public_key = server_public_key
         await session.flush()
