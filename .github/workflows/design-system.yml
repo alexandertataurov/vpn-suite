@@ -5,19 +5,23 @@ on: [pull_request]
 jobs:
   lint-design-system:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Node
-        uses: actions/setup-node@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
         with:
           node-version: "20"
-
-      - name: Install pnpm
-        run: npm install -g pnpm
+          cache: "pnpm"
+          cache-dependency-path: frontend/pnpm-lock.yaml
 
       - name: Install deps
-        run: pnpm install --dir frontend
+        run: pnpm install --dir frontend --frozen-lockfile
 
       - name: No hardcoded colors (miniapp)
         run: |
@@ -57,8 +61,9 @@ jobs:
       - name: No inline styles (miniapp)
         run: |
           set -euo pipefail
-          COUNT=$(grep -rn "style={{" frontend/miniapp/src/components frontend/miniapp/src/pages \
-            --include="*.tsx" | wc -l)
+          COUNT=$( (test -d frontend/miniapp/src/components && grep -rn "style={{" frontend/miniapp/src/components --include="*.tsx" || true; \
+            test -d frontend/miniapp/src/pages && grep -rn "style={{" frontend/miniapp/src/pages --include="*.tsx" || true ) | wc -l) || true
+          COUNT=${COUNT:-0}
           [ "$COUNT" -eq 0 ] || (echo "❌ $COUNT inline styles found in miniapp" && exit 1)
 
       - name: No inline styles (admin)

@@ -9,6 +9,10 @@ on:
 jobs:
   lint-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      pull-requests: read
     defaults:
       run:
         working-directory: backend
@@ -61,6 +65,7 @@ jobs:
 
       - name: Install dependencies
         run: |
+          set -euo pipefail
           python -m pip install --upgrade pip
           pip install -r requirements-dev.txt
 
@@ -73,13 +78,14 @@ jobs:
         run: mypy app
 
       - name: pip-audit
-        run: pip install pip-audit && pip-audit -r requirements.txt
+        run: pip-audit -r requirements.txt
 
       - name: Migrate
         run: python -m alembic upgrade head
 
       - name: Migration integrity (downgrade/upgrade)
         run: |
+          set -euo pipefail
           python -m alembic downgrade -1
           python -m alembic upgrade head
 
@@ -95,6 +101,9 @@ jobs:
   build:
     needs: [lint-test]
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
@@ -112,6 +121,7 @@ jobs:
   trivy-scan:
     needs: [lint-test]
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     permissions:
       contents: read
       security-events: write
@@ -122,7 +132,8 @@ jobs:
         env:
           PUBLIC_DOMAIN: ci.invalid
         run: |
-          docker buildx create --use --driver docker-container || true
+          set -euo pipefail
+          docker buildx create --use --driver docker-container || true  # reuse existing builder if present
           docker buildx build --load \
             --cache-from type=gha --cache-to type=gha,mode=max \
             -f backend/Dockerfile -t vpn-suite-admin-api ./backend
@@ -131,11 +142,15 @@ jobs:
         with:
           image-ref: vpn-suite-admin-api
           format: table
-          exit-code: 0
+          exit-code: 1
           severity: CRITICAL,HIGH
 
   frontend-checks:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      actions: write
     steps:
       - uses: actions/checkout@v4
 
@@ -204,6 +219,7 @@ jobs:
 
       - name: Record bundle size (baseline)
         run: |
+          set -euo pipefail
           du -sb frontend/admin/dist | tee frontend/dist-size-admin.txt
           du -sb frontend/miniapp/dist | tee frontend/dist-size-miniapp.txt
           echo "Bundle size (admin): $(cat frontend/dist-size-admin.txt)"
@@ -228,6 +244,7 @@ jobs:
           cp -r frontend/admin/dist/* .serve/admin/
           npx serve -s .serve -l 4173 &
           for i in $(seq 1 15); do curl -sf http://127.0.0.1:4173/admin/ > /dev/null && break; sleep 1; done
+          curl -sf http://127.0.0.1:4173/admin/ > /dev/null || { echo "Serve did not become ready"; exit 1; }
 
       - name: Lighthouse accessibility
         run: |
@@ -257,6 +274,7 @@ jobs:
         timeout-minutes: 5
         working-directory: frontend
         run: |
+          set -euo pipefail
           npm run storybook -w admin -- --ci --host 127.0.0.1 --port 6006 &
           for i in $(seq 1 60); do
             curl -sf http://127.0.0.1:6006/ && break
@@ -269,11 +287,17 @@ jobs:
         working-directory: frontend/admin
         run: npm run storybook:guardrails
 
+      - name: Script preflight
+        run: chmod +x scripts/check-tokens.sh
+
       - name: Token compliance (no raw hex)
         run: bash scripts/check-tokens.sh
 
   secret-scan:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
         with:
@@ -287,6 +311,8 @@ jobs:
     needs: [lint-test, frontend-checks]
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    permissions:
+      contents: read
     env:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/vpn_admin
       REDIS_URL: redis://localhost:6379/0
@@ -336,6 +362,7 @@ jobs:
       - name: Backend deps and migrate
         working-directory: backend
         run: |
+          set -euo pipefail
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           python -m alembic upgrade head
@@ -395,6 +422,9 @@ jobs:
           echo "Admin dev server did not become ready"
           exit 1
 
+      - name: Script preflight
+        run: chmod +x scripts/release_api_happy_path.sh
+
       - name: API contract (happy path)
         run: bash scripts/release_api_happy_path.sh
         env:
@@ -412,6 +442,9 @@ jobs:
 
   bot-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
     defaults:
       run:
         working-directory: bot
@@ -428,6 +461,7 @@ jobs:
           key: pip-bot-${{ runner.os }}-${{ hashFiles('bot/requirements*.txt') }}
       - name: Install dependencies
         run: |
+          set -euo pipefail
           python -m pip install --upgrade pip
           pip install -r requirements-dev.txt
       - name: Pytest

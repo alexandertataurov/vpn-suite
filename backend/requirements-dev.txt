@@ -248,3 +248,5 @@ websockets==16.0
     # via
     #   -r requirements.txt
     #   uvicorn
+pip-audit==2.6.1
+    # via -r requirements-dev.in
