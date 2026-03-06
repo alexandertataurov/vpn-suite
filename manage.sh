@@ -162,7 +162,7 @@ case "$cmd" in
     "${DC[@]}" up -d admin-api
     ;;
   up-core)
-    "${DC[@]}" up -d postgres redis
+    "${DC[@]}" up -d --remove-orphans postgres redis
     "${DC[@]}" run --rm admin-api python -m alembic upgrade head
     run_seeds
     "${DC[@]}" up -d admin-api admin-worker

@@ -7,7 +7,7 @@ RUN rm -f /etc/apt/apt.conf.d/docker-clean && \
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     apt-get update && \
-    apt-get install -y --no-install-recommends docker-cli ca-certificates && \
+    apt-get install -y --no-install-recommends docker.io ca-certificates && \
     rm -rf /var/lib/apt/lists/* && \
     groupadd -r app && useradd -r -g app app
 RUN --mount=type=cache,target=/root/.cache/pip \
