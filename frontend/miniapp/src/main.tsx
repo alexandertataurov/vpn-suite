@@ -3,7 +3,7 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "@/design-system/theme/ThemeProvider";
-import { ApiError } from "@/lib/types/api-error";
+import { ApiError } from "@vpn-suite/shared";
 import App from "./App";
 import "@/design-system/styles/index.css";
 

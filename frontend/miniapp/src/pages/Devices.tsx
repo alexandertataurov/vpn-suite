@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { getErrorMessage } from "@/lib/utils/error";
 import { useTelegramMainButton } from "@/hooks/useTelegramMainButton";
-import type { WebAppIssueDeviceResponse } from "@/lib/types";
+import type { WebAppIssueDeviceResponse } from "@vpn-suite/shared";
 import { useSession } from "@/hooks/useSession";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useWebappToken, webappApi } from "@/api/client";

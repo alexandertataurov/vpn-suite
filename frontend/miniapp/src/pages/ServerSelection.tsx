@@ -14,7 +14,7 @@ import {
   MissionSecondaryButton,
   SessionMissing,
 } from "@/design-system";
-import type { WebAppServersResponse, WebAppServerItem } from "@/lib/types";
+import type { WebAppServersResponse, WebAppServerItem } from "@vpn-suite/shared";
 import { useWebappToken, webappApi } from "@/api/client";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 

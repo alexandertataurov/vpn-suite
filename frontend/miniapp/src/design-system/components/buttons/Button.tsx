@@ -1,7 +1,7 @@
 import { forwardRef } from "react";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { Slot } from "@radix-ui/react-slot";
-import { cn } from "@/lib/utils/cn";
+import { cn } from "@vpn-suite/shared";
 
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "outline" | "danger" | "link";
 export type ButtonSize = "sm" | "md" | "lg" | "icon";

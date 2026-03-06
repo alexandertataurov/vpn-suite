@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import type {
   WebAppReferralMyLinkResponse,
   WebAppReferralStatsResponse,
-} from "@/lib/types";
+} from "@vpn-suite/shared";
 import {
   Skeleton,
   useToast,

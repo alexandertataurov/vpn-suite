@@ -1,5 +1,5 @@
 import { useQuery, type UseQueryOptions, type UseQueryResult } from "@tanstack/react-query";
-import { useApi } from "./context";
+import { useApi } from "@/core/api/context";
 
 const DEFAULT_STALE_TIME = 30_000;
 const DEFAULT_RETRY = 2;
@@ -18,3 +18,4 @@ export function useApiQuery<TData>(
     ...options,
   });
 }
+

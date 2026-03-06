@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { cn } from "@/lib/utils/cn";
+import { cn } from "@vpn-suite/shared";
 import { Label } from "./Label";
 import { HelperText } from "./HelperText";
 

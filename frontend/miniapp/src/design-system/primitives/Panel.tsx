@@ -1,6 +1,6 @@
 import type { ElementType, HTMLAttributes, ReactNode, Ref } from "react";
 import { forwardRef } from "react";
-import { cn } from "@/lib/utils/cn";
+import { cn } from "@vpn-suite/shared";
 
 export type PrimitivePanelVariant = "surface" | "outline";
 export type PrimitivePanelPadding = "sm" | "md" | "lg";

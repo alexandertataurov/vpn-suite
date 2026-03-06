@@ -11,6 +11,7 @@
       "@/lib/*": ["./src/lib/*"]
     }
   },
+  "references": [{ "path": "../shared" }],
   "include": ["src/**/*"],
   "exclude": ["src/**/*.stories.tsx", "src/**/*.stories.ts", "src/lib/storybook", "src/design-system/ui/__tests__"]
 }

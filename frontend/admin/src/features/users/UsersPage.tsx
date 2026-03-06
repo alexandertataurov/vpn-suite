@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useApi } from "@/core/api/context";
-import { useApiQuery } from "@/core/api/useApiQuery";
+import { useApiQuery } from "@/hooks/api/useApiQuery";
 import {
   Button,
   Card,

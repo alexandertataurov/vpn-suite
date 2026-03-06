@@ -1,4 +1,4 @@
-import { ApiError, isApiErrorBody } from "@/shared/types/api-error";
+import { ApiError, isApiErrorBody } from "@vpn-suite/shared";
 import type { ApiClient, ApiClientOptions } from "./types";
 
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);

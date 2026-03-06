@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { WebAppSubscriptionOffersResponse } from "@/lib/types";
+import type { WebAppSubscriptionOffersResponse } from "@vpn-suite/shared";
 import { useSession } from "@/hooks/useSession";
 import { useWebappToken, webappApi } from "@/api/client";
 import {

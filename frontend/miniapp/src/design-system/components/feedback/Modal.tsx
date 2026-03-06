@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
-import { cn } from "@/lib/utils/cn";
+import { cn } from "@vpn-suite/shared";
 import { Button } from "../buttons/Button";
 import { Input } from "../forms/Input";
 import { Textarea } from "../forms/Textarea";

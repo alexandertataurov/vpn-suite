@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { useApiQuery } from "@/core/api/useApiQuery";
+import { useApiQuery } from "@/hooks/api/useApiQuery";
 import { useApi } from "@/core/api/context";
 import {
   Badge,

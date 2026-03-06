@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { useApiQuery } from "@/core/api/useApiQuery";
+import { useApiQuery } from "@/hooks/api/useApiQuery";
 import { Button, ErrorState, Skeleton } from "@/design-system/primitives";
 import { PageLayout } from "@/layout/PageLayout";
 import { VpnNodeDrilldown, VpnNodeGrid } from "@/design-system/widgets/vpn-node";

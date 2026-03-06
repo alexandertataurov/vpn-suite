@@ -1,5 +1,5 @@
 import type { HTMLAttributes, ReactNode } from "react";
-import { cn } from "@/lib/utils/cn";
+import { cn } from "@vpn-suite/shared";
 
 export type TextVariant = "body" | "body-sm" | "meta" | "caption";
 export type TextSize = "inherit" | "sm" | "base" | "lg";

@@ -1,6 +1,6 @@
 /**
  * Single source of truth for domain status → Badge variant mappings.
- * Use these helpers instead of ad-hoc status→variant logic.
+ * Why: prevents ad-hoc status→variant drift across admin + miniapp.
  */
 
 export type StatusMapVariant = "neutral" | "info" | "success" | "warning" | "danger";
@@ -147,3 +147,4 @@ export function dataStatusToVariant(s: string | null | undefined): StatusMapVari
   if (v === "empty" || v === "loading") return "info";
   return "info";
 }
+

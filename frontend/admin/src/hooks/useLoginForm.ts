@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useApi } from "@/core/api/context";
 import { useAuthStore } from "@/core/auth/store";
-import { ApiError } from "@/shared/types/api-error";
+import { ApiError } from "@vpn-suite/shared";
 
 /**
  * Purpose: Login form state and submit; matches LoginPage behavior.

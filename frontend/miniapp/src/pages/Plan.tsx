@@ -6,7 +6,7 @@ import type {
   WebAppBillingHistoryResponse,
   WebAppBillingHistoryStatus,
   WebAppUsageResponse,
-} from "@/lib/types";
+} from "@vpn-suite/shared";
 import {
   FallbackScreen,
   SessionMissing,

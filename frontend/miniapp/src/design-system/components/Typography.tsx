@@ -1,5 +1,5 @@
 import type { HTMLAttributes, ReactNode } from "react";
-import { cn } from "@/lib/utils/cn";
+import { cn } from "@vpn-suite/shared";
 import { Heading as PrimitiveHeading } from "../primitives/typography/Heading";
 import { Text as PrimitiveText } from "../primitives/typography/Text";
 

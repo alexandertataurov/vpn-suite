@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import type { WebAppServersResponse, WebAppUsageResponse } from "@/lib/types";
+import type { WebAppServersResponse, WebAppUsageResponse } from "@vpn-suite/shared";
 import {
   FallbackScreen,
   Skeleton,

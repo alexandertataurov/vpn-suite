@@ -1,4 +1,4 @@
-import { ApiError, isApiErrorBody } from "../types/api-error";
+import { ApiError, isApiErrorBody } from "@vpn-suite/shared";
 
 export interface TokenPair {
   access_token: string;

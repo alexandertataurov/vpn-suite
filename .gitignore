@@ -38,6 +38,7 @@ env/
 .env.local
 *.env
 backend/.venv/
+backend/.venv-mypy/
 
 # Backups (cron dumps)
 backups/
@@ -75,6 +76,9 @@ frontend/**/node_modules/
 frontend/**/dist/
 frontend/**/.next/
 reports/
+
+# pnpm store (local)
+.pnpm-store/
 
 # Local secrets (mTLS CA, keys, certs). .env is the single source for config.
 secrets/

@@ -1,4 +1,4 @@
-import { useApiQuery } from "@/core/api/useApiQuery";
+import { useApiQuery } from "@/hooks/api/useApiQuery";
 import type { VpnNodeDetail } from "./types";
 
 export function useVpnNodeDetail(serverId: string | null) {

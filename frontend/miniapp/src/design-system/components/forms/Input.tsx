@@ -1,5 +1,5 @@
 import type { InputHTMLAttributes } from "react";
-import { cn } from "@/lib/utils/cn";
+import { cn } from "@vpn-suite/shared";
 import { Field } from "./Field";
 
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {

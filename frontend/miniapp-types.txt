@@ -1,0 +1,5 @@
+> miniapp@0.0.1 typecheck /opt/vpn-suite/frontend/miniapp
+> tsc -b tsconfig.json --pretty false
+
+(no TypeScript errors)
+

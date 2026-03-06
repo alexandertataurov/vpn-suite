@@ -19,6 +19,17 @@ export default tseslint.config(
       "react/react-in-jsx-scope": "off",
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "warn",
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["*/miniapp/src/*", "*/admin/src/*"],
+              message: "Cross-workspace imports forbidden. Move shared code to @vpn-suite/shared.",
+            },
+          ],
+        },
+      ],
     },
   }
   ,

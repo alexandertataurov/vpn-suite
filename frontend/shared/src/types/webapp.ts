@@ -1,5 +1,8 @@
 /** Webapp API types (hand-written; not in OpenAPI export). */
 
+// Why: these shapes are consumed by both admin + miniapp, but currently drift slightly.
+// We keep a compatible superset and use optional fields where one side lacks data.
+
 export interface WebAppAuthResponse {
   session_token: string;
   expires_in: number;
@@ -23,15 +26,10 @@ export interface WebAppMeDevice {
   device_name: string | null;
   issued_at: string;
   revoked_at: string | null;
+
+  // miniapp-only fields today
   last_seen_handshake_at?: string | null;
   apply_status?: string | null;
-}
-
-export interface WebAppMeResponse {
-  user: WebAppMeUser | null;
-  subscriptions: WebAppMeSubscription[];
-  devices: WebAppMeDevice[];
-  onboarding: WebAppOnboardingState;
 }
 
 export interface WebAppOnboardingState {
@@ -39,6 +37,13 @@ export interface WebAppOnboardingState {
   step: number | null;
   version: number;
   updated_at: string | null;
+}
+
+export interface WebAppMeResponse {
+  user: WebAppMeUser | null;
+  subscriptions: WebAppMeSubscription[];
+  devices: WebAppMeDevice[];
+  onboarding: WebAppOnboardingState;
 }
 
 export interface WebAppOnboardingStateRequest {
@@ -98,17 +103,24 @@ export interface WebAppPaymentStatusOut {
   valid_until: string | null;
 }
 
-export type WebAppBillingHistoryStatus = "paid" | "pending" | "refunded" | "failed";
+export type WebAppBillingHistoryStatus = "paid" | "pending" | "failed" | "refunded";
 
 export interface WebAppBillingHistoryItem {
   payment_id: string;
-  plan_id: string | null;
-  plan_name: string;
+  status: WebAppBillingHistoryStatus;
+
+  // Why: miniapp UI expects these to always render; admin may treat missing as a backend bug.
   amount: number;
   currency: string;
-  status: WebAppBillingHistoryStatus;
   created_at: string;
+  plan_name: string;
   invoice_ref: string;
+
+  // admin-only fields today
+  duration_days?: number;
+
+  // other surface includes this
+  plan_id?: string | null;
 }
 
 export interface WebAppBillingHistoryResponse {
@@ -156,10 +168,13 @@ export interface WebAppUsageResponse {
 export interface WebAppIssueDeviceResponse {
   device_id: string;
   config: string | null;
-  config_awg: string | null;
-  config_wg_obf: string | null;
-  config_wg: string | null;
+  config_awg?: string | null;
+  config_wg_obf?: string | null;
+  config_wg?: string | null;
   issued_at: string;
-  node_mode: "mock" | "real";
+
+  // Why: backend has used both string and a narrow union across endpoints.
+  node_mode: "mock" | "real" | (string & {});
   peer_created: boolean;
 }
+

@@ -1,13 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import type {
-  WebAppAuthResponse,
-  WebAppMeResponse,
-  WebAppOnboardingState,
-  WebAppOnboardingStateRequest,
-  WebAppOnboardingStateResponse,
-} from "@/lib/types";
-import { ApiError } from "@/lib/types";
+import { ApiError, type WebAppAuthResponse, type WebAppMeResponse, type WebAppOnboardingState, type WebAppOnboardingStateRequest, type WebAppOnboardingStateResponse } from "@vpn-suite/shared";
 import { setWebappToken, useWebappToken, webappApi } from "../api/client";
 import { useSession } from "../hooks/useSession";
 import {

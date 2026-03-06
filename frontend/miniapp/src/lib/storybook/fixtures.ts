@@ -1,4 +1,4 @@
-import type { WebAppMeResponse, WebAppMeDevice, WebAppMeSubscription } from "@/lib/types";
+import type { WebAppMeResponse, WebAppMeDevice, WebAppMeSubscription } from "@vpn-suite/shared";
 
 const baseSubscription: WebAppMeSubscription = {
   id: "sub-001",

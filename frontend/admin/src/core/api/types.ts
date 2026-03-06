@@ -1,4 +1,4 @@
-export { ApiError, isApiErrorBody, type ApiErrorBody } from "@/shared/types/api-error";
+export { ApiError, isApiErrorBody, type ApiErrorBody } from "@vpn-suite/shared";
 
 export interface ApiClient {
   request<T>(path: string, init?: RequestInit): Promise<T>;

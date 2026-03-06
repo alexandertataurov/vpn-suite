@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useApiQuery } from "@/core/api/useApiQuery";
+import { useApiQuery } from "@/hooks/api/useApiQuery";
 import { useApiMutation } from "./useApiMutation";
 import type {
   DeviceOut,

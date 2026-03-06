@@ -1,6 +1,6 @@
 import { useRef, useLayoutEffect } from "react";
 import type { HTMLAttributes } from "react";
-import { cn } from "@/lib/utils/cn";
+import { cn } from "@vpn-suite/shared";
 
 export type SkeletonVariant = "default" | "line" | "card" | "list" | "shimmer";
 

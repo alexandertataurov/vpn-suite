@@ -1,4 +1,4 @@
-import { ApiError, isApiErrorBody } from "../types/api-error";
+import { ApiError, isApiErrorBody } from "@vpn-suite/shared";
 
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 const MAX_RETRIES = 2;

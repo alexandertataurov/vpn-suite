@@ -1,0 +1,317 @@
+src/hooks/index.ts:1 - useApiMutation
+src/hooks/index.ts:2 - useAuth
+src/hooks/index.ts:3 - useRequireAuth
+src/hooks/index.ts:4 - usePermission
+src/hooks/index.ts:5 - useModal
+src/hooks/index.ts:6 - usePagination
+src/hooks/index.ts:7 - useDebounce
+src/hooks/index.ts:8 - useLocalStorage
+src/hooks/index.ts:9 - useMediaQuery
+src/hooks/index.ts:10 - useRunAction
+src/hooks/index.ts:12 - useGetDevice
+src/hooks/index.ts:13 - useGetDeviceList
+src/hooks/index.ts:14 - useGetDeviceSummary
+src/hooks/index.ts:15 - useGetDeviceConfigHealth
+src/hooks/index.ts:16 - useDevicesInvalidate
+src/hooks/index.ts:17 - useDeviceReconcile
+src/hooks/index.ts:18 - useDeviceRevoke
+src/hooks/index.ts:19 - useDeviceReissue
+src/hooks/index.ts:21 - ConfigHealthOut
+src/hooks/index.ts:23 - buildUsersPath
+src/hooks/index.ts:24 - useGetUserList
+src/hooks/index.ts:25 - useGetUser
+src/hooks/index.ts:26 - useGetUserDevices
+src/hooks/index.ts:27 - useUsersInvalidate
+src/hooks/index.ts:28 - useUpdateUser
+src/hooks/index.ts:29 - useDeleteUser
+src/hooks/index.ts:31 - UserListParams
+src/hooks/index.ts:31 - UserDeviceListOut
+src/hooks/index.ts:33 - useGetServer
+src/hooks/index.ts:34 - useGetServerList
+src/hooks/index.ts:35 - useGetServersSnapshotSummary
+src/hooks/index.ts:36 - useCreateServer
+src/hooks/index.ts:37 - useUpdateServer
+src/hooks/index.ts:38 - useDeleteServer
+src/hooks/index.ts:40 - useLoginForm
+src/hooks/index.ts:41 - useFormField
+src/hooks/index.ts:42 - useToast
+src/layout/NavRail.tsx:5 - NavItem (used in module)
+src/layout/PageHeader.tsx:4 - PageHeaderProps (used in module)
+src/layout/PageLayout.tsx:4 - PageLayoutProps (used in module)
+src/layout/Shell.tsx:28 - Shell
+src/shared/index.ts:1 - ADMIN_BASE
+src/shared/index.ts:1 - getBaseUrl
+src/core/api/errors.ts:1 - ApiError
+src/core/api/errors.ts:1 - isApiErrorBody
+src/core/api/types.ts:1 - ApiError
+src/core/api/types.ts:1 - isApiErrorBody
+src/core/api/types.ts:1 - ApiErrorBody
+src/core/auth/store.ts:36 - AuthState (used in module)
+src/core/errors/map.ts:3 - AppError (used in module)
+src/core/loading/strategy.ts:7 - ROUTE_LOADING_FALLBACK_KEY
+src/core/telemetry/client.ts:14 - applyTelemetryEvent
+src/core/telemetry/client.ts:3 - TelemetryStreamHandlers (used in module)
+src/core/telemetry/provider.tsx:48 - useTelemetry
+src/core/telemetry/types.ts:8 - LiveNodeState (used in module)
+src/design-system/primitives/CommandPalette.tsx:4 - CommandPaletteItem (used in module)
+src/design-system/primitives/DataTable.tsx:3 - DataTableColumn (used in module)
+src/design-system/primitives/index.ts:2 - Skeleton
+src/design-system/primitives/index.ts:3 - Spinner
+src/design-system/primitives/index.ts:4 - Meter
+src/design-system/primitives/index.ts:4 - SegmentedMeter
+src/design-system/primitives/index.ts:4 - Progress
+src/design-system/primitives/index.ts:5 - AnimatedNumber
+src/design-system/primitives/index.ts:7 - Nbar
+src/design-system/primitives/index.ts:10 - Card
+src/design-system/primitives/index.ts:11 - Widget
+src/design-system/primitives/index.ts:11 - WidgetEdgeAccent
+src/design-system/primitives/index.ts:14 - Button
+src/design-system/primitives/index.ts:15 - AnchorButton
+src/design-system/primitives/index.ts:16 - LinkButton
+src/design-system/primitives/index.ts:19 - Input
+src/design-system/primitives/index.ts:20 - Slider
+src/design-system/primitives/index.ts:21 - DatePicker
+src/design-system/primitives/index.ts:24 - Modal
+src/design-system/primitives/index.ts:25 - Drawer
+src/design-system/primitives/index.ts:26 - Popover
+src/design-system/primitives/index.ts:27 - ToastProvider
+src/design-system/primitives/index.ts:27 - useToast
+src/design-system/primitives/index.ts:30 - Tabs
+src/design-system/primitives/index.ts:30 - TabsList
+src/design-system/primitives/index.ts:30 - TabsTrigger
+src/design-system/primitives/index.ts:30 - TabsPanel
+src/design-system/primitives/index.ts:30 - TabsItems
+src/design-system/primitives/index.ts:31 - Accordion
+src/design-system/primitives/index.ts:31 - AccordionItem
+src/design-system/primitives/index.ts:32 - Breadcrumb
+src/design-system/primitives/index.ts:32 - BreadcrumbItem
+src/design-system/primitives/index.ts:33 - Pagination
+src/design-system/primitives/index.ts:34 - Stepper
+src/design-system/primitives/index.ts:34 - VerticalStepper
+src/design-system/primitives/index.ts:37 - Table
+src/design-system/primitives/index.ts:37 - TableHead
+src/design-system/primitives/index.ts:37 - TableBody
+src/design-system/primitives/index.ts:37 - TableRow
+src/design-system/primitives/index.ts:37 - TableCell
+src/design-system/primitives/index.ts:38 - DataTable
+src/design-system/primitives/index.ts:39 - VirtualTable
+src/design-system/primitives/index.ts:42 - SectionHeader
+src/design-system/primitives/index.ts:43 - Timeline
+src/design-system/primitives/index.ts:46 - Badge
+src/design-system/primitives/index.ts:47 - BadgeCount
+src/design-system/primitives/index.ts:50 - EmptyState
+src/design-system/primitives/index.ts:51 - ErrorState
+src/design-system/primitives/index.ts:54 - CommandPalette
+src/design-system/primitives/index.ts:55 - Avatar
+src/design-system/primitives/index.ts:55 - AvatarGroup
+src/design-system/primitives/Slider.tsx:6 - SliderProps (used in module)
+src/design-system/primitives/Stepper.tsx:5 - StepDefinition (used in module)
+src/design-system/primitives/Timeline.tsx:5 - TimelineEvent (used in module)
+src/design-system/primitives/Toast.tsx:6 - ToastOptions (used in module)
+src/design-system/typography/index.ts:42 - KpiValue
+src/design-system/typography/index.ts:53 - KpiDelta
+src/design-system/typography/index.ts:64 - KpiValueUnit
+src/design-system/typography/index.ts:20 - PageTitle
+src/design-system/typography/index.ts:22 - SectionTitle
+src/design-system/typography/index.ts:24 - CardTitle
+src/design-system/typography/index.ts:26 - BodyText
+src/design-system/typography/index.ts:28 - BodySmall
+src/design-system/typography/index.ts:30 - Caption
+src/design-system/typography/index.ts:32 - NavLabel
+src/design-system/typography/index.ts:34 - NavBadge
+src/design-system/typography/index.ts:36 - MetaText
+src/design-system/widgets/index.ts:2 - SessionsWidget
+src/design-system/widgets/index.ts:3 - IncidentsWidget
+src/design-system/widgets/index.ts:4 - TelemetryWidget
+src/design-system/widgets/index.ts:5 - ApiLatencyWidget
+src/design-system/widgets/index.ts:6 - ClusterLoadWidget
+src/design-system/widgets/index.ts:7 - KpiNumberWidget
+src/design-system/widgets/index.ts:8 - ServersSummaryWidget
+src/design-system/widgets/index.ts:10 - ServersSummaryWidgetData
+src/design-system/widgets/index.ts:12 - SidebarNavRoot
+src/design-system/widgets/index.ts:13 - SidebarNavSection
+src/design-system/widgets/index.ts:14 - SidebarNavLink
+src/design-system/widgets/index.ts:15 - SidebarNavFooter
+src/design-system/widgets/index.ts:18 - TopbarRoot
+src/design-system/widgets/index.ts:19 - TopbarBrand
+src/design-system/widgets/index.ts:20 - TopbarCrumb
+src/design-system/widgets/index.ts:21 - TopbarRight
+src/design-system/widgets/index.ts:22 - TopbarTime
+src/design-system/widgets/index.ts:23 - TopbarLiveChip
+src/design-system/widgets/index.ts:24 - TopbarBtn
+src/design-system/widgets/index.ts:25 - TopbarAvatar
+src/design-system/widgets/index.ts:29 - WidgetAccent
+src/design-system/widgets/index.ts:30 - TrendDirection
+src/design-system/widgets/index.ts:31 - SessionsMode
+src/design-system/widgets/index.ts:32 - SessionsWidgetData
+src/design-system/widgets/index.ts:33 - IncidentsState
+src/design-system/widgets/index.ts:34 - IncidentsWidgetData
+src/design-system/widgets/index.ts:35 - FreshnessState
+src/design-system/widgets/index.ts:36 - StampKind
+src/design-system/widgets/index.ts:37 - SparkPoint
+src/design-system/widgets/index.ts:38 - TelemetryWidgetData
+src/design-system/widgets/index.ts:39 - LatencyBand
+src/design-system/widgets/index.ts:40 - LatencyDistribution
+src/design-system/widgets/index.ts:41 - LatencyWidgetData
+src/design-system/widgets/index.ts:42 - ClusterMode
+src/design-system/widgets/index.ts:43 - ClusterMetricRow
+src/design-system/widgets/index.ts:44 - ClusterLoadWidgetData
+src/design-system/widgets/index.ts:47 - getAccentForSessionsState
+src/design-system/widgets/index.ts:48 - getIncidentsState
+src/design-system/widgets/index.ts:49 - getFreshnessStamp
+src/design-system/widgets/index.ts:50 - getLatencyBand
+src/design-system/widgets/index.ts:51 - getLatencyAccent
+src/design-system/widgets/index.ts:52 - getBarFillVariant
+src/design-system/widgets/index.ts:53 - getClusterAccent
+src/design-system/widgets/index.ts:57 - VpnNodeCard
+src/design-system/widgets/index.ts:58 - VpnNodeDrilldown
+src/design-system/widgets/index.ts:59 - VpnNodeGrid
+src/design-system/widgets/index.ts:60 - AlertStrip
+src/design-system/widgets/index.ts:61 - AlertDetails
+src/design-system/widgets/index.ts:62 - LatencyQualityPanel
+src/design-system/widgets/index.ts:63 - NodeSystemHealthPanel
+src/design-system/widgets/index.ts:64 - PeerHealthTable
+src/design-system/widgets/index.ts:65 - TrafficCapacityPanel
+src/design-system/widgets/index.ts:66 - TunnelHealthPanel
+src/design-system/widgets/index.ts:67 - VpnNodeSparkline
+src/design-system/widgets/index.ts:3 - RTT_P95_DEGRADED_MS
+src/design-system/widgets/index.ts:4 - LOSS_P95_DEGRADED_PCT
+src/design-system/widgets/index.ts:5 - HANDSHAKE_RATIO_DEGRADED
+src/design-system/widgets/index.ts:6 - CAPACITY_DEGRADED_PCT
+src/design-system/widgets/index.ts:7 - CPU_DEGRADED_PCT
+src/features/vpn-nodes/format.ts:23 - formatNumber
+src/features/vpn-nodes/types.ts:3 - HealthState (used in module)
+src/features/vpn-nodes/types.ts:14 - VpnNodeIdentity (used in module)
+src/shared/types/admin-api.ts:3 - OverviewStats
+src/shared/types/admin-api.ts:12 - ConnectionNodeOut (used in module)
+src/shared/types/admin-api.ts:22 - ConnectionNodesOut
+src/shared/types/admin-api.ts:27 - DashboardTimeseriesPoint (used in module)
+src/shared/types/admin-api.ts:34 - DashboardTimeseriesOut
+src/shared/types/admin-api.ts:39 - ServiceScrapeStatus (used in module)
+src/shared/types/admin-api.ts:54 - MetricsKpisOut
+src/shared/types/admin-api.ts:63 - OperatorHealthStrip (used in module)
+src/shared/types/admin-api.ts:79 - OperatorClusterRow (used in module)
+src/shared/types/admin-api.ts:92 - OperatorIncident (used in module)
+src/shared/types/admin-api.ts:122 - OperatorUserSessions (used in module)
+src/shared/types/admin-api.ts:131 - LatencyTimeseriesPoint (used in module)
+src/shared/types/admin-api.ts:136 - OperatorDashboardOut
+src/shared/types/admin-api.ts:150 - HealthSnapshotOut
+src/shared/types/admin-api.ts:164 - TelemetrySnapshotMetaOut (used in module)
+src/shared/types/admin-api.ts:173 - TelemetrySnapshotNodesSummaryOut (used in module)
+src/shared/types/admin-api.ts:180 - TelemetrySnapshotOut
+src/shared/types/admin-api.ts:188 - AppSettingsCapabilitiesOut (used in module)
+src/shared/types/admin-api.ts:197 - AppSettingsOut
+src/shared/types/admin-api.ts:232 - LoginRequest
+src/shared/types/admin-api.ts:237 - TokenResponse
+src/shared/types/admin-api.ts:243 - ListMeta
+src/shared/types/admin-api.ts:249 - ServerStatus (used in module)
+src/shared/types/admin-api.ts:288 - ActionCreateOut
+src/shared/types/admin-api.ts:294 - AgentActionLogOut (used in module)
+src/shared/types/admin-api.ts:302 - ActionOut (used in module)
+src/shared/types/admin-api.ts:317 - ActionListOut
+src/shared/types/admin-api.ts:323 - ServerSnapshotSummaryEntry (used in module)
+src/shared/types/admin-api.ts:343 - AdminIssuePeerRequest
+src/shared/types/admin-api.ts:354 - ConfigEntryOut (used in module)
+src/shared/types/admin-api.ts:360 - AwgDownloadLinkResponse
+src/shared/types/admin-api.ts:365 - AdminIssuePeerPeerOut (used in module)
+src/shared/types/admin-api.ts:373 - AdminIssuePeerResponse
+src/shared/types/admin-api.ts:389 - AdminRevokePeerResponse
+src/shared/types/admin-api.ts:394 - ServerCapabilitiesOut
+src/shared/types/admin-api.ts:402 - PeerListItem (used in module)
+src/shared/types/admin-api.ts:414 - PeerListOut
+src/shared/types/admin-api.ts:427 - ServerIpOut (used in module)
+src/shared/types/admin-api.ts:437 - ServerIpListOut
+src/shared/types/admin-api.ts:442 - ServerDeviceCountsOut
+src/shared/types/admin-api.ts:446 - PeerOut (used in module)
+src/shared/types/admin-api.ts:460 - ServerPeersOut
+src/shared/types/admin-api.ts:466 - ServerTelemetryOut
+src/shared/types/admin-api.ts:482 - NodeObfuscationOut (used in module)
+src/shared/types/admin-api.ts:494 - HostSummary (used in module)
+src/shared/types/admin-api.ts:507 - HostSummaryListOut
+src/shared/types/admin-api.ts:512 - ContainerPort (used in module)
+src/shared/types/admin-api.ts:553 - ContainerMetricsPoint (used in module)
+src/shared/types/admin-api.ts:564 - ContainerMetricsTimeseries
+src/shared/types/admin-api.ts:573 - ContainerLogLine (used in module)
+src/shared/types/admin-api.ts:580 - ContainerLogLineListOut
+src/shared/types/admin-api.ts:602 - UserOut (used in module)
+src/shared/types/admin-api.ts:622 - SubscriptionOut (used in module)
+src/shared/types/admin-api.ts:636 - SubscriptionList
+src/shared/types/admin-api.ts:641 - IssuedConfigOut (used in module)
+src/shared/types/admin-api.ts:650 - ReconciliationStatus (used in module)
+src/shared/types/admin-api.ts:651 - NodeHealthStatus (used in module)
+src/shared/types/admin-api.ts:652 - ConfigStateStatus (used in module)
+src/shared/types/admin-api.ts:654 - DeviceTelemetryOut (used in module)
+src/shared/types/admin-api.ts:697 - DeviceUpdate
+src/shared/types/admin-api.ts:725 - IssueRequest
+src/shared/types/admin-api.ts:731 - IssueResponse
+src/shared/types/admin-api.ts:747 - WebAppIssueDeviceResponse
+src/shared/types/admin-api.ts:758 - PaymentOut (used in module)
+src/shared/types/admin-api.ts:771 - PaymentList
+src/shared/types/admin-api.ts:776 - AuditLogOut (used in module)
+src/shared/types/admin-api.ts:787 - AuditLogList
+src/shared/types/admin-api.ts:808 - TopologySummaryOut
+src/shared/types/admin-api.ts:823 - TopologyGraphNodeOut (used in module)
+src/shared/types/admin-api.ts:835 - TopologyGraphEdgeOut (used in module)
+src/shared/types/admin-api.ts:843 - TopologyGraphOut
+src/shared/types/admin-api.ts:850 - PlacementCandidateOut (used in module)
+src/shared/types/admin-api.ts:864 - PlacementSimulationOut
+src/shared/types/admin-api.ts:870 - RebalanceMoveOut (used in module)
+src/shared/types/admin-api.ts:876 - RebalancePlanOut
+src/shared/types/admin-api.ts:884 - FailoverEvaluateOut
+src/shared/types/admin-api.ts:892 - BusinessMetricsOut
+src/shared/types/admin-api.ts:901 - SecurityMetricsOut
+src/shared/types/admin-api.ts:909 - AnomalyUserScoreOut (used in module)
+src/shared/types/admin-api.ts:918 - AnomalyMetricsOut
+src/shared/types/admin-api.ts:928 - AutomationRunOut (used in module)
+src/shared/types/admin-api.ts:958 - AutomationStatusOut
+src/shared/types/admin-api.ts:979 - ControlPlaneEventOut (used in module)
+src/shared/types/admin-api.ts:989 - ControlPlaneEventListOut
+src/shared/utils/error.ts:7 - getErrorMessage
+src/shared/utils/format.ts:5 - formatDate
+src/shared/utils/format.ts:11 - formatDateLong
+src/shared/utils/format.ts:26 - formatDateTime
+src/shared/utils/format.ts:55 - formatPct
+src/shared/utils/format.ts:62 - formatPercent01
+src/shared/utils/format.ts:124 - formatDurationShort
+src/shared/utils/format.ts:141 - formatBytes (used in module)
+src/shared/utils/format.ts:157 - formatRate
+src/shared/utils/format.ts:162 - safeNumber
+src/shared/utils/format.ts:20 - FormatDateTimeOptions (used in module)
+src/shared/utils/format.ts:52 - TimeZoneMode (used in module)
+src/design-system/widgets/dashboard/index.ts:1 - ApiLatencyWidget
+src/design-system/widgets/dashboard/index.ts:2 - ClusterLoadWidget
+src/design-system/widgets/dashboard/index.ts:3 - IncidentsWidget
+src/design-system/widgets/dashboard/index.ts:4 - KpiNumberWidget
+src/design-system/widgets/dashboard/index.ts:5 - ServersSummaryWidget
+src/design-system/widgets/dashboard/index.ts:6 - ServersSummaryWidgetData
+src/design-system/widgets/dashboard/index.ts:7 - SessionsWidget
+src/design-system/widgets/dashboard/index.ts:8 - TelemetryWidget
+src/design-system/widgets/shell/index.ts:2 - SidebarNavRoot
+src/design-system/widgets/shell/index.ts:3 - SidebarNavSection
+src/design-system/widgets/shell/index.ts:4 - SidebarNavLink
+src/design-system/widgets/shell/index.ts:5 - SidebarNavFooter
+src/design-system/widgets/shell/index.ts:8 - TopbarRoot
+src/design-system/widgets/shell/index.ts:9 - TopbarBrand
+src/design-system/widgets/shell/index.ts:10 - TopbarCrumb
+src/design-system/widgets/shell/index.ts:11 - TopbarRight
+src/design-system/widgets/shell/index.ts:12 - TopbarTime
+src/design-system/widgets/shell/index.ts:13 - TopbarLiveChip
+src/design-system/widgets/shell/index.ts:14 - TopbarBtn
+src/design-system/widgets/shell/index.ts:15 - TopbarAvatar
+src/design-system/widgets/vpn-node/index.ts:1 - AlertDetails
+src/design-system/widgets/vpn-node/index.ts:2 - AlertStrip
+src/design-system/widgets/vpn-node/index.ts:3 - LatencyQualityPanel
+src/design-system/widgets/vpn-node/index.ts:4 - NodeSystemHealthPanel
+src/design-system/widgets/vpn-node/index.ts:5 - PeerHealthTable
+src/design-system/widgets/vpn-node/index.ts:6 - TrafficCapacityPanel
+src/design-system/widgets/vpn-node/index.ts:7 - TunnelHealthPanel
+src/design-system/widgets/vpn-node/index.ts:8 - VpnNodeCard
+src/design-system/widgets/vpn-node/index.ts:9 - VpnNodeSparkline
+src/design-system/widgets/vpn-node/index.ts:10 - VpnNodeDrilldown
+src/design-system/widgets/vpn-node/index.ts:11 - VpnNodeGrid
+src/design-system/widgets/vpn-node/index.ts:3 - RTT_P95_DEGRADED_MS
+src/design-system/widgets/vpn-node/index.ts:4 - LOSS_P95_DEGRADED_PCT
+src/design-system/widgets/vpn-node/index.ts:5 - HANDSHAKE_RATIO_DEGRADED
+src/design-system/widgets/vpn-node/index.ts:6 - CAPACITY_DEGRADED_PCT
+src/design-system/widgets/vpn-node/index.ts:7 - CPU_DEGRADED_PCT
+

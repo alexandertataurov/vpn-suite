@@ -13,10 +13,9 @@ export default defineConfig({
     dedupe: ["react", "react-dom", "react-router-dom"],
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      "@vpn-suite/shared": path.resolve(__dirname, "./src/shared"),
-      "@vpn-suite/shared/theme": path.resolve(__dirname, "./src/shared/theme/index.ts"),
-      "@vpn-suite/shared/api-client": path.resolve(__dirname, "./src/shared/api-client/index.ts"),
-      "@vpn-suite/shared/types": path.resolve(__dirname, "./src/shared/types/index.ts"),
+      // Why: keep workspace package as source (no prebuild) for Vite dev/build.
+      "@shared": path.resolve(__dirname, "../shared/src"),
+      "@vpn-suite/shared": path.resolve(__dirname, "../shared/src"),
     },
   },
   server: {
@@ -39,7 +38,7 @@ export default defineConfig({
           if (id.includes("node_modules/echarts") || id.includes("node_modules/echarts-for-react"))
             return "echarts";
           if (id.includes("node_modules")) return "vendor";
-          if (id.includes("shared")) return "shared";
+          if (id.includes("/shared/src/")) return "shared";
         },
       },
     },

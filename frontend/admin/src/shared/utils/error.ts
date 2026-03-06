@@ -1,4 +1,4 @@
-import { ApiError } from "../types/api-error";
+import { ApiError } from "@vpn-suite/shared";
 
 /**
  * Extract a user-facing error message from an unknown error.

@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import type { ReactNode } from "react";
-import type { WebAppIssueDeviceResponse, WebAppMeResponse } from "@/lib/types";
+import type { WebAppIssueDeviceResponse, WebAppMeResponse } from "@vpn-suite/shared";
 
 type MockMode = "success" | "error" | "loading";
 

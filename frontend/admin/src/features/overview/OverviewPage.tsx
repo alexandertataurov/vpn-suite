@@ -1,5 +1,5 @@
 import { useMemo, useState, useCallback, useRef, useEffect } from "react";
-import { useApiQuery } from "@/core/api/useApiQuery";
+import { useApiQuery } from "@/hooks/api/useApiQuery";
 import { Button, Drawer, EmptyState, ErrorState, SectionHeader, Skeleton, useToast, Widget, Nbar } from "@/design-system/primitives";
 import { PageLayout } from "@/layout/PageLayout";
 import { BodyText } from "@/design-system/typography";
@@ -11,7 +11,7 @@ import {
   TelemetryWidget,
 } from "@/design-system/widgets";
 import type { ClusterMetricRow, FreshnessState, SparkPoint } from "@/design-system/widgets/widgets.types";
-import { serverStatusToVariant } from "@/shared/statusMap";
+import { serverStatusToVariant } from "@vpn-suite/shared";
 import { OverviewPeersChart, OverviewThroughputChart, type OperatorTimeseriesPoint } from "./OverviewCharts";
 
 interface HealthSnapshot {

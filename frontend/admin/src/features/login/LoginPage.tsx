@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useApi } from "@/core/api/context";
 import { useAuthStore } from "@/core/auth/store";
 import { Button, Input } from "@/design-system/primitives";
-import { ApiError } from "@/shared/types/api-error";
+import { ApiError } from "@vpn-suite/shared";
 
 export function LoginPage() {
   const api = useApi();

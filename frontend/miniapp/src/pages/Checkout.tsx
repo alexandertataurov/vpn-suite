@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import type { WebAppCreateInvoiceResponse, WebAppPaymentStatusOut } from "@/lib/types";
+import type { WebAppCreateInvoiceResponse, WebAppPaymentStatusOut } from "@vpn-suite/shared";
 import {
   FallbackScreen,
   Input,

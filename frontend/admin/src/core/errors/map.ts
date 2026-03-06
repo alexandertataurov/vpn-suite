@@ -1,4 +1,4 @@
-import { ApiError } from "@/shared/types/api-error";
+import { ApiError } from "@vpn-suite/shared";
 
 export interface AppError {
   code: string;

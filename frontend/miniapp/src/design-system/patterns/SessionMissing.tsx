@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import type { WebAppAuthResponse } from "@/lib/types";
+import type { WebAppAuthResponse } from "@vpn-suite/shared";
 import { setWebappToken, webappApi } from "@/api/client";
 import { useTelegramWebApp } from "@/hooks/useTelegramWebApp";
 import { PageStateScreen } from "./PageStateScreen";
