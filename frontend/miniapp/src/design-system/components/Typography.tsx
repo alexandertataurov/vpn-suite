@@ -33,7 +33,7 @@ export function H3(props: MiniappTextProps) {
   return <PrimitiveHeading level={3} {...(props as React.ComponentProps<typeof PrimitiveHeading>)} />;
 }
 
-export function Body({ className, tabular = false, ...props }: MiniappTextProps) {
+export function Body({ className, tabular = false, as: _as, ...props }: MiniappTextProps) {
   return (
     <PrimitiveText
       variant="body"
@@ -45,7 +45,7 @@ export function Body({ className, tabular = false, ...props }: MiniappTextProps)
 }
 
 /** Caption style (type-caption). Use for small supporting text. */
-export function Caption({ className, tabular = false, ...props }: MiniappTextProps) {
+export function Caption({ className, tabular = false, as: _as, ...props }: MiniappTextProps) {
   return (
     <PrimitiveText
       variant="caption"

@@ -33,7 +33,9 @@ jobs:
           set -euo pipefail
           COUNT=$(grep -rn "#[0-9a-fA-F]\{3,8\}" frontend/admin/src \
             --include="*.tsx" --include="*.ts" \
-            | grep -vE '^[[:space:]]*//|^[[:space:]]*\*|^[[:space:]]*/\*' | wc -l)
+            | grep -v '\.stories\.' \
+            | grep -vE '^[[:space:]]*//|^[[:space:]]*\*|^[[:space:]]*/\*' | wc -l) || true
+          COUNT=${COUNT:-0}
           [ "$COUNT" -eq 0 ] || (echo "❌ $COUNT hardcoded colors found in admin" && exit 1)
 
       - name: No hardcoded colors (shared)

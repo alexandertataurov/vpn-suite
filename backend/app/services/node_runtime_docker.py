@@ -406,8 +406,8 @@ def _extract_entrypoint_cmd(inspect: dict) -> str:
     cfg = inspect.get("Config") or {}
     ep = cfg.get("Entrypoint") or []
     cmd = cfg.get("Cmd") or []
-    a = list(ep) if isinstance(ep, (list, tuple)) else [ep]
-    b = list(cmd) if isinstance(cmd, (list, tuple)) else [cmd]
+    a = list(ep) if isinstance(ep, list | tuple) else [ep]
+    b = list(cmd) if isinstance(cmd, list | tuple) else [cmd]
     return " ".join(str(x) for x in a + b).lower()
 
 
