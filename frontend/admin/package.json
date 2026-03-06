@@ -23,6 +23,8 @@
     "perf:bundle": "npm run build"
   },
   "dependencies": {
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^3.5.0",
     "@sentry/react": "^8.55.0",
     "@tanstack/react-query": "^5.62.0",
     "@tanstack/react-virtual": "^3.13.18",
