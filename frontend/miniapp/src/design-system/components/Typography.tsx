@@ -34,6 +34,7 @@ export function H3(props: MiniappTextProps) {
 }
 
 export function Body({ className, tabular = false, as: _as, ...props }: MiniappTextProps) {
+  void _as;
   return (
     <PrimitiveText
       variant="body"
@@ -46,6 +47,7 @@ export function Body({ className, tabular = false, as: _as, ...props }: MiniappT
 
 /** Caption style (type-caption). Use for small supporting text. */
 export function Caption({ className, tabular = false, as: _as, ...props }: MiniappTextProps) {
+  void _as;
   return (
     <PrimitiveText
       variant="caption"

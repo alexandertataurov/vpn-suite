@@ -1175,6 +1175,7 @@ class DockerNodeRuntimeAdapter(NodeRuntimeAdapter):
             classid = class_by_plan.get(plan_id)
             if classid is None:
                 continue
+            cid: str = classid
             host_cidrs = _extract_ipv4_host_cidrs(str(binding.get("allowed_ips") or ""))
             if not host_cidrs:
                 skipped_no_host_ip += 1
@@ -1200,7 +1201,7 @@ class DockerNodeRuntimeAdapter(NodeRuntimeAdapter):
                         "dst",
                         cidr,
                         "flowid",
-                        classid,
+                        cid,
                     ]
                 )
                 commands.append(
@@ -1222,7 +1223,7 @@ class DockerNodeRuntimeAdapter(NodeRuntimeAdapter):
                         "src",
                         cidr,
                         "flowid",
-                        classid,
+                        cid,
                     ]
                 )
 

@@ -50,7 +50,8 @@ jobs:
         run: |
           set -euo pipefail
           COUNT=$(grep -rn "from 'lucide-react'\|from \"lucide-react\"" frontend/miniapp/src \
-            --include="*.tsx" | grep -v "shared-inline/icons.ts" | wc -l)
+            --include="*.tsx" --include="*.ts" | grep -vE "shared-inline/icons\.ts|/lib/icons\.ts" | wc -l) || true
+          COUNT=${COUNT:-0}
           [ "$COUNT" -eq 0 ] || (echo "❌ $COUNT direct lucide imports found" && exit 1)
 
       - name: No inline styles (miniapp)
