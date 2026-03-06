@@ -8,6 +8,11 @@
 - [ ] Relevant tests passed locally/CI
 - [ ] No breaking API/UI behavior introduced
 
+## Miniapp (if frontend/miniapp changed)
+
+- [ ] No inline `style` prop; use tokenized CSS / design-system classes
+- [ ] UI imports from `@/design-system` only (no direct `design-system/ui` or primitives paths)
+
 ## Accessibility
 
 - [ ] Reviewed against [`docs/accessibility-checklist.md`](../docs/accessibility-checklist.md)
