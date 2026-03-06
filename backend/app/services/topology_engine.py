@@ -118,6 +118,7 @@ class TopologyEngine:
         nodes = await self._adapter.discover_nodes()
         await self._sync_discovered_nodes(nodes)
         total_capacity = sum(n.max_peers for n in nodes)
+
         # For cluster "load" and dashboard peers, prefer active/connected peers
         # when available, falling back to total peer_count only when necessary.
         def _peer_count(n: object) -> int:
