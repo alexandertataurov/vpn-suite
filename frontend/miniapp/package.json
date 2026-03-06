@@ -52,7 +52,7 @@
     "@vitejs/plugin-react": "^4.3.3",
     "eslint": "^9.39.3",
     "eslint-plugin-react": "^7.37.5",
-    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-hooks": "^7.0.1",
     "jsdom": "^28.1.0",
     "rollup-plugin-visualizer": "^7.0.1",
     "storybook": "^8.6.17",
