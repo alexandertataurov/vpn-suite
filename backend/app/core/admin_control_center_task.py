@@ -17,9 +17,9 @@ try:
         vpn_abuse_signals_total,
     )
 except Exception:
-    vpn_abuse_high_risk_users = None
-    vpn_abuse_medium_risk_users = None
-    vpn_abuse_signals_total = None
+    vpn_abuse_high_risk_users = None  # type: ignore[assignment]
+    vpn_abuse_medium_risk_users = None  # type: ignore[assignment]
+    vpn_abuse_signals_total = None  # type: ignore[assignment]
 
 _log = logging.getLogger(__name__)
 

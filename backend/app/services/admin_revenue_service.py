@@ -233,7 +233,7 @@ async def get_revenue_overview(session: AsyncSession) -> dict:
         .scalars()
         .all()
     )
-    earned_bonus_days = sum(r.reward_days for r in ref_bonus_result) if ref_bonus_result else 0
+    earned_bonus_days = sum(ref_bonus_result) if ref_bonus_result else 0
 
     # Churn by reason
     churn_by_reason_result = (

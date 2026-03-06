@@ -172,10 +172,11 @@ async def apply_diff(
                 p.public_key[:16],
             )
         for p in diff.peers_to_remove:
+            pub = (p[:16] if isinstance(p, str) else getattr(p, "public_key", str(p))[:16])
             _log.warning(
                 "Safe Reconcile (Read-Only): ORPHAN peer found in runtime but not in DB: node_id=%s pubkey=%s",
                 node_id,
-                p[:16],
+                pub,
             )
         for p in diff.peers_to_update:
             _log.warning(
@@ -374,7 +375,7 @@ async def reconcile_node(
         )
         for row in rev.all():
             if row and row[0]:
-                revoked_pubkeys.add(row[0].strip())
+                revoked_pubkeys.add(str(row[0]).strip())
         wg_pubkeys = {str(p.get("public_key", "")).strip() for p in wg_peers if p.get("public_key")}
         expired_active = len(revoked_pubkeys & wg_pubkeys)
         if vpn_peers_expired_active_count is not None:

@@ -102,8 +102,9 @@ async def run_abuse_detection(session: AsyncSession) -> dict:
     ).all()
     user_limit: dict[int, int] = {}
     for r in sub_plan:
-        if r.user_id not in user_limit:
-            user_limit[int(r.user_id)] = r.device_limit or 1
+        uid = int(r[0]) if r[0] is not None else 0
+        if uid not in user_limit:
+            user_limit[uid] = (r[2] or 1) if (r[2] is not None) else 1
 
     # Shared config: public_key used by >1 user
     key_reuse_by_user: dict[int, float] = defaultdict(float)

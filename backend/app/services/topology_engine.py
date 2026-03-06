@@ -121,7 +121,7 @@ class TopologyEngine:
         # For cluster "load" and dashboard peers, prefer active/connected peers
         # when available, falling back to total peer_count only when necessary.
         current_load = sum(
-            (n.active_peers if getattr(n, "active_peers", None) is not None else n.peer_count)
+            int(n.active_peers if getattr(n, "active_peers", None) is not None else n.peer_count or 0)
             for n in nodes
         )
         load_factor = current_load / total_capacity if total_capacity else 0.0

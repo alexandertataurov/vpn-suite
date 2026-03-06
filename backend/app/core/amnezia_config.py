@@ -76,8 +76,10 @@ def _validate_s1_s2_constraint(s1: int, s2: int) -> None:
         )
 
 
-def get_obfuscation_params(profile_request_params: dict[str, Any] | None) -> dict[str, int]:
-    """Extract AmneziaWG obfuscation params from server profile request_params. Use defaults when missing."""
+def get_obfuscation_params(profile_request_params: dict[str, Any] | None) -> dict[str, int | str]:
+    """Extract AmneziaWG obfuscation params from server profile request_params. Use defaults when missing.
+    I1–I5 are kept as strings; config_builder normalizers require non-empty strings (e.g. <b 0x1234>).
+    """
     if not profile_request_params:
         _validate_s1_s2_constraint(DEFAULT_S1, DEFAULT_S2)
         h1, h2, h3, h4 = _DEFAULT_H_FALLBACK
@@ -95,7 +97,7 @@ def get_obfuscation_params(profile_request_params: dict[str, Any] | None) -> dic
     s1 = int(profile_request_params.get("amnezia_s1", DEFAULT_S1))
     s2 = int(profile_request_params.get("amnezia_s2", DEFAULT_S2))
     _validate_s1_s2_constraint(s1, s2)
-    return {
+    out: dict[str, int | str] = {
         "Jc": int(profile_request_params.get("amnezia_jc", DEFAULT_Jc)),
         "Jmin": int(profile_request_params.get("amnezia_jmin", DEFAULT_Jmin)),
         "Jmax": int(profile_request_params.get("amnezia_jmax", DEFAULT_Jmax)),
@@ -111,22 +113,18 @@ def get_obfuscation_params(profile_request_params: dict[str, Any] | None) -> dic
         "S4": int(profile_request_params.get("amnezia_s4", 0))
         if "amnezia_s4" in profile_request_params
         else 0,
-        "I1": int(profile_request_params.get("amnezia_i1") or 0)
-        if "amnezia_i1" in profile_request_params
-        else 0,
-        "I2": int(profile_request_params.get("amnezia_i2") or 0)
-        if "amnezia_i2" in profile_request_params
-        else 0,
-        "I3": int(profile_request_params.get("amnezia_i3") or 0)
-        if "amnezia_i3" in profile_request_params
-        else 0,
-        "I4": int(profile_request_params.get("amnezia_i4") or 0)
-        if "amnezia_i4" in profile_request_params
-        else 0,
-        "I5": int(profile_request_params.get("amnezia_i5") or 0)
-        if "amnezia_i5" in profile_request_params
-        else 0,
     }
+    for key, param_key in (
+        ("I1", "amnezia_i1"),
+        ("I2", "amnezia_i2"),
+        ("I3", "amnezia_i3"),
+        ("I4", "amnezia_i4"),
+        ("I5", "amnezia_i5"),
+    ):
+        if param_key in profile_request_params:
+            raw = profile_request_params.get(param_key)
+            out[key] = str(raw) if raw is not None else ""
+    return out
 
 
 def _select_awg_profile(obfuscation: dict[str, Any] | None) -> ConfigProfile:
@@ -155,7 +153,7 @@ def build_all_configs(
     allowed_ips: str = "0.0.0.0/0, ::/0",
     dns: str | None = None,
     persistent_keepalive: int = 25,
-    obfuscation: dict[str, int] | None = None,
+    obfuscation: dict[str, int | str] | None = None,
     mtu: int | None = None,
     address: str | None = None,
     preshared_key: str | None = None,
@@ -207,7 +205,7 @@ def build_amnezia_client_config(
     allowed_ips: str = "0.0.0.0/0, ::/0",
     dns: str | None = None,
     persistent_keepalive: int = 15,
-    obfuscation: dict[str, int] | None = None,
+    obfuscation: dict[str, int | str] | None = None,
     mtu: int | None = None,
     address: str | None = None,
     preshared_key: str | None = None,
@@ -292,7 +290,7 @@ def build_wg_obfuscated_config(
     allowed_ips: str = "0.0.0.0/0, ::/0",
     dns: str | None = None,
     persistent_keepalive: int = 25,
-    obfuscation: dict[str, int] | None = None,
+    obfuscation: dict[str, int | str] | None = None,
     mtu: int | None = None,
     address: str | None = None,
     preshared_key: str | None = None,

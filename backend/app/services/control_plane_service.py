@@ -1037,7 +1037,7 @@ def map_plan_bandwidth_policy(row: PlanBandwidthPolicy, plan_name: str) -> PlanB
         priority=row.priority,
         enabled=row.enabled,
         created_at=row.created_at or datetime.now(timezone.utc),
-        updated_at=row.updated_at or datetime.now(timezone.utc),
+        updated_at=getattr(row, "updated_at", None) or datetime.now(timezone.utc),
     )
 
 
