@@ -6,7 +6,6 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.error_responses import error_body
 from app.core.rate_limit import rate_limit_config_download
 from app.core.security import decrypt_config
 from app.core.one_time_download import verify_and_consume_one_time_token
