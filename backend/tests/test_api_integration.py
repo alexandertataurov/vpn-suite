@@ -1,9 +1,13 @@
 """API integration tests: validation, auth required, error responses. No DB seed required for these."""
 
+from datetime import datetime, timezone
+from types import SimpleNamespace
+
 import pytest
 from httpx import ASGITransport, AsyncClient
 
 from app.core.config import settings
+from app.core.database import get_db
 from app.main import app
 
 
@@ -209,6 +213,241 @@ async def test_webapp_auth_503_when_bot_token_not_configured(client: AsyncClient
     assert r.status_code == 503
     data = r.json()
     assert "WEBAPP_AUTH_DISABLED" in str(data) or "error" in data
+
+
+@pytest.mark.asyncio
+async def test_webapp_auth_persists_tg_requisites_in_meta(
+    client: AsyncClient, monkeypatch, async_session
+):
+    """POST /api/v1/webapp/auth with valid init_data stores Telegram user in User.meta['tg']."""
+    from app.core import config
+    from app.models import User
+    from sqlalchemy import select
+
+    tg_id = 987654321
+    tg_user = {
+        "id": tg_id,
+        "first_name": "Auth",
+        "last_name": "Test",
+        "username": "authtest",
+        "language_code": "en",
+        "is_premium": False,
+    }
+    monkeypatch.setattr(config.settings, "telegram_bot_token", "TEST_BOT_TOKEN")
+    monkeypatch.setattr(
+        config.settings,
+        "secret_key",
+        getattr(config.settings, "secret_key", "test-secret"),
+    )
+    monkeypatch.setattr(
+        "app.api.v1.webapp.validate_telegram_init_data",
+        lambda init_data, bot_token: tg_user if bot_token else None,
+    )
+
+    async def override_get_db():
+        yield async_session
+
+    app.dependency_overrides[get_db] = override_get_db
+    try:
+        r = await client.post("/api/v1/webapp/auth", json={"init_data": "any"})
+        assert r.status_code == 200, r.text
+        data = r.json()
+        assert "session_token" in data
+
+        result = await async_session.execute(select(User).where(User.tg_id == tg_id))
+        user = result.scalar_one_or_none()
+        assert user is not None
+        assert user.meta is not None
+        assert "tg" in user.meta
+        tg = user.meta["tg"]
+        assert tg["id"] == tg_id
+        assert tg["first_name"] == "Auth"
+        assert tg["last_name"] == "Test"
+        assert tg["username"] == "authtest"
+        assert tg["language_code"] == "en"
+        assert tg["is_premium"] is False
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+
+
+@pytest.mark.asyncio
+async def test_webapp_debug_test_telegram_config_sends_to_expected_chat(monkeypatch):
+    """POST /api/v1/webapp/debug/test-telegram-config uses WebApp tg_id as chat_id."""
+    from app.core import config
+    from app.api.v1 import webapp as webapp_module
+
+    # Ensure bot token is set so endpoint does not 503.
+    monkeypatch.setattr(config.settings, "telegram_bot_token", "TEST_TOKEN")
+
+    # Force _get_tg_id_from_bearer to return our expected id without real JWT.
+    monkeypatch.setattr(
+        webapp_module,
+        "_get_tg_id_from_bearer",
+        lambda request: 504047,
+    )
+
+    # Capture Telegram Bot API calls.
+    called = {"sendMessage": None, "sendDocument": None}
+
+    class DummyResponse:
+        def __init__(self, status_code: int, text: str = ""):
+            self.status_code = status_code
+            self.text = text
+
+    async def fake_post(self, url: str, *args, **kwargs):
+        if url.endswith("/sendMessage"):
+            called["sendMessage"] = kwargs
+            return DummyResponse(200, '{"ok":true}')
+        if url.endswith("/sendDocument"):
+            called["sendDocument"] = kwargs
+            return DummyResponse(200, '{"ok":true}')
+        return DummyResponse(404, '{"ok":false}')
+
+    class DummyAsyncClient:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return False
+
+        post = fake_post  # type: ignore[assignment]
+
+    monkeypatch.setattr(webapp_module, "httpx", type("H", (), {"AsyncClient": DummyAsyncClient}))
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        r = await ac.post("/api/v1/webapp/debug/test-telegram-config")
+
+    assert r.status_code == 200, r.text
+    assert called["sendMessage"] is not None
+    assert called["sendDocument"] is not None
+    assert called["sendMessage"]["json"]["chat_id"] == 504047
+    assert called["sendDocument"]["data"]["chat_id"] == "504047"
+
+
+def test_webapp_delivery_config_selection_prefers_awg():
+    """Delivery should prefer AmneziaWG config when available."""
+    from app.api.v1 import webapp as webapp_module
+
+    class DummyOut:
+        config_awg = "awg-config"
+        config_wg_obf = "wg-obf-config"
+        config_wg = "wg-config"
+
+    assert webapp_module._select_delivery_config_text(DummyOut()) == "awg-config"
+
+
+def test_webapp_delivery_config_selection_falls_back_to_wg_variants():
+    """Delivery should fallback to non-empty wg_obf/wg/legacy config in order."""
+    from app.api.v1 import webapp as webapp_module
+
+    class DummyOut:
+        config_awg = "   "
+        config_wg_obf = ""
+        config_wg = "wg-config"
+        config = "legacy-config"
+
+    assert webapp_module._select_delivery_config_text(DummyOut()) == "wg-config"
+
+
+@pytest.mark.asyncio
+async def test_webapp_issue_device_enqueues_telegram_send_background_task(
+    client: AsyncClient, monkeypatch
+):
+    """POST /api/v1/webapp/devices/issue schedules Telegram config delivery via BackgroundTasks."""
+    from app.api.v1 import webapp as webapp_module
+
+    class _FakeResult:
+        def __init__(self, value):
+            self._value = value
+
+        def scalar_one_or_none(self):
+            return self._value
+
+    class _FakeDB:
+        def __init__(self):
+            self.added = []
+
+        async def execute(self, stmt):  # noqa: ARG002
+            return _FakeResult(SimpleNamespace(id="sub-1"))
+
+        def add(self, obj):
+            self.added.append(obj)
+
+        async def commit(self):
+            pass
+
+        async def refresh(self, obj):  # noqa: ARG002
+            pass
+
+        async def rollback(self):
+            pass
+
+    fake_db = _FakeDB()
+
+    async def fake_get_db():
+        yield fake_db
+
+    app.dependency_overrides[get_db] = fake_get_db
+
+    monkeypatch.setattr(settings, "issue_rate_limit_per_minute", 0)
+    monkeypatch.setattr(webapp_module, "_get_tg_id_from_bearer", lambda request: 504047)
+
+    async def fake_get_or_create_user(db, tg_id):  # noqa: ARG001
+        return SimpleNamespace(id=77, meta={})
+
+    monkeypatch.setattr(webapp_module, "_get_or_create_webapp_user", fake_get_or_create_user)
+
+    issued_at = datetime.now(timezone.utc)
+    out = SimpleNamespace(
+        device=SimpleNamespace(id="dev-bg-1", server_id="srv-bg-1", issued_at=issued_at),
+        config_awg="[Interface]\nPrivateKey = TEST\nAddress = 10.0.0.2/32\n",
+        config_wg_obf="",
+        config_wg="",
+        peer_created=True,
+    )
+
+    async def fake_issue_device(*args, **kwargs):  # noqa: ARG001
+        return out
+
+    monkeypatch.setattr(webapp_module, "issue_device", fake_issue_device)
+
+    async def _noop():
+        return None
+
+    monkeypatch.setattr(webapp_module, "invalidate_devices_summary_cache", _noop)
+    monkeypatch.setattr(webapp_module, "invalidate_devices_list_cache", _noop)
+
+    sent: list[tuple[int, str, str]] = []
+
+    async def fake_send_config_to_telegram(tg_id: int, device_id: str, config_text: str):
+        sent.append((tg_id, device_id, config_text))
+
+    monkeypatch.setattr(webapp_module, "_send_webapp_config_to_telegram", fake_send_config_to_telegram)
+
+    old_adapter = getattr(app.state, "node_runtime_adapter", None)
+    app.state.node_runtime_adapter = object()
+    try:
+        r = await client.post("/api/v1/webapp/devices/issue", json={})
+        assert r.status_code == 200, r.text
+        assert len(sent) == 1
+        assert sent[0][0] == 504047
+        assert sent[0][1] == "dev-bg-1"
+        assert sent[0][2].startswith("[Interface]")
+        assert len(fake_db.added) == 1
+        assert fake_db.added[0].device_id == "dev-bg-1"
+        assert fake_db.added[0].server_id == out.device.server_id
+        assert fake_db.added[0].profile_type == "awg"
+        assert fake_db.added[0].config_encrypted
+    finally:
+        if old_adapter is None and hasattr(app.state, "node_runtime_adapter"):
+            delattr(app.state, "node_runtime_adapter")
+        elif old_adapter is not None:
+            app.state.node_runtime_adapter = old_adapter
+        app.dependency_overrides.clear()
 
 
 @pytest.mark.asyncio

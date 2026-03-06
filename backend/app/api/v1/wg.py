@@ -17,6 +17,7 @@ from app.core.exceptions import LoadBalancerError, WireGuardCommandError
 from app.core.rbac import require_permission
 from app.models import Device
 from app.schemas.device import IssueResponse
+from app.services.issued_config_service import persist_issued_configs
 from app.services.issue_service import issue_device
 from app.services.server_live_key_service import ServerNotSyncedError
 from app.services.topology_engine import TopologyEngine
@@ -78,6 +79,15 @@ async def create_wg_peer(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e).replace("_", " "),
         )
+    await persist_issued_configs(
+        db,
+        device_id=out.device.id,
+        server_id=out.device.server_id,
+        config_awg=out.config_awg,
+        config_wg_obf=out.config_wg_obf,
+        config_wg=out.config_wg,
+        issued_by_admin_id=getattr(_admin, "id", None),
+    )
     await db.commit()
     await invalidate_devices_summary_cache()
     await invalidate_devices_list_cache()

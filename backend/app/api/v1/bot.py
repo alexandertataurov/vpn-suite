@@ -11,11 +11,11 @@ from sqlalchemy.orm import selectinload
 
 from app.core.bot_auth import BotPrincipal, get_admin_or_bot
 from app.core.database import get_db
+from app.core.telegram_user import build_tg_requisites
 from app.core.metrics import vpn_revenue_churn_total
 from app.models import (
     ChurnSurvey,
     Device,
-    IssuedConfig,
     Payment,
     Plan,
     Referral,
@@ -41,6 +41,7 @@ from app.schemas.bot import (
 from app.schemas.subscription import SubscriptionOut
 from app.schemas.user import UserOut
 from app.services.funnel_service import log_funnel_event
+from app.services.issued_config_service import persist_issued_configs
 from app.services.payment_webhook_service import complete_pending_payment_by_bot
 from app.services.retention_service import pause_subscription, retention_discount_percent
 from app.services.topology_engine import TopologyEngine
@@ -101,6 +102,12 @@ async def create_or_get_subscription(
             await log_funnel_event(
                 db, event_type="start", user_id=user.id, payload={"tg_id": body.tg_id}
             )
+    if body.telegram_user:
+        requisites = build_tg_requisites(body.telegram_user)
+        if requisites:
+            meta = user.meta or {}
+            meta["tg"] = requisites
+            user.meta = meta
     if user.is_banned:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -639,30 +646,14 @@ async def bot_trial_start(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={"code": "BAD_REQUEST", "message": str(e).replace("_", " ")},
         ) from e
-    import hashlib
-    import secrets
-
-    from app.core.security import encrypt_config
-
-    for profile_type, config_text in [
-        ("awg", result.config_awg),
-        ("wg_obf", result.config_wg_obf),
-        ("wg", result.config_wg),
-    ]:
-        if not config_text:
-            continue
-        token = secrets.token_hex(32)
-        token_hash = hashlib.sha256(token.encode()).hexdigest()
-        db.add(
-            IssuedConfig(
-                device_id=result.device_id,
-                server_id=result.server_id,
-                profile_type=profile_type,
-                download_token_hash=token_hash,
-                config_encrypted=encrypt_config(config_text),
-                issued_by_admin_id=None,
-            )
-        )
+    await persist_issued_configs(
+        db,
+        device_id=result.device_id,
+        server_id=result.server_id,
+        config_awg=result.config_awg,
+        config_wg_obf=result.config_wg_obf,
+        config_wg=result.config_wg,
+    )
     await db.commit()
     return TrialStartResponse(
         subscription_id=result.subscription_id,
