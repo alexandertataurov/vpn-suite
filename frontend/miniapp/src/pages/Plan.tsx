@@ -757,7 +757,7 @@ export function PlanPage() {
                     <div className="hist-body">
                       <div className="hist-plan">{item.plan_name}</div>
                       <div className="hist-date">
-                        {formatHistoryDate(item.created_at)} · Invoice #{compactInvoiceRef(item.invoice_ref)}
+                        {formatHistoryDate(item.created_at)} · Invoice #{compactInvoiceRef(item.invoice_ref ?? item.payment_id)}
                       </div>
                     </div>
                     <div className="hist-right">
