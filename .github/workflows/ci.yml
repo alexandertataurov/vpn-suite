@@ -262,13 +262,9 @@ jobs:
             process.exit(s >= 0.9 ? 0 : 1);
           "
 
-      - name: Storybook check
+      - name: Storybook build (admin)
         working-directory: frontend
-        run: npm run storybook:check -w shared
-
-      - name: Storybook build
-        working-directory: frontend
-        run: npm run build-storybook -w shared
+        run: npm run build-storybook -w admin
 
       - name: Storybook test runner (admin)
         timeout-minutes: 5

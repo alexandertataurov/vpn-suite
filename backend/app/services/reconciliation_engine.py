@@ -172,7 +172,7 @@ async def apply_diff(
                 p.public_key[:16],
             )
         for p in diff.peers_to_remove:
-            pub = (p[:16] if isinstance(p, str) else getattr(p, "public_key", str(p))[:16])
+            pub = p[:16] if isinstance(p, str) else getattr(p, "public_key", str(p))[:16]
             _log.warning(
                 "Safe Reconcile (Read-Only): ORPHAN peer found in runtime but not in DB: node_id=%s pubkey=%s",
                 node_id,

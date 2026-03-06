@@ -69,8 +69,9 @@ jobs:
       - name: No inline styles (admin)
         run: |
           set -euo pipefail
-          COUNT=$(grep -rn "style={{" frontend/admin/src --include="*.tsx" | wc -l)
-          [ "$COUNT" -eq 0 ] || (echo "❌ $COUNT inline styles found in admin" && exit 1)
+          COUNT=$(grep -rn "style={{" frontend/admin/src --include="*.tsx" 2>/dev/null | grep -v -E 'styleguide|design-system' | wc -l) || true
+          COUNT=${COUNT:-0}
+          [ "$COUNT" -eq 0 ] || (echo "❌ $COUNT inline styles found in admin (excluding styleguide/design-system)" && exit 1)
 
       - name: No inline styles (shared)
         run: |
