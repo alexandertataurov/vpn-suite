@@ -22,7 +22,7 @@ import { useSession } from "@/hooks/useSession";
 import { useTelemetry } from "@/hooks/useTelemetry";
 import { useTelegramWebApp } from "@/hooks/useTelegramWebApp";
 import { webappQueryKeys } from "@/lib/query-keys/webapp.query-keys";
-import { getActiveDevices } from "@/page-models/helpers";
+import { getActiveDevices } from "@/page-models";
 import { useQueryClient } from "@tanstack/react-query";
 import appStoreBadgeUrl from "@/assets/badges/app-store-badge.svg";
 import googlePlayBadgeUrl from "@/assets/badges/google-play-badge.png";

@@ -1,4 +1,5 @@
 import {
+  FallbackScreen,
   PageFrame,
   PageSection,
   Skeleton,
@@ -8,7 +9,6 @@ import {
   SessionMissing,
   HomePrimaryActionZone,
 } from "@/design-system";
-import { FallbackScreen } from "@/design-system/patterns/FallbackScreen";
 import { useHomePageModel } from "@/page-models";
 
 export function HomePage() {

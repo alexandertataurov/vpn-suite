@@ -72,3 +72,36 @@ Miniapp pages do not own local CSS files under `src/pages`.
 - Route styling must live in shared design-system styles.
 - If a page needs a new structural wrapper or page-shaped layout, promote it into `design-system/page-recipes` or `design-system/patterns`.
 - CI enforces this through `npm --prefix frontend run design:check -w miniapp`.
+
+## Import Rules
+
+- **Page-models:** Import from `@/design-system` barrel only. Allowed: `useToast`, types (`MissionChipTone`, `PageHeaderBadgeTone`, `MissionTone`). No components.
+- **Pages and sub-pages:** Import from `@/design-system` barrel only. No deep paths like `@/design-system/patterns/FallbackScreen`.
+- **Page-model hooks in pages:** Import from `@/page-models` barrel only. No `@/page-models/useXxxPageModel` or `@/page-models/helpers` deep paths.
+
+## Tone Type Reference
+
+| Component | Tone type | Allowed values |
+|-----------|-----------|----------------|
+| MissionChip, StandardSectionBadge | MissionChipTone | neutral, blue, green, amber, red |
+| PageHeaderBadge, StandardPageBadge | PageHeaderBadgeTone | neutral, info, success, warning, danger |
+| MissionCard, MissionOperationArticle | MissionTone | blue, green, amber, red (no neutral) |
+| MissionProgressBar | MissionHealthTone | healthy, warning, danger |
+| MissionAlert | MissionAlertTone | info, warning, error, success |
+
+The split is intentional (chip vs header vs card semantics). Do not mix tone types.
+
+## Token Usage Rules
+
+- **Spacing:** Use `--spacing-1`…`--spacing-16`, `--spacing-xs`/`--spacing-sm`/`--spacing-md`/`--spacing-lg`/`--spacing-xl`, `--container-pad`, `--size-touch-target`. No hardcoded px/rem in component files.
+- **Typography:** Use design-system typography tokens/classes. No inline font-size, font-weight, line-height, or letter-spacing overrides in pages or components.
+- **Color:** All colors via `var(--*)` tokens. No raw hex, rgb(), hsl(), or named colors. `--tg-theme-*` scoped to token files only; consumers use design-system wrapper tokens.
+- **8px grid:** All spacing values must be multiples of 8px. Document any non-8px values.
+
+## Content Ownership
+
+- **Model:** header, pageState, badges, hero, step content (e.g. Support TROUBLESHOOTER_STEPS), payment/plan display data.
+- **Page:** section titles, structural labels, FallbackScreen fallback strings when model omits message.
+- **Sub-components:** domain-specific UX copy (e.g. SetupCardContent, ConfigCardContent) when fixed per step/variant.
+
+Deferred: move FallbackScreen fallbacks into model; move Plan `nextStepCard` config into model.

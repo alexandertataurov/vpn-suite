@@ -7,6 +7,7 @@ import type {
   WebAppBillingHistoryStatus,
 } from "@vpn-suite/shared";
 import {
+  FallbackScreen,
   SessionMissing,
   PageFrame,
   PageSection,
@@ -27,7 +28,6 @@ import {
   MissionSecondaryLink,
   useToast,
 } from "@/design-system";
-import { FallbackScreen } from "@/design-system/patterns/FallbackScreen";
 import { useUpdateSubscription } from "@/hooks";
 import { formatBytes } from "@/lib/utils/format";
 import { getPercentClass } from "@/lib/percentClass";

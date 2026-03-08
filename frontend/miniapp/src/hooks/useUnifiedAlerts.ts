@@ -1,6 +1,5 @@
 import { useMemo } from "react";
-import { useToast } from "@/design-system/components/feedback/Toast";
-import type { HeaderAlertItem } from "@/design-system/layouts/HeaderAlertsContent";
+import { useToast, type HeaderAlertItem } from "@/design-system";
 import { useAccountSignals } from "@/hooks/useAccountSignals";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 

@@ -1,5 +1,5 @@
 import { PageFrame, PageCardSection, MissionPrimaryButton, MissionSecondaryLink, SessionMissing } from "@/design-system";
-import { useRestoreAccessPageModel } from "@/page-models/useRestoreAccessPageModel";
+import { useRestoreAccessPageModel } from "@/page-models";
 
 export function RestoreAccessPage() {
   const model = useRestoreAccessPageModel();

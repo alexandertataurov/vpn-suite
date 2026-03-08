@@ -6,7 +6,7 @@ import {
   MissionSecondaryLink,
   SessionMissing,
 } from "@/design-system";
-import { useConnectStatusPageModel } from "@/page-models/useConnectStatusPageModel";
+import { useConnectStatusPageModel } from "@/page-models";
 
 export function ConnectStatusPage() {
   const navigate = useNavigate();

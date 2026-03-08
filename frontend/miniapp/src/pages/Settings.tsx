@@ -29,10 +29,10 @@ import {
   IconHelpCircle,
   IconUser,
   Button,
+  FallbackScreen,
 } from "@/design-system";
 import { useTelegramHaptics } from "@/hooks/useTelegramHaptics";
-import { FallbackScreen } from "@/design-system/patterns/FallbackScreen";
-import { useSettingsPageModel } from "@/page-models/useSettingsPageModel";
+import { useSettingsPageModel } from "@/page-models";
 
 export function SettingsPage() {
   const location = useLocation();

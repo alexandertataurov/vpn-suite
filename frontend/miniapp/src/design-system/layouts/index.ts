@@ -17,3 +17,4 @@ export { ShellContextBlock } from "./ShellContextBlock";
 export type { ShellContextBlockProps } from "./ShellContextBlock";
 export { ScrollZone } from "./ScrollZone";
 export { ActionZone } from "./ActionZone";
+export type { HeaderAlertItem, HeaderAlertTone } from "./HeaderAlertsContent";

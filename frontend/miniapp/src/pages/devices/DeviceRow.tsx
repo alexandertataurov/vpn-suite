@@ -1,5 +1,4 @@
-import { IconSmartphone } from "@/design-system";
-import { MissionOperationArticle } from "@/design-system";
+import { IconSmartphone, MissionOperationArticle } from "@/design-system";
 import { DeviceRowActions } from "../DeviceRowActions";
 
 export interface DeviceRowProps {

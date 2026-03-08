@@ -4,14 +4,14 @@ import { useWebappToken, webappApi } from "@/api/client";
 import { useApiHealth } from "@/hooks/useApiHealth";
 import { useSession } from "@/hooks/useSession";
 import { webappQueryKeys } from "@/lib/query-keys/webapp.query-keys";
-import type { HeaderAlertItem, HeaderAlertTone } from "@/design-system/layouts/HeaderAlertsContent";
+import type { HeaderAlertItem, HeaderAlertTone } from "@/design-system";
 import {
   daysUntil,
   getActiveDevices,
   getActiveSubscription,
   shouldShowUpsell,
-} from "@/page-models/helpers";
-import type { PlanItem, PlansResponse } from "@/page-models/usePlanPageModel";
+} from "@/page-models";
+import type { PlanItem, PlansResponse } from "@/page-models";
 
 const TRIAL_ENDING_DAYS = 7;
 

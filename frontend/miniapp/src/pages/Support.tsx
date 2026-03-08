@@ -1,4 +1,5 @@
 import {
+  FallbackScreen,
   PageCardSection,
   PageFrame,
   PageSection,
@@ -10,7 +11,6 @@ import {
   SessionMissing,
   TroubleshooterStep,
 } from "@/design-system";
-import { FallbackScreen } from "@/design-system/patterns/FallbackScreen";
 import { useSupportPageModel } from "@/page-models";
 
 export function SupportPage() {

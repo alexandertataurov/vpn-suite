@@ -1,4 +1,5 @@
 import {
+  FallbackScreen,
   Input,
   PageCardSection,
   PageFrame,
@@ -10,8 +11,7 @@ import {
   MissionSecondaryLink,
   SessionMissing,
 } from "@/design-system";
-import { FallbackScreen } from "@/design-system/patterns/FallbackScreen";
-import { useCheckoutPageModel } from "@/page-models/useCheckoutPageModel";
+import { useCheckoutPageModel } from "@/page-models";
 
 export function CheckoutPage() {
   const model = useCheckoutPageModel();

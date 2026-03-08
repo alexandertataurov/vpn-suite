@@ -1,4 +1,5 @@
 import {
+  FallbackScreen,
   Skeleton,
   PageCardSection,
   PageFrame,
@@ -10,7 +11,6 @@ import {
   MissionSecondaryLink,
   SessionMissing,
 } from "@/design-system";
-import { FallbackScreen } from "@/design-system/patterns/FallbackScreen";
 import { useReferralPageModel } from "@/page-models";
 
 export function ReferralPage() {
