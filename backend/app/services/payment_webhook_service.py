@@ -22,6 +22,7 @@ from app.models import (
     Referral,
     Subscription,
 )
+from app.services.entitlement_service import emit_entitlement_event
 from app.services.funnel_service import log_funnel_event
 
 
@@ -55,14 +56,37 @@ async def _apply_payment_success_effects(
     if not plan:
         return
     now = datetime.now(timezone.utc)
+    was_active = sub.status == "active"
+    was_grace = getattr(sub, "access_status", "enabled") == "grace"
     if sub.status != "active":
         sub.status = "active"
+        setattr(sub, "subscription_status", "active")
+        setattr(sub, "access_status", "enabled")
         sub.valid_from = now
         base = now
+        # Single active sub per user: cancel other active subscriptions for this user.
+        other_active = await session.execute(
+            select(Subscription).where(
+                Subscription.user_id == int(user_id),
+                Subscription.id != subscription_id,
+                Subscription.status == "active",
+            )
+        )
+        for other in other_active.scalars().all():
+            other.status = "cancelled"
+            setattr(other, "subscription_status", "cancelled")
     else:
         base = sub.valid_until if sub.valid_until and sub.valid_until > now else now
+    sub.device_limit = int(getattr(plan, "device_limit", sub.device_limit) or sub.device_limit)
     sub.valid_until = base + timedelta(days=plan.duration_days)
     await session.flush()
+    await emit_entitlement_event(
+        session,
+        subscription_id=subscription_id,
+        user_id=sub.user_id,
+        event_type="subscription_activated" if not was_active else "subscription_renewed",
+        payload={"plan_id": sub.plan_id},
+    )
     await log_funnel_event(
         session,
         event_type="payment",
@@ -75,6 +99,13 @@ async def _apply_payment_success_effects(
         user_id=sub.user_id,
         payload={"subscription_id": str(subscription_id)},
     )
+    if was_grace:
+        await log_funnel_event(
+            session,
+            event_type="grace_converted",
+            user_id=sub.user_id,
+            payload={"subscription_id": str(subscription_id), "plan_id": sub.plan_id},
+        )
     try:
         vpn_revenue_payment_total.labels(plan_id=str(sub.plan_id)[:32]).inc()
         vpn_revenue_renewal_total.inc()
@@ -96,6 +127,7 @@ async def _apply_payment_success_effects(
             .where(
                 Subscription.user_id == ref.referrer_user_id,
                 Subscription.status == "active",
+                Subscription.valid_until > now,
             )
             .order_by(Subscription.valid_until.desc())
             .limit(1)
@@ -104,12 +136,23 @@ async def _apply_payment_success_effects(
         if referrer_sub:
             base_ref = (
                 referrer_sub.valid_until
-                if referrer_sub.valid_until > datetime.now(timezone.utc)
-                else datetime.now(timezone.utc)
+                if referrer_sub.valid_until > now
+                else now
             )
             referrer_sub.valid_until = base_ref + timedelta(days=reward_days)
-        ref.reward_applied_at = datetime.now(timezone.utc)
-        ref.status = "rewarded"
+            ref.reward_applied_at = now
+            ref.status = "rewarded"
+        else:
+            pending = getattr(ref, "pending_reward_days", 0) or 0
+            ref.pending_reward_days = pending + reward_days
+            ref.status = "pending_reward"
+            await emit_entitlement_event(
+                session,
+                subscription_id=None,
+                user_id=ref.referrer_user_id,
+                event_type="referral_reward_accrued",
+                payload={"referral_id": ref.id, "days": reward_days},
+            )
         await session.flush()
         try:
             vpn_revenue_referral_paid_total.inc()
@@ -119,7 +162,41 @@ async def _apply_payment_success_effects(
             session,
             event_type="referral_signup",
             user_id=ref.referrer_user_id,
-            payload={"referee_user_id": ref.referee_user_id, "reward_applied": True},
+            payload={
+                "referee_user_id": ref.referee_user_id,
+                "reward_applied": referrer_sub is not None,
+                "pending_reward_days": getattr(ref, "pending_reward_days", 0),
+            },
+        )
+    referrer_pending = await session.execute(
+        select(Referral)
+        .where(
+            Referral.referrer_user_id == int(user_id),
+            Referral.pending_reward_days > 0,
+        )
+    )
+    for ref_as_referrer in referrer_pending.scalars().all():
+        days = ref_as_referrer.pending_reward_days or 0
+        if days <= 0:
+            continue
+        base_p = sub.valid_until if sub.valid_until > now else now
+        sub.valid_until = base_p + timedelta(days=days)
+        ref_as_referrer.pending_reward_days = 0
+        ref_as_referrer.reward_applied_at = now
+        ref_as_referrer.status = "rewarded"
+        await session.flush()
+        await emit_entitlement_event(
+            session,
+            subscription_id=subscription_id,
+            user_id=user_id,
+            event_type="referral_reward_applied",
+            payload={"referral_id": ref_as_referrer.id, "days": days},
+        )
+        await log_funnel_event(
+            session,
+            event_type="referral_reward_applied",
+            user_id=user_id,
+            payload={"referral_id": ref_as_referrer.id, "days": days},
         )
     promo_code_str = (payload.get("promo_code") or "").strip() or None
     if promo_code_str:
@@ -156,6 +233,13 @@ async def _apply_payment_success_effects(
                         sub.valid_until = base_p + timedelta(days=days)
                     except (TypeError, ValueError):
                         pass
+                await emit_entitlement_event(
+                    session,
+                    subscription_id=str(subscription_id),
+                    user_id=sub.user_id,
+                    event_type="promo_applied",
+                    payload={"promo_code_id": promo.id},
+                )
                 await log_funnel_event(
                     session,
                     event_type="promo_applied",

@@ -8,7 +8,7 @@ from app.core.bot_auth import get_admin_or_bot
 from app.core.constants import PERM_PLANS_READ, PERM_PLANS_WRITE
 from app.core.database import get_db
 from app.core.rbac import require_permission
-from app.models import Plan
+from app.models import Plan, Subscription
 from app.schemas.plan import PlanCreate, PlanList, PlanOut, PlanUpdate
 
 router = APIRouter(prefix="/plans", tags=["plans"])
@@ -24,8 +24,10 @@ async def create_plan(
     plan = Plan(
         name=body.name,
         duration_days=body.duration_days,
+        device_limit=body.device_limit,
         price_currency=body.price_currency,
         price_amount=body.price_amount,
+        upsell_methods=body.upsell_methods,
     )
     db.add(plan)
     await db.flush()
@@ -79,6 +81,7 @@ async def update_plan(
     old_snapshot = {
         "name": plan.name,
         "duration_days": plan.duration_days,
+        "device_limit": plan.device_limit,
         "price_amount": str(plan.price_amount),
     }
     data = body.model_dump(exclude_unset=True)
@@ -91,3 +94,30 @@ async def update_plan(
     await db.commit()
     await db.refresh(plan)
     return plan
+
+
+@router.delete("/{plan_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_plan(
+    request: Request,
+    plan_id: str,
+    db: AsyncSession = Depends(get_db),
+    admin=Depends(require_permission(PERM_PLANS_WRITE)),
+):
+    result = await db.execute(select(Plan).where(Plan.id == plan_id))
+    plan = result.scalar_one_or_none()
+    if not plan:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Plan not found")
+    sub_count = (
+        await db.execute(select(func.count()).select_from(Subscription).where(Subscription.plan_id == plan_id))
+    ).scalar() or 0
+    if sub_count > 0:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Cannot delete plan: {sub_count} subscription(s) reference it",
+        )
+    request.state.audit_resource_type = "plan"
+    request.state.audit_resource_id = plan.id
+    request.state.audit_old_new = {"deleted": {"name": plan.name}}
+    await db.delete(plan)
+    await db.commit()
+    return None

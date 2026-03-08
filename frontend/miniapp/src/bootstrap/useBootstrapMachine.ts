@@ -3,17 +3,21 @@ import { useQueryClient } from "@tanstack/react-query";
 import { ApiError, type WebAppAuthResponse, type WebAppMeResponse, type WebAppOnboardingState, type WebAppOnboardingStateRequest, type WebAppOnboardingStateResponse } from "@vpn-suite/shared";
 import { setWebappToken, useWebappToken, webappApi } from "../api/client";
 import { useSession } from "../hooks/useSession";
+import { webappQueryKeys } from "@/lib/query-keys/webapp.query-keys";
 import {
   clearOnboardingResume,
   loadOnboardingResume,
   saveOnboardingResume,
 } from "./bootstrapStorage";
+import { ONBOARDING_MAX_STEP, ONBOARDING_MIN_STEP, ONBOARDING_VERSION } from "./constants";
 
-const ONBOARDING_MAX_STEP = 4;
-const ONBOARDING_VERSION = 1;
 const SPLASH_DURATION_MS = 900;
 const STARTUP_SOFT_TIMEOUT_MS = 1_500;
 let webappAuthPromise: Promise<WebAppAuthResponse> | null = null;
+
+function isAutomatedRuntime(): boolean {
+  return typeof navigator !== "undefined" && navigator.webdriver;
+}
 
 export type BootPhase =
   | "boot_init"
@@ -25,9 +29,21 @@ export type BootPhase =
   | "app_ready"
   | "startup_error";
 
+// Why: make bootstrap states explicit and exhaustively enumerable for consumers/controllers.
+export type BootstrapState =
+  | { status: "boot_init" }
+  | { status: "telegram_ready" }
+  | { status: "authenticating" }
+  | { status: "loading_session" }
+  | { status: "splash_visible" }
+  | { status: "onboarding" }
+  | { status: "app_ready" }
+  | { status: "startup_error"; error: StartupError };
+
 export interface StartupError {
   title: string;
   message: string;
+  debug?: string;
 }
 
 interface UseBootstrapMachineOptions {
@@ -36,6 +52,7 @@ interface UseBootstrapMachineOptions {
 }
 
 export interface BootstrapMachineState {
+  state: BootstrapState;
   phase: BootPhase;
   session: WebAppMeResponse | undefined;
   slowNetwork: boolean;
@@ -47,11 +64,11 @@ export interface BootstrapMachineState {
   startupError: StartupError | null;
   retry: () => void;
   setOnboardingStep: (step: number) => Promise<void>;
-  completeOnboarding: () => Promise<boolean>;
+  completeOnboarding: () => Promise<{ done: boolean; synced: boolean }>;
 }
 
 function clampStep(step: number): number {
-  return Math.max(0, Math.min(ONBOARDING_MAX_STEP, step));
+  return Math.max(ONBOARDING_MIN_STEP, Math.min(ONBOARDING_MAX_STEP, step));
 }
 
 function getStartupError(isInsideTelegram: boolean): StartupError {
@@ -91,6 +108,7 @@ export function useBootstrapMachine({
   initData,
   isInsideTelegram,
 }: UseBootstrapMachineOptions): BootstrapMachineState {
+  const splashDurationMs = isAutomatedRuntime() ? 0 : SPLASH_DURATION_MS;
   const hasToken = !!useWebappToken();
   const queryClient = useQueryClient();
   const sessionQuery = useSession(hasToken);
@@ -120,9 +138,9 @@ export function useBootstrapMachine({
     const timer = window.setTimeout(() => {
       setSplashDone(true);
       setPhase("onboarding");
-    }, SPLASH_DURATION_MS);
+    }, splashDurationMs);
     return () => window.clearTimeout(timer);
-  }, [phase]);
+  }, [phase, splashDurationMs]);
 
   useEffect(() => {
     if (!hasToken) {
@@ -134,7 +152,10 @@ export function useBootstrapMachine({
   useEffect(() => {
     if (phase === "boot_init") {
       if (!initData) {
-        setStartupError(getStartupError(isInsideTelegram));
+        setStartupError({
+          ...getStartupError(isInsideTelegram),
+          debug: `reason=no_init_data isInsideTelegram=${String(isInsideTelegram)}`,
+        });
         setPhase("startup_error");
         return;
       }
@@ -153,14 +174,15 @@ export function useBootstrapMachine({
       setPhase("authenticating");
       authenticateWebApp(initData)
         .then((res) => {
-          setWebappToken(res.session_token);
+          setWebappToken(res.session_token, res.expires_in);
           setStartupError(null);
           setPhase("loading_session");
         })
         .catch((err: unknown) => {
+          const errObj = err as ApiError | Error | { code?: string; message?: string };
           const isTimeout =
-            (err as { code?: string })?.code === "TIMEOUT" ||
-            (err as Error)?.message?.includes("timed out");
+            (errObj as { code?: string })?.code === "TIMEOUT" ||
+            (errObj as Error)?.message?.includes("timed out");
           const rawMessage =
             err instanceof ApiError ? err.message : undefined;
           const isInvalidInitData =
@@ -175,6 +197,7 @@ export function useBootstrapMachine({
           setStartupError({
             title: "Session error",
             message,
+            debug: `reason=auth_error code=${(err as ApiError | { code?: string })?.code ?? "n/a"} status=${(err as ApiError | { statusCode?: number })?.statusCode ?? "n/a"} rawMessage=${rawMessage ?? "n/a"} isInsideTelegram=${String(isInsideTelegram)} initDataPresent=${String(!!initData)}`,
           });
           setPhase("startup_error");
         });
@@ -204,6 +227,7 @@ export function useBootstrapMachine({
           message: isExpired
             ? "Your session expired. Tap Retry to sign in again, or reopen the app from the bot."
             : "Could not load your account. Tap Retry or reopen the mini app from the bot.",
+          debug: `reason=session_error code=${err instanceof ApiError ? err.code : "n/a"} status=${err instanceof ApiError ? err.statusCode : "n/a"} isExpired=${String(isExpired)} hasToken=${String(hasToken)} initDataPresent=${String(!!initData)} isInsideTelegram=${String(isInsideTelegram)}`,
         });
         setPhase("startup_error");
         return;
@@ -330,37 +354,51 @@ export function useBootstrapMachine({
   const completeOnboarding = useCallback(async () => {
     setOnboardingError(null);
     setIsCompletingOnboarding(true);
-    try {
-      const payload: WebAppOnboardingStateRequest = {
-        step: ONBOARDING_MAX_STEP,
-        completed: true,
-        version: onboardingState.version || ONBOARDING_VERSION,
-      };
-      const res = await webappApi.post<WebAppOnboardingStateResponse>(
+    const payload: WebAppOnboardingStateRequest = {
+      step: ONBOARDING_MAX_STEP,
+      completed: true,
+      version: onboardingState.version || ONBOARDING_VERSION,
+    };
+    const doPost = () =>
+      webappApi.post<WebAppOnboardingStateResponse>(
         "/webapp/onboarding/state",
         payload,
       );
+    try {
+      const res = await doPost();
       setOnboardingState(res.onboarding);
       clearOnboardingResume(currentUserId.current);
       setSplashDone(true);
-      await queryClient.invalidateQueries({ queryKey: ["webapp", "me"] });
+      await queryClient.invalidateQueries({ queryKey: [...webappQueryKeys.me()] });
       setPhase("app_ready");
-      return true;
+      return { done: true, synced: true };
     } catch {
-      // Fail-open to avoid trapping users at the last onboarding step when backend is temporarily unavailable.
-      saveOnboardingResume(currentUserId.current, {
-        step: ONBOARDING_MAX_STEP,
-        version: onboardingState.version || ONBOARDING_VERSION,
-        completed: true,
-      });
-      setOnboardingState((prev) => ({
-        ...prev,
-        completed: true,
-        step: ONBOARDING_MAX_STEP,
-      }));
-      setSplashDone(true);
-      setPhase("app_ready");
-      return true;
+      // Retry once after short delay before fail-open.
+      try {
+        await new Promise((r) => setTimeout(r, 500));
+        const res = await doPost();
+        setOnboardingState(res.onboarding);
+        clearOnboardingResume(currentUserId.current);
+        setSplashDone(true);
+        await queryClient.invalidateQueries({ queryKey: [...webappQueryKeys.me()] });
+        setPhase("app_ready");
+        return { done: true, synced: true };
+      } catch {
+        // Fail-open to avoid trapping users when backend is unavailable.
+        saveOnboardingResume(currentUserId.current, {
+          step: ONBOARDING_MAX_STEP,
+          version: onboardingState.version || ONBOARDING_VERSION,
+          completed: true,
+        });
+        setOnboardingState((prev) => ({
+          ...prev,
+          completed: true,
+          step: ONBOARDING_MAX_STEP,
+        }));
+        setSplashDone(true);
+        setPhase("app_ready");
+        return { done: true, synced: false };
+      }
     } finally {
       setIsCompletingOnboarding(false);
     }
@@ -382,7 +420,21 @@ export function useBootstrapMachine({
     setPhase("telegram_ready");
   }, [hasToken, initData, sessionQuery]);
 
+  const state: BootstrapState =
+    phase === "startup_error"
+      ? {
+          status: "startup_error",
+          error:
+            startupError ??
+            ({
+              title: "Session error",
+              message: "Please try again.",
+            } satisfies StartupError),
+        }
+      : { status: phase };
+
   return {
+    state,
     phase,
     session: sessionQuery.data,
     slowNetwork,

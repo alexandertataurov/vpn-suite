@@ -1,19 +1,31 @@
 import type { ReactNode } from "react";
 import { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { QRCodeSVG } from "qrcode.react";
 import { useApiQuery } from "@/hooks/api/useApiQuery";
 import { useApi } from "@/core/api/context";
+import { deviceKeys, type DeviceListParams } from "@/features/devices/services/device.query-keys";
+import {
+  formatBytes,
+  formatRate,
+  formatRelative,
+  connectionStatus,
+  formatHandshakeAge,
+  formatLatencyMs,
+  deviceStatus,
+  type DeviceHealthVariant,
+} from "@/features/devices/utils/deviceFormatting";
 import {
   AnimatedNumber,
-  AnchorButton,
   Badge,
   Button,
+  Card,
   DataTable,
   EmptyState,
   ErrorState,
   Input,
+  LinkButton,
   Modal,
+  Pagination,
   SectionHeader,
   Skeleton,
   useToast,
@@ -21,77 +33,10 @@ import {
 } from "@/design-system/primitives";
 import { PageLayout } from "@/layout/PageLayout";
 import { KpiValue, MetaText } from "@/design-system/typography";
-
-function normalizeConfigForQr(config: string): string {
-  // Remove UTF-8 BOM if present, normalize newlines, and ensure no leading whitespace before [Interface]
-  let s = config.replace(/^\uFEFF/, "");
-  s = s.replace(/\r\n/g, "\n");
-  s = s.replace(/^\s+(\[Interface\])/m, "$1");
-  return s;
-}
-
-interface DeviceSummary {
-  total: number;
-  active: number;
-  revoked: number;
-  unused_configs: number;
-  no_allowed_ips: number;
-  handshake_ok_count: number;
-  no_handshake_count: number;
-  traffic_zero_count: number;
-  telemetry_last_updated: string | null;
-}
-
-interface DeviceTelemetry {
-  handshake_latest_at: string | null;
-  handshake_age_sec?: number | null;
-  transfer_rx_bytes: number | null;
-  transfer_tx_bytes: number | null;
-  rtt_ms?: number | null;
-  node_health: string;
-  peer_present?: boolean;
-  reconciliation_status: string;
-  config_state?: string;
-  telemetry_reason?: string | null;
-  last_updated?: string | null;
-}
-
-interface IssuedConfigOut {
-  id: string;
-  server_id: string;
-  profile_type: string;
-  expires_at: string | null;
-  consumed_at: string | null;
-  created_at: string;
-}
-
-interface DeviceListItem {
-  id: string;
-  user_id: number;
-  subscription_id: string;
-  server_id: string;
-  device_name: string | null;
-  user_email: string | null;
-  issued_at: string;
-  revoked_at: string | null;
-  suspended_at: string | null;
-  telemetry: DeviceTelemetry | null;
-  issued_configs?: IssuedConfigOut[];
-}
-
-interface DeviceList {
-  items: DeviceListItem[];
-  total: number;
-}
-
-interface DeviceDetail extends DeviceListItem {
-  issued_configs: IssuedConfigOut[];
-  public_key?: string;
-  allowed_ips?: string | null;
-  apply_status?: string | null;
-  last_applied_at?: string | null;
-  last_error?: string | null;
-}
+import type { DeviceList, DeviceOut, DeviceSummaryOut } from "@/shared/types/admin-api";
+import { ConfigQrModal } from "@/features/devices/ConfigQrModal";
+import { DeviceDetailModal } from "@/features/devices/DeviceDetailModal";
+import { RevokeDeviceModal } from "@/features/devices/RevokeDeviceModal";
 
 interface ConfigEntryOut {
   download_url: string;
@@ -127,151 +72,6 @@ interface ConfigHealthOut {
   telemetry_last_updated: string | null;
 }
 
-function formatRelative(iso: string | null): string {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "—";
-  const sec = Math.floor((Date.now() - d.getTime()) / 1000);
-  if (sec < 60) return "just now";
-  if (sec < 3600) return `${Math.floor(sec / 60)} min ago`;
-  if (sec < 86400) return `${Math.floor(sec / 3600)} h ago`;
-  return d.toLocaleDateString();
-}
-
-function formatBytes(bytes: number | null | undefined): string {
-  if (bytes == null) return "—";
-  if (bytes >= 1e9) return `${(bytes / 1e9).toFixed(1)} GB`;
-  if (bytes >= 1e6) return `${(bytes / 1e6).toFixed(1)} MB`;
-  if (bytes >= 1e3) return `${(bytes / 1e3).toFixed(1)} KB`;
-  return `${bytes} B`;
-}
-
-function formatRate(bytesPerSec: number): string {
-  if (bytesPerSec >= 1e6) return `${(bytesPerSec / 1e6).toFixed(2)} MB/s`;
-  if (bytesPerSec >= 1e3) return `${(bytesPerSec / 1e3).toFixed(1)} KB/s`;
-  return `${Math.round(bytesPerSec)} B/s`;
-}
-
-/** Recent handshake = tunnel considered up (seconds). */
-const HANDSHAKE_RECENT_SEC = 120;
-/** Any non-zero traffic = device considered "connected" (not idle). */
-const TRAFFIC_CONNECTED_MIN_BYTES = 1;
-
-type ConnectionDisplay = "Connected" | "Idle" | "Disconnected" | "Revoked" | "No telemetry" | "Node offline";
-
-/**
- * Derives connection state from handshake recency + traffic.
- * - Connected: recent handshake + device has sent/received data (rx+tx > 0).
- * - Idle: recent handshake + no traffic (tunnel up, no flow yet).
- * - Disconnected: stale/no handshake, or node offline, or peer not on node.
- */
-function connectionStatus(d: DeviceListItem): ConnectionDisplay {
-  if (d.revoked_at) return "Revoked";
-  const t = d.telemetry;
-  if (!t) return "No telemetry";
-  if (t.node_health === "offline") return "Node offline";
-  if (!t.peer_present) return "Disconnected";
-
-  const age = t.handshake_age_sec;
-  const hasRecentHandshake = age != null && age <= HANDSHAKE_RECENT_SEC;
-  if (!hasRecentHandshake) return "Disconnected";
-
-  const rx = t.transfer_rx_bytes ?? 0;
-  const tx = t.transfer_tx_bytes ?? 0;
-  const totalBytes = rx + tx;
-  return totalBytes >= TRAFFIC_CONNECTED_MIN_BYTES ? "Connected" : "Idle";
-}
-
-/** Handshake age in seconds; 0 when disconnected. */
-function formatHandshakeAge(d: DeviceListItem): string {
-  const conn = connectionStatus(d);
-  if (conn === "Disconnected" || conn === "Revoked" || conn === "No telemetry" || conn === "Node offline") return "0";
-  const age = d.telemetry?.handshake_age_sec;
-  if (age != null) return `${age}`;
-  return "0";
-}
-
-/** Real RTT in ms from telemetry.
- * - Connected/Idle and rtt_ms != null -> numeric string
- * - Connected/Idle and rtt_ms == null -> "—" (no measurement yet)
- * - Disconnected/Revoked/No telemetry/Node offline -> "Offline"
- */
-function formatLatencyMs(d: DeviceListItem): string {
-  const conn = connectionStatus(d);
-  if (conn === "Disconnected" || conn === "Revoked" || conn === "No telemetry" || conn === "Node offline") return "Offline";
-  const rtt = d.telemetry?.rtt_ms;
-  if (rtt != null && rtt >= 0) return `${rtt}`;
-  return "—";
-}
-
-function deviceStatus(device: DeviceListItem): string {
-  if (device.revoked_at) return "revoked";
-  if (device.suspended_at) return "suspended";
-  return "active";
-}
-
-type DeviceHealthVariant = "success" | "warning" | "danger" | "info" | "neutral";
-
-interface DeviceHealthInfo {
-  label: string;
-  variant: DeviceHealthVariant;
-  detail?: string;
-}
-
-function getDeviceConfigHealth(telemetry: DeviceTelemetry | null | undefined): DeviceHealthInfo {
-  if (!telemetry) {
-    return {
-      label: "No telemetry",
-      variant: "info",
-      detail: "No peer telemetry from node yet.",
-    };
-  }
-
-  const {
-    reconciliation_status: recon,
-    node_health: nodeHealth,
-    config_state: configState,
-    telemetry_reason: reason,
-  } = telemetry;
-
-  if (recon === "broken") {
-    return {
-      label: "Config broken",
-      variant: "danger",
-      detail: reason || "Invalid allowed_ips or peer drift; rotate config and reconcile.",
-    };
-  }
-
-  if (recon === "needs_reconcile") {
-    let detail = reason;
-    if (!detail) {
-      if (nodeHealth === "offline") {
-        detail = "Node offline; cannot reach peer.";
-      } else {
-        detail = "Config and peer state out of sync; run Reconcile.";
-      }
-    }
-    return {
-      label: "Needs reconcile",
-      variant: "warning",
-      detail,
-    };
-  }
-
-  if (configState === "pending") {
-    return {
-      label: "Config pending",
-      variant: "info",
-      detail: "Config issued but not used yet.",
-    };
-  }
-
-  return {
-    label: "Healthy",
-    variant: "success",
-  };
-}
-
 export function DevicesPage() {
   const api = useApi();
   const queryClient = useQueryClient();
@@ -284,6 +84,22 @@ export function DevicesPage() {
   const [reissueResult, setReissueResult] = useState<AdminRotatePeerResponse | null>(null);
   const [qrPayload, setQrPayload] = useState<string | null>(null);
   const [qrTitle, setQrTitle] = useState<string | null>(null);
+  const [addDeviceModalOpen, setAddDeviceModalOpen] = useState(false);
+  const [listParams, setListParams] = useState<DeviceListParams>({
+    limit: 50,
+    offset: 0,
+    status: null,
+    node_id: null,
+  });
+
+  const devicesListUrl = useMemo(() => {
+    const sp = new URLSearchParams();
+    sp.set("limit", String(listParams.limit));
+    sp.set("offset", String(listParams.offset));
+    if (listParams.status) sp.set("status", listParams.status);
+    if (listParams.node_id) sp.set("node_id", listParams.node_id);
+    return `/devices?${sp.toString()}`;
+  }, [listParams]);
 
   const {
     data: summary,
@@ -291,7 +107,7 @@ export function DevicesPage() {
     isError: isSummaryError,
     error: summaryError,
     refetch: refetchSummary,
-  } = useApiQuery<DeviceSummary>(["devices", "summary"], "/devices/summary", { retry: 1 });
+  } = useApiQuery<DeviceSummaryOut>([...deviceKeys.summary()], "/devices/summary", { retry: 1 });
 
   const prevListRef = useRef<DeviceList | null>(null);
   const prevListTsRef = useRef<number>(0);
@@ -302,14 +118,14 @@ export function DevicesPage() {
     isError: isListError,
     error: listError,
     refetch: refetchList,
-  } = useApiQuery<DeviceList>(["devices", "list", 50], "/devices?limit=50&offset=0", {
+  } = useApiQuery<DeviceList>([...deviceKeys.list(listParams)], devicesListUrl, {
     retry: 1,
     staleTime: 5_000,
     refetchInterval: 5_000,
   });
 
-  const { data: detailDevice, isLoading: isDetailLoading } = useApiQuery<DeviceDetail>(
-    ["devices", "detail", detailDeviceId],
+  const { data: detailDevice, isLoading: isDetailLoading } = useApiQuery<DeviceOut>(
+    [...deviceKeys.detail(detailDeviceId ?? "")],
     `/devices/${detailDeviceId!}`,
     { enabled: !!detailDeviceId, retry: 0 }
   );
@@ -318,17 +134,17 @@ export function DevicesPage() {
     data: configHealth,
     isLoading: isConfigHealthLoading,
   } = useApiQuery<ConfigHealthOut>(
-    ["devices", "config-health"],
+    [...deviceKeys.configHealth()],
     "/devices/config-health?limit=500",
     { retry: 1, staleTime: 60_000 }
   );
 
   const invalidateDevices = useCallback(() => {
-    void queryClient.invalidateQueries({ queryKey: ["devices", "summary"] });
-    void queryClient.invalidateQueries({ queryKey: ["devices", "list"] });
-    void queryClient.invalidateQueries({ queryKey: ["devices", "config-health"] });
+    void queryClient.invalidateQueries({ queryKey: [...deviceKeys.summary()] });
+    void queryClient.invalidateQueries({ queryKey: [...deviceKeys.lists()] });
+    void queryClient.invalidateQueries({ queryKey: [...deviceKeys.configHealth()] });
     if (detailDeviceId) {
-      void queryClient.invalidateQueries({ queryKey: ["devices", "detail", detailDeviceId] });
+      void queryClient.invalidateQueries({ queryKey: [...deviceKeys.detail(detailDeviceId)] });
     }
   }, [queryClient, detailDeviceId]);
 
@@ -360,12 +176,14 @@ export function DevicesPage() {
         void refetchList();
         void refetchSummary();
       } catch (e) {
-        setActionError(e instanceof Error ? e.message : "Action failed");
+        const msg = e instanceof Error ? e.message : "Action failed";
+        setActionError(msg);
+        showToast({ variant: "danger", title: "Action failed", description: msg });
       } finally {
         setActionPending(false);
       }
     },
-    [invalidateDevices, refetchList, refetchSummary]
+    [invalidateDevices, refetchList, refetchSummary, showToast]
   );
 
   const handleReconcile = useCallback(
@@ -385,7 +203,9 @@ export function DevicesPage() {
         void refetchList();
         void refetchSummary();
       } catch (e) {
-        setActionError(e instanceof Error ? e.message : "Reconcile failed");
+        const msg = e instanceof Error ? e.message : "Reconcile failed";
+        setActionError(msg);
+        showToast({ variant: "danger", title: "Reconcile failed", description: msg });
       } finally {
         setActionPending(false);
       }
@@ -417,7 +237,9 @@ export function DevicesPage() {
       void refetchList();
       void refetchSummary();
     } catch (e) {
-      setActionError(e instanceof Error ? e.message : "Reconcile all failed");
+      const msg = e instanceof Error ? e.message : "Reconcile all failed";
+      setActionError(msg);
+      showToast({ variant: "danger", title: "Reconcile all failed", description: msg });
     } finally {
       setActionPending(false);
     }
@@ -548,6 +370,21 @@ export function DevicesPage() {
     [api, invalidateDevices]
   );
 
+  const handleAwgDownloadLinkQr = useCallback(
+    async (deviceId: string) => {
+      try {
+        const res = await api.get<{ url: string; expires_in: number }>(
+          `/api/v1/devices/${deviceId}/awg/download-link`
+        );
+        setQrPayload(res.url);
+        setQrTitle("AmneziaWG QR (download .conf)");
+      } catch {
+        showToast({ variant: "danger", title: "Failed to create download link" });
+      }
+    },
+    [api, showToast]
+  );
+
   const ratesMap = useMemo(() => {
     const prev = prevListRef.current;
     const prevTs = prevListTsRef.current;
@@ -615,15 +452,17 @@ export function DevicesPage() {
     );
   }
 
-  const unhealthy = summary.no_handshake_count;
-  const healthy = summary.handshake_ok_count;
-  const telemetryNone = summary.traffic_zero_count;
+  const unhealthy = summary.no_handshake_count ?? 0;
+  const healthy = summary.handshake_ok_count ?? 0;
+  const telemetryNone = summary.traffic_zero_count ?? 0;
   const activePercent =
     summary.total > 0 ? Math.round((summary.active / summary.total) * 100) : 0;
   const handshakeHealthyPercent =
     summary.active > 0 ? Math.round((healthy / summary.active) * 100) : null;
   const attentionCount =
-    summary.no_handshake_count + summary.no_allowed_ips + summary.traffic_zero_count;
+    (summary.no_handshake_count ?? 0) +
+    (summary.no_allowed_ips ?? 0) +
+    (summary.traffic_zero_count ?? 0);
 
   const rows = list.items.map((d) => {
     const rxBytes = d.telemetry?.transfer_rx_bytes ?? null;
@@ -687,40 +526,20 @@ export function DevicesPage() {
     };
   });
 
-  const detailHealth = detailDevice ? getDeviceConfigHealth(detailDevice.telemetry) : null;
-
   const devicesDescription = (
     <span className="devices-page__updated">
-      Telemetry updated {formatRelative(summary.telemetry_last_updated)}
+      Telemetry updated {formatRelative(summary.telemetry_last_updated ?? null)}
     </span>
   );
   const devicesActions = (
-    <Button
-      type="button"
-      variant="default"
-      onClick={() => {
-        if (list.items.length > 0) {
-          const first = list.items[0];
-          const subId = first?.subscription_id;
-          const hint = subId ? `Example subscription: ${subId}` : undefined;
-          window.alert(
-            [
-              "To add a new device, go to the Users page, open a user, and use the 'Issue device' panel.",
-              hint,
-            ]
-              .filter(Boolean)
-              .join("\n\n")
-          );
-        } else {
-          window.alert(
-            "To add a new device, go to the Users page, open a user, and use the 'Issue device' panel."
-          );
-        }
-      }}
-    >
+    <Button type="button" variant="default" onClick={() => setAddDeviceModalOpen(true)}>
       Add device
     </Button>
   );
+  const addDeviceHint =
+    list.items.length > 0
+      ? `Example subscription: ${list.items[0]?.subscription_id ?? ""}`
+      : null;
 
   return (
     <PageLayout
@@ -792,7 +611,7 @@ export function DevicesPage() {
           </KpiValue>
           <div className="kpi__meta">
             <span className="kpi__meta-item">
-              {summary.no_handshake_count} with no recent handshake
+              {unhealthy} with no recent handshake
             </span>
             <span className="kpi__meta-item">
               {telemetryNone} with zero traffic
@@ -804,24 +623,32 @@ export function DevicesPage() {
         </Widget>
       </div>
 
-      <section className="devices-page__config-health" aria-label="Advanced config health">
-        <h3 className="devices-page__detail-h3">Config health</h3>
+      <SectionHeader
+        label="Config health"
+        size="lg"
+        note={
+          configHealth?.telemetry_last_updated
+            ? `Telemetry: ${formatRelative(configHealth.telemetry_last_updated)}`
+            : undefined
+        }
+      />
+      <Card>
         {isConfigHealthLoading && <Skeleton height={120} />}
         {!isConfigHealthLoading && configHealth && (
           <div className="devices-page__config-health-content">
             <div className="devices-page__config-health-summary">
-              <span className="badge badge-sm badge-success">
+              <Badge variant="success" size="sm">
                 {configHealth.by_reconciliation?.ok ?? 0} ok
-              </span>
-              <span className="badge badge-sm badge-warning">
+              </Badge>
+              <Badge variant="warning" size="sm">
                 {configHealth.by_reconciliation?.needs_reconcile ?? 0} needs reconcile
-              </span>
-              <span className="badge badge-sm badge-danger">
+              </Badge>
+              <Badge variant="danger" size="sm">
                 {configHealth.by_reconciliation?.broken ?? 0} broken
-              </span>
-              <span className="badge badge-sm badge-neutral">
+              </Badge>
+              <Badge variant="neutral" size="sm">
                 {configHealth.no_telemetry_count} no telemetry
-              </span>
+              </Badge>
               <Button
                 type="button"
                 variant="secondary"
@@ -832,62 +659,95 @@ export function DevicesPage() {
               >
                 Reconcile all
               </Button>
-              {configHealth.telemetry_last_updated && (
-                <MetaText className="devices-page__config-health-meta">
-                  Telemetry: {formatRelative(configHealth.telemetry_last_updated)}
-                </MetaText>
-              )}
             </div>
             {configHealth.devices_needing_attention.length > 0 ? (
               <div className="data-table-wrap">
-              <DataTable
-                density="compact"
-                columns={[
-                  { key: "device", header: "Device" },
-                  { key: "user", header: "User" },
-                  { key: "server", header: "Server" },
-                  { key: "recon", header: "Status" },
-                  { key: "reason", header: "Reason" },
-                  { key: "view", header: "" },
-                ]}
-                rows={configHealth.devices_needing_attention.map((e) => ({
-                  ...e,
-                  device: e.device_name || e.device_id.slice(0, 8),
-                  user: e.user_email ?? "—",
-                  recon: (
-                    <Badge
-                      variant={e.reconciliation_status === "broken" ? "danger" : "warning"}
-                      size="sm"
-                    >
-                      {e.reconciliation_status}
-                    </Badge>
-                  ),
-                  reason: e.reason ?? "—",
-                  view: (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setDetailDeviceId(e.device_id)}
-                      aria-label={`View ${e.device_id}`}
-                    >
-                      View
-                    </Button>
-                  ),
-                }))}
-                getRowKey={(row: { device_id: string }) => row.device_id}
-              />
+                <DataTable
+                  density="compact"
+                  columns={[
+                    { key: "device", header: "Device" },
+                    { key: "user", header: "User" },
+                    { key: "server", header: "Server" },
+                    { key: "recon", header: "Status" },
+                    { key: "reason", header: "Reason" },
+                    { key: "view", header: "" },
+                  ]}
+                  rows={configHealth.devices_needing_attention.map((e) => ({
+                    ...e,
+                    device: e.device_name || e.device_id.slice(0, 8),
+                    user: e.user_email ?? "—",
+                    recon: (
+                      <Badge
+                        variant={e.reconciliation_status === "broken" ? "danger" : "warning"}
+                        size="sm"
+                      >
+                        {e.reconciliation_status}
+                      </Badge>
+                    ),
+                    reason: e.reason ?? "—",
+                    view: (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setDetailDeviceId(e.device_id)}
+                        aria-label={`View ${e.device_id}`}
+                      >
+                        View
+                      </Button>
+                    ),
+                  }))}
+                  getRowKey={(row: { device_id: string }) => row.device_id}
+                />
               </div>
             ) : (
               <MetaText>No devices need attention.</MetaText>
             )}
           </div>
         )}
-      </section>
+      </Card>
 
-      {rows.length > 0 ? (
-        <section className="devices-page__table" aria-label="Devices list">
-          <SectionHeader label="Devices" size="lg" />
+      <section className="devices-page__table" aria-label="Devices list">
+        <SectionHeader label="Devices" size="lg" />
+        <div className="devices-page__filters">
+          <label className="devices-page__filter-label">
+            Status
+            <select
+              value={listParams.status ?? ""}
+              onChange={(e) => {
+                const v = e.target.value;
+                setListParams((p) => ({
+                  ...p,
+                  offset: 0,
+                  status: v ? v : null,
+                }));
+              }}
+              aria-label="Filter by status"
+            >
+              <option value="">All</option>
+              <option value="active">Active</option>
+              <option value="revoked">Revoked</option>
+            </select>
+          </label>
+          <label className="devices-page__filter-label">
+            Server (node ID)
+            <Input
+              type="text"
+              value={listParams.node_id ?? ""}
+              onChange={(e) =>
+                setListParams((p) => ({
+                  ...p,
+                  offset: 0,
+                  node_id: e.target.value.trim() || null,
+                }))
+              }
+              placeholder="e.g. node-1"
+              aria-label="Filter by server node ID"
+            />
+          </label>
+        </div>
+        {rows.length > 0 ? (
+          <>
           <div className="data-table-wrap">
           <DataTable
             density="compact"
@@ -909,390 +769,94 @@ export function DevicesPage() {
             getRowKey={(row: { id: string }) => row.id}
           />
           </div>
-        </section>
-      ) : (
-        <EmptyState message="No devices found for current filters." />
-      )}
-
-      <Modal open={!!detailDeviceId} onClose={closeDetail} title="Device details">
-        {detailDeviceId && (
-          <div className="devices-page__detail">
-            {isDetailLoading && <Skeleton height={80} />}
-            {!isDetailLoading && detailDevice && (
-              <>
-                <dl className="devices-page__detail-dl">
-                  <dt>Device</dt>
-                  <dd>{detailDevice.device_name || detailDevice.id}</dd>
-                  <dt>ID</dt>
-                  <dd className="devices-page__detail-id">{detailDevice.id}</dd>
-                  <dt>User</dt>
-                  <dd>{detailDevice.user_email ?? `#${detailDevice.user_id}`}</dd>
-                  <dt>Server</dt>
-                  <dd>{detailDevice.server_id}</dd>
-                  <dt>Status</dt>
-                  <dd>{deviceStatus(detailDevice)}</dd>
-                  {detailHealth && (
-                    <>
-                      <dt>Health</dt>
-                      <dd>
-                        <Badge
-                          variant={detailHealth.variant}
-                          size="sm"
-                        >
-                          {detailHealth.label}
-                        </Badge>
-                        {detailHealth.detail && (
-                          <span className="devices-page__detail-health-meta">
-                            {detailHealth.detail}
-                          </span>
-                        )}
-                      </dd>
-                    </>
-                  )}
-                  {detailDevice.apply_status && (
-                    <>
-                      <dt>Apply status</dt>
-                      <dd>{detailDevice.apply_status}</dd>
-                    </>
-                  )}
-                  {detailDevice.last_error && (
-                    <>
-                      <dt>Last error</dt>
-                      <dd className="devices-page__detail-error">{detailDevice.last_error}</dd>
-                    </>
-                  )}
-                </dl>
-                <div className="devices-page__detail-buttons" aria-label="Device config actions">
-                  <Button
-                    type="button"
-                    variant="default"
-                    onClick={() => handleReissue(detailDevice.id)}
-                    disabled={actionPending}
-                  >
-                    Rotate config
-                  </Button>
-                  {reissueResult && (
-                    <>
-                      <AnchorButton
-                        href={reissueResult.config_awg.download_url}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        Download AWG
-                      </AnchorButton>
-                      <AnchorButton
-                        href={reissueResult.config_wg_obf.download_url}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        Download WG (obf)
-                      </AnchorButton>
-                      <AnchorButton
-                        href={reissueResult.config_wg.download_url}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        Download WG
-                      </AnchorButton>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        onClick={() => {
-                          void copyToClipboard(
-                            reissueResult.config_awg.qr_payload,
-                            "AWG config copied"
-                          );
-                        }}
-                        disabled={actionPending}
-                      >
-                        Copy AWG
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        onClick={() => {
-                          void copyToClipboard(
-                            reissueResult.config_wg_obf.qr_payload,
-                            "WG (obf) config copied"
-                          );
-                        }}
-                        disabled={actionPending}
-                      >
-                        Copy WG (obf)
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        onClick={() => {
-                          void copyToClipboard(
-                            reissueResult.config_wg.qr_payload,
-                            "WG config copied"
-                          );
-                        }}
-                        disabled={actionPending}
-                      >
-                        Copy WG
-                      </Button>
-                      {reissueResult.config_awg.amnezia_vpn_key && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          onClick={() => {
-                            setQrPayload(reissueResult.config_awg.amnezia_vpn_key!);
-                            setQrTitle("AmneziaVPN QR (vpn:// key)");
-                          }}
-                          disabled={actionPending}
-                        >
-                          AmneziaVPN QR
-                        </Button>
-                      )}
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        onClick={async () => {
-                          try {
-                            const res = await api.get<{ url: string; expires_in: number }>(
-                              `/api/v1/devices/${detailDevice.id}/awg/download-link`,
-                            );
-                            setQrPayload(res.url);
-                            setQrTitle("AmneziaWG QR (download .conf)");
-                          } catch {
-                            showToast({
-                              variant: "danger",
-                              title: "Failed to create download link",
-                            });
-                          }
-                        }}
-                        disabled={actionPending}
-                      >
-                        AmneziaWG QR (download link)
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        onClick={() => {
-                          setQrPayload(reissueResult.config_awg.qr_payload);
-                          setQrTitle("AmneziaWG QR (legacy .conf)");
-                        }}
-                        disabled={actionPending}
-                      >
-                        AmneziaWG QR (legacy .conf)
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        onClick={() => {
-                          setQrPayload(reissueResult.config_wg_obf.qr_payload);
-                          setQrTitle("WG (obf) config QR");
-                        }}
-                        disabled={actionPending}
-                      >
-                        WG (obf) QR
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        onClick={() => {
-                          setQrPayload(reissueResult.config_wg.qr_payload);
-                          setQrTitle("WG config QR");
-                        }}
-                        disabled={actionPending}
-                      >
-                        WG QR
-                      </Button>
-                    </>
-                  )}
-                </div>
-                {reissueResult && (
-                  <p className="devices-page__detail-empty">Reissued (request_id: {reissueResult.request_id})</p>
-                )}
-                <h3 className="devices-page__detail-h3">Configurations</h3>
-                {detailDevice.issued_configs && detailDevice.issued_configs.length > 0 ? (
-                  <div className="data-table-wrap">
-                  <DataTable
-                    density="compact"
-                    columns={[
-                      { key: "profile_type", header: "Profile" },
-                      { key: "server_id", header: "Server" },
-                      { key: "created_at", header: "Created" },
-                      { key: "consumed_at", header: "Consumed" },
-                      { key: "download", header: "Download" },
-                    ]}
-                    rows={detailDevice.issued_configs.map((c) => ({
-                      ...c,
-                      created_at: c.created_at ? formatRelative(c.created_at) : "—",
-                      consumed_at: c.consumed_at ? formatRelative(c.consumed_at) : "—",
-                      download: (
-                        <div className="devices-page__config-actions">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => downloadIssuedConfig(c.id)}
-                            disabled={actionPending}
-                          >
-                            Download
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              void handleCopyIssuedConfig(c.id);
-                            }}
-                            disabled={actionPending}
-                          >
-                            Copy
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              void handleShowIssuedConfigQr(c.id);
-                            }}
-                            disabled={actionPending}
-                          >
-                            QR
-                          </Button>
-                        </div>
-                      ),
-                    }))}
-                    getRowKey={(row: { id: string }) => row.id}
-                  />
-                  </div>
-                ) : (
-                  <p className="devices-page__detail-empty">No issued configs.</p>
-                )}
-                <div className="devices-page__detail-actions">
-                  {actionError && (
-                    <p className="devices-page__detail-action-error" role="alert">
-                      {actionError}
-                    </p>
-                  )}
-                  <div className="devices-page__detail-buttons">
-                    {deviceStatus(detailDevice) === "active" && (
-                      <>
-                        <Button
-                          type="button"
-                          variant="default"
-                          onClick={() => handleReconcile(detailDevice.id)}
-                          disabled={actionPending}
-                        >
-                          Reconcile
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="default"
-                          onClick={() => handleSuspend(detailDevice.id)}
-                          disabled={actionPending}
-                        >
-                          Suspend
-                        </Button>
-                      </>
-                    )}
-                    {deviceStatus(detailDevice) === "suspended" && (
-                      <Button
-                        type="button"
-                        variant="default"
-                        onClick={() => handleResume(detailDevice.id)}
-                        disabled={actionPending}
-                      >
-                        Resume
-                      </Button>
-                    )}
-                    {!detailDevice.revoked_at && (
-                      <Button
-                        type="button"
-                        variant="danger"
-                        onClick={() => {
-                          setRevokeDeviceId(detailDevice.id);
-                        }}
-                        disabled={actionPending}
-                      >
-                        Revoke
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </>
-            )}
+          <div className="devices-page__pagination-wrap">
+            <Pagination
+              page={Math.floor(list.offset / list.limit) + 1}
+              pageCount={Math.max(1, Math.ceil(list.total / list.limit))}
+              onPageChange={(page) =>
+                setListParams((p) => ({ ...p, offset: (page - 1) * p.limit }))
+              }
+            />
+            <MetaText className="devices-page__pagination-meta">
+              {list.total} device{list.total !== 1 ? "s" : ""}
+            </MetaText>
           </div>
+          </>
+        ) : (
+          <EmptyState message="No devices found for current filters." />
         )}
-      </Modal>
+      </section>
+
+      <DeviceDetailModal
+        open={!!detailDeviceId}
+        onClose={closeDetail}
+        deviceId={detailDeviceId}
+        device={detailDevice}
+        isLoading={isDetailLoading}
+        actionError={actionError}
+        actionPending={actionPending}
+        reissueResult={reissueResult}
+        onReissue={handleReissue}
+        onReconcile={handleReconcile}
+        onSuspend={handleSuspend}
+        onResume={handleResume}
+        onRevokeClick={setRevokeDeviceId}
+        onCopyToClipboard={copyToClipboard}
+        onSetQr={(payload, title) => {
+          setQrPayload(payload);
+          setQrTitle(title);
+        }}
+        onDownloadIssuedConfig={downloadIssuedConfig}
+        onCopyIssuedConfig={handleCopyIssuedConfig}
+        onShowIssuedConfigQr={handleShowIssuedConfigQr}
+        onAwgDownloadLinkQr={handleAwgDownloadLinkQr}
+        showToast={showToast}
+      />
 
       <Modal
+        open={addDeviceModalOpen}
+        onClose={() => setAddDeviceModalOpen(false)}
+        title="Add device"
+      >
+        <p className="devices-page__revoke-hint">
+          To add a new device, go to the Users page, open a user, and use the &quot;Issue device&quot; panel.
+        </p>
+        {addDeviceHint ? (
+          <MetaText className="devices-page__config-health-meta">{addDeviceHint}</MetaText>
+        ) : null}
+        <div className="devices-page__revoke-actions">
+          <LinkButton to="/users" variant="default">
+            Open Users
+          </LinkButton>
+          <Button type="button" variant="secondary" onClick={() => setAddDeviceModalOpen(false)}>
+            Close
+          </Button>
+        </div>
+      </Modal>
+
+      <RevokeDeviceModal
         open={!!revokeDeviceId}
         onClose={() => {
           setRevokeDeviceId(null);
           setRevokeToken("");
         }}
-        title="Revoke device"
-      >
-        <p className="devices-page__revoke-hint">Enter the confirmation token to revoke this device.</p>
-        <label className="devices-page__revoke-label">
-          Confirm token
-          <Input
-            type="password"
-            value={revokeToken}
-            onChange={(e) => setRevokeToken(e.target.value)}
-            placeholder="Token"
-            aria-label="Revoke confirmation token"
-          />
-        </label>
-        <div className="devices-page__revoke-actions">
-          <Button
-            type="button"
-            variant="default"
-            onClick={() => {
-              setRevokeDeviceId(null);
-              setRevokeToken("");
-            }}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="button"
-            variant="danger"
-            onClick={handleRevokeSubmit}
-            disabled={!revokeToken.trim() || actionPending}
-          >
-            Revoke
-          </Button>
-        </div>
-      </Modal>
+        revokeToken={revokeToken}
+        onRevokeTokenChange={setRevokeToken}
+        onConfirm={handleRevokeSubmit}
+        pending={actionPending}
+      />
 
-      <Modal
+      <ConfigQrModal
         open={!!qrPayload}
         onClose={() => {
           setQrPayload(null);
           setQrTitle(null);
         }}
-        title={qrTitle || "Config QR"}
-      >
-        {qrPayload && (
-          <div className="devices-page__qr">
-            <QRCodeSVG
-              value={normalizeConfigForQr(qrPayload)}
-              size={300}
-              level="L"
-              includeMargin
-            />
-            <div className="devices-page__qr-actions">
-              <Button
-                type="button"
-                variant="default"
-                onClick={() => {
-                  void copyToClipboard(qrPayload, "Config copied to clipboard");
-                }}
-                disabled={actionPending}
-              >
-                Copy config
-              </Button>
-            </div>
-          </div>
-        )}
-      </Modal>
+        title={qrTitle}
+        payload={qrPayload}
+        onCopy={() => void copyToClipboard(qrPayload ?? "", "Config copied to clipboard")}
+        pending={actionPending}
+      />
     </PageLayout>
   );
 }

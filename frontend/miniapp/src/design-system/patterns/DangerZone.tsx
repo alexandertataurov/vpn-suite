@@ -17,6 +17,7 @@ export interface DangerZoneProps {
   cancelLabel: string;
   onConfirm: () => void | Promise<void>;
   loading?: boolean;
+  disabled?: boolean;
 }
 
 export function DangerZone({
@@ -29,6 +30,7 @@ export function DangerZone({
   cancelLabel,
   onConfirm,
   loading = false,
+  disabled = false,
 }: DangerZoneProps) {
   const [open, setOpen] = useState(false);
 
@@ -47,7 +49,7 @@ export function DangerZone({
         <h3 className="op-name type-h3">{title}</h3>
         <p className="op-desc type-body-sm">{description}</p>
         <div className="btn-row">
-          <MissionPrimaryButton tone="danger" onClick={() => setOpen(true)} disabled={loading}>
+          <MissionPrimaryButton tone="danger" onClick={() => setOpen(true)} disabled={loading || disabled}>
             {buttonLabel}
           </MissionPrimaryButton>
         </div>

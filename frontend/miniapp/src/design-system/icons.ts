@@ -11,6 +11,7 @@ export {
   IconSmartphone,
   IconUser,
   IconChevronLeft,
+  IconAlertTriangle,
 } from "@/lib/icons";
 
 export type { IconType } from "@/lib/icons";

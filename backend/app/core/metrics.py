@@ -20,6 +20,26 @@ auth_failures_total = Counter(
     "Total auth failures (login, refresh)",
     ["reason"],  # e.g. invalid_credentials, invalid_totp, token_revoked, invalid_refresh
 )
+auth_success_total = Counter(
+    "auth_success_total",
+    "Total auth successes (admin login, refresh)",
+    ["auth_type"],  # admin_login, refresh
+)
+referral_attach_total = Counter(
+    "referral_attach_total",
+    "Referral attach attempts",
+    ["status"],  # attached, already_attached
+)
+referral_attach_fail_total = Counter(
+    "referral_attach_fail_total",
+    "Referral attach failures",
+    ["reason"],  # invalid_ref, self_referral_blocked, referrer_not_found, etc.
+)
+admin_login_total = Counter(
+    "admin_login_total",
+    "Admin panel login attempts",
+    ["status"],  # success, failure
+)
 
 health_check_failures_total = Counter(
     "health_check_failures_total",

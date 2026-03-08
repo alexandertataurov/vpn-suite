@@ -21,6 +21,8 @@ class Referral(Base, TimestampMixin):
     referral_code: Mapped[str] = mapped_column(String(64), nullable=False)
     status: Mapped[str] = mapped_column(String(32), nullable=False, default="pending")
     reward_days: Mapped[int] = mapped_column(Integer, default=7, nullable=False)
+    pending_reward_days: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     reward_applied_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    source_channel: Mapped[str | None] = mapped_column(String(64), nullable=True)

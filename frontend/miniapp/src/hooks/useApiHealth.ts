@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { webappApi } from "../api/client";
+import { webappQueryKeys } from "@/lib/query-keys/webapp.query-keys";
 
 interface HealthReadyResponse {
   status?: string;
@@ -9,7 +10,7 @@ interface HealthReadyResponse {
 
 export function useApiHealth(enabled = true) {
   return useQuery<HealthReadyResponse>({
-    queryKey: ["webapp", "health", "ready"],
+    queryKey: [...webappQueryKeys.healthReady()],
     queryFn: () => webappApi.get<HealthReadyResponse>("/health/ready"),
     enabled,
     staleTime: 60_000,

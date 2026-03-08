@@ -12,7 +12,8 @@ from aiogram.types import (
     WebAppInfo,
 )
 
-from config import MINIAPP_URL
+from api_client import get_referral_my_link
+from config import BOT_USERNAME, MINIAPP_URL
 from i18n import t
 from utils.logging import get_logger
 
@@ -55,11 +56,27 @@ def _open_app_keyboard(locale: str, ref: str | None) -> InlineKeyboardMarkup | N
     )
 
 
+def _referral_link(payload: str) -> str:
+    """Build t.me start link with ref payload."""
+    return f"https://t.me/{BOT_USERNAME}?start={payload}"
+
+
 @router.message(CommandStart())
 async def cmd_start(message: Message):
     locale = "en"
     ref = _get_ref_from_start(message.text)
     greeting = t(locale, "welcome")
+    tg_id = message.from_user.id if message.from_user else None
+    if tg_id:
+        try:
+            result = await get_referral_my_link(tg_id)
+            if result.success and result.data:
+                payload = (result.data.get("payload") or "").strip()
+                if payload:
+                    link = _referral_link(payload)
+                    greeting = f"{greeting}\n\n{t(locale, 'welcome_referral_line', link=link)}"
+        except Exception as e:
+            _log.debug("referral_link_skip", tg_id=tg_id, error=str(e))
     keyboard = _open_app_keyboard(locale, ref)
     await message.answer(
         greeting,
@@ -68,14 +85,17 @@ async def cmd_start(message: Message):
     )
     if MINIAPP_URL.startswith("https://") and message.chat:
         try:
+            menu_url = MINIAPP_URL
+            if ref:
+                menu_url = f"{menu_url}?{urlencode({'ref': ref[:64]})}"
             await message.bot.set_chat_menu_button(
                 chat_id=message.chat.id,
                 menu_button=MenuButtonWebApp(
                     text="Open App",
-                    web_app=WebAppInfo(url=MINIAPP_URL),
+                    web_app=WebAppInfo(url=menu_url),
                 ),
             )
-            _log.debug("menu_button_set_chat", chat_id=message.chat.id)
+            _log.debug("menu_button_set_chat", chat_id=message.chat.id, has_ref=bool(ref))
         except Exception as e:
             _log.warning(
                 "set_chat_menu_button_failed",

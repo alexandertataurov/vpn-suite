@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import type { HTMLAttributes } from "react";
 
 export type PlanHeroStatus = "active" | "expiring" | "expired";
@@ -11,19 +11,24 @@ function ExpiryFill({
   percent: number;
   fillClass?: "ok" | "warn" | "crit";
 }) {
-  const [width, setWidth] = useState(0);
-  const mounted = useRef(false);
+  const fillRef = useRef<HTMLDivElement>(null);
+  const hasAnimatedRef = useRef(false);
+
   useEffect(() => {
-    if (mounted.current) return;
-    mounted.current = true;
-    const t = setTimeout(() => setWidth(percent), 380);
+    if (hasAnimatedRef.current) return;
+    hasAnimatedRef.current = true;
+    const clamped = Math.max(0, Math.min(100, percent));
+    const t = setTimeout(() => {
+      fillRef.current?.style.setProperty("--bar-fill-width", `${clamped}%`);
+    }, 380);
     return () => clearTimeout(t);
   }, [percent]);
+
   return (
     <div
-      className={`bar-fill ${fillClass}`}
+      ref={fillRef}
+      className={`bar-fill bar-fill--animated ${fillClass}`}
       id="expiryFill"
-      style={{ width: `${width}%` }}
       role="progressbar"
       aria-valuenow={percent}
       aria-valuemin={0}
@@ -47,6 +52,8 @@ export interface PlanHeroProps extends Omit<HTMLAttributes<HTMLDivElement>, "chi
   onCopyPlanId?: (fullId: string) => void;
   onRenew?: () => void;
   onManage?: () => void;
+  renewLabel?: string;
+  manageLabel?: string;
   status?: PlanHeroStatus;
 }
 
@@ -66,6 +73,8 @@ export function PlanHero({
   onCopyPlanId,
   onRenew,
   onManage,
+  renewLabel = "Renew Plan",
+  manageLabel = "Manage",
   status = "active",
   className = "",
   ...props
@@ -74,7 +83,7 @@ export function PlanHero({
 
   return (
     <div
-      className={`plan-hero ${statusClass} stagger-1 ${className}`.trim()}
+      className={["plan-hero", statusClass, "stagger-1", className].filter(Boolean).join(" ")}
       {...props}
     >
       <div className="plan-hero-glow" aria-hidden />
@@ -103,13 +112,17 @@ export function PlanHero({
           </div>
         </div>
         {(planId != null || devicesLabel != null || protocolLabel != null) && (
-          <div className="data-grid three" style={{ marginTop: 12 }}>
+          <div className="data-grid three plan-hero-meta">
             {planId != null && (
               <div className="data-cell">
                 <div className="dc-key">Plan ID</div>
                 <div
-                  className="dc-val teal"
-                  style={{ fontSize: 10, cursor: onCopyPlanId ? "pointer" : undefined }}
+                  className={[
+                    "dc-val",
+                    "teal",
+                    "plan-hero-planid",
+                    onCopyPlanId ? "is-clickable" : "",
+                  ].filter(Boolean).join(" ")}
                   onClick={onCopyPlanId ? () => onCopyPlanId(planId) : undefined}
                   role={onCopyPlanId ? "button" : undefined}
                 >
@@ -131,14 +144,18 @@ export function PlanHero({
             )}
           </div>
         )}
-        <div className="btn-row-auto" style={{ marginTop: 14 }}>
-          <button type="button" className="btn-primary success" onClick={onRenew}>
-            Renew Plan
-          </button>
-          <button type="button" className="btn-secondary" style={{ width: "auto", padding: "0 18px" }} onClick={onManage}>
-            Manage
-          </button>
-        </div>
+        {onRenew ? (
+          <div className="btn-row-auto plan-hero-actions">
+            <button type="button" className="btn-primary success" onClick={onRenew}>
+              {renewLabel}
+            </button>
+            {onManage ? (
+              <button type="button" className="btn-secondary is-compact" onClick={onManage}>
+                {manageLabel}
+              </button>
+            ) : null}
+          </div>
+        ) : null}
       </div>
     </div>
   );

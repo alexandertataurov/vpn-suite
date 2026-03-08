@@ -22,10 +22,29 @@ export default tseslint.config(
       "no-restricted-imports": [
         "error",
         {
+          paths: [
+            {
+              name: "@/design-system",
+              importNames: ["FallbackScreen"],
+              message:
+                "Import FallbackScreen from '@/design-system/patterns/FallbackScreen' to avoid barrel chunk cycles.",
+            },
+          ],
           patterns: [
             {
-              group: ["*/miniapp/src/*", "*/admin/src/*"],
-              message: "Cross-workspace imports forbidden. Move shared code to @vpn-suite/shared.",
+              // Why: enforce workspace boundaries and force shared extraction.
+              group: [
+                "*/miniapp/src/*",
+                "*/admin/src/*",
+                "miniapp/src/*",
+                "admin/src/*",
+                "../miniapp/src/*",
+                "../admin/src/*",
+                "../../miniapp/src/*",
+                "../../admin/src/*",
+              ],
+              message:
+                "Cross-workspace imports forbidden. Move shared code to @vpn-suite/shared or @shared/*.",
             },
           ],
         },
@@ -56,7 +75,31 @@ export default tseslint.config(
     files: ["miniapp/src/**/*.tsx"],
     plugins: { react },
     rules: {
-      "react/forbid-dom-props": ["warn", { forbid: ["style"] }],
+      "react/forbid-dom-props": ["error", { forbid: ["style"] }],
+    },
+  },
+  {
+    files: ["miniapp/src/pages/**/*.tsx", "miniapp/src/page-models/**/*.ts", "miniapp/src/page-models/**/*.tsx"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: [
+                "@/design-system/components/*",
+                "@/design-system/layouts/*",
+                "@/design-system/page-recipes/*",
+                "@/design-system/patterns/*",
+                "@/design-system/primitives/*",
+                "!@/design-system/patterns/FallbackScreen",
+              ],
+              message:
+                "Import reusable UI from '@/design-system'. Only FallbackScreen may be imported from its direct pattern path.",
+            },
+          ],
+        },
+      ],
     },
   },
   {

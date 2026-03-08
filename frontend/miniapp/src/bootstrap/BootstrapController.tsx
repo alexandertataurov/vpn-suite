@@ -4,12 +4,14 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   type ReactNode,
 } from "react";
 import { IconShield } from "@/design-system";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button, InlineAlert, Skeleton, Display, Body } from "@/design-system";
-import { initTelegramRuntime, useTelegramWebApp } from "../hooks/useTelegramWebApp";
+import { useTelegramWebApp } from "../hooks/useTelegramWebApp";
+import { track } from "@vpn-suite/shared";
 import { useTelegramBackButtonController } from "../hooks/useTelegramBackButtonController";
 import { useBootstrapMachine, type BootPhase } from "./useBootstrapMachine";
 
@@ -20,10 +22,24 @@ interface BootstrapContextValue {
   onboardingError: string | null;
   isCompletingOnboarding: boolean;
   setOnboardingStep: (step: number) => Promise<void>;
-  completeOnboarding: () => Promise<boolean>;
+  completeOnboarding: () => Promise<{ done: boolean; synced: boolean }>;
 }
 
 const BootstrapContext = createContext<BootstrapContextValue | null>(null);
+
+/** Routes onboarding users may visit; they are not forced back to /onboarding on these. */
+const ONBOARDING_ALLOWED_PATHS = [
+  "/plan",
+  "/devices",
+  "/devices/issue",
+];
+
+function isOnboardingAllowedPath(pathname: string): boolean {
+  if (pathname === "/onboarding") return true;
+  if (ONBOARDING_ALLOWED_PATHS.includes(pathname)) return true;
+  if (pathname.startsWith("/plan/checkout/")) return true;
+  return false;
+}
 
 export function useBootstrapContext(): BootstrapContextValue {
   const context = useContext(BootstrapContext);
@@ -44,7 +60,7 @@ function BootLoadingScreen({ slowNetwork, onRetry }: { slowNetwork: boolean; onR
         {slowNetwork && (
           <>
             <Body className="splash-screen-tagline">Still connecting. You can retry now.</Body>
-            <Button variant="secondary" size="md" onClick={onRetry}>
+            <Button variant="secondary" size="md" onClick={onRetry} aria-label="Retry connection">
               Retry
             </Button>
           </>
@@ -57,10 +73,12 @@ function BootLoadingScreen({ slowNetwork, onRetry }: { slowNetwork: boolean; onR
 function BootErrorScreen({
   title,
   message,
+  debug,
   onRetry,
 }: {
   title: string;
   message: string;
+  debug?: string;
   onRetry: () => void;
 }) {
   return (
@@ -70,7 +88,12 @@ function BootErrorScreen({
           <IconShield size={42} strokeWidth={1.5} />
         </span>
         <InlineAlert variant="error" title={title} message={message} />
-        <Button variant="primary" size="lg" className="splash-screen-cta" onClick={onRetry}>
+        {debug && (
+          <Body as="p" className="splash-screen-tagline">
+            Debug: {debug}
+          </Body>
+        )}
+        <Button variant="primary" size="lg" className="splash-screen-cta" onClick={onRetry} aria-label="Retry">
           Retry
         </Button>
       </div>
@@ -97,6 +120,7 @@ export function BootstrapController({ children }: { children: ReactNode }) {
   const location = useLocation();
   const { initData, isInsideTelegram } = useTelegramWebApp();
   const machine = useBootstrapMachine({ initData, isInsideTelegram });
+  const session = machine.session;
   const {
     phase,
     onboardingStep,
@@ -110,10 +134,6 @@ export function BootstrapController({ children }: { children: ReactNode }) {
     startupError,
   } = machine;
 
-  useEffect(() => {
-    initTelegramRuntime();
-  }, []);
-
   const handleOnboardingBack = useCallback(() => {
     if (onboardingStep <= 0) return;
     void setOnboardingStep(onboardingStep - 1);
@@ -126,14 +146,23 @@ export function BootstrapController({ children }: { children: ReactNode }) {
   });
 
   useEffect(() => {
-    if (phase === "onboarding" && location.pathname !== "/onboarding") {
+    if (phase === "onboarding" && !isOnboardingAllowedPath(location.pathname)) {
       navigate("/onboarding", { replace: true });
       return;
     }
     if (phase === "app_ready" && location.pathname === "/onboarding") {
-      navigate("/plan", { replace: true });
+      const route = session?.routing?.recommended_route ?? "/plan";
+      navigate(route, { replace: true });
     }
-  }, [location.pathname, navigate, phase]);
+  }, [location.pathname, navigate, phase, session?.routing?.recommended_route]);
+
+  const readyTracked = useRef(false);
+  useEffect(() => {
+    if (phase === "app_ready" && !readyTracked.current) {
+      readyTracked.current = true;
+      track("miniapp.ready", {});
+    }
+  }, [phase]);
 
   const contextValue = useMemo<BootstrapContextValue>(
     () => ({
@@ -170,6 +199,7 @@ export function BootstrapController({ children }: { children: ReactNode }) {
       <BootErrorScreen
         title={startupError?.title ?? "Session error"}
         message={startupError?.message ?? "Please try again."}
+        debug={startupError?.debug}
         onRetry={retry}
       />
     );
@@ -179,7 +209,7 @@ export function BootstrapController({ children }: { children: ReactNode }) {
     return <BrandSplashScreen />;
   }
 
-  if (phase === "onboarding" && location.pathname !== "/onboarding") {
+  if (phase === "onboarding" && !isOnboardingAllowedPath(location.pathname)) {
     return <BootLoadingScreen slowNetwork={false} onRetry={retry} />;
   }
 

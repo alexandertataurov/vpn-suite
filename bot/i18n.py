@@ -3,6 +3,7 @@
 TEXTS = {
     "ru": {
         "welcome": "Добро пожаловать! Откройте приложение для управления VPN.",
+        "welcome_referral_line": "Ваша реферальная ссылка: {link}",
         "open_app": "Открыть приложение",
         "choose_lang": "Выберите язык / Choose language:",
         "connect_cta": "Подключить",
@@ -201,6 +202,7 @@ TEXTS = {
     },
     "en": {
         "welcome": "Welcome! Open the app to manage your VPN.",
+        "welcome_referral_line": "Your referral link: {link}",
         "open_app": "Open App",
         "choose_lang": "Choose language:",
         "connect_cta": "Connect",

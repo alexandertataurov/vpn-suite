@@ -1,7 +1,7 @@
 import { forwardRef } from "react";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { Slot } from "@radix-ui/react-slot";
-import { cn } from "@vpn-suite/shared";
+import { cx } from "../../utils";
 
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "outline" | "danger" | "link";
 export type ButtonSize = "sm" | "md" | "lg" | "icon";
@@ -95,7 +95,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     </>
   );
 
-  const mergedClassName = cn(
+  const mergedClassName = cx(
         "btn",
         variantClass[variant],
         sizeCls,

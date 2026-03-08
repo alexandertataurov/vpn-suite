@@ -1,39 +1,39 @@
-/* Canonical consumer theme — single source for consumer-dark (and consumer-light in palette).
+/* Canonical consumer theme — single source for consumer-dark and consumer-light.
    Import after miniapp-tokens; primitives-aliases and miniapp.css depend on these vars. */
 
 html[data-theme="consumer-dark"] {
   color-scheme: dark;
-  --space-black: #07090b;
-  --space-carbon: #0f1418;
-  --space-gray: #1b242d;
-  --space-gray-light: #6e90a4;
-  --space-white: #dde8f0;
+  --space-black: #000000;
+  --space-carbon: #07090b;
+  --space-gray: #10151a;
+  --space-gray-light: #70818f;
+  --space-white: #f2f6f9;
   --space-alert-red: #e85858;
-  --miniapp-ink-950: #07090b;
-  --miniapp-ink-900: #0b0e12;
-  --miniapp-ink-850: #0f1418;
-  --miniapp-ink-800: #151c23;
-  --miniapp-ink-200: #dde8f0;
+  --miniapp-ink-950: #000000;
+  --miniapp-ink-900: #05070a;
+  --miniapp-ink-850: #07090b;
+  --miniapp-ink-800: #10151a;
+  --miniapp-ink-200: #f2f6f9;
   --miniapp-grid-line: rgb(255 255 255 / 0.05);
-  --miniapp-glow: rgb(46 216 122 / 0.16);
-  --miniapp-shadow-strong: rgb(0 0 0 / 0.5);
-  --miniapp-sheen: rgb(255 255 255 / 0.02);
+  --miniapp-glow: rgb(46 216 122 / 0.1);
+  --miniapp-shadow-strong: rgb(0 0 0 / 0.68);
+  --miniapp-sheen: rgb(255 255 255 / 0.015);
   --miniapp-debug-outline-color: rgb(255 255 255 / 0.16);
 
   --color-bg: var(--space-black);
   --color-surface: var(--space-carbon);
-  --color-surface-2: #151c23;
+  --color-surface-2: #0e1317;
   --color-text: var(--space-white);
-  --color-text-muted: #6e90a4;
-  --color-text-tertiary: #3b5468;
-  --color-border: rgb(255 255 255 / 0.08);
-  --color-border-subtle: rgb(255 255 255 / 0.05);
-  --color-border-strong: rgb(255 255 255 / 0.14);
-  --color-accent: #4aa8ff;
-  --color-accent-hover: #3f9cf2;
-  --color-accent-active: #338de2;
+  --color-text-muted: #7b8f9f;
+  --color-text-tertiary: #495d6c;
+  --color-border: rgb(255 255 255 / 0.09);
+  --color-border-subtle: rgb(255 255 255 / 0.055);
+  --color-border-strong: rgb(255 255 255 / 0.16);
+  --color-accent: #5caeff;
+  --color-accent-hover: #4aa3fa;
+  --color-accent-active: #3a92e8;
   --color-on-accent: #07090b;
-  --color-focus-ring: #4aa8ff;
+  --color-focus-ring: #5caeff;
   --color-success: #2ed87a;
   --color-warning: #f0a428;
   --color-error: var(--space-alert-red);
@@ -44,6 +44,9 @@ html[data-theme="consumer-dark"] {
   --shadow-md: none;
   --shadow-lg: none;
   --focus-ring: 0 0 0 2px rgb(74 168 255 / 0.28);
+  --miniapp-backdrop-top: color-mix(in oklch, var(--s1) 12%, var(--bg) 88%);
+  --miniapp-backdrop-glow: color-mix(in oklch, var(--blue) 6%, transparent);
+  --miniapp-backdrop-sheen: color-mix(in oklch, white 2.5%, transparent);
 
   --blue-d: rgba(74, 168, 255, 0.08);
   --blue-b: rgba(74, 168, 255, 0.22);
@@ -114,4 +117,50 @@ html[data-theme="consumer-dark"] {
 
   --z-nav: 180;
   --z-above: 220;
+}
+
+html[data-theme="consumer-light"] {
+  color-scheme: light;
+  --color-bg: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-2: #f7f9fc;
+  --color-border-subtle: rgba(16, 34, 53, 0.07);
+  --color-border: rgba(16, 34, 53, 0.12);
+  --color-border-strong: rgba(16, 34, 53, 0.18);
+  --color-text: #0b1724;
+  --color-text-muted: #476177;
+  --color-text-tertiary: #6a8195;
+  --color-success: #1da45f;
+  --color-accent: #2a82e3;
+  --color-warning: #ba7a12;
+  --color-error: #c14343;
+  --color-info: #177ca4;
+  --color-accent-hover: #1e72cf;
+  --color-accent-active: #1e72cf;
+  --color-on-accent: #ffffff;
+  --color-focus-ring: rgba(42, 130, 227, 0.24);
+  --blue-d: rgba(42, 130, 227, 0.12);
+  --blue-b: rgba(42, 130, 227, 0.24);
+  --green-d: rgba(29, 164, 95, 0.12);
+  --green-b: rgba(29, 164, 95, 0.24);
+  --amber-d: rgba(186, 122, 18, 0.12);
+  --amber-b: rgba(186, 122, 18, 0.24);
+  --red-d: rgba(193, 67, 67, 0.12);
+  --red-b: rgba(193, 67, 67, 0.24);
+  --green-glow: rgba(29, 164, 95, 0.12);
+  --text-2xs: 10px;
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-md: 14px;
+  --text-base: 15px;
+  --text-lg: 16px;
+  --text-xl: 20px;
+  --text-2xl: 22px;
+  --text-4xl: 34px;
+  --text-hero: 40px;
+  --size-touch-target: 48px;
+  --overlay-scrim: rgba(10, 22, 35, 0.42);
+  --miniapp-backdrop-top: color-mix(in oklch, var(--s1) 56%, white 44%);
+  --miniapp-backdrop-glow: color-mix(in oklch, var(--blue) 4.5%, transparent);
+  --miniapp-backdrop-sheen: color-mix(in oklch, var(--tx-pri) 1.5%, transparent);
 }

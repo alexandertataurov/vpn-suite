@@ -21,6 +21,16 @@
   gap: 6px;
 }
 
+.billing-page__grace-form-actions {
+  margin-top: var(--sp-4);
+}
+
+.billing-page__plan-actions {
+  display: flex;
+  gap: var(--sp-2);
+  align-items: center;
+}
+
 .ph-title {
   font-family: var(--font-mono);
   font-size: 18px;

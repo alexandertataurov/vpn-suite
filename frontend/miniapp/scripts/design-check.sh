@@ -7,7 +7,7 @@ VIOLATIONS=0
 
 # 1. Only token/shell files may define :root
 ROOT_FILES=$(grep -rl "^:root\s*{" "$SRC" --include="*.css" 2>/dev/null || true)
-ALLOWED_ROOT="$SRC/design-system/styles/miniapp-tokens.css $SRC/design-system/styles/miniapp.css $SRC/design-system/styles/miniapp-palette.css"
+ALLOWED_ROOT="$SRC/design-system/styles/miniapp-tokens.css $SRC/design-system/styles/miniapp-theme-consumer.css $SRC/design-system/styles/miniapp.css"
 if [ -n "$ROOT_FILES" ]; then
   for f in $ROOT_FILES; do
     allowed=
@@ -43,6 +43,47 @@ while IFS= read -r f; do
 done <<EOF
 $(find "$SRC" \( -name "*.ts" -o -name "*.tsx" \) 2>/dev/null)
 EOF
+
+# 4. Pages/page-models should consume reusable UI from the public design-system entrypoint.
+while IFS= read -r f; do
+  [ -z "$f" ] && continue
+  if grep -qE 'from\s+["'\'']@/design-system/(components|layouts|page-recipes|patterns|primitives)/' "$f" 2>/dev/null; then
+    if grep -qE 'from\s+["'\'']@/design-system/patterns/FallbackScreen["'\'']' "$f" 2>/dev/null; then
+      if grep -vE 'from\s+["'\'']@/design-system/patterns/FallbackScreen["'\'']' "$f" | grep -qE 'from\s+["'\'']@/design-system/(components|layouts|page-recipes|patterns|primitives)/' 2>/dev/null; then
+        echo "design:check — pages/page-models must import reusable UI from '@/design-system'. File: $f"
+        VIOLATIONS=$((VIOLATIONS + 1))
+      fi
+    else
+      echo "design:check — pages/page-models must import reusable UI from '@/design-system'. File: $f"
+      VIOLATIONS=$((VIOLATIONS + 1))
+    fi
+  fi
+done <<EOF
+$(find "$SRC/pages" "$SRC/page-models" \( -name "*.ts" -o -name "*.tsx" \) 2>/dev/null)
+EOF
+
+# 5. No page-local stylesheets under src/pages; styling belongs in shared design-system layers.
+PAGE_CSS_FILES=$(find "$SRC/pages" -name "*.css" 2>/dev/null || true)
+if [ -n "$PAGE_CSS_FILES" ]; then
+  while IFS= read -r f; do
+    [ -z "$f" ] && continue
+    echo "design:check — page-local stylesheets are not allowed; move styles into design-system shared layers. File: $f"
+    VIOLATIONS=$((VIOLATIONS + 1))
+  done <<EOF
+$PAGE_CSS_FILES
+EOF
+fi
+
+PAGE_STYLE_IMPORTS=$(grep -RInE 'import\s+["'"'"']\./[^"'"'"']+\.css["'"'"'];?' "$SRC/pages" --include="*.tsx" 2>/dev/null || true)
+if [ -n "$PAGE_STYLE_IMPORTS" ]; then
+  while IFS= read -r line; do
+    [ -z "$line" ] && continue
+    echo "design:check — page-local stylesheet imports are not allowed; use shared design-system styles. $line"
+    VIOLATIONS=$((VIOLATIONS + 1))
+  done <<EOF
+$PAGE_STYLE_IMPORTS
+EOF
+fi
 
 if [ "$VIOLATIONS" -gt 0 ]; then
   echo "design:check — $VIOLATIONS violation(s). See .cursor/rules/design-system.mdc"

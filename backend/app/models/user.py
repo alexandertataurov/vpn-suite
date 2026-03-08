@@ -27,6 +27,17 @@ class User(Base, TimestampMixin):
     onboarding_version: Mapped[int] = mapped_column(
         Integer, nullable=False, default=1, server_default="1"
     )
+    first_connected_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    last_connection_confirmed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    preferred_server_id: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    server_auto_select: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    last_active_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
     )
@@ -42,4 +53,7 @@ class User(Base, TimestampMixin):
     )
     churn_surveys: Mapped[list["ChurnSurvey"]] = relationship(
         "ChurnSurvey", back_populates="user", foreign_keys="ChurnSurvey.user_id"
+    )
+    entitlement_events: Mapped[list["EntitlementEvent"]] = relationship(
+        "EntitlementEvent", back_populates="user", foreign_keys="EntitlementEvent.user_id"
     )

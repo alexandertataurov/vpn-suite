@@ -11,6 +11,7 @@ export {
   Smartphone as IconSmartphone,
   User as IconUser,
   ChevronLeft as IconChevronLeft,
+  AlertTriangle as IconAlertTriangle,
 } from "lucide-react";
 
 export type { LucideIcon as IconType } from "lucide-react";

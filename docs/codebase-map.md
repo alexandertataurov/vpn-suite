@@ -164,7 +164,7 @@ Pydantic schemas for API: `auth`, `user`, `server`, `server_ip`, `device`, `plan
 | Script                    | Role                      |
 | ------------------------- | ------------------------- |
 | `seed_admin.py`           | Bootstrap admin user      |
-| `seed_plans.py`           | Seed plans from env       |
+| `seed_plans.py`           | Optional: seed plans from env (PLAN_*); plans normally in Admin UI & DB |
 | `seed_servers.py`         | Seed servers (nodes)      |
 | `seed_agent_server.py`    | One server for agent mode |
 | `seed_system_operator.py` | System operator user      |

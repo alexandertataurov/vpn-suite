@@ -79,6 +79,7 @@ reports/
 
 # pnpm store (local)
 .pnpm-store/
+pnpm-lock.yaml
 
 # Local secrets (mTLS CA, keys, certs). .env is the single source for config.
 secrets/

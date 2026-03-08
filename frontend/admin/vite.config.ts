@@ -31,14 +31,55 @@ export default defineConfig({
   build: {
     outDir: "dist",
     sourcemap: enableSourcemap,
-    chunkSizeWarningLimit: 1000,
+    // Why: keep chunk regressions visible in CI; admin can tolerate larger chunks than miniapp.
+    chunkSizeWarningLimit: 250,
     rollupOptions: {
       output: {
         manualChunks: (id) => {
-          if (id.includes("node_modules/echarts") || id.includes("node_modules/echarts-for-react"))
-            return "echarts";
-          if (id.includes("node_modules")) return "vendor";
           if (id.includes("/shared/src/")) return "shared";
+          if (
+            id.includes("node_modules/react/") ||
+            id.includes("node_modules/react-dom/") ||
+            id.includes("node_modules/scheduler/") ||
+            id.includes("node_modules/use-sync-external-store/")
+          ) {
+            return "vendor-react";
+          }
+          if (id.includes("node_modules/react-router-dom/") || id.includes("node_modules/@remix-run/router/")) {
+            return "vendor-router";
+          }
+          if (id.includes("node_modules/@tanstack/react-query/") || id.includes("node_modules/@tanstack/react-virtual/")) {
+            return "vendor-query";
+          }
+          if (id.includes("node_modules/react-hook-form/") || id.includes("node_modules/@hookform/resolvers/") || id.includes("node_modules/zod/")) {
+            return "vendor-forms";
+          }
+          if (id.includes("node_modules/zustand/")) {
+            return "vendor-zustand";
+          }
+          if (id.includes("node_modules/echarts/") || id.includes("node_modules/echarts-for-react/")) {
+            return "vendor-echarts";
+          }
+          if (id.includes("node_modules/recharts/")) {
+            return "vendor-recharts";
+          }
+          if (
+            id.includes("node_modules/d3-") ||
+            id.includes("node_modules/internmap/") ||
+            id.includes("node_modules/delaunator/") ||
+            id.includes("node_modules/robust-predicates/")
+          ) {
+            return "vendor-d3";
+          }
+          if (id.includes("node_modules/framer-motion/")) {
+            return "vendor-motion";
+          }
+          if (id.includes("node_modules/lucide-react/")) {
+            return "vendor-icons";
+          }
+          if (id.includes("node_modules/cmdk/") || id.includes("node_modules/@radix-ui/")) {
+            return "vendor-ui";
+          }
         },
       },
     },

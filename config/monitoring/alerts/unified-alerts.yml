@@ -48,3 +48,40 @@ groups:
         annotations:
           summary: "VPN peers inactive"
           description: "Peers exist but none active for 10 minutes."
+
+      - alert: AuthFailureSpike
+        expr: rate(auth_failures_total[15m]) > 0.1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Auth failure rate spike"
+          description: "Auth failures > 0.1/s for 10 minutes. Check for brute force or misconfiguration."
+          runbook_url: "https://github.com/vpn-suite/vpn-suite/blob/main/docs/ops/runbook.md"
+
+      - alert: ReferralAttachFailuresSpike
+        expr: rate(referral_attach_fail_total[1h]) > 0.05
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Referral attach failure rate elevated"
+          description: "Referral attach failures > 0.05/s for 30 minutes. Check referral codes and referrer lookup."
+
+      - alert: PostgresExporterDown
+        expr: up{job="postgres"} == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Postgres exporter down"
+          description: "Postgres exporter target down for 5 minutes."
+
+      - alert: RedisExporterDown
+        expr: up{job="redis"} == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis exporter down"
+          description: "Redis exporter target down for 5 minutes."

@@ -31,6 +31,7 @@ async def _create_plan(duration_days: int = 30) -> Plan:
         plan = Plan(
             name=f"audit-{uuid.uuid4().hex[:8]}",
             duration_days=duration_days,
+            device_limit=1,
             price_currency="XTR",
             price_amount=Decimal("100.00"),
         )
@@ -42,6 +43,21 @@ async def _create_plan(duration_days: int = 30) -> Plan:
 
 def _parse_dt(value: str) -> datetime:
     return datetime.fromisoformat(value.replace("Z", "+00:00"))
+
+
+async def _create_plan_with_limit(duration_days: int, device_limit: int, price_amount: str) -> Plan:
+    async with async_session_factory() as db:
+        plan = Plan(
+            name=f"audit-{uuid.uuid4().hex[:8]}",
+            duration_days=duration_days,
+            device_limit=device_limit,
+            price_currency="XTR",
+            price_amount=Decimal(price_amount),
+        )
+        db.add(plan)
+        await db.commit()
+        await db.refresh(plan)
+        return plan
 
 
 @pytest.mark.asyncio
@@ -180,6 +196,58 @@ async def test_first_completed_webhook_activates_pending_single_period(
     delta_days = (after_until - before_until).total_seconds() / 86400
     assert delta_days >= duration_days - 0.1
     assert delta_days <= duration_days + 0.5
+
+
+@pytest.mark.asyncio
+async def test_completed_webhook_updates_subscription_device_limit_from_plan(
+    client: AsyncClient, monkeypatch
+):
+    if not await check_db():
+        pytest.skip("DB not available")
+    monkeypatch.setattr(config.settings, "bot_api_key", "test-bot-key")
+    monkeypatch.setattr(config.settings, "telegram_stars_webhook_secret", "")
+
+    basic_plan = await _create_plan_with_limit(duration_days=30, device_limit=1, price_amount="100.00")
+    pro_plan = await _create_plan_with_limit(duration_days=30, device_limit=5, price_amount="300.00")
+    tg_id = int(uuid.uuid4().int % 10_000_000_000)
+
+    basic = await client.post(
+        "/api/v1/bot/subscriptions/create-or-get",
+        json={"tg_id": tg_id, "plan_id": basic_plan.id},
+        headers={"X-API-Key": "test-bot-key"},
+    )
+    assert basic.status_code == 200, basic.text
+
+    pro = await client.post(
+        "/api/v1/bot/subscriptions/create-or-get",
+        json={"tg_id": tg_id, "plan_id": pro_plan.id},
+        headers={"X-API-Key": "test-bot-key"},
+    )
+    assert pro.status_code == 200, pro.text
+    pro_sub_id = pro.json()["subscription_id"]
+    user_id = pro.json()["user_id"]
+
+    webhook = await client.post(
+        "/webhooks/payments/telegram_stars",
+        json={
+            "external_id": f"audit-{uuid.uuid4().hex}",
+            "user_id": user_id,
+            "subscription_id": pro_sub_id,
+            "amount": 300,
+            "currency": "XTR",
+            "status": "completed",
+        },
+    )
+    assert webhook.status_code == 200, webhook.text
+
+    async with async_session_factory() as db:
+        from app.models import Subscription
+
+        sub = (
+            await db.execute(select(Subscription).where(Subscription.id == pro_sub_id))
+        ).scalar_one()
+        assert sub.status == "active"
+        assert sub.device_limit == 5
 
 
 @pytest.mark.asyncio

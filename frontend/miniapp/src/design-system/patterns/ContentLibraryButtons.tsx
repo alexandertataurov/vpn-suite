@@ -21,22 +21,29 @@ export function ButtonRowAuto({ children, className = "", ...props }: ButtonRowA
 export interface CardFooterLinkProps extends Omit<HTMLAttributes<HTMLDivElement>, "children"> {
   children: ReactNode;
   onClick?: () => void;
+  disabled?: boolean;
 }
 
 /** Content Library 13: "see all" card footer link. */
 export function CardFooterLink({
   children,
   onClick,
+  disabled,
   className = "",
   ...props
 }: CardFooterLinkProps) {
   return (
     <div
-      className={`card-footer-link ${className}`.trim()}
+      className={`card-footer-link ${disabled ? "is-disabled" : ""} ${className}`.trim()}
       role="button"
-      tabIndex={0}
-      onClick={onClick}
+      aria-disabled={disabled}
+      tabIndex={disabled ? -1 : 0}
+      onClick={() => {
+        if (disabled) return;
+        onClick?.();
+      }}
       onKeyDown={(e) => {
+        if (disabled) return;
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
           onClick?.();

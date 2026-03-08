@@ -19,24 +19,31 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10
-
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "pnpm"
-          cache-dependency-path: frontend/pnpm-lock.yaml
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
 
       - name: Install
-        run: pnpm install --frozen-lockfile
+        run: npm ci
 
-      - name: Typecheck
-        run: pnpm run typecheck -w miniapp
+      - name: Typecheck (miniapp)
+        run: npm run typecheck -w miniapp
 
-      - name: Lint
-        run: pnpm run lint -w miniapp
+      - name: Typecheck (admin)
+        run: npm run typecheck -w admin
+
+      - name: Lint (miniapp)
+        run: npm run lint -w miniapp
+
+      - name: Lint (admin)
+        run: npm run lint -w admin
 
       - name: Build
-        run: pnpm run build -w miniapp
+        env:
+          VITE_POSTHOG_KEY: ""
+          VITE_POSTHOG_HOST: https://eu.i.posthog.com
+          VITE_FARO_COLLECTOR_URL: ""
+          VITE_ANALYTICS_ENABLED: "0"
+        run: npm run build

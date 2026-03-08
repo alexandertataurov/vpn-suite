@@ -122,6 +122,7 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
       return request<T>(path, init, retries + 1);
     }
 
+    if (res.status === 204) return null as T;
     return parseResponse<T>(res);
   }
 
@@ -197,14 +198,19 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
       return getBlob(path, init ?? {});
     },
     post<T>(path: string, body?: unknown, init?: RequestInit) {
-      return request<T>(path, { ...init, method: "POST", body: body !== undefined ? JSON.stringify(body) : undefined });
+      const requestInit: RequestInit = { ...init, method: "POST" };
+      if (body !== undefined) requestInit.body = JSON.stringify(body);
+      return request<T>(path, requestInit);
     },
     put<T>(path: string, body?: unknown, init?: RequestInit) {
-      return request<T>(path, { ...init, method: "PUT", body: body !== undefined ? JSON.stringify(body) : undefined });
+      const requestInit: RequestInit = { ...init, method: "PUT" };
+      if (body !== undefined) requestInit.body = JSON.stringify(body);
+      return request<T>(path, requestInit);
     },
     patch<T>(path: string, body?: unknown, init?: RequestInit) {
-      return request<T>(path, { ...init, method: "PATCH", body: body !== undefined ? JSON.stringify(body) : undefined });
+      const requestInit: RequestInit = { ...init, method: "PATCH" };
+      if (body !== undefined) requestInit.body = JSON.stringify(body);
+      return request<T>(path, requestInit);
     },
   };
 }
-

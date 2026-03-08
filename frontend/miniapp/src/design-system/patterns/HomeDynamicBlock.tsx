@@ -13,7 +13,25 @@ export interface HomeDynamicBlockProps {
   deviceLimit: number | null;
   usedDevices: number;
   healthError: boolean;
+  /** When false, renewal message is shown without "Renew now" action. Default true (legacy). */
+  showUpsellExpiry?: boolean;
+  /** When true and at device limit, show "Upgrade plan" instead of "Manage devices". Default false. */
+  showUpsellDeviceLimit?: boolean;
+  /** Route used for renewal/trial-end upsell. */
+  renewalTargetTo?: string;
+  /** Route used for upgrade upsell (trial end, etc.). */
+  upgradeTargetTo?: string;
+  /** Route for device-limit upsell (plan with more devices). Falls back to upgradeTargetTo if unset. */
+  upgradeTargetToDeviceLimit?: string;
+  /** When true, subscription is a trial (trial_end upsell may apply). */
+  isTrial?: boolean;
+  /** Days until trial ends; used with showUpsellTrialEnd. */
+  trialDaysLeft?: number;
+  /** When true and trial ending soon, show "Upgrade" CTA. */
+  showUpsellTrialEnd?: boolean;
 }
+
+const TRIAL_ENDING_DAYS = 7;
 
 export function HomeDynamicBlock({
   daysLeft,
@@ -21,6 +39,14 @@ export function HomeDynamicBlock({
   deviceLimit,
   usedDevices,
   healthError,
+  showUpsellExpiry = true,
+  showUpsellDeviceLimit = false,
+  renewalTargetTo = "/plan",
+  upgradeTargetTo = "/plan",
+  upgradeTargetToDeviceLimit,
+  isTrial = false,
+  trialDaysLeft = 0,
+  showUpsellTrialEnd = false,
 }: HomeDynamicBlockProps) {
   const items: {
     tone: MissionAlertTone;
@@ -33,14 +59,27 @@ export function HomeDynamicBlock({
     items.push({
       tone: "warning",
       title: "Service health",
-      message: "Backend telemetry reports degradation. Connection may be unstable.",
+      message: "Service telemetry reports degradation. Connection may be unstable.",
     });
   }
 
-  if (hasSub && daysLeft <= 7) {
+  if (hasSub && isTrial && trialDaysLeft <= TRIAL_ENDING_DAYS) {
+    const message =
+      trialDaysLeft <= 0
+        ? "Your trial ended. Upgrade to keep secure access."
+        : trialDaysLeft === 1
+          ? "Your trial ends tomorrow. Upgrade to keep access."
+          : `Your trial ends in ${trialDaysLeft} days. Upgrade to keep access.`;
+    items.push({
+      tone: trialDaysLeft <= 0 ? "error" : "warning",
+      title: "Trial",
+      message,
+      ...(showUpsellTrialEnd ? { action: { label: "Upgrade", to: upgradeTargetTo } } : {}),
+    });
+  } else if (hasSub && daysLeft <= 7) {
     const message =
       daysLeft <= 0
-        ? "Your plan expired. Renew now to restore secure traffic."
+        ? "Your plan expired. Renew to restore secure traffic."
         : daysLeft === 1
           ? "Your plan ends tomorrow. Renew to avoid interruption."
           : `Your plan ends in ${daysLeft} days. Renew to avoid interruption.`;
@@ -48,20 +87,22 @@ export function HomeDynamicBlock({
       tone: daysLeft <= 0 ? "error" : "warning",
       title: "Subscription",
       message,
-      action: { label: "Renew now", to: "/plan" },
+      ...(showUpsellExpiry ? { action: { label: "Renew now", to: renewalTargetTo } } : {}),
     });
   }
 
   if (deviceLimit != null && usedDevices >= deviceLimit - 1) {
     const atLimit = usedDevices >= deviceLimit;
     const message = atLimit
-      ? `Device capacity reached (${deviceLimit}). Revoke one profile before issuing another.`
+      ? `Device capacity reached (${deviceLimit}). ${showUpsellDeviceLimit ? "Upgrade your plan for more devices." : "Revoke one profile before issuing another."}`
       : `${deviceLimit - usedDevices} device slot${deviceLimit - usedDevices === 1 ? "" : "s"} remaining.`;
     items.push({
       tone: atLimit ? "error" : "info",
       title: "Device capacity",
       message,
-      action: { label: "Manage devices", to: "/devices" },
+      action: atLimit && showUpsellDeviceLimit
+        ? { label: "Upgrade plan", to: upgradeTargetToDeviceLimit ?? upgradeTargetTo }
+        : { label: "Manage devices", to: "/devices" },
     });
   }
 
@@ -73,7 +114,7 @@ export function HomeDynamicBlock({
           chip={<MissionChip tone="green">Clear</MissionChip>}
         />
         <h3 className="op-name type-h3">All systems nominal</h3>
-        <p className="op-desc type-body-sm">No critical alerts for your account.</p>
+        <p className="op-desc type-body-sm">No account alerts need action.</p>
       </MissionCard>
     );
   }

@@ -1,5 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useApiQuery } from "@/hooks/api/useApiQuery";
+import { userKeys } from "@/features/users/services/user.query-keys";
 import { useApiMutation } from "./useApiMutation";
 import type { UserDetail, UserList } from "@/shared/types/admin-api";
 
@@ -34,7 +35,7 @@ export function buildUsersPath(params: UserListParams): string {
  */
 export function useGetUserList(params: UserListParams) {
   const path = buildUsersPath(params);
-  return useApiQuery<UserList>(["users", "list", path], path, { retry: 1, staleTime: 15_000 });
+  return useApiQuery<UserList>([...userKeys.list(path)], path, { retry: 1, staleTime: 15_000 });
 }
 
 /**
@@ -42,8 +43,9 @@ export function useGetUserList(params: UserListParams) {
  * Used in: UsersPage detail panel.
  */
 export function useGetUser(userId: number | null) {
+  const resolvedId = userId ?? 0;
   return useApiQuery<UserDetail>(
-    ["users", "detail", userId!],
+    [...userKeys.detail(resolvedId)],
     `/users/${userId!}`,
     { enabled: !!userId, retry: 0 }
   );
@@ -76,8 +78,9 @@ export interface UserDeviceListOut {
  * Used in: UsersPage user detail devices list.
  */
 export function useGetUserDevices(userId: number | null) {
+  const resolvedId = userId ?? 0;
   return useApiQuery<UserDeviceListOut>(
-    ["users", "devices", userId!],
+    [...userKeys.devices(resolvedId)],
     `/users/${userId!}/devices?limit=50&offset=0`,
     { enabled: !!userId, retry: 0, staleTime: 10_000 }
   );
@@ -90,10 +93,10 @@ export function useGetUserDevices(userId: number | null) {
 export function useUsersInvalidate() {
   const queryClient = useQueryClient();
   return function invalidateUsers(selectedUserId?: number | null) {
-    void queryClient.invalidateQueries({ queryKey: ["users", "list"] });
+    void queryClient.invalidateQueries({ queryKey: [...userKeys.lists()] });
     if (selectedUserId != null) {
-      void queryClient.invalidateQueries({ queryKey: ["users", "detail", selectedUserId] });
-      void queryClient.invalidateQueries({ queryKey: ["users", "devices", selectedUserId] });
+      void queryClient.invalidateQueries({ queryKey: [...userKeys.detail(selectedUserId)] });
+      void queryClient.invalidateQueries({ queryKey: [...userKeys.devices(selectedUserId)] });
     }
   };
 }
@@ -114,14 +117,17 @@ export function useUpdateUser() {
 }
 
 /**
- * Purpose: DELETE /users/:id; invalidates users.
+ * Purpose: DELETE /users/:id; invalidates users. Requires confirm_token in body.
  * Used in: UsersPage delete modal.
  */
 export function useDeleteUser() {
   const invalidateUsers = useUsersInvalidate();
   return useApiMutation({
-    mutationFn: (api) => (userId: number) =>
-      api.request(`/users/${userId}`, { method: "DELETE" }),
+    mutationFn: (api) => (payload: { userId: number; confirm_token: string }) =>
+      api.request(`/users/${payload.userId}`, {
+        method: "DELETE",
+        body: JSON.stringify({ confirm_token: payload.confirm_token }),
+      }),
     onSuccess: () => {
       invalidateUsers();
     },

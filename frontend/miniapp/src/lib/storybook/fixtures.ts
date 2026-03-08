@@ -33,6 +33,7 @@ export const webappMeActive: WebAppMeResponse = {
   user: { id: 1, tg_id: 1001 },
   subscriptions: [baseSubscription],
   devices,
+  public_ip: "185.199.110.42",
   onboarding: { completed: true, step: 2, version: 1, updated_at: "2026-02-01T00:00:00Z" },
 };
 
@@ -40,6 +41,7 @@ export const webappMeNoSubscription: WebAppMeResponse = {
   user: { id: 2, tg_id: 1002 },
   subscriptions: [],
   devices: [],
+  public_ip: null,
   onboarding: { completed: true, step: 2, version: 1, updated_at: "2026-02-01T00:00:00Z" },
 };
 
@@ -47,6 +49,7 @@ export const webappMeNoDevices: WebAppMeResponse = {
   user: { id: 3, tg_id: 1003 },
   subscriptions: [baseSubscription],
   devices: [],
+  public_ip: "185.199.110.42",
   onboarding: { completed: true, step: 2, version: 1, updated_at: "2026-02-01T00:00:00Z" },
 };
 
@@ -54,5 +57,6 @@ export const webappMeRevokedOnly: WebAppMeResponse = {
   user: { id: 4, tg_id: 1004 },
   subscriptions: [baseSubscription],
   devices: devices.map((d) => ({ ...d, revoked_at: d.revoked_at ?? "2026-02-20T11:00:00Z" })),
+  public_ip: "185.199.110.42",
   onboarding: { completed: true, step: 2, version: 1, updated_at: "2026-02-01T00:00:00Z" },
 };

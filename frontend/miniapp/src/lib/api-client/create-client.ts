@@ -60,9 +60,13 @@ async function parseResponse<T>(res: Response): Promise<T> {
         correlationId
       );
     }
+    const msg =
+      (data as { detail?: { message?: string } })?.detail?.message ??
+      (data as { error?: { message?: string } })?.error?.message ??
+      res.statusText;
     throw new ApiError(
       "HTTP_ERROR",
-      (data as { error?: { message?: string } })?.error?.message ?? res.statusText,
+      msg,
       res.status,
       responseCorrelationId ? { correlation_id: responseCorrelationId } : undefined,
       responseRequestId,
@@ -231,25 +235,19 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
       return getBlob(path, init ?? {});
     },
     post<T>(path: string, body?: unknown, init?: RequestInit) {
-      return request<T>(path, {
-        ...init,
-        method: "POST",
-        body: body !== undefined ? JSON.stringify(body) : undefined,
-      });
+      const requestInit: RequestInit = { ...init, method: "POST" };
+      if (body !== undefined) requestInit.body = JSON.stringify(body);
+      return request<T>(path, requestInit);
     },
     put<T>(path: string, body?: unknown, init?: RequestInit) {
-      return request<T>(path, {
-        ...init,
-        method: "PUT",
-        body: body !== undefined ? JSON.stringify(body) : undefined,
-      });
+      const requestInit: RequestInit = { ...init, method: "PUT" };
+      if (body !== undefined) requestInit.body = JSON.stringify(body);
+      return request<T>(path, requestInit);
     },
     patch<T>(path: string, body?: unknown, init?: RequestInit) {
-      return request<T>(path, {
-        ...init,
-        method: "PATCH",
-        body: body !== undefined ? JSON.stringify(body) : undefined,
-      });
+      const requestInit: RequestInit = { ...init, method: "PATCH" };
+      if (body !== undefined) requestInit.body = JSON.stringify(body);
+      return request<T>(path, requestInit);
     },
   };
 }

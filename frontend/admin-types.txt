@@ -1,5 +1,0 @@
-> admin@0.0.1 typecheck /opt/vpn-suite/frontend/admin
-> tsc -b tsconfig.json --pretty false
-
-(no TypeScript errors)
-

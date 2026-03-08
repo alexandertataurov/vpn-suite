@@ -30,7 +30,11 @@ Every page follows this exact structure inside `.page`:
 
 ## 1 · Page Map
 
-Five pages in the app. One active nav tab per page. Hero block and section structure per page below.
+Five main pages in the app (with bottom nav). Onboarding is a full-screen flow before the user reaches the app. Hero block and section structure per page below.
+
+### Onboarding (`/onboarding`)
+
+Pre-app flow (no nav). 3 outcome-based steps: (1) **Install AmneziaVPN** — body: download the app for your device, tap store below; store badges (App Store, Google Play). (2) **Get your config** — body: subscribe if needed → Devices → Issue device → one-time config (copy or .conf); in AmneziaVPN: Add configuration → Import file or paste; store config carefully, may appear once. Diagram: This app: Plan → Devices → Issue device → Copy/download .conf → AmneziaVPN: Add configuration → Import file or paste. CTAs: Choose plan, Go to Devices. (3) **Confirm connected** — body: once VPN connected, confirm here. CTA: I'm connected. No QR in miniapp; use import file or paste only.
 
 ### Home (`/`)
 **Nav active:** Home  

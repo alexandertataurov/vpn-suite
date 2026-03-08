@@ -1,7 +1,6 @@
-/* Single design-system CSS entry: tokens first, then shell and component styles. */
-@import "./miniapp-tokens.css";
+/* Single design-system CSS entry: foundations (tokens + theme) first, then shell and content. */
+@import "../foundations/css-variables.css";
 @import "./telegram-miniapp-design-system.css";
-@import "./miniapp-palette.css";
 @import "./miniapp-theme-consumer.css";
 @import "./miniapp-primitives-aliases.css";
 @import "./miniapp.css";

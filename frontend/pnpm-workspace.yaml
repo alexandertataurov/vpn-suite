@@ -1,4 +1,4 @@
 packages:
-  - "admin"
-  - "miniapp"
-  - "shared"
+  - admin
+  - miniapp
+  - shared

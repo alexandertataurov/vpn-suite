@@ -11,12 +11,14 @@ export interface HeaderAlertItem {
 
 export interface HeaderAlertsContentProps {
   alerts: HeaderAlertItem[];
+  /** Popover/list title. Default "Signals". */
+  title?: string;
 }
 
-export function HeaderAlertsContent({ alerts }: HeaderAlertsContentProps) {
+export function HeaderAlertsContent({ alerts, title = "Signals" }: HeaderAlertsContentProps) {
   return (
     <>
-      <p className="miniapp-header-alert-popover-title">Signals</p>
+      <p className="miniapp-header-alert-popover-title">{title}</p>
       <ul className="miniapp-header-alert-list">
         {alerts.map((alert) => (
           <li

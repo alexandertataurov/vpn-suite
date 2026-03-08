@@ -19,6 +19,9 @@ class SubscriptionUpdate(BaseModel):
     valid_until: datetime | None = None
     device_limit: int | None = None
     status: str | None = None
+    access_status: str | None = None
+    grace_until: datetime | None = None
+    grace_reason: str | None = None
 
 
 class SubscriptionOut(OrmSchema):
@@ -34,6 +37,13 @@ class SubscriptionOut(OrmSchema):
     trial_ends_at: datetime | None = None
     paused_at: datetime | None = None
     pause_reason: str | None = None
+    subscription_status: str = "active"
+    access_status: str = "enabled"
+    billing_status: str = "paid"
+    renewal_status: str = "auto_renew_on"
+    grace_until: datetime | None = None
+    grace_reason: str | None = None
+    cancel_at_period_end: bool = False
 
     @computed_field  # type: ignore[prop-decorator]
     @property

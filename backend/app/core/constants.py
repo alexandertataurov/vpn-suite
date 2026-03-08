@@ -3,6 +3,10 @@
 Avoid magic strings in routers and services; import from here.
 """
 
+# Placeholder conversion for legacy non-Stars pricing into Telegram Stars.
+# Product must confirm the real conversion rate before relying on it for pricing.
+STARS_PER_LEGACY_UNIT = 50
+
 # Redis key prefixes (backend cache and agent heartbeat)
 REDIS_KEY_SERVERS_LIST = "servers:list:"
 REDIS_KEY_SERVERS_LIST_PATTERN = "servers:list:*"

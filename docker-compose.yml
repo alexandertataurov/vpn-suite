@@ -54,6 +54,8 @@ services:
       - REDIS_URL=${REDIS_URL}
       - SECRET_KEY=${SECRET_KEY}
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_BOT_USERNAME=${VITE_TELEGRAM_BOT_USERNAME:-}
+      - VITE_TELEGRAM_BOT_USERNAME=${VITE_TELEGRAM_BOT_USERNAME:-}
       - OTEL_TRACES_ENDPOINT=${OTEL_TRACES_ENDPOINT:-}
       - VPN_DEFAULT_HOST=${VPN_DEFAULT_HOST:-${PUBLIC_DOMAIN}}
     depends_on:
@@ -316,6 +318,34 @@ services:
       - "127.0.0.1:9100:9100"
     networks:
       - vpn-suite-app
+
+  postgres-exporter:
+    <<: [*monitoring_default, *resource_small]
+    image: prometheuscommunity/postgres-exporter:v0.15.0
+    environment:
+      DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-vpn_admin}?sslmode=disable"
+    ports:
+      - "127.0.0.1:9187:9187"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - vpn-suite-app
+      - vpn-suite-db
+
+  redis-exporter:
+    <<: [*monitoring_default, *resource_small]
+    image: oliver006/redis_exporter:v1.55.0
+    environment:
+      REDIS_ADDR: "redis:6379"
+    ports:
+      - "127.0.0.1:9121:9121"
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - vpn-suite-app
+      - vpn-suite-db
 
   loki:
     <<: [*monitoring_default, *resource_medium]

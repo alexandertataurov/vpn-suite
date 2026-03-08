@@ -35,6 +35,29 @@ async def get_matching_subscriptions(
     return list(result.scalars().all())
 
 
+async def get_matching_winback_subscriptions(
+    session: AsyncSession,
+    condition: dict,
+) -> list[Subscription]:
+    """Return expired or grace subscriptions for win-back (reminder_winback_sent_at not set)."""
+    from sqlalchemy import or_
+
+    now = datetime.now(timezone.utc)
+    q = select(Subscription).where(
+        Subscription.reminder_winback_sent_at.is_(None),
+        or_(
+            Subscription.subscription_status.in_(["expired", "cancelled"]),
+            Subscription.access_status == "grace",
+        ),
+    )
+    if "expiry_days_gte" in condition:
+        days = int(condition["expiry_days_gte"])
+        since = now - timedelta(days=days)
+        q = q.where(Subscription.valid_until >= since)
+    result = await session.execute(q)
+    return list(result.scalars().all())
+
+
 async def run_retention_rules(session: AsyncSession) -> dict:
     """Load enabled retention rules, find matching subs, apply actions (reminder/discount). Returns run summary."""
     now = datetime.now(timezone.utc)
@@ -68,8 +91,12 @@ async def run_retention_rules(session: AsyncSession) -> dict:
                         actions_taken += 1
         elif rule.action_type == "discount_percent":
             # Discount: store in action_params; actual promo application would be via bot/miniapp
-            # Here we only record that the rule matched; no DB change for discount unless we add a "offer_sent_at"
-            actions_taken += 0  # No DB update for discount offer; could add offer_sent_at later
+            actions_taken += 0
+        elif rule.action_type == "winback_invite":
+            subs_winback = await get_matching_winback_subscriptions(session, cond)
+            for sub in subs_winback:
+                sub.reminder_winback_sent_at = now
+                actions_taken += 1
         await session.flush()
 
     return {

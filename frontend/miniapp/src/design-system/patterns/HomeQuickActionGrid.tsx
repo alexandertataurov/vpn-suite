@@ -1,9 +1,9 @@
 import {
   IconSmartphone,
-  IconGlobe,
   IconCreditCard,
   IconUser,
   IconHelpCircle,
+  IconUsers,
   type IconType,
 } from "../icons";
 import { useLocation } from "react-router-dom";
@@ -31,8 +31,8 @@ export function HomeQuickActionGrid({ hasSub }: HomeQuickActionGridProps) {
     ...(hasSub
       ? [
           {
-            label: "Connection Details",
-            description: "Manage your devices",
+            label: "Manage Connection",
+            description: "Devices and configs",
             to: "/devices",
             icon: IconSmartphone,
             tone: "blue",
@@ -50,16 +50,8 @@ export function HomeQuickActionGrid({ hasSub }: HomeQuickActionGridProps) {
           },
         ] satisfies StyledQuickAction[]),
     {
-      label: "Change Server",
-      description: "Pick endpoint region",
-      to: "/servers",
-      icon: IconGlobe,
-      tone: "green",
-      iconTone: "green",
-    },
-    {
       label: "Account",
-      description: "Open plan and settings",
+      description: "Plan and settings",
       to: "/settings",
       icon: IconUser,
       tone: "amber",
@@ -72,6 +64,14 @@ export function HomeQuickActionGrid({ hasSub }: HomeQuickActionGridProps) {
       icon: IconHelpCircle,
       tone: "red",
       iconTone: "red",
+    },
+    {
+      label: "Invite friends",
+      description: "Referral rewards",
+      to: "/referral",
+      icon: IconUsers,
+      tone: "green",
+      iconTone: "green",
     },
   ];
 
@@ -87,7 +87,7 @@ export function HomeQuickActionGrid({ hasSub }: HomeQuickActionGridProps) {
           className="quick-action-card"
           onClick={() => impact("light")}
           aria-label={label}
-          icon={<Icon size={20} strokeWidth={1.6} />}
+          icon={<Icon size={16} strokeWidth={1.6} />}
           title={label}
           description={description}
         />

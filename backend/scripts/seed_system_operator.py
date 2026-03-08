@@ -22,28 +22,13 @@ from app.models.base import uuid4_hex
 
 DB_URL = settings.database_url
 
-# tg_id for system/operator user (standalone peers)
+# tg_id for system user (standalone admin-issued peers)
 SYSTEM_TG_ID = 0
-OPERATOR_PLAN_NAME = "operator"
-VALID_YEARS = 100
+STANDALONE_DEVICE_LIMIT = 1000
 
 
 async def seed(session: AsyncSession) -> None:
-    # Plan "operator" for standalone devices (high device_limit)
-    result = await session.execute(select(Plan).where(Plan.name == OPERATOR_PLAN_NAME))
-    plan = result.scalar_one_or_none()
-    if not plan:
-        plan = Plan(
-            id=uuid4_hex(),
-            name=OPERATOR_PLAN_NAME,
-            duration_days=365 * VALID_YEARS,
-            price_currency="USD",
-            price_amount=0,
-        )
-        session.add(plan)
-        await session.flush()
-
-    # User with tg_id=0 (system operator)
+    # User with tg_id=0 (system user for standalone peers)
     result = await session.execute(select(User).where(User.tg_id == SYSTEM_TG_ID))
     user = result.scalar_one_or_none()
     if not user:
@@ -51,7 +36,13 @@ async def seed(session: AsyncSession) -> None:
         session.add(user)
         await session.flush()
 
-    # Subscription: user + plan, active, long valid_until, high device_limit
+    # Use first plan in DB for system subscription (no dedicated "operator" plan)
+    plan_result = await session.execute(select(Plan).order_by(Plan.created_at.asc()).limit(1))
+    plan = plan_result.scalar_one_or_none()
+    if not plan:
+        logger.warning("No plan in DB; create at least one plan via Admin UI (or run seed-plans with PLAN_* set). Skipping system subscription.")
+        return
+
     result = await session.execute(
         select(Subscription).where(
             Subscription.user_id == user.id,
@@ -71,7 +62,7 @@ async def seed(session: AsyncSession) -> None:
             plan_id=plan.id,
             valid_from=now,
             valid_until=valid_until,
-            device_limit=1000,
+            device_limit=STANDALONE_DEVICE_LIMIT,
             status="active",
         )
     )
@@ -84,7 +75,7 @@ async def main() -> None:
         await seed(session)
         await session.commit()
     await engine.dispose()
-    logger.info("Seed OK: system operator user and subscription for standalone peers")
+    logger.info("Seed OK: system user and subscription for standalone peers")
 
 
 if __name__ == "__main__":

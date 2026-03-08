@@ -303,7 +303,13 @@ async def _fetch_servers_list_uncached(
             "cert_expires_at": getattr(s, "cert_expires_at", None),
         }
         items.append(ServerOut(**d))
-    return ServerList(items=items, total=total, agent_mode_no_heartbeat=agent_mode_no_heartbeat)
+    return ServerList(
+        items=items,
+        total=total,
+        limit=effective_limit,
+        offset=effective_offset,
+        agent_mode_no_heartbeat=agent_mode_no_heartbeat,
+    )
 
 
 @router.get("", response_model=ServerList)
@@ -349,7 +355,12 @@ async def list_servers(
             redis = get_redis()
             cached = await redis.get(cache_key)
             if cached:
-                return ServerList.model_validate(json.loads(cached))
+                data = json.loads(cached)
+                if "limit" not in data:
+                    data["limit"] = effective_limit
+                if "offset" not in data:
+                    data["offset"] = effective_offset
+                return ServerList.model_validate(data)
         except Exception:
             logger.debug("Servers list cache get failed", exc_info=True)
 

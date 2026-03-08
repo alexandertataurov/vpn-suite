@@ -13,7 +13,7 @@ from sqlalchemy.sql import func
 from app.core.config import settings
 from app.core.database import get_db
 from app.core.logging_config import extra_for_event, get_security_logger
-from app.core.metrics import auth_failures_total
+from app.core.metrics import admin_login_total, auth_failures_total, auth_success_total
 from app.core.rate_limit import rate_limit_login_failure
 from app.core.redis_client import get_redis
 from app.core.security import (
@@ -57,6 +57,7 @@ async def login(
     user = await get_admin_by_email(db, email)
     if not user or not verify_password(body.password, user.password_hash):
         auth_failures_total.labels(reason="invalid_credentials").inc()
+        admin_login_total.labels(status="failure").inc()
         ip = request.client.host if request.client else None
         _security_log.info(
             "auth login failed",
@@ -80,6 +81,7 @@ async def login(
 
         if not body.totp_code or not pyotp.TOTP(totp_secret).verify(body.totp_code, valid_window=1):
             auth_failures_total.labels(reason="invalid_totp").inc()
+            admin_login_total.labels(status="failure").inc()
             ip = request.client.host if request.client else None
             _security_log.info(
                 "auth login failed",
@@ -98,6 +100,8 @@ async def login(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid or missing TOTP code",
             )
+    auth_success_total.labels(auth_type="admin_login").inc()
+    admin_login_total.labels(status="success").inc()
     _log.info(
         "auth login success",
         extra=extra_for_event(
@@ -236,6 +240,7 @@ async def refresh(
     except Exception as e:
         _log.warning("Refresh token rotation blocklist set failed: %s", type(e).__name__)
 
+    auth_success_total.labels(auth_type="refresh").inc()
     _log.info(
         "auth refresh success",
         extra=extra_for_event(event="auth.refresh.success", entity_id=str(user.id)),

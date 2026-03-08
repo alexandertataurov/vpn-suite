@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { track } from "@vpn-suite/shared";
 import { useApi } from "@/core/api/context";
 import { useAuthStore } from "@/core/auth/store";
 import { Button, Input } from "@/design-system/primitives";
@@ -27,6 +28,7 @@ export function LoginPage() {
           password,
         });
         if (res?.access_token && res?.refresh_token) {
+          track("admin.login_succeeded", { route: from });
           setTokens(res.access_token, res.refresh_token);
           navigate(from, { replace: true });
         } else {
@@ -35,6 +37,7 @@ export function LoginPage() {
       } catch (err) {
         const msg = err instanceof ApiError ? err.message : null;
         const suggestion = " Check your email and password, then try again.";
+        track("admin.login_failed", { reason: msg ?? "unknown" });
         setError(msg && msg.length > 0 ? `${msg}${suggestion}` : `Sign in failed.${suggestion}`);
       } finally {
         setLoading(false);

@@ -13,5 +13,7 @@ export { PageScaffold } from "./PageScaffold";
 export type { PageScaffoldProps } from "./PageScaffold";
 export { HeaderZone } from "./HeaderZone";
 export type { HeaderZoneProps } from "./HeaderZone";
+export { ShellContextBlock } from "./ShellContextBlock";
+export type { ShellContextBlockProps } from "./ShellContextBlock";
 export { ScrollZone } from "./ScrollZone";
 export { ActionZone } from "./ActionZone";

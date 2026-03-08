@@ -1,7 +1,11 @@
 /*
  * Minimal global error capture for the miniapp.
- * Sends to backend /api/v1/log/frontend-error (unauthenticated).
+ * Sends to backend .../log/frontend-error (unauthenticated). Uses getBaseUrl() for cross-origin.
+ * Also tracks via analytics.trackError for PostHog.
  */
+
+import { trackError } from "@vpn-suite/shared";
+import { getBaseUrl } from "@/lib/api-client";
 
 type FrontendErrorPayload = {
   message: string;
@@ -17,9 +21,14 @@ function safeString(value: unknown): string {
   return String(value).slice(0, 500);
 }
 
+function getFrontendErrorUrl(): string {
+  const base = getBaseUrl().replace(/\/$/, "");
+  return `${base}/log/frontend-error`;
+}
+
 async function postFrontendError(payload: FrontendErrorPayload): Promise<void> {
   try {
-    await fetch("/api/v1/log/frontend-error", {
+    await fetch(getFrontendErrorUrl(), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -35,12 +44,14 @@ function onUnhandledRejection(ev: PromiseRejectionEvent): void {
     const reason = ev.reason;
     const message = reason instanceof Error ? reason.message : safeString(reason);
     const stack = reason instanceof Error ? reason.stack ?? null : null;
+    const route = typeof window !== "undefined" ? window.location.pathname : undefined;
     void postFrontendError({
       message,
       stack,
-      route: typeof window !== "undefined" ? window.location.pathname : undefined,
+      route,
       userAgent: typeof navigator !== "undefined" ? navigator.userAgent : null,
     });
+    trackError(message, { stack: stack ?? undefined, route });
   } catch {
     /* ignore */
   }
@@ -51,12 +62,14 @@ function onWindowError(ev: ErrorEvent): void {
     const err = ev.error;
     const message = err instanceof Error ? err.message : safeString(ev.message) || "window_error";
     const stack = err instanceof Error ? err.stack ?? null : null;
+    const route = typeof window !== "undefined" ? window.location.pathname : undefined;
     void postFrontendError({
       message,
       stack,
-      route: typeof window !== "undefined" ? window.location.pathname : undefined,
+      route,
       userAgent: typeof navigator !== "undefined" ? navigator.userAgent : null,
     });
+    trackError(message, { stack: stack ?? undefined, route });
   } catch {
     /* ignore */
   }

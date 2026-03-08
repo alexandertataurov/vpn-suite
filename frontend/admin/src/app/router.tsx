@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { track } from "@vpn-suite/shared";
 import { RootLayout } from "./RootLayout";
 import { ErrorBoundary } from "@/core/errors/Boundary";
 import { Skeleton } from "@/design-system/primitives";
@@ -27,6 +28,11 @@ function DocumentTitle() {
   useEffect(() => {
     document.title = pageTitle === BASE_TITLE ? BASE_TITLE : `${pageTitle} — ${BASE_TITLE}`;
   }, [pageTitle]);
+  useEffect(() => {
+    if (pathname !== "/login") {
+      track("admin.page_view", { route: pathname, page: pathname });
+    }
+  }, [pathname]);
   return null;
 }
 

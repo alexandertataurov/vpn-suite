@@ -200,6 +200,8 @@ class ServerCertStatusOut(BaseModel):
 class ServerList(BaseModel):
     items: list[ServerOut]
     total: int
+    limit: int
+    offset: int
     # True when NODE_DISCOVERY=agent and no Redis heartbeats; list is empty until node-agent sends heartbeat with SERVER_ID
     agent_mode_no_heartbeat: bool = False
 

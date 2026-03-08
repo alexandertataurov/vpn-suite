@@ -30,7 +30,7 @@ export function TroubleshooterStep({
   return (
     <MissionCard tone="amber" className="module-card support-step">
       <MissionModuleHead
-        label="Diagnostic flow"
+        label="Flow"
         chip={<MissionChip tone="neutral">Step {stepIndex}/{totalSteps}</MissionChip>}
       />
       <h3 className="op-name type-h3">{title}</h3>

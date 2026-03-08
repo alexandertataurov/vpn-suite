@@ -1,7 +1,10 @@
 import { useSyncExternalStore } from "react";
 import { createApiClient, getBaseUrl } from "@/lib/api-client";
 
+/** Single source of truth: in-memory only. Never logged or sent to telemetry. */
 let token: string | null = null;
+/** Expiry timestamp (ms). Set when token is set with expires_in from /webapp/auth. */
+let tokenExpiresAt: number | null = null;
 const listeners = new Set<() => void>();
 
 function getSnapshot(): string | null {
@@ -17,14 +20,27 @@ function notify(): void {
   listeners.forEach((l) => l());
 }
 
-export function setWebappToken(t: string | null) {
-  if (token === t) return;
+/**
+ * Set webapp session token. Optionally pass expires_in (seconds) from /webapp/auth for proactive refresh.
+ * Token is stored in memory only; never logged or sent to telemetry.
+ */
+export function setWebappToken(t: string | null, expiresInSeconds?: number) {
+  if (token === t && expiresInSeconds == null) return;
   token = t;
+  tokenExpiresAt =
+    t != null && typeof expiresInSeconds === "number" && expiresInSeconds > 0
+      ? Date.now() + expiresInSeconds * 1000
+      : null;
   notify();
 }
 
 export function getWebappToken(): string | null {
   return token;
+}
+
+/** For proactive refresh: when to refresh (ms before expiry). */
+export function getWebappTokenExpiresAt(): number | null {
+  return tokenExpiresAt;
 }
 
 export function useWebappToken(): string | null {

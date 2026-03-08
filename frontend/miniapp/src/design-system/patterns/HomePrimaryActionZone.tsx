@@ -9,6 +9,8 @@ import {
 export interface HomePrimaryActionZoneProps {
   phase: ConnectionPhase;
   primaryTo?: string;
+  /** When set and phase is inactive, overrides default "Connect" label (e.g. "Get a plan"). */
+  primaryLabel?: string;
   onPrimaryAction?: () => void;
   secondaryLabel?: string;
   secondaryTo?: string;
@@ -17,11 +19,14 @@ export interface HomePrimaryActionZoneProps {
 export function HomePrimaryActionZone({
   phase,
   primaryTo,
+  primaryLabel: primaryLabelOverride,
   onPrimaryAction,
   secondaryLabel,
   secondaryTo,
 }: HomePrimaryActionZoneProps) {
-  const primaryLabel = phase === "connected" ? "Disconnect" : phase === "connecting" ? "Connecting…" : "Connect";
+  const defaultLabel =
+    phase === "connected" ? "Disconnect" : phase === "connecting" ? "Connecting…" : "Connect";
+  const primaryLabel = phase === "inactive" && primaryLabelOverride != null ? primaryLabelOverride : defaultLabel;
   const primaryTone: MissionPrimaryButtonTone = phase === "connected"
     ? "danger"
     : phase === "connecting"

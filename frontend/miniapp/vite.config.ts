@@ -41,11 +41,34 @@ export default defineConfig({
   build: {
     outDir: "dist",
     sourcemap: enableSourcemap,
-  },
-  test: {
-    environment: "jsdom",
-    setupFiles: ["./src/test/setup.ts"],
-    include: ["src/**/*.test.{ts,tsx}"],
-    coverage: { provider: "v8", reporter: ["text", "json-summary"], thresholds: { lines: 0 } },
+    // Why: miniapp runs on mobile Telegram WebView; enforce stricter chunk warning threshold.
+    chunkSizeWarningLimit: 150,
+    rollupOptions: {
+      output: {
+        manualChunks: (id) => {
+          if (id.includes("/shared/src/")) return "shared";
+          if (
+            id.includes("node_modules/react/") ||
+            id.includes("node_modules/react-dom/") ||
+            id.includes("node_modules/scheduler/") ||
+            id.includes("node_modules/use-sync-external-store/")
+          ) {
+            return "vendor-react";
+          }
+          if (id.includes("node_modules/react-router-dom/") || id.includes("node_modules/@remix-run/router/")) {
+            return "vendor-router";
+          }
+          if (id.includes("node_modules/@tanstack/react-query/")) {
+            return "vendor-query";
+          }
+          if (id.includes("node_modules/lucide-react/")) {
+            return "vendor-icons";
+          }
+          if (id.includes("node_modules/@radix-ui/")) {
+            return "vendor-ui";
+          }
+        },
+      },
+    },
   },
 });

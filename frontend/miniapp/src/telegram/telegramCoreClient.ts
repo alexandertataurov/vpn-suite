@@ -1,132 +1,27 @@
-export type TelegramSafeAreaInsets = {
-  top: number;
-  bottom: number;
-  left: number;
-  right: number;
-};
+import type {
+  TelegramBackButton,
+  TelegramBiometricManager,
+  TelegramCloudStorage,
+  TelegramEventName,
+  TelegramInitDataUnsafe,
+  TelegramMainButton,
+  TelegramSafeAreaInsets,
+  TelegramWebApp,
+} from "./telegram.types";
 
-export type TelegramEventName =
-  | "themeChanged"
-  | "viewportChanged"
-  | "safeAreaChanged"
-  | "contentSafeAreaChanged"
-  | "fullscreenChanged"
-  | "mainButtonClicked"
-  | "backButtonClicked"
-  | "invoiceClosed"
-  | "popupClosed"
-  | "qrTextReceived";
-
-export type TelegramPopupButton = {
-  id?: string;
-  type?: "default" | "ok" | "close" | "cancel" | "destructive";
-  text?: string;
-};
-
-export type TelegramPopupParams = {
-  title?: string;
-  message: string;
-  buttons?: TelegramPopupButton[];
-};
-
-export type TelegramInitDataUnsafe = {
-  user?: Record<string, unknown>;
-  chat?: Record<string, unknown>;
-  start_param?: string;
-  [key: string]: unknown;
-};
-
-export type TelegramMainButton = {
-  text?: string;
-  isVisible?: boolean;
-  isEnabled?: boolean;
-  show?: () => void;
-  hide?: () => void;
-  enable?: () => void;
-  disable?: () => void;
-  showProgress?: (leaveActive?: boolean) => void;
-  hideProgress?: () => void;
-  onClick?: (cb: () => void) => void;
-  offClick?: (cb: () => void) => void;
-};
-
-export type TelegramBackButton = {
-  show?: () => void;
-  hide?: () => void;
-  onClick?: (cb: () => void) => void;
-  offClick?: (cb: () => void) => void;
-};
-
-export type TelegramCloudStorage = {
-  getItem?: (key: string, cb?: (error: unknown, value: string) => void) => Promise<string> | void;
-  setItem?: (key: string, value: string, cb?: (error: unknown) => void) => Promise<void> | void;
-  removeItem?: (key: string, cb?: (error: unknown) => void) => Promise<void> | void;
-  getKeys?: (cb?: (error: unknown, keys: string[]) => void) => Promise<string[]> | void;
-};
-
-export type TelegramBiometricManager = {
-  isInited?: boolean;
-  isBiometricAvailable?: boolean;
-  isAccessRequested?: boolean;
-  isAccessGranted?: boolean;
-  init?: (cb?: () => void) => void;
-  requestAccess?: (paramsOrCb?: unknown, cb?: (granted: boolean) => void) => void;
-  authenticate?: (paramsOrCb?: unknown, cb?: (ok: boolean, token?: string) => void) => void;
-};
-
-export type TelegramWebApp = {
-  ready?: () => void;
-  expand?: () => void;
-  close?: () => void;
-  requestFullscreen?: () => void;
-  exitFullscreen?: () => void;
-  isExpanded?: boolean;
-  isFullscreen?: boolean;
-  platform?: string;
-  colorScheme?: "light" | "dark";
-  themeParams?: Record<string, string | undefined>;
-  initData?: string;
-  initDataUnsafe?: TelegramInitDataUnsafe;
-  viewportHeight?: number;
-  viewportStableHeight?: number;
-  safeAreaInset?: Partial<TelegramSafeAreaInsets>;
-  contentSafeAreaInset?: Partial<TelegramSafeAreaInsets>;
-  openLink?: (url: string, options?: Record<string, unknown>) => void;
-  openTelegramLink?: (url: string) => void;
-  showPopup?: (params: TelegramPopupParams, cb?: (buttonId: string) => void) => void;
-  showScanQrPopup?: (params: { text?: string }, cb?: (value: string) => boolean | void) => void;
-  closeScanQrPopup?: () => void;
-  readTextFromClipboard?: (cb: (text: string | null) => void) => void;
-  switchInlineQuery?: (query: string, chooseChatTypes?: string[]) => void;
-  openInvoice?: (url: string, cb?: (status: string) => void) => void;
-  enableClosingConfirmation?: () => void;
-  disableClosingConfirmation?: () => void;
-  disableVerticalSwipes?: () => void;
-  enableVerticalSwipes?: () => void;
-  isVerticalSwipesEnabled?: boolean;
-  requestWriteAccess?: (cb?: (allowed: boolean) => void) => void;
-  requestContact?: (cb?: (shared: boolean) => void) => void;
-  hideKeyboard?: () => void;
-  MainButton?: TelegramMainButton;
-  BackButton?: TelegramBackButton;
-  CloudStorage?: TelegramCloudStorage;
-  BiometricManager?: TelegramBiometricManager;
-  HapticFeedback?: {
-    impactOccurred?: (style: "light" | "medium" | "heavy") => void;
-    notificationOccurred?: (type: "error" | "success" | "warning") => void;
-    selectionChanged?: () => void;
-  };
-  onEvent?: (event: string, cb: () => void) => void;
-  offEvent?: (event: string, cb: () => void) => void;
-};
-
-declare global {
-  interface Window {
-    Telegram?: {
-      WebApp?: TelegramWebApp;
-    };
-  }
-}
+// Why: preserve existing import paths while the codebase migrates to telegram.types.ts directly.
+export type {
+  TelegramBackButton,
+  TelegramBiometricManager,
+  TelegramCloudStorage,
+  TelegramEventName,
+  TelegramInitDataUnsafe,
+  TelegramMainButton,
+  TelegramPopupButton,
+  TelegramPopupParams,
+  TelegramSafeAreaInsets,
+  TelegramWebApp,
+} from "./telegram.types";
 
 function getInitDataFromUrl(): string {
   if (typeof window === "undefined") return "";
@@ -197,14 +92,21 @@ export const telegramClient = {
     return !!this.getWebApp()?.isFullscreen;
   },
 
-  getPlatform(): string {
+  /** Normalized: "ios" | "android" | "desktop". Desktop = TG desktop (macos, tdesktop, weba) or UA not mobile. */
+  getPlatform(): "ios" | "android" | "desktop" {
     const tgPlatform = (this.getWebApp()?.platform ?? "").toLowerCase();
-    if (tgPlatform) return tgPlatform;
-    if (typeof navigator === "undefined") return "unknown";
+    if (tgPlatform === "ios") return "ios";
+    if (tgPlatform === "android" || tgPlatform === "android_x") return "android";
+    if (tgPlatform && !/^(ios|android|android_x)$/.test(tgPlatform)) return "desktop";
+    if (typeof navigator === "undefined") return "desktop";
     const ua = navigator.userAgent.toLowerCase();
     if (/iphone|ipad|ipod|ios/.test(ua)) return "ios";
     if (/android/.test(ua)) return "android";
-    return "unknown";
+    return "desktop";
+  },
+
+  isDesktop(): boolean {
+    return this.getPlatform() === "desktop";
   },
 
   getInitData(): string {
@@ -339,8 +241,18 @@ export const telegramClient = {
   },
 };
 
+/**
+ * Initialize Telegram WebApp.
+ * - ready(): hide loading placeholder (call as early as possible per docs).
+ * - expand(): expand to maximum available height (no-op on desktop).
+ * - requestFullscreen(): only on mobile; on desktop keep windowed mode.
+ * - disableVerticalSwipes(): avoid accidental close when swiping.
+ */
 export function initTelegramRuntime(): void {
   telegramClient.ready();
   telegramClient.expand();
+  if (!telegramClient.isDesktop() && typeof telegramClient.getWebApp()?.requestFullscreen === "function") {
+    telegramClient.requestFullscreen();
+  }
   telegramClient.disableVerticalSwipes();
 }

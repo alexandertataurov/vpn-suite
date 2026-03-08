@@ -1,7 +1,7 @@
 """Bot API Key auth: X-API-Key allows bot-only scope (by-tg, issue, reset). No admin permissions."""
 
 import secrets
-from typing import Annotated
+from typing import Annotated, cast
 
 from fastapi import Depends, Header, HTTPException, Request, status
 from sqlalchemy import select
@@ -29,12 +29,13 @@ class WebAppPrincipal:
         self.tg_id = tg_id
 
 
-async def get_admin_or_bot(
+async def _resolve_principal(
     request: Request,
     x_api_key: Annotated[str | None, Header(alias="X-API-Key")] = None,
     admin: AdminUser | None = Depends(get_current_admin_optional),
+    allow_webapp: bool = True,
 ) -> AdminUser | BotPrincipal | WebAppPrincipal:
-    """Accept JWT (admin), X-API-Key (bot), or Bearer session token (WebApp)."""
+    """Resolve principal: admin JWT, X-API-Key (bot), optionally Bearer WebApp session."""
     if admin is not None:
         return admin
     if (
@@ -43,21 +44,40 @@ async def get_admin_or_bot(
         and secrets.compare_digest(x_api_key, settings.bot_api_key)
     ):
         return BotPrincipal()
-    # WebApp session token (Bearer)
-    auth_header = request.headers.get("Authorization")
-    if auth_header and auth_header.startswith("Bearer "):
-        token = auth_header[7:]
-        payload = decode_token(token)
-        if payload and payload.get("type") == "webapp" and payload.get("sub"):
-            try:
-                return WebAppPrincipal(tg_id=int(payload["sub"]))
-            except (ValueError, TypeError):
-                pass
+    if allow_webapp:
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header[7:]
+            payload = decode_token(token)
+            if payload and payload.get("type") == "webapp" and payload.get("sub"):
+                try:
+                    return WebAppPrincipal(tg_id=int(payload["sub"]))
+                except (ValueError, TypeError):
+                    pass
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Not authenticated",
         headers={"WWW-Authenticate": "Bearer"},
     )
+
+
+async def get_admin_or_bot(
+    request: Request,
+    x_api_key: Annotated[str | None, Header(alias="X-API-Key")] = None,
+    admin: AdminUser | None = Depends(get_current_admin_optional),
+) -> AdminUser | BotPrincipal | WebAppPrincipal:
+    """Accept JWT (admin), X-API-Key (bot), or Bearer session token (WebApp). Use for routes that allow miniapp (e.g. app_settings)."""
+    return await _resolve_principal(request, x_api_key, admin, allow_webapp=True)
+
+
+async def get_admin_or_bot_only(
+    request: Request,
+    x_api_key: Annotated[str | None, Header(alias="X-API-Key")] = None,
+    admin: AdminUser | None = Depends(get_current_admin_optional),
+) -> AdminUser | BotPrincipal:
+    """Accept only JWT (admin) or X-API-Key (bot). Reject WebApp bearer. Use for /api/v1/bot/* to enforce scope."""
+    principal = await _resolve_principal(request, x_api_key, admin, allow_webapp=False)
+    return cast(AdminUser | BotPrincipal, principal)
 
 
 def require_admin(

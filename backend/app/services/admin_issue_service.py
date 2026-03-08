@@ -29,7 +29,6 @@ from app.core.exceptions import WireGuardCommandError
 from app.core.redaction import redact_for_log
 from app.models import (
     Device,
-    Plan,
     ProfileIssue,
     Server,
     ServerProfile,
@@ -106,15 +105,10 @@ async def _resolve_system_user_sub(session: AsyncSession) -> tuple[int, str]:
     user = user_result.scalar_one_or_none()
     if not user:
         raise ValueError("system_operator_not_seeded")
-    plan_result = await session.execute(select(Plan).where(Plan.name == "operator"))
-    plan = plan_result.scalar_one_or_none()
-    if not plan:
-        raise ValueError("system_operator_not_seeded")
     sub_result = await session.execute(
         select(Subscription)
         .where(
             Subscription.user_id == user.id,
-            Subscription.plan_id == plan.id,
             Subscription.status == "active",
             Subscription.valid_until > datetime.now(timezone.utc),
         )

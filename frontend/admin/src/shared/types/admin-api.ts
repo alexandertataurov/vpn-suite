@@ -59,6 +59,19 @@ export interface MetricsKpisOut {
   message?: string | null;
 }
 
+/** Analytics: GET /analytics/funnel-kpis (spec 11.4). */
+export interface FunnelKpisOut {
+  days: number;
+  event_counts: Record<string, number>;
+  conversion_plan_to_payment_pct: number | null;
+  conversion_payment_to_device_pct: number | null;
+  conversion_device_to_connected_pct: number | null;
+  conversion_trial_to_paid_pct: number | null;
+  conversion_grace_recovered_pct: number | null;
+  conversion_cancel_retained_pct: number | null;
+  conversion_referral_rewarded_pct: number | null;
+}
+
 /** Operator dashboard (GET /overview/operator). */
 export interface OperatorHealthStrip {
   api_status: "ok" | "degraded" | "down" | "unknown";
@@ -419,6 +432,8 @@ export interface PeerListOut {
 export interface ServerList {
   items: ServerOut[];
   total: number;
+  limit: number;
+  offset: number;
   /** True when agent mode and no Redis heartbeats; list empty until node-agent sends heartbeat with SERVER_ID */
   agent_mode_no_heartbeat?: boolean;
 }
@@ -613,6 +628,8 @@ export interface UserOut {
 export interface UserList {
   items: UserOut[];
   total: number;
+  limit: number;
+  offset: number;
 }
 
 export interface UserDetail extends UserOut {
@@ -628,9 +645,20 @@ export interface SubscriptionOut {
   valid_until: string;
   device_limit: number;
   created_at: string;
-  updated_at: string;
+  updated_at?: string;
   /** Derived: "expired" when valid_until < now, else status. Use for display. */
   effective_status?: string;
+  subscription_status?: string;
+  access_status?: string;
+  billing_status?: string;
+  renewal_status?: string;
+  is_trial?: boolean;
+  trial_ends_at?: string | null;
+  paused_at?: string | null;
+  pause_reason?: string | null;
+  grace_until?: string | null;
+  grace_reason?: string | null;
+  cancel_at_period_end?: boolean;
 }
 
 export interface SubscriptionList {
@@ -708,6 +736,8 @@ export interface DeviceUpdate {
 export interface DeviceList {
   items: DeviceOut[];
   total: number;
+  limit: number;
+  offset: number;
 }
 
 export interface DeviceSummaryOut {
@@ -763,9 +793,8 @@ export interface PaymentOut {
   status: string;
   amount: number;
   currency: string;
-  external_id: string | null;
+  external_id: string;
   created_at: string;
-  updated_at: string;
 }
 
 export interface PaymentList {
@@ -798,11 +827,36 @@ export interface PlanOut {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  upsell_methods?: string[] | null;
 }
 
 export interface PlanList {
   items: PlanOut[];
   total: number;
+}
+
+/** GET /admin/entitlement-events — subscription/access audit ledger. */
+export interface EntitlementEventOut {
+  id: string;
+  subscription_id: string | null;
+  user_id: number;
+  event_type: string;
+  payload: Record<string, unknown> | null;
+  created_at: string;
+}
+
+/** GET /admin/churn-surveys — cancellation reasons and offer acceptance. */
+export interface ChurnSurveyOut {
+  id: string;
+  user_id: number;
+  subscription_id: string | null;
+  reason: string;
+  reason_group: string | null;
+  reason_code: string | null;
+  free_text: string | null;
+  discount_offered: boolean;
+  offer_accepted: boolean | null;
+  created_at: string;
 }
 
 export interface TopologySummaryOut {

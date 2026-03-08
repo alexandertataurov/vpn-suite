@@ -3,7 +3,8 @@
  * Emits webapp telemetry event_type "web_vital" once per metric per page load.
  */
 
-import { webappApi } from "@/api/client";
+import { track } from "@vpn-suite/shared";
+import type { WebVitalTelemetryPayload } from "@vpn-suite/shared";
 
 /** Layout Shift entry shape (LayoutShift in DOM; not all TS libs narrow it). */
 interface LayoutShiftEntryLike extends PerformanceEntry {
@@ -23,19 +24,22 @@ interface PerformanceObserverConstructorWithTypes {
 
 const sent = new Set<string>();
 
-function send(name: string, value: number, unit: "ms" | "score", extra?: Record<string, unknown>): void {
+function send(
+  name: string,
+  value: number,
+  unit: "ms" | "score",
+  extra?: Partial<WebVitalTelemetryPayload>,
+): void {
   if (sent.has(name)) return;
   sent.add(name);
-  const payload = {
+  const payload: WebVitalTelemetryPayload = {
     name,
     value: Number.isFinite(value) ? value : 0,
     unit,
     route: typeof window !== "undefined" ? window.location.pathname : undefined,
-    ...extra,
+    ...(extra ?? {}),
   };
-  webappApi.post("/webapp/telemetry", { event_type: "web_vital", payload }).catch(() => {
-    /* ignore */
-  });
+  track("miniapp.web_vital", payload);
 }
 
 function getNavEntry(): PerformanceNavigationTiming | null {
@@ -63,7 +67,7 @@ export function initWebVitals(): void {
     });
     po.observe({ type: "paint", buffered: true });
   } catch {
-    /* ignore */
+    /* ignore: paint/observer unsupported in some environments */
   }
 
   let lcpEntry: PerformanceEntry | null = null;
@@ -75,7 +79,7 @@ export function initWebVitals(): void {
     });
     po.observe({ type: "largest-contentful-paint", buffered: true } as PerformanceObserverInit);
   } catch {
-    /* ignore */
+    /* ignore: LCP observer unsupported in some environments */
   }
 
   let clsValue = 0;
@@ -88,7 +92,7 @@ export function initWebVitals(): void {
     });
     po.observe({ type: "layout-shift", buffered: true } as PerformanceObserverInit);
   } catch {
-    /* ignore */
+    /* ignore: layout-shift observer unsupported in some environments */
   }
 
   let inpValue = 0;
@@ -106,7 +110,7 @@ export function initWebVitals(): void {
       po.observe({ type: "event", buffered: true, durationThreshold: 40 } as PerformanceObserverInit);
     }
   } catch {
-    /* ignore */
+    /* ignore: event observer unsupported in some environments */
   }
 
   const flush = () => {

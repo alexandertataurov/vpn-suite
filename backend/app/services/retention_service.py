@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.models import Subscription
+from app.services.entitlement_service import emit_entitlement_event
 
 
 async def pause_subscription(
@@ -31,6 +32,13 @@ async def pause_subscription(
     sub.paused_at = datetime.now(timezone.utc)
     sub.pause_reason = reason[:64] if reason else None
     await session.flush()
+    await emit_entitlement_event(
+        session,
+        subscription_id=subscription_id,
+        user_id=user_id,
+        event_type="access_paused",
+        payload={"reason": reason},
+    )
     return True
 
 
@@ -53,6 +61,13 @@ async def resume_subscription(
     sub.paused_at = None
     sub.pause_reason = None
     await session.flush()
+    await emit_entitlement_event(
+        session,
+        subscription_id=subscription_id,
+        user_id=user_id,
+        event_type="access_resumed",
+        payload={},
+    )
     return True
 
 

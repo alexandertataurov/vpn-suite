@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { useApiQuery } from "@/hooks/api/useApiQuery";
 import { useApi } from "@/core/api/context";
+import { serverKeys } from "@/features/servers/services/server.query-keys";
 import {
   Badge,
   Button,
@@ -88,7 +89,7 @@ export function ServersPage() {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
 
   const { data, isLoading, isError, error, refetch } = useApiQuery<ServersSnapshotSummaryOut>(
-    ["servers", "snapshots", "summary"],
+    [...serverKeys.snapshotsSummary()],
     "/servers/snapshots/summary",
     { retry: 1 }
   );
@@ -100,7 +101,7 @@ export function ServersPage() {
   );
 
   const { data: vpnNodeCards, isLoading: vpnNodesLoading } = useApiQuery<VpnNodeCardType[]>(
-    ["servers", "vpn-nodes"],
+    [...serverKeys.vpnNodes()],
     "/servers/vpn-nodes",
     { retry: 1, staleTime: 30_000 }
   );
@@ -414,10 +415,14 @@ function ServersSettingsPanel({
     isError,
     error,
     refetch,
-  } = useApiQuery<ServerList>(["servers", "settings", "list"], "/servers?limit=50&offset=0", {
+  } = useApiQuery<ServerList>(
+    [...serverKeys.settingsList("/servers?limit=50&offset=0")],
+    "/servers?limit=50&offset=0",
+    {
     retry: 1,
     staleTime: 15_000,
-  });
+    }
+  );
 
   const runAction = useCallback(
     async (fn: () => Promise<unknown>) => {

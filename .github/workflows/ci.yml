@@ -189,6 +189,10 @@ jobs:
           VITE_SENTRY_RELEASE: ${{ github.sha }}
           VITE_SENTRY_ENV: ci
           VITE_SENTRY_SOURCEMAPS: ${{ vars.SENTRY_UPLOAD_ENABLED == 'true' && '1' || '0' }}
+          VITE_POSTHOG_KEY: ""
+          VITE_POSTHOG_HOST: https://eu.i.posthog.com
+          VITE_FARO_COLLECTOR_URL: ""
+          VITE_ANALYTICS_ENABLED: "0"
         run: npm run build
 
       - name: Upload Sentry sourcemaps (admin)

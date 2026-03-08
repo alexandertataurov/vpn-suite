@@ -1,16 +1,2 @@
-export type LiveConnectionState = "offline" | "connecting" | "connected" | "degraded" | "error";
-
-export interface LiveClusterState {
-  nodes: LiveNodeState[];
-  updatedAt: number;
-}
-
-export interface LiveNodeState {
-  nodeId: string;
-  status: string;
-  peerCount: number | null;
-  rxBytes: number | null;
-  txBytes: number | null;
-  heartbeatAgeSeconds: number | null;
-  stale: boolean;
-}
+// Why: keep admin imports stable while telemetry primitives are shared.
+export type { LiveClusterState, LiveConnectionState, LiveNodeState } from "@vpn-suite/shared";

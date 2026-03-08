@@ -27,6 +27,7 @@ export function useTelegramApp() {
     isExpanded,
     isFullscreen,
     platform,
+    isDesktop: platform === "desktop",
     isAvailable: telegramClient.isAvailable(),
   };
 }

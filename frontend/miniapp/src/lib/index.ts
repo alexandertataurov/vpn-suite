@@ -16,3 +16,4 @@ export {
 } from "./utils/format";
 export * from "./icons";
 export * from "./api-client/index";
+export { webappQueryKeys } from "./query-keys/webapp.query-keys";

@@ -68,7 +68,9 @@ export function ToggleRow({
         role="switch"
         aria-checked={checked}
       >
-        <div className="ts-knob" />
+        <span className="ts-track" aria-hidden>
+          <div className="ts-knob" />
+        </span>
       </button>
     </div>
   );
@@ -78,6 +80,7 @@ export interface SegmentedControlOption {
   id: string;
   label: ReactNode;
   tag?: ReactNode;
+  disabled?: boolean;
 }
 
 export interface SegmentedControlProps {
@@ -85,6 +88,7 @@ export interface SegmentedControlProps {
   activeId: string;
   onSelect: (id: string) => void;
   className?: string;
+  ariaLabel?: string;
 }
 
 /** Content Library 12: segmented control (e.g. Monthly/Annual). */
@@ -93,15 +97,19 @@ export function SegmentedControl({
   activeId,
   onSelect,
   className = "",
+  ariaLabel,
 }: SegmentedControlProps) {
   return (
-    <div className={`seg-toggle ${className}`.trim()}>
+    <div className={`seg-toggle ${className}`.trim()} role="tablist" aria-label={ariaLabel}>
       {options.map((opt) => (
         <button
           key={opt.id}
           type="button"
           className={`seg-btn ${activeId === opt.id ? "on" : ""}`.trim()}
           onClick={() => onSelect(opt.id)}
+          disabled={opt.disabled}
+          role="tab"
+          aria-selected={activeId === opt.id}
         >
           {opt.label}
           {opt.tag != null ? <span className="seg-tag">{opt.tag}</span> : null}

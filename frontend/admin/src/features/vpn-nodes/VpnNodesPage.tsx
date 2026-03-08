@@ -3,13 +3,14 @@ import { useApiQuery } from "@/hooks/api/useApiQuery";
 import { Button, ErrorState, Skeleton } from "@/design-system/primitives";
 import { PageLayout } from "@/layout/PageLayout";
 import { VpnNodeDrilldown, VpnNodeGrid } from "@/design-system/widgets/vpn-node";
+import { vpnNodeKeys } from "./services/vpn-node.query-keys";
 import type { VpnNodeCard as VpnNodeCardType } from "./types";
 
 export function VpnNodesPage() {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
 
   const { data: cards, isLoading, isError, error, refetch } = useApiQuery<VpnNodeCardType[]>(
-    ["servers", "vpn-nodes"],
+    [...vpnNodeKeys.cards()],
     "/servers/vpn-nodes",
     { retry: 1, staleTime: 30_000 }
   );

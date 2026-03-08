@@ -11,25 +11,65 @@ export interface WebAppAuthResponse {
 export interface WebAppMeUser {
   id: number;
   tg_id: number;
+  email?: string | null;
+  phone?: string | null;
+  /** Display name (user override or from Telegram). */
+  display_name?: string | null;
+  /** Telegram profile photo URL from meta.tg. */
+  photo_url?: string | null;
+  /** User locale preference (e.g. en, ru, uk). */
+  locale?: string | null;
+  onboarding_step?: number | null;
+  first_connected_at?: string | null;
+  last_connection_confirmed_at?: string | null;
+}
+
+/** Request body for PATCH /webapp/me. Only provided fields are updated. */
+export interface WebAppMeProfileUpdate {
+  email?: string | null;
+  phone?: string | null;
+  display_name?: string | null;
+  locale?: string | null;
+}
+
+export interface WebAppMeProfileUpdateResponse {
+  user: WebAppMeUser;
 }
 
 export interface WebAppMeSubscription {
   id: string;
   plan_id: string;
   status: string;
+  subscription_status?: string;
+  access_status?: string;
+  billing_status?: string;
+  renewal_status?: string;
   valid_until: string;
+  grace_until?: string | null;
+  cancel_at_period_end?: boolean;
+  accrued_bonus_days?: number;
   device_limit: number;
+  auto_renew?: boolean;
+  is_trial?: boolean;
+  trial_ends_at?: string | null;
 }
 
 export interface WebAppMeDevice {
   id: string;
   device_name: string | null;
+  platform?: string | null;
+  server_id?: string;
   issued_at: string;
   revoked_at: string | null;
-
-  // miniapp-only fields today
   last_seen_handshake_at?: string | null;
+  last_connection_confirmed_at?: string | null;
   apply_status?: string | null;
+  status?: "connected" | "idle" | "revoked" | "config_pending";
+}
+
+export interface WebAppMeRouting {
+  recommended_route: string;
+  reason: string;
 }
 
 export interface WebAppOnboardingState {
@@ -43,7 +83,9 @@ export interface WebAppMeResponse {
   user: WebAppMeUser | null;
   subscriptions: WebAppMeSubscription[];
   devices: WebAppMeDevice[];
+  public_ip?: string | null;
   onboarding: WebAppOnboardingState;
+  routing?: WebAppMeRouting;
 }
 
 export interface WebAppOnboardingStateRequest {
@@ -59,6 +101,8 @@ export interface WebAppOnboardingStateResponse {
 export interface WebAppReferralMyLinkResponse {
   referral_code: string;
   payload: string;
+  /** Bot @username (no @) for referral link; from backend when set. */
+  bot_username?: string | null;
 }
 
 export interface WebAppReferralStatsResponse {
@@ -67,6 +111,7 @@ export interface WebAppReferralStatsResponse {
   earned_days: number;
   active_referrals: number;
   pending_rewards: number;
+  pending_reward_days?: number;
   invite_goal: number;
   invite_progress: number;
   invite_remaining: number;
@@ -151,6 +196,11 @@ export interface WebAppSubscriptionOffersResponse {
   discount_percent: number;
   can_pause: boolean;
   can_resume: boolean;
+  /** Reason-driven offers (backend returns when ?reason_group= is set). */
+  offer_pause?: boolean;
+  offer_discount?: boolean;
+  offer_downgrade?: boolean;
+  reason_group?: string | null;
 }
 
 export interface WebAppUsagePoint {
@@ -177,4 +227,3 @@ export interface WebAppIssueDeviceResponse {
   node_mode: "mock" | "real" | (string & {});
   peer_created: boolean;
 }
-

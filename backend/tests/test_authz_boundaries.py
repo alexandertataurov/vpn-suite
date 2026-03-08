@@ -48,3 +48,14 @@ async def test_payments_list_requires_auth(client: AsyncClient):
     """GET /api/v1/payments requires auth."""
     r = await client.get("/api/v1/payments")
     assert r.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_users_delete_requires_auth(client: AsyncClient):
+    """DELETE /api/v1/users/:id requires admin auth (and body with confirm_token)."""
+    r = await client.request(
+        "DELETE",
+        "/api/v1/users/1",
+        json={"confirm_token": "any"},
+    )
+    assert r.status_code == 401

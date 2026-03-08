@@ -1,0 +1,6 @@
+/**
+ * Foundations: base CSS variables (tokens + theme consumer).
+ * Import this for the token/theme layer only. Shell and content CSS stay in styles/.
+ */
+@import "../styles/miniapp-tokens.css";
+@import "../styles/miniapp-theme-consumer.css";

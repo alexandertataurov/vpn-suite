@@ -6,7 +6,7 @@ export interface PageScaffoldProps extends HTMLAttributes<HTMLDivElement> {
 
 export function PageScaffold({ className = "", children, ...props }: PageScaffoldProps) {
   return (
-    <div className={`miniapp-page-scaffold ${className}`.trim()} {...props}>
+    <div className={`miniapp-page-scaffold page ${className}`.trim()} {...props}>
       {children}
     </div>
   );

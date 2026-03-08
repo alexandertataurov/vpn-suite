@@ -5041,6 +5041,31 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/subscriptions/me:
+    patch:
+      tags:
+      - subscriptions
+      summary: Update My Subscription
+      description: 'Update current user''s subscription preferences (currently: auto_renew).'
+      operationId: update_my_subscription_api_v1_subscriptions_me_patch
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscriptionMeUpdateBody'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/v1/agent/heartbeat:
     post:
       tags:
@@ -12640,6 +12665,15 @@ components:
       - items
       - total
       title: SubscriptionList
+    SubscriptionMeUpdateBody:
+      properties:
+        auto_renew:
+          type: boolean
+          title: Auto Renew
+      type: object
+      required:
+      - auto_renew
+      title: SubscriptionMeUpdateBody
     SubscriptionOut:
       properties:
         id:

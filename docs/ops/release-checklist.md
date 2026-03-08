@@ -45,7 +45,7 @@
 
 - [ ] `./manage.sh build-admin` выполнен перед up-core (иначе /admin/assets/* 404)
 - [ ] `./manage.sh seed` выполнен при первом деплое (админ из ADMIN_EMAIL/ADMIN_PASSWORD)
-- [ ] **Plans:** создан хотя бы один тариф (Plans) для бота и miniapp (через Admin UI или `./manage.sh seed-plans` при заданных `PLAN_1_*` env)
+- [ ] **Plans:** создан хотя бы один тариф (Plans) для бота и miniapp через Admin UI (Billing / Plans)
 - [ ] **Production (recommended):** `NODE_MODE=agent`, `NODE_DISCOVERY=agent`; ноды подключаются через `node-agent` (outbound-only) и mTLS на `https://$PUBLIC_DOMAIN:8443/api/v1/agent/*` (allowlist `AGENT_ALLOW_CIDRS`).
 - [ ] Резервное копирование настроено по расписанию (см. `docs/ops/runbook.md`).
 

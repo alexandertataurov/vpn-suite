@@ -33,6 +33,7 @@ from commands import COMMANDS, register_commands
 from aiogram.types import MenuButtonWebApp, WebAppInfo as MenuWebAppInfo
 from utils.config_validator import validate_config
 from middleware.logging import LoggingMiddleware
+from handlers.payment import router as payment_router
 from handlers.start import router as start_router
 from otel_tracing import setup_otel_tracing
 
@@ -182,6 +183,7 @@ async def run_bot():
                 pass
         return True
 
+    dp.include_router(payment_router)
     dp.include_router(start_router)
     dp.include_router(errors_router)
     if BOT_WEBHOOK_URL:

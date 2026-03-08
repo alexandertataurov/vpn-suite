@@ -20,13 +20,50 @@ export default tseslint.config(
       "react/react-in-jsx-scope": "off",
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "warn",
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "@/design-system",
+              importNames: ["FallbackScreen"],
+              message:
+                "Import FallbackScreen from '@/design-system/patterns/FallbackScreen' to avoid barrel chunk cycles.",
+            },
+          ],
+        },
+      ],
     },
   },
   {
     files: ["src/**/*.tsx"],
     plugins: { react },
     rules: {
-      "react/forbid-dom-props": ["warn", { forbid: ["style"] }],
+      "react/forbid-dom-props": ["error", { forbid: ["style"] }],
+    },
+  },
+  {
+    files: ["src/pages/**/*.tsx", "src/page-models/**/*.ts", "src/page-models/**/*.tsx"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: [
+                "@/design-system/components/*",
+                "@/design-system/layouts/*",
+                "@/design-system/page-recipes/*",
+                "@/design-system/patterns/*",
+                "@/design-system/primitives/*",
+                "!@/design-system/patterns/FallbackScreen",
+              ],
+              message:
+                "Import reusable UI from '@/design-system'. Only FallbackScreen may be imported from its direct pattern path.",
+            },
+          ],
+        },
+      ],
     },
   }
 );

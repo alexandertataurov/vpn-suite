@@ -23,7 +23,23 @@ class Subscription(Base, TimestampMixin):
     valid_from: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     valid_until: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     device_limit: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    auto_renew: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     status: Mapped[str] = mapped_column(String(32), default="active", nullable=False)
+    # Split state (spec v2): commercial, access, billing, renewal
+    subscription_status: Mapped[str] = mapped_column(
+        String(32), default="active", nullable=False
+    )
+    access_status: Mapped[str] = mapped_column(String(32), default="enabled", nullable=False)
+    billing_status: Mapped[str] = mapped_column(String(32), default="paid", nullable=False)
+    renewal_status: Mapped[str] = mapped_column(
+        String(32), default="auto_renew_on", nullable=False
+    )
+    grace_until: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    grace_reason: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    cancel_at_period_end: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    accrued_bonus_days: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     is_trial: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     trial_ends_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     paused_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
@@ -32,6 +48,9 @@ class Subscription(Base, TimestampMixin):
         DateTime(timezone=True), nullable=True
     )
     reminder_1d_sent_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    reminder_winback_sent_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
 
@@ -51,4 +70,9 @@ class Subscription(Base, TimestampMixin):
         "ChurnSurvey",
         back_populates="subscription",
         foreign_keys="ChurnSurvey.subscription_id",
+    )
+    entitlement_events: Mapped[list["EntitlementEvent"]] = relationship(
+        "EntitlementEvent",
+        back_populates="subscription",
+        foreign_keys="EntitlementEvent.subscription_id",
     )

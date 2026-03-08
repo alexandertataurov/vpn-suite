@@ -1,5 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useApiQuery } from "@/hooks/api/useApiQuery";
+import { deviceKeys } from "@/features/devices/services/device.query-keys";
 import { useApiMutation } from "./useApiMutation";
 import type {
   DeviceOut,
@@ -19,8 +20,9 @@ export interface ConfigHealthOut {
  * Used in: DevicesPage detail drawer.
  */
 export function useGetDevice(deviceId: string | null) {
+  const resolvedId = deviceId ?? "";
   return useApiQuery<DeviceOut>(
-    ["devices", "detail", deviceId!],
+    [...deviceKeys.detail(resolvedId)],
     `/devices/${deviceId!}`,
     { enabled: !!deviceId, retry: 0 }
   );
@@ -32,7 +34,7 @@ export function useGetDevice(deviceId: string | null) {
  */
 export function useGetDeviceList(params: { limit: number; offset: number }) {
   const path = `/devices?limit=${params.limit}&offset=${params.offset}`;
-  return useApiQuery<DeviceList>(["devices", "list", params.limit, params.offset], path, { retry: 1 });
+  return useApiQuery<DeviceList>([...deviceKeys.list(params)], path, { retry: 1 });
 }
 
 /**
@@ -40,7 +42,7 @@ export function useGetDeviceList(params: { limit: number; offset: number }) {
  * Used in: DevicesPage KPIs.
  */
 export function useGetDeviceSummary() {
-  return useApiQuery<DeviceSummaryOut>(["devices", "summary"], "/devices/summary", { retry: 1 });
+  return useApiQuery<DeviceSummaryOut>([...deviceKeys.summary()], "/devices/summary", { retry: 1 });
 }
 
 /**
@@ -49,7 +51,7 @@ export function useGetDeviceSummary() {
  */
 export function useGetDeviceConfigHealth() {
   return useApiQuery<ConfigHealthOut>(
-    ["devices", "config-health"],
+    [...deviceKeys.configHealth()],
     "/devices/config-health?limit=500",
     { retry: 1, staleTime: 60_000 }
   );
@@ -62,11 +64,11 @@ export function useGetDeviceConfigHealth() {
 export function useDevicesInvalidate() {
   const queryClient = useQueryClient();
   return function invalidateDevices(deviceId?: string | null) {
-    void queryClient.invalidateQueries({ queryKey: ["devices", "summary"] });
-    void queryClient.invalidateQueries({ queryKey: ["devices", "list"] });
-    void queryClient.invalidateQueries({ queryKey: ["devices", "config-health"] });
+    void queryClient.invalidateQueries({ queryKey: [...deviceKeys.summary()] });
+    void queryClient.invalidateQueries({ queryKey: [...deviceKeys.lists()] });
+    void queryClient.invalidateQueries({ queryKey: [...deviceKeys.configHealth()] });
     if (deviceId) {
-      void queryClient.invalidateQueries({ queryKey: ["devices", "detail", deviceId] });
+      void queryClient.invalidateQueries({ queryKey: [...deviceKeys.detail(deviceId)] });
     }
   };
 }

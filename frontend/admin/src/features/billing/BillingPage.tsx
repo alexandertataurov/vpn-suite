@@ -3,6 +3,8 @@ import { useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useApiQuery } from "@/hooks/api/useApiQuery";
 import { useApi } from "@/core/api/context";
+import { SubscriptionRecordsTab } from "@/features/billing/SubscriptionRecordsTab";
+import { billingKeys } from "@/features/billing/services/billing.query-keys";
 import {
   Button,
   Card,
@@ -16,12 +18,29 @@ import {
 } from "@/design-system/primitives";
 import { PageLayout } from "@/layout/PageLayout";
 import { MetaText } from "@/design-system/typography";
-import type { PlanList, PlanOut } from "@/shared/types/admin-api";
+import { getErrorMessage } from "@vpn-suite/shared";
+import type {
+  ChurnSurveyOut,
+  EntitlementEventOut,
+  PaymentList,
+  PlanList,
+  PlanOut,
+} from "@/shared/types/admin-api";
 
 const TABS = [
-  { id: "subscriptions", label: "Subscriptions" },
+  { id: "plans", label: "Plans" },
+  { id: "subscription-records", label: "Subscription records" },
   { id: "payments", label: "Payments" },
+  { id: "entitlement-events", label: "Entitlement events" },
+  { id: "cancellation-reasons", label: "Cancellation reasons" },
 ] as const;
+
+const UPSELL_METHOD_OPTIONS: { value: string; label: string }[] = [
+  { value: "device_limit", label: "Device limit" },
+  { value: "expiry", label: "Expiry" },
+  { value: "trial_end", label: "Trial end" },
+  { value: "referral", label: "Referral" },
+];
 
 type PlanStyle = "normal" | "popular" | "promotional";
 
@@ -31,6 +50,7 @@ interface PlanRow extends Record<string, unknown> {
   duration: string;
   price: string;
   style: string;
+  upsellMethods: string;
   createdAt: string;
   actions: JSX.Element;
 }
@@ -41,6 +61,7 @@ interface PlanFormState {
   priceCurrency: string;
   priceAmount: string;
   style: PlanStyle;
+  upsellMethods: string[];
 }
 
 function parsePlanName(rawName: string | null | undefined): { style: PlanStyle; cleanName: string } {
@@ -82,19 +103,104 @@ export function BillingPage() {
     isError: isPlansError,
     error: plansError,
     refetch: refetchPlans,
-  } = useApiQuery<PlanList>(["billing", "plans"], "/plans?limit=50&offset=0", { retry: 1 });
+  } = useApiQuery<PlanList>([...billingKeys.plans()], "/plans?limit=50&offset=0", { retry: 1 });
 
   const [editingPlan, setEditingPlan] = useState<PlanOut | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form, setForm] = useState<PlanFormState>({
     name: "",
     durationDays: "",
-    priceCurrency: "USD",
+    priceCurrency: "XTR",
     priceAmount: "",
     style: "normal",
+    upsellMethods: [],
   });
   const [savePending, setSavePending] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [planToDelete, setPlanToDelete] = useState<PlanOut | null>(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deletePending, setDeletePending] = useState(false);
+
+  const [paymentFilters, setPaymentFilters] = useState<{
+    user_id: string;
+    status: string;
+    provider: string;
+  }>({ user_id: "", status: "", provider: "" });
+
+  const [entitlementFilters, setEntitlementFilters] = useState<{
+    user_id: string;
+    subscription_id: string;
+    event_type: string;
+  }>({ user_id: "", subscription_id: "", event_type: "" });
+
+  const [churnSurveysFilters, setChurnSurveysFilters] = useState<{
+    user_id: string;
+    subscription_id: string;
+  }>({ user_id: "", subscription_id: "" });
+
+  const paymentsPath = useMemo(() => {
+    const p = new URLSearchParams();
+    p.set("limit", "50");
+    p.set("offset", "0");
+    if (paymentFilters.user_id.trim()) p.set("user_id", paymentFilters.user_id.trim());
+    if (paymentFilters.status.trim()) p.set("status", paymentFilters.status.trim());
+    if (paymentFilters.provider.trim()) p.set("provider", paymentFilters.provider.trim());
+    return `/payments?${p.toString()}`;
+  }, [paymentFilters]);
+
+  const {
+    data: paymentsData,
+    isLoading: isPaymentsLoading,
+    isError: isPaymentsError,
+    error: paymentsError,
+    refetch: refetchPayments,
+  } = useApiQuery<PaymentList>(
+    [...billingKeys.payments(paymentFilters)],
+    paymentsPath,
+    { retry: 1, enabled: active === "payments" }
+  );
+
+  const entitlementEventsPath = useMemo(() => {
+    const p = new URLSearchParams();
+    if (entitlementFilters.user_id.trim()) p.set("user_id", entitlementFilters.user_id.trim());
+    if (entitlementFilters.subscription_id.trim()) p.set("subscription_id", entitlementFilters.subscription_id.trim());
+    if (entitlementFilters.event_type.trim()) p.set("event_type", entitlementFilters.event_type.trim());
+    p.set("limit", "100");
+    return `/admin/entitlement-events?${p.toString()}`;
+  }, [entitlementFilters]);
+
+  const churnSurveysPath = useMemo(() => {
+    const p = new URLSearchParams();
+    p.set("limit", "100");
+    p.set("offset", "0");
+    if (churnSurveysFilters.user_id.trim()) p.set("user_id", churnSurveysFilters.user_id.trim());
+    if (churnSurveysFilters.subscription_id.trim()) p.set("subscription_id", churnSurveysFilters.subscription_id.trim());
+    return `/admin/churn-surveys?${p.toString()}`;
+  }, [churnSurveysFilters]);
+
+  const {
+    data: entitlementEvents,
+    isLoading: isEntitlementEventsLoading,
+    isError: isEntitlementEventsError,
+    error: entitlementEventsError,
+    refetch: refetchEntitlementEvents,
+  } = useApiQuery<EntitlementEventOut[]>(
+    [...billingKeys.entitlementEvents(entitlementFilters)],
+    entitlementEventsPath,
+    { retry: 1, enabled: active === "entitlement-events" }
+  );
+
+  const {
+    data: churnSurveys,
+    isLoading: isChurnSurveysLoading,
+    isError: isChurnSurveysError,
+    error: churnSurveysError,
+    refetch: refetchChurnSurveys,
+  } = useApiQuery<ChurnSurveyOut[]>(
+    [...billingKeys.churnSurveys(churnSurveysFilters)],
+    churnSurveysPath,
+    { retry: 1, enabled: active === "cancellation-reasons" }
+  );
 
   const planRows: PlanRow[] = useMemo(() => {
     if (!plans?.items?.length) return [];
@@ -102,33 +208,50 @@ export function BillingPage() {
       const { style, cleanName } = parsePlanName(p.name);
       const styleLabel =
         style === "promotional" ? "Promotional" : style === "popular" ? "Popular" : "Normal";
+      const upsellList = (p.upsell_methods ?? []).join(", ") || "—";
       return {
         id: p.id,
         name: cleanName || p.id,
         duration: `${p.duration_days} days`,
         price: `${p.price_amount} ${p.price_currency}`,
         style: styleLabel,
+        upsellMethods: upsellList,
         createdAt: new Date(p.created_at).toLocaleDateString(),
         actions: (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              setEditingPlan(p);
-              setForm({
-                name: cleanName,
-                durationDays: String(p.duration_days),
-                priceCurrency: p.price_currency,
-                priceAmount: String(p.price_amount),
-                style,
-              });
-              setSaveError(null);
-              setIsModalOpen(true);
-            }}
-          >
-            Edit
-          </Button>
+          <span className="billing-page__plan-actions">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setEditingPlan(p);
+                setForm({
+                  name: cleanName,
+                  durationDays: String(p.duration_days),
+                  priceCurrency: p.price_currency,
+                  priceAmount: String(p.price_amount),
+                  style,
+                  upsellMethods: p.upsell_methods ?? [],
+                });
+                setSaveError(null);
+                setIsModalOpen(true);
+              }}
+            >
+              Edit
+            </Button>
+            <Button
+              type="button"
+              variant="danger"
+              size="sm"
+              onClick={() => {
+                setPlanToDelete(p);
+                setDeleteConfirmText("");
+                setSaveError(null);
+              }}
+            >
+              Delete
+            </Button>
+          </span>
         ),
       };
     });
@@ -139,9 +262,10 @@ export function BillingPage() {
     setForm({
       name: "",
       durationDays: "",
-      priceCurrency: "USD",
+      priceCurrency: "XTR",
       priceAmount: "",
       style: "normal",
+      upsellMethods: [],
     });
     setSaveError(null);
     setIsModalOpen(true);
@@ -163,6 +287,23 @@ export function BillingPage() {
     form.priceCurrency.trim().length > 0 &&
     form.priceAmount.trim().length > 0;
 
+  const handleDeletePlan = async () => {
+    if (!planToDelete) return;
+    const confirmName = parsePlanName(planToDelete.name).cleanName;
+    if (deleteConfirmText.trim().toLowerCase() !== confirmName.toLowerCase()) return;
+    setDeletePending(true);
+    try {
+      await api.request(`/plans/${planToDelete.id}`, { method: "DELETE" });
+      await queryClient.invalidateQueries({ queryKey: [...billingKeys.plans()] });
+      setPlanToDelete(null);
+      setDeleteConfirmText("");
+    } catch (e) {
+      setSaveError(getErrorMessage(e, "Failed to delete plan"));
+    } finally {
+      setDeletePending(false);
+    }
+  };
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!canSubmit || savePending) return;
@@ -175,13 +316,14 @@ export function BillingPage() {
         duration_days: Number.parseInt(form.durationDays, 10),
         price_currency: form.priceCurrency.trim(),
         price_amount: form.priceAmount.trim(),
+        upsell_methods: form.upsellMethods.length > 0 ? form.upsellMethods : null,
       };
       if (editingPlan) {
         await api.patch<PlanOut>(`/plans/${editingPlan.id}`, body);
       } else {
         await api.post<PlanOut>("/plans", body);
       }
-      await queryClient.invalidateQueries({ queryKey: ["billing", "plans"] });
+      await queryClient.invalidateQueries({ queryKey: [...billingKeys.plans()] });
       setIsModalOpen(false);
       setEditingPlan(null);
     } catch (e) {
@@ -212,7 +354,7 @@ export function BillingPage() {
         ))}
       </div>
       <div className="billing-page__panel" role="tabpanel" id={panelId} aria-labelledby={`billing-tab-${active}`}>
-        {active === "subscriptions" && (
+        {active === "plans" && (
           <>
             {isPlansLoading && <Skeleton height={120} />}
             {isPlansError && (
@@ -241,6 +383,7 @@ export function BillingPage() {
                         { key: "duration", header: "Duration" },
                         { key: "price", header: "Price" },
                         { key: "style", header: "Style" },
+                        { key: "upsellMethods", header: "Upsell triggers" },
                         { key: "createdAt", header: "Created" },
                         { key: "actions", header: "Actions" },
                       ]}
@@ -289,20 +432,20 @@ export function BillingPage() {
                     <Input
                       value={form.priceCurrency}
                       onChange={(e) => handleFormChange({ priceCurrency: e.target.value })}
-                      placeholder="USD"
+                      placeholder="XTR"
                     />
                   </label>
                 </div>
                 <div className="input-wrap">
                   <label className="input-label">
-                    Price amount
+                    Price amount (Stars)
                     <Input
                       type="number"
                       min={0}
-                      step="0.01"
+                      step="1"
                       value={form.priceAmount}
                       onChange={(e) => handleFormChange({ priceAmount: e.target.value })}
-                      placeholder="9.99"
+                      placeholder="100"
                     />
                   </label>
                 </div>
@@ -321,6 +464,26 @@ export function BillingPage() {
                       </select>
                     </div>
                   </label>
+                </div>
+                <div className="input-wrap">
+                  <span className="input-label">Upsell triggers</span>
+                  <div className="checkbox-group" role="group" aria-label="Upsell triggers">
+                    {UPSELL_METHOD_OPTIONS.map((opt) => (
+                      <label key={opt.value} className="checkbox-label">
+                        <input
+                          type="checkbox"
+                          checked={form.upsellMethods.includes(opt.value)}
+                          onChange={(e) => {
+                            const next = e.target.checked
+                              ? [...form.upsellMethods, opt.value]
+                              : form.upsellMethods.filter((m) => m !== opt.value);
+                            handleFormChange({ upsellMethods: next });
+                          }}
+                        />
+                        {opt.label}
+                      </label>
+                    ))}
+                  </div>
                 </div>
                 {saveError && (
                   <p className="input-hint is-error" role="alert">
@@ -342,9 +505,325 @@ export function BillingPage() {
                 </div>
               </form>
             </Modal>
+
+            <Modal
+              open={planToDelete != null}
+              onClose={() => {
+                if (!deletePending) {
+                  setPlanToDelete(null);
+                  setDeleteConfirmText("");
+                  setSaveError(null);
+                }
+              }}
+              title="Delete plan"
+              variant="danger"
+            >
+              <p className="billing-page__muted type-meta">
+                {planToDelete
+                  ? `This permanently removes the plan "${parsePlanName(planToDelete.name).cleanName}". Type the plan name to confirm.`
+                  : ""}
+              </p>
+              <label className="input-label">
+                Confirm
+                <Input
+                  value={deleteConfirmText}
+                  onChange={(e) => setDeleteConfirmText(e.target.value)}
+                  placeholder={planToDelete ? parsePlanName(planToDelete.name).cleanName : ""}
+                  aria-label="Type plan name to confirm deletion"
+                />
+              </label>
+              {saveError && (
+                <p className="input-hint is-error" role="alert">
+                  {saveError}
+                </p>
+              )}
+              <div className="users-page__modal-actions">
+                <Button
+                  type="button"
+                  variant="default"
+                  onClick={() => {
+                    setPlanToDelete(null);
+                    setDeleteConfirmText("");
+                    setSaveError(null);
+                  }}
+                  disabled={deletePending}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  variant="danger"
+                  disabled={
+                    (planToDelete
+                      ? deleteConfirmText.trim().toLowerCase() !==
+                        parsePlanName(planToDelete.name).cleanName.toLowerCase()
+                      : true) || deletePending
+                  }
+                  onClick={handleDeletePlan}
+                >
+                  Delete plan
+                </Button>
+              </div>
+            </Modal>
           </>
         )}
-        {active === "payments" && <MetaText>Payments (placeholder).</MetaText>}
+        {active === "subscription-records" && <SubscriptionRecordsTab />}
+        {active === "payments" && (
+          <>
+            <Card>
+              <SectionHeader label="Payments" note="Payment history (Telegram Stars, etc.)." />
+              <div className="billing-page__filters">
+                <label className="input-label">
+                  User ID
+                  <Input
+                    type="number"
+                    value={paymentFilters.user_id}
+                    onChange={(e) => setPaymentFilters((f) => ({ ...f, user_id: e.target.value }))}
+                    placeholder="Filter by user_id"
+                  />
+                </label>
+                <label className="input-label">
+                  Status
+                  <select
+                    className="input"
+                    value={paymentFilters.status}
+                    onChange={(e) => setPaymentFilters((f) => ({ ...f, status: e.target.value }))}
+                  >
+                    <option value="">All</option>
+                    <option value="pending">pending</option>
+                    <option value="completed">completed</option>
+                    <option value="failed">failed</option>
+                  </select>
+                </label>
+                <label className="input-label">
+                  Provider
+                  <Input
+                    value={paymentFilters.provider}
+                    onChange={(e) => setPaymentFilters((f) => ({ ...f, provider: e.target.value }))}
+                    placeholder="e.g. telegram_stars"
+                  />
+                </label>
+              </div>
+              {isPaymentsLoading && <Skeleton height={120} />}
+              {isPaymentsError && (
+                <ErrorState
+                  message={
+                    paymentsError instanceof Error
+                      ? paymentsError.message
+                      : "Failed to load payments."
+                  }
+                  onRetry={() => refetchPayments()}
+                />
+              )}
+              {!isPaymentsLoading && !isPaymentsError && paymentsData && (
+                paymentsData.items.length > 0 ? (
+                  <div className="data-table-wrap">
+                    <DataTable<{
+                      id: string;
+                      user_id: number;
+                      subscription_id: string;
+                      provider: string;
+                      status: string;
+                      amount: number;
+                      currency: string;
+                      external_id: string;
+                      created_at: string;
+                    }>
+                      density="compact"
+                      columns={[
+                        { key: "id", header: "ID" },
+                        { key: "user_id", header: "User ID" },
+                        { key: "subscription_id", header: "Subscription ID" },
+                        { key: "provider", header: "Provider" },
+                        { key: "status", header: "Status" },
+                        { key: "amount", header: "Amount" },
+                        { key: "currency", header: "Currency" },
+                        { key: "external_id", header: "External ID" },
+                        { key: "created_at", header: "Created" },
+                      ]}
+                      rows={paymentsData.items.map((p) => ({
+                        id: p.id,
+                        user_id: p.user_id,
+                        subscription_id: p.subscription_id,
+                        provider: p.provider,
+                        status: p.status,
+                        amount: p.amount,
+                        currency: p.currency,
+                        external_id: p.external_id,
+                        created_at: p.created_at ? new Date(p.created_at).toLocaleString() : "—",
+                      }))}
+                      getRowKey={(row) => row.id}
+                    />
+                  </div>
+                ) : (
+                  <EmptyState message="No payments match the filters." />
+                )
+              )}
+            </Card>
+          </>
+        )}
+        {active === "entitlement-events" && (
+          <>
+            <Card>
+              <SectionHeader label="Entitlement events" note="Subscription/access audit ledger." />
+              <div className="billing-page__filters">
+                <label className="input-label">
+                  User ID
+                  <Input
+                    type="number"
+                    value={entitlementFilters.user_id}
+                    onChange={(e) => setEntitlementFilters((f) => ({ ...f, user_id: e.target.value }))}
+                    placeholder="Filter by user_id"
+                  />
+                </label>
+                <label className="input-label">
+                  Subscription ID
+                  <Input
+                    value={entitlementFilters.subscription_id}
+                    onChange={(e) => setEntitlementFilters((f) => ({ ...f, subscription_id: e.target.value }))}
+                    placeholder="Filter by subscription_id"
+                  />
+                </label>
+                <label className="input-label">
+                  Event type
+                  <select
+                    className="input"
+                    value={entitlementFilters.event_type}
+                    onChange={(e) => setEntitlementFilters((f) => ({ ...f, event_type: e.target.value }))}
+                  >
+                    <option value="">All</option>
+                    <option value="subscription_activated">subscription_activated</option>
+                    <option value="subscription_renewed">subscription_renewed</option>
+                    <option value="subscription_extended">subscription_extended</option>
+                    <option value="grace_started">grace_started</option>
+                    <option value="grace_converted">grace_converted</option>
+                    <option value="access_paused">access_paused</option>
+                    <option value="access_resumed">access_resumed</option>
+                    <option value="access_blocked">access_blocked</option>
+                    <option value="referral_reward_accrued">referral_reward_accrued</option>
+                    <option value="referral_reward_applied">referral_reward_applied</option>
+                    <option value="promo_applied">promo_applied</option>
+                  </select>
+                </label>
+              </div>
+              {isEntitlementEventsLoading && <Skeleton height={120} />}
+              {isEntitlementEventsError && (
+                <ErrorState
+                  message={entitlementEventsError instanceof Error ? entitlementEventsError.message : "Failed to load entitlement events."}
+                  onRetry={() => refetchEntitlementEvents()}
+                />
+              )}
+              {!isEntitlementEventsLoading && !isEntitlementEventsError && entitlementEvents && (
+                entitlementEvents.length > 0 ? (
+                  <div className="data-table-wrap">
+                    <DataTable<{ id: string; created_at: string; event_type: string; user_id: number; subscription_id: string; payload: string }>
+                      density="compact"
+                      columns={[
+                        { key: "created_at", header: "Created" },
+                        { key: "event_type", header: "Event type" },
+                        { key: "user_id", header: "User ID" },
+                        { key: "subscription_id", header: "Subscription ID" },
+                        { key: "payload", header: "Payload" },
+                      ]}
+                      rows={entitlementEvents.map((e) => ({
+                        id: e.id,
+                        created_at: e.created_at ? new Date(e.created_at).toLocaleString() : "",
+                        event_type: e.event_type,
+                        user_id: e.user_id,
+                        subscription_id: e.subscription_id ?? "—",
+                        payload: e.payload ? JSON.stringify(e.payload) : "—",
+                      }))}
+                      getRowKey={(row) => row.id}
+                    />
+                  </div>
+                ) : (
+                  <EmptyState message="No entitlement events match the filters." />
+                )
+              )}
+            </Card>
+          </>
+        )}
+        {active === "cancellation-reasons" && (
+          <>
+            <Card>
+              <SectionHeader label="Cancellation reasons" note="Churn survey: reason and offer acceptance." />
+              <div className="billing-page__filters">
+                <label className="input-label">
+                  User ID
+                  <Input
+                    type="number"
+                    value={churnSurveysFilters.user_id}
+                    onChange={(e) => setChurnSurveysFilters((f) => ({ ...f, user_id: e.target.value }))}
+                    placeholder="Filter by user_id"
+                  />
+                </label>
+                <label className="input-label">
+                  Subscription ID
+                  <Input
+                    value={churnSurveysFilters.subscription_id}
+                    onChange={(e) => setChurnSurveysFilters((f) => ({ ...f, subscription_id: e.target.value }))}
+                    placeholder="Filter by subscription_id"
+                  />
+                </label>
+              </div>
+              {isChurnSurveysLoading && <Skeleton height={120} />}
+              {isChurnSurveysError && (
+                <ErrorState
+                  message={
+                    churnSurveysError instanceof Error
+                      ? churnSurveysError.message
+                      : "Failed to load cancellation reasons."
+                  }
+                  onRetry={() => refetchChurnSurveys()}
+                />
+              )}
+              {!isChurnSurveysLoading && !isChurnSurveysError && churnSurveys && (
+                churnSurveys.length > 0 ? (
+                  <div className="data-table-wrap">
+                    <DataTable<{
+                      id: string;
+                      user_id: number;
+                      subscription_id: string;
+                      reason: string;
+                      reason_code: string;
+                      free_text: string;
+                      discount_offered: string;
+                      offer_accepted: string;
+                      created_at: string;
+                    }>
+                      density="compact"
+                      columns={[
+                        { key: "id", header: "ID" },
+                        { key: "user_id", header: "User ID" },
+                        { key: "subscription_id", header: "Subscription ID" },
+                        { key: "reason", header: "Reason" },
+                        { key: "reason_code", header: "Reason code" },
+                        { key: "free_text", header: "Free text" },
+                        { key: "discount_offered", header: "Discount offered" },
+                        { key: "offer_accepted", header: "Offer accepted" },
+                        { key: "created_at", header: "Created" },
+                      ]}
+                      rows={churnSurveys.map((c) => ({
+                        id: c.id,
+                        user_id: c.user_id,
+                        subscription_id: c.subscription_id ?? "—",
+                        reason: c.reason_group ?? c.reason,
+                        reason_code: c.reason_code ?? "—",
+                        free_text: c.free_text ?? "—",
+                        discount_offered: c.discount_offered ? "Yes" : "No",
+                        offer_accepted: c.offer_accepted === null ? "—" : c.offer_accepted ? "Yes" : "No",
+                        created_at: c.created_at ? new Date(c.created_at).toLocaleString() : "—",
+                      }))}
+                      getRowKey={(row) => row.id}
+                    />
+                  </div>
+                ) : (
+                  <EmptyState message="No churn surveys match the filters." />
+                )
+              )}
+            </Card>
+          </>
+        )}
       </div>
     </PageLayout>
   );

@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { WebAppAuthResponse } from "@vpn-suite/shared";
 import { setWebappToken, webappApi } from "@/api/client";
 import { useTelegramWebApp } from "@/hooks/useTelegramWebApp";
+import { webappQueryKeys } from "@/lib/query-keys/webapp.query-keys";
 import { PageStateScreen } from "./PageStateScreen";
 import { MissionPrimaryButton } from "./MissionPrimitives";
 
@@ -23,8 +24,8 @@ export function SessionMissing({
     webappApi
       .post<WebAppAuthResponse>("/webapp/auth", { init_data: initData })
       .then((res) => {
-        setWebappToken(res.session_token);
-        queryClient.invalidateQueries({ queryKey: ["webapp", "me"] });
+        setWebappToken(res.session_token, res.expires_in);
+        queryClient.invalidateQueries({ queryKey: [...webappQueryKeys.me()] });
       })
       .finally(() => setLoading(false));
   }, [initData, queryClient]);

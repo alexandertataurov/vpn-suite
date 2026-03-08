@@ -6,9 +6,9 @@ const webServerMode = process.env.PLAYWRIGHT_WEB_SERVER_MODE || "preview";
 
 function getWebServerCommand() {
     if (webServerMode === "dev") {
-        return "pnpm exec vite --host 127.0.0.1 --port 5175 --strictPort";
+        return "npx vite --host 127.0.0.1 --port 5175 --strictPort";
     }
-    return "test -d dist || pnpm run build; pnpm exec vite preview --host 127.0.0.1 --port 5175 --strictPort";
+    return "test -d dist || npm run build; npx vite preview --host 127.0.0.1 --port 5175 --strictPort";
 }
 
 const shouldStartWebServer =

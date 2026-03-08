@@ -6,6 +6,7 @@ export interface SectionHeaderRowProps extends Omit<HTMLAttributes<HTMLDivElemen
   title?: ReactNode;
   description?: ReactNode;
   action?: ReactNode;
+  noteClassName?: string;
 }
 
 /** Doc-only section header row when section has no title (description/action only). */
@@ -13,6 +14,7 @@ export function SectionHeaderRow({
   title,
   description,
   action,
+  noteClassName = "",
   className = "",
   ...props
 }: SectionHeaderRowProps) {
@@ -22,7 +24,7 @@ export function SectionHeaderRow({
       <span className="shead-lbl">{title ?? "\u00A0"}</span>
       <span className="shead-rule" aria-hidden />
       {(action ?? description) ? (
-        <span className="shead-note">{action ?? description}</span>
+        <span className={["shead-note", noteClassName].filter(Boolean).join(" ")}>{action ?? description}</span>
       ) : null}
     </div>
   );
@@ -33,6 +35,10 @@ export interface PageSectionProps extends Omit<HTMLAttributes<HTMLElement>, "tit
   description?: ReactNode;
   action?: ReactNode;
   children: ReactNode;
+  headerClassName?: string;
+  descriptionClassName?: string;
+  contentClassName?: string;
+  noteClassName?: string;
 }
 
 /** Section with design-system shead (label + line + note). Built from Stack + typography. */
@@ -40,6 +46,10 @@ export function PageSection({
   title,
   description,
   action,
+  headerClassName = "",
+  descriptionClassName = "",
+  contentClassName = "",
+  noteClassName = "",
   className = "",
   children,
   ...props
@@ -48,22 +58,28 @@ export function PageSection({
   const hasMeta = description || action;
   return (
     <section className={className.trim() || undefined} {...props}>
-      <Stack direction="vertical" gap="2">
+      <Stack direction="vertical" gap="2" className={contentClassName || undefined}>
         {hasShead ? (
           <>
-            <div className="shead">
+            <div className={["shead", headerClassName].filter(Boolean).join(" ")}>
               <span className="shead-lbl">{title}</span>
               <span className="shead-rule" aria-hidden />
-              {action ? <span className="shead-note">{action}</span> : null}
+              {action ? <span className={["shead-note", noteClassName].filter(Boolean).join(" ")}>{action}</span> : null}
             </div>
             {description ? (
-              <div className="type-body-sm">
+              <div className={["type-body-sm", descriptionClassName].filter(Boolean).join(" ")}>
                 {typeof description === "string" ? description : <Body as="span">{description}</Body>}
               </div>
             ) : null}
           </>
         ) : hasMeta ? (
-          <SectionHeaderRow title={null} description={description} action={action} />
+          <SectionHeaderRow
+            title={null}
+            description={description}
+            action={action}
+            className={headerClassName}
+            noteClassName={noteClassName}
+          />
         ) : null}
         {children}
       </Stack>

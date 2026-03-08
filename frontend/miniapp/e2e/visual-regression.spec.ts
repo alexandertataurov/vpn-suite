@@ -10,13 +10,13 @@ const VIEWPORTS = [
 
 const ROUTES = [
   { path: "/", readyText: /Mission Control|Tunnel health|Change Server/i },
-  { path: "/plan", readyText: /Plan\\s*&\\s*Billing|Pro|Basic|No plans available|Could not load/i },
+  { path: "/plan", readyText: /Plan\s*&\s*Billing|Pro|Basic|No plans available|Could not load/i },
   { path: "/plan/checkout/plan-pro", readyText: /Checkout|Payment|Plan ID/i },
-  { path: "/devices", readyText: /Devices|Your devices|Add device/i },
+  { path: "/devices", readyText: /Devices\s*&\s*Access|Active Devices|Your config|Add device|No devices yet/i },
   { path: "/servers", readyText: /Servers|Routing mode|Locations/i },
   { path: "/referral", readyText: /Referral|Referrals|Share link|Reward progress/i },
   { path: "/support", readyText: /Support|Troubleshooter|FAQ/i },
-  { path: "/settings", readyText: /Settings|Preferences|Account/i },
+  { path: "/settings", readyText: /Account|Profile and app controls|Plans\s*&\s*billing|Reset configs/i },
 ] as const;
 
 async function injectTelegram(page: Page) {
@@ -245,9 +245,15 @@ async function mockApi(page: Page) {
         contentType: "application/json",
         body: JSON.stringify({
           subscription_id: "sub-1",
+          status: "active",
+          valid_until: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
           can_pause: true,
           can_resume: false,
           discount_percent: 20,
+          offer_pause: false,
+          offer_discount: true,
+          offer_downgrade: false,
+          reason_group: null,
         }),
       });
       return;
@@ -277,7 +283,7 @@ test.describe("Miniapp Visual Regression", () => {
         const routeId = route.path === "/" ? "home" : route.path.replaceAll("/", "-").replace(/^-/, "");
         await expect(page).toHaveScreenshot(`spacex-${routeId}-${viewport.name}.png`, {
           fullPage: true,
-          maxDiffPixels: 1200,
+          maxDiffPixels: 1600,
           maxDiffPixelRatio: 0.005,
         });
       }

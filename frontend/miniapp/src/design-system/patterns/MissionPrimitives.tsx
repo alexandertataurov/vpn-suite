@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import type {
   AnchorHTMLAttributes,
   ButtonHTMLAttributes,
@@ -290,6 +291,21 @@ export interface MissionProgressBarProps extends Omit<HTMLAttributes<HTMLDivElem
   ariaLabel?: string;
 }
 
+interface MissionProgressFillProps {
+  className: string;
+  percent: number;
+}
+
+function MissionProgressFill({ className, percent }: MissionProgressFillProps) {
+  const fillRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    fillRef.current?.style.setProperty("--pct", String(Math.max(0, Math.min(100, percent))));
+  }, [percent]);
+
+  return <div ref={fillRef} className={className} />;
+}
+
 export function MissionProgressBar({
   percent,
   tone = "healthy",
@@ -316,7 +332,7 @@ export function MissionProgressBar({
       aria-valuenow={Math.round(normalizedPercent)}
       {...props}
     >
-      <div className={fillClassName} />
+      <MissionProgressFill className={fillClassName} percent={normalizedPercent} />
     </div>
   );
 }

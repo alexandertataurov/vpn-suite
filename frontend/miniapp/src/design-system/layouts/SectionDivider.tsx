@@ -16,7 +16,7 @@ export function SectionDivider({
 }: SectionDividerProps) {
   return (
     <div className={`shead ${className}`.trim()} {...props}>
-      <div className="shead-lbl">{label}</div>
+      <span className="shead-lbl">{label}</span>
       <div className="shead-rule" aria-hidden />
       {count != null ? <div className="shead-count">{count}</div> : null}
     </div>

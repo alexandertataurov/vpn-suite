@@ -1,0 +1,444 @@
+/**
+ * Layout — single source of truth for miniapp shell, zones, page, and section.
+ * Spec: layout-system.md (this folder). Consumed by design-system/styles/miniapp.css.
+ */
+
+/* ---------- Layout variables ---------- */
+html {
+  --miniapp-header-safe-top: var(--safe-top);
+  --miniapp-fullscreen-top-buffer: var(--sp-3);
+  --miniapp-header-content-height: 72px;
+  --miniapp-header-slot-width: 48px;
+  --miniapp-content-top-gap: clamp(4px, 1.2vw, 6px);
+  --miniapp-bottom-nav-height: max(var(--miniapp-nav-height, 64px), 78px);
+  --miniapp-bottom-safe-gap: var(--sp-4);
+  --miniapp-shell-margin: 0;
+  --miniapp-content-gutter: 16px;
+  --miniapp-page-gap: clamp(10px, 2.8vw, 12px);
+  --miniapp-section-gap: clamp(8px, 2.4vw, 10px);
+  --miniapp-row-gap: clamp(8px, 2.4vw, 10px);
+  --miniapp-grid-gap: clamp(6px, 1.8vw, 8px);
+  --miniapp-card-padding: clamp(14px, 3.4vw, 16px);
+  --miniapp-card-padding-tight: clamp(13px, 3vw, 14px);
+  --miniapp-hero-padding: clamp(14px, 3.6vw, 17px);
+  --miniapp-data-cell-padding: clamp(12px, 3vw, 13px);
+  --miniapp-data-cell-min-height: clamp(62px, 16vw, 66px);
+  --miniapp-chip-min-height: 26px;
+  --miniapp-chip-padding-inline: 9px;
+  --miniapp-page-title-size: clamp(20px, 6vw, 24px);
+  --miniapp-page-title-line-height: 1.04;
+  --miniapp-page-subtitle-size: clamp(12px, 3.5vw, 13px);
+  --miniapp-page-subtitle-line-height: 1.45;
+  --miniapp-shell-frame-max: calc(var(--miniapp-shell-max) + (var(--miniapp-content-gutter) * 2));
+}
+
+html[data-tg-fullscreen="true"] {
+  --miniapp-header-safe-top: max(var(--safe-top), var(--miniapp-fullscreen-top-buffer));
+  --miniapp-bottom-safe-gap: 0px;
+}
+
+html[data-tg-fullscreen="true"][data-tg-platform="ios"] {
+  --miniapp-fullscreen-top-buffer: 24px;
+}
+
+html[data-tg-fullscreen="true"][data-tg-platform="android"] {
+  --miniapp-fullscreen-top-buffer: 20px;
+}
+
+html[data-tg-fullscreen="true"][data-tg-platform="other"] {
+  --miniapp-fullscreen-top-buffer: 12px;
+}
+
+html[data-tg-desktop="true"] {
+  --miniapp-header-content-height: 56px;
+  --topbar-h: 56px;
+}
+
+/* Runtime/shell tokens (--safe-* may be set by theme or JS) */
+html {
+  --topbar-h: 72px;
+  --nav-h: 78px;
+  --miniapp-shell-max: 420px;
+  --miniapp-main-button-reserve: 120px;
+  --z-header: 200;
+  --z-nav: 200;
+  --tg-top: 0px;
+  --tg-bottom: 0px;
+  --tg-left: 0px;
+  --tg-right: 0px;
+  --safe-top: var(--tg-top);
+  --safe-bottom: var(--tg-bottom);
+  --safe-left: var(--tg-left);
+  --safe-right: var(--tg-right);
+  --app-height: var(--tg-viewport-height, 100dvh);
+}
+
+/* Viewport / root ---------- */
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  min-height: var(--app-height);
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+[data-layer="SafeAreaLayer"].tg-safe-area-layer {
+  padding: 0;
+  min-height: var(--app-height);
+}
+
+/* ---------- Shell ---------- */
+.miniapp-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  height: -webkit-fill-available;
+  min-height: var(--app-height);
+  width: min(100%, var(--miniapp-shell-frame-max));
+  max-width: var(--miniapp-shell-frame-max);
+  margin-inline: auto;
+  padding-inline: 0;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--tx-pri);
+  position: relative;
+  box-sizing: border-box;
+}
+
+.miniapp-shell--tabbed {
+  padding-bottom: 0;
+}
+
+.miniapp-shell-screen {
+  min-width: 0;
+}
+
+/* ---------- ScrollZone (.miniapp-main) ---------- */
+.miniapp-main {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-gutter: stable both-edges;
+  padding-block: var(--miniapp-content-top-gap) var(--miniapp-bottom-safe-gap);
+  padding-inline: var(--miniapp-content-gutter);
+}
+
+.miniapp-main--tabbed {
+  padding-top: 0;
+  padding-bottom: calc(var(--miniapp-bottom-nav-height, 56px) + var(--safe-bottom) + var(--miniapp-bottom-safe-gap));
+}
+
+.miniapp-main--tabbed > .tab-content,
+.miniapp-main--tabbed > .miniapp-scroll-content > .tab-content {
+  padding-top: 0;
+  margin-top: 0;
+}
+
+.miniapp-main--stack {
+  min-height: 0;
+  padding-top: 0;
+  padding-bottom: max(var(--miniapp-bottom-safe-gap), var(--safe-bottom));
+}
+
+.miniapp-main--stack-with-main-button {
+  padding-bottom: 0;
+}
+
+/* ---------- HeaderZone ---------- */
+.miniapp-header {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-header);
+  min-height: calc(var(--miniapp-header-content-height, 72px) + var(--miniapp-header-safe-top));
+  padding-inline: var(--miniapp-content-gutter);
+  border-bottom: 1px solid color-mix(in oklch, var(--tg-theme-text-color, var(--tx-pri)) 10%, transparent);
+  background: color-mix(in oklch, var(--tg-theme-bg-color, var(--s0)) 88%, transparent);
+  backdrop-filter: blur(18px) saturate(1.05);
+  -webkit-backdrop-filter: blur(18px) saturate(1.05);
+  display: flex;
+  justify-content: center;
+}
+
+.miniapp-header--stack {
+  border-bottom-color: color-mix(in oklch, var(--tg-theme-text-color, var(--tx-pri)) 16%, transparent);
+}
+
+.miniapp-header-inner {
+  flex: 1;
+  min-width: 0;
+  max-width: var(--miniapp-shell-max);
+  min-height: var(--miniapp-header-content-height, 72px);
+  padding: max(6px, var(--miniapp-header-safe-top)) 0 10px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+
+.miniapp-header-bar {
+  display: grid;
+  grid-template-columns: var(--miniapp-header-slot-width) minmax(0, 1fr) var(--miniapp-header-slot-width);
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: 48px;
+}
+
+.miniapp-header-bar--title-only {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.miniapp-header-slot {
+  width: var(--miniapp-header-slot-width);
+  height: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.miniapp-header-slot--left {
+  justify-self: start;
+}
+
+.miniapp-header-slot--right {
+  justify-self: end;
+}
+
+/* ---------- ActionZone (bottom nav) ---------- */
+.miniapp-bottom-nav-wrap {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: var(--z-nav);
+  padding-inline: var(--miniapp-content-gutter);
+  padding-bottom: calc(var(--safe-bottom) + 8px);
+  background: transparent;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  min-height: calc(var(--miniapp-bottom-nav-height) + var(--safe-bottom));
+}
+
+.miniapp-bottom-nav {
+  width: min(100%, var(--miniapp-shell-max));
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0;
+  align-items: stretch;
+}
+
+.miniapp-tab {
+  position: relative;
+  min-height: var(--miniapp-bottom-nav-height, 64px);
+  height: var(--miniapp-bottom-nav-height, 64px);
+  border: none;
+  border-radius: 14px;
+  text-decoration: none;
+  color: var(--tx-mut);
+  background: transparent;
+  transition: color 0.12s ease, opacity 0.12s ease, transform 0.12s ease;
+}
+
+.miniapp-tab--active {
+  color: var(--tx-pri);
+}
+
+/* Inner nav (inside .miniapp-bottom-nav-wrap); wrap provides horizontal padding */
+.bottom-nav.miniapp-bottom-nav {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  gap: 0;
+  padding: 2px 4px 3px;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  border-radius: 24px;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  height: var(--miniapp-bottom-nav-height, 64px);
+  min-height: var(--miniapp-bottom-nav-height, 64px);
+  min-width: 0;
+  overflow: hidden;
+  cursor: pointer;
+  color: var(--tx-mut);
+  transition: color 0.12s ease, background-color 0.12s ease, border-color 0.12s ease, transform 0.12s ease;
+  position: relative;
+  user-select: none;
+  text-decoration: none;
+}
+
+.nav-item.on {
+  color: var(--tx-pri);
+  background: transparent;
+  border: none;
+  border-radius: 14px;
+}
+
+/* ---------- Page & PageScaffold ---------- */
+.miniapp-page-scaffold {
+  display: grid;
+  gap: 0;
+}
+
+.miniapp-page-scaffold > section {
+  display: grid;
+  gap: 0;
+}
+
+.page {
+  padding: 0;
+  margin-top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* ---------- Section divider (.shead) ---------- */
+.shead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 0;
+}
+
+.shead-lbl,
+.shead-label {
+  font: 600 9px var(--mono);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--tx-mut);
+  white-space: nowrap;
+}
+
+.shead-rule,
+.shead-line {
+  flex: 1;
+  height: 1px;
+  background: var(--bd-sub);
+}
+
+.shead-count {
+  font: 600 9px var(--mono);
+  padding: 4px 10px;
+  border-radius: var(--r-xs);
+  background: var(--s2);
+  border: 1px solid var(--bd-hi);
+  color: var(--tx-sec);
+}
+
+.shead-note {
+  font: 600 9px var(--mono);
+  color: var(--tx-sec);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* ---------- Stack utility ---------- */
+.ds-stack {
+  display: flex;
+  flex-direction: column;
+}
+.ds-stack[data-direction="vertical"] { flex-direction: column; }
+.ds-stack[data-direction="horizontal"] { flex-direction: row; }
+.ds-stack[data-gap="1"] { gap: var(--sp-1); }
+.ds-stack[data-gap="2"] { gap: var(--sp-2); }
+.ds-stack[data-gap="3"] { gap: var(--sp-3); }
+.ds-stack[data-gap="4"] { gap: var(--sp-4); }
+.ds-stack[data-gap="6"] { gap: var(--sp-6); }
+
+/* ---------- Mobile-first overrides ---------- */
+html {
+  --mobile-shell-max: 420px;
+  --mobile-gutter: var(--miniapp-content-gutter);
+  --mobile-page-gap: var(--miniapp-page-gap);
+  --mobile-section-gap: var(--miniapp-section-gap);
+  --mobile-grid-gap: var(--miniapp-grid-gap);
+}
+
+.miniapp-shell {
+  padding-inline: 0;
+}
+
+.miniapp-header-inner,
+.bottom-nav.miniapp-bottom-nav {
+  width: min(100%, var(--miniapp-shell-max));
+}
+
+.miniapp-main {
+  padding-inline: var(--miniapp-content-gutter);
+}
+
+.miniapp-page-scaffold.page {
+  display: grid;
+  gap: var(--miniapp-page-gap);
+}
+
+.miniapp-page-scaffold.page > section {
+  display: grid;
+  gap: var(--miniapp-section-gap);
+  min-width: 0;
+}
+
+.miniapp-main.miniapp-main--tabbed {
+  padding-top: var(--miniapp-content-top-gap);
+  padding-bottom: calc(var(--miniapp-bottom-nav-height) + var(--safe-bottom) + var(--miniapp-bottom-safe-gap));
+}
+
+.miniapp-main.miniapp-main--stack {
+  padding-top: var(--miniapp-content-top-gap);
+}
+
+.miniapp-header-inner {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.bottom-nav.miniapp-bottom-nav {
+  gap: 0;
+}
+
+.nav-item.miniapp-tab {
+  min-width: 0;
+  padding: 8px 4px 10px;
+}
+
+.miniapp-shell-screen,
+.miniapp-page-scaffold {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.miniapp-page-scaffold,
+.page {
+  gap: 0;
+}
+
+.page {
+  padding: 0;
+  width: 100%;
+  max-width: 100%;
+}
+
+.miniapp-page-scaffold > section {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  min-width: 0;
+}

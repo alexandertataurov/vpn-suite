@@ -29,7 +29,7 @@
 |----------|---------|
 | BOT_TOKEN | Bot token (Telegram) |
 | BOT_API_KEY | Internal API key for bot (if used) |
-| BOT_USERNAME / VITE_TELEGRAM_BOT_USERNAME | Bot @username (docker-compose passes latter to BOT_USERNAME) |
+| BOT_USERNAME / VITE_TELEGRAM_BOT_USERNAME | Bot @username without @. Referral links require it: Compose passes VITE_* to admin-api as TELEGRAM_BOT_USERNAME; without Compose, set TELEGRAM_BOT_USERNAME or rely on backend fallback to VITE_TELEGRAM_BOT_USERNAME. |
 | SUPPORT_HANDLE | Support handle (e.g. @support) |
 | SUPPORT_LINK | Optional deep link for support |
 
@@ -61,3 +61,15 @@
 | CONTROL_PLANE_URL | https://$PUBLIC_DOMAIN:8443 |
 | SERVER_ID | Server ID from control-plane |
 | AGENT_SHARED_TOKEN | Must match control-plane |
+
+## Troubleshooting
+
+### Referral: "Bot username missing"
+
+If the miniapp shows "Referral links are unavailable: bot username is not configured":
+
+1. **Env:** Ensure `.env` has `VITE_TELEGRAM_BOT_USERNAME=YourBot` (no `@`).
+2. **Backend:** Recreate the container so it gets env: `docker compose up -d --force-recreate admin-api`.
+3. **Miniapp build:** Rebuild from repo root so build-time env is set: `cd frontend && npm run build -w miniapp`.
+4. **Check backend:** `curl -s http://localhost:8000/health` (or your API origin) and confirm `referral_configured: true`.
+5. **Stale cache:** Hard-refresh the miniapp or clear site data; the page will also refetch the referral link once when it sees empty bot username (cache bust).

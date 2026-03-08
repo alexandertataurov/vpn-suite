@@ -10,16 +10,31 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      "@vpn-suite/shared": path.resolve(__dirname, "./src/shared"),
-      "@vpn-suite/shared/theme": path.resolve(__dirname, "./src/shared/theme/index.ts"),
-      "@vpn-suite/shared/api-client": path.resolve(__dirname, "./src/shared/api-client/index.ts"),
-      "@vpn-suite/shared/types": path.resolve(__dirname, "./src/shared/types/index.ts"),
+      "@shared": path.resolve(__dirname, "../shared/src"),
+      "@vpn-suite/shared": path.resolve(__dirname, "../shared/src"),
     },
   },
   test: {
     environment: "jsdom",
     globals: true,
+    setupFiles: ["./src/test/setup.ts"],
     include: ["src/**/*.test.{ts,tsx}"],
-    exclude: ["e2e/**/*", "node_modules/**/*"],
+    exclude: ["e2e/**/*", "node_modules/**/*", "src/design-system/**/*"],
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "lcov", "html"],
+      thresholds: {
+        lines: 80,
+        functions: 80,
+        branches: 75,
+      },
+      exclude: [
+        "src/app/**",
+        "src/**/*.types.ts",
+        "src/design-system/**",
+        "src/test/**",
+        "e2e/**",
+      ],
+    },
   },
 });

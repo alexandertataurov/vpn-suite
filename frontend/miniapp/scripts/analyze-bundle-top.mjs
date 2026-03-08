@@ -14,7 +14,7 @@ function fail(message) {
 if (!fs.existsSync(analysisPath)) {
   fail(
     `Bundle analysis file not found at ${analysisPath}.\n` +
-      "Run `pnpm run build:analyze` first.",
+      "Run `npm run build:analyze` first.",
   );
 }
 

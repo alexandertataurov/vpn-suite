@@ -22,7 +22,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### Removed
 
-- (None)
+- **Breaking:** `Server.integration_type` (migration 036) and `Device.outline_key_id` (migration 035). Outline integration removed; use AmneziaWG + node-agent only.
 
 ### Fixed
 

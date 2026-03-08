@@ -2,7 +2,7 @@
 
 import logging
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
+from fastapi import APIRouter, Body, Depends, Header, HTTPException, Query, Request, status
 from sqlalchemy import delete, func, or_, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -43,9 +43,10 @@ from app.models import (
     Subscription,
     User,
 )
+from app.schemas.base import PaginationParams
 from app.schemas.device import DeviceListItemOut, IssueRequest, IssueResponse, UserDeviceList
 from app.schemas.subscription import SubscriptionOut
-from app.schemas.user import UserCreate, UserDetail, UserList, UserOut, UserUpdate
+from app.schemas.user import UserCreate, UserDetail, UserDeleteBody, UserList, UserOut, UserUpdate
 from app.services.funnel_service import log_funnel_event
 from app.services.issue_service import issue_device
 from app.services.issued_config_service import persist_issued_configs
@@ -56,6 +57,7 @@ router = APIRouter(prefix="/users", tags=["users"])
 logger = logging.getLogger(__name__)
 
 BAN_CONFIRM = settings.ban_confirm_token
+DELETE_USER_CONFIRM = settings.delete_user_confirm_token
 IDEMPOTENCY_TTL = settings.idempotency_ttl_seconds
 
 
@@ -84,9 +86,8 @@ async def create_user(
 @router.get("", response_model=UserList)
 async def list_users(
     db: AsyncSession = Depends(get_db),
+    pagination: PaginationParams = Depends(),
     _admin=Depends(require_permission(PERM_USERS_READ)),
-    limit: int = Query(50, ge=1, le=200),
-    offset: int = Query(0, ge=0),
     tg_id: int | None = Query(None),
     email: str | None = Query(None),
     phone: str | None = Query(None),
@@ -136,9 +137,10 @@ async def list_users(
         if plan_id is not None:
             count_stmt = count_stmt.join(User.subscriptions).where(Subscription.plan_id == plan_id)
     total = (await db.execute(count_stmt)).scalar() or 0
+    limit, offset = pagination.limit, pagination.offset
     result = await db.execute(stmt.order_by(User.id.desc()).limit(limit).offset(offset))
     rows = result.scalars().all()
-    return UserList(items=[UserOut.model_validate(r) for r in rows], total=total)
+    return UserList(items=[UserOut.model_validate(r) for r in rows], total=total, limit=limit, offset=offset)
 
 
 @router.get("/by-tg/{tg_id}", response_model=UserDetail)
@@ -221,9 +223,15 @@ async def _delete_user_cascade(db: AsyncSession, user_id: int) -> None:
 async def delete_user(
     request: Request,
     user_id: int,
+    body: UserDeleteBody = Body(...),
     db: AsyncSession = Depends(get_db),
     admin=Depends(require_permission(PERM_USERS_WRITE)),
 ):
+    if body.confirm_token != DELETE_USER_CONFIRM:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Delete requires valid confirm_token in body",
+        )
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
     if not user:

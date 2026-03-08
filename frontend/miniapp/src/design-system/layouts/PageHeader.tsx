@@ -5,6 +5,8 @@ export interface PageHeaderProps extends HTMLAttributes<HTMLDivElement> {
   title: string;
   subtitle?: string;
   action?: ReactNode;
+  /** Rendered on the same row as the title (e.g. notification bell). */
+  trailingAction?: ReactNode;
   children?: ReactNode;
 }
 
@@ -27,6 +29,7 @@ export function PageHeader({
   title,
   subtitle,
   action,
+  trailingAction,
   className = "",
   children,
   ...props
@@ -46,8 +49,9 @@ export function PageHeader({
           </div>
         )}
         {children}
+        {action ? <div className="ph-actions global-page-actions">{action}</div> : null}
       </div>
-      {action ? <div className="ph-actions global-page-actions">{action}</div> : null}
+      {trailingAction ? <div className="ph-trailing global-page-trailing">{trailingAction}</div> : null}
     </header>
   );
 }

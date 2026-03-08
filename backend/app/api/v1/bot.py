@@ -9,7 +9,8 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.core.bot_auth import BotPrincipal, get_admin_or_bot
+from app.core.bot_auth import BotPrincipal, get_admin_or_bot_only
+from app.core.config import settings
 from app.core.database import get_db
 from app.core.metrics import vpn_revenue_churn_total
 from app.core.telegram_user import build_tg_requisites
@@ -63,7 +64,7 @@ async def create_or_get_subscription(
     request: Request,
     body: CreateOrGetSubscriptionRequest,
     db: AsyncSession = Depends(get_db),
-    principal=Depends(get_admin_or_bot),
+    principal=Depends(get_admin_or_bot_only),
 ):
     """Find/create user; return active or pending subscription for plan. Bot (X-API-Key) only."""
     _require_bot(principal)
@@ -146,7 +147,7 @@ async def create_or_get_subscription(
             # Pending subscription carries no paid entitlement window until webhook completion.
             valid_from=now,
             valid_until=now,
-            device_limit=1,
+            device_limit=int(getattr(plan, "device_limit", 1) or 1),
             status="pending",
         )
         db.add(sub)
@@ -168,7 +169,7 @@ async def create_invoice(
     provider: str,
     body: CreateInvoiceRequest,
     db: AsyncSession = Depends(get_db),
-    principal=Depends(get_admin_or_bot),
+    principal=Depends(get_admin_or_bot_only),
     idempotency_key: str | None = Header(None, alias="Idempotency-Key"),
 ):
     """Create pending payment and return invoice payload for Telegram Stars (stub). Bot only."""
@@ -262,6 +263,7 @@ async def create_invoice(
             sub.status = "active"
             sub.valid_from = now
             sub.valid_until = now + timedelta(days=plan.duration_days)
+            sub.device_limit = int(getattr(plan, "device_limit", sub.device_limit) or sub.device_limit)
         await db.commit()
         await db.refresh(payment)
         await db.refresh(sub)
@@ -302,7 +304,7 @@ async def create_invoice(
 async def telegram_stars_confirm(
     body: TelegramStarsConfirmRequest,
     db: AsyncSession = Depends(get_db),
-    principal=Depends(get_admin_or_bot),
+    principal=Depends(get_admin_or_bot_only),
 ):
     """Confirm payment when bot receives successful_payment from Telegram (Stars). Idempotent. Bot only."""
     _require_bot(principal)
@@ -329,7 +331,7 @@ async def get_payment_invoice(
     payment_id: str,
     tg_id: int = Query(..., description="Telegram user id"),
     db: AsyncSession = Depends(get_db),
-    principal=Depends(get_admin_or_bot),
+    principal=Depends(get_admin_or_bot_only),
 ):
     """Return invoice payload for an existing pending payment (e.g. from Mini App deep link). Bot only."""
     _require_bot(principal)
@@ -373,7 +375,7 @@ async def bot_revoke_device(
     device_id: str,
     body: BotRevokeDeviceRequest,
     db: AsyncSession = Depends(get_db),
-    principal=Depends(get_admin_or_bot),
+    principal=Depends(get_admin_or_bot_only),
 ):
     """Revoke own device: verify device belongs to user by tg_id, then set revoked_at. Bot only."""
     _require_bot(principal)
@@ -411,7 +413,7 @@ async def bot_revoke_device(
 async def bot_events(
     body: BotEventRequest,
     db: AsyncSession = Depends(get_db),
-    principal=Depends(get_admin_or_bot),
+    principal=Depends(get_admin_or_bot_only),
 ):
     """Log funnel event from bot/WebApp. Bot only."""
     _require_bot(principal)
@@ -432,25 +434,35 @@ async def bot_events(
 async def referral_my_link(
     tg_id: int = Query(..., description="Telegram user id"),
     db: AsyncSession = Depends(get_db),
-    principal=Depends(get_admin_or_bot),
+    principal=Depends(get_admin_or_bot_only),
 ):
-    """Return referral link for user (ref_<user_id>). Bot only."""
+    """Return referral link for user (ref_<user_id>). Create user if not found. Bot only."""
     _require_bot(principal)
     user_result = await db.execute(select(User).where(User.tg_id == tg_id))
     user = user_result.scalar_one_or_none()
     if not user:
+        await db.execute(
+            pg_insert(User)
+            .values(tg_id=tg_id)
+            .on_conflict_do_nothing(index_elements=[User.tg_id])
+        )
+        user_result = await db.execute(select(User).where(User.tg_id == tg_id))
+        user = user_result.scalar_one_or_none()
+    if not user:
         raise HTTPException(
-            status_code=404, detail={"code": "USER_NOT_FOUND", "message": "User not found"}
+            status_code=409,
+            detail={"code": "USER_CREATE_RACE", "message": "Retry request"},
         )
     code = str(user.id)
-    return {"referral_code": code, "payload": f"ref_{code}"}
+    bot_username = (settings.telegram_bot_username or "").strip() or None
+    return {"referral_code": code, "payload": f"ref_{code}", "bot_username": bot_username}
 
 
 @router.post("/referral/attach")
 async def referral_attach(
     body: ReferralAttachRequest,
     db: AsyncSession = Depends(get_db),
-    principal=Depends(get_admin_or_bot),
+    principal=Depends(get_admin_or_bot_only),
 ):
     """Attach referee (tg_id) to referrer (referral_code). Idempotent. Bot only."""
     _require_bot(principal)
@@ -507,7 +519,7 @@ async def referral_attach(
 async def promo_validate(
     body: PromoValidateRequest,
     db: AsyncSession = Depends(get_db),
-    principal=Depends(get_admin_or_bot),
+    principal=Depends(get_admin_or_bot_only),
 ):
     """Validate promo code for plan and user; return preview (discount/bonus). Bot only."""
     _require_bot(principal)
@@ -562,7 +574,7 @@ async def promo_validate(
 async def referral_stats(
     tg_id: int = Query(..., description="Telegram user id"),
     db: AsyncSession = Depends(get_db),
-    principal=Depends(get_admin_or_bot),
+    principal=Depends(get_admin_or_bot_only),
 ):
     """Return referral stats for user. Bot only."""
     _require_bot(principal)
@@ -610,7 +622,7 @@ async def bot_trial_start(
     request: Request,
     body: TrialStartRequest,
     db: AsyncSession = Depends(get_db),
-    principal=Depends(get_admin_or_bot),
+    principal=Depends(get_admin_or_bot_only),
 ):
     """Start 24h trial: create user if needed, one trial sub + one device, return configs. Bot only."""
     _require_bot(principal)
@@ -673,7 +685,7 @@ async def bot_trial_start(
 async def bot_churn_survey(
     body: ChurnSurveyRequest,
     db: AsyncSession = Depends(get_db),
-    principal=Depends(get_admin_or_bot),
+    principal=Depends(get_admin_or_bot_only),
 ):
     """Record churn reason; offer retention discount or pause. Bot only."""
     _require_bot(principal)

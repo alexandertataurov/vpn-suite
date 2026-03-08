@@ -24,6 +24,7 @@ class Device(Base, TimestampMixin):
         String(32), ForeignKey("servers.id", ondelete="RESTRICT"), nullable=False
     )
     device_name: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    platform: Mapped[str | None] = mapped_column(String(32), nullable=True)
     public_key: Mapped[str] = mapped_column(String(128), nullable=False)
     allowed_ips: Mapped[str | None] = mapped_column(
         String(64), nullable=True
@@ -45,6 +46,9 @@ class Device(Base, TimestampMixin):
     )
     last_applied_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     last_seen_handshake_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    last_connection_confirmed_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
     last_error: Mapped[str | None] = mapped_column(Text(), nullable=True)

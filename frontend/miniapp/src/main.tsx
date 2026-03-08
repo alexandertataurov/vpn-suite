@@ -16,6 +16,9 @@ function bootstrapTelemetry(): void {
   };
 
   const run = () => {
+    void import("./bootstrap/analytics").then(({ initAnalytics }) => {
+      initAnalytics();
+    });
     void import("./telemetry/errors").then(({ wireGlobalErrors }) => {
       wireGlobalErrors();
     });

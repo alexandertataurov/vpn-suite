@@ -1,14 +1,11 @@
-"""Seed plans (tariffs) from env. Idempotent.
+"""Optional bootstrap: seed plans (tariffs) from env. Idempotent.
 
-This is intentionally opt-in: plans contain pricing, so defaults must not be
-auto-created in production without explicit operator intent.
+Plans are normally managed via Admin UI and DB. This script is for legacy/bootstrap
+only when PLAN_* env vars are set.
 
-Env schema:
-- PLAN_1_NAME, PLAN_1_DURATION_DAYS, PLAN_1_PRICE_STARS (or PLAN_1_PRICE_AMOUNT), PLAN_1_PRICE_CURRENCY
-- Repeat for PLAN_2_*, PLAN_3_*, ... (up to 10)
-
-Optional (non-production only):
-- SEED_DEFAULT_PLANS=1: create a minimal placeholder plan if no PLAN_* are provided.
+Env schema (optional): PLAN_1_NAME, PLAN_1_DURATION_DAYS, PLAN_1_PRICE_STARS (or
+PLAN_1_PRICE_AMOUNT), PLAN_1_PRICE_CURRENCY; repeat for PLAN_2_* … PLAN_10_*.
+Non-production only: SEED_DEFAULT_PLANS=1 creates one placeholder plan if no PLAN_* set.
 """
 
 from __future__ import annotations
@@ -35,6 +32,7 @@ from app.models import Plan
 class PlanSpec:
     name: str
     duration_days: int
+    device_limit: int
     price_currency: str
     price_amount: Decimal
 
@@ -62,6 +60,11 @@ def _plans_from_env() -> list[PlanSpec]:
             duration_days = int(duration_raw)
         except ValueError:
             duration_days = 0
+        device_limit_raw = (os.environ.get(f"{prefix}DEVICE_LIMIT", "") or "1").strip()
+        try:
+            device_limit = int(device_limit_raw)
+        except ValueError:
+            device_limit = 0
 
         price_currency = (os.environ.get(f"{prefix}PRICE_CURRENCY", "") or "XTR").strip() or "XTR"
 
@@ -69,7 +72,7 @@ def _plans_from_env() -> list[PlanSpec]:
         if amount is None:
             amount = _parse_decimal(os.environ.get(f"{prefix}PRICE_STARS", ""))
 
-        if duration_days <= 0 or amount is None or amount <= 0:
+        if duration_days <= 0 or device_limit <= 0 or amount is None or amount <= 0:
             # Skip invalid plan definitions rather than crashing bootstrap.
             continue
 
@@ -77,6 +80,7 @@ def _plans_from_env() -> list[PlanSpec]:
             PlanSpec(
                 name=name,
                 duration_days=duration_days,
+                device_limit=device_limit,
                 price_currency=price_currency,
                 price_amount=amount,
             )
@@ -95,6 +99,7 @@ async def seed(session: AsyncSession) -> int:
                 PlanSpec(
                     name="Audit Placeholder (30 days)",
                     duration_days=30,
+                    device_limit=1,
                     price_currency="XTR",
                     price_amount=Decimal("1"),
                 )
@@ -114,6 +119,7 @@ async def seed(session: AsyncSession) -> int:
             Plan(
                 name=s.name,
                 duration_days=s.duration_days,
+                device_limit=s.device_limit,
                 price_currency=s.price_currency,
                 price_amount=s.price_amount,
             )

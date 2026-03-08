@@ -7,6 +7,8 @@ export interface SummaryHeroProps extends Omit<HTMLAttributes<HTMLDivElement>, "
   eyebrow?: string;
   title: string;
   subtitle?: string;
+  /** Compact two-cell layout: count left, pending status right. Ignores subtitle when set. */
+  pendingLabel?: string | null;
   edge?: SummaryHeroEdge;
   glow?: SummaryHeroGlow;
   children?: ReactNode;
@@ -17,19 +19,30 @@ export function SummaryHero({
   eyebrow,
   title,
   subtitle,
+  pendingLabel,
   edge = "e-b",
   glow = "g-blue",
   children,
   className = "",
   ...props
 }: SummaryHeroProps) {
+  const useCells = pendingLabel != null && pendingLabel !== "";
   return (
-    <div className={`summary-hero ${edge} stagger-1 ${className}`.trim()} {...props}>
+    <div className={["summary-hero", edge, "stagger-1", className].filter(Boolean).join(" ")} {...props}>
       <div className={`summary-hero-glow ${glow}`} aria-hidden />
       <div className="summary-hero-body">
         {eyebrow ? <div className="card-eyebrow">{eyebrow}</div> : null}
-        <div className="summary-hero-title">{title}</div>
-        {subtitle ? <div className="summary-hero-sub">{subtitle}</div> : null}
+        {useCells ? (
+          <div className="devices-hero-cells">
+            <div className="devices-hero-cell--count miniapp-tnum">{title}</div>
+            <div className="devices-hero-cell--pending">{pendingLabel}</div>
+          </div>
+        ) : (
+          <>
+            <div className="summary-hero-title">{title}</div>
+            {subtitle ? <div className="summary-hero-sub">{subtitle}</div> : null}
+          </>
+        )}
         {children}
       </div>
     </div>

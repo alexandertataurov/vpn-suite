@@ -28,6 +28,12 @@ class UserUpdate(BaseModel):
     confirm_token: str | None = None
 
 
+class UserDeleteBody(BaseModel):
+    """Required body for DELETE /users/:id. confirm_token must match settings.delete_user_confirm_token."""
+
+    confirm_token: str
+
+
 class UserOut(OrmSchema):
     id: int
     tg_id: int
@@ -42,6 +48,8 @@ class UserOut(OrmSchema):
 class UserList(BaseModel):
     items: list[UserOut]
     total: int
+    limit: int
+    offset: int
 
 
 class UserDetail(UserOut):

@@ -1,26 +1,42 @@
 import { useEffect, useState } from "react";
 import { telegramClient } from "@/telegram/telegramCoreClient";
-
-type TelegramUser = Record<string, unknown> | undefined;
-type TelegramChat = Record<string, unknown> | undefined;
+import type { TelegramInitDataChat, TelegramInitDataUnsafe, TelegramInitDataUser } from "@/telegram/telegram.types";
 
 type TelegramInitDataState = {
   initData: string;
-  initDataUnsafe: Record<string, unknown>;
-  user: TelegramUser;
-  chat: TelegramChat;
+  initDataUnsafe: TelegramInitDataUnsafe;
+  user: TelegramInitDataUser | undefined;
+  chat: TelegramInitDataChat | undefined;
   startParam: string;
   isInsideTelegram: boolean;
 };
 
+function getStartParamFromUrl(): string {
+  if (typeof window === "undefined") return "";
+  try {
+    const fromSearch = new URLSearchParams(window.location.search).get("tgWebAppStartParam") ?? "";
+    if (fromSearch) return fromSearch;
+    const hash = window.location.hash.startsWith("#")
+      ? window.location.hash.slice(1)
+      : window.location.hash;
+    return new URLSearchParams(hash).get("tgWebAppStartParam") ?? "";
+  } catch {
+    return "";
+  }
+}
+
 function readState(): TelegramInitDataState {
   const initDataUnsafe = telegramClient.getInitDataUnsafe();
+  const fromUnsafe =
+    typeof initDataUnsafe.start_param === "string" ? initDataUnsafe.start_param : "";
+  const fromUrl = getStartParamFromUrl();
+  const startParam = fromUnsafe || fromUrl;
   return {
     initData: telegramClient.getInitData(),
     initDataUnsafe,
     user: initDataUnsafe.user,
     chat: initDataUnsafe.chat,
-    startParam: typeof initDataUnsafe.start_param === "string" ? initDataUnsafe.start_param : "",
+    startParam,
     isInsideTelegram: telegramClient.isInsideTelegram(),
   };
 }
@@ -44,4 +60,3 @@ export function useTelegramInitData() {
 
   return state;
 }
-

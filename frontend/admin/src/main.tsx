@@ -27,6 +27,10 @@ const apiClient = createApiClient({
   timeoutMs: 30_000,
 });
 
+void import("./core/analytics/bootstrap").then(({ initAnalytics }) => {
+  initAnalytics(apiClient);
+});
+
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <BrowserRouter basename="/admin">

@@ -31,6 +31,7 @@ from app.core.metrics import config_issue_blocked_total, discovery_not_found_tot
 from app.core.one_time_download import create_one_time_token
 from app.core.rbac import require_permission
 from app.models import Device, IssuedConfig, Server, User
+from app.schemas.base import PaginationParams
 from app.schemas.device import (
     BlockRequest,
     BulkRevokeOut,
@@ -105,8 +106,7 @@ async def bulk_revoke_devices(
 @router.get("", response_model=DeviceList)
 async def list_devices(
     db: AsyncSession = Depends(get_db),
-    limit: int = Query(20, ge=1, le=200),
-    offset: int = Query(0, ge=0),
+    pagination: PaginationParams = Depends(),
     user_id: int | None = Query(None),
     email: str | None = Query(None),
     status_filter: str | None = Query(None, alias="status"),
@@ -116,6 +116,7 @@ async def list_devices(
     _admin=Depends(require_permission(PERM_CLUSTER_READ)),
 ):
     """List all devices with optional filters. Admin only. Attaches telemetry from cache when available."""
+    limit, offset = pagination.limit, pagination.offset
     try:
         cache_key = devices_list_cache_key(
             limit, offset, user_id, email, status_filter, search, sort, node_id
@@ -189,7 +190,7 @@ async def list_devices(
                 if merged:
                     d_out = d_out.model_copy(update={"telemetry": merged})
             items.append(d_out)
-        out = DeviceList(items=items, total=total)
+        out = DeviceList(items=items, total=total, limit=limit, offset=offset)
         await set_devices_list_cached(cache_key, out)
         return out
     except HTTPException:

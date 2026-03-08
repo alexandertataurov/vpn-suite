@@ -139,6 +139,8 @@ class DeviceUpdate(BaseModel):
 class DeviceList(OrmSchema):
     items: list[DeviceOut]
     total: int
+    limit: int
+    offset: int
 
 
 class UserDeviceList(BaseModel):

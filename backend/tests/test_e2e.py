@@ -5,6 +5,7 @@ import os
 import pytest
 from httpx import ASGITransport, AsyncClient
 
+from app.core.config import settings
 from app.main import app
 
 # When set, E2E must run and fail the build on 401 or connection error (no skip).
@@ -63,3 +64,19 @@ async def test_login_then_servers_then_users():
         )
         assert r3.status_code == 200, r3.text
         assert "items" in r3.json()
+
+        # DELETE /users/:id requires body with valid confirm_token
+        r_del_bad = await client.request(
+            "DELETE",
+            "/api/v1/users/99999",
+            json={"confirm_token": "wrong_token"},
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert r_del_bad.status_code == 400, r_del_bad.text
+        r_del_404 = await client.request(
+            "DELETE",
+            "/api/v1/users/99999",
+            json={"confirm_token": settings.delete_user_confirm_token},
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert r_del_404.status_code == 404, r_del_404.text

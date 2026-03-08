@@ -9,13 +9,17 @@ import logging
 import time
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from datetime import datetime, timedelta, timezone
+
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from pydantic import BaseModel
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.constants import PERM_CLUSTER_READ, PERM_CLUSTER_WRITE
 from app.core.database import get_db
 from app.core.rbac import require_permission
+from app.models import FunnelEvent
 from app.services.prometheus_query_service import PrometheusQueryService
 from app.services.revenue_analytics_service import get_revenue_snapshot, update_revenue_gauges
 
@@ -298,4 +302,70 @@ async def get_metrics_kpis(
         error_rate_5m=err,
         latency_p95_seconds=p95,
         prometheus_available=True,
+    )
+
+
+class FunnelKpisOut(BaseModel):
+    """Funnel event counts and conversion ratios (spec 11.4). Window = last N days."""
+
+    days: int
+    event_counts: dict[str, int]
+    conversion_plan_to_payment_pct: float | None
+    conversion_payment_to_device_pct: float | None
+    conversion_device_to_connected_pct: float | None
+    conversion_trial_to_paid_pct: float | None
+    conversion_grace_recovered_pct: float | None
+    conversion_cancel_retained_pct: float | None
+    conversion_referral_rewarded_pct: float | None
+
+
+@router.get("/funnel-kpis", response_model=FunnelKpisOut)
+async def get_funnel_kpis(
+    db: AsyncSession = Depends(get_db),
+    _admin=Depends(require_permission(PERM_CLUSTER_READ)),
+    days: int = Query(30, ge=1, le=90),
+) -> FunnelKpisOut:
+    """Funnel event counts and conversion ratios for admin dashboard (spec 11.4)."""
+    now = datetime.now(timezone.utc)
+    since = now - timedelta(days=days)
+
+    # Counts per event_type
+    q = (
+        select(FunnelEvent.event_type, func.count().label("cnt"))
+        .where(FunnelEvent.created_at >= since)
+        .group_by(FunnelEvent.event_type)
+    )
+    result = await db.execute(q)
+    rows = result.all()
+    event_counts = {str(row.event_type): int(row.cnt) for row in rows}
+
+    def cnt(e: str) -> int:
+        return event_counts.get(e, 0)
+
+    # Conversions (denominator -> numerator); None if denominator is 0
+    plan_view = cnt("pricing_view") + cnt("plan_selected")
+    payment_completed = cnt("payment") + cnt("renewal") + cnt("bot_confirm")
+    device_issued = cnt("device_issue_success") + cnt("issue")
+    connected = cnt("connect_confirmed")
+    trial_started = cnt("trial_started")
+    cancel_started = cnt("cancel_click")
+    cancel_retained = cnt("pause_selected")
+    referral_attributed = cnt("referral_signup")
+    referral_rewarded = cnt("referral_reward_applied")
+
+    def pct(num: int, den: int) -> float | None:
+        if den <= 0:
+            return None
+        return round(100.0 * num / den, 2)
+
+    return FunnelKpisOut(
+        days=days,
+        event_counts=event_counts,
+        conversion_plan_to_payment_pct=pct(payment_completed, plan_view) if plan_view > 0 else None,
+        conversion_payment_to_device_pct=pct(device_issued, payment_completed) if payment_completed > 0 else None,
+        conversion_device_to_connected_pct=pct(connected, device_issued) if device_issued > 0 else None,
+        conversion_trial_to_paid_pct=pct(payment_completed, trial_started) if trial_started > 0 else None,
+        conversion_grace_recovered_pct=None,
+        conversion_cancel_retained_pct=pct(cancel_retained, cancel_started) if cancel_started > 0 else None,
+        conversion_referral_rewarded_pct=pct(referral_rewarded, referral_attributed) if referral_attributed > 0 else None,
     )

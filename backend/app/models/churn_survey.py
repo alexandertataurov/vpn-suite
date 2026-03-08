@@ -21,7 +21,11 @@ class ChurnSurvey(Base, TimestampMixin):
         nullable=True,
     )
     reason: Mapped[str] = mapped_column(String(32), nullable=False)
+    reason_group: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    reason_code: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    free_text: Mapped[str | None] = mapped_column(String(512), nullable=True)
     discount_offered: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    offer_accepted: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
 
     user: Mapped["User"] = relationship("User", back_populates="churn_surveys")
     subscription: Mapped["Subscription | None"] = relationship(

@@ -15,9 +15,11 @@ from prometheus_client import REGISTRY, CollectorRegistry, generate_latest, mult
 from app.api.v1.actions import router as actions_router
 from app.api.v1.admin_abuse import router as admin_abuse_router
 from app.api.v1.admin_churn import router as admin_churn_router
+from app.api.v1.admin_churn_surveys import router as admin_churn_surveys_router
 from app.api.v1.admin_cohorts import router as admin_cohorts_router
 from app.api.v1.admin_configs import router as admin_configs_router
 from app.api.v1.admin_devops import router as admin_devops_router
+from app.api.v1.admin_entitlement_events import router as admin_entitlement_events_router
 from app.api.v1.admin_payments_monitor import router as admin_payments_monitor_router
 from app.api.v1.admin_pricing import router as admin_pricing_router
 from app.api.v1.admin_promos import router as admin_promos_router
@@ -43,6 +45,7 @@ from app.api.v1.servers import router as servers_router
 from app.api.v1.servers_peers import router as servers_peers_router
 from app.api.v1.servers_stream import router as servers_stream_router
 from app.api.v1.subscriptions import router as subscriptions_router
+from app.api.v1.subscriptions_me import router as subscriptions_me_router
 from app.api.v1.telemetry_docker import router as telemetry_docker_router
 from app.api.v1.telemetry_snapshot import router as telemetry_snapshot_router
 from app.api.v1.users import router as users_router
@@ -160,6 +163,11 @@ async def lifespan(app: FastAPI):
         "config loaded",
         extra=extra_for_event(event="config.load"),
     )
+    if not (settings.telegram_bot_username or "").strip():
+        _log.warning(
+            "Referral links will be unavailable: TELEGRAM_BOT_USERNAME (or VITE_TELEGRAM_BOT_USERNAME) not set",
+            extra=extra_for_event(event="config.load", entity_id="referral_bot_username_missing"),
+        )
     _raw_adapter = _create_node_runtime_adapter()
     app.state.node_runtime_adapter = TimingNodeRuntimeAdapter(
         _raw_adapter, adapter_name=settings.node_discovery
@@ -254,6 +262,8 @@ app.include_router(admin_retention_router, prefix="/api/v1")
 app.include_router(admin_pricing_router, prefix="/api/v1")
 app.include_router(admin_promos_router, prefix="/api/v1")
 app.include_router(admin_payments_monitor_router, prefix="/api/v1")
+app.include_router(admin_entitlement_events_router, prefix="/api/v1")
+app.include_router(admin_churn_surveys_router, prefix="/api/v1")
 app.include_router(admin_churn_router, prefix="/api/v1")
 app.include_router(admin_devops_router, prefix="/api/v1")
 app.include_router(admin_cohorts_router, prefix="/api/v1")
@@ -273,6 +283,8 @@ app.include_router(users_router, prefix="/api/v1")
 app.include_router(devices_stream_router, prefix="/api/v1")
 app.include_router(devices_router, prefix="/api/v1")
 app.include_router(plans_router, prefix="/api/v1")
+# Webapp /me before parametric /{id} so PATCH /subscriptions/me is handled by webapp auth
+app.include_router(subscriptions_me_router, prefix="/api/v1")
 app.include_router(subscriptions_router, prefix="/api/v1")
 app.include_router(agent_router, prefix="/api/v1")
 app.include_router(telemetry_docker_router, prefix="/api/v1")
@@ -305,7 +317,11 @@ def metrics():
 @app.get("/health")
 def health():
     """Liveness: returns 200 when process is up. node_mode: mock (no node call) or real."""
-    return {"status": "ok", "node_mode": settings.node_mode}
+    return {
+        "status": "ok",
+        "node_mode": settings.node_mode,
+        "referral_configured": bool((settings.telegram_bot_username or "").strip()),
+    }
 
 
 _ready_cache_ts = 0.0
@@ -326,7 +342,7 @@ async def health_ready(request: Request):
             if adapter is not None:
                 global _ready_cache_ts, _ready_cache_score
                 now = time.monotonic()
-                if now - _ready_cache_ts > 15.0:
+                if now - _ready_cache_ts > 30.0:
                     from app.services.topology_engine import TopologyEngine
 
                     engine = TopologyEngine(adapter)
@@ -348,7 +364,7 @@ async def health_ready(request: Request):
                         status_code=503,
                         request_id=rid,
                         correlation_id=cid,
-                        details={"cluster_health_score": topo.health_score},
+                        details={"cluster_health_score": _ready_cache_score},
                     )
                     body["status"] = "degraded"
                     return JSONResponse(status_code=503, content=body)

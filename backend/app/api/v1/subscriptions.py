@@ -105,6 +105,9 @@ async def update_subscription(
         "valid_until": _json_val(sub.valid_until),
         "device_limit": sub.device_limit,
         "status": sub.status,
+        "access_status": getattr(sub, "access_status", None),
+        "grace_until": _json_val(getattr(sub, "grace_until", None)),
+        "grace_reason": getattr(sub, "grace_reason", None),
     }
     data = body.model_dump(exclude_unset=True)
     for k, v in data.items():

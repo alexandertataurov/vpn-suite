@@ -167,6 +167,24 @@ scrape_configs:
         regex: (.+)
         replacement: ${1}
 
+  - job_name: "postgres"
+    metrics_path: /metrics
+    scheme: http
+    scrape_interval: 15s
+    static_configs:
+      - targets: ["postgres-exporter:9187"]
+        labels:
+          service_name: postgres-exporter
+
+  - job_name: "redis"
+    metrics_path: /metrics
+    scheme: http
+    scrape_interval: 15s
+    static_configs:
+      - targets: ["redis-exporter:9121"]
+        labels:
+          service_name: redis-exporter
+
   - job_name: "wg-exporter"
     metrics_path: /metrics
     scheme: http

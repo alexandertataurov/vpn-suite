@@ -4,7 +4,6 @@ import { TelegramProvider, useTelegram } from "./TelegramContext";
 
 const mockViewportDimensions = vi.fn();
 const mockTelegramApp = vi.fn();
-const mockUseTheme = vi.fn();
 
 vi.mock("@/hooks/useViewportDimensions", () => ({
   useViewportDimensions: () => mockViewportDimensions(),
@@ -14,16 +13,11 @@ vi.mock("@/hooks/telegram", () => ({
   useTelegramApp: () => mockTelegramApp(),
 }));
 
-vi.mock("@/design-system/theme/ThemeProvider", () => ({
-  useTheme: () => mockUseTheme(),
-}));
-
 function Consumer() {
   const value = useTelegram();
   return (
     <div data-testid="consumer">
       <span data-viewport-height={value.viewportHeight} />
-      <span data-theme={value.theme} />
       <span data-fullscreen={String(value.isFullscreen)} />
     </div>
   );
@@ -36,7 +30,6 @@ describe("TelegramProvider / useTelegram", () => {
       safeAreaInsets: { top: 10, bottom: 20, left: 0, right: 0 },
     });
     mockTelegramApp.mockReturnValue({ isFullscreen: true, platform: "ios" });
-    mockUseTheme.mockReturnValue({ theme: "consumer-light" as const });
   });
 
   it("provides value from useViewportDimensions and useTheme", () => {
@@ -50,10 +43,6 @@ describe("TelegramProvider / useTelegram", () => {
     expect(el.querySelector("[data-viewport-height]")).toHaveAttribute(
       "data-viewport-height",
       "600"
-    );
-    expect(el.querySelector("[data-theme]")).toHaveAttribute(
-      "data-theme",
-      "consumer-light"
     );
     expect(el.querySelector("[data-fullscreen]")).toHaveAttribute(
       "data-fullscreen",

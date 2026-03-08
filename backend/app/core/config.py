@@ -4,6 +4,7 @@ defaults are for local dev only. Do not log or expose secret_key/admin_password.
 """
 
 import logging
+import os
 
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -65,6 +66,7 @@ class Settings(BaseSettings):
     restart_confirm_token: str = "confirm_restart"
     block_confirm_token: str = "confirm_block"
     cleanup_db_confirm_token: str = "confirm_cleanup_db"
+    delete_user_confirm_token: str = "confirm_delete_user"
     # Dangerous settings controls (.env read/write) for admin UI. Keep disabled in production by default.
     app_env_editor_enabled: bool = False
     # Admin frontend telemetry ingest controls.
@@ -76,6 +78,8 @@ class Settings(BaseSettings):
     bot_api_key: str = ""
     # Telegram Bot token (for WebApp initData validation; empty = skip)
     telegram_bot_token: str = ""
+    # Telegram Bot @username without @ (for referral links). Set TELEGRAM_BOT_USERNAME or VITE_TELEGRAM_BOT_USERNAME.
+    telegram_bot_username: str = ""
     # WebApp session: JWT lifetime (seconds) for miniapp Bearer token.
     webapp_session_expire_seconds: int = 3600
     # S8-4: background limits check → auto-block when traffic exceeds server limit (interval sec; 0 = disabled)
@@ -129,6 +133,8 @@ class Settings(BaseSettings):
     trial_duration_hours: int = 24
     trial_plan_id: str = ""
     retention_discount_percent: int = 20
+    # Grace window hours when subscription expires (24, 48, 72); 0 = disabled
+    grace_window_hours: int = 24
     # Set ENVIRONMENT=production to enforce non-default secrets at startup
     environment: str = "development"
     # mock = issue profile does not call node.
@@ -193,6 +199,15 @@ class Settings(BaseSettings):
     docker_vpn_container_prefixes: str = "amnezia-awg,amnezia-wg"
     # Outline VPN integration is unsupported; this flag is for docs/future-proofing only (default off).
     feature_outline_legacy: bool = False
+
+    @model_validator(mode="after")
+    def fill_telegram_bot_username_from_vite(self) -> "Settings":
+        """Use VITE_TELEGRAM_BOT_USERNAME when TELEGRAM_BOT_USERNAME is unset (e.g. non-Docker dev)."""
+        if not (self.telegram_bot_username or "").strip():
+            vite = (os.environ.get("VITE_TELEGRAM_BOT_USERNAME") or "").strip()
+            if vite:
+                object.__setattr__(self, "telegram_bot_username", vite)
+        return self
 
     @model_validator(mode="after")
     def check_node_mode(self) -> "Settings":
@@ -326,6 +341,15 @@ class Settings(BaseSettings):
             raise ValueError(
                 "Refusing to start: ENVIRONMENT=production but CLEANUP_DB_CONFIRM_TOKEN is still the default. "
                 "Set CLEANUP_DB_CONFIRM_TOKEN in .env."
+            )
+        if (
+            (not self.delete_user_confirm_token)
+            or self.delete_user_confirm_token == "confirm_delete_user"
+            or len(self.delete_user_confirm_token) < 16
+        ):
+            raise ValueError(
+                "Refusing to start: ENVIRONMENT=production but DELETE_USER_CONFIRM_TOKEN is still the default. "
+                "Set DELETE_USER_CONFIRM_TOKEN in .env."
             )
         if self.node_discovery == "agent" or self.node_mode == "agent":
             if not self.agent_shared_token or len(self.agent_shared_token) < 32:

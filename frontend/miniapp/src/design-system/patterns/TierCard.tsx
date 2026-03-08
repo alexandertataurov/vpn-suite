@@ -1,18 +1,25 @@
 import type { HTMLAttributes, ReactNode } from "react";
 
 export interface TierFeatureRowProps {
-  check: boolean;
+  check?: boolean;
+  icon?: "yes" | "no" | "amber";
   text: ReactNode;
   value?: ReactNode;
 }
 
-export function TierFeatureRow({ check, text, value }: TierFeatureRowProps) {
+export function TierFeatureRow({ check, icon, text, value }: TierFeatureRowProps) {
+  const tone = icon ?? (check ? "yes" : "no");
   return (
     <div className="feat-row">
-      <div className={`feat-ico ${check ? "yes" : "no"}`}>
-        {check ? (
+      <div className={`feat-ico ${tone}`}>
+        {tone === "yes" ? (
           <svg fill="none" viewBox="0 0 14 14" stroke="currentColor" strokeWidth={2}>
             <path d="M2 7l3 3 7-7" />
+          </svg>
+        ) : tone === "amber" ? (
+          <svg fill="none" viewBox="0 0 14 14" stroke="currentColor" strokeWidth={2}>
+            <path d="M7 3v4.5M7 10.5v.4" />
+            <circle cx="7" cy="7" r="5.2" />
           </svg>
         ) : (
           <svg fill="none" viewBox="0 0 14 14" stroke="currentColor" strokeWidth={2}>
@@ -40,6 +47,7 @@ export interface TierCardProps extends Omit<HTMLAttributes<HTMLDivElement>, "chi
   featured?: boolean;
   onSelect?: () => void;
   selectDisabled?: boolean;
+  selectAriaLabel?: string;
 }
 
 /** Content Library 16: Tier card for plan comparison. */
@@ -57,6 +65,7 @@ export function TierCard({
   featured,
   onSelect,
   selectDisabled,
+  selectAriaLabel,
   className = "",
   ...props
 }: TierCardProps) {
@@ -82,14 +91,24 @@ export function TierCard({
         </div>
         <div className="tier-features">
           {features.map((f, i) => (
-            <TierFeatureRow key={i} check={f.check} text={f.text} value={f.value} />
+            <TierFeatureRow
+              key={i}
+              check={f.check}
+              icon={f.icon}
+              text={f.text}
+              value={f.value}
+            />
           ))}
         </div>
         <button
           type="button"
           className="tier-select-btn"
-          onClick={onSelect}
+          onClick={(event) => {
+            event.stopPropagation();
+            onSelect?.();
+          }}
           disabled={selectDisabled}
+          aria-label={selectAriaLabel}
         >
           {selectLabel}
         </button>

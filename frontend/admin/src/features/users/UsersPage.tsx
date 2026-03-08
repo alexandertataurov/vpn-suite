@@ -2,6 +2,8 @@ import { useCallback, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useApi } from "@/core/api/context";
 import { useApiQuery } from "@/hooks/api/useApiQuery";
+import { deviceKeys } from "@/features/devices/services/device.query-keys";
+import { userKeys } from "@/features/users/services/user.query-keys";
 import {
   Button,
   Card,
@@ -172,24 +174,24 @@ export function UsersPage() {
     isError: isUsersError,
     error: usersError,
     refetch: refetchUsers,
-  } = useApiQuery<UserListOut>(["users", "list", listPath], listPath, { retry: 1, staleTime: 15_000 });
+  } = useApiQuery<UserListOut>([...userKeys.list(listPath)], listPath, { retry: 1, staleTime: 15_000 });
 
   const { data: userDetail, isLoading: isUserLoading } = useApiQuery<UserDetail>(
-    ["users", "detail", selectedUserId],
+    [...userKeys.detail(selectedUserId ?? 0)],
     `/users/${selectedUserId!}`,
     { enabled: !!selectedUserId, retry: 0 }
   );
 
   const { data: userDevices, isLoading: isUserDevicesLoading } = useApiQuery<UserDeviceListOut>(
-    ["users", "devices", selectedUserId],
+    [...userKeys.devices(selectedUserId ?? 0)],
     `/users/${selectedUserId!}/devices?limit=50&offset=0`,
     { enabled: !!selectedUserId, retry: 0, staleTime: 10_000 }
   );
 
   const invalidateUsers = useCallback(() => {
-    void queryClient.invalidateQueries({ queryKey: ["users", "list"] });
-    if (selectedUserId) void queryClient.invalidateQueries({ queryKey: ["users", "detail", selectedUserId] });
-    if (selectedUserId) void queryClient.invalidateQueries({ queryKey: ["users", "devices", selectedUserId] });
+    void queryClient.invalidateQueries({ queryKey: [...userKeys.lists()] });
+    if (selectedUserId) void queryClient.invalidateQueries({ queryKey: [...userKeys.detail(selectedUserId)] });
+    if (selectedUserId) void queryClient.invalidateQueries({ queryKey: [...userKeys.devices(selectedUserId)] });
   }, [queryClient, selectedUserId]);
 
   const runAction = useCallback(
@@ -290,11 +292,17 @@ export function UsersPage() {
 
   const handleDeleteSubmit = useCallback(() => {
     if (!deleteUserId) return;
-    runAction(() => api.request(`/users/${deleteUserId}`, { method: "DELETE" }));
+    const token = deleteConfirm.trim();
+    runAction(() =>
+      api.request(`/users/${deleteUserId}`, {
+        method: "DELETE",
+        body: JSON.stringify({ confirm_token: token }),
+      })
+    );
     setDeleteUserId(null);
     setDeleteConfirm("");
     setSelectedUserId(null);
-  }, [api, deleteUserId, runAction]);
+  }, [api, deleteConfirm, deleteUserId, runAction]);
 
   const [issueSubId, setIssueSubId] = useState("");
   const [issueServerId, setIssueServerId] = useState("");
@@ -315,8 +323,8 @@ export function UsersPage() {
         device_name: issueDeviceName.trim() || null,
       });
       setIssueOk(res);
-      void queryClient.invalidateQueries({ queryKey: ["devices", "list"] });
-      void queryClient.invalidateQueries({ queryKey: ["devices", "summary"] });
+      void queryClient.invalidateQueries({ queryKey: [...deviceKeys.lists()] });
+      void queryClient.invalidateQueries({ queryKey: [...deviceKeys.summary()] });
     });
   }, [api, issueDeviceName, issueServerId, issueSubId, queryClient, runAction, userDetail]);
 
@@ -717,11 +725,16 @@ export function UsersPage() {
         title="Delete user"
       >
         <p className="users-page__muted">
-          This permanently deletes the user and related data. Type <strong>DELETE</strong> to confirm.
+          This permanently deletes the user and related data. Enter the delete confirmation token (from backend env) to confirm.
         </p>
         <label className="users-page__filter">
-          Confirm
-          <Input value={deleteConfirm} onChange={(e) => setDeleteConfirm(e.target.value)} placeholder="DELETE" />
+          Confirm token
+          <Input
+            type="password"
+            value={deleteConfirm}
+            onChange={(e) => setDeleteConfirm(e.target.value)}
+            placeholder="Delete confirmation token"
+          />
         </label>
         <div className="users-page__modal-actions">
           <Button
@@ -737,7 +750,7 @@ export function UsersPage() {
           <Button
             type="button"
             variant="danger"
-            disabled={deleteConfirm.trim().toUpperCase() !== "DELETE" || actionPending}
+            disabled={!deleteConfirm.trim() || actionPending}
             onClick={handleDeleteSubmit}
           >
             Delete

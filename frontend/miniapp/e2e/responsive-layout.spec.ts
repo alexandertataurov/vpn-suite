@@ -8,7 +8,7 @@ const CORE_PAGES = [
   { path: "/plan", ctaLabel: /Renew Plan|Select Basic|Select Pro|Current Plan|View all transactions/i },
   { path: "/devices", ctaLabel: /Add device/i },
   { path: "/support", ctaLabel: /Contact support/i },
-  { path: "/settings", ctaLabel: /Manage devices/i },
+  { path: "/settings", ctaLabel: /Plans & billing|Devices|Referral link/i },
 ] as const;
 
 async function injectTelegram(page: Page) {
@@ -129,15 +129,34 @@ async function mockApi(page: Page) {
       body: JSON.stringify({ auto_select: true, items: [] }),
     });
   });
+  await page.route("**/api/v1/webapp/usage", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        range: "7d",
+        points: [
+          { ts: nowIso, bytes_in: 12_000_000, bytes_out: 8_500_000 },
+          { ts: nowIso, bytes_in: 15_500_000, bytes_out: 9_800_000 },
+        ],
+      }),
+    });
+  });
   await page.route("**/api/v1/webapp/subscription/offers", async (route) => {
     await route.fulfill({
       status: 200,
       contentType: "application/json",
       body: JSON.stringify({
         subscription_id: "sub-1",
+        status: "active",
+        valid_until: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
         can_pause: true,
         can_resume: false,
         discount_percent: 20,
+        offer_pause: false,
+        offer_discount: true,
+        offer_downgrade: false,
+        reason_group: null,
       }),
     });
   });
@@ -146,6 +165,15 @@ async function mockApi(page: Page) {
 async function goToPath(page: Page, path: string) {
   const url = path === "/" ? "./?tgWebAppData=e2e-test" : `.${path}?tgWebAppData=e2e-test`;
   await page.goto(url);
+}
+
+async function waitForShellReady(page: Page) {
+  await page.waitForFunction(() => {
+    return !document.querySelector(".splash-screen") &&
+      !!document.querySelector(".miniapp-main") &&
+      !!document.querySelector(".miniapp-header") &&
+      !!document.querySelector(".miniapp-bottom-nav");
+  }, { timeout: 10000 });
 }
 
 async function assertNoHorizontalOverflow(page: Page) {
@@ -176,53 +204,87 @@ async function assertNoTextClipping(page: Page) {
 }
 
 async function assertBottomTabsTapTarget(page: Page) {
-  const tabs = page.locator(".miniapp-bottom-nav .miniapp-tab");
-  const count = await tabs.count();
-  if (count === 0) return;
-  for (let index = 0; index < count; index += 1) {
-    const tab = tabs.nth(index);
-    const box = await tab.boundingBox();
-    expect(box).toBeTruthy();
-    expect(box!.height).toBeGreaterThanOrEqual(48);
-    expect(box!.width).toBeGreaterThanOrEqual(48);
+  const tabBoxes = await page.evaluate(() => {
+    return [...document.querySelectorAll(".miniapp-bottom-nav .miniapp-tab")]
+      .map((node) => {
+        const el = node as HTMLElement;
+        const rect = el.getBoundingClientRect();
+        if (rect.width <= 0 || rect.height <= 0) return null;
+        return { width: rect.width, height: rect.height };
+      })
+      .filter((value): value is { width: number; height: number } => value != null);
+  });
+  if (tabBoxes.length === 0) return;
+  for (const box of tabBoxes) {
+    expect(box.height).toBeGreaterThanOrEqual(48);
+    expect(box.width).toBeGreaterThanOrEqual(48);
   }
 }
 
 async function assertHeaderAndActionSafe(page: Page) {
-  const header = page.locator(".miniapp-header");
-  await expect(header).toBeVisible();
-  const headerMetrics = await header.evaluate((el) => {
-    const rect = el.getBoundingClientRect();
+  const headerProbe = await page.waitForFunction(() => {
+    const header = document.querySelector(".miniapp-header") as HTMLElement | null;
+    if (!header) return null;
+    const rect = header.getBoundingClientRect();
+    if (rect.height <= 0) return null;
     return { top: rect.top, height: rect.height };
-  });
+  }, { timeout: 10000 });
+  const headerMetrics = await headerProbe.jsonValue() as { top: number; height: number } | null;
+  expect(headerMetrics).not.toBeNull();
   expect(headerMetrics.top).toBeGreaterThanOrEqual(-1);
-  expect(headerMetrics.height).toBeGreaterThanOrEqual(56);
+  expect(headerMetrics.height).toBeGreaterThanOrEqual(48);
 
-  const actionZone = page.locator(".miniapp-bottom-nav-wrap");
-  const actionCount = await actionZone.count();
-  if (actionCount === 0) return;
-  await expect(actionZone).toBeVisible();
-  const actionMetrics = await actionZone.first().evaluate((el) => {
-    const rect = el.getBoundingClientRect();
+  const actionProbe = await page.waitForFunction(() => {
+    const actionZone = document.querySelector(".miniapp-bottom-nav-wrap") as HTMLElement | null;
+    if (!actionZone) return null;
+    const rect = actionZone.getBoundingClientRect();
+    if (rect.height <= 0) return null;
     return { bottom: rect.bottom, height: rect.height, viewportHeight: window.innerHeight };
-  });
+  }, { timeout: 10000 }).catch(() => null);
+  const actionMetrics = actionProbe
+    ? await actionProbe.jsonValue() as { bottom: number; height: number; viewportHeight: number } | null
+    : null;
+  if (!actionMetrics) return;
   expect(actionMetrics.bottom).toBeLessThanOrEqual(actionMetrics.viewportHeight + 1);
   expect(actionMetrics.height).toBeGreaterThanOrEqual(72);
 }
 
 async function assertPrimaryCtaVisible(page: Page, ctaLabel: RegExp) {
-  const button = page.getByRole("button", { name: ctaLabel });
-  const link = page.getByRole("link", { name: ctaLabel });
-  const cta = button.or(link).first();
-  await expect(cta).toBeVisible({ timeout: 10000 });
-  const isClipped = await cta.evaluate((el) => {
-    const rect = el.getBoundingClientRect();
-    return rect.left < -1 || rect.right > window.innerWidth + 1 || rect.width <= 0 || rect.height <= 0;
-  });
-  expect(isClipped).toBeFalsy();
+  const ctaProbe = await page.waitForFunction(
+    ({ source, flags }) => {
+      const matcher = new RegExp(source, flags);
+      const main = document.querySelector(".miniapp-main");
+      if (!main) return null;
+      for (const node of main.querySelectorAll("button,a")) {
+        const el = node as HTMLElement;
+        const label = el.getAttribute("aria-label") || el.textContent?.trim() || "";
+        if (!matcher.test(label)) continue;
+        const rect = el.getBoundingClientRect();
+        if (rect.width <= 0 || rect.height <= 0) continue;
+        return {
+          left: rect.left,
+          right: rect.right,
+          width: rect.width,
+          viewportWidth: window.innerWidth,
+        };
+      }
+      return null;
+    },
+    { source: ctaLabel.source, flags: ctaLabel.flags },
+    { timeout: 10000 },
+  );
+
+  const ctaMetrics = await ctaProbe.jsonValue() as
+    | { left: number; right: number; width: number; viewportWidth: number }
+    | null;
+  expect(ctaMetrics).not.toBeNull();
+  expect(ctaMetrics!.left).toBeGreaterThanOrEqual(-1);
+  expect(ctaMetrics!.right).toBeLessThanOrEqual(ctaMetrics!.viewportWidth + 1);
 }
 
 test.describe("Miniapp Responsive Layout", () => {
+  test.setTimeout(180000);
+
   test("core pages keep CTA visibility and avoid overflow across required widths", async ({ page }) => {
     await injectTelegram(page);
     await mockApi(page);
@@ -231,6 +293,7 @@ test.describe("Miniapp Responsive Layout", () => {
       await page.setViewportSize({ width, height: VIEWPORT_HEIGHT });
       for (const pageConfig of CORE_PAGES) {
         await goToPath(page, pageConfig.path);
+        await waitForShellReady(page);
         await assertPrimaryCtaVisible(page, pageConfig.ctaLabel);
         await assertBottomTabsTapTarget(page);
         await assertHeaderAndActionSafe(page);

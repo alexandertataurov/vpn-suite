@@ -432,8 +432,11 @@ Used across layout and operator CSS (from shared/theme or local):
   Response: `UserDetailType`.  
   Used by: UserDetail.
 - **PATCH /users/:userId**  
-  Body: e.g. role.  
+  Body: e.g. role, is_banned, confirm_token (for ban).  
   Used by: Users page.
+- **DELETE /users/:id**  
+  Body: `{ confirm_token }` (required; must match `DELETE_USER_CONFIRM_TOKEN`).  
+  Used by: Users page delete modal.
 - **POST /users/:id/devices/issue**  
   Body: `{ subscription_id }`.  
   Used by: UserDetail.
@@ -468,12 +471,22 @@ Used across layout and operator CSS (from shared/theme or local):
 
 ### 6.7 Billing
 
-- **GET /subscriptions** (query)  
+Billing page has four tabs: **Plans**, **Subscription records**, **Payments**, **Entitlement events**.
+
+- **GET /plans** (query: limit, offset)  
+  Response: `PlanList`.  
+  Used by: BillingPage Plans tab (plan catalog CRUD).
+- **POST /plans**, **PATCH /plans/:id**  
+  Used by: BillingPage Plans tab.
+- **GET /subscriptions** (query: user_id?, plan_id?, limit, offset)  
   Response: `SubscriptionList`.  
-  Used by: SubscriptionsTab.
-- **GET /payments** (query)  
+  Used by: BillingPage Subscription records tab.
+- **GET /payments** (query: user_id?, status?, provider?, limit, offset)  
   Response: `PaymentList`.  
-  Used by: PaymentsTab.
+  Used by: BillingPage Payments tab.
+- **GET /admin/entitlement-events** (query: user_id?, subscription_id?, event_type?, limit)  
+  Response: `EntitlementEventOut[]`.  
+  Used by: BillingPage Entitlement events tab.
 
 ### 6.8 Audit
 

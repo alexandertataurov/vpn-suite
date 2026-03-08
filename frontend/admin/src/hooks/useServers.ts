@@ -1,5 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useApiQuery } from "@/hooks/api/useApiQuery";
+import { serverKeys } from "@/features/servers/services/server.query-keys";
 import { useApiMutation } from "./useApiMutation";
 import type {
   ServerOut,
@@ -12,8 +13,9 @@ import type {
  * Used in: ServersPage detail / edit modal.
  */
 export function useGetServer(serverId: string | null) {
+  const resolvedId = serverId ?? "";
   return useApiQuery<ServerOut>(
-    ["servers", "detail", serverId!],
+    [...serverKeys.detail(resolvedId)],
     `/servers/${serverId!}`,
     { enabled: !!serverId, retry: 0 }
   );
@@ -25,7 +27,7 @@ export function useGetServer(serverId: string | null) {
  */
 export function useGetServerList(params: { limit: number; offset: number }) {
   const path = `/servers?limit=${params.limit}&offset=${params.offset}`;
-  return useApiQuery<ServerList>(["servers", "settings", "list", path], path, { retry: 1 });
+  return useApiQuery<ServerList>([...serverKeys.settingsList(path)], path, { retry: 1 });
 }
 
 /**
@@ -34,7 +36,7 @@ export function useGetServerList(params: { limit: number; offset: number }) {
  */
 export function useGetServersSnapshotSummary() {
   return useApiQuery<ServersSnapshotSummaryOut>(
-    ["servers", "snapshots", "summary"],
+    [...serverKeys.snapshotsSummary()],
     "/servers/snapshots/summary",
     { retry: 1 }
   );
@@ -49,7 +51,7 @@ export function useCreateServer() {
   return useApiMutation({
     mutationFn: (api) => (body: Record<string, unknown>) => api.post<ServerOut>("/servers", body),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["servers"] });
+      void queryClient.invalidateQueries({ queryKey: [...serverKeys.all] });
     },
   });
 }
@@ -64,7 +66,7 @@ export function useUpdateServer() {
     mutationFn: (api) => (payload: { serverId: string; body: Record<string, unknown> }) =>
       api.patch<ServerOut>(`/servers/${payload.serverId}`, payload.body),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["servers"] });
+      void queryClient.invalidateQueries({ queryKey: [...serverKeys.all] });
     },
   });
 }
@@ -79,7 +81,7 @@ export function useDeleteServer() {
     mutationFn: (api) => (serverId: string) =>
       api.request(`/servers/${serverId}`, { method: "DELETE" }),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["servers"] });
+      void queryClient.invalidateQueries({ queryKey: [...serverKeys.all] });
     },
   });
 }

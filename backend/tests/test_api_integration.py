@@ -272,6 +272,166 @@ async def test_webapp_auth_persists_tg_requisites_in_meta(
 
 
 @pytest.mark.asyncio
+async def test_webapp_me_patch_updates_profile(
+    client: AsyncClient, monkeypatch, async_session
+):
+    """PATCH /api/v1/webapp/me with Bearer updates user profile (email, phone, display_name, locale)."""
+    from sqlalchemy import select
+
+    from app.core import config
+    from app.models import User
+
+    tg_id = 111222333
+    tg_user = {
+        "id": tg_id,
+        "first_name": "Patch",
+        "last_name": "User",
+        "username": "patchuser",
+        "language_code": "en",
+    }
+    monkeypatch.setattr(config.settings, "telegram_bot_token", "TEST_BOT_TOKEN")
+    monkeypatch.setattr(
+        config.settings,
+        "secret_key",
+        getattr(config.settings, "secret_key", "test-secret"),
+    )
+    monkeypatch.setattr(
+        "app.api.v1.webapp.validate_telegram_init_data",
+        lambda init_data, bot_token: tg_user if bot_token else None,
+    )
+
+    async def override_get_db():
+        yield async_session
+
+    app.dependency_overrides[get_db] = override_get_db
+    try:
+        auth_r = await client.post("/api/v1/webapp/auth", json={"init_data": "x"})
+        assert auth_r.status_code == 200, auth_r.text
+        token = auth_r.json()["session_token"]
+
+        get_r = await client.get(
+            "/api/v1/webapp/me",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert get_r.status_code == 200, get_r.text
+        me = get_r.json()
+        assert me["user"] is not None
+        assert me["user"]["phone"] is None
+        assert me["user"].get("locale") is None
+
+        patch_r = await client.patch(
+            "/api/v1/webapp/me",
+            headers={"Authorization": f"Bearer {token}"},
+            json={
+                "display_name": "New Name",
+                "email": "new@example.com",
+                "phone": "+1234567890",
+                "locale": "ru",
+            },
+        )
+        assert patch_r.status_code == 200, patch_r.text
+        updated = patch_r.json()["user"]
+        assert updated["display_name"] == "New Name"
+        assert updated["email"] == "new@example.com"
+        assert updated["phone"] == "+1234567890"
+        assert updated["locale"] == "ru"
+
+        get_r2 = await client.get(
+            "/api/v1/webapp/me",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert get_r2.status_code == 200
+        assert get_r2.json()["user"]["display_name"] == "New Name"
+        assert get_r2.json()["user"]["email"] == "new@example.com"
+        assert get_r2.json()["user"]["phone"] == "+1234567890"
+        assert get_r2.json()["user"]["locale"] == "ru"
+
+        result = await async_session.execute(select(User).where(User.tg_id == tg_id))
+        user = result.scalar_one_or_none()
+        assert user is not None
+        assert user.email == "new@example.com"
+        assert user.phone == "+1234567890"
+        assert (user.meta or {}).get("display_name") == "New Name"
+        assert (user.meta or {}).get("locale") == "ru"
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+
+
+@pytest.mark.asyncio
+async def test_webapp_me_patch_invalid_locale_422(client: AsyncClient, monkeypatch, async_session):
+    """PATCH /api/v1/webapp/me with invalid locale returns 422."""
+    from app.core import config
+
+    tg_id = 444555666
+    tg_user = {"id": tg_id, "first_name": "X", "language_code": "en"}
+    monkeypatch.setattr(config.settings, "telegram_bot_token", "TEST_BOT_TOKEN")
+    monkeypatch.setattr(
+        config.settings,
+        "secret_key",
+        getattr(config.settings, "secret_key", "test-secret"),
+    )
+    monkeypatch.setattr(
+        "app.api.v1.webapp.validate_telegram_init_data",
+        lambda init_data, bot_token: tg_user if bot_token else None,
+    )
+
+    async def override_get_db():
+        yield async_session
+
+    app.dependency_overrides[get_db] = override_get_db
+    try:
+        auth_r = await client.post("/api/v1/webapp/auth", json={"init_data": "x"})
+        assert auth_r.status_code == 200
+        token = auth_r.json()["session_token"]
+
+        r = await client.patch(
+            "/api/v1/webapp/me",
+            headers={"Authorization": f"Bearer {token}"},
+            json={"locale": "xx"},
+        )
+        assert r.status_code == 422, r.text
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+
+
+@pytest.mark.asyncio
+async def test_webapp_me_patch_invalid_email_422(client: AsyncClient, monkeypatch, async_session):
+    """PATCH /api/v1/webapp/me with invalid email format returns 422."""
+    from app.core import config
+
+    tg_id = 777888999
+    tg_user = {"id": tg_id, "first_name": "Y", "language_code": "en"}
+    monkeypatch.setattr(config.settings, "telegram_bot_token", "TEST_BOT_TOKEN")
+    monkeypatch.setattr(
+        config.settings,
+        "secret_key",
+        getattr(config.settings, "secret_key", "test-secret"),
+    )
+    monkeypatch.setattr(
+        "app.api.v1.webapp.validate_telegram_init_data",
+        lambda init_data, bot_token: tg_user if bot_token else None,
+    )
+
+    async def override_get_db():
+        yield async_session
+
+    app.dependency_overrides[get_db] = override_get_db
+    try:
+        auth_r = await client.post("/api/v1/webapp/auth", json={"init_data": "x"})
+        assert auth_r.status_code == 200
+        token = auth_r.json()["session_token"]
+
+        r = await client.patch(
+            "/api/v1/webapp/me",
+            headers={"Authorization": f"Bearer {token}"},
+            json={"email": "not-an-email"},
+        )
+        assert r.status_code == 422, r.text
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+
+
+@pytest.mark.asyncio
 async def test_webapp_debug_test_telegram_config_sends_to_expected_chat(monkeypatch):
     """POST /api/v1/webapp/debug/test-telegram-config uses WebApp tg_id as chat_id."""
     from app.api.v1 import webapp as webapp_module

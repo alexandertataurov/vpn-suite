@@ -1,13 +1,14 @@
 import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import { Skeleton } from "@/design-system";
 import { MainButtonReserveProvider } from "@/context/MainButtonReserveContext";
+import { TelegramLoadingScreen } from "@/app/TelegramLoadingScreen";
 import { TelegramProvider } from "@/context/TelegramContext";
 import { TelegramThemeBridge } from "@/design-system";
 import { AppRoot } from "@/app/AppRoot";
 import { SafeAreaLayer } from "@/app/SafeAreaLayer";
 import { OverlayLayer } from "@/app/OverlayLayer";
 import { TelegramEventManager } from "@/app/TelegramEventManager";
+import { WebappAuthRefresh } from "@/app/WebappAuthRefresh";
 
 const HomePage = lazy(() => import("@/pages/Home").then((m) => ({ default: m.HomePage })));
 const PlanPage = lazy(() => import("@/pages/Plan").then((m) => ({ default: m.PlanPage })));
@@ -21,6 +22,12 @@ const ServerSelectionPage = lazy(() =>
 );
 const OnboardingPage = lazy(() =>
   import("@/pages/Onboarding").then((m) => ({ default: m.OnboardingPage })),
+);
+const ConnectStatusPage = lazy(() =>
+  import("@/pages/ConnectStatus").then((m) => ({ default: m.ConnectStatusPage })),
+);
+const RestoreAccessPage = lazy(() =>
+  import("@/pages/RestoreAccess").then((m) => ({ default: m.RestoreAccessPage })),
 );
 const TabbedShellLayout = lazy(() =>
   import("@/app/ViewportLayout").then((m) => ({ default: m.TabbedShellLayout })),
@@ -41,12 +48,18 @@ export function Providers() {
         <SafeAreaLayer>
           <MainButtonReserveProvider>
             <OverlayLayer>
-              <Suspense fallback={<div className="miniapp-loading"><Skeleton height={24} /></div>}>
+              <WebappAuthRefresh />
+              <Suspense fallback={<TelegramLoadingScreen />}>
                 <BootstrapController>
                   <Routes>
                     <Route element={<StackFlowLayout />}>
                       <Route path="/onboarding" element={<OnboardingPage />} />
                       <Route path="/plan/checkout/:planId" element={<CheckoutPage />} />
+                      <Route path="/devices/issue" element={<DevicesPage />} />
+                      <Route path="/connect-status" element={<ConnectStatusPage />} />
+                      <Route path="/restore-access" element={<RestoreAccessPage />} />
+                      {/* Spec §7.3: backend returns /account/subscription for cancel_at_period_end; redirect intentional: Plan page covers subscription state. */}
+                      <Route path="/account/subscription" element={<Navigate to="/plan" replace />} />
                       <Route path="/servers" element={<ServerSelectionPage />} />
                       <Route path="/referral" element={<ReferralPage />} />
                     </Route>

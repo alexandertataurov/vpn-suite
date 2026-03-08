@@ -1,6 +1,6 @@
+import { ONBOARDING_MAX_STEP, ONBOARDING_MIN_STEP } from "./constants";
+
 const STORAGE_PREFIX = "vpn-suite-miniapp-onboarding";
-const MIN_STEP = 0;
-const MAX_STEP = 2;
 
 export interface OnboardingResumeState {
   step: number;
@@ -15,7 +15,7 @@ function getStorageKey(userId?: number | null): string {
 }
 
 function clampStep(step: number): number {
-  return Math.max(MIN_STEP, Math.min(MAX_STEP, step));
+  return Math.max(ONBOARDING_MIN_STEP, Math.min(ONBOARDING_MAX_STEP, step));
 }
 
 function isObject(value: unknown): value is Record<string, unknown> {

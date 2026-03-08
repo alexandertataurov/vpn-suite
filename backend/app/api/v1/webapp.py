@@ -2,11 +2,12 @@
 
 import logging
 import math
+import re
 from datetime import datetime, timedelta, timezone
 
 import httpx
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request, status
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,11 +16,19 @@ from sqlalchemy.orm import selectinload
 from app.api.v1.device_cache import invalidate_devices_list_cache, invalidate_devices_summary_cache
 from app.core.config import settings
 from app.core.config_builder import ConfigValidationError
-from app.core.constants import REDIS_KEY_RATELIMIT_ISSUE_PREFIX
+from app.core.constants import REDIS_KEY_RATELIMIT_ISSUE_PREFIX, STARS_PER_LEGACY_UNIT
 from app.core.database import get_db
-from app.core.metrics import frontend_web_vital_ms, frontend_web_vital_score, miniapp_events_total
+from app.core.metrics import (
+    frontend_web_vital_ms,
+    frontend_web_vital_score,
+    miniapp_events_total,
+    referral_attach_fail_total,
+    referral_attach_total,
+    vpn_revenue_referral_signup_total,
+)
 from app.core.redaction import redact_for_log
 from app.core.redis_client import get_redis
+from app.core.rate_limit import rate_limit_webapp_me_patch
 from app.core.security import create_webapp_session_token, decode_token, validate_telegram_init_data
 from app.core.telegram_user import build_tg_requisites
 from app.models import (
@@ -36,6 +45,7 @@ from app.models import (
     User,
 )
 from app.services.device_telemetry_cache import get_device_telemetry_bulk
+from app.services.entitlement_service import emit_entitlement_event
 from app.services.funnel_service import log_funnel_event
 from app.services.issue_service import issue_device
 from app.services.issued_config_service import persist_issued_configs
@@ -50,7 +60,107 @@ router = APIRouter(prefix="/webapp", tags=["webapp"])
 _WEBAPP_SERVER_SELECT_LIMIT = 20
 _WEBAPP_SERVER_SELECT_WINDOW_SECONDS = 60
 _WEBAPP_ONBOARDING_VERSION = 1
-_WEBAPP_ONBOARDING_MAX_STEP = 4
+_WEBAPP_ONBOARDING_MAX_STEP = 2
+
+
+def _looks_like_ip(host: str) -> bool:
+    """True if host looks like an IPv4 or IPv6 address, not a hostname."""
+    if not host or not host.strip():
+        return False
+    s = host.strip()
+    # IPv4: digits and dots only, 4 parts
+    if "." in s and ":" not in s:
+        parts = s.split(".")
+        if len(parts) == 4 and all(p.isdigit() and 0 <= int(p) <= 255 for p in parts):
+            return True
+    # IPv6: contains colons
+    if ":" in s:
+        return True
+    return False
+
+
+def _server_public_ip(server: Server | None) -> str | None:
+    """Return server's public/exit IP for display. Returns None if endpoint host is a hostname (not an IP)."""
+    if server is None or not getattr(server, "api_endpoint", None):
+        return None
+    host = (server.api_endpoint or "").split("//")[-1].split("/")[0].split(":")[0] or None
+    if not host or not _looks_like_ip(host):
+        return None
+    return host
+
+
+def _resolve_route(
+    user: User,
+    subscriptions: list,
+    active_devices: list,
+) -> tuple[str, str]:
+    """Return (recommended_route, reason) per spec §7.2."""
+    now = datetime.now(timezone.utc)
+    primary_sub = next(
+        (
+            s
+            for s in subscriptions
+            if (getattr(s, "subscription_status", s.status) in ("active", "pending"))
+            and (s.valid_until > now or getattr(s, "access_status", "") == "grace")
+        ),
+        None,
+    )
+    if not primary_sub:
+        # Check for grace/expired
+        grace_sub = next(
+            (
+                s
+                for s in subscriptions
+                if getattr(s, "access_status", "") == "grace"
+                and getattr(s, "grace_until", None)
+                and getattr(s, "grace_until") > now
+            ),
+            None,
+        )
+        if grace_sub:
+            return "/restore-access", "expired_with_grace"
+        # No active subscription
+        return "/plan", "no_subscription"
+
+    sub_status = getattr(primary_sub, "subscription_status", primary_sub.status)
+    access_status = getattr(primary_sub, "access_status", "enabled")
+    cancel_at_end = bool(getattr(primary_sub, "cancel_at_period_end", False))
+
+    grace_until = getattr(primary_sub, "grace_until", None)
+    if access_status == "grace" and grace_until and grace_until > now:
+        return "/restore-access", "grace"
+    if cancel_at_end and primary_sub.valid_until > now:
+        return "/account/subscription", "cancelled_at_period_end"
+
+    has_device = len(active_devices) > 0
+    has_confirmed = (
+        user.last_connection_confirmed_at is not None
+        or any(
+            getattr(d, "last_connection_confirmed_at", None) is not None
+            for d in active_devices
+        )
+    )
+
+    if not has_device:
+        return "/devices/issue", "no_device"
+    if not has_confirmed:
+        return "/connect-status", "connection_not_confirmed"
+    return "/", "connected_user"
+
+
+def _stars_amount(amount: object, currency: str) -> int:
+    """Return Telegram Stars amount as a non-negative integer."""
+    try:
+        value = float(amount or 0)
+    except (TypeError, ValueError):
+        value = 0.0
+    if not math.isfinite(value) or value <= 0:
+        return 0
+    normalized = (currency or "").strip().upper()
+    if normalized in ("XTR", "STARS"):
+        return max(0, int(round(value)))
+    # Legacy/unknown non-Stars currency: convert using placeholder ratio until product confirms mapping.
+    return max(0, int(round(value * float(STARS_PER_LEGACY_UNIT))))
 
 
 class WebAppAuthRequest(BaseModel):
@@ -198,15 +308,59 @@ async def webapp_me(request: Request, db: AsyncSession = Depends(get_db)):
             "user": None,
             "subscriptions": [],
             "devices": [],
+            "public_ip": None,
             "onboarding": _serialize_onboarding_state(None),
         }
+    active_devices = [d for d in user.devices if d.revoked_at is None]
+    preferred_server_id = str((user.meta or {}).get("preferred_server_id") or "").strip() or None
+    server_id_for_ip = None
+    if active_devices:
+        ranked_devices = sorted(
+            active_devices,
+            key=lambda device: (
+                device.last_seen_handshake_at or device.issued_at,
+                device.issued_at,
+            ),
+            reverse=True,
+        )
+        server_id_for_ip = ranked_devices[0].server_id
+    elif preferred_server_id:
+        server_id_for_ip = preferred_server_id
+    public_ip = None
+    if server_id_for_ip:
+        server_result = await db.execute(select(Server).where(Server.id == server_id_for_ip))
+        public_ip = _server_public_ip(server_result.scalar_one_or_none())
+
+    now = datetime.now(timezone.utc)
+
+    def _device_status(d: Device) -> str:
+        if d.revoked_at:
+            return "revoked"
+        if d.apply_status in ("PENDING_APPLY", "APPLYING", "FAILED_APPLY", "NO_HANDSHAKE"):
+            return "config_pending"
+        if d.last_seen_handshake_at:
+            age = (now - d.last_seen_handshake_at).total_seconds()
+            return "connected" if age < 300 else "idle"
+        return "config_pending"
     subs = [
         {
             "id": s.id,
             "plan_id": s.plan_id,
             "status": s.status,
+            "subscription_status": getattr(s, "subscription_status", s.status),
+            "access_status": getattr(s, "access_status", "enabled"),
+            "billing_status": getattr(s, "billing_status", "paid"),
+            "renewal_status": getattr(
+                s, "renewal_status", "auto_renew_on" if getattr(s, "auto_renew", True) else "auto_renew_off"
+            ),
             "valid_until": s.valid_until.isoformat(),
+            "grace_until": (g.isoformat() if (g := getattr(s, "grace_until", None)) else None),
+            "cancel_at_period_end": bool(getattr(s, "cancel_at_period_end", False)),
+            "accrued_bonus_days": int(getattr(s, "accrued_bonus_days", 0) or 0),
             "device_limit": s.device_limit,
+            "auto_renew": bool(getattr(s, "auto_renew", True)),
+            "is_trial": bool(getattr(s, "is_trial", False)),
+            "trial_ends_at": (te.isoformat() if (te := getattr(s, "trial_ends_at", None)) else None),
         }
         for s in user.subscriptions
     ]
@@ -214,12 +368,18 @@ async def webapp_me(request: Request, db: AsyncSession = Depends(get_db)):
         {
             "id": d.id,
             "device_name": d.device_name,
+            "platform": getattr(d, "platform", None),
+            "server_id": d.server_id,
             "issued_at": d.issued_at.isoformat(),
             "revoked_at": d.revoked_at.isoformat() if d.revoked_at else None,
             "last_seen_handshake_at": d.last_seen_handshake_at.isoformat()
             if d.last_seen_handshake_at
             else None,
+            "last_connection_confirmed_at": (
+                (lc.isoformat() if (lc := getattr(d, "last_connection_confirmed_at", None)) else None)
+            ),
             "apply_status": d.apply_status,
+            "status": _device_status(d),
         }
         for d in user.devices
     ]
@@ -230,11 +390,151 @@ async def webapp_me(request: Request, db: AsyncSession = Depends(get_db)):
         payload={"source": "webapp"},
     )
     miniapp_events_total.labels(event="dashboard_open").inc()
+
+    recommended_route, route_reason = _resolve_route(user, user.subscriptions, active_devices)
+    routing = {"recommended_route": recommended_route, "reason": route_reason}
+
+    meta = user.meta or {}
+    tg_meta = meta.get("tg") or {}
+    first = (tg_meta.get("first_name") or "").strip()
+    last = (tg_meta.get("last_name") or "").strip()
+    tg_display = " ".join((first, last)).strip() or (tg_meta.get("username") or "").strip() or "User"
+    display_name = (meta.get("display_name") or "").strip() or tg_display or "User"
+    photo_url = tg_meta.get("photo_url") or None
+    locale = meta.get("locale") or None
+
     return {
-        "user": {"id": user.id, "tg_id": user.tg_id},
+        "user": {
+            "id": user.id,
+            "tg_id": user.tg_id,
+            "email": user.email,
+            "phone": user.phone,
+            "display_name": display_name or None,
+            "photo_url": photo_url,
+            "locale": locale,
+            "onboarding_step": user.onboarding_step,
+            "first_connected_at": (
+                user.first_connected_at.isoformat()
+                if getattr(user, "first_connected_at", None)
+                else None
+            ),
+            "last_connection_confirmed_at": (
+                user.last_connection_confirmed_at.isoformat()
+                if getattr(user, "last_connection_confirmed_at", None)
+                else None
+            ),
+        },
         "subscriptions": subs,
         "devices": devs,
+        "public_ip": public_ip,
         "onboarding": _serialize_onboarding_state(user),
+        "routing": routing,
+    }
+
+
+_WEBAPP_ALLOWED_LOCALES = frozenset({"en", "ru"})
+
+
+_EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+
+class WebAppMeProfileUpdateBody(BaseModel):
+    """Optional profile fields for PATCH /webapp/me. Omitted or None = no change."""
+
+    email: str | None = None
+    phone: str | None = None
+    display_name: str | None = None
+    locale: str | None = None
+
+    @field_validator("email")
+    @classmethod
+    def validate_email_format(cls, v: str | None) -> str | None:
+        if v is None or not v.strip():
+            return None
+        s = v.strip()
+        if not _EMAIL_RE.match(s):
+            raise ValueError("Invalid email format")
+        return s
+
+    @model_validator(mode="after")
+    def validate_locale(self) -> "WebAppMeProfileUpdateBody":
+        if self.locale is not None and self.locale.strip():
+            if self.locale.strip().lower() not in _WEBAPP_ALLOWED_LOCALES:
+                raise ValueError(
+                    f"locale must be one of {sorted(_WEBAPP_ALLOWED_LOCALES)}"
+                )
+        return self
+
+
+@router.patch("/me")
+async def webapp_me_update(
+    body: WebAppMeProfileUpdateBody,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    """Update current session user profile. Only provided fields are updated."""
+    tg_id = _get_tg_id_from_bearer(request)
+    if not tg_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"code": "UNAUTHORIZED", "message": "Invalid session"},
+        )
+    await rate_limit_webapp_me_patch(tg_id)
+    result = await db.execute(select(User).where(User.tg_id == tg_id))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"code": "USER_NOT_FOUND", "message": "User not found"},
+        )
+    meta = dict(user.meta or {})
+    if body.email is not None:
+        user.email = body.email.strip() or None
+    if body.phone is not None:
+        user.phone = body.phone.strip() or None
+    if body.display_name is not None:
+        s = body.display_name.strip()
+        if s:
+            meta["display_name"] = s
+        else:
+            meta.pop("display_name", None)
+    if body.locale is not None:
+        s = body.locale.strip().lower() if body.locale.strip() else ""
+        if s and s in _WEBAPP_ALLOWED_LOCALES:
+            meta["locale"] = s
+        else:
+            meta.pop("locale", None)
+    user.meta = meta or None
+    await db.commit()
+    await db.refresh(user)
+    meta = user.meta or {}
+    tg_meta = meta.get("tg") or {}
+    first = (tg_meta.get("first_name") or "").strip()
+    last = (tg_meta.get("last_name") or "").strip()
+    tg_display = " ".join((first, last)).strip() or (tg_meta.get("username") or "").strip() or "User"
+    display_name = (meta.get("display_name") or "").strip() or tg_display or "User"
+    locale = meta.get("locale") or None
+    return {
+        "user": {
+            "id": user.id,
+            "tg_id": user.tg_id,
+            "email": user.email,
+            "phone": user.phone,
+            "display_name": display_name or None,
+            "photo_url": tg_meta.get("photo_url") or None,
+            "locale": locale,
+            "onboarding_step": user.onboarding_step,
+            "first_connected_at": (
+                user.first_connected_at.isoformat()
+                if getattr(user, "first_connected_at", None)
+                else None
+            ),
+            "last_connection_confirmed_at": (
+                user.last_connection_confirmed_at.isoformat()
+                if getattr(user, "last_connection_confirmed_at", None)
+                else None
+            ),
+        },
     }
 
 
@@ -297,7 +597,7 @@ async def webapp_telemetry(
     request: Request,
     db: AsyncSession = Depends(get_db),
 ):
-    """Log a telemetry event (screen_open, cta_click, etc.). Requires Bearer session token."""
+    """Log a telemetry event (e.g. screen_view, cta_click). Requires Bearer session token."""
     tg_id = _get_tg_id_from_bearer(request)
     if not tg_id:
         raise HTTPException(
@@ -312,6 +612,8 @@ async def webapp_telemetry(
         user_id=user.id if user else None,
         payload=payload,
     )
+    event_label = (body.event_type or "unknown")[:64]
+    miniapp_events_total.labels(event=event_label).inc()
     if body.event_type == "web_vital" and isinstance(payload, dict):
         name = str(payload.get("name") or "")[:32]
         unit = str(payload.get("unit") or "ms").lower()
@@ -428,7 +730,6 @@ async def webapp_list_plans(request: Request, db: AsyncSession = Depends(get_db)
     stmt = select(Plan)
     if trial_plan_id:
         stmt = stmt.where(Plan.id != trial_plan_id)
-    stmt = stmt.order_by(Plan.price_amount.asc(), Plan.duration_days.asc(), Plan.id.asc())
     result = await db.execute(stmt)
     plans = result.scalars().all()
     user_result = await db.execute(select(User.id).where(User.tg_id == tg_id))
@@ -444,16 +745,20 @@ async def webapp_list_plans(request: Request, db: AsyncSession = Depends(get_db)
     items = []
     for p in plans:
         style, clean_name = _extract_plan_style(p.name)
+        stars = _stars_amount(p.price_amount, p.price_currency)
         items.append(
             {
                 "id": p.id,
                 "name": clean_name or p.id,
                 "duration_days": p.duration_days,
-                "price_currency": p.price_currency,
-                "price_amount": float(p.price_amount),
+                "device_limit": int(getattr(p, "device_limit", 1) or 1),
+                "price_currency": "XTR",
+                "price_amount": stars,
                 "style": style,
+                "upsell_methods": p.upsell_methods if p.upsell_methods is not None else [],
             }
         )
+    items.sort(key=lambda item: (int(item.get("price_amount") or 0), int(item.get("duration_days") or 0), str(item.get("id") or "")))
     return {
         "items": items,
         "total": len(items),
@@ -762,6 +1067,181 @@ async def webapp_issue_device(
     )
 
 
+@router.post("/devices/{device_id}/confirm-connected")
+async def webapp_confirm_connected(
+    device_id: str, request: Request, db: AsyncSession = Depends(get_db)
+):
+    """Confirm connection for device (idempotent). Bearer session token required."""
+    tg_id = _get_tg_id_from_bearer(request)
+    if not tg_id:
+        raise HTTPException(
+            status_code=401, detail={"code": "UNAUTHORIZED", "message": "Invalid session"}
+        )
+    user_result = await db.execute(select(User).where(User.tg_id == tg_id))
+    user = user_result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(
+            status_code=404, detail={"code": "USER_NOT_FOUND", "message": "User not found"}
+        )
+    device_result = await db.execute(
+        select(Device).where(Device.id == device_id, Device.user_id == user.id)
+    )
+    device = device_result.scalar_one_or_none()
+    if not device:
+        raise HTTPException(
+            status_code=404, detail={"code": "DEVICE_NOT_FOUND", "message": "Device not found"}
+        )
+    if device.revoked_at:
+        raise HTTPException(
+            status_code=400, detail={"code": "ALREADY_REVOKED", "message": "Already revoked"}
+        )
+    now = datetime.now(timezone.utc)
+    device.last_connection_confirmed_at = now
+    if not user.first_connected_at:
+        user.first_connected_at = now
+    user.last_connection_confirmed_at = now
+    await db.commit()
+    await log_funnel_event(
+        db,
+        event_type="connect_confirmed",
+        user_id=user.id,
+        payload={"device_id": device_id, "source": "webapp"},
+    )
+    miniapp_events_total.labels(event="connect_confirmed").inc()
+    return {"status": "ok"}
+
+
+@router.post("/devices/{device_id}/replace-with-new", response_model=WebAppIssueDeviceResponse)
+async def webapp_replace_device(
+    device_id: str,
+    request: Request,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db),
+):
+    """Revoke current device and issue a new one in the same slot (subscription). Bearer required."""
+    tg_id = _get_tg_id_from_bearer(request)
+    if not tg_id:
+        raise HTTPException(
+            status_code=401, detail={"code": "UNAUTHORIZED", "message": "Invalid session"}
+        )
+    user = await _get_or_create_webapp_user(db, tg_id)
+    if not user:
+        raise HTTPException(
+            status_code=404, detail={"code": "USER_NOT_FOUND", "message": "User not found"}
+        )
+    device_result = await db.execute(
+        select(Device).where(Device.id == device_id, Device.user_id == user.id)
+    )
+    device = device_result.scalar_one_or_none()
+    if not device:
+        raise HTTPException(
+            status_code=404, detail={"code": "DEVICE_NOT_FOUND", "message": "Device not found"}
+        )
+    if device.revoked_at:
+        raise HTTPException(
+            status_code=400, detail={"code": "ALREADY_REVOKED", "message": "Device already revoked"}
+        )
+    now = datetime.now(timezone.utc)
+    device.revoked_at = now
+    sub_result = await db.execute(
+        select(Subscription).where(
+            Subscription.id == device.subscription_id,
+            Subscription.user_id == user.id,
+        )
+    )
+    sub = sub_result.scalar_one_or_none()
+    if not sub:
+        raise HTTPException(
+            status_code=400, detail={"code": "INVALID_DEVICE", "message": "Invalid device subscription"}
+        )
+    access_status = getattr(sub, "access_status", "enabled")
+    if access_status == "grace":
+        raise HTTPException(
+            status_code=400,
+            detail={"code": "GRACE_NO_NEW_DEVICE", "message": "Cannot replace device during grace. Restore access first."},
+        )
+    sub_status = getattr(sub, "subscription_status", sub.status)
+    if sub_status not in ("active", "pending") or sub.valid_until <= now:
+        raise HTTPException(
+            status_code=400,
+            detail={"code": "NO_ACTIVE_SUBSCRIPTION", "message": "No active subscription"},
+        )
+    adapter = getattr(request.app.state, "node_runtime_adapter", None)
+    if adapter is None:
+        raise HTTPException(
+            status_code=503,
+            detail={"code": "NODE_RUNTIME_UNAVAILABLE", "message": "Device issuance unavailable."},
+        )
+    preferred_server_id: str | None = device.server_id
+    meta = user.meta or {}
+    if meta.get("server_auto_select", True):
+        preferred_server_id = None
+    else:
+        raw = str(meta.get("preferred_server_id") or "").strip()
+        if raw:
+            preferred_server_id = raw
+    from app.services.topology_engine import TopologyEngine
+
+    engine = TopologyEngine(adapter)
+    get_topology = engine.get_topology
+    try:
+        out = await issue_device(
+            db,
+            user_id=user.id,
+            subscription_id=sub.id,
+            server_id=preferred_server_id,
+            device_name=device.device_name or f"webapp_{tg_id}",
+            get_topology=get_topology,
+            runtime_adapter=adapter,
+        )
+    except Exception as e:
+        from app.core.exceptions import LoadBalancerError, WireGuardCommandError
+        from app.services.server_live_key_service import ServerNotSyncedError
+
+        if isinstance(e, ServerNotSyncedError):
+            raise HTTPException(status_code=409, detail={"code": "SERVER_NOT_SYNCED", "message": str(e)}) from e
+        if isinstance(e, LoadBalancerError):
+            raise HTTPException(status_code=503, detail={"code": "NO_NODE", "message": str(e)}) from e
+        if isinstance(e, (WireGuardCommandError, ValueError)):
+            raise HTTPException(status_code=400, detail={"code": "ISSUE_FAILED", "message": str(e)}) from e
+        raise HTTPException(status_code=500, detail={"code": "INTERNAL_ERROR", "message": "Replace failed"}) from e
+    try:
+        await persist_issued_configs(
+            db, out.device.id, out.device.server_id,
+            out.config_awg, out.config_wg_obf, out.config_wg,
+        )
+        await db.commit()
+        await invalidate_devices_summary_cache()
+        await invalidate_devices_list_cache()
+        await db.refresh(out.device)
+    except Exception:
+        await db.rollback()
+        raise HTTPException(status_code=500, detail={"code": "INTERNAL_ERROR", "message": "Replace failed"})
+    config_text = _select_delivery_config_text(out)
+    if config_text:
+        try:
+            background_tasks.add_task(
+                _send_webapp_config_to_telegram,
+                tg_id=tg_id, device_id=out.device.id, config_text=config_text,
+            )
+        except Exception:
+            pass
+    await log_funnel_event(db, event_type="device_revoked", user_id=user.id, payload={"device_id": device_id})
+    await log_funnel_event(db, event_type="device_issue_success", user_id=user.id, payload={"device_id": out.device.id})
+    miniapp_events_total.labels(event="device_revoked").inc()
+    miniapp_events_total.labels(event="device_issue_success").inc()
+    return WebAppIssueDeviceResponse(
+        device_id=out.device.id,
+        config=out.config_awg,
+        config_awg=out.config_awg,
+        config_wg_obf=out.config_wg_obf,
+        config_wg=out.config_wg,
+        node_mode=settings.node_mode,
+        peer_created=out.peer_created,
+        issued_at=out.device.issued_at,
+    )
+
+
 @router.post("/devices/{device_id}/revoke")
 async def webapp_revoke_device(
     device_id: str, request: Request, db: AsyncSession = Depends(get_db)
@@ -809,7 +1289,154 @@ async def webapp_referral_my_link(request: Request, db: AsyncSession = Depends(g
             status_code=404, detail={"code": "USER_NOT_FOUND", "message": "User not found"}
         )
     code = str(user.id)
-    return {"referral_code": code, "payload": f"ref_{code}"}
+    bot_username = (settings.telegram_bot_username or "").strip()
+    return {"referral_code": code, "payload": f"ref_{code}", "bot_username": bot_username or None}
+
+
+class WebAppReferralAttachBody(BaseModel):
+    """ref (preferred) or referral_code. Backend resolves to referrer_user_id."""
+
+    ref: str | None = None
+    referral_code: str | None = None
+
+    @model_validator(mode="after")
+    def resolve_ref(self) -> "WebAppReferralAttachBody":
+        raw = (self.ref or self.referral_code or "").strip()
+        if raw.startswith("ref_"):
+            raw = raw[4:].strip()
+        if not raw:
+            raise ValueError("ref or referral_code required")
+        object.__setattr__(self, "_resolved", raw)
+        return self
+
+
+class WebAppReferralAttachAttachedResponse(BaseModel):
+    """New referral record created."""
+    status: str = "attached"
+    referrer_user_id: int
+
+
+class WebAppReferralAttachAlreadyResponse(BaseModel):
+    """Referee already has a referrer; idempotent."""
+    status: str = "already_attached"
+    referrer_user_id: int
+
+
+def _log_referral_attach_attempt(telegram_user_id: int, ref_code: str) -> None:
+    logging.getLogger(__name__).info(
+        "referral_attach_attempt",
+        extra={"telegram_user_id": telegram_user_id, "ref_code": ref_code},
+    )
+
+
+def _log_referral_attach_result(
+    telegram_user_id: int,
+    ref_code: str,
+    resolved_referrer_user_id: int | None,
+    attach_status: str,
+    reason: str | None = None,
+) -> None:
+    logging.getLogger(__name__).info(
+        "referral_attach_result",
+        extra={
+            "telegram_user_id": telegram_user_id,
+            "ref_code": ref_code,
+            "resolved_referrer_user_id": resolved_referrer_user_id,
+            "attach_status": attach_status,
+            "reason": reason,
+        },
+    )
+
+
+@router.post(
+    "/referral/attach",
+    response_model=WebAppReferralAttachAttachedResponse | WebAppReferralAttachAlreadyResponse,
+    responses={
+        400: {"description": "status: self_referral_blocked or invalid_ref"},
+        401: {"description": "Invalid session"},
+    },
+)
+async def webapp_referral_attach(
+    body: WebAppReferralAttachBody,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    """Attach current user (referee) to referrer by ref/referral_code. Idempotent. Bearer required.
+    Returns status: attached | already_attached (200); 400 with status self_referral_blocked | invalid_ref.
+    Backend is source of truth; does not overwrite existing referrer. See docs/referral-pipeline.md."""
+    tg_id = _get_tg_id_from_bearer(request)
+    if not tg_id:
+        raise HTTPException(
+            status_code=401, detail={"code": "UNAUTHORIZED", "message": "Invalid session"}
+        )
+    referral_code = getattr(body, "_resolved", None) or (body.referral_code or "").strip()
+    if not referral_code:
+        referral_attach_fail_total.labels(reason="invalid_ref").inc()
+        _log_referral_attach_result(tg_id, "", None, "invalid_ref", "ref required")
+        raise HTTPException(
+            status_code=400,
+            detail={"status": "invalid_ref", "code": "BAD_REQUEST", "message": "ref or referral_code required"},
+        )
+    _log_referral_attach_attempt(tg_id, referral_code)
+    try:
+        referrer_user_id = int(referral_code)
+    except ValueError:
+        referral_attach_fail_total.labels(reason="invalid_ref").inc()
+        _log_referral_attach_result(tg_id, referral_code, None, "invalid_ref", "ref not numeric")
+        raise HTTPException(
+            status_code=400,
+            detail={"status": "invalid_ref", "code": "BAD_REQUEST", "message": "Invalid referral code"},
+        )
+    referee_result = await db.execute(select(User).where(User.tg_id == tg_id))
+    referee = referee_result.scalar_one_or_none()
+    if not referee:
+        raise HTTPException(
+            status_code=404, detail={"code": "USER_NOT_FOUND", "message": "User not found"}
+        )
+    if referrer_user_id == referee.id:
+        referral_attach_fail_total.labels(reason="self_referral_blocked").inc()
+        _log_referral_attach_result(
+            tg_id, referral_code, referrer_user_id, "self_referral_blocked", "self-referral"
+        )
+        raise HTTPException(
+            status_code=400,
+            detail={"status": "self_referral_blocked", "code": "BAD_REQUEST", "message": "Cannot refer self"},
+        )
+    referrer_result = await db.execute(select(User).where(User.id == referrer_user_id))
+    if referrer_result.scalar_one_or_none() is None:
+        referral_attach_fail_total.labels(reason="referrer_not_found").inc()
+        _log_referral_attach_result(tg_id, referral_code, None, "invalid_ref", "referrer not found")
+        raise HTTPException(
+            status_code=400,
+            detail={"status": "invalid_ref", "code": "NOT_FOUND", "message": "Referrer not found"},
+        )
+    existing_result = await db.execute(select(Referral).where(Referral.referee_user_id == referee.id))
+    existing = existing_result.scalar_one_or_none()
+    if existing:
+        await db.commit()
+        referral_attach_total.labels(status="already_attached").inc()
+        _log_referral_attach_result(
+            tg_id, referral_code, existing.referrer_user_id, "already_attached", "one attach per referee"
+        )
+        return {"status": "already_attached", "referrer_user_id": existing.referrer_user_id}
+    r = Referral(
+        referrer_user_id=referrer_user_id,
+        referee_user_id=referee.id,
+        referral_code=referral_code,
+        status="pending",
+    )
+    db.add(r)
+    await log_funnel_event(
+        db,
+        event_type="referral_signup",
+        user_id=referee.id,
+        payload={"referrer_user_id": referrer_user_id},
+    )
+    await db.commit()
+    vpn_revenue_referral_signup_total.inc()
+    referral_attach_total.labels(status="attached").inc()
+    _log_referral_attach_result(tg_id, referral_code, referrer_user_id, "attached", None)
+    return {"status": "attached", "referrer_user_id": referrer_user_id}
 
 
 @router.get("/referral/stats")
@@ -850,6 +1477,14 @@ async def webapp_referral_stats(request: Request, db: AsyncSession = Depends(get
         )
     )
     pending = pending_result.scalar() or 0
+    pending_days_result = await db.execute(
+        select(func.coalesce(func.sum(Referral.pending_reward_days), 0))
+        .where(
+            Referral.referrer_user_id == user.id,
+            Referral.pending_reward_days > 0,
+        )
+    )
+    pending_reward_days = int(pending_days_result.scalar() or 0)
     goal = 2
     completed_cycles = total // goal
     progress_in_cycle = total - completed_cycles * goal
@@ -860,6 +1495,7 @@ async def webapp_referral_stats(request: Request, db: AsyncSession = Depends(get
         "earned_days": earned_days,
         "active_referrals": rewarded,
         "pending_rewards": pending,
+        "pending_reward_days": pending_reward_days,
         "invite_goal": goal,
         "invite_progress": progress_in_cycle,
         "invite_remaining": remaining_to_next,
@@ -1050,12 +1686,14 @@ async def webapp_create_invoice(
             valid_from=now,
             # Pending subscription has no paid window until completed payment webhook.
             valid_until=now,
-            device_limit=1,
+            device_limit=int(getattr(plan, "device_limit", 1) or 1),
+            auto_renew=bool((user.meta or {}).get("webapp_auto_renew_default", True)),
             status="pending",
         )
         db.add(sub)
         await db.flush()
-    is_free = float(plan.price_amount or 0) <= 0
+    stars_amount = _stars_amount(plan.price_amount, plan.price_currency)
+    is_free = stars_amount <= 0
     server_result = await db.execute(select(Server).where(Server.is_active.is_(True)).limit(1))
     server = server_result.scalar_one_or_none()
     if not server and not is_free:
@@ -1063,6 +1701,48 @@ async def webapp_create_invoice(
             status_code=503,
             detail={"code": "SERVER_NOT_AVAILABLE", "message": "No server available"},
         )
+    # Idempotency: return existing pending payment for same user+sub within window to avoid duplicate charges on retry.
+    _CREATE_INVOICE_IDEMPOTENCY_MINUTES = 5
+    idem_cutoff = now - timedelta(minutes=_CREATE_INVOICE_IDEMPOTENCY_MINUTES)
+    existing_payment_result = await db.execute(
+        select(Payment)
+        .where(
+            Payment.user_id == user.id,
+            Payment.subscription_id == sub.id,
+            Payment.status == "pending",
+            Payment.created_at >= idem_cutoff,
+        )
+        .order_by(Payment.created_at.desc())
+        .limit(1)
+    )
+    existing_payment = existing_payment_result.scalar_one_or_none()
+    if existing_payment:
+        await db.commit()
+        await db.refresh(existing_payment)
+        star_count = 0 if is_free else max(1, int(stars_amount))
+        title = plan.name or "VPN"
+        description = f"VPN plan, {plan.duration_days} days"
+        invoice_link = ""
+        if not is_free:
+            invoice_link = await _create_telegram_invoice_link(
+                title=title,
+                description=description,
+                payload=existing_payment.id,
+                star_count=star_count,
+            )
+        return {
+            "invoice_id": existing_payment.id,
+            "payment_id": existing_payment.id,
+            "title": title,
+            "description": description,
+            "currency": "XTR",
+            "star_count": star_count,
+            "payload": existing_payment.id,
+            "server_id": server.id if server else "",
+            "subscription_id": sub.id,
+            "invoice_link": invoice_link,
+            "free_activation": is_free,
+        }
     external_id = (
         f"webapp:telegram_stars:{user.id}:{sub.id}:{getattr(request.state, 'request_id', 'none')}"
     )
@@ -1071,8 +1751,8 @@ async def webapp_create_invoice(
         subscription_id=sub.id,
         provider="telegram_stars",
         status="completed" if is_free else "pending",
-        amount=plan.price_amount,
-        currency=plan.price_currency,
+        amount=stars_amount,
+        currency="XTR",
         external_id=external_id,
         webhook_payload={"promo_code": body.promo_code} if body.promo_code else None,
     )
@@ -1082,6 +1762,7 @@ async def webapp_create_invoice(
         sub.status = "active"
         sub.valid_from = now
         sub.valid_until = now + timedelta(days=plan.duration_days or 365)
+        sub.device_limit = int(getattr(plan, "device_limit", sub.device_limit) or sub.device_limit)
     await log_funnel_event(
         db,
         event_type="plan_selected",
@@ -1089,10 +1770,17 @@ async def webapp_create_invoice(
         payload={"plan_id": plan.id},
     )
     miniapp_events_total.labels(event="plan_selected").inc()
+    await log_funnel_event(
+        db,
+        event_type="invoice_created",
+        user_id=user.id,
+        payload={"plan_id": plan.id, "payment_id": payment.id},
+    )
+    miniapp_events_total.labels(event="invoice_created").inc()
     await db.commit()
     await db.refresh(payment)
     await db.refresh(sub)
-    star_count = 0 if is_free else max(1, int(plan.price_amount))
+    star_count = 0 if is_free else max(1, int(stars_amount))
     title = plan.name or "VPN"
     description = f"VPN plan, {plan.duration_days} days"
     invoice_link = ""
@@ -1180,13 +1868,14 @@ async def webapp_payments_history(
             payment_status=payment.status,
             has_refund_event=payment.id in refunded_payment_ids,
         )
+        stars_amount = _stars_amount(payment.amount, payment.currency)
         items.append(
             WebAppBillingHistoryItem(
                 payment_id=payment.id,
                 plan_id=subscription.plan_id if subscription else None,
                 plan_name=clean_plan_name or fallback_plan_name,
-                amount=float(payment.amount or 0),
-                currency=payment.currency,
+                amount=float(stars_amount),
+                currency="XTR",
                 status=history_status,
                 created_at=payment.created_at,
                 invoice_ref=invoice_ref,
@@ -1326,6 +2015,31 @@ async def webapp_servers(request: Request, db: AsyncSession = Depends(get_db)):
         .group_by(Device.server_id)
     )
     counts: dict[str, int] = {row[0]: int(row[1]) for row in counts_result.all()}
+    # Per-server RTT from this user's device telemetry (for latency display)
+    server_avg_ping_ms: dict[str, float] = {}
+    user_devices_result = await db.execute(
+        select(Device.id, Device.server_id).where(
+            Device.user_id == user.id, Device.revoked_at.is_(None)
+        )
+    )
+    user_devices = list(user_devices_result.all())
+    if user_devices:
+        device_ids = [str(row[0]) for row in user_devices]
+        telemetry_map = await get_device_telemetry_bulk(device_ids)
+        server_rtts: dict[str, list[float]] = {}
+        for row in user_devices:
+            dev_id, server_id = str(row[0]), row[1]
+            te = telemetry_map.get(dev_id)
+            if te and getattr(te, "rtt_ms", None) is not None and te.rtt_ms is not None:
+                try:
+                    rtt = float(te.rtt_ms)
+                    if 0 <= rtt <= 60000:
+                        server_rtts.setdefault(server_id, []).append(rtt)
+                except (TypeError, ValueError):
+                    pass
+        for sid, rtts in server_rtts.items():
+            if rtts:
+                server_avg_ping_ms[sid] = round(sum(rtts) / len(rtts), 1)
     items: list[WebAppServerOut] = []
     best_id: str | None = None
     best_score: tuple[int, float] | None = None
@@ -1339,13 +2053,14 @@ async def webapp_servers(request: Request, db: AsyncSession = Depends(get_db)):
         if best_score is None or score > best_score:
             best_score = score
             best_id = s.id
+        avg_ping = server_avg_ping_ms.get(s.id)
         items.append(
             WebAppServerOut(
                 id=s.id,
                 name=s.name,
                 region=s.region,
                 load_percent=load_percent,
-                avg_ping_ms=None,
+                avg_ping_ms=avg_ping,
                 is_recommended=False,
                 is_current=preferred_server_id == s.id,
             )
@@ -1444,14 +2159,36 @@ class WebAppSubscriptionOffersOut(BaseModel):
     discount_percent: int
     can_pause: bool
     can_resume: bool
+    # Reason-driven offers (spec §6.4): primary response by reason_group
+    offer_pause: bool = False
+    offer_discount: bool = False
+    offer_downgrade: bool = False
+    reason_group: str | None = None
+
+
+def _offers_for_reason(reason_group: str | None, can_pause: bool, discount_percent: int) -> tuple[bool, bool, bool]:
+    """Spec §6.4: map reason_group to targeted offers."""
+    if not reason_group:
+        return (can_pause, discount_percent > 0, False)
+    r = (reason_group or "").strip().lower()
+    if r in ("too_expensive", "price"):
+        return (False, True, False)
+    if r in ("not_using", "temporary_break", "not_needed"):
+        return (True, False, True)
+    if r in ("slow_or_unstable", "need_more_devices"):
+        return (False, False, False)
+    if r in ("privacy_or_trust_concern", "other"):
+        return (False, discount_percent > 0, False)
+    return (can_pause, discount_percent > 0, False)
 
 
 @router.get("/subscription/offers", response_model=WebAppSubscriptionOffersOut)
 async def webapp_subscription_offers(
     request: Request,
+    reason_group: str | None = None,
     db: AsyncSession = Depends(get_db),
 ):
-    """Return simple retention offers (pause, discount) for the current user."""
+    """Return retention offers (pause, discount). Optional reason_group for reason-driven offers (spec §6.4)."""
     tg_id = _get_tg_id_from_bearer(request)
     if not tg_id:
         raise HTTPException(
@@ -1474,30 +2211,161 @@ async def webapp_subscription_offers(
     )
     sub = sub_result.scalar_one_or_none()
     if not sub:
+        discount_pct = retention_discount_percent()
+        op, od, odw = _offers_for_reason(reason_group, False, discount_pct)
         return WebAppSubscriptionOffersOut(
             subscription_id=None,
             status=None,
             valid_until=None,
-            discount_percent=retention_discount_percent(),
+            discount_percent=discount_pct,
             can_pause=False,
             can_resume=False,
+            offer_pause=op,
+            offer_discount=od,
+            offer_downgrade=odw,
+            reason_group=reason_group,
         )
     can_pause = sub.paused_at is None and sub.valid_until > now
     can_resume = sub.paused_at is not None and sub.valid_until > now
+    discount_pct = retention_discount_percent()
+    offer_pause, offer_discount, offer_downgrade = _offers_for_reason(reason_group, can_pause, discount_pct)
     await log_funnel_event(
         db,
         event_type="cancel_click",
         user_id=user.id,
-        payload={"subscription_id": sub.id},
+        payload={"subscription_id": sub.id, "reason_group": reason_group or ""},
     )
     return WebAppSubscriptionOffersOut(
         subscription_id=sub.id,
         status=sub.status,
         valid_until=sub.valid_until.isoformat(),
-        discount_percent=retention_discount_percent(),
+        discount_percent=discount_pct,
         can_pause=can_pause,
         can_resume=can_resume,
+        offer_pause=offer_pause,
+        offer_discount=offer_discount,
+        offer_downgrade=offer_downgrade,
+        reason_group=reason_group,
     )
+
+
+class WebAppSubscriptionAccessStateOut(BaseModel):
+    subscription_id: str | None
+    access_status: str | None
+    grace_until: str | None
+    valid_until: str | None
+    plan_id: str | None
+    can_restore: bool
+
+
+@router.get("/subscription/access-state", response_model=WebAppSubscriptionAccessStateOut)
+async def webapp_subscription_access_state(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    """Return access/grace summary for restore UI."""
+    tg_id = _get_tg_id_from_bearer(request)
+    if not tg_id:
+        raise HTTPException(
+            status_code=401, detail={"code": "UNAUTHORIZED", "message": "Invalid session"}
+        )
+    user_result = await db.execute(select(User).where(User.tg_id == tg_id))
+    user = user_result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(
+            status_code=404, detail={"code": "USER_NOT_FOUND", "message": "User not found"}
+        )
+    now = datetime.now(timezone.utc)
+    sub_result = await db.execute(
+        select(Subscription)
+        .where(Subscription.user_id == user.id)
+        .order_by(Subscription.valid_until.desc())
+        .limit(1)
+    )
+    sub = sub_result.scalar_one_or_none()
+    if not sub:
+        return WebAppSubscriptionAccessStateOut(
+            subscription_id=None,
+            access_status=None,
+            grace_until=None,
+            valid_until=None,
+            plan_id=None,
+            can_restore=False,
+        )
+    access_status = getattr(sub, "access_status", "enabled")
+    grace_until = getattr(sub, "grace_until", None)
+    in_grace = access_status == "grace" and grace_until and grace_until > now
+    sub_status = getattr(sub, "subscription_status", sub.status)
+    can_restore = (
+        (access_status == "grace" or sub_status == "expired")
+        and sub.plan_id
+    )
+    return WebAppSubscriptionAccessStateOut(
+        subscription_id=sub.id,
+        access_status=access_status,
+        grace_until=grace_until.isoformat() if grace_until else None,
+        valid_until=sub.valid_until.isoformat(),
+        plan_id=sub.plan_id,
+        can_restore=can_restore,
+    )
+
+
+class WebAppSubscriptionRestoreBody(BaseModel):
+    plan_id: str | None = None
+
+
+@router.post("/subscription/restore")
+async def webapp_subscription_restore(
+    body: WebAppSubscriptionRestoreBody,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    """For grace/expired users: create restore invoice for plan, or return plan_id for checkout."""
+    tg_id = _get_tg_id_from_bearer(request)
+    if not tg_id:
+        raise HTTPException(
+            status_code=401, detail={"code": "UNAUTHORIZED", "message": "Invalid session"}
+        )
+    user_result = await db.execute(select(User).where(User.tg_id == tg_id))
+    user = user_result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(
+            status_code=404, detail={"code": "USER_NOT_FOUND", "message": "User not found"}
+        )
+    now = datetime.now(timezone.utc)
+    sub_result = await db.execute(
+        select(Subscription)
+        .where(Subscription.user_id == user.id)
+        .order_by(Subscription.valid_until.desc())
+        .limit(1)
+    )
+    sub = sub_result.scalar_one_or_none()
+    if not sub:
+        raise HTTPException(
+            status_code=400,
+            detail={"code": "NO_SUBSCRIPTION", "message": "No subscription to restore"},
+        )
+    access_status = getattr(sub, "access_status", "enabled")
+    sub_status = getattr(sub, "subscription_status", sub.status)
+    if access_status != "grace" and sub_status != "expired":
+        raise HTTPException(
+            status_code=400,
+            detail={"code": "NOT_RESTORABLE", "message": "Subscription is not in restore state"},
+        )
+    plan_id = body.plan_id or sub.plan_id
+    if not plan_id:
+        raise HTTPException(
+            status_code=400,
+            detail={"code": "NO_PLAN", "message": "No plan to restore"},
+        )
+    await log_funnel_event(
+        db,
+        event_type="winback_clicked",
+        user_id=user.id,
+        payload={"subscription_id": sub.id, "plan_id": plan_id},
+    )
+    miniapp_events_total.labels(event="winback_clicked").inc()
+    return {"status": "ok", "plan_id": plan_id, "redirect_to": f"/plan/checkout/{plan_id}"}
 
 
 class WebAppSubscriptionPauseBody(BaseModel):
@@ -1611,8 +2479,13 @@ async def webapp_subscription_resume(
 
 class WebAppSubscriptionCancelBody(BaseModel):
     subscription_id: str | None = None
-    reason_code: str
+    reason_code: str = "user_request"
+    reason_group: str | None = None
+    free_text: str | None = None
     discount_accepted: bool | None = None
+    offer_accepted: bool | None = None
+    cancel_at_period_end: bool = False
+    pause_instead: bool = False
 
 
 @router.post("/subscription/cancel")
@@ -1621,7 +2494,7 @@ async def webapp_subscription_cancel(
     request: Request,
     db: AsyncSession = Depends(get_db),
 ):
-    """Cancel subscription with a simple churn survey."""
+    """Cancel subscription with churn survey; support reason_group, pause_instead, cancel_at_period_end."""
     tg_id = _get_tg_id_from_bearer(request)
     if not tg_id:
         raise HTTPException(
@@ -1662,19 +2535,63 @@ async def webapp_subscription_cancel(
             status_code=404,
             detail={"code": "SUBSCRIPTION_NOT_FOUND", "message": "Subscription not found"},
         )
+    now = datetime.now(timezone.utc)
+    if body.pause_instead:
+        ok = await pause_subscription(
+            db, subscription_id=sub.id, user_id=user.id, reason=f"webapp_cancel_{body.reason_code}",
+        )
+        if not ok:
+            raise HTTPException(status_code=400, detail={"code": "PAUSE_FAILED", "message": "Could not pause"})
+        survey = ChurnSurvey(
+            user_id=user.id,
+            subscription_id=sub.id,
+            reason=body.reason_code[:32],
+            reason_group=(body.reason_group or "")[:32] or None,
+            reason_code=body.reason_code[:32] or None,
+            free_text=(body.free_text or "")[:512] or None,
+            discount_offered=bool(body.discount_accepted),
+            offer_accepted=body.offer_accepted,
+        )
+        db.add(survey)
+        await log_funnel_event(db, event_type="pause_selected", user_id=user.id, payload={"subscription_id": sub.id})
+        await db.commit()
+        return {"status": "ok", "action": "paused"}
+    if body.cancel_at_period_end:
+        sub.cancel_at_period_end = True
+        sub.subscription_status = "active"
+        sub.status = "active"
+    else:
+        sub.status = "cancelled"
+        setattr(sub, "subscription_status", "cancelled")
+        setattr(sub, "access_status", "blocked")
+        await emit_entitlement_event(
+            db,
+            subscription_id=sub.id,
+            user_id=user.id,
+            event_type="access_blocked",
+            payload={"reason": body.reason_code},
+        )
     survey = ChurnSurvey(
         user_id=user.id,
         subscription_id=sub.id,
         reason=body.reason_code[:32],
+        reason_group=(body.reason_group or "")[:32] or None,
+        reason_code=body.reason_code[:32] or None,
+        free_text=(body.free_text or "")[:512] or None,
         discount_offered=bool(body.discount_accepted),
+        offer_accepted=body.offer_accepted,
     )
     db.add(survey)
-    sub.status = "cancelled"
     await log_funnel_event(
         db,
         event_type="cancel_confirm",
         user_id=user.id,
-        payload={"subscription_id": sub.id, "reason": body.reason_code},
+        payload={
+            "subscription_id": sub.id,
+            "reason": body.reason_code,
+            "reason_group": body.reason_group,
+            "cancel_at_period_end": body.cancel_at_period_end,
+        },
     )
     await db.commit()
-    return {"status": "ok"}
+    return {"status": "ok", "action": "cancel_at_period_end" if body.cancel_at_period_end else "cancelled"}

@@ -13,6 +13,14 @@ class PaginationParams(BaseModel):
     offset: int = Field(default=0, ge=0)
 
 
+class PaginationMeta(BaseModel):
+    """Standard pagination metadata in list responses."""
+
+    total: int = Field(..., description="Total number of items")
+    limit: int = Field(..., description="Page size")
+    offset: int = Field(..., description="Offset applied")
+
+
 class OrmSchema(BaseModel):
     """Base for response schemas that are built from ORM models."""
 

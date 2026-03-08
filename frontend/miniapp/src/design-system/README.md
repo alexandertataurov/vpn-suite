@@ -1,6 +1,20 @@
 # Miniapp design system
 
-Single entry for layout, patterns, components, primitives, tokens, theme, and icons. Import from `@/design-system`.
+Single entry for layout, page recipes, patterns, components, primitives, tokens, theme, icons, hooks, and utils. Import reusable UI from `@/design-system`.
+
+## Architecture
+
+The design system follows a **layered model**. Each layer has strict responsibilities; see **[docs/design-system-architecture.md](./docs/design-system-architecture.md)** for the full guide, **[docs/design-system-enforcement-checklist.md](./docs/design-system-enforcement-checklist.md)** for PR/CI checks, and **[docs/mobile-platform-guidelines.md](./docs/mobile-platform-guidelines.md)** for iOS/Android-compatible mobile UI rules.
+
+| Layer | Responsibility |
+|-------|----------------|
+| **Tokens** | Single source of truth for colors, spacing, typography, radius, shadows, motion, breakpoints. Use via CSS `var(--*)` or tokens/*.ts. |
+| **Foundations** | Theme config, CSS variables (tokens + theme consumer), global/reset. |
+| **Primitives** | Low-level layout and typography (Box, Stack, Text, Heading, etc.). No business logic. |
+| **Components** | Reusable UI (Button, Input, Modal, Toast, etc.). Consistent variant/size/tone APIs. |
+| **Patterns** | Composed structures (FormField, PageHeader, Hero blocks). No data fetching. |
+| **Page Recipes** | Canonical page-shaped wrappers built from layouts + patterns (header badges, card sections, hero-first page blocks). |
+| **App** | Feature components and pages; business logic lives here, not in the design system. |
 
 ## Content Library (page content source of truth)
 
@@ -14,7 +28,7 @@ Single entry for layout, patterns, components, primitives, tokens, theme, and ic
 - Token usage (`--ui`, `--mono`, `--s1`–`--s4`, `--bd-def`, `--tx-pri`, etc.)
 - Content-level constraints (Section 18)
 
-CSS for content lives in `styles/content-library.css` and `styles/miniapp.css`; load order is `styles/index.css` → tokens → telegram DS → palette → primitives-aliases → miniapp.css → content-library.css.
+CSS for content lives in `styles/content-library.css` and `styles/miniapp.css`; load order is `styles/index.css` → foundations (tokens + theme-consumer) → telegram DS → palette → primitives-aliases → miniapp.css → content-library.css.
 
 ## Conventions
 
@@ -24,10 +38,37 @@ CSS for content lives in `styles/content-library.css` and `styles/miniapp.css`; 
 
 ## Structure
 
-- **tokens/** — colors, spacing, radius, typography, shadows, zIndex
+- **tokens/** — colors, spacing, radius, typography, shadows, zIndex, motion, breakpoints
+- **foundations/** — theme (re-exports), css-variables.css, global.css
 - **theme/** — ThemeProvider, tokens-map, z-index constants
 - **primitives/** — Box, Stack, Container, Panel, Heading, Text, Divider, Inline
 - **components/** — Typography, Button, forms, feedback, display
 - **patterns/** — Mission*, Home*, DangerZone, ListCard, DataGrid, etc.
 - **layouts/** — PageScaffold, PageHeader, PageSection
+- **page-recipes/** — PageHeaderBadge, PageCardSection, other reusable page shells/recipes
+- **hooks/** — useThemeMode, useBreakpoint
+- **utils/** — cx (class merge), accessibility helpers
 - **styles/** — CSS entry and token/component styles
+
+## App layer contract
+
+App-layer pages should do only three things:
+
+- page container wiring
+- route-specific orchestration
+- composition of page-model hooks + `@/design-system`
+
+Keep reusable structure in `design-system/page-recipes` or `design-system/patterns`, and keep page-level derivation in app-layer page-model hooks rather than inside TSX render branches.
+
+Within a page, keep hierarchy singular:
+
+- one owner for a given status signal in a page zone (`PageHeaderBadge` or hero status or section chip, not all three)
+- no nested header chrome for the same block (`PageCardSection` title plus `MissionModuleHead` repeating it)
+
+## Zero Page CSS
+
+Miniapp pages do not own local CSS files under `src/pages`.
+
+- Route styling must live in shared design-system styles.
+- If a page needs a new structural wrapper or page-shaped layout, promote it into `design-system/page-recipes` or `design-system/patterns`.
+- CI enforces this through `npm --prefix frontend run design:check -w miniapp`.
