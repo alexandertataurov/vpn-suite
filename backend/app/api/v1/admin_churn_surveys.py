@@ -38,12 +38,7 @@ async def list_churn_surveys(
     offset: int = Query(0, ge=0),
 ):
     """List churn surveys (cancellation reasons and offer acceptance)."""
-    q = (
-        select(ChurnSurvey)
-        .order_by(ChurnSurvey.created_at.desc())
-        .limit(limit)
-        .offset(offset)
-    )
+    q = select(ChurnSurvey).order_by(ChurnSurvey.created_at.desc()).limit(limit).offset(offset)
     if user_id is not None:
         q = q.where(ChurnSurvey.user_id == user_id)
     if subscription_id is not None:

@@ -15,6 +15,8 @@ export type {
   TelegramBiometricManager,
   TelegramCloudStorage,
   TelegramEventName,
+  TelegramEventPayloadFor,
+  TelegramEventPayloadMap,
   TelegramInitDataUnsafe,
   TelegramMainButton,
   TelegramPopupButton,
@@ -22,6 +24,7 @@ export type {
   TelegramSafeAreaInsets,
   TelegramWebApp,
 } from "./telegram.types";
+export { TELEGRAM_EVENT_NAMES } from "./telegram.types";
 
 function getInitDataFromUrl(): string {
   if (typeof window === "undefined") return "";
@@ -156,12 +159,12 @@ export const telegramClient = {
     };
   },
 
-  onEvent(event: TelegramEventName, cb: () => void): () => void {
+  /** Callback may receive event payload (invoiceClosed, popupClosed, qrTextReceived, viewportChanged). */
+  onEvent(event: TelegramEventName, cb: (payload?: unknown) => void): () => void {
     const tg = this.getWebApp();
-    tg?.onEvent?.(event, cb);
-    return () => {
-      tg?.offEvent?.(event, cb);
-    };
+    const handler = (ev?: unknown) => cb(ev);
+    tg?.onEvent?.(event, handler as () => void);
+    return () => tg?.offEvent?.(event, handler as () => void);
   },
 
   getThemeParams(): Record<string, string> {

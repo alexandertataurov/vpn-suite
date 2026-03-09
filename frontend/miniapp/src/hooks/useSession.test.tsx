@@ -1,28 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import type { ReactNode } from "react";
 import { useSession } from "./useSession";
 import { webappApi } from "@/api/client";
+import { createWrapper } from "@/test/utils/render";
+import { webappMeCompleted } from "@/test/fixtures/session";
 
 vi.mock("@/api/client", () => ({
   webappApi: { get: vi.fn() },
 }));
 
 const mockGet = vi.mocked(webappApi.get);
-
-function createWrapper() {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
-  });
-  return function Wrapper({ children }: { children: ReactNode }) {
-    return (
-      <QueryClientProvider client={queryClient}>
-        {children}
-      </QueryClientProvider>
-    );
-  };
-}
 
 describe("useSession", () => {
   beforeEach(() => {
@@ -39,14 +26,23 @@ describe("useSession", () => {
     expect(mockGet).not.toHaveBeenCalled();
   });
 
+  it("returns error when enabled and request fails", async () => {
+    mockGet.mockRejectedValue(new Error("Network error"));
+
+    const { result } = renderHook(() => useSession(true), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => {
+      expect(result.current.isError).toBe(true);
+    });
+
+    expect(result.current.error).toBeInstanceOf(Error);
+    expect(result.current.data).toBeUndefined();
+  });
+
   it("returns data when enabled and request succeeds", async () => {
-    const mockData = {
-      user: { id: 1, tg_id: 100 },
-      subscriptions: [],
-      devices: [],
-      onboarding: { completed: true, step: 1, version: 1, updated_at: null },
-    };
-    mockGet.mockResolvedValue(mockData);
+    mockGet.mockResolvedValue(webappMeCompleted);
 
     const { result } = renderHook(() => useSession(true), {
       wrapper: createWrapper(),
@@ -56,7 +52,7 @@ describe("useSession", () => {
       expect(result.current.isSuccess).toBe(true);
     });
 
-    expect(result.current.data).toEqual(mockData);
+    expect(result.current.data).toEqual(webappMeCompleted);
     expect(mockGet).toHaveBeenCalledWith("/webapp/me");
   });
 });

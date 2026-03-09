@@ -1,10 +1,11 @@
 import { useNavigate } from "react-router-dom";
+import { SessionMissing } from "@/components";
 import {
   PageFrame,
   PageCardSection,
   MissionPrimaryButton,
   MissionSecondaryLink,
-  SessionMissing,
+  ButtonRow,
 } from "@/design-system";
 import { useConnectStatusPageModel } from "@/page-models";
 
@@ -19,17 +20,17 @@ export function ConnectStatusPage() {
   return (
     <PageFrame title={model.header.title} className="connect-status-page">
       <PageCardSection title="Confirm connection" description={model.description}>
-        <div className="btn-row">
+        <ButtonRow>
           <MissionPrimaryButton
             onClick={() => model.confirmConnected().then((ok) => ok && navigate("/", { replace: true }))}
             disabled={model.isConfirming}
           >
             {model.isConfirming ? "Confirming…" : "I'm connected"}
           </MissionPrimaryButton>
-        </div>
-        <div className="btn-row">
+        </ButtonRow>
+        <ButtonRow>
           <MissionSecondaryLink to="/devices">Go to devices</MissionSecondaryLink>
-        </div>
+        </ButtonRow>
       </PageCardSection>
     </PageFrame>
   );

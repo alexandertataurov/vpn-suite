@@ -44,7 +44,9 @@ def upgrade() -> None:
     )
     op.create_index("ix_entitlement_events_event_type", "entitlement_events", ["event_type"])
     op.create_index("ix_entitlement_events_user_id", "entitlement_events", ["user_id"])
-    op.create_index("ix_entitlement_events_subscription_id", "entitlement_events", ["subscription_id"])
+    op.create_index(
+        "ix_entitlement_events_subscription_id", "entitlement_events", ["subscription_id"]
+    )
 
 
 def downgrade() -> None:

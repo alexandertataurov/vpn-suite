@@ -37,10 +37,8 @@ def _target_key(t: dict) -> str:
 
 
 async def run_once(out_dir: str) -> None:
-    from ops.discovery.discovery_service import run_discovery, host_ss_listeners, _has_listener, _ensure_host_id
-    import json
+    from ops.discovery.discovery_service import run_discovery, host_ss_listeners, _ensure_host_id
     from datetime import datetime, timezone
-    from contextlib import asynccontextmanager
 
     async def _can_connect(host: str, port: int, timeout: float = 0.5) -> bool:
         try:
@@ -179,7 +177,7 @@ async def loop() -> None:
     while True:
         try:
             await run_once(out_dir)
-        except Exception as e:
+        except Exception:
             import traceback
             traceback.print_exc()
         await asyncio.sleep(interval)

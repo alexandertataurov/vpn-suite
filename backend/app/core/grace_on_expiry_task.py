@@ -81,7 +81,6 @@ async def run_grace_on_expiry_loop() -> None:
     """Run grace check every INTERVAL_SECONDS. Disabled when grace_window_hours=0."""
     from app.core.database import async_session_factory
 
-    grace_hours = max(0, getattr(settings, "grace_window_hours", 24))
     while True:
         try:
             async with async_session_factory() as session:

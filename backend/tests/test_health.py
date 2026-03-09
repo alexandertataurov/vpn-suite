@@ -20,7 +20,7 @@ async def test_health_returns_200():
         r = await client.get("/health")
     assert r.status_code == 200
     data = r.json()
-    assert data == {"status": "ok", "node_mode": "mock"}
+    assert data == {"status": "ok", "node_mode": "mock", "referral_configured": False}
 
 
 @pytest.mark.asyncio

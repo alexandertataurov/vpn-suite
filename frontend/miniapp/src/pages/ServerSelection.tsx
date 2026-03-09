@@ -1,3 +1,4 @@
+import { SessionMissing } from "@/components";
 import {
   FallbackScreen,
   Skeleton,
@@ -5,11 +6,11 @@ import {
   PageFrame,
   PageSection,
   MissionChip,
-  MissionModuleHead,
-  MissionProgressBar,
   MissionPrimaryButton,
   MissionSecondaryButton,
-  SessionMissing,
+  ButtonRow,
+  ServerCard,
+  EmptyStateBlock,
 } from "@/design-system";
 import { useServerSelectionPageModel } from "@/page-models";
 
@@ -46,7 +47,7 @@ export function ServerSelectionPage() {
           {model.data.auto_select ? "Automatic server selection is enabled." : "Manual server preference is enabled."}
         </p>
         <p className="op-desc type-body-sm">We prioritize healthy, low-load servers near your region.</p>
-        <div className="btn-row">
+        <ButtonRow>
           {model.data.auto_select ? (
             <MissionSecondaryButton
               onClick={model.handleAutoSelect}
@@ -62,7 +63,7 @@ export function ServerSelectionPage() {
               {model.isMutating && model.pendingServerId === "auto" ? "Applying…" : "Use best server"}
             </MissionPrimaryButton>
           )}
-        </div>
+        </ButtonRow>
       </PageCardSection>
 
       <PageSection
@@ -71,52 +72,27 @@ export function ServerSelectionPage() {
         description="Compare location, latency, and load before pinning a preferred route."
       >
         <div className="stack">
-          {model.data.items.map((server) => {
-            const load = server.load_percent ?? 0;
-            const isPending = model.isMutating && model.pendingServerId === server.id;
-            const code = (server.region ?? server.name ?? "??").slice(0, 2).toUpperCase();
-            return (
-              <article key={server.id} className="module-card">
-                <MissionModuleHead
-                  label={`Node ${code}`}
-                  chip={<MissionChip tone={server.is_current ? "green" : "neutral"}>{server.is_current ? "Current" : "Available"}</MissionChip>}
-                />
-                <div className="data-grid">
-                  <div className="data-cell">
-                    <div className="dc-key">Location</div>
-                    <div className="dc-val teal">{server.name}</div>
-                  </div>
-                  <div className="data-cell">
-                    <div className="dc-key">Latency</div>
-                    <div className={`dc-val ${server.avg_ping_ms != null ? "green" : "mut"} miniapp-tnum`}>
-                      {server.avg_ping_ms != null ? `${Math.round(server.avg_ping_ms)}ms` : "--"}
-                    </div>
-                  </div>
-                </div>
-                <div className="server-load">
-                  <div className="module-head">
-                    <span className="dc-key">Load</span>
-                    <span className="dc-val miniapp-tnum">{Math.round(load)}%</span>
-                  </div>
-                  <MissionProgressBar
-                    percent={load}
-                    tone={load >= 85 ? "danger" : load >= 65 ? "warning" : "healthy"}
-                    staticFill
-                    ariaLabel={`${server.name} load ${Math.round(load)}%`}
-                  />
-                </div>
-                {server.is_current ? (
-                  <MissionSecondaryButton onClick={() => model.handleSelectServer(server)} disabled={!model.isOnline || isPending}>
-                    {isPending ? "Selecting…" : "Current"}
-                  </MissionSecondaryButton>
-                ) : (
-                  <MissionPrimaryButton onClick={() => model.handleSelectServer(server)} disabled={!model.isOnline || isPending}>
-                    {isPending ? "Selecting…" : "Select"}
-                  </MissionPrimaryButton>
-                )}
-              </article>
-            );
-          })}
+          {model.data.items.length === 0 ? (
+            <EmptyStateBlock
+              title="No servers available"
+              message="Server list is empty. Try again later or contact support."
+            />
+          ) : (
+            model.data.items.map((server) => (
+              <ServerCard
+                key={server.id}
+                id={server.id}
+                name={server.name}
+                region={server.region}
+                avgPingMs={server.avg_ping_ms}
+                loadPercent={server.load_percent ?? 0}
+                isCurrent={server.is_current}
+                isPending={model.isMutating && model.pendingServerId === server.id}
+                onSelect={() => model.handleSelectServer(server)}
+                disabled={!model.isOnline}
+              />
+            ))
+          )}
         </div>
       </PageSection>
     </PageFrame>

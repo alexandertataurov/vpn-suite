@@ -905,6 +905,57 @@
         ]
       }
     },
+    "/api/v1/analytics/funnel-kpis": {
+      "get": {
+        "tags": [
+          "analytics"
+        ],
+        "summary": "Get Funnel Kpis",
+        "description": "Funnel event counts and conversion ratios for admin dashboard (spec 11.4).",
+        "operationId": "get_funnel_kpis_api_v1_analytics_funnel_kpis_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 90,
+              "minimum": 1,
+              "default": 30,
+              "title": "Days"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FunnelKpisOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/admin/revenue/overview": {
       "get": {
         "tags": [
@@ -1897,6 +1948,217 @@
                     "$ref": "#/components/schemas/WebhookErrorOut"
                   },
                   "title": "Response List Webhook Errors Api V1 Admin Payments Webhook Errors Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/entitlement-events/": {
+      "get": {
+        "tags": [
+          "admin-entitlement-events"
+        ],
+        "summary": "List Entitlement Events",
+        "description": "List entitlement events (subscription/access audit trail).",
+        "operationId": "list_entitlement_events_api_v1_admin_entitlement_events__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by user_id",
+              "title": "User Id"
+            },
+            "description": "Filter by user_id"
+          },
+          {
+            "name": "subscription_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by subscription_id",
+              "title": "Subscription Id"
+            },
+            "description": "Filter by subscription_id"
+          },
+          {
+            "name": "event_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by event_type",
+              "title": "Event Type"
+            },
+            "description": "Filter by event_type"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "default": 100,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EntitlementEventOut"
+                  },
+                  "title": "Response List Entitlement Events Api V1 Admin Entitlement Events  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/churn-surveys/": {
+      "get": {
+        "tags": [
+          "admin-churn-surveys"
+        ],
+        "summary": "List Churn Surveys",
+        "description": "List churn surveys (cancellation reasons and offer acceptance).",
+        "operationId": "list_churn_surveys_api_v1_admin_churn_surveys__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by user_id",
+              "title": "User Id"
+            },
+            "description": "Filter by user_id"
+          },
+          {
+            "name": "subscription_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by subscription_id",
+              "title": "Subscription Id"
+            },
+            "description": "Filter by subscription_id"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "default": 100,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ChurnSurveyOut"
+                  },
+                  "title": "Response List Churn Surveys Api V1 Admin Churn Surveys  Get"
                 }
               }
             }
@@ -6305,29 +6567,6 @@
         ],
         "parameters": [
           {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 200,
-              "minimum": 1,
-              "default": 50,
-              "title": "Limit"
-            }
-          },
-          {
-            "name": "offset",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "default": 0,
-              "title": "Offset"
-            }
-          },
-          {
             "name": "tg_id",
             "in": "query",
             "required": false,
@@ -6421,6 +6660,29 @@
                 }
               ],
               "title": "Region"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
             }
           }
         ],
@@ -6580,6 +6842,16 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserDeleteBody"
+              }
+            }
+          }
+        },
         "responses": {
           "204": {
             "description": "Successful Response"
@@ -6915,29 +7187,6 @@
         ],
         "parameters": [
           {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 200,
-              "minimum": 1,
-              "default": 20,
-              "title": "Limit"
-            }
-          },
-          {
-            "name": "offset",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "default": 0,
-              "title": "Offset"
-            }
-          },
-          {
             "name": "user_id",
             "in": "query",
             "required": false,
@@ -7028,6 +7277,29 @@
               "title": "Node Id"
             },
             "description": "Filter by server/node ID"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
           }
         ],
         "responses": {
@@ -8056,6 +8328,84 @@
             }
           }
         }
+      },
+      "delete": {
+        "tags": [
+          "plans"
+        ],
+        "summary": "Delete Plan",
+        "operationId": "delete_plan_api_v1_plans__plan_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "plan_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Plan Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/subscriptions/me": {
+      "patch": {
+        "tags": [
+          "subscriptions"
+        ],
+        "summary": "Update My Subscription",
+        "description": "Update current user's subscription preferences (currently: auto_renew).",
+        "operationId": "update_my_subscription_api_v1_subscriptions_me_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubscriptionMeUpdateBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/subscriptions": {
@@ -8281,46 +8631,6 @@
                 "schema": {
                   "$ref": "#/components/schemas/SubscriptionOut"
                 }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/subscriptions/me": {
-      "patch": {
-        "tags": [
-          "subscriptions"
-        ],
-        "summary": "Update My Subscription",
-        "description": "Update current user's subscription preferences (currently: auto_renew).",
-        "operationId": "update_my_subscription_api_v1_subscriptions_me_patch",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SubscriptionMeUpdateBody"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
               }
             }
           },
@@ -10031,7 +10341,7 @@
           "bot"
         ],
         "summary": "Referral My Link",
-        "description": "Return referral link for user (ref_<user_id>). Bot only.",
+        "description": "Return referral link for user (ref_<user_id>). Create user if not found. Bot only.",
         "operationId": "referral_my_link_api_v1_bot_referral_my_link_get",
         "security": [
           {
@@ -10467,6 +10777,44 @@
             }
           }
         }
+      },
+      "patch": {
+        "tags": [
+          "webapp"
+        ],
+        "summary": "Webapp Me Update",
+        "description": "Update current session user profile. Only provided fields are updated.",
+        "operationId": "webapp_me_update_api_v1_webapp_me_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebAppMeProfileUpdateBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/webapp/onboarding/state": {
@@ -10515,7 +10863,7 @@
           "webapp"
         ],
         "summary": "Webapp Telemetry",
-        "description": "Log a telemetry event (screen_open, cta_click, etc.). Requires Bearer session token.",
+        "description": "Log a telemetry event (e.g. screen_view, cta_click). Requires Bearer session token.",
         "operationId": "webapp_telemetry_api_v1_webapp_telemetry_post",
         "requestBody": {
           "content": {
@@ -10655,6 +11003,90 @@
         }
       }
     },
+    "/api/v1/webapp/devices/{device_id}/confirm-connected": {
+      "post": {
+        "tags": [
+          "webapp"
+        ],
+        "summary": "Webapp Confirm Connected",
+        "description": "Confirm connection for device (idempotent). Bearer session token required.",
+        "operationId": "webapp_confirm_connected_api_v1_webapp_devices__device_id__confirm_connected_post",
+        "parameters": [
+          {
+            "name": "device_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Device Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/webapp/devices/{device_id}/replace-with-new": {
+      "post": {
+        "tags": [
+          "webapp"
+        ],
+        "summary": "Webapp Replace Device",
+        "description": "Revoke current device and issue a new one in the same slot (subscription). Bearer required.",
+        "operationId": "webapp_replace_device_api_v1_webapp_devices__device_id__replace_with_new_post",
+        "parameters": [
+          {
+            "name": "device_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Device Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebAppIssueDeviceResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/webapp/devices/{device_id}/revoke": {
       "post": {
         "tags": [
@@ -10709,6 +11141,62 @@
             "content": {
               "application/json": {
                 "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/webapp/referral/attach": {
+      "post": {
+        "tags": [
+          "webapp"
+        ],
+        "summary": "Webapp Referral Attach",
+        "description": "Attach current user (referee) to referrer by ref/referral_code. Idempotent. Bearer required.\nReturns status: attached | already_attached (200); 400 with status self_referral_blocked | invalid_ref.\nBackend is source of truth; does not overwrite existing referrer. See docs/referral-pipeline.md.",
+        "operationId": "webapp_referral_attach_api_v1_webapp_referral_attach_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebAppReferralAttachBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/WebAppReferralAttachAttachedResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/WebAppReferralAttachAlreadyResponse"
+                    }
+                  ],
+                  "title": "Response Webapp Referral Attach Api V1 Webapp Referral Attach Post"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "status: self_referral_blocked or invalid_ref"
+          },
+          "401": {
+            "description": "Invalid session"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
               }
             }
           }
@@ -11001,8 +11489,26 @@
           "webapp"
         ],
         "summary": "Webapp Subscription Offers",
-        "description": "Return simple retention offers (pause, discount) for the current user.",
+        "description": "Return retention offers (pause, discount). Optional reason_group for reason-driven offers (spec §6.4).",
         "operationId": "webapp_subscription_offers_api_v1_webapp_subscription_offers_get",
+        "parameters": [
+          {
+            "name": "reason_group",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Reason Group"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -11010,6 +11516,78 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/WebAppSubscriptionOffersOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/webapp/subscription/access-state": {
+      "get": {
+        "tags": [
+          "webapp"
+        ],
+        "summary": "Webapp Subscription Access State",
+        "description": "Return access/grace summary for restore UI.",
+        "operationId": "webapp_subscription_access_state_api_v1_webapp_subscription_access_state_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebAppSubscriptionAccessStateOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/webapp/subscription/restore": {
+      "post": {
+        "tags": [
+          "webapp"
+        ],
+        "summary": "Webapp Subscription Restore",
+        "description": "For grace/expired users: create restore invoice for plan, or return plan_id for checkout.",
+        "operationId": "webapp_subscription_restore_api_v1_webapp_subscription_restore_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebAppSubscriptionRestoreBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -11103,7 +11681,7 @@
           "webapp"
         ],
         "summary": "Webapp Subscription Cancel",
-        "description": "Cancel subscription with a simple churn survey.",
+        "description": "Cancel subscription with churn survey; support reason_group, pause_instead, cancel_at_period_end.",
         "operationId": "webapp_subscription_cancel_api_v1_webapp_subscription_cancel_post",
         "requestBody": {
           "content": {
@@ -13215,6 +13793,99 @@
         ],
         "title": "ChurnRunOut"
       },
+      "ChurnSurveyOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "user_id": {
+            "type": "integer",
+            "title": "User Id"
+          },
+          "subscription_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subscription Id"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "reason_group": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason Group"
+          },
+          "reason_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason Code"
+          },
+          "free_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Free Text"
+          },
+          "discount_offered": {
+            "type": "boolean",
+            "title": "Discount Offered"
+          },
+          "offer_accepted": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offer Accepted"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "user_id",
+          "subscription_id",
+          "reason",
+          "reason_group",
+          "reason_code",
+          "free_text",
+          "discount_offered",
+          "offer_accepted",
+          "created_at"
+        ],
+        "title": "ChurnSurveyOut"
+      },
       "ChurnSurveyRequest": {
         "properties": {
           "tg_id": {
@@ -14524,12 +15195,22 @@
           "total": {
             "type": "integer",
             "title": "Total"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset"
           }
         },
         "type": "object",
         "required": [
           "items",
-          "total"
+          "total",
+          "limit",
+          "offset"
         ],
         "title": "DeviceList"
       },
@@ -15206,6 +15887,59 @@
         "type": "object",
         "title": "DrainBody"
       },
+      "EntitlementEventOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "subscription_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subscription Id"
+          },
+          "user_id": {
+            "type": "integer",
+            "title": "User Id"
+          },
+          "event_type": {
+            "type": "string",
+            "title": "Event Type"
+          },
+          "payload": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payload"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "subscription_id",
+          "user_id",
+          "event_type",
+          "payload",
+          "created_at"
+        ],
+        "title": "EntitlementEventOut"
+      },
       "EnvFileOut": {
         "properties": {
           "path": {
@@ -15469,6 +16203,112 @@
           "ts"
         ],
         "title": "FrontendTelemetryEventIn"
+      },
+      "FunnelKpisOut": {
+        "properties": {
+          "days": {
+            "type": "integer",
+            "title": "Days"
+          },
+          "event_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Event Counts"
+          },
+          "conversion_plan_to_payment_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversion Plan To Payment Pct"
+          },
+          "conversion_payment_to_device_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversion Payment To Device Pct"
+          },
+          "conversion_device_to_connected_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversion Device To Connected Pct"
+          },
+          "conversion_trial_to_paid_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversion Trial To Paid Pct"
+          },
+          "conversion_grace_recovered_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversion Grace Recovered Pct"
+          },
+          "conversion_cancel_retained_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversion Cancel Retained Pct"
+          },
+          "conversion_referral_rewarded_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversion Referral Rewarded Pct"
+          }
+        },
+        "type": "object",
+        "required": [
+          "days",
+          "event_counts",
+          "conversion_plan_to_payment_pct",
+          "conversion_payment_to_device_pct",
+          "conversion_device_to_connected_pct",
+          "conversion_trial_to_paid_pct",
+          "conversion_grace_recovered_pct",
+          "conversion_cancel_retained_pct",
+          "conversion_referral_rewarded_pct"
+        ],
+        "title": "FunnelKpisOut",
+        "description": "Funnel event counts and conversion ratios (spec 11.4). Window = last N days."
       },
       "HTTPValidationError": {
         "properties": {
@@ -17327,6 +18167,11 @@
             "type": "integer",
             "title": "Duration Days"
           },
+          "device_limit": {
+            "type": "integer",
+            "title": "Device Limit",
+            "default": 1
+          },
           "price_currency": {
             "type": "string",
             "title": "Price Currency"
@@ -17342,6 +18187,20 @@
               }
             ],
             "title": "Price Amount"
+          },
+          "upsell_methods": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Upsell Methods"
           }
         },
         "type": "object",
@@ -17388,6 +18247,10 @@
             "type": "integer",
             "title": "Duration Days"
           },
+          "device_limit": {
+            "type": "integer",
+            "title": "Device Limit"
+          },
           "price_currency": {
             "type": "string",
             "title": "Price Currency"
@@ -17401,6 +18264,20 @@
             "type": "string",
             "format": "date-time",
             "title": "Created At"
+          },
+          "upsell_methods": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Upsell Methods"
           }
         },
         "type": "object",
@@ -17408,6 +18285,7 @@
           "id",
           "name",
           "duration_days",
+          "device_limit",
           "price_currency",
           "price_amount",
           "created_at"
@@ -17438,6 +18316,17 @@
             ],
             "title": "Duration Days"
           },
+          "device_limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Device Limit"
+          },
           "price_currency": {
             "anyOf": [
               {
@@ -17463,6 +18352,20 @@
               }
             ],
             "title": "Price Amount"
+          },
+          "upsell_methods": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Upsell Methods"
           }
         },
         "type": "object",
@@ -19171,6 +20074,14 @@
             "type": "integer",
             "title": "Total"
           },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset"
+          },
           "agent_mode_no_heartbeat": {
             "type": "boolean",
             "title": "Agent Mode No Heartbeat",
@@ -19180,7 +20091,9 @@
         "type": "object",
         "required": [
           "items",
-          "total"
+          "total",
+          "limit",
+          "offset"
         ],
         "title": "ServerList"
       },
@@ -20509,6 +21422,54 @@
             ],
             "title": "Pause Reason"
           },
+          "subscription_status": {
+            "type": "string",
+            "title": "Subscription Status",
+            "default": "active"
+          },
+          "access_status": {
+            "type": "string",
+            "title": "Access Status",
+            "default": "enabled"
+          },
+          "billing_status": {
+            "type": "string",
+            "title": "Billing Status",
+            "default": "paid"
+          },
+          "renewal_status": {
+            "type": "string",
+            "title": "Renewal Status",
+            "default": "auto_renew_on"
+          },
+          "grace_until": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grace Until"
+          },
+          "grace_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grace Reason"
+          },
+          "cancel_at_period_end": {
+            "type": "boolean",
+            "title": "Cancel At Period End",
+            "default": false
+          },
           "effective_status": {
             "type": "string",
             "title": "Effective Status",
@@ -20565,6 +21526,40 @@
               }
             ],
             "title": "Status"
+          },
+          "access_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Access Status"
+          },
+          "grace_until": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grace Until"
+          },
+          "grace_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grace Reason"
           }
         },
         "type": "object",
@@ -21144,6 +22139,20 @@
         ],
         "title": "UserCreate"
       },
+      "UserDeleteBody": {
+        "properties": {
+          "confirm_token": {
+            "type": "string",
+            "title": "Confirm Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "confirm_token"
+        ],
+        "title": "UserDeleteBody",
+        "description": "Required body for DELETE /users/:id. confirm_token must match settings.delete_user_confirm_token."
+      },
       "UserDetail": {
         "properties": {
           "id": {
@@ -21258,12 +22267,22 @@
           "total": {
             "type": "integer",
             "title": "Total"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset"
           }
         },
         "type": "object",
         "required": [
           "items",
-          "total"
+          "total",
+          "limit",
+          "offset"
         ],
         "title": "UserList"
       },
@@ -22268,11 +23287,62 @@
         ],
         "title": "WebAppIssueDeviceResponse"
       },
+      "WebAppMeProfileUpdateBody": {
+        "properties": {
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "locale": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Locale"
+          }
+        },
+        "type": "object",
+        "title": "WebAppMeProfileUpdateBody",
+        "description": "Optional profile fields for PATCH /webapp/me. Omitted or None = no change."
+      },
       "WebAppOnboardingStateBody": {
         "properties": {
           "step": {
             "type": "integer",
-            "maximum": 4.0,
+            "maximum": 2.0,
             "minimum": 0.0,
             "title": "Step"
           },
@@ -22341,6 +23411,73 @@
         ],
         "title": "WebAppPaymentStatusOut"
       },
+      "WebAppReferralAttachAlreadyResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "already_attached"
+          },
+          "referrer_user_id": {
+            "type": "integer",
+            "title": "Referrer User Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "referrer_user_id"
+        ],
+        "title": "WebAppReferralAttachAlreadyResponse",
+        "description": "Referee already has a referrer; idempotent."
+      },
+      "WebAppReferralAttachAttachedResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "attached"
+          },
+          "referrer_user_id": {
+            "type": "integer",
+            "title": "Referrer User Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "referrer_user_id"
+        ],
+        "title": "WebAppReferralAttachAttachedResponse",
+        "description": "New referral record created."
+      },
+      "WebAppReferralAttachBody": {
+        "properties": {
+          "ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ref"
+          },
+          "referral_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Referral Code"
+          }
+        },
+        "type": "object",
+        "title": "WebAppReferralAttachBody",
+        "description": "ref (preferred) or referral_code. Backend resolves to referrer_user_id."
+      },
       "WebAppServerSelectBody": {
         "properties": {
           "server_id": {
@@ -22369,6 +23506,79 @@
         "type": "object",
         "title": "WebAppServerSelectBody"
       },
+      "WebAppSubscriptionAccessStateOut": {
+        "properties": {
+          "subscription_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subscription Id"
+          },
+          "access_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Access Status"
+          },
+          "grace_until": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grace Until"
+          },
+          "valid_until": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid Until"
+          },
+          "plan_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plan Id"
+          },
+          "can_restore": {
+            "type": "boolean",
+            "title": "Can Restore"
+          }
+        },
+        "type": "object",
+        "required": [
+          "subscription_id",
+          "access_status",
+          "grace_until",
+          "valid_until",
+          "plan_id",
+          "can_restore"
+        ],
+        "title": "WebAppSubscriptionAccessStateOut"
+      },
       "WebAppSubscriptionCancelBody": {
         "properties": {
           "subscription_id": {
@@ -22384,7 +23594,30 @@
           },
           "reason_code": {
             "type": "string",
-            "title": "Reason Code"
+            "title": "Reason Code",
+            "default": "user_request"
+          },
+          "reason_group": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason Group"
+          },
+          "free_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Free Text"
           },
           "discount_accepted": {
             "anyOf": [
@@ -22396,12 +23629,30 @@
               }
             ],
             "title": "Discount Accepted"
+          },
+          "offer_accepted": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offer Accepted"
+          },
+          "cancel_at_period_end": {
+            "type": "boolean",
+            "title": "Cancel At Period End",
+            "default": false
+          },
+          "pause_instead": {
+            "type": "boolean",
+            "title": "Pause Instead",
+            "default": false
           }
         },
         "type": "object",
-        "required": [
-          "reason_code"
-        ],
         "title": "WebAppSubscriptionCancelBody"
       },
       "WebAppSubscriptionOffersOut": {
@@ -22450,6 +23701,32 @@
           "can_resume": {
             "type": "boolean",
             "title": "Can Resume"
+          },
+          "offer_pause": {
+            "type": "boolean",
+            "title": "Offer Pause",
+            "default": false
+          },
+          "offer_discount": {
+            "type": "boolean",
+            "title": "Offer Discount",
+            "default": false
+          },
+          "offer_downgrade": {
+            "type": "boolean",
+            "title": "Offer Downgrade",
+            "default": false
+          },
+          "reason_group": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason Group"
           }
         },
         "type": "object",
@@ -22479,6 +23756,23 @@
         },
         "type": "object",
         "title": "WebAppSubscriptionPauseBody"
+      },
+      "WebAppSubscriptionRestoreBody": {
+        "properties": {
+          "plan_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plan Id"
+          }
+        },
+        "type": "object",
+        "title": "WebAppSubscriptionRestoreBody"
       },
       "WebAppSubscriptionResumeBody": {
         "properties": {

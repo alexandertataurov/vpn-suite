@@ -1,6 +1,7 @@
 /*
  * Lightweight Web Vitals collection (no external deps).
  * Emits webapp telemetry event_type "web_vital" once per metric per page load.
+ * Optional: set VITE_WEB_VITALS_ENABLED=0 to disable. Defaults to VITE_ANALYTICS_ENABLED if unset.
  */
 
 import { track } from "@vpn-suite/shared";
@@ -50,6 +51,8 @@ function getNavEntry(): PerformanceNavigationTiming | null {
 
 export function initWebVitals(): void {
   if (typeof window === "undefined" || typeof PerformanceObserver === "undefined") return;
+  const enabled = import.meta.env.VITE_WEB_VITALS_ENABLED ?? import.meta.env.VITE_ANALYTICS_ENABLED;
+  if (enabled === "0" || enabled === "false") return;
 
   const nav = getNavEntry();
   if (nav) {

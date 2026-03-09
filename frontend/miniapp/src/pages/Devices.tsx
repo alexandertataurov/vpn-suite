@@ -1,21 +1,19 @@
 import { useLocation } from "react-router-dom";
+import { SummaryHero, LimitStrip, SessionMissing } from "@/components";
+import { Link } from "react-router-dom";
 import {
   IconAlertTriangle,
   Skeleton,
   ConfirmModal,
   PageFrame,
   PageSection,
-  SummaryHero,
   MissionAlert,
   MissionCard,
   MissionChip,
-  MissionPrimaryButton,
   MissionPrimaryLink,
   MissionSecondaryLink,
-  ButtonRow,
-  LimitStrip,
-  SessionMissing,
   FallbackScreen,
+  EmptyStateBlock,
 } from "@/design-system";
 import { useTelegramMainButton } from "@/hooks/useTelegramMainButton";
 import { useDevicesPageModel } from "@/page-models";
@@ -61,17 +59,79 @@ export function DevicesPage() {
           </MissionSecondaryLink>
         </PageSection>
       )}
-      <SummaryHero
-        {...model.summaryHero}
-        className="stagger-1"
-        pendingLabel={model.pendingConnectionCount > 0 ? "Pending confirmation" : null}
-      />
+      <SummaryHero {...model.summaryHero} className="stagger-1" />
+
+      <PageSection
+        title="Devices"
+        action={<MissionChip tone={model.activeBadge.tone} className="section-meta-chip miniapp-tnum">{model.activeBadge.label}</MissionChip>}
+        className="stagger-3"
+      >
+        {(model.isDeviceLimitError || model.showUpgradeCta) ? (
+          <LimitStrip
+            variant="compact"
+            title={model.deviceLimitUpsellCopy?.title ?? "Device limit reached"}
+            message={model.deviceLimitUpsellCopy?.body ?? "Upgrade plan or revoke device"}
+            action={(
+              <MissionPrimaryLink to={model.upgradeTargetTo} onClick={model.handleUpgradePlanClick}>
+                {model.deviceLimitUpsellCopy?.ctaLabel ?? "Upgrade plan"}
+              </MissionPrimaryLink>
+            )}
+            icon={<IconAlertTriangle size={20} strokeWidth={1.8} />}
+          />
+        ) : model.issueErrorMessage ? (
+          <MissionAlert
+            tone="error"
+            title="Could not issue device"
+            message={model.issueErrorMessage}
+          />
+        ) : null}
+        {model.hasSubscription && model.canAddDevice && model.activeDevices.length > 0 ? (
+          <div className="device-actions-inline">
+            <button
+              type="button"
+              className="link-interactive"
+              onClick={model.handleIssueDevice}
+              disabled={model.isAddPending}
+              aria-label="Add device"
+            >
+              {model.isAddPending ? "Issuing…" : model.issueActionLabel}
+            </button>
+            <span className="device-actions-sep" aria-hidden> · </span>
+            <Link to="/servers" className="link-interactive" aria-label="Change server routing">
+              Routing
+            </Link>
+          </div>
+        ) : null}
+
+        <div className="ops">
+          {model.activeDevices.map((device) => (
+            <DeviceRow
+              key={device.id}
+              device={device}
+              formatIssuedAt={model.formatIssuedAt}
+              onConfirm={model.handleConfirmConnected}
+              onReplace={model.handleReplaceDevice}
+              onRevoke={model.setRevokeId}
+              isConfirmingId={model.isConfirmingId}
+              isReplacingId={model.isReplacingId}
+            />
+          ))}
+          {model.activeDevices.length === 0 ? (
+            <EmptyStateBlock
+              title="No devices yet"
+              message={model.hasSubscription
+                ? "Issue your first device to receive a VPN config for AmneziaVPN."
+                : "Activate a plan first, then come back here to issue your first config."}
+            />
+          ) : null}
+        </div>
+      </PageSection>
 
       {model.showSetupCard ? (
         <PageSection
-          title="Setup"
+          title="Pending setup"
           action={<MissionChip tone={model.setupChip.tone} className="section-meta-chip">{model.setupChip.label}</MissionChip>}
-          className="stagger-2"
+          className="stagger-3"
         >
           <MissionCard tone={model.setupCardTone} className="module-card">
             <SetupCardContent
@@ -91,7 +151,7 @@ export function DevicesPage() {
           <PageSection
             title="Your config"
             action={<MissionChip tone={model.configBadge.tone} className="section-meta-chip">{model.configBadge.label}</MissionChip>}
-            className="stagger-2"
+            className="stagger-4"
           >
           <MissionCard tone="amber" className="module-card">
             <ConfigCardContent
@@ -106,67 +166,6 @@ export function DevicesPage() {
         </PageSection>
         </div>
       ) : null}
-
-      <PageSection
-        title="Active Devices"
-        action={<MissionChip tone={model.activeBadge.tone} className="section-meta-chip miniapp-tnum">{model.activeBadge.label}</MissionChip>}
-        className="stagger-3"
-      >
-        {(model.isDeviceLimitError || model.showUpgradeCta) ? (
-          <LimitStrip
-            title="Device limit reached"
-            message="No free slots. Upgrade or revoke an old device."
-            action={(
-              <MissionPrimaryLink to={model.upgradeTargetTo} onClick={model.handleUpgradePlanClick}>
-                Upgrade
-              </MissionPrimaryLink>
-            )}
-            icon={<IconAlertTriangle size={20} strokeWidth={1.8} />}
-          />
-        ) : model.issueErrorMessage ? (
-          <MissionAlert
-            tone="error"
-            title="Could not issue device"
-            message={model.issueErrorMessage}
-          />
-        ) : null}
-        {model.hasSubscription && model.canAddDevice && model.activeDevices.length > 0 ? (
-          <ButtonRow>
-            <MissionPrimaryButton
-              onClick={model.handleIssueDevice}
-              disabled={model.isAddPending}
-              aria-label="Add device"
-            >
-              {model.isAddPending ? "Issuing…" : model.issueActionLabel}
-            </MissionPrimaryButton>
-            <MissionSecondaryLink to="/servers">Routing</MissionSecondaryLink>
-          </ButtonRow>
-        ) : null}
-
-        <div className="ops">
-          {model.activeDevices.map((device) => (
-            <DeviceRow
-              key={device.id}
-              device={device}
-              formatIssuedAt={model.formatIssuedAt}
-              onConfirm={model.handleConfirmConnected}
-              onReplace={model.handleReplaceDevice}
-              onRevoke={model.setRevokeId}
-              isConfirmingId={model.isConfirmingId}
-              isReplacingId={model.isReplacingId}
-            />
-          ))}
-          {model.activeDevices.length === 0 ? (
-            <MissionAlert
-              tone="info"
-              title="No devices yet"
-              message={model.hasSubscription
-                ? "Issue your first device to receive a VPN config for AmneziaVPN."
-                : "Activate a plan first, then come back here to issue your first config."}
-            />
-          ) : null}
-        </div>
-      </PageSection>
 
       <ConfirmModal
         open={model.revokeId !== null}

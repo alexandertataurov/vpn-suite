@@ -19,7 +19,7 @@ export function HeaderAlertsContent({ alerts, title = "Signals" }: HeaderAlertsC
   return (
     <>
       <p className="miniapp-header-alert-popover-title">{title}</p>
-      <ul className="miniapp-header-alert-list">
+      <ul className="miniapp-header-alert-list" role="status" aria-live="polite">
         {alerts.map((alert) => (
           <li
             key={alert.id}

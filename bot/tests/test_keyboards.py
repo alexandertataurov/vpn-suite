@@ -3,7 +3,6 @@
 import sys
 from pathlib import Path
 
-import pytest
 
 bot_root = Path(__file__).resolve().parent.parent
 if str(bot_root) not in sys.path:

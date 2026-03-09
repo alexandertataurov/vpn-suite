@@ -12,6 +12,8 @@ export {
   User as IconUser,
   ChevronLeft as IconChevronLeft,
   AlertTriangle as IconAlertTriangle,
+  MoreVertical as IconMoreVertical,
+  Download as IconDownload,
 } from "lucide-react";
 
 export type { LucideIcon as IconType } from "lucide-react";

@@ -117,6 +117,8 @@ Miniapp rule:
 - keep `48px` as the preferred shared target in our web UI
 - add padding around compact icon buttons before shrinking visuals
 
+**Touch target audit (design system):** `.page-hd-btn`, `.btn-primary`, `.btn-secondary`, `.icon-btn`, `.op-ico`, `.tier-select-btn`, bottom nav items use `var(--size-touch-target)` or `min-height: 44px`/`48px`. Non-interactive elements (`.bar-track`, `.feat-ico`, `.lr-ico`) may be smaller; ensure adjacent tappable controls meet 48px.
+
 ## 2. Minimum Readable Text
 
 Apple guidance: text should be at least `11pt` and custom type should follow recommended defaults; iOS default body size is `17pt` with `11pt` minimum.

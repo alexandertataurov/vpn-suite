@@ -1,20 +1,20 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { WebAppReferralMyLinkResponse, WebAppReferralStatsResponse } from "@vpn-suite/shared";
+import { getPlans } from "@/api";
 import { useWebappToken, webappApi } from "@/api/client";
 import { useSession } from "@/hooks/useSession";
+import { useTrackScreen } from "@/hooks/useTrackScreen";
 import { useTelegramHaptics } from "@/hooks/useTelegramHaptics";
 import { useTelegramMainButton } from "@/hooks/useTelegramMainButton";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { useToast } from "@/design-system";
 import { webappQueryKeys } from "@/lib/query-keys/webapp.query-keys";
-import type { PlanItem, PlansResponse } from "./usePlanPageModel";
+import type { PlanItem, PlansResponse } from "@/api";
 import type { StandardPageHeader, StandardPageState, StandardSectionBadge } from "./types";
-import {
-  getActiveSubscription,
-  getUpgradeCheckoutPath,
-  shouldShowUpsell,
-} from "./helpers";
+import { getActiveSubscription, shouldShowUpsell } from "./helpers";
+import { getUpgradeOfferForIntent, type PlanLikeForUpsell } from "./upsell";
+import { telegramBotUsername } from "@/config/env";
 
 export function useReferralPageModel() {
   const { addToast } = useToast();
@@ -24,7 +24,7 @@ export function useReferralPageModel() {
   const { data: session } = useSession(hasToken);
   const { data: plansData } = useQuery<PlansResponse>({
     queryKey: [...webappQueryKeys.plans()],
-    queryFn: () => webappApi.get<PlansResponse>("/webapp/plans"),
+    queryFn: getPlans,
     enabled: hasToken,
   });
   const plans = useMemo(() => plansData?.items ?? [], [plansData?.items]);
@@ -34,7 +34,12 @@ export function useReferralPageModel() {
     [plans, activeSub?.plan_id],
   );
   const showUpsellReferral = shouldShowUpsell(currentPlan?.upsell_methods, "referral");
-  const referralUpsellTo = getUpgradeCheckoutPath(plans, activeSub?.plan_id);
+  const referralOffer = showUpsellReferral
+    ? getUpgradeOfferForIntent(plans as PlanLikeForUpsell[], currentPlan, "referral", "referral")
+    : null;
+  const referralUpsellTo = referralOffer?.targetTo ?? "/plan?intent=referral";
+
+  useTrackScreen("referral", activeSub?.plan_id ?? null);
   const {
     data: linkData,
     isFetching: linkFetching,
@@ -59,10 +64,7 @@ export function useReferralPageModel() {
 
   const linkPayload = linkData?.payload;
   const fromApi = (linkData?.bot_username ?? "").trim();
-  const fromEnv = typeof import.meta !== "undefined"
-    ? (import.meta as { env?: { VITE_TELEGRAM_BOT_USERNAME?: string } }).env?.VITE_TELEGRAM_BOT_USERNAME ?? ""
-    : "";
-  const botUsername = fromApi || fromEnv.trim();
+  const botUsername = fromApi || telegramBotUsername;
 
   const refetchedForEmptyBotRef = useRef(false);
   useEffect(() => {

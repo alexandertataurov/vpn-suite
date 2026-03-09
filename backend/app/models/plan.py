@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from sqlalchemy import Integer, Numeric, String
+from sqlalchemy import Boolean, Integer, Numeric, String
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -21,6 +21,8 @@ class Plan(Base, TimestampMixin):
     price_currency: Mapped[str] = mapped_column(String(8), nullable=False)
     price_amount: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
     upsell_methods: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
+    is_archived: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    display_order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
     subscriptions: Mapped[list["Subscription"]] = relationship(
         "Subscription", back_populates="plan", foreign_keys="Subscription.plan_id"

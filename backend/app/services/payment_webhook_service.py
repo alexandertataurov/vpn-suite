@@ -1,5 +1,6 @@
 """Process payment webhook: idempotent by external_id; extend subscription; referral reward; promo redemption."""
 
+import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
@@ -7,7 +8,7 @@ from decimal import Decimal
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import settings
+from app.core.constants import REFERRAL_REWARD_DAYS
 from app.core.metrics import (
     vpn_revenue_payment_total,
     vpn_revenue_referral_paid_total,
@@ -21,9 +22,12 @@ from app.models import (
     PromoRedemption,
     Referral,
     Subscription,
+    User,
 )
 from app.services.entitlement_service import emit_entitlement_event
 from app.services.funnel_service import log_funnel_event
+from app.services.referral_notification import notify_referrer_reward_granted
+from app.services.referral_service import grant_referral_reward
 
 
 @dataclass
@@ -120,57 +124,59 @@ async def _apply_payment_success_effects(
         .limit(1)
     )
     ref = ref_result.scalar_one_or_none()
-    reward_days = getattr(ref, "reward_days", None) or settings.referral_reward_bonus_days
-    if ref and reward_days:
-        referrer_subs = await session.execute(
-            select(Subscription)
-            .where(
-                Subscription.user_id == ref.referrer_user_id,
-                Subscription.status == "active",
-                Subscription.valid_until > now,
-            )
-            .order_by(Subscription.valid_until.desc())
-            .limit(1)
-        )
-        referrer_sub = referrer_subs.scalar_one_or_none()
-        if referrer_sub:
-            base_ref = (
-                referrer_sub.valid_until
-                if referrer_sub.valid_until > now
-                else now
-            )
-            referrer_sub.valid_until = base_ref + timedelta(days=reward_days)
-            ref.reward_applied_at = now
-            ref.status = "rewarded"
-        else:
-            pending = getattr(ref, "pending_reward_days", 0) or 0
-            ref.pending_reward_days = pending + reward_days
-            ref.status = "pending_reward"
-            await emit_entitlement_event(
-                session,
-                subscription_id=None,
-                user_id=ref.referrer_user_id,
-                event_type="referral_reward_accrued",
-                payload={"referral_id": ref.id, "days": reward_days},
-            )
-        await session.flush()
+    if ref:
         try:
-            vpn_revenue_referral_paid_total.inc()
-        except Exception:
-            pass
-        await log_funnel_event(
-            session,
-            event_type="referral_signup",
-            user_id=ref.referrer_user_id,
-            payload={
-                "referee_user_id": ref.referee_user_id,
-                "reward_applied": referrer_sub is not None,
-                "pending_reward_days": getattr(ref, "pending_reward_days", 0),
-            },
-        )
+            processed, applied_immediate = await grant_referral_reward(session, ref.id)
+            if processed:
+                try:
+                    vpn_revenue_referral_paid_total.inc()
+                except Exception:
+                    pass
+                if not applied_immediate:
+                    await emit_entitlement_event(
+                        session,
+                        subscription_id=None,
+                        user_id=ref.referrer_user_id,
+                        event_type="referral_reward_accrued",
+                        payload={"referral_id": ref.id, "days": REFERRAL_REWARD_DAYS},
+                    )
+                if applied_immediate:
+                    try:
+                        referrer_u = (
+                            await session.execute(
+                                select(User).where(User.id == ref.referrer_user_id)
+                            )
+                        ).scalar_one_or_none()
+                        if referrer_u:
+                            await notify_referrer_reward_granted(referrer_u.tg_id)
+                    except Exception:
+                        logging.getLogger(__name__).warning(
+                            "referral_notification_failed referral_id=%s referrer_user_id=%s",
+                            ref.id,
+                            ref.referrer_user_id,
+                            exc_info=True,
+                        )
+                await session.refresh(ref)
+                await log_funnel_event(
+                    session,
+                    event_type="referral_signup",
+                    user_id=ref.referrer_user_id,
+                    payload={
+                        "referee_user_id": ref.referee_user_id,
+                        "reward_applied": applied_immediate,
+                        "pending_reward_days": getattr(ref, "pending_reward_days", 0),
+                    },
+                )
+        except Exception as exc:
+            logging.getLogger(__name__).error(
+                "referral_reward_failed referral_id=%s referee_user_id=%s: %s",
+                ref.id,
+                user_id,
+                exc,
+                exc_info=True,
+            )
     referrer_pending = await session.execute(
-        select(Referral)
-        .where(
+        select(Referral).where(
             Referral.referrer_user_id == int(user_id),
             Referral.pending_reward_days > 0,
         )

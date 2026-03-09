@@ -62,9 +62,16 @@ export function SetupCardContent({
     );
   }
   return (
-    <ButtonRow>
-      <MissionPrimaryLink to={recommendedRoute}>Continue setup</MissionPrimaryLink>
-      <MissionSecondaryLink to="/support">Troubleshoot</MissionSecondaryLink>
-    </ButtonRow>
+    <MissionAlert
+      tone="info"
+      title="Device setup in progress"
+      message="Complete installation in your VPN app."
+      actions={(
+        <ButtonRow>
+          <MissionPrimaryLink to={recommendedRoute}>Continue setup</MissionPrimaryLink>
+          <MissionSecondaryLink to="/support">Installation guide</MissionSecondaryLink>
+        </ButtonRow>
+      )}
+    />
   );
 }

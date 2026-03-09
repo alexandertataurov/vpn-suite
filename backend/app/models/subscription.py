@@ -26,17 +26,11 @@ class Subscription(Base, TimestampMixin):
     auto_renew: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     status: Mapped[str] = mapped_column(String(32), default="active", nullable=False)
     # Split state (spec v2): commercial, access, billing, renewal
-    subscription_status: Mapped[str] = mapped_column(
-        String(32), default="active", nullable=False
-    )
+    subscription_status: Mapped[str] = mapped_column(String(32), default="active", nullable=False)
     access_status: Mapped[str] = mapped_column(String(32), default="enabled", nullable=False)
     billing_status: Mapped[str] = mapped_column(String(32), default="paid", nullable=False)
-    renewal_status: Mapped[str] = mapped_column(
-        String(32), default="auto_renew_on", nullable=False
-    )
-    grace_until: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    renewal_status: Mapped[str] = mapped_column(String(32), default="auto_renew_on", nullable=False)
+    grace_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     grace_reason: Mapped[str | None] = mapped_column(String(64), nullable=True)
     cancel_at_period_end: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     accrued_bonus_days: Mapped[int] = mapped_column(Integer, default=0, nullable=False)

@@ -7,8 +7,8 @@ from app.models.churn_risk_score import ChurnRiskScore
 from app.models.churn_survey import ChurnSurvey
 from app.models.control_plane_event import ControlPlaneEvent
 from app.models.device import Device
-from app.models.entitlement_event import EntitlementEvent
 from app.models.docker_alert import DockerAlert
+from app.models.entitlement_event import EntitlementEvent
 from app.models.funnel_event import FunnelEvent
 from app.models.ip_pool import IpPool
 from app.models.issued_config import IssuedConfig

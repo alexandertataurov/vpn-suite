@@ -1,3 +1,4 @@
+import { SessionMissing } from "@/components";
 import {
   FallbackScreen,
   Skeleton,
@@ -9,7 +10,7 @@ import {
   MissionProgressBar,
   MissionSecondaryButton,
   MissionSecondaryLink,
-  SessionMissing,
+  ButtonRow,
 } from "@/design-system";
 import { useReferralPageModel } from "@/page-models";
 
@@ -58,14 +59,14 @@ export function ReferralPage() {
           />
         ) : null}
         <code className="code-block type-meta">{model.shareUrl || "Unavailable"}</code>
-        <div className="btn-row">
+        <ButtonRow>
           <MissionPrimaryButton onClick={() => void model.handleShare()} disabled={!model.shareUrl || !model.isOnline}>
             Share secure access
           </MissionPrimaryButton>
           <MissionSecondaryButton onClick={() => void model.copyToClipboard()} disabled={!model.shareUrl || !model.isOnline}>
             Copy link
           </MissionSecondaryButton>
-        </div>
+        </ButtonRow>
       </PageCardSection>
 
       {model.statsData ? (

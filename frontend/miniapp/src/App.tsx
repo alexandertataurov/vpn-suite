@@ -1,11 +1,12 @@
 import { useEffect, useRef } from "react";
 import { useWebappToken } from "@/api/client";
-import { flushTelemetryQueue } from "@/lib/utils/telemetry";
+import { flushTelemetryQueue } from "@/telemetry/webappTelemetry";
 import { useTelemetry } from "@/hooks/useTelemetry";
 import { useScrollInputIntoView } from "@/hooks/useScrollInputIntoView";
 import { useLayoutDebugMode } from "@/hooks/useLayoutDebugMode";
 import { useGlobalHapticFeedback } from "@/hooks/useGlobalHapticFeedback";
-import { Providers } from "@/app/providers";
+import { AppErrorBoundary } from "@/app/AppErrorBoundary";
+import { AppShell } from "@/app/AppShell";
 
 function App() {
   const token = useWebappToken();
@@ -24,7 +25,11 @@ function App() {
     }
   }, [token, track]);
 
-  return <Providers />;
+  return (
+    <AppErrorBoundary>
+      <AppShell />
+    </AppErrorBoundary>
+  );
 }
 
 export default App;

@@ -12,6 +12,7 @@
     "check:css-budget": "node scripts/check-css-budget.mjs",
     "build:ci": "npm run build && npm run check:css-budget",
     "design:check": "bash scripts/design-check.sh",
+    "token:drift": "node scripts/check-token-drift.mjs",
     "lint": "eslint src --ext .ts,.tsx",
     "lint:fix": "eslint src --ext .ts,.tsx --fix",
     "typecheck": "tsc -b tsconfig.json --pretty false",
@@ -29,10 +30,10 @@
     "test:e2e:docker": "docker run --rm -t -e CI=1 -e PLAYWRIGHT_WEB_SERVER_MODE=preview -v \"$(pwd)/..\":/work -w /work -v miniapp_node_modules:/work/frontend/miniapp/node_modules -v shared_node_modules:/work/frontend/shared/node_modules -v frontend_node_modules:/work/frontend/node_modules mcr.microsoft.com/playwright:v1.58.2-noble bash -lc \"cd frontend && npm ci && npm run build -w miniapp && cd miniapp && npm exec playwright test\""
   },
   "dependencies": {
-    "@vpn-suite/shared": "workspace:*",
     "@radix-ui/react-slot": "^1.1.0",
     "@sentry/browser": "^8.55.0",
     "@tanstack/react-query": "^5.62.0",
+    "@vpn-suite/shared": "workspace:*",
     "lucide-react": "^0.487.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -53,6 +54,7 @@
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.3",
     "eslint": "^9.39.3",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",
     "jsdom": "^28.1.0",

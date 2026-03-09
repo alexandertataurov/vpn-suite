@@ -41,6 +41,12 @@ function readState(): TelegramInitDataState {
   };
 }
 
+/**
+ * Read Telegram WebApp init data and related state.
+ * Polls every 100ms up to 10 times when initData is empty — known Telegram quirk where
+ * initData may arrive slightly after script load. If Telegram never provides initData,
+ * caller sees empty string after ~1s and BootstrapController shows startup_error.
+ */
 export function useTelegramInitData() {
   const [state, setState] = useState<TelegramInitDataState>(() => readState());
 

@@ -158,6 +158,7 @@ KEY_PREFIX_ADMIN_ISSUE = "ratelimit:admin_issue:"
 KEY_PREFIX_CONFIG_DOWNLOAD = "ratelimit:config_dl:"
 KEY_PREFIX_SERVER_ACTIONS = "ratelimit:server_actions:"
 KEY_PREFIX_WEBAPP_ME_PATCH = "ratelimit:webapp_me_patch:"
+KEY_PREFIX_PROMO_VALIDATE = "ratelimit:promo_validate:"
 ADMIN_ISSUE_LIMIT = 30
 ADMIN_ISSUE_WINDOW = 60
 CONFIG_DOWNLOAD_IP_LIMIT = 60
@@ -167,6 +168,8 @@ SERVER_ACTIONS_PER_USER_PER_SERVER_LIMIT = 10
 SERVER_ACTIONS_WINDOW = 60
 WEBAPP_ME_PATCH_LIMIT = 20
 WEBAPP_ME_PATCH_WINDOW = 60
+PROMO_VALIDATE_LIMIT = 10
+PROMO_VALIDATE_WINDOW = 60
 
 
 async def rate_limit_admin_issue(request: Request) -> None:
@@ -243,9 +246,34 @@ async def rate_limit_webapp_me_patch(tg_id: int) -> None:
         if n > WEBAPP_ME_PATCH_LIMIT:
             raise HTTPException(
                 status_code=429,
-                detail={"code": "RATE_LIMIT", "message": "Too many profile updates. Try again later."},
+                detail={
+                    "code": "RATE_LIMIT",
+                    "message": "Too many profile updates. Try again later.",
+                },
             )
     except HTTPException:
         raise
     except Exception as e:
         _log.warning("Webapp me patch rate limit skipped: %s", type(e).__name__)
+
+
+async def rate_limit_promo_validate(tg_id: int) -> None:
+    """Check rate limit for POST /promo/validate per user (tg_id). Call from route. Fail-open if Redis down."""
+    try:
+        r = get_redis()
+        key = f"{KEY_PREFIX_PROMO_VALIDATE}{tg_id}"
+        n = await r.incr(key)
+        if n == 1:
+            await r.expire(key, PROMO_VALIDATE_WINDOW)
+        if n > PROMO_VALIDATE_LIMIT:
+            raise HTTPException(
+                status_code=429,
+                detail={
+                    "code": "RATE_LIMIT",
+                    "message": "Too many promo validation requests. Try again later.",
+                },
+            )
+    except HTTPException:
+        raise
+    except Exception as e:
+        _log.warning("Promo validate rate limit skipped: %s", type(e).__name__)

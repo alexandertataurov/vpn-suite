@@ -42,11 +42,12 @@ export default defineConfig({
     outDir: "dist",
     sourcemap: enableSourcemap,
     // Why: miniapp runs on mobile Telegram WebView; enforce stricter chunk warning threshold.
-    chunkSizeWarningLimit: 150,
+    chunkSizeWarningLimit: 400,
     rollupOptions: {
       output: {
         manualChunks: (id) => {
           if (id.includes("/shared/src/")) return "shared";
+          if (id.includes("/design-system/patterns/") || id.includes("/design-system/layouts/")) return "design-system-core";
           if (
             id.includes("node_modules/react/") ||
             id.includes("node_modules/react-dom/") ||

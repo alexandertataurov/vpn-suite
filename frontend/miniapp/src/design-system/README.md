@@ -24,7 +24,7 @@ The design system follows a **layered model**. Each layer has strict responsibil
 - Class names (e.g. `.page-hd`, `.shead`, `.shead-lbl`, `.shead-rule`, `.op`, `.data-grid`, `.btn-primary`). CSS keeps `.shead-label`/`.shead-line` as aliases for `.shead-lbl`/`.shead-rule`.
 - Progress: Content Library §8 uses `.bar-track`/`.bar-fill` (`.ok`/`.warn`/`.crit`/`.info`) in content-library.css. Legacy: `.h-track`, `.h-fill`, `.h-fill.pct-*` (0–100) in miniapp.css. Prefer ProgressBar component or `.bar-track`/`.bar-fill` for new code.
 - Error vs danger: Semantic token is `--color-error`; `--danger`, `.btn-danger`, and LEGACY_ALIASES use "danger" as the legacy name for the same semantic (see tokens/colors.ts).
-- Buttons: Prefer the `Button` component and `getButtonClassName()` from `@/design-system` for consistency and theming. Raw `.btn`, `.btn-primary`, etc. in miniapp.css are legacy; migrate over time.
+- Buttons: Prefer the `Button` component and `getButtonClassName()` from `@/design-system` for consistency and theming. Raw `.btn`, `.btn-primary`, etc. in miniapp.css are legacy; migrate over time. See **Mission\* vs Button** below.
 - Token usage (`--ui`, `--mono`, `--s1`–`--s4`, `--bd-def`, `--tx-pri`, etc.)
 - Content-level constraints (Section 18)
 
@@ -43,7 +43,7 @@ CSS for content lives in `styles/content-library.css` and `styles/miniapp.css`; 
 - **theme/** — ThemeProvider, tokens-map, z-index constants
 - **primitives/** — Box, Stack, Container, Panel, Heading, Text, Divider, Inline
 - **components/** — Typography, Button, forms, feedback, display
-- **patterns/** — Mission*, Home*, DangerZone, ListCard, DataGrid, etc.
+- **patterns/** — Mission*, Home*, ListCard, DataGrid, FormField, etc. Product-specific patterns (heroes, tier/usage/billing cards, DangerZone, LimitStrip, TroubleshooterStep, SessionMissing) live in `src/components` and are imported from `@/components`.
 - **layouts/** — PageScaffold, PageHeader, PageSection
 - **page-recipes/** — PageHeaderBadge, PageCardSection, other reusable page shells/recipes
 - **hooks/** — useThemeMode, useBreakpoint
@@ -90,6 +90,23 @@ Miniapp pages do not own local CSS files under `src/pages`.
 | MissionAlert | MissionAlertTone | info, warning, error, success |
 
 The split is intentional (chip vs header vs card semantics). Do not mix tone types.
+
+## Mission* vs Button
+
+Use the design-system components for buttons and button groups; avoid raw class names.
+
+| Use | For |
+|-----|-----|
+| `Button` | Base button with `variant`, `size`, `tone`, `loading`, `iconOnly`. Use for custom flows or when Mission* variants don't fit. |
+| `MissionPrimaryButton` | Primary CTA (blue); thin wrapper over `Button variant="primary" size="lg"` with optional `tone` (default, warning, danger). |
+| `MissionSecondaryButton` | Secondary action (outline-style). |
+| `MissionPrimaryLink` | Primary-styled link (`<Link>`). Use when the action navigates. |
+| `MissionSecondaryLink` | Secondary-styled link. |
+| `getButtonClassName()` | For link elements styled as buttons (e.g. `<a className={getButtonClassName("primary", "lg")}>`). |
+| `ButtonRow` | Two-column button layout (1fr 1fr). **Always use `ButtonRow`**, not `div className="btn-row"`. |
+| `ButtonRowAuto` | Primary full-width + secondary auto-width layout. |
+
+Raw `.btn-primary`, `.btn-secondary`, `.btn-row` are legacy. New code must use `Button` / `Mission*` + `ButtonRow`.
 
 ## Token Usage Rules
 

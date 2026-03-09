@@ -1,31 +1,26 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { WebAppServersResponse, WebAppUsageResponse } from "@vpn-suite/shared";
+import { getPlans } from "@/api";
 import { useWebappToken, webappApi } from "@/api/client";
-import { useAccountSignals } from "@/hooks/useAccountSignals";
-import { useApiHealth } from "@/hooks/useApiHealth";
+import { useConnectionStatus } from "@/hooks/features/useConnectionStatus";
 import { useSession } from "@/hooks/useSession";
 import { useTrackScreen } from "@/hooks/useTrackScreen";
+import { getBaseUrl } from "@/lib/api-client";
 import { webappQueryKeys } from "@/lib/query-keys/webapp.query-keys";
 import { formatBytes, formatDurationShort } from "@/lib/utils/format";
 import type { StandardPageHeader, StandardPageState, StandardSectionBadge } from "./types";
-import type { PlanItem, PlansResponse } from "./usePlanPageModel";
-import {
-  daysUntil,
-  getActiveDevices,
-  getActiveSubscription,
-  getRenewalCheckoutPath,
-  getUpgradeCheckoutPath,
-  getUpgradeCheckoutPathForDeviceLimit,
-  shouldShowUpsell,
-} from "./helpers";
+import { daysUntil, getActiveDevices, getActiveSubscription } from "./helpers";
+import { evaluateUpsell, type UpsellDecision } from "./upsell";
 
 export interface HomePageModel {
   header: StandardPageHeader;
   pageState: StandardPageState;
   connectionHero: {
     state: "inactive" | "connecting" | "connected";
+    serverKeyLabel: string;
     serverLabel: string;
+    latencyKeyLabel: string;
     latencyLabel: string;
     currentIpKeyLabel: string;
     currentIp: string;
@@ -34,57 +29,59 @@ export interface HomePageModel {
     trafficKeyLabel: string;
     trafficLabel: string;
     protocolLabel: string;
+    showCurrentIpCell: boolean;
     title: string;
     hint: string;
   };
   hasSubscription: boolean;
-  shouldPrioritizeSignals: boolean;
   quickAccessMeta: { badge: StandardSectionBadge; description: string };
-  signalsMeta: { badge: StandardSectionBadge; description: string };
-  signals: {
-    daysLeft: number;
-    hasSub: boolean;
-    deviceLimit: number | null;
-    usedDevices: number;
-    healthError: boolean;
-    showUpsellExpiry: boolean;
-    showUpsellDeviceLimit: boolean;
-  renewalTargetTo: string;
-  upgradeTargetTo: string;
-  upgradeTargetToDeviceLimit: string;
-  isTrial: boolean;
-    trialDaysLeft: number;
-    showUpsellTrialEnd: boolean;
-  };
+  /** Primary monetization card (spec §14.1). */
+  primaryUpsell: UpsellDecision | null;
+  planId: string | null;
   refetch: () => void;
 }
 
 export function useHomePageModel(): HomePageModel {
   const hasToken = !!useWebappToken();
   const { data, isLoading, error, refetch, isFetching } = useSession(hasToken);
-  const { error: healthError } = useApiHealth(hasToken);
   const activeSub = getActiveSubscription(data);
   const activeDevices = getActiveDevices(data);
 
   const { data: plansData } = useQuery({
     queryKey: [...webappQueryKeys.plans()],
-    queryFn: () => webappApi.get<PlansResponse>("/webapp/plans"),
-    enabled: hasToken,
+    queryFn: getPlans,
+    enabled: hasToken && !!activeSub,
   });
   const plans = useMemo(() => plansData?.items ?? [], [plansData?.items]);
-  const currentPlan = useMemo<PlanItem | undefined>(
+  const currentPlan = useMemo(
     () => (activeSub?.plan_id ? plans.find((p) => p.id === activeSub.plan_id) : undefined),
     [plans, activeSub?.plan_id],
   );
-  const showUpsellExpiry = shouldShowUpsell(currentPlan?.upsell_methods, "expiry");
-  const showUpsellDeviceLimit = shouldShowUpsell(currentPlan?.upsell_methods, "device_limit");
-  const trialDaysLeft = daysUntil(activeSub?.trial_ends_at);
-  const isTrial = Boolean(activeSub?.is_trial);
-  const showUpsellTrialEnd =
-    isTrial && trialDaysLeft <= 7 && shouldShowUpsell(currentPlan?.upsell_methods, "trial_end");
-  const renewalTargetTo = getRenewalCheckoutPath(activeSub?.plan_id);
-  const upgradeTargetTo = getUpgradeCheckoutPath(plans, activeSub?.plan_id);
-  const upgradeTargetToDeviceLimit = getUpgradeCheckoutPathForDeviceLimit(plans, activeSub?.plan_id);
+
+  const subscriptionStatusForUpsell = !activeSub
+    ? "none" as const
+    : activeSub.is_trial
+      ? "trial" as const
+      : daysUntil(activeSub.valid_until) <= 0
+        ? "expired" as const
+        : "active" as const;
+
+  const upsellContext = useMemo(
+    () => ({
+      page: "home" as const,
+      currentPlanId: activeSub?.plan_id ?? null,
+      currentPlan: currentPlan ?? null,
+      plans,
+      subscriptionStatus: subscriptionStatusForUpsell,
+      daysToExpiry: activeSub ? daysUntil(activeSub.valid_until) : null,
+      trialDaysLeft: activeSub?.is_trial ? daysUntil(activeSub.trial_ends_at) : null,
+      devicesUsed: activeDevices.length,
+      deviceLimit: activeSub?.device_limit ?? null,
+      isDeviceLimitError: false,
+    }),
+    [activeSub, activeDevices.length, currentPlan, plans, subscriptionStatusForUpsell],
+  );
+  const primaryUpsell = useMemo(() => evaluateUpsell(upsellContext), [upsellContext]);
 
   const { data: serversData } = useQuery<WebAppServersResponse>({
     queryKey: [...webappQueryKeys.servers()],
@@ -101,11 +98,19 @@ export function useHomePageModel(): HomePageModel {
 
   useTrackScreen("home", activeSub?.plan_id ?? null);
 
+  const apiBase = getBaseUrl();
+  const healthUrl = apiBase.replace(/\/api\/v1\/?$/, "") ? `${apiBase.replace(/\/api\/v1\/?$/, "")}/health` : "/health";
+  const { latency: apiLatencyMs } = useConnectionStatus({ latencyProbeUrl: healthUrl, pollMs: 15_000 });
+
   const currentServer = serversData?.items.find((server) => server.is_current);
-  const locationLabel = !serversData || serversData.auto_select ? "Automatic" : (currentServer?.name ?? "Automatic");
-  const connectedLatency = currentServer?.avg_ping_ms != null && currentServer.avg_ping_ms > 0
-    ? `${Math.round(currentServer.avg_ping_ms)}ms`
-    : "--";
+  const locationLabel = !serversData || serversData.auto_select ? "Fastest available" : (currentServer?.name ?? "Fastest available");
+  const vpnLatency =
+    currentServer?.avg_ping_ms != null && currentServer.avg_ping_ms > 0
+      ? `${Math.round(currentServer.avg_ping_ms)}ms`
+      : null;
+  const connectedLatency =
+    vpnLatency ??
+    (apiLatencyMs != null && apiLatencyMs >= 0 ? `${apiLatencyMs}ms` : "--");
 
   const deviceLimit = activeSub?.device_limit ?? null;
   const usedDevices = activeDevices.length;
@@ -116,42 +121,33 @@ export function useHomePageModel(): HomePageModel {
     return latest == null || ts > latest ? ts : latest;
   }, null);
 
-  const daysLeft = daysUntil(activeSub?.valid_until);
   const phase = !activeSub
     ? "inactive"
     : activeDevices.length === 0 || isFetching
       ? "connecting"
       : "connected";
   const statusText = phase === "connected"
-    ? "Connected · Secured"
+    ? "Configuration active"
     : phase === "connecting"
-      ? "Connecting…"
-      : "Connection inactive";
-  const statusHint = phase === "inactive" ? "No active secure tunnel" : locationLabel;
+      ? "Config pending"
+      : "Config inactive";
+  const statusHint = phase === "inactive"
+    ? "Set up config on a device"
+    : phase === "connecting"
+      ? "Add device to get config"
+      : locationLabel;
 
   const totalTrafficBytes = usageData?.points?.reduce(
     (acc, point) => acc + (point.bytes_in ?? 0) + (point.bytes_out ?? 0),
     0,
   );
-  const latencyLabel = phase === "connected" ? connectedLatency : "--";
+  const latencyLabel = phase === "connected" ? connectedLatency : (phase === "connecting" ? "Testing servers…" : "--");
   const bandwidthLabel = activeSub && totalTrafficBytes != null ? formatBytes(totalTrafficBytes, { digits: 1 }) : "--";
-  const routeModeLabel = activeSub && phase !== "inactive"
-    ? serversData?.auto_select === false ? "Manual" : "Auto"
-    : "--";
-  const currentIpLabel = data?.public_ip ?? routeModeLabel;
-  const currentIpKeyLabel = data?.public_ip ? "Current IP" : "Route mode";
+  const currentIpLabel = data?.public_ip ?? "--";
+  const currentIpKeyLabel = "Current IP";
   const lastActiveLabel = latestHandshakeMs != null && latestHandshakeMs <= Date.now()
     ? formatDurationShort(Date.now() - latestHandshakeMs)
     : "--";
-
-  const accountSignals = useAccountSignals();
-  const signalCount = accountSignals.length;
-  const shouldPrioritizeSignals = signalCount > 0;
-  const signalsBadgeTone = signalCount === 0
-    ? "green"
-    : accountSignals.some((s) => s.tone === "warning")
-      ? "amber"
-      : "neutral";
 
   const header: StandardPageHeader = {
     title: "Mission Control",
@@ -180,20 +176,24 @@ export function useHomePageModel(): HomePageModel {
     pageState,
     connectionHero: {
       state: phase,
+      serverKeyLabel: "Server preset",
       serverLabel: locationLabel,
+      latencyKeyLabel: "Server latency",
       latencyLabel,
       currentIpKeyLabel,
       currentIp: currentIpLabel,
-      durationKeyLabel: "Last active",
+      durationKeyLabel: "Device last active",
       durationLabel: lastActiveLabel,
-      trafficKeyLabel: "7d traffic",
+      trafficKeyLabel: "Account traffic (7 days)",
       trafficLabel: bandwidthLabel,
-      protocolLabel: phase === "inactive" ? "--" : "AWG",
+      protocolLabel: phase === "inactive" ? "--" : "AmneziaWG",
+      showCurrentIpCell: !!data?.public_ip,
       title: statusText,
       hint: statusHint,
     },
     hasSubscription: Boolean(activeSub),
-    shouldPrioritizeSignals,
+    primaryUpsell,
+    planId: activeSub?.plan_id ?? null,
     quickAccessMeta: {
       badge: !activeSub
         ? { tone: "blue", label: "Start here" }
@@ -205,33 +205,6 @@ export function useHomePageModel(): HomePageModel {
       description: !activeSub
         ? "Choose a plan first, then return here to manage access."
         : "Fast access to connection, plan, support, and account actions.",
-    },
-    signalsMeta: {
-      badge: signalCount === 0
-        ? { tone: "green", label: "All clear" }
-        : {
-            tone: signalsBadgeTone,
-            label: `${signalCount} active`,
-            emphasizeNumeric: true,
-          },
-      description: signalCount === 0
-        ? "No renewal, capacity, or service issues need action."
-        : "Renewal risk, capacity, and service health appear here first.",
-    },
-    signals: {
-      daysLeft,
-      hasSub: Boolean(activeSub),
-      deviceLimit,
-      usedDevices,
-      healthError: Boolean(healthError),
-      showUpsellExpiry,
-      showUpsellDeviceLimit,
-      renewalTargetTo,
-      upgradeTargetTo,
-      upgradeTargetToDeviceLimit,
-      isTrial,
-      trialDaysLeft,
-      showUpsellTrialEnd,
     },
     refetch: () => void refetch(),
   };

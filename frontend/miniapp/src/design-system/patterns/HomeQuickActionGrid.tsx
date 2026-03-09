@@ -1,7 +1,8 @@
 import {
   IconSmartphone,
   IconCreditCard,
-  IconUser,
+  IconDownload,
+  IconGlobe,
   IconHelpCircle,
   IconUsers,
   type IconType,
@@ -31,12 +32,28 @@ export function HomeQuickActionGrid({ hasSub }: HomeQuickActionGridProps) {
     ...(hasSub
       ? [
           {
-            label: "Manage Connection",
-            description: "Devices and configs",
+            label: "Manage Devices",
+            description: "Devices & configurations",
             to: "/devices",
             icon: IconSmartphone,
             tone: "blue",
             iconTone: "blue",
+          },
+          {
+            label: "Download Config",
+            description: "Get config for VPN app",
+            to: "/devices",
+            icon: IconDownload,
+            tone: "blue",
+            iconTone: "blue",
+          },
+          {
+            label: "Change server",
+            description: "Route and region",
+            to: "/servers",
+            icon: IconGlobe,
+            tone: "amber",
+            iconTone: "amber",
           },
         ] satisfies StyledQuickAction[]
       : [
@@ -50,10 +67,10 @@ export function HomeQuickActionGrid({ hasSub }: HomeQuickActionGridProps) {
           },
         ] satisfies StyledQuickAction[]),
     {
-      label: "Account",
-      description: "Plan and settings",
-      to: "/settings",
-      icon: IconUser,
+      label: "Subscription",
+      description: "Plan and billing",
+      to: "/plan",
+      icon: IconCreditCard,
       tone: "amber",
       iconTone: "amber",
     },
@@ -66,8 +83,8 @@ export function HomeQuickActionGrid({ hasSub }: HomeQuickActionGridProps) {
       iconTone: "red",
     },
     {
-      label: "Invite friends",
-      description: "Referral rewards",
+      label: "Invite Friends",
+      description: "Earn free VPN time",
       to: "/referral",
       icon: IconUsers,
       tone: "green",
@@ -76,22 +93,24 @@ export function HomeQuickActionGrid({ hasSub }: HomeQuickActionGridProps) {
   ];
 
   return (
-    <div className="ops quick-action-grid">
-      {actions.map(({ label, description, to, icon: Icon, tone, iconTone }) => (
-        <MissionOperationLink
-          key={`${to}-${label}`}
-          to={to}
-          state={{ from: location.pathname }}
-          tone={tone}
-          iconTone={iconTone}
-          className="quick-action-card"
-          onClick={() => impact("light")}
-          aria-label={label}
-          icon={<Icon size={16} strokeWidth={1.6} />}
-          title={label}
-          description={description}
-        />
-      ))}
+    <div className="list-card home-qa-card">
+      <div className="ops quick-action-grid">
+        {actions.map(({ label, description, to, icon: Icon, tone, iconTone }) => (
+          <MissionOperationLink
+            key={`${to}-${label}`}
+            to={to}
+            state={{ from: location.pathname }}
+            tone={tone}
+            iconTone={iconTone}
+            className="quick-action-card"
+            onClick={() => impact("light")}
+            aria-label={label}
+            icon={<Icon size={16} strokeWidth={1.6} />}
+            title={label}
+            description={description}
+          />
+        ))}
+      </div>
     </div>
   );
 }

@@ -9,7 +9,7 @@ const TROUBLESHOOTER_STEPS = [
   {
     title: "Is your subscription active?",
     body: "Check Home or Plan. If there is no active plan, choose one and complete payment.",
-    nextLabel: "Yes, it's active",
+    nextLabel: "Yes, my subscription is active",
     backLabel: "Back",
   },
   {
@@ -60,9 +60,9 @@ export function useSupportPageModel() {
         : { status: "ready" };
 
   const hero = {
-    eyebrow: "Support Status",
-    title: "Support Ready",
-    subtitle: "No active incidents. Try the common fixes below.",
+    eyebrow: "Network status",
+    title: "All systems operational",
+    subtitle: "No known service incidents",
     edge: "e-g" as const,
     glow: "g-green" as const,
   };
@@ -73,6 +73,9 @@ export function useSupportPageModel() {
     emphasizeNumeric: true,
   };
 
+  /** Only for step 0: label for the "No" path (e.g. navigate to plan). */
+  const currentStepAltLabel = step === 0 ? "No, choose plan" : undefined;
+
   return {
     header,
     pageState,
@@ -81,6 +84,7 @@ export function useSupportPageModel() {
     step,
     totalSteps,
     troubleshooterBadge,
+    currentStepAltLabel,
     nextStep: () => setStep((value) => (value + 1 < totalSteps ? value + 1 : 0)),
     previousStep: step > 0 ? () => setStep((value) => value - 1) : undefined,
   };

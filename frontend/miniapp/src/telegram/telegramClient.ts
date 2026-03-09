@@ -17,11 +17,3 @@ export {
   type TelegramWebApp,
 } from "./telegramCoreClient";
 export { telegramFeatureClient } from "./telegramFeatureClient";
-
-import { telegramClient as coreClient } from "./telegramCoreClient";
-import { telegramFeatureClient } from "./telegramFeatureClient";
-
-export const telegramLegacyClient = {
-  ...coreClient,
-  ...telegramFeatureClient,
-};

@@ -30,7 +30,7 @@ async def safe_send_message(
                 truncated = text[: MAX_LENGTH - 20] + "\n\n[Message truncated]"
                 await message.answer(truncated, reply_markup=reply_markup)
                 return True
-            except Exception as e2:
+            except Exception:
                 await message.answer(text[: MAX_LENGTH - 20] + "\n\n[Truncated]")
                 return True
         if reply_markup and ("button" in err_str or "url" in err_str or "invalid" in err_str):

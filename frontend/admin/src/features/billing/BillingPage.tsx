@@ -50,8 +50,11 @@ interface PlanRow extends Record<string, unknown> {
   duration: string;
   price: string;
   style: string;
+  subscriptions: string;
+  archived: string;
   upsellMethods: string;
   createdAt: string;
+  order: JSX.Element;
   actions: JSX.Element;
 }
 
@@ -97,13 +100,19 @@ export function BillingPage() {
   const api = useApi();
   const queryClient = useQueryClient();
 
+  const [includeArchived, setIncludeArchived] = useState(true);
+  const plansPath = useMemo(
+    () =>
+      `/plans?limit=50&offset=0&include_archived=${includeArchived}`,
+    [includeArchived]
+  );
   const {
     data: plans,
     isLoading: isPlansLoading,
     isError: isPlansError,
     error: plansError,
     refetch: refetchPlans,
-  } = useApiQuery<PlanList>([...billingKeys.plans()], "/plans?limit=50&offset=0", { retry: 1 });
+  } = useApiQuery<PlanList>([...billingKeys.plans(), includeArchived], plansPath, { retry: 1 });
 
   const [editingPlan, setEditingPlan] = useState<PlanOut | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -120,6 +129,8 @@ export function BillingPage() {
   const [planToDelete, setPlanToDelete] = useState<PlanOut | null>(null);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [deletePending, setDeletePending] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [actionPending, setActionPending] = useState(false);
 
   const [paymentFilters, setPaymentFilters] = useState<{
     user_id: string;
@@ -204,19 +215,50 @@ export function BillingPage() {
 
   const planRows: PlanRow[] = useMemo(() => {
     if (!plans?.items?.length) return [];
-    return plans.items.map((p) => {
+    const sorted = [...plans.items].sort(
+      (a, b) => (a.display_order ?? 0) - (b.display_order ?? 0)
+    );
+    return sorted.map((p, idx) => {
       const { style, cleanName } = parsePlanName(p.name);
       const styleLabel =
         style === "promotional" ? "Promotional" : style === "popular" ? "Popular" : "Normal";
       const upsellList = (p.upsell_methods ?? []).join(", ") || "—";
+      const subCount = p.subscription_count ?? 0;
+      const canDelete = subCount === 0;
       return {
         id: p.id,
         name: cleanName || p.id,
         duration: `${p.duration_days} days`,
         price: `${p.price_amount} ${p.price_currency}`,
         style: styleLabel,
+        subscriptions: subCount > 0 ? `${subCount}` : "0 (can delete)",
+        archived: p.is_archived ? "Archived" : "—",
         upsellMethods: upsellList,
         createdAt: new Date(p.created_at).toLocaleDateString(),
+        order: (
+          <span className="billing-page__plan-actions">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              aria-label="Move up"
+              disabled={idx === 0 || actionPending}
+              onClick={() => handleMoveUp(p)}
+            >
+              ↑
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              aria-label="Move down"
+              disabled={idx === sorted.length - 1 || actionPending}
+              onClick={() => handleMoveDown(p)}
+            >
+              ↓
+            </Button>
+          </span>
+        ),
         actions: (
           <span className="billing-page__plan-actions">
             <Button
@@ -241,8 +283,40 @@ export function BillingPage() {
             </Button>
             <Button
               type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => handleClone(p)}
+              disabled={actionPending}
+            >
+              Clone
+            </Button>
+            {p.is_archived ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => handleRestore(p)}
+                disabled={actionPending}
+              >
+                Restore
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => handleArchive(p)}
+                disabled={actionPending}
+              >
+                Archive
+              </Button>
+            )}
+            <Button
+              type="button"
               variant="danger"
               size="sm"
+              disabled={!canDelete || actionPending}
+              title={!canDelete ? `${subCount} subscription(s) — cannot delete` : undefined}
               onClick={() => {
                 setPlanToDelete(p);
                 setDeleteConfirmText("");
@@ -255,7 +329,7 @@ export function BillingPage() {
         ),
       };
     });
-  }, [plans]);
+  }, [plans, actionPending]);
 
   const openCreateModal = () => {
     setEditingPlan(null);
@@ -292,6 +366,7 @@ export function BillingPage() {
     const confirmName = parsePlanName(planToDelete.name).cleanName;
     if (deleteConfirmText.trim().toLowerCase() !== confirmName.toLowerCase()) return;
     setDeletePending(true);
+    setSaveError(null);
     try {
       await api.request(`/plans/${planToDelete.id}`, { method: "DELETE" });
       await queryClient.invalidateQueries({ queryKey: [...billingKeys.plans()] });
@@ -302,6 +377,56 @@ export function BillingPage() {
     } finally {
       setDeletePending(false);
     }
+  };
+
+  const runPlanAction = async (fn: () => Promise<unknown>) => {
+    setActionError(null);
+    setActionPending(true);
+    try {
+      await fn();
+      await queryClient.invalidateQueries({ queryKey: [...billingKeys.plans()] });
+    } catch (e) {
+      setActionError(getErrorMessage(e, "Action failed"));
+    } finally {
+      setActionPending(false);
+    }
+  };
+
+  const handleClone = (p: PlanOut) =>
+    runPlanAction(() => api.post<PlanOut>(`/plans/${p.id}/clone`, {}));
+
+  const handleArchive = (p: PlanOut) =>
+    runPlanAction(() => api.patch<PlanOut>(`/plans/${p.id}`, { is_archived: true }));
+
+  const handleRestore = (p: PlanOut) =>
+    runPlanAction(() => api.patch<PlanOut>(`/plans/${p.id}`, { is_archived: false }));
+
+  const handleMoveUp = (p: PlanOut) => {
+    if (!plans?.items?.length) return;
+    const idx = plans.items.findIndex((x) => x.id === p.id);
+    if (idx <= 0) return;
+    const reordered = [...plans.items].sort(
+      (a, b) => (a.display_order ?? 0) - (b.display_order ?? 0)
+    );
+    const planIdx = reordered.findIndex((x) => x.id === p.id);
+    if (planIdx <= 0) return;
+    [reordered[planIdx - 1], reordered[planIdx]] = [reordered[planIdx], reordered[planIdx - 1]];
+    runPlanAction(() =>
+      api.patch<PlanList>("/plans/reorder", { plan_ids: reordered.map((x) => x.id) })
+    );
+  };
+
+  const handleMoveDown = (p: PlanOut) => {
+    if (!plans?.items?.length) return;
+    const reordered = [...plans.items].sort(
+      (a, b) => (a.display_order ?? 0) - (b.display_order ?? 0)
+    );
+    const planIdx = reordered.findIndex((x) => x.id === p.id);
+    if (planIdx < 0 || planIdx >= reordered.length - 1) return;
+    [reordered[planIdx], reordered[planIdx + 1]] = [reordered[planIdx + 1], reordered[planIdx]];
+    runPlanAction(() =>
+      api.patch<PlanList>("/plans/reorder", { plan_ids: reordered.map((x) => x.id) })
+    );
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -374,14 +499,30 @@ export function BillingPage() {
                   }
                 />
                 <MetaText>Configure the subscription plans exposed in the Telegram miniapp.</MetaText>
+                <label className="billing-page__filter-inline">
+                  <input
+                    type="checkbox"
+                    checked={includeArchived}
+                    onChange={(e) => setIncludeArchived(e.target.checked)}
+                  />
+                  Include archived
+                </label>
+                {actionError && (
+                  <p className="input-hint is-error" role="alert">
+                    {actionError}
+                  </p>
+                )}
                 {planRows.length > 0 ? (
                   <div className="data-table-wrap">
                     <DataTable<PlanRow>
                       density="compact"
                       columns={[
+                        { key: "order", header: "Order" },
                         { key: "name", header: "Plan" },
                         { key: "duration", header: "Duration" },
                         { key: "price", header: "Price" },
+                        { key: "subscriptions", header: "Subscriptions" },
+                        { key: "archived", header: "Archived" },
                         { key: "style", header: "Style" },
                         { key: "upsellMethods", header: "Upsell triggers" },
                         { key: "createdAt", header: "Created" },

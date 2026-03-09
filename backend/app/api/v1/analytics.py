@@ -7,9 +7,8 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Any
-
 from datetime import datetime, timedelta, timezone
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from pydantic import BaseModel
@@ -362,10 +361,20 @@ async def get_funnel_kpis(
         days=days,
         event_counts=event_counts,
         conversion_plan_to_payment_pct=pct(payment_completed, plan_view) if plan_view > 0 else None,
-        conversion_payment_to_device_pct=pct(device_issued, payment_completed) if payment_completed > 0 else None,
-        conversion_device_to_connected_pct=pct(connected, device_issued) if device_issued > 0 else None,
-        conversion_trial_to_paid_pct=pct(payment_completed, trial_started) if trial_started > 0 else None,
+        conversion_payment_to_device_pct=pct(device_issued, payment_completed)
+        if payment_completed > 0
+        else None,
+        conversion_device_to_connected_pct=pct(connected, device_issued)
+        if device_issued > 0
+        else None,
+        conversion_trial_to_paid_pct=pct(payment_completed, trial_started)
+        if trial_started > 0
+        else None,
         conversion_grace_recovered_pct=None,
-        conversion_cancel_retained_pct=pct(cancel_retained, cancel_started) if cancel_started > 0 else None,
-        conversion_referral_rewarded_pct=pct(referral_rewarded, referral_attributed) if referral_attributed > 0 else None,
+        conversion_cancel_retained_pct=pct(cancel_retained, cancel_started)
+        if cancel_started > 0
+        else None,
+        conversion_referral_rewarded_pct=pct(referral_rewarded, referral_attributed)
+        if referral_attributed > 0
+        else None,
     )

@@ -11,7 +11,7 @@ bot_root = Path(__file__).resolve().parent.parent
 if str(bot_root) not in sys.path:
     sys.path.insert(0, str(bot_root))
 
-from api_client import ApiClient, Result
+from api_client import ApiClient
 
 
 @pytest.mark.asyncio

@@ -2,10 +2,11 @@
  * Per guidelines: Use hideKeyboard() (Bot API 9.1+) when appropriate.
  * Call on form submit or when dismissing input focus.
  */
+import { useCallback } from "react";
 import { telegramClient } from "@/telegram/telegramCoreClient";
 
 export function useHideKeyboard() {
-  return () => {
+  return useCallback(() => {
     telegramClient.hideKeyboard();
-  };
+  }, []);
 }

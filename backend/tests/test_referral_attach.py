@@ -141,9 +141,7 @@ async def test_webapp_referral_attach_self_referral_blocked(
 
 
 @pytest.mark.asyncio
-async def test_webapp_referral_attach_invalid_ref(
-    client: AsyncClient, async_session: AsyncSession
-):
+async def test_webapp_referral_attach_invalid_ref(client: AsyncClient, async_session: AsyncSession):
     """Invalid ref (non-numeric, referrer not found) → 400 invalid_ref."""
     referee = User(tg_id=400001)
     async_session.add(referee)

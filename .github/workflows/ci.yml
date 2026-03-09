@@ -179,6 +179,10 @@ jobs:
         working-directory: frontend
         run: npm run typecheck
 
+      - name: Design system check (miniapp)
+        working-directory: frontend
+        run: npm run design:check -w miniapp
+
       - name: Unit tests (shared)
         working-directory: frontend
         run: npm test -- --run

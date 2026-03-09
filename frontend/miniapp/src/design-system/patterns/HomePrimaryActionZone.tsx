@@ -5,6 +5,7 @@ import {
   MissionSecondaryLink,
   type MissionPrimaryButtonTone,
 } from "./MissionPrimitives";
+import { ButtonRow } from "./ContentLibraryButtons";
 
 export interface HomePrimaryActionZoneProps {
   phase: ConnectionPhase;
@@ -48,7 +49,7 @@ export function HomePrimaryActionZone({
       );
 
   return (
-    <div className="btn-row">
+    <ButtonRow>
       {primaryTo && phase === "inactive" ? (
         <MissionPrimaryLink to={primaryTo} tone={primaryTone} onClick={onPrimaryAction}>
           {primaryIcon}
@@ -65,6 +66,6 @@ export function HomePrimaryActionZone({
           <span>{secondaryLabel}</span>
         </MissionSecondaryLink>
       )}
-    </div>
+    </ButtonRow>
   );
 }

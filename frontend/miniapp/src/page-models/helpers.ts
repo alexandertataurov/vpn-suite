@@ -4,6 +4,7 @@ interface PlanLike {
   id: string;
   duration_days: number;
   price_amount: number;
+  display_order?: number;
 }
 
 /** Plan with device_limit for device-limit upsell targeting. */
@@ -41,6 +42,9 @@ export function shouldShowUpsell(upsellMethods: string[] | undefined, trigger: s
 
 function sortPlansForCheckout(plans: PlanLike[]): PlanLike[] {
   return [...plans].sort((a, b) => {
+    const orderA = a.display_order ?? 0;
+    const orderB = b.display_order ?? 0;
+    if (orderA !== orderB) return orderA - orderB;
     const priceDelta = Number(a.price_amount) - Number(b.price_amount);
     if (priceDelta !== 0) return priceDelta;
     const durationDelta = a.duration_days - b.duration_days;
@@ -73,21 +77,19 @@ export function getUpgradeCheckoutPath(
   return `/plan/checkout/${nextPlan.id}`;
 }
 
-/**
- * For device-limit upsell: return checkout path for the cheapest plan that has
- * strictly more device_limit than the current plan. Falls back to next-by-price
- * if no plan has higher device_limit.
- */
 export function getUpgradeCheckoutPathForDeviceLimit(
   plans: PlanLikeWithDeviceLimit[],
   currentPlanId: string | null | undefined,
 ): string {
-  if (plans.length === 0) return "/plan";
+  if (plans.length === 0) return "/plan?intent=device_limit";
   const currentPlan = currentPlanId ? plans.find((p) => p.id === currentPlanId) : undefined;
   const currentLimit = currentPlan?.device_limit ?? 0;
   const withHigherLimit = plans
     .filter((p) => (p.device_limit ?? 0) > currentLimit)
     .sort((a, b) => {
+      const orderA = a.display_order ?? 999_999;
+      const orderB = b.display_order ?? 999_999;
+      if (orderA !== orderB) return orderA - orderB;
       const priceDelta = Number(a.price_amount) - Number(b.price_amount);
       if (priceDelta !== 0) return priceDelta;
       const durationDelta = a.duration_days - b.duration_days;
@@ -95,6 +97,6 @@ export function getUpgradeCheckoutPathForDeviceLimit(
       return a.id.localeCompare(b.id);
     });
   const nextByDevices = withHigherLimit[0];
-  if (nextByDevices) return `/plan/checkout/${nextByDevices.id}`;
-  return getUpgradeCheckoutPath(plans, currentPlanId);
+  if (nextByDevices) return `/plan/checkout/${nextByDevices.id}?intent=device_limit`;
+  return "/plan?intent=device_limit";
 }

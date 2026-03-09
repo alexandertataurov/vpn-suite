@@ -1,23 +1,14 @@
-import { createContext, useContext, useEffect, useMemo, type ReactNode } from "react";
-import { useViewportDimensions, type SafeAreaInsets } from "../hooks/useViewportDimensions";
+import { useEffect, type ReactNode } from "react";
+import { useViewportDimensions } from "../hooks/useViewportDimensions";
 import { useTelegramApp } from "../hooks/telegram";
 
-export type TelegramContextValue = {
-  viewportHeight: number;
-  safeAreaInsets: SafeAreaInsets;
-  isFullscreen: boolean;
-};
-
-const defaultValue: TelegramContextValue = {
-  viewportHeight: 0,
-  safeAreaInsets: { top: 0, bottom: 0, left: 0, right: 0 },
-  isFullscreen: true,
-};
-
-const TelegramContext = createContext<TelegramContextValue>(defaultValue);
-
+/**
+ * Side-effect provider: wires viewport/safe-area CSS vars (via useViewportDimensions)
+ * and data-tg* attributes on document root for platform-based styling.
+ * No context value; use useTelegramApp / useViewportDimensions directly for viewport/safe-area/fullscreen.
+ */
 export function TelegramProvider({ children }: { children: ReactNode }) {
-  const { viewportHeight, safeAreaInsets } = useViewportDimensions();
+  useViewportDimensions(); // sets --tg-viewport-height, --safe-* CSS vars
   const { isFullscreen, platform } = useTelegramApp();
 
   useEffect(() => {
@@ -34,21 +25,5 @@ export function TelegramProvider({ children }: { children: ReactNode }) {
     };
   }, [isFullscreen, platform]);
 
-  const value = useMemo<TelegramContextValue>(
-    () => ({
-      viewportHeight,
-      safeAreaInsets,
-      isFullscreen,
-    }),
-    [isFullscreen, viewportHeight, safeAreaInsets],
-  );
-  return (
-    <TelegramContext.Provider value={value}>
-      {children}
-    </TelegramContext.Provider>
-  );
-}
-
-export function useTelegram(): TelegramContextValue {
-  return useContext(TelegramContext);
+  return <>{children}</>;
 }

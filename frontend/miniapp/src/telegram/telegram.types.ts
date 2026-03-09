@@ -18,6 +18,32 @@ export type TelegramEventName =
   | "popupClosed"
   | "qrTextReceived";
 
+/** Single source for all Telegram event names; avoids drift between registry and bridge. */
+export const TELEGRAM_EVENT_NAMES: readonly TelegramEventName[] = [
+  "themeChanged",
+  "viewportChanged",
+  "safeAreaChanged",
+  "contentSafeAreaChanged",
+  "fullscreenChanged",
+  "mainButtonClicked",
+  "backButtonClicked",
+  "invoiceClosed",
+  "popupClosed",
+  "qrTextReceived",
+] as const;
+
+/** Events that carry payloads per Telegram WebApp docs. Others pass void. */
+export interface TelegramEventPayloadMap {
+  invoiceClosed: { status: string };
+  popupClosed: { button_id: string };
+  qrTextReceived: { data: string };
+  viewportChanged: { is_state_stable: boolean };
+}
+
+export type TelegramEventPayloadFor<E extends TelegramEventName> = E extends keyof TelegramEventPayloadMap
+  ? TelegramEventPayloadMap[E]
+  : void;
+
 export type TelegramPopupButton = {
   id?: string;
   type?: "default" | "ok" | "close" | "cancel" | "destructive";

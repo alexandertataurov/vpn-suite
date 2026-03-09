@@ -40,6 +40,14 @@ function resolveUpwardScrollLockWindowMs(platform: string): number {
   return UPWARD_SCROLL_LOCK_MS_DEFAULT;
 }
 
+/**
+ * Pull-to-refresh gesture for a scroll container.
+ *
+ * @param containerRef - Ref to the scrollable container element.
+ * @param onRefresh - Callback invoked when the user triggers refresh. Must be memoized
+ *   (e.g. with useCallback) to avoid re-attaching listeners on every render.
+ * @param options - Optional threshold, maxPull, resistance overrides.
+ */
 export function usePullToRefresh(
   containerRef: RefObject<HTMLElement | null>,
   onRefresh: () => Promise<void> | void,

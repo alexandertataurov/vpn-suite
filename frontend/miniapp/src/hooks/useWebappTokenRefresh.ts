@@ -1,23 +1,36 @@
 import { useEffect, useRef } from "react";
-import type { WebAppAuthResponse } from "@vpn-suite/shared";
-import { getBaseUrl } from "@/lib/api-client";
+import { postAuth } from "@/api";
 import { getWebappTokenExpiresAt, setWebappToken, useWebappToken } from "@/api/client";
 
 const REFRESH_BEFORE_MS = 60_000;
 const POLL_INTERVAL_MS = 30_000;
 
+export interface UseWebappTokenRefreshOptions {
+  /** Called when a refresh attempt fails (e.g. network error). */
+  onError?: (err: unknown) => void;
+}
+
 /**
  * Proactively refresh webapp session before expiry. Runs when we have token and initData.
- * Uses raw fetch to /webapp/auth (no Bearer) so refresh works even near expiry.
+ * Uses postUnauthenticated (no Bearer) so refresh works even near expiry.
  */
-export function useWebappTokenRefresh(initData: string) {
+export function useWebappTokenRefresh(
+  initData: string,
+  options: UseWebappTokenRefreshOptions = {},
+) {
+  const { onError } = options;
   const token = useWebappToken();
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mountedRef = useRef(true);
+  const onErrorRef = useRef(onError);
+  onErrorRef.current = onError;
 
   useEffect(() => {
+    mountedRef.current = true;
     if (!token || !initData) return;
 
     const scheduleRefresh = () => {
+      if (!mountedRef.current) return;
       const expiresAt = getWebappTokenExpiresAt();
       if (expiresAt == null) return;
 
@@ -35,26 +48,24 @@ export function useWebappTokenRefresh(initData: string) {
     };
 
     const doRefresh = () => {
-      const base = getBaseUrl().replace(/\/$/, "");
-      fetch(`${base}/webapp/auth`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ init_data: initData }),
-      })
-        .then((res) => res.json())
-        .then((data: WebAppAuthResponse) => {
+      postAuth(initData)
+        .then((data) => {
+          if (!mountedRef.current) return;
           if (data?.session_token && typeof data.expires_in === "number") {
             setWebappToken(data.session_token, data.expires_in);
             scheduleRefresh();
           }
         })
-        .catch(() => {
+        .catch((err) => {
+          if (!mountedRef.current) return;
+          onErrorRef.current?.(err);
           scheduleRefresh();
         });
     };
 
     scheduleRefresh();
     return () => {
+      mountedRef.current = false;
       if (timerRef.current) {
         clearTimeout(timerRef.current);
         timerRef.current = null;

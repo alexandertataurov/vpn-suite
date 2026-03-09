@@ -6,15 +6,12 @@ import asyncio
 import json
 import os
 import subprocess
-from dataclasses import asdict, dataclass, field
-from datetime import datetime, timezone
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
 from .fingerprint_classifier import (
-    ClassificationResult,
-    CandidateClassification,
     classify_candidate,
     classify_container,
 )

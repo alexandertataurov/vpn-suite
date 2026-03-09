@@ -263,7 +263,9 @@ async def create_invoice(
             sub.status = "active"
             sub.valid_from = now
             sub.valid_until = now + timedelta(days=plan.duration_days)
-            sub.device_limit = int(getattr(plan, "device_limit", sub.device_limit) or sub.device_limit)
+            sub.device_limit = int(
+                getattr(plan, "device_limit", sub.device_limit) or sub.device_limit
+            )
         await db.commit()
         await db.refresh(payment)
         await db.refresh(sub)
@@ -442,9 +444,7 @@ async def referral_my_link(
     user = user_result.scalar_one_or_none()
     if not user:
         await db.execute(
-            pg_insert(User)
-            .values(tg_id=tg_id)
-            .on_conflict_do_nothing(index_elements=[User.tg_id])
+            pg_insert(User).values(tg_id=tg_id).on_conflict_do_nothing(index_elements=[User.tg_id])
         )
         user_result = await db.execute(select(User).where(User.tg_id == tg_id))
         user = user_result.scalar_one_or_none()

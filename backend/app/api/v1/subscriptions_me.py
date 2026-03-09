@@ -92,4 +92,3 @@ async def update_my_subscription(
 
     await db.commit()
     return {"auto_renew": bool(body.auto_renew)}
-

@@ -1,3 +1,4 @@
+import { SessionMissing } from "@/components";
 import {
   FallbackScreen,
   Input,
@@ -9,9 +10,25 @@ import {
   MissionPrimaryButton,
   MissionSecondaryButton,
   MissionSecondaryLink,
-  SessionMissing,
+  ButtonRow,
+  StickyBottomBar,
+  PageHeaderBadge,
 } from "@/design-system";
 import { useCheckoutPageModel } from "@/page-models";
+import type { PromoErrorCode } from "@/page-models";
+
+function promoErrorToDisplay(code: PromoErrorCode | null): string {
+  if (!code) return "Code invalid";
+  const map: Record<PromoErrorCode, string> = {
+    PROMO_NOT_FOUND: "Code not found",
+    PROMO_ALREADY_USED: "Already used",
+    PROMO_EXPIRED: "Code expired",
+    PROMO_INACTIVE: "Code unavailable",
+    PROMO_EXHAUSTED: "Code unavailable",
+    PROMO_PLAN_INELIGIBLE: "Not valid for this plan",
+  };
+  return map[code];
+}
 
 export function CheckoutPage() {
   const model = useCheckoutPageModel();
@@ -30,9 +47,9 @@ export function CheckoutPage() {
               title={model.pageState.title}
               message={model.pageState.message ?? `Plan "${model.selectedPlanId}" is not available. Please choose a plan from the list.`}
             />
-            <div className="btn-row">
+            <ButtonRow>
               <MissionSecondaryLink to="/plan">Back to plan</MissionSecondaryLink>
-            </div>
+            </ButtonRow>
           </PageCardSection>
         </PageFrame>
       );
@@ -75,7 +92,16 @@ export function CheckoutPage() {
           {model.planPriceStars != null ? (
             <div className="data-cell">
               <div className="dc-key">Price</div>
-              <div className="dc-val teal miniapp-tnum">{model.planPriceStars}</div>
+              <div className="dc-val teal miniapp-tnum">
+                {model.promoStatus === "valid" && model.discountedPriceXtr != null ? (
+                  <span className="price-summary">
+                    <span className="price-original">{model.planPriceStars}</span>
+                    <span className="price-discounted">⭐{model.discountedPriceXtr}</span>
+                  </span>
+                ) : (
+                  model.planPriceStars
+                )}
+              </div>
             </div>
           ) : null}
           {showConfirmation ? (
@@ -128,50 +154,62 @@ export function CheckoutPage() {
               </MissionSecondaryButton>
             </form>
 
-            {model.promoPreview ? (
-              <MissionAlert tone="info" title="Promo applied" message={model.promoPreview.description} />
+            {model.promoStatus === "valid" && model.displayLabel ? (
+              <div className="promo-feedback promo-feedback--valid">
+                <PageHeaderBadge tone="success" label={model.displayLabel} />
+                <MissionSecondaryButton type="button" onClick={model.handlePromoRemove} disabled={model.isValidatingPromo}>
+                  Remove
+                </MissionSecondaryButton>
+              </div>
             ) : null}
-            {model.promoError ? (
+            {model.promoStatus === "invalid" && model.promoError ? (
               <>
-                <MissionAlert tone="error" title="Promo code issue" message={model.promoError} />
-                <div className="btn-row">
+                <MissionAlert tone="error" title="Promo code issue" message={promoErrorToDisplay(model.promoErrorCode)} />
+                <ButtonRow>
                   <MissionSecondaryButton type="button" onClick={model.handlePromoRecovery} disabled={model.isValidatingPromo}>
                     {model.promoErrorAction === "clear" ? "Remove code" : "Try again"}
                   </MissionSecondaryButton>
-                </div>
+                </ButtonRow>
               </>
             ) : null}
 
-            <div className="btn-row">
+            <ButtonRow>
               <MissionPrimaryButton
                 onClick={model.handleContinue}
                 disabled={!model.planId || !model.hasToken || !model.isOnline}
               >
                 Continue
               </MissionPrimaryButton>
-            </div>
+            </ButtonRow>
           </>
         ) : (
           <>
-            {model.promoPreview ? (
-              <MissionAlert tone="info" title="Promo applied" message={model.promoPreview.description} />
+            {model.promoStatus === "valid" && model.displayLabel ? (
+              <div className="promo-feedback promo-feedback--valid">
+                <PageHeaderBadge tone="success" label={model.displayLabel} />
+                <MissionSecondaryButton type="button" onClick={model.handlePromoRemove} disabled={model.isValidatingPromo}>
+                  Remove
+                </MissionSecondaryButton>
+              </div>
             ) : null}
             <MissionAlert
               tone="info"
               title="After payment"
               message="Your first device will be issued and you'll set up the connection."
             />
-            <div className="btn-row">
-              <MissionSecondaryButton onClick={model.handleBack} type="button">
-                Back
-              </MissionSecondaryButton>
-              <MissionPrimaryButton
-                onClick={model.handlePay}
-                disabled={!model.planId || !model.hasToken || !model.isOnline || model.phase === "waiting" || model.phase === "creating_invoice"}
-              >
-                {model.isCreatingInvoice ? "Preparing…" : model.isFreePlan ? "Activate plan" : "Pay with Telegram Stars"}
-              </MissionPrimaryButton>
-            </div>
+            <StickyBottomBar>
+              <ButtonRow>
+                <MissionSecondaryButton onClick={model.handleBack} type="button">
+                  Back
+                </MissionSecondaryButton>
+                <MissionPrimaryButton
+                  onClick={model.handlePay}
+                  disabled={!model.planId || !model.hasToken || !model.isOnline || model.phase === "waiting" || model.phase === "creating_invoice"}
+                >
+                  {model.isCreatingInvoice ? "Preparing…" : model.isFreePlan ? "Activate plan" : "Pay with Telegram Stars"}
+                </MissionPrimaryButton>
+              </ButtonRow>
+            </StickyBottomBar>
           </>
         )}
 
@@ -190,9 +228,9 @@ export function CheckoutPage() {
                 ? "Payment did not complete in time. Try again."
                 : model.errorMessage || "We could not complete the payment. Please try again or contact support."}
             />
-            <div className="btn-row">
+            <ButtonRow>
               <MissionSecondaryButton onClick={model.handleRetry}>Try again</MissionSecondaryButton>
-            </div>
+            </ButtonRow>
           </>
         ) : null}
       </PageCardSection>

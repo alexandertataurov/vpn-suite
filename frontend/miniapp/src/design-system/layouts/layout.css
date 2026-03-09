@@ -7,11 +7,11 @@
 html {
   --miniapp-header-safe-top: var(--safe-top);
   --miniapp-fullscreen-top-buffer: var(--sp-3);
-  --miniapp-header-content-height: 72px;
+  --miniapp-header-content-height: 62px;
   --miniapp-header-slot-width: 48px;
-  --miniapp-content-top-gap: clamp(4px, 1.2vw, 6px);
+  --miniapp-content-top-gap: 3px;
   --miniapp-bottom-nav-height: max(var(--miniapp-nav-height, 64px), 78px);
-  --miniapp-bottom-safe-gap: var(--sp-4);
+  --miniapp-bottom-safe-gap: 20px;
   --miniapp-shell-margin: 0;
   --miniapp-content-gutter: 16px;
   --miniapp-page-gap: clamp(10px, 2.8vw, 12px);
@@ -34,7 +34,7 @@ html {
 
 html[data-tg-fullscreen="true"] {
   --miniapp-header-safe-top: max(var(--safe-top), var(--miniapp-fullscreen-top-buffer));
-  --miniapp-bottom-safe-gap: 0px;
+  --miniapp-bottom-safe-gap: 20px;
 }
 
 html[data-tg-fullscreen="true"][data-tg-platform="ios"] {
@@ -50,13 +50,13 @@ html[data-tg-fullscreen="true"][data-tg-platform="other"] {
 }
 
 html[data-tg-desktop="true"] {
-  --miniapp-header-content-height: 56px;
-  --topbar-h: 56px;
+  --miniapp-header-content-height: 46px;
+  --topbar-h: 46px;
 }
 
 /* Runtime/shell tokens (--safe-* may be set by theme or JS) */
 html {
-  --topbar-h: 72px;
+  --topbar-h: 62px;
   --nav-h: 78px;
   --miniapp-shell-max: 420px;
   --miniapp-main-button-reserve: 120px;
@@ -209,6 +209,35 @@ body,
 
 .miniapp-header-slot--right {
   justify-self: end;
+}
+
+/* ---------- StickyBottomBar (transactional CTA) ---------- */
+html {
+  --sticky-bar-height: calc(60px + var(--safe-bottom) + 16px);
+}
+
+.sticky-bottom-bar-spacer {
+  flex-shrink: 0;
+  min-height: var(--sticky-bar-height, 76px);
+}
+
+.sticky-bottom-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: var(--z-nav);
+  padding: var(--miniapp-content-gutter);
+  padding-bottom: calc(var(--safe-bottom) + 16px);
+  background: color-mix(in oklch, var(--tg-theme-bg-color, var(--bg)) 94%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  justify-content: center;
+}
+
+.sticky-bottom-bar > * {
+  width: min(100%, var(--miniapp-shell-max));
 }
 
 /* ---------- ActionZone (bottom nav) ---------- */
@@ -441,4 +470,37 @@ html {
   grid-template-columns: minmax(0, 1fr);
   gap: 0;
   min-width: 0;
+}
+
+/* Danger zone — GitHub-style destructive section */
+.danger-zone-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--miniapp-section-gap);
+}
+.danger-zone-title {
+  margin: 0;
+  color: var(--danger);
+  font-size: var(--miniapp-page-title-size);
+  font-weight: 600;
+}
+.danger-zone-card {
+  border: 1px solid var(--danger-border);
+  border-left-width: 3px;
+  border-left-color: var(--danger);
+}
+.danger-zone-content {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--miniapp-row-gap);
+}
+.danger-zone-icon {
+  flex-shrink: 0;
+  color: var(--danger);
+}
+.danger-zone-content .op-name {
+  margin-top: 0;
+}
+.danger-zone-content .op-desc {
+  margin-bottom: 0;
 }

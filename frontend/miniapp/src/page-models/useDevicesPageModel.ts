@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { RefObject } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { WebAppIssueDeviceResponse } from "@vpn-suite/shared";
+import { getPlans } from "@/api";
 import { useWebappToken, webappApi } from "@/api/client";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { useSession } from "@/hooks/useSession";
@@ -13,13 +14,15 @@ import { webappQueryKeys } from "@/lib/query-keys/webapp.query-keys";
 import { getErrorMessage } from "@/lib/utils/error";
 import type { MissionTone } from "@/design-system";
 import type { StandardPageHeader, StandardPageState, StandardSectionBadge } from "./types";
-import type { PlansResponse, RecommendedRouteReason } from "./usePlanPageModel";
+import type { PlansResponse } from "@/api";
+import type { RecommendedRouteReason } from "./usePlanPageModel";
 import {
   getActiveDevices,
   getActiveSubscription,
   getUpgradeCheckoutPathForDeviceLimit,
   shouldShowUpsell,
 } from "./helpers";
+import { getUpgradeOfferForIntent, type PlanLikeForUpsell } from "./upsell";
 
 function formatIssuedAt(value: string): string {
   const date = new Date(value);
@@ -60,6 +63,8 @@ export interface DevicesPageModel {
   showSetupCard: boolean;
   showUpgradeCta: boolean;
   upgradeTargetTo: string;
+  /** Intent-specific copy for device-limit upsell (spec §15). */
+  deviceLimitUpsellCopy: { title: string; body: string; ctaLabel: string } | null;
   handleIssueDevice: () => void;
   handleUpgradePlanClick: () => void;
   handleCopyConfig: () => Promise<void>;
@@ -89,7 +94,7 @@ export function useDevicesPageModel(): DevicesPageModel {
 
   const plansQuery = useQuery<PlansResponse>({
     queryKey: [...webappQueryKeys.plans()],
-    queryFn: () => webappApi.get<PlansResponse>("/webapp/plans"),
+    queryFn: getPlans,
     enabled: hasToken,
   });
   const plans = plansQuery.data?.items ?? [];
@@ -100,6 +105,12 @@ export function useDevicesPageModel(): DevicesPageModel {
   const atDeviceLimit = Boolean(activeSub && activeDevices.length >= (activeSub.device_limit ?? 0));
   const showUpgradeCta = atDeviceLimit && showUpsellDeviceLimit;
   const upgradeTargetTo = getUpgradeCheckoutPathForDeviceLimit(plans, activeSub?.plan_id);
+  const deviceLimitOffer = showUpgradeCta
+    ? getUpgradeOfferForIntent(plans as PlanLikeForUpsell[], currentPlan, "device_limit", "devices")
+    : null;
+  const deviceLimitUpsellCopy = deviceLimitOffer
+    ? { title: deviceLimitOffer.title, body: deviceLimitOffer.body, ctaLabel: deviceLimitOffer.ctaLabel }
+    : null;
   useTrackScreen("devices", activeSub?.plan_id ?? null);
   const { track } = useTelemetry(activeSub?.plan_id ?? null);
 
@@ -123,7 +134,7 @@ export function useDevicesPageModel(): DevicesPageModel {
     },
   });
 
-  const replaceMutation = useMutation({
+  const replaceMutation = useMutation<WebAppIssueDeviceResponse, Error, string>({
     mutationFn: async (deviceId: string) => {
       return webappApi.post<WebAppIssueDeviceResponse>(`/webapp/devices/${deviceId}/replace-with-new`);
     },
@@ -140,7 +151,7 @@ export function useDevicesPageModel(): DevicesPageModel {
     },
   });
 
-  const confirmConnectedMutation = useMutation({
+  const confirmConnectedMutation = useMutation<void, Error, string>({
     mutationFn: async (deviceId: string) => {
       await webappApi.post(`/webapp/devices/${deviceId}/confirm-connected`);
     },
@@ -323,7 +334,7 @@ export function useDevicesPageModel(): DevicesPageModel {
     setupStep: !hasSubscription ? "subscription" : activeDevices.length === 0 ? "issue" : "pending",
     setupChip: {
       tone: !hasSubscription ? "blue" : "amber",
-      label: !hasSubscription ? "Step 1" : activeDevices.length === 0 ? "Step 2" : "Pending",
+      label: !hasSubscription ? "Step 1" : activeDevices.length === 0 ? "Step 2" : pendingConnectionCount > 0 ? `${pendingConnectionCount} device waiting` : "Pending",
     },
     showSetupCard:
       !hasSubscription ||
@@ -331,6 +342,7 @@ export function useDevicesPageModel(): DevicesPageModel {
       (pendingConnectionCount > 0 && !issuedConfig),
     showUpgradeCta,
     upgradeTargetTo,
+    deviceLimitUpsellCopy,
     handleIssueDevice,
     handleUpgradePlanClick,
     handleCopyConfig,
@@ -344,8 +356,8 @@ export function useDevicesPageModel(): DevicesPageModel {
       impact("medium");
       confirmConnectedMutation.mutate(deviceId);
     },
-    isReplacingId: replaceMutation.isPending ? (replaceMutation.variables as string) ?? null : null,
-    isConfirmingId: confirmConnectedMutation.isPending ? (confirmConnectedMutation.variables as string) ?? null : null,
+    isReplacingId: replaceMutation.isPending && replaceMutation.variables != null ? replaceMutation.variables : null,
+    isConfirmingId: confirmConnectedMutation.isPending && confirmConnectedMutation.variables != null ? confirmConnectedMutation.variables : null,
     formatIssuedAt,
   };
 }

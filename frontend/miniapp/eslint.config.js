@@ -2,6 +2,7 @@ import js from "@eslint/js";
 import tseslint from "typescript-eslint";
 import react from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
+import jsxA11y from "eslint-plugin-jsx-a11y";
 
 /** Miniapp-local ESLint (flat config). Use from frontend/miniapp when running lint in isolation. */
 export default tseslint.config(
@@ -9,7 +10,7 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
   {
     files: ["src/**/*.{ts,tsx}"],
-    plugins: { react, "react-hooks": reactHooks },
+    plugins: { react, "react-hooks": reactHooks, "jsx-a11y": jsxA11y },
     languageOptions: {
       parserOptions: { ecmaFeatures: { jsx: true } },
       globals: { React: "readonly", JSX: "readonly" },
@@ -20,6 +21,7 @@ export default tseslint.config(
       "react/react-in-jsx-scope": "off",
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "warn",
+      "jsx-a11y/control-has-associated-label": "warn",
       "no-restricted-imports": [
         "error",
         {

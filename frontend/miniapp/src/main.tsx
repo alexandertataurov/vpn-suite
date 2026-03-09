@@ -2,25 +2,26 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ThemeProvider } from "@/design-system/theme/ThemeProvider";
+import { ThemeProvider } from "@/design-system";
 import { ApiError } from "@vpn-suite/shared";
+import { webappQueryKeys } from "@/lib/query-keys/webapp.query-keys";
+import { wireGlobalErrors } from "@/telemetry/errors";
 import App from "./App";
 import "@/design-system/styles/index.css";
 
+/**
+ * Layer 0: Telemetry bootstrap. main.tsx owns analytics (PostHog, Faro, Sentry),
+ * global error capture, and web vitals. Runs before React mount.
+ */
 const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN;
 
 function bootstrapTelemetry(): void {
   if (typeof window === "undefined") return;
-  const host = window as Window & {
-    requestIdleCallback?: (callback: IdleRequestCallback, options?: IdleRequestOptions) => number;
-  };
 
   const run = () => {
+    wireGlobalErrors();
     void import("./bootstrap/analytics").then(({ initAnalytics }) => {
       initAnalytics();
-    });
-    void import("./telemetry/errors").then(({ wireGlobalErrors }) => {
-      wireGlobalErrors();
     });
     void import("./telemetry/webVitals").then(({ initWebVitals }) => {
       initWebVitals();
@@ -32,11 +33,7 @@ function bootstrapTelemetry(): void {
     }
   };
 
-  if (typeof host.requestIdleCallback === "function") {
-    host.requestIdleCallback(run, { timeout: 1_500 });
-    return;
-  }
-  setTimeout(run, 0);
+  run();
 }
 
 bootstrapTelemetry();
@@ -66,6 +63,12 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+if (typeof window !== "undefined") {
+  window.addEventListener("webapp:unauthorized", () => {
+    void queryClient.invalidateQueries({ queryKey: [...webappQueryKeys.all] });
+  });
+}
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>

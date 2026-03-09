@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useToast, type HeaderAlertItem } from "@/design-system";
-import { useAccountSignals } from "@/hooks/useAccountSignals";
+import { useHeaderAlerts } from "@/page-models/useHeaderAlerts";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 
 export interface UseUnifiedAlertsResult {
@@ -14,7 +14,7 @@ export interface UseUnifiedAlertsResult {
 export function useUnifiedAlerts(stackFlow: boolean): UseUnifiedAlertsResult {
   const isOnline = useOnlineStatus();
   const { toasts } = useToast();
-  const accountSignals = useAccountSignals();
+  const accountSignals = useHeaderAlerts();
 
   const items = useMemo<HeaderAlertItem[]>(() => {
     const list: HeaderAlertItem[] = [];

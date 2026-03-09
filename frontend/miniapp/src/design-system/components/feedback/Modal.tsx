@@ -49,7 +49,13 @@ export function Modal({
 
     if (!didFocusRef.current) {
       didFocusRef.current = true;
-      modal.focus();
+      const focusable = modal.querySelectorAll<HTMLElement>(FOCUSABLE);
+      const first = focusable[0];
+      if (first) {
+        requestAnimationFrame(() => first.focus());
+      } else {
+        modal.focus();
+      }
     }
 
     function onKeyDown(e: KeyboardEvent) {
@@ -97,6 +103,8 @@ export function Modal({
   return (
     <div
       className="modal-overlay"
+      role="presentation"
+      aria-hidden="true"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div
@@ -199,6 +207,8 @@ export interface ConfirmDangerProps {
   /** Require confirm token/code input (e.g. from env). */
   confirmTokenRequired?: boolean;
   confirmTokenLabel?: string;
+  /** When set, confirm button is disabled until input matches this value exactly (case-sensitive). */
+  expectedConfirmValue?: string;
   onConfirm: (payload: ConfirmDangerPayload) => void | Promise<void>;
   confirmLabel?: string;
   cancelLabel?: string;
@@ -215,6 +225,7 @@ export function ConfirmDanger({
   reasonPlaceholder,
   confirmTokenRequired = false,
   confirmTokenLabel = "Confirmation code",
+  expectedConfirmValue,
   onConfirm,
   confirmLabel = "Confirm",
   cancelLabel = "Cancel",
@@ -232,9 +243,15 @@ export function ConfirmDanger({
     if (!open) reset();
   }, [open]);
 
+  const tokenMatches =
+    !confirmTokenRequired ||
+    (expectedConfirmValue != null
+      ? confirmToken.trim() === expectedConfirmValue
+      : confirmToken.trim() !== "");
   const canConfirm =
     (!reasonRequired || reason.trim() !== "") &&
-    (!confirmTokenRequired || confirmToken.trim() !== "");
+    (!confirmTokenRequired || confirmToken.trim() !== "") &&
+    tokenMatches;
 
   async function handleConfirm() {
     await onConfirm({
@@ -280,8 +297,8 @@ export function ConfirmDanger({
           <label htmlFor="confirm-danger-token">{confirmTokenLabel}</label>
           <Input
             id="confirm-danger-token"
-            type="password"
-            autoComplete="one-time-code"
+            type={expectedConfirmValue != null ? "text" : "password"}
+            autoComplete={expectedConfirmValue != null ? "off" : "one-time-code"}
             placeholder={confirmTokenLabel}
             value={confirmToken}
             onChange={(e) => setConfirmToken(e.target.value)}

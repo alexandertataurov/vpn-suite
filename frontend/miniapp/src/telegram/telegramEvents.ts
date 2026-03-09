@@ -1,19 +1,11 @@
 import { telegramClient, type TelegramEventName } from "./telegramCoreClient";
+import { TELEGRAM_EVENT_NAMES } from "./telegram.types";
 
-type EventListener = () => void;
+export type TelegramEventListener = (payload?: unknown) => void;
 
-const listenerRegistry: Record<TelegramEventName, Set<EventListener>> = {
-  themeChanged: new Set<EventListener>(),
-  viewportChanged: new Set<EventListener>(),
-  safeAreaChanged: new Set<EventListener>(),
-  contentSafeAreaChanged: new Set<EventListener>(),
-  fullscreenChanged: new Set<EventListener>(),
-  mainButtonClicked: new Set<EventListener>(),
-  backButtonClicked: new Set<EventListener>(),
-  invoiceClosed: new Set<EventListener>(),
-  popupClosed: new Set<EventListener>(),
-  qrTextReceived: new Set<EventListener>(),
-};
+const listenerRegistry = Object.fromEntries(
+  TELEGRAM_EVENT_NAMES.map((e) => [e, new Set<TelegramEventListener>()]),
+) as Record<TelegramEventName, Set<TelegramEventListener>>;
 
 let eventManagerActive = false;
 
@@ -21,13 +13,13 @@ export function setTelegramEventManagerActive(active: boolean) {
   eventManagerActive = active;
 }
 
-export function emitTelegramEvent(event: TelegramEventName) {
+export function emitTelegramEvent(event: TelegramEventName, payload?: unknown) {
   for (const listener of listenerRegistry[event]) {
-    listener();
+    listener(payload);
   }
 }
 
-export function subscribeTelegramEvent(event: TelegramEventName, listener: EventListener) {
+export function subscribeTelegramEvent(event: TelegramEventName, listener: TelegramEventListener) {
   listenerRegistry[event].add(listener);
   const removeLocal = () => {
     listenerRegistry[event].delete(listener);
@@ -37,7 +29,7 @@ export function subscribeTelegramEvent(event: TelegramEventName, listener: Event
     return removeLocal;
   }
 
-  const removeDirect = telegramClient.onEvent(event, listener);
+  const removeDirect = telegramClient.onEvent(event, (p) => listener(p));
   return () => {
     removeLocal();
     removeDirect();

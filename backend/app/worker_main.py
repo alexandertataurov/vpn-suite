@@ -14,6 +14,7 @@ from app.core.anomaly_metrics_task import run_anomaly_metrics_export_loop
 from app.core.config import settings
 from app.core.device_expiry_task import run_device_expiry_loop
 from app.core.docker_alert_polling_task import run_docker_alert_poll_loop
+from app.core.grace_on_expiry_task import run_grace_on_expiry_loop
 from app.core.handshake_quality_gate_task import run_handshake_quality_gate_loop
 from app.core.health_check_task import run_health_check_loop
 from app.core.limits_check_task import run_limits_check_loop
@@ -24,7 +25,6 @@ from app.core.redaction import redact_for_log
 from app.core.redis_client import check_redis, close_redis, init_redis
 from app.core.revenue_metrics_task import run_revenue_metrics_loop
 from app.core.server_sync_loop import run_server_sync_loop
-from app.core.grace_on_expiry_task import run_grace_on_expiry_loop
 from app.core.subscription_expiry_reminder_task import run_subscription_reminder_loop
 from app.core.telemetry_polling_task import run_telemetry_poll_loop
 from app.live_metrics.aggregator_worker import run_live_metrics_aggregator

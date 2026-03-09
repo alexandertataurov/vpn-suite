@@ -1,4 +1,12 @@
-import { PageFrame, PageCardSection, MissionPrimaryButton, MissionSecondaryLink, SessionMissing } from "@/design-system";
+import { SessionMissing } from "@/components";
+import {
+  PageFrame,
+  PageSection,
+  MissionPrimaryButton,
+  MissionSecondaryLink,
+  ButtonRow,
+  StickyBottomBar,
+} from "@/design-system";
 import { useRestoreAccessPageModel } from "@/page-models";
 
 export function RestoreAccessPage() {
@@ -10,19 +18,20 @@ export function RestoreAccessPage() {
 
   return (
     <PageFrame title={model.header.title} className="restore-access-page">
-      <PageCardSection title="Restore access" description={model.description}>
-        <div className="btn-row">
+      <PageSection title="Restore access" description={model.description}>
+        <div />
+      </PageSection>
+      <StickyBottomBar>
+        <ButtonRow>
           <MissionPrimaryButton
             onClick={() => model.restoreAccess()}
             disabled={model.isRestoring}
           >
             {model.isRestoring ? "Restoring…" : "Restore access"}
           </MissionPrimaryButton>
-        </div>
-        <div className="btn-row">
           <MissionSecondaryLink to="/plan">View plans</MissionSecondaryLink>
-        </div>
-      </PageCardSection>
+        </ButtonRow>
+      </StickyBottomBar>
     </PageFrame>
   );
 }

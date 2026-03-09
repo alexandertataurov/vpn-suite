@@ -7,7 +7,7 @@ export interface AppRootProps {
 }
 
 /**
- * Production layer: Telegram boot.
+ * Layer 1: Platform init. AppRoot owns Telegram init (ready, expand, fullscreen, viewport).
  * Defer ready() until after first paint so Telegram's placeholder is replaced by our custom
  * loading screen (TelegramLoadingScreen). Per docs: call ready() when essential UI is loaded.
  */

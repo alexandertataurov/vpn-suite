@@ -1,9 +1,7 @@
-import {
-  MissionPrimaryButton,
-  MissionSecondaryButton,
-  MissionSecondaryLink,
-  ButtonRow,
-} from "@/design-system";
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { Popover, IconMoreVertical } from "@/design-system";
+import { useTelegramHaptics } from "@/hooks/useTelegramHaptics";
 
 export interface DeviceRowActionsProps {
   deviceId: string;
@@ -15,7 +13,7 @@ export interface DeviceRowActionsProps {
   isReplacingId: string | null;
 }
 
-/** Device row actions: Confirm (primary) + secondary row (Reissue, Server, Revoke). */
+/** Device row actions: popup menu (Confirm · Reissue · Server · Revoke). */
 export function DeviceRowActions({
   deviceId,
   deviceStatus,
@@ -25,46 +23,94 @@ export function DeviceRowActions({
   isConfirmingId,
   isReplacingId,
 }: DeviceRowActionsProps) {
+  const [open, setOpen] = useState(false);
+  const { impact } = useTelegramHaptics();
   const showConfirm = deviceStatus === "idle" || deviceStatus === "config_pending";
-  const secondaryActions = (
-    <ButtonRow className="device-row-actions-secondary">
-      <MissionSecondaryButton
-        className="device-row-action"
-        onClick={() => onReplace(deviceId)}
-        disabled={isReplacingId === deviceId}
-      >
-        {isReplacingId === deviceId ? "…" : "Reissue"}
-      </MissionSecondaryButton>
-      <MissionSecondaryLink to="/servers" className="device-row-action">
-        Server
-      </MissionSecondaryLink>
-      <MissionSecondaryButton
-        className="device-row-action device-row-action--revoke"
-        onClick={() => onRevoke(deviceId)}
-      >
-        Revoke
-      </MissionSecondaryButton>
-    </ButtonRow>
-  );
 
-  if (showConfirm) {
-    return (
-      <div className="device-row-actions device-row-actions--stacked">
-        <MissionPrimaryButton
-          className="device-row-action device-row-action--confirm"
-          onClick={() => onConfirm(deviceId)}
-          disabled={isConfirmingId === deviceId}
-        >
-          {isConfirmingId === deviceId ? "…" : "Confirm"}
-        </MissionPrimaryButton>
-        {secondaryActions}
-      </div>
-    );
-  }
+  const close = () => setOpen(false);
+
+  const handleConfirm = () => {
+    impact("light");
+    onConfirm(deviceId);
+    close();
+  };
+  const handleReplace = () => {
+    impact("light");
+    onReplace(deviceId);
+    close();
+  };
+  const handleServer = () => {
+    impact("light");
+    close();
+  };
+  const handleRevoke = () => {
+    impact("light");
+    onRevoke(deviceId);
+    close();
+  };
 
   return (
-    <div className="device-row-actions">
-      {secondaryActions}
-    </div>
+    <Popover
+      open={open}
+      onOpenChange={setOpen}
+      id={`device-menu-${deviceId}`}
+      renderTrigger={(triggerProps) => (
+        <button
+          type="button"
+          className="device-menu-trigger"
+          onClick={() => {
+            impact("light");
+            setOpen((o) => !o);
+          }}
+          aria-label="Device actions"
+          {...triggerProps}
+        >
+          <IconMoreVertical size={18} strokeWidth={2} />
+        </button>
+      )}
+    >
+      <ul className="device-menu-list" role="menu" aria-label="Device actions">
+        {showConfirm && (
+          <li role="none">
+            <button
+              type="button"
+              role="menuitem"
+              className="device-menu-item"
+              onClick={handleConfirm}
+              disabled={isConfirmingId === deviceId}
+            >
+              {isConfirmingId === deviceId ? "…" : "Confirm device installation"}
+            </button>
+          </li>
+        )}
+        <li role="none">
+          <button
+            type="button"
+            role="menuitem"
+            className="device-menu-item"
+            onClick={handleReplace}
+            disabled={isReplacingId === deviceId}
+          >
+            {isReplacingId === deviceId ? "…" : "Generate new config"}
+          </button>
+        </li>
+        <li role="none">
+          <Link to="/servers" role="menuitem" className="device-menu-item" onClick={handleServer}>
+            Change server location
+          </Link>
+        </li>
+        <li role="separator" className="device-menu-divider" aria-hidden />
+        <li role="none">
+          <button
+            type="button"
+            role="menuitem"
+            className="device-menu-item device-menu-item--danger"
+            onClick={handleRevoke}
+          >
+            Revoke device
+          </button>
+        </li>
+      </ul>
+    </Popover>
   );
 }

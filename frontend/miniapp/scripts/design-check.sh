@@ -85,6 +85,11 @@ $PAGE_STYLE_IMPORTS
 EOF
 fi
 
+# 6. Token drift — tokens-map PRIMITIVES vs tokens/*.ts
+if ! node "$ROOT/scripts/check-token-drift.mjs" 2>/dev/null; then
+  VIOLATIONS=$((VIOLATIONS + 1))
+fi
+
 if [ "$VIOLATIONS" -gt 0 ]; then
   echo "design:check — $VIOLATIONS violation(s). See .cursor/rules/design-system.mdc"
   exit 1

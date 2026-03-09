@@ -1,10 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
-import { useReferralAttach } from "./useReferralAttach";
+import { useReferralAttach } from "./features/referral";
 
-const { mockPost, mockUseWebappToken } = vi.hoisted(() => ({
+const { mockPost, mockUseWebappToken, mockAddToast } = vi.hoisted(() => ({
   mockPost: vi.fn(),
   mockUseWebappToken: vi.fn(),
+  mockAddToast: vi.fn(),
 }));
 
 vi.mock("@/api/client", () => ({
@@ -17,13 +18,14 @@ vi.mock("@/hooks/telegram/useTelegramInitData", () => ({
 }));
 
 vi.mock("@/design-system", () => ({
-  useToast: () => ({ addToast: vi.fn() }),
+  useToast: () => ({ addToast: mockAddToast }),
 }));
 
 describe("useReferralAttach", () => {
   beforeEach(() => {
     mockPost.mockReset();
     mockUseWebappToken.mockReturnValue(null);
+    mockAddToast.mockClear();
     sessionStorage.clear();
   });
 
@@ -33,8 +35,10 @@ describe("useReferralAttach", () => {
 
     renderHook(() => useReferralAttach());
 
-    await waitFor(() => {}, { timeout: 200 });
-    expect(mockPost).not.toHaveBeenCalled();
+    await waitFor(
+      () => expect(mockPost).not.toHaveBeenCalled(),
+      { timeout: 300 },
+    );
   });
 
   it("calls attach once when token and pending ref exist, clears on success", async () => {
@@ -53,5 +57,49 @@ describe("useReferralAttach", () => {
     await waitFor(() => {
       expect(sessionStorage.getItem("pending_referral_code")).toBeNull();
     });
+  });
+
+  it("shows toast on 4xx error", async () => {
+    const { ApiError } = await import("@vpn-suite/shared");
+    mockUseWebappToken.mockReturnValue("token");
+    sessionStorage.setItem("pending_referral_code", "123");
+    sessionStorage.setItem("pending_referral_source", "query");
+    mockPost.mockRejectedValue(new ApiError("HTTP_ERROR", "Bad request", 400));
+
+    renderHook(() => useReferralAttach());
+
+    await waitFor(() => {
+      expect(mockAddToast).toHaveBeenCalledWith(
+        expect.stringContaining("Referral link could not be applied"),
+        "error",
+      );
+    });
+  });
+
+  it("retries once on 5xx then shows toast on second failure", async () => {
+    const { ApiError } = await import("@vpn-suite/shared");
+    mockUseWebappToken.mockReturnValue("token");
+    sessionStorage.setItem("pending_referral_code", "123");
+    sessionStorage.setItem("pending_referral_source", "query");
+    mockPost
+      .mockRejectedValueOnce(new ApiError("HTTP_ERROR", "Server error", 500))
+      .mockRejectedValueOnce(new ApiError("HTTP_ERROR", "Server error", 502));
+
+    renderHook(() => useReferralAttach());
+
+    await waitFor(() => expect(mockPost).toHaveBeenCalledTimes(1));
+
+    await new Promise((r) => setTimeout(r, 1600));
+
+    await waitFor(
+      () => {
+        expect(mockPost).toHaveBeenCalledTimes(2);
+        expect(mockAddToast).toHaveBeenCalledWith(
+          expect.stringContaining("Referral link could not be applied"),
+          "error",
+        );
+      },
+      { timeout: 3000 },
+    );
   });
 });

@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { ApiError, type WebAppAuthResponse, type WebAppMeResponse, type WebAppOnboardingState, type WebAppOnboardingStateRequest, type WebAppOnboardingStateResponse } from "@vpn-suite/shared";
+import { ApiError, track, trackError, trackTiming, type WebAppMeResponse, type WebAppOnboardingState, type WebAppOnboardingStateRequest, type WebAppOnboardingStateResponse } from "@vpn-suite/shared";
 import { setWebappToken, useWebappToken, webappApi } from "../api/client";
 import { useSession } from "../hooks/useSession";
 import { webappQueryKeys } from "@/lib/query-keys/webapp.query-keys";
+import { authenticateWebApp } from "./authBootstrap";
 import {
   clearOnboardingResume,
   loadOnboardingResume,
@@ -13,7 +14,6 @@ import { ONBOARDING_MAX_STEP, ONBOARDING_MIN_STEP, ONBOARDING_VERSION } from "./
 
 const SPLASH_DURATION_MS = 900;
 const STARTUP_SOFT_TIMEOUT_MS = 1_500;
-let webappAuthPromise: Promise<WebAppAuthResponse> | null = null;
 
 function isAutomatedRuntime(): boolean {
   return typeof navigator !== "undefined" && navigator.webdriver;
@@ -44,6 +44,14 @@ export interface StartupError {
   title: string;
   message: string;
   debug?: string;
+}
+
+/** Structured bootstrap failure for telemetry/Sentry. */
+export interface BootstrapFailure {
+  phase: BootPhase;
+  reason: string;
+  debug?: string;
+  correlationId?: string;
 }
 
 interface UseBootstrapMachineOptions {
@@ -93,17 +101,6 @@ function getDefaultOnboardingState(): WebAppOnboardingState {
   };
 }
 
-async function authenticateWebApp(initData: string): Promise<WebAppAuthResponse> {
-  if (!webappAuthPromise) {
-    webappAuthPromise = webappApi
-      .post<WebAppAuthResponse>("/webapp/auth", { init_data: initData })
-      .finally(() => {
-        webappAuthPromise = null;
-      });
-  }
-  return webappAuthPromise;
-}
-
 export function useBootstrapMachine({
   initData,
   isInsideTelegram,
@@ -123,6 +120,22 @@ export function useBootstrapMachine({
   const [onboardingError, setOnboardingError] = useState<string | null>(null);
   const onboardingInitialized = useRef(false);
   const currentUserId = useRef<number | null>(null);
+  const bootStartRef = useRef<number>(typeof performance !== "undefined" ? performance.now() : 0);
+  const prevPhaseRef = useRef<BootPhase>("boot_init");
+
+  useEffect(() => {
+    if (prevPhaseRef.current !== phase) {
+      track("miniapp.bootstrap_phase", {
+        from: prevPhaseRef.current,
+        to: phase,
+      });
+      prevPhaseRef.current = phase;
+      if (phase === "app_ready") {
+        const durationMs = typeof performance !== "undefined" ? Math.round(performance.now() - bootStartRef.current) : 0;
+        trackTiming("bootstrap_duration", durationMs, { phase: "app_ready" });
+      }
+    }
+  }, [phase]);
 
   useEffect(() => {
     if (phase !== "authenticating" && phase !== "loading_session") {
@@ -149,12 +162,38 @@ export function useBootstrapMachine({
     }
   }, [hasToken]);
 
+  const retry = useCallback(() => {
+    setStartupError(null);
+    setOnboardingError(null);
+    setSlowNetwork(false);
+    if (!initData) {
+      setPhase("boot_init");
+      return;
+    }
+    if (hasToken) {
+      setPhase("loading_session");
+      void sessionQuery.refetch();
+      return;
+    }
+    setPhase("telegram_ready");
+  }, [hasToken, initData, sessionQuery]);
+
+  useEffect(() => {
+    if (phase === "startup_error" && initData) {
+      retry();
+    }
+  }, [phase, initData, retry]);
+
   useEffect(() => {
     if (phase === "boot_init") {
       if (!initData) {
-        setStartupError({
+        const err = {
           ...getStartupError(isInsideTelegram),
           debug: `reason=no_init_data isInsideTelegram=${String(isInsideTelegram)}`,
+        };
+        setStartupError(err);
+        trackError(`bootstrap.startup_error: phase=boot_init reason=${err.message}`, {
+          route: typeof window !== "undefined" ? window.location.pathname : undefined,
         });
         setPhase("startup_error");
         return;
@@ -194,10 +233,14 @@ export function useBootstrapMachine({
             : isInvalidInitData
               ? "Open this app from the Telegram bot (menu or /start link). If you already did, close and reopen it from the bot."
               : rawMessage ?? "Session could not be started. Please try again.";
-          setStartupError({
+          const authErr = {
             title: "Session error",
             message,
             debug: `reason=auth_error code=${(err as ApiError | { code?: string })?.code ?? "n/a"} status=${(err as ApiError | { statusCode?: number })?.statusCode ?? "n/a"} rawMessage=${rawMessage ?? "n/a"} isInsideTelegram=${String(isInsideTelegram)} initDataPresent=${String(!!initData)}`,
+          };
+          setStartupError(authErr);
+          trackError(`bootstrap.startup_error: phase=authenticating reason=${message}`, {
+            route: typeof window !== "undefined" ? window.location.pathname : undefined,
           });
           setPhase("startup_error");
         });
@@ -222,12 +265,17 @@ export function useBootstrapMachine({
         const isExpired =
           err instanceof ApiError &&
           (err.code === "UNAUTHORIZED" || err.statusCode === 401);
-        setStartupError({
+        const sessionErrMsg = isExpired
+          ? "Your session expired. Tap Retry to sign in again, or reopen the app from the bot."
+          : "Could not load your account. Tap Retry or reopen the mini app from the bot.";
+        const sessionErr = {
           title: "Session error",
-          message: isExpired
-            ? "Your session expired. Tap Retry to sign in again, or reopen the app from the bot."
-            : "Could not load your account. Tap Retry or reopen the mini app from the bot.",
+          message: sessionErrMsg,
           debug: `reason=session_error code=${err instanceof ApiError ? err.code : "n/a"} status=${err instanceof ApiError ? err.statusCode : "n/a"} isExpired=${String(isExpired)} hasToken=${String(hasToken)} initDataPresent=${String(!!initData)} isInsideTelegram=${String(isInsideTelegram)}`,
+        };
+        setStartupError(sessionErr);
+        trackError(`bootstrap.startup_error: phase=loading_session reason=${sessionErrMsg}`, {
+          route: typeof window !== "undefined" ? window.location.pathname : undefined,
         });
         setPhase("startup_error");
         return;
@@ -403,22 +451,6 @@ export function useBootstrapMachine({
       setIsCompletingOnboarding(false);
     }
   }, [onboardingState.version, queryClient]);
-
-  const retry = useCallback(() => {
-    setStartupError(null);
-    setOnboardingError(null);
-    setSlowNetwork(false);
-    if (!initData) {
-      setPhase("boot_init");
-      return;
-    }
-    if (hasToken) {
-      setPhase("loading_session");
-      void sessionQuery.refetch();
-      return;
-    }
-    setPhase("telegram_ready");
-  }, [hasToken, initData, sessionQuery]);
 
   const state: BootstrapState =
     phase === "startup_error"

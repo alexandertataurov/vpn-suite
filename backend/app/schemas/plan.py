@@ -15,7 +15,9 @@ def _validate_upsell_methods(v: list[str] | None) -> list[str] | None:
         return None
     invalid = set(v) - UPSELL_METHOD_VALUES
     if invalid:
-        raise ValueError(f"Invalid upsell_methods: {invalid}. Allowed: {sorted(UPSELL_METHOD_VALUES)}")
+        raise ValueError(
+            f"Invalid upsell_methods: {invalid}. Allowed: {sorted(UPSELL_METHOD_VALUES)}"
+        )
     return list(v) if v else None
 
 
@@ -40,6 +42,8 @@ class PlanUpdate(BaseModel):
     price_currency: str | None = None
     price_amount: Decimal | None = None
     upsell_methods: list[str] | None = None
+    is_archived: bool | None = None
+    display_order: int | None = None
 
     @field_validator("upsell_methods")
     @classmethod
@@ -56,8 +60,17 @@ class PlanOut(OrmSchema):
     price_amount: Decimal
     created_at: datetime
     upsell_methods: list[str] | None = None
+    is_archived: bool = False
+    display_order: int = 0
+    subscription_count: int | None = None  # populated in list_plans for admin
 
 
 class PlanList(BaseModel):
     items: list[PlanOut]
     total: int
+
+
+class PlanReorderBody(BaseModel):
+    """List of plan IDs in desired display order (index = display_order)."""
+
+    plan_ids: list[str]

@@ -165,19 +165,19 @@ State-driven. All visual elements must update together when state changes — se
       </div>
     </div>
 
-    <!-- Data grid -->
+    <!-- Data grid. Config-centric: mini-app cannot control VPN connection. Current IP cell hidden when no public_ip. -->
     <div class="data-grid" style="margin-top:14px;">
-      <div class="data-cell"><div class="dc-key">Server</div><div class="dc-val teal" id="dcServer">amnezia-awg</div></div>
-      <div class="data-cell"><div class="dc-key">Latency</div><div class="dc-val mut" id="dcLatency">--</div></div>
+      <div class="data-cell"><div class="dc-key">Server preset</div><div class="dc-val teal" id="dcServer">Fastest available</div></div>
+      <div class="data-cell"><div class="dc-key">Server latency</div><div class="dc-val mut" id="dcLatency">--</div></div>
       <div class="data-cell wide"><div class="dc-key">Current IP</div><div class="dc-val ip" id="dcIp">212.58.121.102</div></div>
-      <div class="data-cell"><div class="dc-key">Duration</div><div class="dc-val mut" id="dcDuration">--</div></div>
-      <div class="data-cell"><div class="dc-key">Traffic</div><div class="dc-val mut" id="dcTraffic">--</div></div>
+      <div class="data-cell"><div class="dc-key">Device last active</div><div class="dc-val mut" id="dcDuration">--</div></div>
+      <div class="data-cell"><div class="dc-key">Account traffic (7 days)</div><div class="dc-val mut" id="dcTraffic">--</div></div>
       <div class="data-cell"><div class="dc-key">Protocol</div><div class="dc-val mut" id="dcProto">--</div></div>
     </div>
 
     <!-- Button row -->
     <div class="btn-row" style="margin-top:12px;">
-      <button class="btn-primary" id="connectBtn" onclick="handleConnect()">Connect</button>
+      <button class="btn-primary" id="connectBtn" onclick="handleConnect()">Add device</button>
       <button class="btn-secondary" onclick="ripple(event,this)">Change Server</button>
     </div>
 
@@ -221,21 +221,21 @@ State-driven. All visual elements must update together when state changes — se
 .card-actions-row { display: flex; gap: 6px; flex-shrink: 0; }
 ```
 
-**Connection state table — update ALL rows simultaneously:**
+**Connection state table (config-centric: mini-app cannot control VPN; these reflect config/account status):**
 
 | Element | `inactive` | `connecting` | `connected` |
 |---|---|---|---|
 | `.conn-card` class | *(none)* | `s-connecting` | `s-connected` |
 | `.card-glow` class | `g-red` | `g-amber` | `g-green` |
 | `.status-dot` class | *(none)* | `connecting` | `online` |
-| `.card-title` text | `"Connection inactive"` | `"Connecting…"` | `"Connected · Secured"` |
-| `.card-hint` text | `"Your traffic is not encrypted"` | `"Establishing secure tunnel"` | `"All traffic encrypted via AWG"` |
-| `#connectBtn` class | `btn-primary` | `btn-primary warning` | `btn-primary danger` |
-| `#connectBtn` label | `"Connect"` | `"Connecting…"` | `"Disconnect"` |
-| `#dcLatency` | `"--"` · `mut` | `"--"` · `mut` | `"24ms"` · `green` |
-| `#dcProto` | `"--"` · `mut` | `"AWG"` · `teal` | `"AWG"` · `teal` |
-| `#dcDuration` | `"--"` · `mut` | `"--"` · `mut` | live timer · `teal` |
-| `#dcTraffic` | `"--"` · `mut` | `"--"` · `mut` | accumulating · `green` |
+| `.card-title` text | `"Config inactive"` | `"Config pending"` | `"Configuration active"` |
+| `.card-hint` text | `"Set up config on a device"` | `"Add device to get config"` | `"Last synced with device"` |
+| `#connectBtn` class | `btn-primary` | `btn-primary warning` | *(no button)* |
+| `#connectBtn` label | `"Add device"` | `"Finish setup"` | — |
+| `#dcLatency` | `"--"` · `mut` | `"Testing servers…"` · `mut` | `"24ms"` · `green` |
+| `#dcProto` | `"--"` · `mut` | `"AmneziaWG"` · `teal` | `"AmneziaWG"` · `teal` |
+| `#dcDuration` (Device last active) | `"--"` · `mut` | `"--"` · `mut` | time ago · `teal` |
+| `#dcTraffic` (Account traffic 7d) | `"--"` · `mut` | `"--"` · `mut` | accumulating · `green` |
 
 ---
 

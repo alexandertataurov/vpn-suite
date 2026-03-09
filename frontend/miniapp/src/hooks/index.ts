@@ -2,7 +2,6 @@
 // Why: avoids creating a “hidden public API” via `export *`, which makes pruning/renames unsafe.
 
 // Local top-level hooks (commonly imported by pages/features)
-export { useAccountSignals } from "./useAccountSignals";
 export { useApiHealth } from "./useApiHealth";
 export { useGlobalHapticFeedback } from "./useGlobalHapticFeedback";
 export { useUnifiedAlerts, type UseUnifiedAlertsResult } from "./useUnifiedAlerts";

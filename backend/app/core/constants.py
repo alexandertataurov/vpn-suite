@@ -49,3 +49,10 @@ PERM_PRICING_WRITE = "pricing:write"
 PERM_SETTINGS_READ = "settings:read"
 PERM_SETTINGS_WRITE = "settings:write"
 PERM_SETTINGS_DANGEROUS = "settings:dangerous"
+
+# Referral reward: days granted to referrer when referee completes first payment
+REFERRAL_REWARD_DAYS: int = 14
+
+# Promo: price floor (never below 1 XTR); 1freestar discount
+MIN_PRICE_XTR: int = 1
+PROMO_1FREESTAR_DISCOUNT_XTR: int = 1

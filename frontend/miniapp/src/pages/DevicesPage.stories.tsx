@@ -7,7 +7,7 @@ import {
   webappMeNoSubscription,
   webappMeNoDevices,
   webappMeRevokedOnly,
-} from "@/lib/storybook";
+} from "@/storybook";
 import { Body } from "@/design-system";
 
 const meta: Meta<typeof DevicesPage> = {

@@ -7,6 +7,7 @@ from datetime import datetime, timedelta, timezone
 
 import httpx
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request, status
+from starlette.responses import JSONResponse
 from pydantic import BaseModel, Field, field_validator, model_validator
 from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
@@ -26,9 +27,9 @@ from app.core.metrics import (
     referral_attach_total,
     vpn_revenue_referral_signup_total,
 )
+from app.core.rate_limit import rate_limit_promo_validate, rate_limit_webapp_me_patch
 from app.core.redaction import redact_for_log
 from app.core.redis_client import get_redis
-from app.core.rate_limit import rate_limit_webapp_me_patch
 from app.core.security import create_webapp_session_token, decode_token, validate_telegram_init_data
 from app.core.telegram_user import build_tg_requisites
 from app.models import (
@@ -49,6 +50,7 @@ from app.services.entitlement_service import emit_entitlement_event
 from app.services.funnel_service import log_funnel_event
 from app.services.issue_service import issue_device
 from app.services.issued_config_service import persist_issued_configs
+from app.services.promo_service import PromoCodeError, redeem_promo_code, validate_promo_code
 from app.services.retention_service import (
     pause_subscription,
     resume_subscription,
@@ -122,7 +124,6 @@ def _resolve_route(
         # No active subscription
         return "/plan", "no_subscription"
 
-    sub_status = getattr(primary_sub, "subscription_status", primary_sub.status)
     access_status = getattr(primary_sub, "access_status", "enabled")
     cancel_at_end = bool(getattr(primary_sub, "cancel_at_period_end", False))
 
@@ -133,12 +134,8 @@ def _resolve_route(
         return "/account/subscription", "cancelled_at_period_end"
 
     has_device = len(active_devices) > 0
-    has_confirmed = (
-        user.last_connection_confirmed_at is not None
-        or any(
-            getattr(d, "last_connection_confirmed_at", None) is not None
-            for d in active_devices
-        )
+    has_confirmed = user.last_connection_confirmed_at is not None or any(
+        getattr(d, "last_connection_confirmed_at", None) is not None for d in active_devices
     )
 
     if not has_device:
@@ -333,15 +330,28 @@ async def webapp_me(request: Request, db: AsyncSession = Depends(get_db)):
 
     now = datetime.now(timezone.utc)
 
+    device_ids = [d.id for d in active_devices] if active_devices else []
+    telemetry_map = await get_device_telemetry_bulk(device_ids) if device_ids else {}
+
+    def _effective_last_seen(d: Device):
+        if d.last_seen_handshake_at:
+            return d.last_seen_handshake_at
+        te = telemetry_map.get(d.id) if isinstance(d.id, str) else telemetry_map.get(str(d.id))
+        if te and getattr(te, "handshake_latest_at", None) is not None:
+            return te.handshake_latest_at
+        return None
+
     def _device_status(d: Device) -> str:
         if d.revoked_at:
             return "revoked"
         if d.apply_status in ("PENDING_APPLY", "APPLYING", "FAILED_APPLY", "NO_HANDSHAKE"):
             return "config_pending"
-        if d.last_seen_handshake_at:
-            age = (now - d.last_seen_handshake_at).total_seconds()
+        last = _effective_last_seen(d)
+        if last:
+            age = (now - last).total_seconds()
             return "connected" if age < 300 else "idle"
         return "config_pending"
+
     subs = [
         {
             "id": s.id,
@@ -351,7 +361,9 @@ async def webapp_me(request: Request, db: AsyncSession = Depends(get_db)):
             "access_status": getattr(s, "access_status", "enabled"),
             "billing_status": getattr(s, "billing_status", "paid"),
             "renewal_status": getattr(
-                s, "renewal_status", "auto_renew_on" if getattr(s, "auto_renew", True) else "auto_renew_off"
+                s,
+                "renewal_status",
+                "auto_renew_on" if getattr(s, "auto_renew", True) else "auto_renew_off",
             ),
             "valid_until": s.valid_until.isoformat(),
             "grace_until": (g.isoformat() if (g := getattr(s, "grace_until", None)) else None),
@@ -360,7 +372,9 @@ async def webapp_me(request: Request, db: AsyncSession = Depends(get_db)):
             "device_limit": s.device_limit,
             "auto_renew": bool(getattr(s, "auto_renew", True)),
             "is_trial": bool(getattr(s, "is_trial", False)),
-            "trial_ends_at": (te.isoformat() if (te := getattr(s, "trial_ends_at", None)) else None),
+            "trial_ends_at": (
+                te.isoformat() if (te := getattr(s, "trial_ends_at", None)) else None
+            ),
         }
         for s in user.subscriptions
     ]
@@ -372,11 +386,9 @@ async def webapp_me(request: Request, db: AsyncSession = Depends(get_db)):
             "server_id": d.server_id,
             "issued_at": d.issued_at.isoformat(),
             "revoked_at": d.revoked_at.isoformat() if d.revoked_at else None,
-            "last_seen_handshake_at": d.last_seen_handshake_at.isoformat()
-            if d.last_seen_handshake_at
-            else None,
+            "last_seen_handshake_at": eff.isoformat() if (eff := _effective_last_seen(d)) else None,
             "last_connection_confirmed_at": (
-                (lc.isoformat() if (lc := getattr(d, "last_connection_confirmed_at", None)) else None)
+                lc.isoformat() if (lc := getattr(d, "last_connection_confirmed_at", None)) else None
             ),
             "apply_status": d.apply_status,
             "status": _device_status(d),
@@ -398,7 +410,9 @@ async def webapp_me(request: Request, db: AsyncSession = Depends(get_db)):
     tg_meta = meta.get("tg") or {}
     first = (tg_meta.get("first_name") or "").strip()
     last = (tg_meta.get("last_name") or "").strip()
-    tg_display = " ".join((first, last)).strip() or (tg_meta.get("username") or "").strip() or "User"
+    tg_display = (
+        " ".join((first, last)).strip() or (tg_meta.get("username") or "").strip() or "User"
+    )
     display_name = (meta.get("display_name") or "").strip() or tg_display or "User"
     photo_url = tg_meta.get("photo_url") or None
     locale = meta.get("locale") or None
@@ -460,9 +474,7 @@ class WebAppMeProfileUpdateBody(BaseModel):
     def validate_locale(self) -> "WebAppMeProfileUpdateBody":
         if self.locale is not None and self.locale.strip():
             if self.locale.strip().lower() not in _WEBAPP_ALLOWED_LOCALES:
-                raise ValueError(
-                    f"locale must be one of {sorted(_WEBAPP_ALLOWED_LOCALES)}"
-                )
+                raise ValueError(f"locale must be one of {sorted(_WEBAPP_ALLOWED_LOCALES)}")
         return self
 
 
@@ -511,7 +523,9 @@ async def webapp_me_update(
     tg_meta = meta.get("tg") or {}
     first = (tg_meta.get("first_name") or "").strip()
     last = (tg_meta.get("last_name") or "").strip()
-    tg_display = " ".join((first, last)).strip() or (tg_meta.get("username") or "").strip() or "User"
+    tg_display = (
+        " ".join((first, last)).strip() or (tg_meta.get("username") or "").strip() or "User"
+    )
     display_name = (meta.get("display_name") or "").strip() or tg_display or "User"
     locale = meta.get("locale") or None
     return {
@@ -727,9 +741,10 @@ async def webapp_list_plans(request: Request, db: AsyncSession = Depends(get_db)
             status_code=401, detail={"code": "UNAUTHORIZED", "message": "Invalid session"}
         )
     trial_plan_id = (getattr(settings, "trial_plan_id", "") or "").strip()
-    stmt = select(Plan)
+    stmt = select(Plan).where(Plan.is_archived.is_(False))
     if trial_plan_id:
         stmt = stmt.where(Plan.id != trial_plan_id)
+    stmt = stmt.order_by(Plan.display_order.asc(), Plan.id.asc())
     result = await db.execute(stmt)
     plans = result.scalars().all()
     user_result = await db.execute(select(User.id).where(User.tg_id == tg_id))
@@ -756,9 +771,17 @@ async def webapp_list_plans(request: Request, db: AsyncSession = Depends(get_db)
                 "price_amount": stars,
                 "style": style,
                 "upsell_methods": p.upsell_methods if p.upsell_methods is not None else [],
+                "display_order": int(getattr(p, "display_order", 0) or 0),
             }
         )
-    items.sort(key=lambda item: (int(item.get("price_amount") or 0), int(item.get("duration_days") or 0), str(item.get("id") or "")))
+    items.sort(
+        key=lambda item: (
+            int(item.get("display_order", 0)),
+            int(item.get("price_amount") or 0),
+            int(item.get("duration_days") or 0),
+            str(item.get("id") or ""),
+        )
+    )
     return {
         "items": items,
         "total": len(items),
@@ -1152,13 +1175,17 @@ async def webapp_replace_device(
     sub = sub_result.scalar_one_or_none()
     if not sub:
         raise HTTPException(
-            status_code=400, detail={"code": "INVALID_DEVICE", "message": "Invalid device subscription"}
+            status_code=400,
+            detail={"code": "INVALID_DEVICE", "message": "Invalid device subscription"},
         )
     access_status = getattr(sub, "access_status", "enabled")
     if access_status == "grace":
         raise HTTPException(
             status_code=400,
-            detail={"code": "GRACE_NO_NEW_DEVICE", "message": "Cannot replace device during grace. Restore access first."},
+            detail={
+                "code": "GRACE_NO_NEW_DEVICE",
+                "message": "Cannot replace device during grace. Restore access first.",
+            },
         )
     sub_status = getattr(sub, "subscription_status", sub.status)
     if sub_status not in ("active", "pending") or sub.valid_until <= now:
@@ -1199,16 +1226,28 @@ async def webapp_replace_device(
         from app.services.server_live_key_service import ServerNotSyncedError
 
         if isinstance(e, ServerNotSyncedError):
-            raise HTTPException(status_code=409, detail={"code": "SERVER_NOT_SYNCED", "message": str(e)}) from e
+            raise HTTPException(
+                status_code=409, detail={"code": "SERVER_NOT_SYNCED", "message": str(e)}
+            ) from e
         if isinstance(e, LoadBalancerError):
-            raise HTTPException(status_code=503, detail={"code": "NO_NODE", "message": str(e)}) from e
-        if isinstance(e, (WireGuardCommandError, ValueError)):
-            raise HTTPException(status_code=400, detail={"code": "ISSUE_FAILED", "message": str(e)}) from e
-        raise HTTPException(status_code=500, detail={"code": "INTERNAL_ERROR", "message": "Replace failed"}) from e
+            raise HTTPException(
+                status_code=503, detail={"code": "NO_NODE", "message": str(e)}
+            ) from e
+        if isinstance(e, WireGuardCommandError | ValueError):
+            raise HTTPException(
+                status_code=400, detail={"code": "ISSUE_FAILED", "message": str(e)}
+            ) from e
+        raise HTTPException(
+            status_code=500, detail={"code": "INTERNAL_ERROR", "message": "Replace failed"}
+        ) from e
     try:
         await persist_issued_configs(
-            db, out.device.id, out.device.server_id,
-            out.config_awg, out.config_wg_obf, out.config_wg,
+            db,
+            out.device.id,
+            out.device.server_id,
+            out.config_awg,
+            out.config_wg_obf,
+            out.config_wg,
         )
         await db.commit()
         await invalidate_devices_summary_cache()
@@ -1216,18 +1255,26 @@ async def webapp_replace_device(
         await db.refresh(out.device)
     except Exception:
         await db.rollback()
-        raise HTTPException(status_code=500, detail={"code": "INTERNAL_ERROR", "message": "Replace failed"})
+        raise HTTPException(
+            status_code=500, detail={"code": "INTERNAL_ERROR", "message": "Replace failed"}
+        )
     config_text = _select_delivery_config_text(out)
     if config_text:
         try:
             background_tasks.add_task(
                 _send_webapp_config_to_telegram,
-                tg_id=tg_id, device_id=out.device.id, config_text=config_text,
+                tg_id=tg_id,
+                device_id=out.device.id,
+                config_text=config_text,
             )
         except Exception:
             pass
-    await log_funnel_event(db, event_type="device_revoked", user_id=user.id, payload={"device_id": device_id})
-    await log_funnel_event(db, event_type="device_issue_success", user_id=user.id, payload={"device_id": out.device.id})
+    await log_funnel_event(
+        db, event_type="device_revoked", user_id=user.id, payload={"device_id": device_id}
+    )
+    await log_funnel_event(
+        db, event_type="device_issue_success", user_id=user.id, payload={"device_id": out.device.id}
+    )
     miniapp_events_total.labels(event="device_revoked").inc()
     miniapp_events_total.labels(event="device_issue_success").inc()
     return WebAppIssueDeviceResponse(
@@ -1312,12 +1359,14 @@ class WebAppReferralAttachBody(BaseModel):
 
 class WebAppReferralAttachAttachedResponse(BaseModel):
     """New referral record created."""
+
     status: str = "attached"
     referrer_user_id: int
 
 
 class WebAppReferralAttachAlreadyResponse(BaseModel):
     """Referee already has a referrer; idempotent."""
+
     status: str = "already_attached"
     referrer_user_id: int
 
@@ -1375,7 +1424,11 @@ async def webapp_referral_attach(
         _log_referral_attach_result(tg_id, "", None, "invalid_ref", "ref required")
         raise HTTPException(
             status_code=400,
-            detail={"status": "invalid_ref", "code": "BAD_REQUEST", "message": "ref or referral_code required"},
+            detail={
+                "status": "invalid_ref",
+                "code": "BAD_REQUEST",
+                "message": "ref or referral_code required",
+            },
         )
     _log_referral_attach_attempt(tg_id, referral_code)
     try:
@@ -1385,7 +1438,11 @@ async def webapp_referral_attach(
         _log_referral_attach_result(tg_id, referral_code, None, "invalid_ref", "ref not numeric")
         raise HTTPException(
             status_code=400,
-            detail={"status": "invalid_ref", "code": "BAD_REQUEST", "message": "Invalid referral code"},
+            detail={
+                "status": "invalid_ref",
+                "code": "BAD_REQUEST",
+                "message": "Invalid referral code",
+            },
         )
     referee_result = await db.execute(select(User).where(User.tg_id == tg_id))
     referee = referee_result.scalar_one_or_none()
@@ -1400,7 +1457,11 @@ async def webapp_referral_attach(
         )
         raise HTTPException(
             status_code=400,
-            detail={"status": "self_referral_blocked", "code": "BAD_REQUEST", "message": "Cannot refer self"},
+            detail={
+                "status": "self_referral_blocked",
+                "code": "BAD_REQUEST",
+                "message": "Cannot refer self",
+            },
         )
     referrer_result = await db.execute(select(User).where(User.id == referrer_user_id))
     if referrer_result.scalar_one_or_none() is None:
@@ -1410,13 +1471,19 @@ async def webapp_referral_attach(
             status_code=400,
             detail={"status": "invalid_ref", "code": "NOT_FOUND", "message": "Referrer not found"},
         )
-    existing_result = await db.execute(select(Referral).where(Referral.referee_user_id == referee.id))
+    existing_result = await db.execute(
+        select(Referral).where(Referral.referee_user_id == referee.id)
+    )
     existing = existing_result.scalar_one_or_none()
     if existing:
         await db.commit()
         referral_attach_total.labels(status="already_attached").inc()
         _log_referral_attach_result(
-            tg_id, referral_code, existing.referrer_user_id, "already_attached", "one attach per referee"
+            tg_id,
+            referral_code,
+            existing.referrer_user_id,
+            "already_attached",
+            "one attach per referee",
         )
         return {"status": "already_attached", "referrer_user_id": existing.referrer_user_id}
     r = Referral(
@@ -1478,8 +1545,7 @@ async def webapp_referral_stats(request: Request, db: AsyncSession = Depends(get
     )
     pending = pending_result.scalar() or 0
     pending_days_result = await db.execute(
-        select(func.coalesce(func.sum(Referral.pending_reward_days), 0))
-        .where(
+        select(func.coalesce(func.sum(Referral.pending_reward_days), 0)).where(
             Referral.referrer_user_id == user.id,
             Referral.pending_reward_days > 0,
         )
@@ -1516,46 +1582,38 @@ async def webapp_promo_validate(
         raise HTTPException(
             status_code=401, detail={"code": "UNAUTHORIZED", "message": "Invalid session"}
         )
-    promo_result = await db.execute(
-        select(PromoCode).where(PromoCode.code == body.code.strip(), PromoCode.status == "active")
-    )
-    promo = promo_result.scalar_one_or_none()
-    if not promo:
-        raise HTTPException(
-            status_code=404,
-            detail={"code": "PROMO_NOT_FOUND", "message": "Invalid or expired code"},
-        )
+    await rate_limit_promo_validate(tg_id)
     user_result = await db.execute(select(User).where(User.tg_id == tg_id))
     user = user_result.scalar_one_or_none()
     if not user:
         raise HTTPException(
             status_code=404, detail={"code": "USER_NOT_FOUND", "message": "User not found"}
         )
-    constraints = promo.constraints or {}
-    if constraints.get("expires_at"):
-        try:
-            exp = datetime.fromisoformat(str(constraints["expires_at"]).replace("Z", "+00:00"))
-            if exp < datetime.now(timezone.utc):
-                raise HTTPException(
-                    status_code=400, detail={"code": "PROMO_EXPIRED", "message": "Code expired"}
-                )
-        except (TypeError, ValueError):
-            pass
-    per_user = constraints.get("per_user_limit", 1)
-    red_result = await db.execute(
-        select(PromoRedemption).where(
-            PromoRedemption.promo_code_id == promo.id, PromoRedemption.user_id == user.id
-        )
-    )
-    if red_result.scalar_one_or_none() and per_user <= 1:
+    plan_result = await db.execute(select(Plan).where(Plan.id == body.plan_id))
+    plan = plan_result.scalar_one_or_none()
+    if not plan:
         raise HTTPException(
-            status_code=400, detail={"code": "PROMO_ALREADY_USED", "message": "Code already used"}
+            status_code=404, detail={"code": "PLAN_NOT_FOUND", "message": "Plan not found"}
+        )
+    original_price_xtr = int(_stars_amount(plan.price_amount, plan.price_currency))
+    try:
+        result = await validate_promo_code(
+            db,
+            code=body.code,
+            user_id=user.id,
+            plan_id=body.plan_id,
+            original_price_xtr=original_price_xtr,
+        )
+    except PromoCodeError as e:
+        return JSONResponse(
+            status_code=422,
+            content={"code": e.code.value, "message": e.message, "status_code": 422},
         )
     return {
         "valid": True,
-        "type": promo.type,
-        "value": str(promo.value),
-        "description": f"{promo.type}: {promo.value}",
+        "discount_xtr": result.discount_amount,
+        "discounted_price_xtr": result.discounted_price,
+        "display_label": result.display_label,
     }
 
 
@@ -1693,7 +1751,26 @@ async def webapp_create_invoice(
         db.add(sub)
         await db.flush()
     stars_amount = _stars_amount(plan.price_amount, plan.price_currency)
-    is_free = stars_amount <= 0
+    original_price_xtr = int(stars_amount)
+    final_price_xtr = original_price_xtr
+    promo_discount_applied = 0
+    if body.promo_code and body.promo_code.strip():
+        try:
+            val_result = await validate_promo_code(
+                db,
+                code=body.promo_code,
+                user_id=user.id,
+                plan_id=body.plan_id,
+                original_price_xtr=original_price_xtr,
+            )
+            final_price_xtr = val_result.discounted_price
+            promo_discount_applied = val_result.discount_amount
+        except PromoCodeError as e:
+            raise HTTPException(
+                status_code=422,
+                detail={"code": e.code.value, "message": e.message},
+            ) from e
+    is_free = final_price_xtr <= 0
     server_result = await db.execute(select(Server).where(Server.is_active.is_(True)).limit(1))
     server = server_result.scalar_one_or_none()
     if not server and not is_free:
@@ -1702,8 +1779,8 @@ async def webapp_create_invoice(
             detail={"code": "SERVER_NOT_AVAILABLE", "message": "No server available"},
         )
     # Idempotency: return existing pending payment for same user+sub within window to avoid duplicate charges on retry.
-    _CREATE_INVOICE_IDEMPOTENCY_MINUTES = 5
-    idem_cutoff = now - timedelta(minutes=_CREATE_INVOICE_IDEMPOTENCY_MINUTES)
+    idem_minutes = 5
+    idem_cutoff = now - timedelta(minutes=idem_minutes)
     existing_payment_result = await db.execute(
         select(Payment)
         .where(
@@ -1719,7 +1796,7 @@ async def webapp_create_invoice(
     if existing_payment:
         await db.commit()
         await db.refresh(existing_payment)
-        star_count = 0 if is_free else max(1, int(stars_amount))
+        star_count = 0 if is_free else max(1, int(float(existing_payment.amount or 0)))
         title = plan.name or "VPN"
         description = f"VPN plan, {plan.duration_days} days"
         invoice_link = ""
@@ -1730,6 +1807,8 @@ async def webapp_create_invoice(
                 payload=existing_payment.id,
                 star_count=star_count,
             )
+        discounted = int(float(existing_payment.amount or 0)) if existing_payment.amount else star_count
+        existing_discount = max(0, original_price_xtr - discounted) if discounted < original_price_xtr else 0
         return {
             "invoice_id": existing_payment.id,
             "payment_id": existing_payment.id,
@@ -1737,6 +1816,8 @@ async def webapp_create_invoice(
             "description": description,
             "currency": "XTR",
             "star_count": star_count,
+            "discounted_price_xtr": discounted,
+            "promo_discount_applied": existing_discount,
             "payload": existing_payment.id,
             "server_id": server.id if server else "",
             "subscription_id": sub.id,
@@ -1751,13 +1832,28 @@ async def webapp_create_invoice(
         subscription_id=sub.id,
         provider="telegram_stars",
         status="completed" if is_free else "pending",
-        amount=stars_amount,
+        amount=float(final_price_xtr),
         currency="XTR",
         external_id=external_id,
         webhook_payload={"promo_code": body.promo_code} if body.promo_code else None,
     )
     db.add(payment)
     await db.flush()
+    if body.promo_code and body.promo_code.strip():
+        try:
+            await redeem_promo_code(
+                db,
+                code=body.promo_code,
+                user_id=user.id,
+                plan_id=body.plan_id,
+                payment_id=payment.id,
+                original_price_xtr=original_price_xtr,
+            )
+        except PromoCodeError as e:
+            raise HTTPException(
+                status_code=422,
+                detail={"code": e.code.value, "message": e.message},
+            ) from e
     if is_free and sub.status != "active":
         sub.status = "active"
         sub.valid_from = now
@@ -1780,7 +1876,7 @@ async def webapp_create_invoice(
     await db.commit()
     await db.refresh(payment)
     await db.refresh(sub)
-    star_count = 0 if is_free else max(1, int(stars_amount))
+    star_count = 0 if is_free else max(1, final_price_xtr)
     title = plan.name or "VPN"
     description = f"VPN plan, {plan.duration_days} days"
     invoice_link = ""
@@ -1798,6 +1894,8 @@ async def webapp_create_invoice(
         "description": description,
         "currency": "XTR",
         "star_count": star_count,
+        "discounted_price_xtr": final_price_xtr,
+        "promo_discount_applied": promo_discount_applied,
         "payload": payment.id,
         "server_id": server.id if server else "",
         "subscription_id": sub.id,
@@ -2017,8 +2115,9 @@ async def webapp_servers(request: Request, db: AsyncSession = Depends(get_db)):
     counts: dict[str, int] = {row[0]: int(row[1]) for row in counts_result.all()}
     # Per-server RTT from this user's device telemetry (for latency display)
     server_avg_ping_ms: dict[str, float] = {}
+    connected_server_id: str | None = None  # server of most recently connected device (for is_current when auto-select)
     user_devices_result = await db.execute(
-        select(Device.id, Device.server_id).where(
+        select(Device.id, Device.server_id, Device.last_seen_handshake_at, Device.issued_at).where(
             Device.user_id == user.id, Device.revoked_at.is_(None)
         )
     )
@@ -2027,6 +2126,7 @@ async def webapp_servers(request: Request, db: AsyncSession = Depends(get_db)):
         device_ids = [str(row[0]) for row in user_devices]
         telemetry_map = await get_device_telemetry_bulk(device_ids)
         server_rtts: dict[str, list[float]] = {}
+        latest_handshake_ts: float | None = None
         for row in user_devices:
             dev_id, server_id = str(row[0]), row[1]
             te = telemetry_map.get(dev_id)
@@ -2037,6 +2137,22 @@ async def webapp_servers(request: Request, db: AsyncSession = Depends(get_db)):
                         server_rtts.setdefault(server_id, []).append(rtt)
                 except (TypeError, ValueError):
                     pass
+            if server_id and te and getattr(te, "handshake_latest_at", None) is not None:
+                ts = te.handshake_latest_at.timestamp()
+                if latest_handshake_ts is None or ts > latest_handshake_ts:
+                    latest_handshake_ts = ts
+                    connected_server_id = server_id
+        if connected_server_id is None and user_devices:
+            ranked = sorted(
+                user_devices,
+                key=lambda r: (
+                    r[2] or r[3],
+                    r[3],
+                ),
+                reverse=True,
+            )
+            if ranked and ranked[0][1]:
+                connected_server_id = ranked[0][1]
         for sid, rtts in server_rtts.items():
             if rtts:
                 server_avg_ping_ms[sid] = round(sum(rtts) / len(rtts), 1)
@@ -2054,6 +2170,9 @@ async def webapp_servers(request: Request, db: AsyncSession = Depends(get_db)):
             best_score = score
             best_id = s.id
         avg_ping = server_avg_ping_ms.get(s.id)
+        is_current = preferred_server_id == s.id
+        if not is_current and preferred_server_id is None and connected_server_id == s.id:
+            is_current = True
         items.append(
             WebAppServerOut(
                 id=s.id,
@@ -2062,7 +2181,7 @@ async def webapp_servers(request: Request, db: AsyncSession = Depends(get_db)):
                 load_percent=load_percent,
                 avg_ping_ms=avg_ping,
                 is_recommended=False,
-                is_current=preferred_server_id == s.id,
+                is_current=is_current,
             )
         )
     recommended_id = preferred_server_id or best_id
@@ -2166,7 +2285,9 @@ class WebAppSubscriptionOffersOut(BaseModel):
     reason_group: str | None = None
 
 
-def _offers_for_reason(reason_group: str | None, can_pause: bool, discount_percent: int) -> tuple[bool, bool, bool]:
+def _offers_for_reason(
+    reason_group: str | None, can_pause: bool, discount_percent: int
+) -> tuple[bool, bool, bool]:
     """Spec §6.4: map reason_group to targeted offers."""
     if not reason_group:
         return (can_pause, discount_percent > 0, False)
@@ -2228,7 +2349,9 @@ async def webapp_subscription_offers(
     can_pause = sub.paused_at is None and sub.valid_until > now
     can_resume = sub.paused_at is not None and sub.valid_until > now
     discount_pct = retention_discount_percent()
-    offer_pause, offer_discount, offer_downgrade = _offers_for_reason(reason_group, can_pause, discount_pct)
+    offer_pause, offer_discount, offer_downgrade = _offers_for_reason(
+        reason_group, can_pause, discount_pct
+    )
     await log_funnel_event(
         db,
         event_type="cancel_click",
@@ -2275,7 +2398,6 @@ async def webapp_subscription_access_state(
         raise HTTPException(
             status_code=404, detail={"code": "USER_NOT_FOUND", "message": "User not found"}
         )
-    now = datetime.now(timezone.utc)
     sub_result = await db.execute(
         select(Subscription)
         .where(Subscription.user_id == user.id)
@@ -2294,12 +2416,8 @@ async def webapp_subscription_access_state(
         )
     access_status = getattr(sub, "access_status", "enabled")
     grace_until = getattr(sub, "grace_until", None)
-    in_grace = access_status == "grace" and grace_until and grace_until > now
     sub_status = getattr(sub, "subscription_status", sub.status)
-    can_restore = (
-        (access_status == "grace" or sub_status == "expired")
-        and sub.plan_id
-    )
+    can_restore = (access_status == "grace" or sub_status == "expired") and sub.plan_id
     return WebAppSubscriptionAccessStateOut(
         subscription_id=sub.id,
         access_status=access_status,
@@ -2332,7 +2450,6 @@ async def webapp_subscription_restore(
         raise HTTPException(
             status_code=404, detail={"code": "USER_NOT_FOUND", "message": "User not found"}
         )
-    now = datetime.now(timezone.utc)
     sub_result = await db.execute(
         select(Subscription)
         .where(Subscription.user_id == user.id)
@@ -2535,13 +2652,17 @@ async def webapp_subscription_cancel(
             status_code=404,
             detail={"code": "SUBSCRIPTION_NOT_FOUND", "message": "Subscription not found"},
         )
-    now = datetime.now(timezone.utc)
     if body.pause_instead:
         ok = await pause_subscription(
-            db, subscription_id=sub.id, user_id=user.id, reason=f"webapp_cancel_{body.reason_code}",
+            db,
+            subscription_id=sub.id,
+            user_id=user.id,
+            reason=f"webapp_cancel_{body.reason_code}",
         )
         if not ok:
-            raise HTTPException(status_code=400, detail={"code": "PAUSE_FAILED", "message": "Could not pause"})
+            raise HTTPException(
+                status_code=400, detail={"code": "PAUSE_FAILED", "message": "Could not pause"}
+            )
         survey = ChurnSurvey(
             user_id=user.id,
             subscription_id=sub.id,
@@ -2553,7 +2674,9 @@ async def webapp_subscription_cancel(
             offer_accepted=body.offer_accepted,
         )
         db.add(survey)
-        await log_funnel_event(db, event_type="pause_selected", user_id=user.id, payload={"subscription_id": sub.id})
+        await log_funnel_event(
+            db, event_type="pause_selected", user_id=user.id, payload={"subscription_id": sub.id}
+        )
         await db.commit()
         return {"status": "ok", "action": "paused"}
     if body.cancel_at_period_end:
@@ -2594,4 +2717,7 @@ async def webapp_subscription_cancel(
         },
     )
     await db.commit()
-    return {"status": "ok", "action": "cancel_at_period_end" if body.cancel_at_period_end else "cancelled"}
+    return {
+        "status": "ok",
+        "action": "cancel_at_period_end" if body.cancel_at_period_end else "cancelled",
+    }

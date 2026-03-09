@@ -67,6 +67,7 @@ export function ToggleRow({
         onClick={() => onChange(!checked)}
         role="switch"
         aria-checked={checked}
+        aria-label={name}
       >
         <span className="ts-track" aria-hidden>
           <div className="ts-knob" />

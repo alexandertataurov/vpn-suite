@@ -207,8 +207,12 @@ async def test_completed_webhook_updates_subscription_device_limit_from_plan(
     monkeypatch.setattr(config.settings, "bot_api_key", "test-bot-key")
     monkeypatch.setattr(config.settings, "telegram_stars_webhook_secret", "")
 
-    basic_plan = await _create_plan_with_limit(duration_days=30, device_limit=1, price_amount="100.00")
-    pro_plan = await _create_plan_with_limit(duration_days=30, device_limit=5, price_amount="300.00")
+    basic_plan = await _create_plan_with_limit(
+        duration_days=30, device_limit=1, price_amount="100.00"
+    )
+    pro_plan = await _create_plan_with_limit(
+        duration_days=30, device_limit=5, price_amount="300.00"
+    )
     tg_id = int(uuid.uuid4().int % 10_000_000_000)
 
     basic = await client.post(

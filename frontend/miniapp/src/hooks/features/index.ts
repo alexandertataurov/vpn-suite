@@ -6,5 +6,5 @@ export { useOpenLink } from "./useOpenLink";
 export { useConnectionStatus } from "./useConnectionStatus";
 export { useMiniAppNavigation } from "./useMiniAppNavigation";
 export { useModalManager } from "./useModalManager";
-export { useToastManager, type ToastMessage } from "./useToastManager";
+export { useReferralAttach, type RefCaptureSource } from "./referral";
 

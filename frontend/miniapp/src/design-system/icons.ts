@@ -12,6 +12,8 @@ export {
   IconUser,
   IconChevronLeft,
   IconAlertTriangle,
+  IconMoreVertical,
+  IconDownload,
 } from "@/lib/icons";
 
 export type { IconType } from "@/lib/icons";

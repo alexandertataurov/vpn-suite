@@ -1,25 +1,25 @@
+import { useNavigate } from "react-router-dom";
+import { SummaryHero, SessionMissing, TroubleshooterStep } from "@/components";
 import {
   FallbackScreen,
-  PageCardSection,
   PageFrame,
   PageSection,
   Skeleton,
-  SummaryHero,
   MissionCard,
   MissionChip,
   MissionPrimaryAnchor,
-  SessionMissing,
-  TroubleshooterStep,
+  SupportActionList,
+  IconShield,
+  IconCreditCard,
+  IconSmartphone,
 } from "@/design-system";
 import { useSupportPageModel } from "@/page-models";
+import { telegramBotUsername } from "@/config/env";
 
 export function SupportPage() {
+  const navigate = useNavigate();
   const model = useSupportPageModel();
-  const botUsername =
-    typeof import.meta !== "undefined"
-      ? (import.meta as { env?: { VITE_TELEGRAM_BOT_USERNAME?: string } }).env?.VITE_TELEGRAM_BOT_USERNAME ?? ""
-      : "";
-  const supportHref = botUsername ? `https://t.me/${botUsername}` : "https://t.me/real_person_0";
+  const supportHref = telegramBotUsername ? `https://t.me/${telegramBotUsername}` : "https://t.me/real_person_0";
 
   if (model.pageState.status === "empty") {
     return <SessionMissing />;
@@ -46,10 +46,10 @@ export function SupportPage() {
   return (
     <PageFrame title={model.header.title} className="support-page">
       <SummaryHero {...model.hero} className="stagger-1" />
-      <PageCardSection
+      <PageSection
         title="Troubleshooter"
         action={<MissionChip tone={model.troubleshooterBadge.tone} className="section-meta-chip miniapp-tnum">{model.troubleshooterBadge.label}</MissionChip>}
-        description="Follow the steps before opening chat. They resolve the most common setup and connection issues."
+        description="Most issues can be fixed in under a minute. Follow the steps before opening support chat."
         className="stagger-2"
       >
         <TroubleshooterStep
@@ -61,14 +61,35 @@ export function SupportPage() {
           onNext={model.nextStep}
           backLabel={model.previousStep ? model.currentStep.backLabel : undefined}
           onBack={model.previousStep}
+          altLabel={model.currentStepAltLabel}
+          onAlt={model.currentStepAltLabel ? () => navigate("/plan") : undefined}
         />
-      </PageCardSection>
+      </PageSection>
+      <PageSection
+        title="Quick fixes"
+        description="Jump to common support flows."
+        className="stagger-3"
+      >
+        <SupportActionList
+          items={[
+            { to: "/restore-access", title: "Restore VPN access", description: "Download a new config", tone: "amber", icon: <IconShield size={20} strokeWidth={1.6} /> },
+            { to: "/plan", title: "Plans & billing", description: "Subscription, renewal, payment", tone: "green", icon: <IconCreditCard size={20} strokeWidth={1.6} /> },
+            { to: "/devices", title: "Devices", description: "Add or remove VPN devices", tone: "blue", icon: <IconSmartphone size={20} strokeWidth={1.6} /> },
+          ]}
+        />
+      </PageSection>
       <PageSection
         title="FAQ"
         description="Short answers to the questions users hit most often."
-        className="stagger-4"
+        className="stagger-6"
       >
-        <div className="faq-grid stagger-5">
+        <div className="faq-grid stagger-7">
+          <MissionCard tone="blue" className="module-card module-card--tight">
+            <h3 className="op-name type-h3">VPN not connecting</h3>
+            <p className="op-desc type-body-sm">
+              Run the steps above, then check Devices and Restore access.
+            </p>
+          </MissionCard>
           <MissionCard tone="blue" className="module-card module-card--tight">
             <h3 className="op-name type-h3">Installation</h3>
             <p className="op-desc type-body-sm">
@@ -83,15 +104,16 @@ export function SupportPage() {
           </MissionCard>
         </div>
       </PageSection>
-      <MissionPrimaryAnchor
-        aria-label="Contact support"
-        href={supportHref}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="stagger-6"
-      >
-        Contact support
-      </MissionPrimaryAnchor>
+      <PageSection title="Still need help?" className="stagger-8">
+        <MissionPrimaryAnchor
+          aria-label="Contact support"
+          href={supportHref}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Contact support
+        </MissionPrimaryAnchor>
+      </PageSection>
     </PageFrame>
   );
 }

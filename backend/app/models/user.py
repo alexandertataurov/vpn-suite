@@ -35,9 +35,7 @@ class User(Base, TimestampMixin):
     )
     preferred_server_id: Mapped[str | None] = mapped_column(String(32), nullable=True)
     server_auto_select: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    last_active_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    last_active_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
     )

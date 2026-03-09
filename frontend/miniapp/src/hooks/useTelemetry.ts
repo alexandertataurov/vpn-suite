@@ -35,6 +35,9 @@ const LEGACY_TO_CANONICAL: Partial<Record<WebappTelemetryEventType, MiniappEvent
   profile_updated: "miniapp.profile_updated",
   upsell_impression: "miniapp.upsell_impression",
   upsell_clicked: "miniapp.upsell_clicked",
+  upsell_dismissed: "miniapp.upsell_dismissed",
+  upsell_suppressed: "miniapp.upsell_suppressed",
+  upsell_evaluated: "miniapp.upsell_evaluated",
   onboarding_abandoned: "miniapp.onboarding_abandoned",
   web_vital: "miniapp.web_vital",
 };

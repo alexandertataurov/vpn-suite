@@ -12,7 +12,9 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Button, InlineAlert, Skeleton, Display, Body } from "@/design-system";
 import { useTelegramWebApp } from "../hooks/useTelegramWebApp";
 import { track } from "@vpn-suite/shared";
+import { enrichContextAtAppReady } from "./analytics";
 import { useTelegramBackButtonController } from "../hooks/useTelegramBackButtonController";
+import { ONBOARDING_ALLOWED_PATHS } from "./constants";
 import { useBootstrapMachine, type BootPhase } from "./useBootstrapMachine";
 
 interface BootstrapContextValue {
@@ -26,13 +28,6 @@ interface BootstrapContextValue {
 }
 
 const BootstrapContext = createContext<BootstrapContextValue | null>(null);
-
-/** Routes onboarding users may visit; they are not forced back to /onboarding on these. */
-const ONBOARDING_ALLOWED_PATHS = [
-  "/plan",
-  "/devices",
-  "/devices/issue",
-];
 
 function isOnboardingAllowedPath(pathname: string): boolean {
   if (pathname === "/onboarding") return true;
@@ -160,6 +155,7 @@ export function BootstrapController({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (phase === "app_ready" && !readyTracked.current) {
       readyTracked.current = true;
+      enrichContextAtAppReady();
       track("miniapp.ready", {});
     }
   }, [phase]);

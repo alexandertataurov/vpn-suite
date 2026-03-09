@@ -46,7 +46,7 @@ from app.models import (
 from app.schemas.base import PaginationParams
 from app.schemas.device import DeviceListItemOut, IssueRequest, IssueResponse, UserDeviceList
 from app.schemas.subscription import SubscriptionOut
-from app.schemas.user import UserCreate, UserDetail, UserDeleteBody, UserList, UserOut, UserUpdate
+from app.schemas.user import UserCreate, UserDeleteBody, UserDetail, UserList, UserOut, UserUpdate
 from app.services.funnel_service import log_funnel_event
 from app.services.issue_service import issue_device
 from app.services.issued_config_service import persist_issued_configs
@@ -140,7 +140,9 @@ async def list_users(
     limit, offset = pagination.limit, pagination.offset
     result = await db.execute(stmt.order_by(User.id.desc()).limit(limit).offset(offset))
     rows = result.scalars().all()
-    return UserList(items=[UserOut.model_validate(r) for r in rows], total=total, limit=limit, offset=offset)
+    return UserList(
+        items=[UserOut.model_validate(r) for r in rows], total=total, limit=limit, offset=offset
+    )
 
 
 @router.get("/by-tg/{tg_id}", response_model=UserDetail)

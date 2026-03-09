@@ -822,12 +822,14 @@ export interface PlanOut {
   id: string;
   name: string | null;
   duration_days: number;
+  device_limit?: number;
   price_amount: number;
   price_currency: string;
-  is_active: boolean;
   created_at: string;
-  updated_at: string;
   upsell_methods?: string[] | null;
+  is_archived?: boolean;
+  display_order?: number;
+  subscription_count?: number;
 }
 
 export interface PlanList {

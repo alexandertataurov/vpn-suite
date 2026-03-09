@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { webappApi } from "@/api/client";
+import { useTrackScreen } from "@/hooks/useTrackScreen";
 import { useSession } from "@/hooks/useSession";
 import { webappQueryKeys } from "@/lib/query-keys/webapp.query-keys";
 import { getActiveDevices } from "./helpers";
@@ -11,6 +12,8 @@ export function useConnectStatusPageModel() {
 
   const activeDevices = getActiveDevices(session);
   const latestDevice = activeDevices[0];
+  const activeSubId = session?.subscriptions?.find((s) => s.status === "active")?.plan_id ?? null;
+  useTrackScreen("connect-status", activeSubId ?? null);
 
   const confirmMutation = useMutation({
     mutationFn: async () => {

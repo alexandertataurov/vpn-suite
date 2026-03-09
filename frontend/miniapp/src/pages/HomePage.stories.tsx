@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { HomePage } from "./Home";
-import { MockWebappApi, MiniappFrame, webappMeActive, webappMeNoSubscription } from "@/lib/storybook";
+import { MockWebappApi, MiniappFrame, webappMeActive, webappMeNoSubscription } from "@/storybook";
 import { Body } from "@/design-system";
 
 const meta: Meta<typeof HomePage> = {

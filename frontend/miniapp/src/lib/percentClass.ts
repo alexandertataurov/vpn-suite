@@ -4,5 +4,3 @@ export function percentClass(pct: number): string {
   if (pct >= 70) return "percent-medium";
   return "percent-low";
 }
-
-export const getPercentClass = percentClass;

@@ -25,4 +25,6 @@ class EntitlementEvent(Base, TimestampMixin):
     subscription: Mapped["Subscription | None"] = relationship(
         "Subscription", back_populates="entitlement_events", foreign_keys=[subscription_id]
     )
-    user: Mapped["User"] = relationship("User", back_populates="entitlement_events", foreign_keys=[user_id])
+    user: Mapped["User"] = relationship(
+        "User", back_populates="entitlement_events", foreign_keys=[user_id]
+    )

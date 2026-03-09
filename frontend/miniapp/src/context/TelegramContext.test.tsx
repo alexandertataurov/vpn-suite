@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
-import { TelegramProvider, useTelegram } from "./TelegramContext";
+import { render } from "@testing-library/react";
+import { TelegramProvider } from "./TelegramContext";
 
 const mockViewportDimensions = vi.fn();
 const mockTelegramApp = vi.fn();
@@ -13,17 +13,7 @@ vi.mock("@/hooks/telegram", () => ({
   useTelegramApp: () => mockTelegramApp(),
 }));
 
-function Consumer() {
-  const value = useTelegram();
-  return (
-    <div data-testid="consumer">
-      <span data-viewport-height={value.viewportHeight} />
-      <span data-fullscreen={String(value.isFullscreen)} />
-    </div>
-  );
-}
-
-describe("TelegramProvider / useTelegram", () => {
+describe("TelegramProvider", () => {
   beforeEach(() => {
     mockViewportDimensions.mockReturnValue({
       viewportHeight: 600,
@@ -32,21 +22,28 @@ describe("TelegramProvider / useTelegram", () => {
     mockTelegramApp.mockReturnValue({ isFullscreen: true, platform: "ios" });
   });
 
-  it("provides value from useViewportDimensions and useTheme", () => {
+  it("sets data-tg* attributes on document root", () => {
     render(
       <TelegramProvider>
-        <Consumer />
+        <div />
       </TelegramProvider>
     );
 
-    const el = screen.getByTestId("consumer");
-    expect(el.querySelector("[data-viewport-height]")).toHaveAttribute(
-      "data-viewport-height",
-      "600"
+    expect(document.documentElement.dataset.tgFullscreen).toBe("true");
+    expect(document.documentElement.dataset.tgPlatform).toBe("ios");
+    expect(document.documentElement.dataset.tgDesktop).toBe("false");
+  });
+
+  it("removes data-tg* attributes on unmount", () => {
+    const { unmount } = render(
+      <TelegramProvider>
+        <div />
+      </TelegramProvider>
     );
-    expect(el.querySelector("[data-fullscreen]")).toHaveAttribute(
-      "data-fullscreen",
-      "true"
-    );
+
+    expect(document.documentElement.dataset.tgPlatform).toBe("ios");
+    unmount();
+    expect(document.documentElement.dataset.tgPlatform).toBeUndefined();
+    expect(document.documentElement.dataset.tgFullscreen).toBeUndefined();
   });
 });

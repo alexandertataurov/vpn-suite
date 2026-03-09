@@ -4,10 +4,16 @@ import {
   type TelegramPopupParams,
 } from "./telegramCoreClient";
 
+export type WithOptionalCallbackOptions = { timeoutMs?: number };
+
+const DEFAULT_CALLBACK_TIMEOUT_MS = 1200;
+
 function withOptionalCallback<T>(
   invoke: (cb: (error: unknown, value: T) => void) => unknown,
   fallback: T,
+  options?: WithOptionalCallbackOptions,
 ): Promise<T> {
+  const timeoutMs = options?.timeoutMs ?? DEFAULT_CALLBACK_TIMEOUT_MS;
   return new Promise<T>((resolve, reject) => {
     let settled = false;
     const complete = (error: unknown, value: T) => {
@@ -30,7 +36,7 @@ function withOptionalCallback<T>(
       (maybePromise as Promise<T>).then((value) => complete(null, value)).catch((error) => complete(error, fallback));
       return;
     }
-    globalThis.setTimeout(() => complete(null, fallback), 1200);
+    globalThis.setTimeout(() => complete(null, fallback), timeoutMs);
   });
 }
 

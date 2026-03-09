@@ -1,7 +1,6 @@
 """Telegram VPN Bot — aiogram 3, Admin API client."""
 
 import asyncio
-import sys
 
 from utils.logging import setup_logging, get_logger
 

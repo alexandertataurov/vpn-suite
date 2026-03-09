@@ -1,10 +1,9 @@
 /**
- * Design system components — Button, Card, Typography, forms, feedback, display.
+ * Design system components — Button, Typography, forms, feedback, display.
+ * Use MissionCard from patterns for cards; Card re-export removed to break components↔patterns cycle.
  */
 export { Button, getButtonClassName } from "./buttons/Button";
 export type { ButtonVariant, ButtonSize, ButtonTone, ButtonProps } from "./buttons/Button";
-export { MissionCard as Card } from "../patterns/MissionPrimitives";
-export type { MissionCardProps as CardProps } from "../patterns/MissionPrimitives";
 
 export { Display, H1, H2, H3, Body, Caption } from "./Typography";
 export { TelegramThemeBridge } from "./TelegramThemeBridge";

@@ -14,5 +14,5 @@
   },
   "references": [{ "path": "../shared" }],
   "include": ["src/**/*"],
-  "exclude": ["src/**/*.stories.tsx", "src/**/*.stories.ts", "src/lib/storybook", "src/design-system/ui/__tests__"]
+  "exclude": ["src/**/*.stories.tsx", "src/**/*.stories.ts", "src/**/*.test.tsx", "src/**/*.test.ts", "src/storybook", "src/design-system/ui/__tests__"]
 }

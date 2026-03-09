@@ -1,16 +1,11 @@
 import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
 
-type MainButtonReserveContextValue = {
+export type MainButtonReserveContextValue = {
   reserve: boolean;
   setReserve: (value: boolean) => void;
 };
 
-const defaultValue: MainButtonReserveContextValue = {
-  reserve: false,
-  setReserve: () => {},
-};
-
-const MainButtonReserveContext = createContext<MainButtonReserveContextValue>(defaultValue);
+const MainButtonReserveContext = createContext<MainButtonReserveContextValue | null>(null);
 
 export function MainButtonReserveProvider({ children }: { children: ReactNode }) {
   const [reserve, setReserve] = useState(false);
@@ -22,6 +17,8 @@ export function MainButtonReserveProvider({ children }: { children: ReactNode })
   );
 }
 
-export function useMainButtonReserve() {
-  return useContext(MainButtonReserveContext);
+export function useMainButtonReserve(): MainButtonReserveContextValue {
+  const ctx = useContext(MainButtonReserveContext);
+  if (!ctx) throw new Error("useMainButtonReserve must be used within MainButtonReserveProvider");
+  return ctx;
 }

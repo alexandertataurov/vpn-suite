@@ -12,7 +12,7 @@ import {
   getAppName,
   track,
 } from "@vpn-suite/shared";
-import { sendWebappTelemetry } from "@/lib/utils/telemetry";
+import { sendWebappTelemetry } from "@/telemetry/webappTelemetry";
 import { telegramClient } from "@/telegram/telegramCoreClient";
 
 /** Map canonical miniapp.* event names to backend WebappTelemetryEventType. */
@@ -82,7 +82,7 @@ export async function initAnalytics(): Promise<void> {
   const posthogKey = import.meta.env.VITE_POSTHOG_KEY as string | undefined;
   const posthogHost = import.meta.env.VITE_POSTHOG_HOST as string | undefined;
   const faroUrl = import.meta.env.VITE_FARO_COLLECTOR_URL as string | undefined;
-  const enabled = import.meta.env.VITE_ANALYTICS_ENABLED !== "0" && import.meta.env.MODE !== "test";
+  const enabled = import.meta.env.VITE_ANALYTICS_ENABLED === "1" && import.meta.env.MODE !== "test";
 
   const platform = telegramClient.getPlatform();
   const startParam = telegramClient.getInitDataUnsafe()?.start_param ?? "";
@@ -138,4 +138,20 @@ export async function initAnalytics(): Promise<void> {
       { once: false },
     );
   }
+}
+
+/**
+ * Enrich analytics context when bootstrap reaches app_ready.
+ * Call once when phase === "app_ready" to update context with full platform/startParam
+ * (init may have run before Telegram was ready).
+ */
+export function enrichContextAtAppReady(): void {
+  const platform = telegramClient.getPlatform();
+  const startParam = telegramClient.getInitDataUnsafe()?.start_param ?? "";
+  const colorScheme = telegramClient.getColorScheme();
+  setContext({
+    telegram_platform: platform,
+    telegram_start_param: startParam ? startParam.slice(0, 200) : "",
+    telegram_color_scheme: colorScheme,
+  });
 }

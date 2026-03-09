@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ApiError } from "@vpn-suite/shared";
+import { ApiError, type WebAppMeResponse } from "@vpn-suite/shared";
 import { webappApi } from "@/api/client";
 import { webappQueryKeys } from "@/lib/query-keys/webapp.query-keys";
 
@@ -19,14 +19,13 @@ export function useUpdateSubscription(options: UseUpdateSubscriptionOptions = {}
       webappApi.patch<{ auto_renew: boolean }>("/subscriptions/me", { auto_renew }),
     onMutate: async (next: boolean) => {
       await queryClient.cancelQueries({ queryKey: [...webappQueryKeys.me()] });
-      const previous = queryClient.getQueryData([...webappQueryKeys.me()]);
+      const previous = queryClient.getQueryData<WebAppMeResponse>([...webappQueryKeys.me()]);
       if (previous && primarySubId) {
-        queryClient.setQueryData([...webappQueryKeys.me()], (old: unknown) => {
-          const data = old as { subscriptions?: Array<Record<string, unknown>> } | null;
-          if (!data?.subscriptions) return old;
+        queryClient.setQueryData<WebAppMeResponse>([...webappQueryKeys.me()], (old) => {
+          if (!old?.subscriptions) return old ?? previous;
           return {
-            ...data,
-            subscriptions: data.subscriptions.map((sub) =>
+            ...old,
+            subscriptions: old.subscriptions.map((sub) =>
               sub && sub.id === primarySubId ? { ...sub, auto_renew: next } : sub,
             ),
           };

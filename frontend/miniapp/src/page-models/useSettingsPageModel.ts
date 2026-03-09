@@ -7,6 +7,7 @@ import {
   type WebAppSubscriptionOffersResponse,
 } from "@vpn-suite/shared";
 import { useSession } from "@/hooks/useSession";
+import { useTelegramInitData } from "@/hooks/telegram/useTelegramInitData";
 import { useWebappToken, webappApi } from "@/api/client";
 import { useTelemetry } from "@/hooks/useTelemetry";
 import { useTrackScreen } from "@/hooks/useTrackScreen";
@@ -15,11 +16,15 @@ import { webappQueryKeys } from "@/lib/query-keys/webapp.query-keys";
 import type { StandardPageHeader, StandardPageState, StandardSectionBadge } from "./types";
 import { getActiveDevices, getActiveSubscription } from "./helpers";
 
-const PROFILE_LOCALE_OPTIONS = [
+const LOCALE_OPTIONS_BASE = [
   { id: "en", label: "English" },
   { id: "ru", label: "Русский" },
 ] as const;
-export type ProfileLocaleId = (typeof PROFILE_LOCALE_OPTIONS)[number]["id"];
+const PROFILE_LOCALE_OPTIONS = [
+  { id: "auto", label: "Auto (Telegram)" },
+  ...LOCALE_OPTIONS_BASE,
+] as const;
+export type ProfileLocaleId = "auto" | "en" | "ru";
 
 export type CancelReasonGroup = "price" | "not_needed" | "technical" | "other";
 
@@ -32,10 +37,18 @@ export interface CancelActionPayload {
   offer_accepted?: boolean;
 }
 
+function resolveTelegramLocale(languageCode: string | undefined): "en" | "ru" {
+  if (!languageCode) return "en";
+  const code = languageCode.trim().toLowerCase().slice(0, 2);
+  return code === "ru" ? "ru" : "en";
+}
+
 export function useSettingsPageModel() {
   const hasToken = !!useWebappToken();
   const queryClient = useQueryClient();
   const { data, isLoading, error } = useSession(hasToken);
+  const { user: tgUser } = useTelegramInitData();
+  const tgLanguageCode = tgUser?.language_code;
   const { addToast } = useToast();
   const activeSub = getActiveSubscription(data);
   const { track } = useTelemetry(activeSub?.plan_id ?? null);
@@ -56,7 +69,7 @@ export function useSettingsPageModel() {
     setProfilePhone((u.phone ?? "").trim());
     const loc = (u.locale ?? "").trim().toLowerCase();
     setProfileLocale(loc === "ru" || loc === "en" ? loc : "en");
-  }, [data?.user?.id, data?.user?.display_name, data?.user?.email, data?.user?.phone, data?.user?.locale]);
+  }, [data?.user]);
 
   const offersReasonGroup = cancelOpen ? cancelReason : "";
   const { data: offers, isLoading: offersLoading, error: offersError } = useQuery<WebAppSubscriptionOffersResponse>({
@@ -158,18 +171,38 @@ export function useSettingsPageModel() {
       ),
   });
 
+  const handlePause = useCallback(() => pauseMutation.mutate(), [pauseMutation]);
+  const handleResume = useCallback(() => resumeMutation.mutate(), [resumeMutation]);
+  const handleRevokeAll = useCallback(() => revokeAllMutation.mutate(), [revokeAllMutation]);
+  const handleUpdateLocale = useCallback(
+    (id: ProfileLocaleId) => {
+      if (id === "auto") {
+        const resolved = resolveTelegramLocale(tgLanguageCode);
+        updateProfileMutation.mutate({ locale: resolved });
+      } else {
+        setProfileLocale(id);
+        updateProfileMutation.mutate({ locale: id });
+      }
+    },
+    [updateProfileMutation, tgLanguageCode],
+  );
+
+  const effectiveTelegramLocale = resolveTelegramLocale(tgLanguageCode);
+
   const saveProfile = useCallback(() => {
+    const localeToSend = profileLocale === "auto" ? resolveTelegramLocale(tgLanguageCode) : profileLocale;
     updateProfileMutation.mutate({
       display_name: profileDisplayName.trim() || undefined,
       email: profileEmail.trim() || undefined,
       phone: profilePhone.trim() || undefined,
-      locale: profileLocale,
+      locale: localeToSend,
     });
   }, [
     profileDisplayName,
     profileEmail,
     profilePhone,
     profileLocale,
+    tgLanguageCode,
     updateProfileMutation,
   ]);
 
@@ -242,9 +275,11 @@ export function useSettingsPageModel() {
     profileLocale,
     setProfileLocale,
     saveProfile,
-    updateProfileMutation,
+    isSavingProfile: updateProfileMutation.isPending,
+    handleUpdateLocale,
     profileIncomplete,
-    profileLocaleOptions: PROFILE_LOCALE_OPTIONS,
+    profileLocaleOptions: [...PROFILE_LOCALE_OPTIONS],
+    effectiveTelegramLocale,
     offers,
     offersLoading,
     offersError,
@@ -257,10 +292,13 @@ export function useSettingsPageModel() {
     cancelFreeText,
     setCancelFreeText,
     handleCancelAction,
-    pauseMutation,
-    resumeMutation,
-    cancelMutation,
-    revokeAllMutation,
+    handlePause,
+    handleResume,
+    handleRevokeAll,
+    isPausing: pauseMutation.isPending,
+    isResuming: resumeMutation.isPending,
+    isCancelling: cancelMutation.isPending,
+    isRevoking: revokeAllMutation.isPending,
     offersBadge,
     refetchOffers: () => queryClient.invalidateQueries({ queryKey: [...webappQueryKeys.subscriptionOffers()] }),
     openCancelFlow: () => {

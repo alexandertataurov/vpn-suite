@@ -1,9 +1,5 @@
-import {
-  MissionAlert,
-  MissionSecondaryButton,
-  MissionSecondaryLink,
-  ButtonRow,
-} from "@/design-system";
+import { Link } from "react-router-dom";
+import { MissionAlert } from "@/design-system";
 
 export interface ConfigCardContentProps {
   configText: string;
@@ -35,17 +31,33 @@ export function ConfigCardContent({
         title="Shown only once"
         message={message}
         actions={(
-          <ButtonRow>
-            <MissionSecondaryButton onClick={() => void onCopy()}>
+          <div className="device-actions-inline">
+            <button
+              type="button"
+              className="link-interactive"
+              onClick={() => void onCopy()}
+              aria-label="Copy config"
+            >
               Copy config
-            </MissionSecondaryButton>
-            <MissionSecondaryButton onClick={onDownload}>
+            </button>
+            <span className="device-actions-sep" aria-hidden> · </span>
+            <button
+              type="button"
+              className="link-interactive"
+              onClick={onDownload}
+              aria-label="Download config file"
+            >
               Download .conf file
-            </MissionSecondaryButton>
+            </button>
             {isPending ? (
-              <MissionSecondaryLink to={recommendedRoute}>Confirm connection</MissionSecondaryLink>
+              <>
+                <span className="device-actions-sep" aria-hidden> · </span>
+                <Link to={recommendedRoute} className="link-interactive" aria-label="Confirm device installation">
+                  Confirm device installation
+                </Link>
+              </>
             ) : null}
-          </ButtonRow>
+          </div>
         )}
       />
       {!peerCreated ? (

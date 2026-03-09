@@ -1,3 +1,8 @@
+/**
+ * Onboarding page — pre-app_ready flow.
+ * No page-model: uses useBootstrapContext, useSession, webappApi directly.
+ * Runs before app_ready; bootstrap owns auth/session. See page-models README for convention.
+ */
 import { useCallback, useEffect, useMemo, useRef, useState, type TouchEvent } from "react";
 import {
   IconShield,
@@ -13,6 +18,7 @@ import {
   MissionPrimaryLink,
   MissionSecondaryButton,
   MissionSecondaryLink,
+  ButtonRow,
   useToast,
 } from "@/design-system";
 import { useBootstrapContext } from "@/bootstrap/BootstrapController";
@@ -26,6 +32,7 @@ import { getActiveDevices } from "@/page-models";
 import { useQueryClient } from "@tanstack/react-query";
 import appStoreBadgeUrl from "@/assets/badges/app-store-badge.svg";
 import googlePlayBadgeUrl from "@/assets/badges/google-play-badge.png";
+import { telegramBotUsername } from "@/config/env";
 
 const IOS_APP_URL = "https://apps.apple.com/app/amneziavpn/id1600529900";
 const ANDROID_APP_URL = "https://play.google.com/store/apps/details?id=org.amnezia.vpn";
@@ -44,8 +51,8 @@ const ONBOARDING_STEPS = [
   {
     id: "get_config",
     title: "Get your config",
-    body: "Subscribe to a plan if needed, then open Devices in this app and tap Issue device. You get a one-time config — copy or download the .conf file. In AmneziaVPN: Add configuration → Import file (use the .conf) or paste the copied text. Store the config carefully; it may only appear once.",
-    bodyAlreadyInstalled: "Subscribe if needed, then open Devices here and tap Issue device. Copy or download the config, then in AmneziaVPN: Add configuration → Import file or paste. Store it carefully; it may only appear once.",
+    body: "1) Plan → Devices → Issue device. 2) Copy or download the .conf. 3) In AmneziaVPN: Add configuration → Import file or paste. Config is shown once — save it.",
+    bodyAlreadyInstalled: "Devices → Issue device. Copy or download the config. In AmneziaVPN: Add configuration → Import file or paste. Save it; it only appears once.",
     cta: "Next",
     icon: IconGlobe,
   },
@@ -130,11 +137,7 @@ export function OnboardingPage() {
     return platformHint ? `${platformHint}${step.body}` : step.body;
   }, [step, selectedPlatform, appAlreadyInstalled]);
 
-  const botUsername =
-    typeof import.meta !== "undefined"
-      ? (import.meta as { env?: { VITE_TELEGRAM_BOT_USERNAME?: string } }).env?.VITE_TELEGRAM_BOT_USERNAME ?? ""
-      : "";
-  const botAppLink = botUsername ? `https://t.me/${botUsername}` : "";
+  const botAppLink = telegramBotUsername ? `https://t.me/${telegramBotUsername}` : "";
 
   const confirmConnected = useCallback(async (): Promise<boolean> => {
     const devices = getActiveDevices(session);
@@ -313,14 +316,14 @@ export function OnboardingPage() {
                     <span className="arrow">↓</span>
                     <span>AmneziaVPN: Add configuration → Import file or paste</span>
                   </div>
-                  <div className="btn-row">
+                  <ButtonRow>
                     <MissionSecondaryLink to="/plan" state={{ fromOnboarding: true }}>
                       Choose plan
                     </MissionSecondaryLink>
                     <MissionSecondaryLink to="/devices" state={{ fromOnboarding: true }}>
                       Go to Devices
                     </MissionSecondaryLink>
-                  </div>
+                  </ButtonRow>
                 </>
               ) : null}
               {step.id === "confirm_connected" ? (
@@ -359,7 +362,7 @@ export function OnboardingPage() {
             )}
 
             <div className="onboarding-footer">
-              <div className="btn-row">
+              <ButtonRow>
                 {stepIndex > 0 && (
                   <MissionSecondaryButton onClick={() => void handleBack()} disabled={isCompletingOnboarding || isAdvancing}>
                     Back
@@ -395,7 +398,7 @@ export function OnboardingPage() {
                     )}
                   </MissionPrimaryButton>
                 )}
-              </div>
+              </ButtonRow>
               <div className="onboarding-progress">
                 <MissionProgressBar percent={progressValue} staticFill ariaLabel="Onboarding progress" />
                 <div className="onboarding-dots" role="tablist" aria-label="Onboarding steps">

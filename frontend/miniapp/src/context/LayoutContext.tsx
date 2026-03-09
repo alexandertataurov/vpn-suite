@@ -22,6 +22,6 @@ export function LayoutProvider({
 
 export function useLayoutContext(): LayoutContextValue {
   const ctx = useContext(LayoutContext);
-  if (!ctx) return { stackFlow: false };
+  if (!ctx) throw new Error("useLayoutContext must be used within LayoutProvider");
   return ctx;
 }

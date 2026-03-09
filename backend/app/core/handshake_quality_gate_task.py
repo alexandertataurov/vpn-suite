@@ -4,12 +4,13 @@ import asyncio
 import logging
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import func, select, update
+from sqlalchemy import case, func, select, update
 
 from app.core.config import settings
 from app.core.database import async_session_factory
-from app.models import Device
+from app.models import Device, User
 from app.services.device_telemetry_cache import get_device_telemetry_bulk
+from app.services.funnel_service import log_funnel_event
 
 try:
     from app.core.metrics import (
@@ -106,14 +107,17 @@ async def run_handshake_quality_gate_once() -> int:
                 )
                 if not has_handshake:
                     continue
+                values: dict = {
+                    "apply_status": "VERIFIED",
+                    "last_error": None,
+                    "unstable_reason": None,
+                }
+                if data.handshake_latest_at is not None:
+                    values["last_seen_handshake_at"] = data.handshake_latest_at
                 await session.execute(
                     update(Device)
                     .where(Device.id == device_id)
-                    .values(
-                        apply_status="VERIFIED",
-                        last_error=None,
-                        unstable_reason=None,
-                    )
+                    .values(**values)
                 )
                 verified_count += 1
                 if (
@@ -132,6 +136,98 @@ async def run_handshake_quality_gate_once() -> int:
                         pass
             if verified_count:
                 await session.commit()
+
+        # Pass 3: update last_seen_handshake_at for any device with handshake in telemetry.
+        # Auto-confirm connection when first handshake recorded (per DEVICE-LIFECYCLE spec).
+        r3 = await session.execute(
+            select(
+                Device.id,
+                Device.user_id,
+                Device.last_seen_handshake_at,
+                Device.last_connection_confirmed_at,
+            ).where(Device.revoked_at.is_(None))
+        )
+        rows3 = r3.all()
+        sync_count = 0
+        if rows3:
+            device_ids3 = [row[0] for row in rows3]
+            telemetry3 = await get_device_telemetry_bulk(device_ids3)
+            for device_id, user_id, last_seen, last_confirmed in rows3:
+                data = telemetry3.get(device_id)
+                if data is None or data.handshake_latest_at is None:
+                    continue
+                if last_seen is not None and data.handshake_latest_at <= last_seen:
+                    continue
+                ts = data.handshake_latest_at
+                device_values: dict = {"last_seen_handshake_at": ts}
+                auto_confirm = last_confirmed is None
+                if auto_confirm:
+                    device_values["last_connection_confirmed_at"] = ts
+                await session.execute(
+                    update(Device).where(Device.id == device_id).values(**device_values)
+                )
+                if auto_confirm and user_id is not None:
+                    await session.execute(
+                        update(User)
+                        .where(User.id == user_id)
+                        .values(
+                            last_connection_confirmed_at=ts,
+                            first_connected_at=case(
+                                (User.first_connected_at.is_(None), ts),
+                                else_=User.first_connected_at,
+                            ),
+                        )
+                    )
+                    await log_funnel_event(
+                        session,
+                        event_type="connect_confirmed",
+                        user_id=user_id,
+                        payload={"device_id": device_id, "source": "handshake"},
+                    )
+                sync_count += 1
+            if sync_count > 0:
+                await session.commit()
+
+        # Pass 3b: auto-confirm devices that already have handshake but were never confirmed
+        # (e.g. last_seen_handshake_at set by Pass 2 or prior run; we skipped update in Pass 3)
+        r3b = await session.execute(
+            select(
+                Device.id,
+                Device.user_id,
+                Device.last_seen_handshake_at,
+            ).where(
+                Device.revoked_at.is_(None),
+                Device.last_seen_handshake_at.isnot(None),
+                Device.last_connection_confirmed_at.is_(None),
+            )
+        )
+        rows3b = r3b.all()
+        if rows3b:
+            for device_id, user_id, last_seen_ts in rows3b:
+                await session.execute(
+                    update(Device)
+                    .where(Device.id == device_id)
+                    .values(last_connection_confirmed_at=last_seen_ts)
+                )
+                if user_id is not None:
+                    await session.execute(
+                        update(User)
+                        .where(User.id == user_id)
+                        .values(
+                            last_connection_confirmed_at=last_seen_ts,
+                            first_connected_at=case(
+                                (User.first_connected_at.is_(None), last_seen_ts),
+                                else_=User.first_connected_at,
+                            ),
+                        )
+                    )
+                    await log_funnel_event(
+                        session,
+                        event_type="connect_confirmed",
+                        user_id=user_id,
+                        payload={"device_id": device_id, "source": "handshake"},
+                    )
+            await session.commit()
 
         if vpn_devices_no_handshake is not None:
             count_result = await session.execute(

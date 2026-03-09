@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { webappApi } from "@/api/client";
+import { useTrackScreen } from "@/hooks/useTrackScreen";
 import { useSession } from "@/hooks/useSession";
 import { webappQueryKeys } from "@/lib/query-keys/webapp.query-keys";
 
@@ -9,6 +10,8 @@ export function useRestoreAccessPageModel() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: session } = useSession(true);
+  const activeSubId = session?.subscriptions?.[0]?.plan_id ?? null;
+  useTrackScreen("restore-access", activeSubId ?? null);
 
   const restoreMutation = useMutation({
     mutationFn: async () => {

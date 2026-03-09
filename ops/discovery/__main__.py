@@ -6,9 +6,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
-import os
 import sys
-from dataclasses import asdict
 from pathlib import Path
 
 # Add parent so we can import discovery modules
@@ -27,7 +25,6 @@ except ImportError:
         DiscoveredNode,
         run_discovery,
         host_ss_listeners,
-        _has_listener,
         _ensure_host_id,
     )
 

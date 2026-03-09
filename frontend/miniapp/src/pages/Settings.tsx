@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
+import { AccountSummaryHero, DangerZone, SessionMissing } from "@/components";
 import {
   Skeleton,
   Modal,
@@ -7,8 +8,6 @@ import {
   PageFrame,
   PageHeaderBadge,
   PageSection,
-  AccountSummaryHero,
-  DangerZone,
   FormField,
   MissionAlert,
   MissionCard,
@@ -19,16 +18,13 @@ import {
   MissionSecondaryButton,
   MissionSecondaryLink,
   SegmentedControl,
-  SessionMissing,
   SettingsCard,
   SettingsDivider,
-  IconSmartphone,
   IconCreditCard,
-  IconGlobe,
   IconUsers,
-  IconHelpCircle,
   IconUser,
   Button,
+  ButtonRow,
   FallbackScreen,
 } from "@/design-system";
 import { useTelegramHaptics } from "@/hooks/useTelegramHaptics";
@@ -85,7 +81,7 @@ export function SettingsPage() {
         memberSince={model.accountSummary.memberSince}
         className="stagger-1"
       />
-      <PageSection title="Account" className="stagger-2">
+      <PageSection title="Profile" className="stagger-2">
         <SettingsCard className="stagger-3 settings-page module-card">
           {model.profileIncomplete && (
             <MissionAlert
@@ -102,8 +98,8 @@ export function SettingsPage() {
             tone="blue"
             iconTone="blue"
             icon={<IconUser size={20} strokeWidth={1.6} />}
-            title="Edit profile"
-            description="Name, email, phone"
+            title="Profile"
+            description="Edit name, email, phone"
             showChevron
             className={profileEditing ? "op-expanded" : ""}
             onClick={() => {
@@ -118,7 +114,7 @@ export function SettingsPage() {
               }
             }}
             aria-expanded={profileEditing}
-            aria-label={profileEditing ? "Collapse profile form" : "Edit profile"}
+            aria-label={profileEditing ? "Collapse profile form" : "Profile"}
           />
           {profileEditing && (
             <>
@@ -164,30 +160,33 @@ export function SettingsPage() {
                   />
                 }
               />
-              <div className="btn-row settings-profile-actions">
+              <ButtonRow className="settings-profile-actions">
                 <MissionPrimaryButton
                   onClick={() => {
                     impact("light");
                     model.saveProfile();
                     setProfileEditing(false);
                   }}
-                  disabled={model.updateProfileMutation.isPending}
+                  disabled={model.isSavingProfile}
                 >
-                  {model.updateProfileMutation.isPending ? "Saving…" : "Save profile"}
+                  {model.isSavingProfile ? "Saving…" : "Save profile"}
                 </MissionPrimaryButton>
-              </div>
+              </ButtonRow>
             </>
           )}
-          <SettingsDivider />
+        </SettingsCard>
+      </PageSection>
+      <PageSection title="Preferences" className="stagger-3">
+        <SettingsCard className="stagger-4 settings-page module-card">
           <div className="field-group">
             <div className="field-label">Language</div>
             <SegmentedControl
               options={model.profileLocaleOptions.map((o) => ({ id: o.id, label: o.label }))}
-              activeId={model.profileLocale}
+              activeId={model.profileLocale === model.effectiveTelegramLocale ? "auto" : model.profileLocale}
               onSelect={(id) => {
                 impact("light");
                 model.setProfileLocale(id as typeof model.profileLocale);
-                model.updateProfileMutation.mutate({ locale: id });
+                model.handleUpdateLocale(id as typeof model.profileLocale);
               }}
               ariaLabel="Language"
             />
@@ -195,68 +194,35 @@ export function SettingsPage() {
           <SettingsDivider />
           <div className="data-cell">
             <div className="dc-key">Notifications</div>
-            <div className="dc-val">Bot reminders</div>
+            <div className="dc-val">VPN notifications</div>
           </div>
         </SettingsCard>
       </PageSection>
-      <PageSection title="Quick links" className="stagger-4">
-      <div className="stagger-5 ops settings-ops">
-        <MissionOperationLink
-          to="/devices"
-          state={{ from: location.pathname }}
-          tone="blue"
-          iconTone="blue"
-          icon={<IconSmartphone size={20} strokeWidth={1.6} />}
-          title="Devices"
-          description={model.activeDevices.length > 0 ? `${model.activeDevices.length} active` : "No active devices"}
-          onClick={() => impact("light")}
-          aria-label="Devices"
-        />
-        <MissionOperationLink
-          to="/plan"
-          state={{ from: location.pathname }}
-          tone="green"
-          iconTone="green"
-          icon={<IconCreditCard size={20} strokeWidth={1.6} />}
-          title="Plans & billing"
-          description="Subscription and renewals"
-          onClick={() => impact("light")}
-          aria-label="Plans and billing"
-        />
-        <MissionOperationLink
-          to="/servers"
-          state={{ from: location.pathname }}
-          tone="amber"
-          iconTone="amber"
-          icon={<IconGlobe size={20} strokeWidth={1.6} />}
-          title="Change server"
-          description="Route and region"
-          onClick={() => impact("light")}
-          aria-label="Change server"
-        />
-        <MissionOperationLink
-          to="/referral"
-          state={{ from: location.pathname }}
-          tone="blue"
-          iconTone="blue"
-          icon={<IconUsers size={20} strokeWidth={1.6} />}
-          title="Referral link"
-          description="Invite and earn rewards"
-          onClick={() => impact("light")}
-          aria-label="Referral link"
-        />
-        <MissionOperationLink
-          to="/support"
-          state={{ from: location.pathname }}
-          tone="red"
-          iconTone="red"
-          icon={<IconHelpCircle size={20} strokeWidth={1.6} />}
-          title="Support"
-          description="Connection help"
-          onClick={() => impact("light")}
-          aria-label="Support"
-        />
-      </div>
+      <PageSection title="Account tools" className="stagger-4">
+        <div className="stagger-5 ops settings-ops">
+          <MissionOperationLink
+            to="/referral"
+            state={{ from: location.pathname }}
+            tone="blue"
+            iconTone="blue"
+            icon={<IconUsers size={20} strokeWidth={1.6} />}
+            title="Invite friends"
+            description="Earn free VPN time"
+            onClick={() => impact("light")}
+            aria-label="Invite friends"
+          />
+          <MissionOperationLink
+            to="/plan"
+            state={{ from: location.pathname }}
+            tone="green"
+            iconTone="green"
+            icon={<IconCreditCard size={20} strokeWidth={1.6} />}
+            title="Billing details"
+            description="Subscription and renewals"
+            onClick={() => impact("light")}
+            aria-label="Billing details"
+          />
+        </div>
       </PageSection>
 
       {model.offersLoading ? (
@@ -272,57 +238,61 @@ export function SettingsPage() {
             title="Subscription options unavailable"
             message="Subscription options could not be loaded. Try again later."
           />
-          <div className="btn-row">
+          <ButtonRow>
             <MissionSecondaryButton onClick={model.refetchOffers}>Try again</MissionSecondaryButton>
-          </div>
+          </ButtonRow>
         </PageCardSection>
       ) : null}
       {model.offers && !model.offersError && (model.offers.can_pause || model.offers.can_resume) ? (
         <PageCardSection
-          title="Subscription operations"
-          description={`Loyalty discount ${model.offers.discount_percent}%`}
-          action={<MissionChip tone={model.offersBadge.tone} className="section-meta-chip miniapp-tnum">{model.offersBadge.label}</MissionChip>}
+          title="Subscription"
+          description={model.offers.discount_percent ? `Loyalty discount ${model.offers.discount_percent}%` : undefined}
+          action={model.offers.discount_percent != null ? <MissionChip tone={model.offersBadge.tone} className="section-meta-chip miniapp-tnum">{model.offersBadge.label}</MissionChip> : undefined}
           className="settings-section settings-section--subscription"
           cardTone="amber"
         >
-          <div className="btn-row">
-            <MissionSecondaryButton disabled={!model.offers.can_pause || model.pauseMutation.isPending} onClick={() => model.pauseMutation.mutate()}>
-              {model.pauseMutation.isPending ? "Pausing…" : "Pause"}
-            </MissionSecondaryButton>
-            <MissionSecondaryButton disabled={!model.offers.can_resume || model.resumeMutation.isPending} onClick={() => model.resumeMutation.mutate()}>
-              {model.resumeMutation.isPending ? "Resuming…" : "Resume"}
-            </MissionSecondaryButton>
-          </div>
-          <MissionPrimaryButton tone="danger" onClick={() => model.openCancelFlow()} disabled={model.cancelMutation.isPending}>
+          <ButtonRow>
+            {model.offers.can_pause ? (
+              <MissionPrimaryButton disabled={model.isPausing} onClick={model.handlePause}>
+                {model.isPausing ? "Pausing…" : "Pause subscription"}
+              </MissionPrimaryButton>
+            ) : model.offers.can_resume ? (
+              <MissionPrimaryButton disabled={model.isResuming} onClick={model.handleResume}>
+                {model.isResuming ? "Resuming…" : "Resume subscription"}
+              </MissionPrimaryButton>
+            ) : null}
+          </ButtonRow>
+          <MissionSecondaryButton onClick={() => model.openCancelFlow()} disabled={model.isCancelling}>
             Cancel subscription
-          </MissionPrimaryButton>
+          </MissionSecondaryButton>
         </PageCardSection>
       ) : null}
 
       {model.activeDevices.length > 0 ? (
         <DangerZone
-          title="Reset configs"
+          title="Reset VPN configs"
           description="Revoke all device configs. You will need to add devices again."
           buttonLabel="Reset all configs"
           confirmTitle="Reset all configs?"
           confirmMessage="This will revoke every device config. You can add new devices afterward."
           confirmLabel="Reset"
           cancelLabel="Cancel"
-          onConfirm={() => model.revokeAllMutation.mutate()}
-          loading={model.revokeAllMutation.isPending}
+          expectedConfirmValue="RESET"
+          onConfirm={model.handleRevokeAll}
+          loading={model.isRevoking}
         />
       ) : null}
 
       <Modal
         open={model.cancelOpen}
-        onClose={() => !model.cancelMutation.isPending && model.setCancelOpen(false)}
+        onClose={() => !model.isCancelling && model.setCancelOpen(false)}
         title="Cancel subscription?"
         description="Pick a reason and choose how to proceed."
         footer={
           <Button
             type="button"
             variant="ghost"
-            onClick={() => !model.cancelMutation.isPending && model.setCancelOpen(false)}
+            onClick={() => !model.isCancelling && model.setCancelOpen(false)}
           >
             Keep subscription
           </Button>
@@ -352,13 +322,13 @@ export function SettingsPage() {
               <MissionSecondaryLink to="/plan">Switch to a cheaper plan</MissionSecondaryLink> instead of cancelling.
             </p>
           )}
-          <div className="btn-row cancel-flow-actions">
+          <ButtonRow className="cancel-flow-actions">
             {(model.offers?.offer_pause ?? model.offers?.can_pause) && (
               <MissionSecondaryButton
                 onClick={() => model.handleCancelAction({ pause_instead: true, offer_accepted: false })}
-                disabled={model.cancelMutation.isPending}
+                disabled={model.isCancelling}
               >
-                {model.cancelMutation.isPending ? "…" : "Pause instead"}
+                {model.isCancelling ? "…" : "Pause instead"}
               </MissionSecondaryButton>
             )}
             <MissionSecondaryButton
@@ -368,9 +338,9 @@ export function SettingsPage() {
                   offer_accepted: !!(model.offers?.offer_discount ?? model.offers?.discount_percent),
                 })
               }
-              disabled={model.cancelMutation.isPending}
+              disabled={model.isCancelling}
             >
-              {model.cancelMutation.isPending ? "…" : "Cancel at period end"}
+              {model.isCancelling ? "…" : "Cancel at period end"}
             </MissionSecondaryButton>
             <MissionPrimaryButton
               tone="danger"
@@ -380,11 +350,11 @@ export function SettingsPage() {
                   offer_accepted: false,
                 })
               }
-              disabled={model.cancelMutation.isPending}
+              disabled={model.isCancelling}
             >
-              {model.cancelMutation.isPending ? "…" : "Cancel now"}
+              {model.isCancelling ? "…" : "Cancel now"}
             </MissionPrimaryButton>
-          </div>
+          </ButtonRow>
         </div>
       </Modal>
     </PageFrame>

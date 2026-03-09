@@ -8,7 +8,7 @@ import type {
 import { Link, type LinkProps } from "react-router-dom";
 import { Button } from "../components/buttons/Button";
 import type { ButtonTone } from "../components/buttons/Button";
-import { getPercentClass } from "@/lib/percentClass";
+import { percentClass } from "@/lib/percentClass";
 
 export type MissionTone = "blue" | "green" | "amber" | "red";
 export type MissionChipTone = "neutral" | "blue" | "green" | "amber" | "red";
@@ -319,7 +319,7 @@ export function MissionProgressBar({
     "h-fill",
     staticFill && "static",
     HEALTH_FILL_CLASS_MAP[tone],
-    getPercentClass(normalizedPercent),
+    percentClass(normalizedPercent),
   );
 
   return (

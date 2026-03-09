@@ -3,10 +3,11 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
   WebAppCreateInvoiceResponse,
-  WebAppMeResponse,
   WebAppPaymentStatusOut,
 } from "@vpn-suite/shared";
-import { webappApi, useWebappToken } from "@/api/client";
+import { getMe, getPlans } from "@/api";
+import { useWebappToken, webappApi } from "@/api/client";
+import type { PlansResponse } from "@/api";
 import { useHideKeyboard } from "@/hooks/useHideKeyboard";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { usePayments } from "@/hooks/features/usePayments";
@@ -15,28 +16,39 @@ import { useTelegramMainButton } from "@/hooks/useTelegramMainButton";
 import { useTelemetry } from "@/hooks/useTelemetry";
 import { useTrackScreen } from "@/hooks/useTrackScreen";
 import { webappQueryKeys } from "@/lib/query-keys/webapp.query-keys";
+import type { PromoErrorCode } from "./promoTypes";
 import type { StandardPageHeader, StandardPageState, StandardSectionBadge } from "./types";
 
 const POLL_INTERVAL_MS = 2500;
 const POLL_TIMEOUT_MS = 5 * 60 * 1000;
 
 type PaymentPhase = "idle" | "creating_invoice" | "waiting" | "success" | "error" | "timeout";
+type PromoStatus = "idle" | "validating" | "valid" | "invalid";
 type PromoErrorAction = "clear" | "retry";
 
-function resolvePromoValidationError(err: unknown): { message: string; action: PromoErrorAction } {
+function resolvePromoValidationError(err: unknown): { message: string; action: PromoErrorAction; code: PromoErrorCode | null } {
   const e = err as Error & { code?: string };
+  const code: PromoErrorCode | null =
+    e?.code && ["PROMO_NOT_FOUND", "PROMO_INACTIVE", "PROMO_EXPIRED", "PROMO_PLAN_INELIGIBLE", "PROMO_ALREADY_USED", "PROMO_EXHAUSTED"].includes(e.code)
+      ? (e.code as PromoErrorCode)
+      : null;
   switch (e?.code) {
     case "PROMO_EXPIRED":
-      return { message: "Promo expired for this plan. Remove the code and continue checkout.", action: "clear" };
+      return { message: "Promo expired for this plan. Remove the code and continue checkout.", action: "clear", code: "PROMO_EXPIRED" };
     case "PROMO_ALREADY_USED":
-      return { message: "This promo was already used on your account. Remove it and continue checkout.", action: "clear" };
+      return { message: "This promo was already used on your account. Remove it and continue checkout.", action: "clear", code: "PROMO_ALREADY_USED" };
     case "PROMO_NOT_FOUND":
-      return { message: "Promo code not found for this plan. Check spelling or remove it to continue.", action: "clear" };
+      return { message: "Promo code not found for this plan. Check spelling or remove it to continue.", action: "clear", code: "PROMO_NOT_FOUND" };
+    case "PROMO_INACTIVE":
+    case "PROMO_EXHAUSTED":
+      return { message: "Code unavailable.", action: "clear", code: code ?? "PROMO_INACTIVE" };
+    case "PROMO_PLAN_INELIGIBLE":
+      return { message: "Not valid for this plan.", action: "retry", code: "PROMO_PLAN_INELIGIBLE" };
     case "NETWORK_UNREACHABLE":
     case "TIMEOUT":
-      return { message: "Cannot validate promo right now. Check your connection and try again.", action: "retry" };
+      return { message: "Cannot validate promo right now. Check your connection and try again.", action: "retry", code: null };
     default:
-      return { message: "Promo code is invalid for the selected plan. Check the code and try again.", action: "retry" };
+      return { message: "Promo code is invalid for the selected plan. Check the code and try again.", action: "retry", code: null };
   }
 }
 
@@ -48,9 +60,14 @@ export function useCheckoutPageModel() {
   const hasToken = !!useWebappToken();
   const isOnline = useOnlineStatus();
   const [promoCode, setPromoCode] = useState("");
+  const [promoStatus, setPromoStatus] = useState<PromoStatus>("idle");
   const [promoError, setPromoError] = useState("");
+  const [promoErrorCode, setPromoErrorCode] = useState<PromoErrorCode | null>(null);
   const [promoErrorAction, setPromoErrorAction] = useState<PromoErrorAction>("retry");
   const [promoPreview, setPromoPreview] = useState<{ description: string } | null>(null);
+  const [discountXtr, setDiscountXtr] = useState<number | null>(null);
+  const [discountedPriceXtr, setDiscountedPriceXtr] = useState<number | null>(null);
+  const [displayLabel, setDisplayLabel] = useState<string | null>(null);
   const [confirmationStep, setConfirmationStep] = useState(false);
   const [phase, setPhase] = useState<PaymentPhase>("idle");
   const [errorMessage, setErrorMessage] = useState("");
@@ -66,14 +83,14 @@ export function useCheckoutPageModel() {
   const navigateToNextStep = useCallback(async () => {
     const session = await queryClient.fetchQuery({
       queryKey: [...webappQueryKeys.me()],
-      queryFn: () => webappApi.get<WebAppMeResponse>("/webapp/me"),
+      queryFn: getMe,
     });
     navigate(session.routing?.recommended_route ?? "/plan", { replace: true });
   }, [navigate, queryClient]);
 
-  const { data: plansData, isLoading: plansLoading, error: plansError, refetch: refetchPlans } = useQuery({
+  const { data: plansData, isLoading: plansLoading, error: plansError, refetch: refetchPlans } = useQuery<PlansResponse>({
     queryKey: [...webappQueryKeys.plans()],
-    queryFn: () => webappApi.get<{ items: { id: string; name?: string; duration_days?: number; price_amount: number; device_limit?: number }[] }>("/webapp/plans"),
+    queryFn: getPlans,
     enabled: hasToken && !!selectedPlanId,
   });
 
@@ -85,26 +102,33 @@ export function useCheckoutPageModel() {
   const planDeviceLimit = selectedPlan?.device_limit ?? 1;
 
   const validatePromo = useMutation({
-    mutationFn: async (): Promise<{ valid: boolean; description?: string }> => {
+    mutationFn: async (): Promise<{ valid: true; discount_xtr: number; discounted_price_xtr: number; display_label: string }> => {
       if (!selectedPlanId) throw new Error("Plan is missing");
-      return webappApi.post<{ valid: boolean; description?: string }>("/webapp/promo/validate", {
+      return webappApi.post("/webapp/promo/validate", {
         code: promoCode.trim(),
         plan_id: selectedPlanId,
       });
     },
+    onMutate: () => setPromoStatus("validating"),
     onSuccess: (data) => {
-      if (data.valid) {
-        setPromoPreview(data.description ? { description: data.description } : null);
-        setPromoError("");
-      } else {
-        setPromoError("Promo code is invalid for the selected plan. Check the code and try again.");
-        setPromoErrorAction("retry");
-      }
+      setPromoStatus("valid");
+      setPromoError("");
+      setPromoErrorCode(null);
+      setPromoPreview({ description: data.display_label });
+      setDiscountXtr(data.discount_xtr);
+      setDiscountedPriceXtr(data.discounted_price_xtr);
+      setDisplayLabel(data.display_label);
     },
     onError: (err) => {
       const resolved = resolvePromoValidationError(err);
+      setPromoStatus("invalid");
       setPromoError(resolved.message);
+      setPromoErrorCode(resolved.code);
       setPromoErrorAction(resolved.action);
+      setPromoPreview(null);
+      setDiscountXtr(null);
+      setDiscountedPriceXtr(null);
+      setDisplayLabel(null);
     },
   });
 
@@ -113,11 +137,28 @@ export function useCheckoutPageModel() {
       setPromoCode("");
       setPromoPreview(null);
       setPromoError("");
+      setPromoErrorCode(null);
       setPromoErrorAction("retry");
+      setPromoStatus("idle");
+      setDiscountXtr(null);
+      setDiscountedPriceXtr(null);
+      setDisplayLabel(null);
       return;
     }
     if (!selectedPlanId || !promoCode.trim()) return;
     validatePromo.mutate();
+  };
+
+  const handlePromoRemove = () => {
+    setPromoCode("");
+    setPromoPreview(null);
+    setPromoError("");
+    setPromoErrorCode(null);
+    setPromoErrorAction("retry");
+    setPromoStatus("idle");
+    setDiscountXtr(null);
+    setDiscountedPriceXtr(null);
+    setDisplayLabel(null);
   };
 
   const stopPolling = useCallback(() => {
@@ -177,7 +218,7 @@ export function useCheckoutPageModel() {
     mutationFn: async () => {
       if (!selectedPlanId) throw new Error("Plan is missing");
       const body: { plan_id: string; promo_code?: string } = { plan_id: selectedPlanId };
-      if (promoCode.trim()) body.promo_code = promoCode.trim();
+      if (promoStatus === "valid" && promoCode.trim()) body.promo_code = promoCode.trim();
       return webappApi.post<WebAppCreateInvoiceResponse>("/webapp/payments/create-invoice", body);
     },
     onMutate: () => {
@@ -260,7 +301,17 @@ export function useCheckoutPageModel() {
           ? "Pending"
           : "Ready";
 
-  useTelegramMainButton(null);
+  useTelegramMainButton(
+    confirmationStep && !phase.match(/success|error|timeout/)
+      ? {
+          text: isFreePlan ? "Activate plan" : "Pay with Telegram Stars",
+          visible: true,
+          enabled: !!planId && !!hasToken && isOnline && phase !== "waiting" && !createInvoice.isPending,
+          loading: createInvoice.isPending || phase === "waiting",
+          onClick: handlePay,
+        }
+      : null,
+  );
 
   const header: StandardPageHeader = {
     title: "Checkout",
@@ -304,9 +355,14 @@ export function useCheckoutPageModel() {
     planDisplayName,
     planPriceStars,
     promoCode,
+    promoStatus,
     promoError,
+    promoErrorCode,
     promoErrorAction,
     promoPreview,
+    discountXtr,
+    discountedPriceXtr,
+    displayLabel,
     phase,
     errorMessage,
     paymentBadge,
@@ -314,13 +370,20 @@ export function useCheckoutPageModel() {
     isValidatingPromo: validatePromo.isPending,
     setPromoCode: (value: string) => {
       setPromoCode(value);
-      if (promoError) {
+      if (promoError || promoStatus === "valid" || promoStatus === "invalid") {
         setPromoError("");
+        setPromoErrorCode(null);
         setPromoErrorAction("retry");
+        setPromoStatus("idle");
+        setPromoPreview(null);
+        setDiscountXtr(null);
+        setDiscountedPriceXtr(null);
+        setDisplayLabel(null);
       }
     },
     applyPromo: () => validatePromo.mutate(),
     handlePromoRecovery,
+    handlePromoRemove,
     handlePay,
     handleRetry,
     confirmationStep,

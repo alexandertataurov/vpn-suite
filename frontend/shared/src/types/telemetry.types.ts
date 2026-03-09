@@ -46,6 +46,9 @@ export type WebappTelemetryEventType =
   | "profile_updated"
   | "upsell_impression"
   | "upsell_clicked"
+  | "upsell_dismissed"
+  | "upsell_suppressed"
+  | "upsell_evaluated"
   | "web_vital";
 
 export interface WebappTelemetryPayloadBase {
@@ -96,6 +99,18 @@ export interface WebappTelemetryEventMap {
   profile_updated: WebappTelemetryPayloadBase & { screen_name?: string };
   upsell_impression: WebappTelemetryPayloadBase & { trigger: string; screen_name?: string };
   upsell_clicked: WebappTelemetryPayloadBase & { trigger: string; screen_name?: string };
+  upsell_dismissed: WebappTelemetryPayloadBase & { trigger: string; screen_name?: string };
+  upsell_suppressed: WebappTelemetryPayloadBase & {
+    trigger: string;
+    screen_name?: string;
+    suppression_reason?: string;
+  };
+  upsell_evaluated: WebappTelemetryPayloadBase & {
+    trigger: string;
+    screen_name?: string;
+    reason?: string;
+    show?: boolean;
+  };
   web_vital: WebVitalTelemetryPayload;
 }
 
@@ -142,6 +157,9 @@ export type MiniappEventName =
   | "miniapp.profile_updated"
   | "miniapp.upsell_impression"
   | "miniapp.upsell_clicked"
+  | "miniapp.upsell_dismissed"
+  | "miniapp.upsell_suppressed"
+  | "miniapp.upsell_evaluated"
   | "miniapp.web_vital";
 
 export type AdminEventName =

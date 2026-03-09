@@ -272,9 +272,7 @@ async def test_webapp_auth_persists_tg_requisites_in_meta(
 
 
 @pytest.mark.asyncio
-async def test_webapp_me_patch_updates_profile(
-    client: AsyncClient, monkeypatch, async_session
-):
+async def test_webapp_me_patch_updates_profile(client: AsyncClient, monkeypatch, async_session):
     """PATCH /api/v1/webapp/me with Bearer updates user profile (email, phone, display_name, locale)."""
     from sqlalchemy import select
 

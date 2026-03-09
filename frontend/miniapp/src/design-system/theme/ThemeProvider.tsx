@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useMemo, useEffect, type ReactNode } from "react";
 
+/** Miniapp uses consumer-dark | consumer-light. primitives, starlink, dim are legacy/admin. */
 export type Theme =
   | "dark"
   | "light"

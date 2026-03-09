@@ -40,7 +40,9 @@ async def seed(session: AsyncSession) -> None:
     plan_result = await session.execute(select(Plan).order_by(Plan.created_at.asc()).limit(1))
     plan = plan_result.scalar_one_or_none()
     if not plan:
-        logger.warning("No plan in DB; create at least one plan via Admin UI (or run seed-plans with PLAN_* set). Skipping system subscription.")
+        logger.warning(
+            "No plan in DB; create at least one plan via Admin UI (or run seed-plans with PLAN_* set). Skipping system subscription."
+        )
         return
 
     result = await session.execute(

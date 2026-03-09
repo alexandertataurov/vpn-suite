@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Textarea } from "./Textarea";
-import { StoryStack, NarrowFrame } from "@/lib/storybook/wrappers";
-import { storyText } from "@/lib/storybook/fixtures";
+import { StoryStack, NarrowFrame } from "@/storybook/wrappers";
+import { storyText } from "@/storybook/fixtures";
 
 const meta: Meta<typeof Textarea> = {
   title: "Shared/Primitives/Textarea",
