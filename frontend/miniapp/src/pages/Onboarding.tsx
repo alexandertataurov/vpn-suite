@@ -3,21 +3,22 @@
  * No page-model: uses useBootstrapContext, useSession, webappApi directly.
  * Runs before app_ready; bootstrap owns auth/session. See page-models README for convention.
  */
-import { useCallback, useEffect, useMemo, useRef, useState, type TouchEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  IconShield,
-  IconSmartphone,
+  IconDownload,
   IconGlobe,
+  IconShield,
   PageFrame,
   PageSection,
   MissionAlert,
   MissionCard,
   MissionModuleHead,
   MissionPrimaryButton,
-  MissionProgressBar,
   MissionPrimaryLink,
   MissionSecondaryButton,
   MissionSecondaryLink,
+  StickyBottomBar,
+  Button,
   ButtonRow,
   useToast,
 } from "@/design-system";
@@ -30,48 +31,48 @@ import { useTelegramWebApp } from "@/hooks/useTelegramWebApp";
 import { webappQueryKeys } from "@/lib/query-keys/webapp.query-keys";
 import { getActiveDevices } from "@/page-models";
 import { useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import appStoreBadgeUrl from "@/assets/badges/app-store-badge.svg";
 import googlePlayBadgeUrl from "@/assets/badges/google-play-badge.png";
 import { telegramBotUsername } from "@/config/env";
+import { useI18n } from "@/hooks/useI18n";
 
 const IOS_APP_URL = "https://apps.apple.com/app/amneziavpn/id1600529900";
 const ANDROID_APP_URL = "https://play.google.com/store/apps/details?id=org.amnezia.vpn";
 
-export type OnboardingPlatform = "ios" | "android" | "other";
-
-// 3 outcome-based steps per spec §8.2
 const ONBOARDING_STEPS = [
   {
-    id: "choose_device",
-    title: "Install AmneziaVPN",
-    body: "Download the app for your device. Tap your store below, then return here.",
-    cta: "Next",
-    icon: IconSmartphone,
+    id: "intro",
+    titleKey: "onboarding.step_intro_title",
+    bodyKey: "onboarding.step_intro_body",
+    ctaKey: "onboarding.step_intro_cta",
+    icon: IconShield,
   },
   {
-    id: "get_config",
-    title: "Get your config",
-    body: "1) Plan → Devices → Issue device. 2) Copy or download the .conf. 3) In AmneziaVPN: Add configuration → Import file or paste. Config is shown once — save it.",
-    bodyAlreadyInstalled: "Devices → Issue device. Copy or download the config. In AmneziaVPN: Add configuration → Import file or paste. Save it; it only appears once.",
-    cta: "Next",
+    id: "install_app",
+    titleKey: "onboarding.step_install_title",
+    bodyKey: "onboarding.step_install_body",
+    ctaKey: "onboarding.step_install_cta",
     icon: IconGlobe,
   },
   {
+    id: "get_config",
+    titleKey: "onboarding.step_get_config_title",
+    bodyKey: "onboarding.step_get_config_body",
+    ctaKey: "onboarding.choose_plan",
+    icon: IconDownload,
+  },
+  {
     id: "confirm_connected",
-    title: "Confirm connected",
-    body: "Once the VPN is connected, confirm here.",
-    cta: "I'm connected",
-    icon: IconShield,
+    titleKey: "onboarding.step_confirm_title",
+    bodyKey: "onboarding.step_confirm_body",
+    ctaKey: "onboarding.step_confirm_primary",
+    icon: IconGlobe,
   },
 ] as const;
 
-const PLATFORM_LABELS: Record<OnboardingPlatform, string> = {
-  ios: "iPhone / iPad",
-  android: "Android",
-  other: "Other device",
-};
-
 export function OnboardingPage() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: session } = useSession(true);
   const { track } = useTelemetry(null);
@@ -81,27 +82,25 @@ export function OnboardingPage() {
     useBootstrapContext();
   const { addToast } = useToast();
   const [isAdvancing, setIsAdvancing] = useState(false);
-  const [touchStartX, setTouchStartX] = useState<number | null>(null);
-  const [selectedPlatform, setSelectedPlatform] = useState<OnboardingPlatform | null>(null);
   const [appAlreadyInstalled, setAppAlreadyInstalled] = useState(false);
   const completedThisSessionRef = useRef(false);
   const lastStepIndexRef = useRef(0);
 
   const user = session?.user ?? null;
   const displayName = (user?.display_name ?? "").trim() || "there";
-  const photoUrl = (user?.photo_url ?? "").trim() || undefined;
 
   const stepIndex = useMemo(
     () => Math.max(0, Math.min(ONBOARDING_STEPS.length - 1, onboardingStep)),
     [onboardingStep],
   );
   const step = ONBOARDING_STEPS[stepIndex] ?? ONBOARDING_STEPS[0];
+  const StepIcon = step.icon;
 
-  // Funnel: onboarding_started (once), onboarding_step_viewed (per step)
   useEffect(() => {
     if (session == null) return;
     track("onboarding_started", {});
   }, []); // eslint-disable-line react-hooks/exhaustive-deps -- fire once on mount
+
   useEffect(() => {
     track("onboarding_step_viewed", { step: stepIndex, step_id: step.id });
   }, [stepIndex, step.id, track]);
@@ -120,22 +119,7 @@ export function OnboardingPage() {
   const isLastStep = stepIndex === ONBOARDING_STEPS.length - 1;
   const activeDevices = useMemo(() => getActiveDevices(session), [session]);
   const hasActiveDevice = activeDevices.length > 0;
-  const progressValue = ((stepIndex + 1) / ONBOARDING_STEPS.length) * 100;
-  const StepIcon = step.icon;
-
-  const step2Body = useMemo(() => {
-    if (step.id !== "get_config") return step.body;
-    if (appAlreadyInstalled && "bodyAlreadyInstalled" in step) {
-      return (step as (typeof ONBOARDING_STEPS)[1]).bodyAlreadyInstalled;
-    }
-    const platformHint =
-      selectedPlatform === "ios"
-        ? "On iPhone or iPad: "
-        : selectedPlatform === "android"
-          ? "On Android: "
-          : "";
-    return platformHint ? `${platformHint}${step.body}` : step.body;
-  }, [step, selectedPlatform, appAlreadyInstalled]);
+  const isConfigStep = step.id === "get_config";
 
   const botAppLink = telegramBotUsername ? `https://t.me/${telegramBotUsername}` : "";
 
@@ -152,31 +136,76 @@ export function OnboardingPage() {
     }
   }, [session, queryClient]);
 
-  const handlePrimaryAction = async () => {
-    if (isLastStep) {
-      completedThisSessionRef.current = true;
-      if (hasActiveDevice) {
-        await confirmConnected();
+  const withAdvance = useCallback(
+    async (action: () => Promise<void>) => {
+      if (isCompletingOnboarding || isAdvancing) return;
+      setIsAdvancing(true);
+      try {
+        await action();
+      } finally {
+        setIsAdvancing(false);
       }
-      const result = await completeOnboarding();
-      if (result?.done) {
-        if (!result.synced) {
-          addToast("Progress saved locally; we'll sync when back online.", "info");
-        }
-        if (botAppLink && !isInsideTelegram) openLink(botAppLink);
-      }
+    },
+    [isAdvancing, isCompletingOnboarding],
+  );
+
+  const goToStep = useCallback(
+    async (nextStep: number) => {
+      track("onboarding_step_completed", { step: stepIndex });
+      await setOnboardingStep(nextStep);
+    },
+    [setOnboardingStep, stepIndex, track],
+  );
+
+  const handlePrimaryAction = useCallback(async () => {
+    if (step.id === "intro") {
+      await withAdvance(async () => {
+        await goToStep(1);
+      });
       return;
     }
-    setIsAdvancing(true);
-    try {
-      track("onboarding_step_completed", { step: stepIndex });
-      await setOnboardingStep(stepIndex + 1);
-    } finally {
-      setIsAdvancing(false);
-    }
-  };
 
-  const handleSkipForNow = async () => {
+    if (step.id === "install_app") {
+      await withAdvance(async () => {
+        await goToStep(2);
+      });
+      return;
+    }
+
+    if (step.id === "get_config") {
+      await withAdvance(async () => {
+        await goToStep(3);
+        navigate("/plan", { state: { fromOnboarding: true } });
+      });
+      return;
+    }
+
+    completedThisSessionRef.current = true;
+    if (hasActiveDevice) {
+      await confirmConnected();
+    }
+    const result = await completeOnboarding();
+    if (result?.done) {
+      if (!result.synced) {
+        addToast("Progress saved locally; we'll sync when back online.", "info");
+      }
+      if (botAppLink && !isInsideTelegram) openLink(botAppLink);
+    }
+  }, [
+    addToast,
+    botAppLink,
+    completeOnboarding,
+    confirmConnected,
+    goToStep,
+    hasActiveDevice,
+    isInsideTelegram,
+    navigate,
+    openLink,
+    step.id,
+    withAdvance,
+  ]);
+
+  const handleSkipForNow = useCallback(async () => {
     if (!isLastStep) return;
     completedThisSessionRef.current = true;
     const result = await completeOnboarding();
@@ -186,245 +215,302 @@ export function OnboardingPage() {
       }
       if (botAppLink && !isInsideTelegram) openLink(botAppLink);
     }
-  };
+  }, [addToast, botAppLink, completeOnboarding, isInsideTelegram, isLastStep, openLink]);
 
-  const handleBack = async () => {
-    if (stepIndex <= 0 || isCompletingOnboarding || isAdvancing) return;
-    setIsAdvancing(true);
-    try {
+  const handleBack = useCallback(async () => {
+    if (stepIndex <= 0) return;
+    await withAdvance(async () => {
       await setOnboardingStep(stepIndex - 1);
-    } finally {
-      setIsAdvancing(false);
-    }
-  };
+    });
+  }, [setOnboardingStep, stepIndex, withAdvance]);
 
-  const handleTouchStart = (event: TouchEvent<HTMLDivElement>) => {
-    if (event.touches.length !== 1 || isCompletingOnboarding || isAdvancing) return;
-    setTouchStartX(event.touches[0]?.clientX ?? null);
-  };
+  const handleChoosePlan = useCallback(async () => {
+    await withAdvance(async () => {
+      await goToStep(3);
+      navigate("/plan", { state: { fromOnboarding: true } });
+    });
+  }, [goToStep, navigate, withAdvance]);
+  const { t } = useI18n();
 
-  const handleTouchEnd = (event: TouchEvent<HTMLDivElement>) => {
-    if (touchStartX == null || isCompletingOnboarding || isAdvancing) return;
-    const deltaX = (event.changedTouches[0]?.clientX ?? touchStartX) - touchStartX;
-    const threshold = 40;
-    if (deltaX <= -threshold && !isLastStep) {
-      void handlePrimaryAction();
-    } else if (deltaX >= threshold && stepIndex > 0) {
-      void handleBack();
-    }
-    setTouchStartX(null);
-  };
+  const pageTitle = t("onboarding.page_title");
+  const pageSubtitle =
+    stepIndex === 0
+      ? t("onboarding.page_subtitle_intro", {
+          comma_name: displayName === "there" ? "" : `, ${displayName}`,
+        })
+      : step.id === "install_app"
+        ? t("onboarding.page_subtitle_install")
+      : step.id === "get_config"
+        ? t("onboarding.page_subtitle_get_config")
+        : t("onboarding.page_subtitle_confirm");
 
   return (
-    <PageFrame title="Welcome">
+    <PageFrame
+      title={pageTitle}
+      subtitle={pageSubtitle}
+      className="onboarding-page"
+      hideTrailingAction
+    >
       <PageSection>
-        <div className="onboarding-greeting">
-          <div className="onboarding-greeting-avatar" aria-hidden>
-            {photoUrl ? (
-              <img src={photoUrl} alt="" className="onboarding-greeting-avatar-img" />
-            ) : (
-              <span className="onboarding-greeting-initial">
-                {displayName !== "there" ? displayName.charAt(0).toUpperCase() : "?"}
-              </span>
-            )}
-          </div>
-          <h1 className="onboarding-greeting-title">
-            Hello, {displayName}!
-          </h1>
-          <p className="onboarding-greeting-desc">
-            Welcome to our VPN service. Follow the steps below to get connected.
-          </p>
-        </div>
-        <MissionCard
-          tone="blue"
-          className="module-card onboarding-card"
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
-        >
+        <MissionCard tone="blue" className="module-card onboarding-task-card">
           <MissionModuleHead
-            label={`Step ${stepIndex + 1} of ${ONBOARDING_STEPS.length}`}
+            label={t("onboarding.store_step_label", {
+              current: stepIndex + 1,
+              total: ONBOARDING_STEPS.length,
+            })}
           />
-          <div className="onboarding-manual stack">
-            <div className="onboarding-header">
-              <div className="onboarding-title-row">
-                <span className="onboarding-icon" aria-hidden>
-                  <StepIcon size={20} strokeWidth={1.6} />
+          <div className="onboarding-task-stack">
+            <div className="onboarding-task-header">
+              <div className="onboarding-task-title-row">
+                <span className="onboarding-task-icon" aria-hidden>
+                  <StepIcon size={18} strokeWidth={1.8} />
                 </span>
-                <h2 className="op-name type-h3">
-                  {step.title}
-                </h2>
+                <h2 className="op-name type-h3">{t(step.titleKey)}</h2>
               </div>
-              <p className="op-desc type-body-sm">
-                {step.id === "get_config" ? step2Body : step.body}
-              </p>
+              <p className="op-desc type-body-sm">{t(step.bodyKey)}</p>
             </div>
 
-            <div className="onboarding-visual">
-              {step.id === "choose_device" ? (
-                <div className="onboarding-store-visual">
-                  {selectedPlatform == null ? (
-                    <div className="onboarding-platform-choice" role="group" aria-label="Choose your device type">
-                      {(["ios", "android", "other"] as const).map((p) => (
-                        <MissionSecondaryButton
-                          key={p}
-                          type="button"
-                          onClick={() => setSelectedPlatform(p)}
-                          aria-pressed={selectedPlatform === p}
-                        >
-                          {PLATFORM_LABELS[p]}
-                        </MissionSecondaryButton>
-                      ))}
+            <div className="onboarding-setup-card">
+              <div className="onboarding-setup-head">
+                <h3 className="type-h2 onboarding-setup-title">{t("onboarding.setup_sequence_title")}</h3>
+                <p className="type-body onboarding-setup-summary">{t("onboarding.setup_sequence_summary")}</p>
+              </div>
+
+              <ol className="onboarding-progress-strip" aria-label={t("onboarding.steps_label")}>
+                {ONBOARDING_STEPS.map((item, index) => {
+                  const status =
+                    index < stepIndex ? "done" : index === stepIndex ? "current" : "upcoming";
+
+                  return (
+                    <li
+                      key={item.id}
+                      className={`onboarding-progress-step onboarding-progress-step--${status}`}
+                    >
+                      <span className="onboarding-progress-index" aria-hidden>
+                        {index + 1}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ol>
+
+              {step.id === "intro" ? (
+                <>
+                  <div className="onboarding-clean-block">
+                    <div className="onboarding-clean-head">
+                      <span className="onboarding-clean-index" aria-hidden>
+                        1
+                      </span>
+                      <div className="onboarding-clean-copy">
+                        <p className="type-h2 onboarding-clean-title">
+                          {t("onboarding.step_intro_title")}
+                        </p>
+                        <p className="type-body onboarding-clean-body">
+                          {t("onboarding.step_intro_body")}
+                        </p>
+                      </div>
                     </div>
-                  ) : null}
-                  {selectedPlatform === "ios" || selectedPlatform === "other" ? (
-                    <button
-                      type="button"
-                      className="store-badge-link"
-                      aria-label="Get AmneziaVPN on the App Store"
-                      onClick={() => openLink(IOS_APP_URL)}
-                    >
-                      <img src={appStoreBadgeUrl} alt="" className="store-badge store-badge--apple" />
-                    </button>
-                  ) : null}
-                  {selectedPlatform === "android" || selectedPlatform === "other" ? (
-                    <button
-                      type="button"
-                      className="store-badge-link"
-                      aria-label="Get AmneziaVPN on Google Play"
-                      onClick={() => openLink(ANDROID_APP_URL)}
-                    >
-                      <img src={googlePlayBadgeUrl} alt="" className="store-badge store-badge--google" />
-                    </button>
+                  </div>
+                  <MissionAlert
+                    tone="info"
+                    title={t("onboarding.connection_boundary_title")}
+                    message={t("onboarding.connection_boundary_message")}
+                  />
+                </>
+              ) : null}
+
+              {step.id === "install_app" ? (
+                <div className="onboarding-clean-block">
+                  <div className="onboarding-clean-head">
+                      <span className="onboarding-clean-index" aria-hidden>
+                        2
+                      </span>
+                      <div className="onboarding-clean-copy">
+                        <p className="type-h2 onboarding-clean-title">
+                          {t("onboarding.config_step_install_title")}
+                        </p>
+                        <p className="type-body onboarding-clean-body">
+                          {appAlreadyInstalled
+                            ? t("onboarding.install_copy_ready")
+                            : t("onboarding.config_step_install_body")}
+                      </p>
+                    </div>
+                  </div>
+
+                  {!appAlreadyInstalled ? (
+                    <div className="onboarding-install-panel">
+                      <div className="onboarding-store-badges">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="md"
+                          className="store-badge-link"
+                          aria-label={t("onboarding.appstore_aria")}
+                          onClick={() => openLink(IOS_APP_URL)}
+                        >
+                          <img src={appStoreBadgeUrl} alt="" className="store-badge store-badge--apple" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="md"
+                          className="store-badge-link"
+                          aria-label={t("onboarding.play_aria")}
+                          onClick={() => openLink(ANDROID_APP_URL)}
+                        >
+                          <img src={googlePlayBadgeUrl} alt="" className="store-badge store-badge--google" />
+                        </Button>
+                      </div>
+
+                      <MissionSecondaryButton
+                        type="button"
+                        onClick={() => setAppAlreadyInstalled(true)}
+                        className="onboarding-already-installed"
+                      >
+                        {t("onboarding.already_installed")}
+                      </MissionSecondaryButton>
+                    </div>
                   ) : null}
                 </div>
               ) : null}
+
               {step.id === "get_config" ? (
                 <>
-                  {!appAlreadyInstalled && (
-                    <MissionSecondaryButton
-                      type="button"
-                      onClick={() => setAppAlreadyInstalled(true)}
-                      className="onboarding-already-installed"
-                    >
-                      I already have AmneziaVPN
-                    </MissionSecondaryButton>
-                  )}
-                  <div className="onboarding-flow-diagram">
-                    <span>This app: Plan → Devices → Issue device</span>
-                    <span className="arrow">↓</span>
-                    <span>Copy config or download .conf</span>
-                    <span className="arrow">↓</span>
-                    <span>AmneziaVPN: Add configuration → Import file or paste</span>
+                  <div className="onboarding-clean-block">
+                    <div className="onboarding-clean-head">
+                      <span className="onboarding-clean-index" aria-hidden>
+                        3
+                      </span>
+                      <div className="onboarding-clean-copy">
+                        <p className="type-h2 onboarding-clean-title">
+                          {t("onboarding.config_step_issue_title")}
+                        </p>
+                        <p className="type-body onboarding-clean-body">
+                          {t("onboarding.config_step_issue_body")}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="onboarding-inline-note">{t("onboarding.issue_note")}</div>
                   </div>
+
                   <ButtonRow>
-                    <MissionSecondaryLink to="/plan" state={{ fromOnboarding: true }}>
-                      Choose plan
-                    </MissionSecondaryLink>
+                    <MissionPrimaryButton
+                      disabled={isCompletingOnboarding || isAdvancing}
+                      onClick={() => void handleChoosePlan()}
+                    >
+                      {isCompletingOnboarding || isAdvancing
+                        ? t("onboarding.loading")
+                        : t("onboarding.choose_plan")}
+                    </MissionPrimaryButton>
                     <MissionSecondaryLink to="/devices" state={{ fromOnboarding: true }}>
-                      Go to Devices
+                      {t("onboarding.go_to_devices")}
                     </MissionSecondaryLink>
                   </ButtonRow>
                 </>
               ) : null}
+
               {step.id === "confirm_connected" ? (
                 <>
-                  {!hasActiveDevice && (
+                  <div className="onboarding-clean-block">
+                    <div className="onboarding-clean-head">
+                      <span className="onboarding-clean-index" aria-hidden>
+                        4
+                      </span>
+                      <div className="onboarding-clean-copy">
+                        <p className="type-h2 onboarding-clean-title">
+                          {t("onboarding.step_confirm_title")}
+                        </p>
+                        <p className="type-body onboarding-clean-body">
+                          {t("onboarding.step_confirm_body")}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {!hasActiveDevice ? (
                     <MissionAlert
                       tone="warning"
-                      title="Get your config first"
-                      message="Subscribe if needed, then open Devices and issue a device. After you import the config and connect, return here to confirm."
+                      title={t("onboarding.get_config_first")}
+                      message={t("onboarding.get_config_first_body")}
                     />
-                  )}
-                  {hasActiveDevice &&
-                    (session?.public_ip ||
-                      activeDevices.some((d) => d.last_seen_handshake_at)) && (
+                  ) : null}
+
+                  {hasActiveDevice && (session?.public_ip || activeDevices.some((d) => d.last_seen_handshake_at)) ? (
                     <MissionAlert
                       tone="success"
-                      title="We see your connection"
+                      title={t("onboarding.setup_activity_detected_title")}
                       message={
                         session?.public_ip
-                          ? `Your VPN IP: ${session.public_ip}. Tap "I'm connected" below to finish.`
-                          : "Connection detected. Tap \"I'm connected\" below to finish."
+                          ? t("onboarding.setup_activity_detected_message_with_ip", {
+                              ip: session.public_ip,
+                            })
+                          : t("onboarding.setup_activity_detected_message_generic")
                       }
                     />
-                  )}
-                  <div className="onboarding-status-legend" aria-label="Connection status examples">
-                    <span>🟢 Connected</span>
-                    <span>🟡 Connecting</span>
-                    <span>🔴 Disconnected</span>
-                  </div>
+                  ) : null}
+
+                  <MissionAlert
+                    tone="info"
+                    title={t("onboarding.what_happens_next_title")}
+                    message={t("onboarding.what_happens_next_message")}
+                  />
                 </>
               ) : null}
             </div>
-
-            {onboardingError && (
-              <MissionAlert tone="error" title="Could not continue" message={onboardingError} />
-            )}
-
-            <div className="onboarding-footer">
-              <ButtonRow>
-                {stepIndex > 0 && (
-                  <MissionSecondaryButton onClick={() => void handleBack()} disabled={isCompletingOnboarding || isAdvancing}>
-                    Back
-                  </MissionSecondaryButton>
-                )}
-                {isLastStep && !hasActiveDevice ? (
-                  <>
-                    <MissionPrimaryLink to="/devices" state={{ fromOnboarding: true }}>
-                      Get your config first
-                    </MissionPrimaryLink>
-                    <MissionSecondaryButton
-                      disabled={isCompletingOnboarding || isAdvancing}
-                      onClick={() => void handleSkipForNow()}
-                    >
-                      Skip for now
-                    </MissionSecondaryButton>
-                  </>
-                ) : (
-                  <MissionPrimaryButton
-                    disabled={isCompletingOnboarding || isAdvancing}
-                    onClick={() => void handlePrimaryAction()}
-                  >
-                    {isCompletingOnboarding || isAdvancing ? (
-                      <>
-                        <svg className="spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
-                          <circle cx="12" cy="12" r="8" strokeOpacity="0.35" />
-                          <path d="M20 12a8 8 0 0 0-8-8" />
-                        </svg>
-                        <span>Loading…</span>
-                      </>
-                    ) : (
-                      step.cta
-                    )}
-                  </MissionPrimaryButton>
-                )}
-              </ButtonRow>
-              <div className="onboarding-progress">
-                <MissionProgressBar percent={progressValue} staticFill ariaLabel="Onboarding progress" />
-                <div className="onboarding-dots" role="tablist" aria-label="Onboarding steps">
-                  {ONBOARDING_STEPS.map((item, index) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      className={`onboarding-dot${
-                        index === stepIndex ? " onboarding-dot--active" : ""
-                      }`}
-                      role="tab"
-                      aria-selected={index === stepIndex}
-                      aria-current={index === stepIndex ? "step" : undefined}
-                      aria-label={`Go to step ${index + 1}: ${item.title}`}
-                      onClick={() => {
-                        if (index === stepIndex || isCompletingOnboarding || isAdvancing) return;
-                        void setOnboardingStep(index);
-                      }}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
           </div>
         </MissionCard>
+
+        {onboardingError ? (
+          <MissionAlert
+            tone="error"
+            title={t("onboarding.could_not_continue_title")}
+            message={onboardingError}
+          />
+        ) : null}
       </PageSection>
+
+      <StickyBottomBar>
+        <div className="onboarding-cta-stack">
+          {stepIndex > 0 ? (
+            <MissionSecondaryButton onClick={() => void handleBack()} disabled={isCompletingOnboarding || isAdvancing}>
+              {t("onboarding.back")}
+            </MissionSecondaryButton>
+          ) : null}
+
+          {isLastStep && !hasActiveDevice ? (
+            <>
+              <MissionPrimaryLink to="/devices" state={{ fromOnboarding: true }}>
+                {t("onboarding.get_config_first")}
+              </MissionPrimaryLink>
+              <MissionSecondaryButton
+                disabled={isCompletingOnboarding || isAdvancing}
+                onClick={() => void handleSkipForNow()}
+              >
+                {t("onboarding.skip_for_now")}
+              </MissionSecondaryButton>
+            </>
+          ) : !isConfigStep ? (
+            <>
+              <MissionPrimaryButton
+                disabled={isCompletingOnboarding || isAdvancing}
+                onClick={() => void handlePrimaryAction()}
+              >
+                {isCompletingOnboarding || isAdvancing
+                  ? t("onboarding.loading")
+                  : step.id === "confirm_connected"
+                    ? t("onboarding.step_confirm_primary")
+                    : t(step.ctaKey)}
+              </MissionPrimaryButton>
+              {stepIndex === 0 ? (
+                <MissionSecondaryLink to="/restore-access">
+                  {t("onboarding.restore_access")}
+                </MissionSecondaryLink>
+              ) : null}
+            </>
+          ) : null}
+        </div>
+      </StickyBottomBar>
     </PageFrame>
   );
 }

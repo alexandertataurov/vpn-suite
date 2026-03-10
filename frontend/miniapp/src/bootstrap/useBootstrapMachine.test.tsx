@@ -81,7 +81,32 @@ const sessionCompleted: Parameters<typeof mockWebappApiGet.mockResolvedValue>[0]
   user: { id: 1, tg_id: 100 },
   subscriptions: [],
   devices: [],
-  onboarding: { completed: true, step: 2, version: 1, updated_at: "2026-01-01T00:00:00Z" },
+  onboarding: { completed: true, step: 3, version: 2, updated_at: "2026-01-01T00:00:00Z" },
+};
+
+const sessionReadyToExitOnboarding: Parameters<typeof mockWebappApiGet.mockResolvedValue>[0] = {
+  user: { id: 2, tg_id: 200 },
+  subscriptions: [
+    {
+      id: "sub-1",
+      plan_id: "plan-1",
+      status: "active",
+      subscription_status: "active",
+      access_status: "enabled",
+      valid_until: "2030-01-01T00:00:00Z",
+      device_limit: 5,
+    },
+  ],
+  devices: [
+    {
+      id: "dev-1",
+      device_name: "iPhone",
+      issued_at: "2026-03-09T00:00:00Z",
+      revoked_at: null,
+      status: "config_pending",
+    },
+  ],
+  onboarding: { completed: false, step: 1, version: 2, updated_at: null },
 };
 
 describe("useBootstrapMachine", () => {
@@ -144,6 +169,29 @@ describe("useBootstrapMachine", () => {
     expect(result.current.session).toEqual(sessionCompleted);
     expect(mockWebappApiGet).toHaveBeenCalledWith("/webapp/me");
     expect(mockAuthenticateWebApp).not.toHaveBeenCalled();
+  });
+
+  it("auto-completes onboarding once the user has an active plan and device", async () => {
+    mockUseWebappToken.mockReturnValue("token");
+    mockWebappApiGet.mockResolvedValue(sessionReadyToExitOnboarding);
+    mockWebappApiPost.mockResolvedValue({
+      onboarding: { completed: true, step: 3, version: 2, updated_at: "2026-03-09T00:00:00Z" },
+    });
+
+    const { result } = renderHook(
+      () => useBootstrapMachine({ initData: "valid", isInsideTelegram: true }),
+      { wrapper: createWrapper() },
+    );
+
+    await waitFor(() => {
+      expect(result.current.phase).toBe("app_ready");
+    }, { timeout: 3000 });
+
+    expect(mockWebappApiPost).toHaveBeenCalledWith("/webapp/onboarding/state", {
+      step: 3,
+      completed: true,
+      version: 2,
+    });
   });
 
   it.skip("transitions to startup_error when session query fails (flaky: webappApi mock)", async () => {

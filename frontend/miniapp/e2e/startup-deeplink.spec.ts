@@ -1,178 +1,42 @@
 import { test, expect } from "@playwright/test";
-
-async function injectTelegram(page: import("@playwright/test").Page) {
-  await page.addInitScript(() => {
-    (window as unknown as { Telegram?: { WebApp: { initData: string; ready: () => void } } }).Telegram = {
-      WebApp: { initData: "e2e-test", ready: () => {} },
-    };
-  });
-}
+import { createPlan, createSession, gotoMiniapp, injectTelegram, setupMiniappApi } from "./helpers/miniapp";
 
 test.describe("Miniapp Startup Deep Links", () => {
-  test("first-time user deep link is gated by onboarding then lands on plan", async ({ page }) => {
+  test("first-time user deep link to devices stays on allowed route and shows setup CTA", async ({ page }) => {
     await injectTelegram(page);
-
-    let onboardingStep = 0;
-    let onboardingCompleted = false;
-
-    await page.route("**/*", async (route) => {
-      const url = route.request().url();
-      if (url.includes("/api/v1/webapp/telemetry")) {
-        await route.fulfill({ status: 204, body: "" });
-        return;
-      }
-      if (url.includes("/api/v1/health/ready")) {
-        await route.fulfill({
-          status: 200,
-          contentType: "application/json",
-          body: JSON.stringify({ status: "ok" }),
-        });
-        return;
-      }
-      if (url.includes("/api/v1/webapp/auth")) {
-        await route.fulfill({
-          status: 200,
-          contentType: "application/json",
-          body: JSON.stringify({ session_token: "e2e-session", expires_in: 3600 }),
-        });
-        return;
-      }
-      if (url.includes("/api/v1/webapp/me")) {
-        await route.fulfill({
-          status: 200,
-          contentType: "application/json",
-          body: JSON.stringify({
-            user: { id: 1, tg_id: 12345 },
-            subscriptions: [],
-            devices: [],
-            onboarding: {
-              completed: onboardingCompleted,
-              step: onboardingStep,
-              version: 1,
-              updated_at: onboardingCompleted ? new Date().toISOString() : null,
-            },
-          }),
-        });
-        return;
-      }
-      if (url.includes("/api/v1/webapp/onboarding/state")) {
-        const body = route.request().postDataJSON() as { step: number; completed?: boolean };
-        onboardingStep = Math.max(onboardingStep, body.step ?? 0);
-        if (body.completed) {
-          onboardingCompleted = true;
-          onboardingStep = 2;
-        }
-        await route.fulfill({
-          status: 200,
-          contentType: "application/json",
-          body: JSON.stringify({
-            onboarding: {
-              completed: onboardingCompleted,
-              step: onboardingStep,
-              version: 1,
-              updated_at: onboardingCompleted ? new Date().toISOString() : null,
-            },
-          }),
-        });
-        return;
-      }
-      if (url.includes("/api/v1/webapp/plans")) {
-        await route.fulfill({
-          status: 200,
-          contentType: "application/json",
-          body: JSON.stringify({
-            items: [
-              {
-                id: "plan-basic",
-                name: "Standard",
-                duration_days: 30,
-                price_amount: 99,
-                price_currency: "Stars",
-              },
-              {
-                id: "plan-family",
-                name: "Family",
-                duration_days: 60,
-                price_amount: 179,
-                price_currency: "Stars",
-              },
-              {
-                id: "plan-pro",
-                name: "Pro",
-                duration_days: 90,
-                price_amount: 249,
-                price_currency: "Stars",
-              },
-            ],
-          }),
-        });
-        return;
-      }
-      await route.continue();
+    await setupMiniappApi(page, {
+      session: createSession({
+        subscriptions: [],
+        onboarding: {
+          completed: false,
+          step: 0,
+          version: 2,
+          updated_at: null,
+        },
+        routing: { recommended_route: "/devices", reason: "no_subscription" },
+      }),
+      plans: { items: [createPlan({ id: "plan-starter", name: "Starter" })] },
     });
 
-    await page.goto("./devices?tgWebAppData=e2e-test");
-    await expect(page).toHaveURL(/.*\/onboarding$/, { timeout: 15000 });
+    await gotoMiniapp(page, "/devices");
 
-    await page.getByRole("button", { name: /Continue/i }).click();
-    await page.getByRole("button", { name: /Continue/i }).click();
-    await page.getByRole("button", { name: /Go to plans/i }).click();
-
-    await expect(page).toHaveURL(/.*\/plan$/, { timeout: 15000 });
-    await expect(page.getByRole("heading", { name: /Choose Your Plan/i })).toBeVisible();
+    await expect(page).toHaveURL(/\/devices/);
+    await expect(page.getByText(/No active subscription/i)).toBeVisible({ timeout: 10000 });
+    await page.getByRole("link", { name: /Choose plan/i }).click();
+    await expect(page).toHaveURL(/\/plan$/);
   });
 
   test("completed user deep link stays on target route", async ({ page }) => {
     await injectTelegram(page);
-
-    await page.route("**/*", async (route) => {
-      const url = route.request().url();
-      if (url.includes("/api/v1/webapp/telemetry")) {
-        await route.fulfill({ status: 204, body: "" });
-        return;
-      }
-      if (url.includes("/api/v1/health/ready")) {
-        await route.fulfill({
-          status: 200,
-          contentType: "application/json",
-          body: JSON.stringify({ status: "ok" }),
-        });
-        return;
-      }
-      if (url.includes("/api/v1/webapp/auth")) {
-        await route.fulfill({
-          status: 200,
-          contentType: "application/json",
-          body: JSON.stringify({ session_token: "e2e-session", expires_in: 3600 }),
-        });
-        return;
-      }
-      if (url.includes("/api/v1/webapp/me")) {
-        await route.fulfill({
-          status: 200,
-          contentType: "application/json",
-          body: JSON.stringify({
-            user: { id: 1, tg_id: 12345 },
-            subscriptions: [
-              {
-                id: "sub-1",
-                plan_id: "plan-1",
-                status: "active",
-                valid_until: "2030-01-01T00:00:00Z",
-                device_limit: 5,
-              },
-            ],
-            devices: [],
-            onboarding: { completed: true, step: 2, version: 1, updated_at: new Date().toISOString() },
-          }),
-        });
-        return;
-      }
-      await route.continue();
+    await setupMiniappApi(page, {
+      session: createSession({
+        routing: { recommended_route: "/devices", reason: "connected_user" },
+      }),
     });
 
-    await page.goto("./devices?tgWebAppData=e2e-test");
-    await expect(page).toHaveURL(/.*\/devices/, { timeout: 15000 });
-    await expect(page.getByRole("heading", { name: /My devices/i })).toBeVisible();
+    await gotoMiniapp(page, "/devices");
+
+    await expect(page).toHaveURL(/\/devices/);
+    await expect(page.getByRole("heading", { name: /Devices/i })).toBeVisible();
   });
 });

@@ -8,6 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import ChurnRiskScore, Subscription
+from app.services.subscription_state import entitled_active_where
 
 
 async def run_churn_prediction(session: AsyncSession) -> dict:
@@ -22,11 +23,7 @@ async def run_churn_prediction(session: AsyncSession) -> dict:
                 Subscription.user_id,
                 Subscription.valid_until,
                 Subscription.created_at,
-            ).where(
-                Subscription.status == "active",
-                Subscription.valid_until > now,
-                Subscription.paused_at.is_(None),
-            )
+            ).where(*entitled_active_where(now=now))
         )
     ).all()
 

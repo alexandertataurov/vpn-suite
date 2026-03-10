@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.security import decode_token
 from app.models import Subscription, User
+from app.services.subscription_state import commercially_active_where
 
 router = APIRouter(prefix="/subscriptions", tags=["subscriptions"])
 
@@ -66,8 +67,7 @@ async def update_my_subscription(
         select(Subscription)
         .where(
             Subscription.user_id == user.id,
-            Subscription.status == "active",
-            Subscription.valid_until > now,
+            *commercially_active_where(now=now),
         )
         .order_by(Subscription.valid_until.desc())
         .limit(1)

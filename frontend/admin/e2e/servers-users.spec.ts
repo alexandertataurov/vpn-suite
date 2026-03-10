@@ -177,7 +177,7 @@ test.describe("Servers", () => {
     await page.getByRole("button", { name: /Issue config/i }).click();
     await expect(page.getByRole("dialog")).toBeVisible({ timeout: 5000 });
     await expect(page.getByRole("heading", { name: /Issue config/i })).toBeVisible();
-    await page.getByRole("button", { name: /Close/i }).first().click();
+    await page.getByRole("button", { name: /Back/i }).first().click();
     await expect(page.getByRole("dialog")).not.toBeVisible();
   });
 
@@ -261,7 +261,7 @@ test.describe("Users", () => {
     if (await openPanelBtn.isVisible()) {
       await openPanelBtn.click();
       await expect(page.getByRole("heading", { name: /User #/i })).toBeVisible();
-      await expect(page.getByRole("button", { name: /Close panel/i })).toBeVisible();
+      await expect(page.getByRole("button", { name: /Back/i })).toBeVisible();
     }
   });
 });

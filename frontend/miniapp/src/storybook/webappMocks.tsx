@@ -35,7 +35,7 @@ export function MockWebappApi({ children, options }: { children: ReactNode; opti
           return jsonResponse({ error: { message: "Mocked error" } }, options.meStatus ?? 500);
         }
         return jsonResponse(
-          options.me ?? { user: null, subscriptions: [], devices: [], public_ip: null, onboarding: { completed: false, step: 0, version: 1, updated_at: null } },
+          options.me ?? { user: null, subscriptions: [], devices: [], public_ip: null, onboarding: { completed: false, step: 0, version: 2, updated_at: null } },
           options.meStatus ?? 200
         );
       }

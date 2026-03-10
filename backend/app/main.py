@@ -7,6 +7,7 @@ import time
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
@@ -122,11 +123,12 @@ async def _validation_exception_handler(
     cid = getattr(request.state, "correlation_id", None) or rid
     path_tpl = path_template(request.url.path)
     http_errors_total.labels(path_template=path_tpl, error_type="VALIDATION_ERROR").inc()
+    errors = jsonable_encoder(exc.errors())
     body = error_body(
         code="VALIDATION_ERROR",
         message="Validation error",
         status_code=422,
-        details={"errors": exc.errors()},
+        details={"errors": errors},
         request_id=rid,
         correlation_id=cid,
     )

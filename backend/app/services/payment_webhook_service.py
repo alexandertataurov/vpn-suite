@@ -24,10 +24,19 @@ from app.models import (
     Subscription,
     User,
 )
-from app.services.entitlement_service import emit_entitlement_event
 from app.services.funnel_service import log_funnel_event
+from app.services.subscription_lifecycle_events import (
+    emit_payment_lifecycle,
+    emit_referral_reward_accrued,
+    emit_referral_reward_applied,
+)
 from app.services.referral_notification import notify_referrer_reward_granted
 from app.services.referral_service import grant_referral_reward
+from app.services.subscription_state import (
+    apply_subscription_cycle,
+    commercially_active_where,
+    mark_cancelled,
+)
 
 
 @dataclass
@@ -62,54 +71,30 @@ async def _apply_payment_success_effects(
     now = datetime.now(timezone.utc)
     was_active = sub.status == "active"
     was_grace = getattr(sub, "access_status", "enabled") == "grace"
-    if sub.status != "active":
-        sub.status = "active"
-        setattr(sub, "subscription_status", "active")
-        setattr(sub, "access_status", "enabled")
-        sub.valid_from = now
-        base = now
+    was_active = apply_subscription_cycle(
+        sub,
+        now=now,
+        duration_days=plan.duration_days,
+        device_limit=int(getattr(plan, "device_limit", sub.device_limit) or sub.device_limit),
+    )
+    if not was_active:
         # Single active sub per user: cancel other active subscriptions for this user.
         other_active = await session.execute(
             select(Subscription).where(
                 Subscription.user_id == int(user_id),
                 Subscription.id != subscription_id,
-                Subscription.status == "active",
+                *commercially_active_where(),
             )
         )
         for other in other_active.scalars().all():
-            other.status = "cancelled"
-            setattr(other, "subscription_status", "cancelled")
-    else:
-        base = sub.valid_until if sub.valid_until and sub.valid_until > now else now
-    sub.device_limit = int(getattr(plan, "device_limit", sub.device_limit) or sub.device_limit)
-    sub.valid_until = base + timedelta(days=plan.duration_days)
+            mark_cancelled(other)
     await session.flush()
-    await emit_entitlement_event(
+    await emit_payment_lifecycle(
         session,
-        subscription_id=subscription_id,
-        user_id=sub.user_id,
-        event_type="subscription_activated" if not was_active else "subscription_renewed",
-        payload={"plan_id": sub.plan_id},
+        subscription=sub,
+        activated=not was_active,
+        grace_converted=was_grace,
     )
-    await log_funnel_event(
-        session,
-        event_type="payment",
-        user_id=sub.user_id,
-        payload={"subscription_id": str(subscription_id)},
-    )
-    await log_funnel_event(
-        session,
-        event_type="renewal",
-        user_id=sub.user_id,
-        payload={"subscription_id": str(subscription_id)},
-    )
-    if was_grace:
-        await log_funnel_event(
-            session,
-            event_type="grace_converted",
-            user_id=sub.user_id,
-            payload={"subscription_id": str(subscription_id), "plan_id": sub.plan_id},
-        )
     try:
         vpn_revenue_payment_total.labels(plan_id=str(sub.plan_id)[:32]).inc()
         vpn_revenue_renewal_total.inc()
@@ -133,12 +118,11 @@ async def _apply_payment_success_effects(
                 except Exception:
                     pass
                 if not applied_immediate:
-                    await emit_entitlement_event(
+                    await emit_referral_reward_accrued(
                         session,
-                        subscription_id=None,
                         user_id=ref.referrer_user_id,
-                        event_type="referral_reward_accrued",
-                        payload={"referral_id": ref.id, "days": REFERRAL_REWARD_DAYS},
+                        referral_id=ref.id,
+                        days=REFERRAL_REWARD_DAYS,
                     )
                 if applied_immediate:
                     try:
@@ -148,7 +132,11 @@ async def _apply_payment_success_effects(
                             )
                         ).scalar_one_or_none()
                         if referrer_u:
-                            await notify_referrer_reward_granted(referrer_u.tg_id)
+                            meta = getattr(referrer_u, "meta", {}) or {}
+                            locale = (meta.get("locale") or "").strip().lower()
+                            if locale not in {"en", "ru"}:
+                                locale = "en"
+                            await notify_referrer_reward_granted(referrer_u.tg_id, locale=locale)
                     except Exception:
                         logging.getLogger(__name__).warning(
                             "referral_notification_failed referral_id=%s referrer_user_id=%s",
@@ -191,18 +179,12 @@ async def _apply_payment_success_effects(
         ref_as_referrer.reward_applied_at = now
         ref_as_referrer.status = "rewarded"
         await session.flush()
-        await emit_entitlement_event(
+        await emit_referral_reward_applied(
             session,
             subscription_id=subscription_id,
             user_id=user_id,
-            event_type="referral_reward_applied",
-            payload={"referral_id": ref_as_referrer.id, "days": days},
-        )
-        await log_funnel_event(
-            session,
-            event_type="referral_reward_applied",
-            user_id=user_id,
-            payload={"referral_id": ref_as_referrer.id, "days": days},
+            referral_id=ref_as_referrer.id,
+            days=days,
         )
     promo_code_str = (payload.get("promo_code") or "").strip() or None
     if promo_code_str:

@@ -27,7 +27,7 @@ const LEGACY_TO_CANONICAL: Partial<Record<WebappTelemetryEventType, MiniappEvent
   connect_confirmed: "miniapp.connect_confirmed",
   device_issue_started: "miniapp.device_issue_started",
   device_issue_success: "miniapp.device_issue_success",
-  server_switched: "miniapp.server_switched",
+  server_switched: "miniapp.server_selected",
   cancel_flow_started: "miniapp.cancel_flow_started",
   cancel_reason_selected: "miniapp.cancel_reason_selected",
   retention_offer_shown: "miniapp.retention_offer_shown",
@@ -40,6 +40,15 @@ const LEGACY_TO_CANONICAL: Partial<Record<WebappTelemetryEventType, MiniappEvent
   upsell_evaluated: "miniapp.upsell_evaluated",
   onboarding_abandoned: "miniapp.onboarding_abandoned",
   web_vital: "miniapp.web_vital",
+  restore_access_started: "miniapp.restore_access_started",
+  restore_access_succeeded: "miniapp.restore_access_succeeded",
+  restore_access_failed: "miniapp.restore_access_failed",
+  referral_detected: "miniapp.referral_detected",
+  referral_attach_started: "miniapp.referral_attach_started",
+  referral_attach_succeeded: "miniapp.referral_attach_succeeded",
+  referral_attach_failed: "miniapp.referral_attach_failed",
+  device_limit_reached: "miniapp.device_limit_reached",
+  support_opened: "miniapp.support_opened",
 };
 
 export function useTelemetry(userPlan?: string | null) {

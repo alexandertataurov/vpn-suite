@@ -9,7 +9,7 @@ The design system follows a **layered model**. Each layer has strict responsibil
 | Layer | Responsibility |
 |-------|----------------|
 | **Tokens** | Single source of truth for colors, spacing, typography, radius, shadows, motion, breakpoints. Use via CSS `var(--*)` or tokens/*.ts. |
-| **Foundations** | Theme config, CSS variables (tokens + theme consumer), global/reset. |
+| **Theme** | Theme config, CSS variables (tokens + theme consumer), global/reset. |
 | **Primitives** | Low-level layout and typography (Box, Stack, Text, Heading, etc.). No business logic. |
 | **Components** | Reusable UI (Button, Input, Modal, Toast, etc.). Consistent variant/size/tone APIs. |
 | **Patterns** | Composed structures (FormField, PageHeader, Hero blocks). No data fetching. |
@@ -22,32 +22,50 @@ The design system follows a **layered model**. Each layer has strict responsibil
 
 - Page composition (Page Header → Hero → Section Divider → Content Cards)
 - Class names (e.g. `.page-hd`, `.shead`, `.shead-lbl`, `.shead-rule`, `.op`, `.data-grid`, `.btn-primary`). CSS keeps `.shead-label`/`.shead-line` as aliases for `.shead-lbl`/`.shead-rule`.
-- Progress: Content Library §8 uses `.bar-track`/`.bar-fill` (`.ok`/`.warn`/`.crit`/`.info`) in content-library.css. Legacy: `.h-track`, `.h-fill`, `.h-fill.pct-*` (0–100) in miniapp.css. Prefer ProgressBar component or `.bar-track`/`.bar-fill` for new code.
-- Error vs danger: Semantic token is `--color-error`; `--danger`, `.btn-danger`, and LEGACY_ALIASES use "danger" as the legacy name for the same semantic (see tokens/colors.ts).
-- Buttons: Prefer the `Button` component and `getButtonClassName()` from `@/design-system` for consistency and theming. Raw `.btn`, `.btn-primary`, etc. in miniapp.css are legacy; migrate over time. See **Mission\* vs Button** below.
+- Progress: Content Library §8 uses `.bar-track`/`.bar-fill` (`.ok`/`.warn`/`.crit`/`.info`) in content/library.css. Legacy: `.h-track`, `.h-fill`, `.h-fill.pct-*` (0–100) in shell/frame.css. Prefer ProgressBar component or `.bar-track`/`.bar-fill` for new code.
+- Error vs danger: Semantic token is `--color-error`; `.btn-danger` uses "danger" as legacy name for the same semantic (see tokens/colors.ts).
+- Buttons: Prefer the `Button` component and `getButtonClassName()` from `@/design-system` for consistency and theming. Raw `.btn`, `.btn-primary`, etc. in shell/frame.css are legacy; migrate over time. See **Mission\* vs Button** below.
 - Token usage (`--ui`, `--mono`, `--s1`–`--s4`, `--bd-def`, `--tx-pri`, etc.)
 - Content-level constraints (Section 18)
 
-CSS for content lives in `styles/content-library.css` and `styles/miniapp.css`; load order is `styles/index.css` → foundations (tokens + theme-consumer) → telegram DS → palette → primitives-aliases → miniapp.css → content-library.css.
+CSS for content lives in `styles/content/library.css` and `styles/shell/frame.css`; load order is `styles/index.css` → tokens/base.css → theme/telegram.css → theme/consumer.css → layout/zones.css → shell/frame.css → content/library.css.
 
 ## Conventions
 
-- **Z-index:** Single source for shell: `theme/z-index.ts` (Z_HEADER, Z_NAV = 200) and `miniapp.css` `:root` (`--z-header`, `--z-nav`). Use `var(--z-*)` in CSS. `miniapp-tokens.css` / `miniapp-theme-consumer.css` set 180/210 in some theme blocks but are overridden by miniapp.css.
+- **Z-index:** Single source for shell: `theme/z-index.ts` (Z_HEADER, Z_NAV = 200) and shell/frame.css `:root` (`--z-header`, `--z-nav`). Use `var(--z-*)` in CSS. `tokens/base.css` / `theme/consumer.css` set 180/210 in some theme blocks but are overridden by shell.
 - **Inline vs Stack:** Prefer `Inline` for horizontal layouts (gap/align/wrap); `Stack direction="horizontal"` is equivalent — use one consistently.
 - **Spacing tokens:** Primary scale is `--spacing-1`…`--spacing-16` (tokens/spacing.ts). Legacy aliases: `--sp-*` and `--ds-space-*` in miniapp-primitives-aliases.css.
+
+## Library structure
+
+Layers: **tokens** → **theme** → **primitives** → **components** → **patterns** → **recipes** → App. Layouts and styles support structure and theming.
+
+| I want to… | Folder |
+|------------|--------|
+| Change a color, spacing, or motion token | `tokens/`, `theme/` |
+| Add a layout building block (box, stack, text) | `primitives/` |
+| Add a form control or button | `components/forms/`, `components/buttons/` |
+| Add feedback (modal, toast, skeleton) | `components/feedback/` |
+| Add a page block (card, hero, empty state) | `patterns/blocks/`, `patterns/cards/`, `patterns/home/` |
+| Add a Mission-style card/chip/alert | `patterns/mission/` |
+| Add a page-shaped wrapper (header badge, card section) | `recipes/` |
 
 ## Structure
 
 - **tokens/** — colors, spacing, radius, typography, shadows, zIndex, motion, breakpoints
-- **foundations/** — theme (re-exports), css-variables.css, global.css
 - **theme/** — ThemeProvider, tokens-map, z-index constants
-- **primitives/** — Box, Stack, Container, Panel, Heading, Text, Divider, Inline
-- **components/** — Typography, Button, forms, feedback, display
-- **patterns/** — Mission*, Home*, ListCard, DataGrid, FormField, etc. Product-specific patterns (heroes, tier/usage/billing cards, DangerZone, LimitStrip, TroubleshooterStep, SessionMissing) live in `src/components` and are imported from `@/components`.
-- **layouts/** — PageScaffold, PageHeader, PageSection
-- **page-recipes/** — PageHeaderBadge, PageCardSection, other reusable page shells/recipes
+- **primitives/** — Layout (Box, Container, Inline, Panel, Stack) → Separator (Divider) → Typography (Text, Heading). See [primitives/README.md](./primitives/README.md).
+- **components/** — typography (Display, H1–H3, Body, Caption) → Buttons → Forms → Feedback → Display → Utility. See [components/README.md](./components/README.md).
+- **patterns/** — Grouped by domain: `mission/` (Mission*), `content/` (FormField, ButtonRow, ContentForms/ContentButtons), `blocks/` (FallbackScreen, PageStateScreen, EmptyStateBlock, OfflineBanner), `cards/` (ListCard, ServerCard), `home/` (Home*), `ui/` (DataGrid, StatusChip, OverflowActionMenu, SupportActionList). Product-specific patterns (heroes, tier/usage/billing cards, DangerZone, LimitStrip, TroubleshooterStep, SessionMissing) live in `src/components` and are imported from `@/components`.
+
+### Field vs FormField
+
+- **Field** (components/forms): label + slot + description + error; uses Label, HelperText; semantic structure. Prefer for new forms.
+- **FormField** (patterns/content/ContentForms): content-library class-based (`.field-group`, `.field-label`); different API (label, input, action). Use for content-library layouts.
+- **layouts/** — PageScaffold, PageHeader, PageSection; layout CSS lives in styles/layout/zones.css
+- **recipes/** — PageHeaderBadge, PageCardSection, other reusable page shells/recipes
 - **hooks/** — useThemeMode, useBreakpoint
-- **utils/** — cx (class merge), accessibility helpers
+- **utils/** — getAriaLabelProps (accessibility). Class merge: use `cn` from `@vpn-suite/shared`.
 - **styles/** — CSS entry and token/component styles
 
 ## App layer contract
@@ -58,7 +76,7 @@ App-layer pages should do only three things:
 - route-specific orchestration
 - composition of page-model hooks + `@/design-system`
 
-Keep reusable structure in `design-system/page-recipes` or `design-system/patterns`, and keep page-level derivation in app-layer page-model hooks rather than inside TSX render branches.
+Keep reusable structure in `design-system/recipes` or `design-system/patterns`, and keep page-level derivation in app-layer page-model hooks rather than inside TSX render branches.
 
 Within a page, keep hierarchy singular:
 
@@ -70,7 +88,7 @@ Within a page, keep hierarchy singular:
 Miniapp pages do not own local CSS files under `src/pages`.
 
 - Route styling must live in shared design-system styles.
-- If a page needs a new structural wrapper or page-shaped layout, promote it into `design-system/page-recipes` or `design-system/patterns`.
+- If a page needs a new structural wrapper or page-shaped layout, promote it into `design-system/recipes` or `design-system/patterns`.
 - CI enforces this through `npm --prefix frontend run design:check -w miniapp`.
 
 ## Import Rules

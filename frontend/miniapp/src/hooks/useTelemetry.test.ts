@@ -49,5 +49,23 @@ describe("useTelemetry", () => {
       }),
     );
   });
-});
 
+  it("maps server_switched to the canonical selection event", () => {
+    const trackMock = vi.mocked(track);
+    const { result } = renderHook(() => useTelemetry("plan-1"));
+
+    result.current.track("server_switched", {
+      screen_name: "servers",
+      server_id: "server-1",
+    } as never);
+
+    expect(trackMock).toHaveBeenCalledWith(
+      "miniapp.server_selected",
+      expect.objectContaining({
+        screen_name: "servers",
+        server_id: "server-1",
+        user_plan: "plan-1",
+      }),
+    );
+  });
+});

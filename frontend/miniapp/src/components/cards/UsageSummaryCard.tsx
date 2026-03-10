@@ -31,7 +31,7 @@ export function UsageSummaryCard({
               <div className="usage-summary-label">{item.label}</div>
               <div className={`usage-summary-value ${item.tone ?? ""}`.trim()}>{item.value}</div>
             </div>
-            <div className="usage-summary-track">{item.progress}</div>
+            {item.progress}
           </div>
         ))}
       </div>

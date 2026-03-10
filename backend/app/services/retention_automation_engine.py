@@ -8,6 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import RetentionRule, Subscription
+from app.services.subscription_state import entitled_active_where
 
 
 async def get_matching_subscriptions(
@@ -16,11 +17,7 @@ async def get_matching_subscriptions(
 ) -> list[Subscription]:
     """Return subscriptions matching condition_json (expiry_days_lte, lifetime_months_gte, etc.)."""
     now = datetime.now(timezone.utc)
-    q = select(Subscription).where(
-        Subscription.status == "active",
-        Subscription.valid_until > now,
-        Subscription.paused_at.is_(None),
-    )
+    q = select(Subscription).where(*entitled_active_where(now=now))
     # expiry_days_lte: valid_until - now <= days
     if "expiry_days_lte" in condition:
         days = int(condition["expiry_days_lte"])

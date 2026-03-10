@@ -55,7 +55,7 @@ export default tseslint.config(
               group: [
                 "@/design-system/components/*",
                 "@/design-system/layouts/*",
-                "@/design-system/page-recipes/*",
+                "@/design-system/recipes/*",
                 "@/design-system/patterns/*",
                 "@/design-system/primitives/*",
                 "!@/design-system/patterns/FallbackScreen",

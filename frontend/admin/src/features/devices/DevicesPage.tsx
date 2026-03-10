@@ -829,7 +829,7 @@ export function DevicesPage() {
             Open Users
           </LinkButton>
           <Button type="button" variant="secondary" onClick={() => setAddDeviceModalOpen(false)}>
-            Close
+            Back
           </Button>
         </div>
       </Modal>

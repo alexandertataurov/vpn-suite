@@ -9,6 +9,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import ChurnSurvey, Device, FunnelEvent, Payment, Plan, Referral, Subscription
+from app.services.subscription_state import entitled_active_where
 
 
 async def get_revenue_overview(session: AsyncSession) -> dict:
@@ -22,11 +23,7 @@ async def get_revenue_overview(session: AsyncSession) -> dict:
     active_result = await session.execute(
         select(func.count())
         .select_from(Subscription)
-        .where(
-            Subscription.status == "active",
-            Subscription.valid_until > now,
-            Subscription.paused_at.is_(None),
-        )
+        .where(*entitled_active_where(now=now))
     )
     subscriptions_active = active_result.scalar() or 0
 
@@ -60,11 +57,7 @@ async def get_revenue_overview(session: AsyncSession) -> dict:
     active_subs_with_plan = (
         await session.execute(
             select(Subscription.plan_id, func.count().label("cnt"))
-            .where(
-                Subscription.status == "active",
-                Subscription.valid_until > now,
-                Subscription.paused_at.is_(None),
-            )
+            .where(*entitled_active_where(now=now))
             .group_by(Subscription.plan_id)
         )
     ).all()
@@ -115,7 +108,7 @@ async def get_revenue_overview(session: AsyncSession) -> dict:
                     func.extract("epoch", func.now() - Subscription.valid_from).label("days"),
                 )
                 .select_from(Subscription)
-                .where(Subscription.status == "active", Subscription.valid_until > now)
+                .where(*entitled_active_where(now=now))
             )
         )
         .scalars()
@@ -133,24 +126,14 @@ async def get_revenue_overview(session: AsyncSession) -> dict:
         await session.execute(
             select(func.count())
             .select_from(Subscription)
-            .where(
-                Subscription.status == "active",
-                Subscription.valid_until > now,
-                Subscription.valid_until <= expiring_3d_end,
-                Subscription.paused_at.is_(None),
-            )
+            .where(*entitled_active_where(now=now), Subscription.valid_until <= expiring_3d_end)
         )
     ).scalar() or 0
     expiring_30d = (
         await session.execute(
             select(func.count())
             .select_from(Subscription)
-            .where(
-                Subscription.status == "active",
-                Subscription.valid_until > now,
-                Subscription.valid_until <= expiring_30d_end,
-                Subscription.paused_at.is_(None),
-            )
+            .where(*entitled_active_where(now=now), Subscription.valid_until <= expiring_30d_end)
         )
     ).scalar() or 0
     expired_today = (

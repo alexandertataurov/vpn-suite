@@ -16,14 +16,14 @@ DEVICE_ICONS = {
 
 
 def is_subscription_effectively_active(sub: dict) -> bool:
-    """Return active status using effective_status if present, else status + valid_until. Paused = inactive."""
+    """Return active status using effective_status if present, else status + valid_until."""
     if not isinstance(sub, dict):
         return False
     if sub.get("paused_at"):
         return False
     effective = str(sub.get("effective_status") or "").strip().lower()
     if effective:
-        return effective == "active"
+        return effective in {"active", "cancel_at_period_end"}
     if str(sub.get("status") or "").strip().lower() != "active":
         return False
     until_raw = sub.get("valid_until")

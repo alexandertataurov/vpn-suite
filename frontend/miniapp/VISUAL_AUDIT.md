@@ -1,7 +1,7 @@
 # Visual Audit — Design System Consolidation
 
 **Scope**: `pages/`, `pages/devices/`, `hooks/`  
-**Token source**: `design-system/styles/miniapp-tokens.css`  
+**Token source**: `design-system/styles/tokens/base.css`  
 **Generated**: Phase 1 (read-only)
 
 ---

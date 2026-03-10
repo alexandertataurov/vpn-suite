@@ -1,7 +1,10 @@
-/* Single design-system CSS entry: foundations (tokens + theme) first, then shell and content. */
-@import "../foundations/css-variables.css";
-@import "./telegram-miniapp-design-system.css";
-@import "./miniapp-theme-consumer.css";
-@import "./miniapp-primitives-aliases.css";
-@import "./miniapp.css";
-@import "./content-library.css";
+/**
+ * Design system CSS — layered load order.
+ * tokens → theme → layout → shell → content
+ */
+@import "./tokens/base.css";
+@import "./theme/telegram.css";
+@import "./theme/consumer.css";
+@import "./layout/zones.css";
+@import "./shell/frame.css";
+@import "./content/library.css";

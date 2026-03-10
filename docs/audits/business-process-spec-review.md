@@ -1,5 +1,7 @@
 # Business Process Spec Review (vpn-suite-specs)
 
+> Superseded for current implementation truth by [business-logic-consolidation-audit-2026-03.md](./business-logic-consolidation-audit-2026-03.md). This document reflects an earlier review snapshot and should not be used as the primary source for current business-logic correctness.
+
 **Date:** 2026-03-07  
 **Specs:** [vpn-suite-specs/docs/product/VPN-SUITE-BUSINESS-LOGIC-USERFLOWS-SPEC-V2.md](../vpn-suite-specs/docs/product/VPN-SUITE-BUSINESS-LOGIC-USERFLOWS-SPEC-V2.md), [GROWTH-MONETIZATION-SPEC.md](../vpn-suite-specs/docs/product/GROWTH-MONETIZATION-SPEC.md), [MINIAPP-ROUTING-SPEC.md](../vpn-suite-specs/docs/frontend/MINIAPP-ROUTING-SPEC.md)
 

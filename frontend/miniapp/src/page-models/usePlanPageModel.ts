@@ -1,17 +1,19 @@
 import { useCallback, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import type { WebAppBillingHistoryResponse, WebAppUsageResponse } from "@vpn-suite/shared";
+import type { WebAppBillingHistoryResponse } from "@vpn-suite/shared";
 import { getPlans } from "@/api";
 import { useWebappToken, webappApi } from "@/api/client";
 import { useSession } from "@/hooks/useSession";
 import { useTelemetry } from "@/hooks/useTelemetry";
 import { useTrackScreen } from "@/hooks/useTrackScreen";
 import { webappQueryKeys } from "@/lib/query-keys/webapp.query-keys";
+import { useI18n } from "@/hooks/useI18n";
 import type { PlanItem, PlansResponse } from "@/api";
 import type { StandardPageHeader, StandardPageState } from "./types";
 import {
   daysUntil,
   getActiveSubscription,
+  getPrimarySubscription,
   getRenewalCheckoutPath,
   getUpgradeCheckoutPath,
   shouldShowUpsell,
@@ -23,10 +25,8 @@ import {
   formatStars,
   periodLabelForHero,
   sanitizePlanDisplayName,
-  usageToneFromPercent,
   toBillingHistoryView,
   clamp,
-  DEFAULT_USAGE_SOFT_CAP_BYTES,
   LIFETIME_DURATION_THRESHOLD,
 } from "./plan-helpers";
 
@@ -38,6 +38,7 @@ export type RecommendedRouteReason =
   | "no_subscription"
   | "expired_with_grace"
   | "grace"
+  | "paused_access"
   | "cancelled_at_period_end"
   | "no_device"
   | "connection_not_confirmed"
@@ -48,16 +49,11 @@ export function usePlanPageModel() {
   const hasToken = !!useWebappToken();
   const queryClient = useQueryClient();
   const sessionQuery = useSession(hasToken);
+  const { t } = useI18n();
   const plansQuery = useQuery({
     queryKey: [...webappQueryKeys.plans()],
     queryFn: getPlans,
     enabled: hasToken,
-  });
-  const usageQuery = useQuery<WebAppUsageResponse>({
-    queryKey: [...webappQueryKeys.usage("7d")],
-    queryFn: () => webappApi.get<WebAppUsageResponse>("/webapp/usage?range=7d"),
-    enabled: hasToken,
-    staleTime: 60_000,
   });
   const historyQuery = useQuery<WebAppBillingHistoryResponse>({
     queryKey: [...webappQueryKeys.paymentsHistory(8)],
@@ -67,7 +63,7 @@ export function usePlanPageModel() {
 
   const plans = useMemo(() => plansQuery.data?.items ?? [], [plansQuery.data?.items]);
   const activeSub = getActiveSubscription(sessionQuery.data);
-  const primarySub = activeSub ?? sessionQuery.data?.subscriptions?.[0] ?? null;
+  const primarySub = getPrimarySubscription(sessionQuery.data);
   const recommendedRoute = sessionQuery.data?.routing?.recommended_route ?? "/plan";
   const routeReason = (sessionQuery.data?.routing?.reason ?? "unknown") as RecommendedRouteReason;
   const currentPlan = useMemo(
@@ -91,6 +87,11 @@ export function usePlanPageModel() {
     : daysLeft <= 30
       ? "expiring"
       : "active";
+  /** Renew (same-plan) only when: no auto_renew OR plan ends soon. Otherwise only upgrade. */
+  const canShowRenew =
+    primarySub?.auto_renew === false ||
+    subscriptionState === "expiring" ||
+    subscriptionState === "expired";
 
   useTrackScreen("plan", primarySub?.plan_id ?? null);
   const telemetry = useTelemetry(primarySub?.plan_id ?? null);
@@ -117,25 +118,8 @@ export function usePlanPageModel() {
 
   const activeDeviceCount =
     sessionQuery.data?.devices?.filter((d: { revoked_at?: string | null }) => !d.revoked_at).length ?? 0;
-  const deviceLimit = primarySub?.device_limit ?? 0;
-  const usageData = usageQuery.data;
-  const totalTrafficBytes = useMemo(
-    () =>
-      (usageData?.points ?? []).reduce(
-        (sum, point) => sum + (point.bytes_in ?? 0) + (point.bytes_out ?? 0),
-        0,
-      ),
-    [usageData?.points],
-  );
-  const devicePercent =
-    deviceLimit > 0 ? clamp((activeDeviceCount / deviceLimit) * 100, 0, 100) : 0;
-  const dataPercent = activeSub
-    ? clamp((totalTrafficBytes / DEFAULT_USAGE_SOFT_CAP_BYTES) * 100, 0, 100)
-    : 0;
-  const uptimePercent =
-    !activeSub || (typeof usageData?.sessions !== "number" || activeDeviceCount <= 0)
-      ? 99.8
-      : clamp((usageData.sessions / activeDeviceCount) * 100, 0, 100);
+  const planDeviceLimit = currentPlan?.device_limit ?? heroPlan?.device_limit ?? null;
+  const deviceLimit = planDeviceLimit ?? primarySub?.device_limit ?? 0;
   const heroDurationDays = heroPlan?.duration_days ?? 30;
   const isLifetimePlan =
     !!heroPlan &&
@@ -146,28 +130,6 @@ export function usePlanPageModel() {
     : subscriptionState === "expired"
       ? 0
       : clamp((daysLeft / Math.max(heroDurationDays, 1)) * 100, 0, 100);
-
-  const usageSummary = useMemo(
-    () => ({
-      activeDeviceCount,
-      deviceLimit,
-      devicePercent,
-      dataPercent,
-      uptimePercent,
-      deviceTone: usageToneFromPercent(devicePercent),
-      dataTone: usageToneFromPercent(dataPercent),
-      uptimeTone: usageToneFromPercent(uptimePercent),
-      totalTrafficBytes,
-    }),
-    [
-      activeDeviceCount,
-      deviceLimit,
-      devicePercent,
-      dataPercent,
-      uptimePercent,
-      totalTrafficBytes,
-    ],
-  );
 
   const billingHistoryItems = useMemo(
     () => toBillingHistoryView(historyQuery.data?.items ?? [], formatStars),
@@ -191,13 +153,15 @@ export function usePlanPageModel() {
   const atDeviceLimit = deviceLimit > 0 && activeDeviceCount >= deviceLimit;
   const heroView = useMemo(
     () => ({
-      heroPlanName: sanitizePlanDisplayName(heroPlan?.name?.trim() ?? primarySub?.plan_id ?? "No active plan"),
+      heroPlanName: sanitizePlanDisplayName(
+        heroPlan?.name?.trim() ?? primarySub?.plan_id ?? t("plan.no_active_plan_label"),
+      ),
       heroPlanPeriod: periodLabelForHero(heroPlan?.duration_days ?? 30),
       heroStars: heroPlan?.price_amount ?? selectedTierPlan?.price_amount ?? 0,
       heroPeriodDetail: heroPlan
-        ? `for ${heroPlan.duration_days} days`
+        ? t("plan.hero_period_for_days", { days: heroPlan.duration_days })
         : selectedTierPlan
-          ? `for ${selectedTierPlan.duration_days} days`
+          ? t("plan.hero_period_for_days", { days: selectedTierPlan.duration_days })
           : "",
       expiryText: primarySub?.valid_until
         ? new Date(primarySub.valid_until).toLocaleDateString(undefined, {
@@ -205,7 +169,7 @@ export function usePlanPageModel() {
             month: "short",
             year: "numeric",
           })
-        : "No active subscription",
+        : t("plan.no_active_subscription"),
       expiryPercent,
       expiryFillClass: (subscriptionState === "expired"
         ? "crit"
@@ -215,18 +179,23 @@ export function usePlanPageModel() {
       compactPlanId: heroPlanId ? `${heroPlanId.slice(0, 8)}···` : "--",
       heroPlanId,
       devicesLabel:
-        deviceLimit > 0 ? `${activeDeviceCount} / ${deviceLimit}` : `${activeDeviceCount}`,
+        deviceLimit > 0
+          ? t("plan.devices_label_limited", { used: activeDeviceCount, limit: deviceLimit })
+          : t("plan.devices_label_unbounded", { used: activeDeviceCount }),
       renewLabel:
         subscriptionState === "expiring" || subscriptionState === "expired"
           ? showUpsellExpiry || showUpsellTrialEnd
-            ? "Renew plan"
-            : "View plans"
-          : isSubscribed && atDeviceLimit
-            ? "Upgrade to add devices"
-            : isSubscribed
-              ? "Upgrade Plan"
-              : "Choose plan",
-      manageLabel: routeReason === "no_device" ? "Issue Device" : "View devices",
+            ? t("plan.cta_renew_plan")
+            : t("plan.cta_choose_plan")
+          : isSubscribed && canShowRenew
+            ? t("plan.cta_renew_plan")
+            : isSubscribed && atDeviceLimit
+              ? t("plan.cta_upgrade_plan")
+              : isSubscribed
+                ? t("plan.cta_upgrade_plan")
+                : t("plan.cta_choose_plan"),
+      manageLabel:
+        routeReason === "no_device" ? t("plan.cta_add_device") : t("plan.cta_manage_devices"),
     }),
     [
       heroPlan,
@@ -238,6 +207,7 @@ export function usePlanPageModel() {
       deviceLimit,
       activeDeviceCount,
       atDeviceLimit,
+      canShowRenew,
       showUpsellExpiry,
       showUpsellTrialEnd,
       isSubscribed,
@@ -246,11 +216,18 @@ export function usePlanPageModel() {
   );
 
   const header: StandardPageHeader = {
-    title: "Plan & Billing",
-    subtitle: "Subscription, renewal, and usage",
+    title: t("plan.header_title"),
+    subtitle: isSubscribed
+      ? t("plan.header_subtitle_subscribed")
+      : t("plan.header_subtitle_no_sub"),
     badge: {
       tone: subscriptionState === "active" ? "success" : subscriptionState === "expiring" ? "warning" : "danger",
-      label: subscriptionState === "active" ? "Active" : subscriptionState === "expiring" ? "Expiring" : "Expired",
+      label:
+        subscriptionState === "active"
+          ? t("plan.badge_active")
+          : subscriptionState === "expiring"
+            ? t("plan.badge_expiring")
+            : t("plan.badge_expired"),
       pulse: true,
     },
   };
@@ -262,12 +239,12 @@ export function usePlanPageModel() {
   }, [queryClient]);
 
   const pageState: StandardPageState = !hasToken
-    ? { status: "empty", title: "Session missing" }
+    ? { status: "empty", title: t("common.session_missing_title") }
     : sessionQuery.error || plansQuery.error
       ? {
           status: "error",
-          title: "Could not load",
-          message: "We could not load your plan or options. Please try again or contact support.",
+          title: t("common.could_not_load_title"),
+          message: t("common.could_not_load_plan"),
           onRetry: retry,
         }
       : sessionQuery.isLoading || plansQuery.isLoading
@@ -284,6 +261,7 @@ export function usePlanPageModel() {
     recommendedRoute,
     routeReason,
     currentPlan,
+    canShowRenew,
     showUpsellExpiry,
     showUpsellTrialEnd,
     renewalTargetTo,
@@ -296,7 +274,6 @@ export function usePlanPageModel() {
     visibleTierPairs,
     hasAnnualOptions,
     shouldShowPlanOptions,
-    usageSummary,
     billingHistoryItems,
     historyLoading: historyQuery.isLoading,
     historyError: historyQuery.error,

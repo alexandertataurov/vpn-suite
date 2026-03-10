@@ -4,11 +4,11 @@ const VIEWPORT_WIDTHS = [320, 360, 390, 768, 1024] as const;
 const VIEWPORT_HEIGHT = 840;
 
 const CORE_PAGES = [
-  { path: "/", ctaLabel: /Connect Now|Get config|Manage Connection/i },
-  { path: "/plan", ctaLabel: /Renew Plan|Select Basic|Select Pro|Current Plan|View all transactions/i },
-  { path: "/devices", ctaLabel: /Add device/i },
+  { path: "/", ctaLabel: /Manage Devices|Get Plan|Subscription/i },
+  { path: "/plan", ctaLabel: /Renew plan|Upgrade Plan|Choose plan|Current Plan/i },
+  { path: "/devices", ctaLabel: /Issue first device|Add device|Choose plan/i },
   { path: "/support", ctaLabel: /Contact support/i },
-  { path: "/settings", ctaLabel: /Plans & billing|Devices|Referral link/i },
+  { path: "/settings", ctaLabel: /Invite friends|Billing details|Pause subscription|Resume subscription/i },
 ] as const;
 
 async function injectTelegram(page: Page) {
@@ -68,6 +68,7 @@ async function mockApi(page: Page) {
             id: "sub-1",
             plan_id: "basic",
             status: "active",
+            access_status: "enabled",
             valid_until: validUntil,
             device_limit: 5,
             created_at: nowIso,
@@ -75,7 +76,7 @@ async function mockApi(page: Page) {
           },
         ],
         devices: [],
-        onboarding: { completed: true, step: 2, version: 1, updated_at: nowIso },
+        onboarding: { completed: true, step: 3, version: 2, updated_at: nowIso },
       }),
     });
   });

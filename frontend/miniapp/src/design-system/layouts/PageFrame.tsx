@@ -7,6 +7,7 @@ export interface PageFrameProps extends Omit<HTMLAttributes<HTMLDivElement>, "ti
   title: string;
   subtitle?: string;
   headerAction?: ReactNode;
+  hideTrailingAction?: boolean;
   children?: ReactNode;
 }
 
@@ -19,6 +20,7 @@ export function PageFrame({
   title,
   subtitle,
   headerAction,
+  hideTrailingAction = false,
   className = "",
   children,
   ...props
@@ -29,7 +31,7 @@ export function PageFrame({
         title={title}
         subtitle={subtitle}
         action={headerAction}
-        trailingAction={<HeaderBell />}
+        trailingAction={hideTrailingAction ? null : <HeaderBell />}
       />
       {children}
     </PageScaffold>

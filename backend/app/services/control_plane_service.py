@@ -55,6 +55,7 @@ from app.services.control_plane.server_crud import _node_regions
 from app.services.load_balancer import calculate_node_score
 from app.services.migrate_service import migrate_peer
 from app.services.node_runtime import NodeRuntimeAdapter
+from app.services.subscription_state import entitled_active_where
 
 
 def build_topology_summary(
@@ -301,7 +302,7 @@ async def _enterprise_pinned_counts(db: AsyncSession, node_ids: set[str]) -> dic
         .where(
             Device.revoked_at.is_(None),
             Device.server_id.in_(node_ids),
-            Subscription.status == "active",
+            *entitled_active_where(),
             or_(*predicates),
         )
         .group_by(Device.server_id)
@@ -574,7 +575,7 @@ async def business_metrics(db: AsyncSession) -> BusinessMetricsOut:
         await db.execute(
             select(func.count())
             .select_from(Subscription)
-            .where(Subscription.status == "active", Subscription.valid_until > now)
+            .where(*entitled_active_where(now=now))
         )
     ).scalar() or 0
 
@@ -583,7 +584,7 @@ async def business_metrics(db: AsyncSession) -> BusinessMetricsOut:
             Subscription.plan_id,
             func.count().label("cnt"),
         )
-        .where(Subscription.status == "active", Subscription.valid_until > now)
+        .where(*entitled_active_where(now=now))
         .group_by(Subscription.plan_id)
     )
     plan_counts = {plan_id: cnt for plan_id, cnt in plan_price_map_rows.all()}
@@ -640,8 +641,7 @@ async def business_metrics(db: AsyncSession) -> BusinessMetricsOut:
     retained_users = (
         await db.execute(
             select(func.count(func.distinct(Subscription.user_id))).where(
-                Subscription.status == "active",
-                Subscription.valid_until > now,
+                *entitled_active_where(now=now),
                 Subscription.user_id.in_(select(User.id).where(User.created_at <= d30_cutoff)),
             )
         )
@@ -1101,7 +1101,7 @@ async def apply_plan_bandwidth_policies(
                 .where(
                     Device.server_id == node_id,
                     Device.revoked_at.is_(None),
-                    Subscription.status == "active",
+                    *entitled_active_where(),
                     PlanBandwidthPolicy.enabled.is_(True),
                 )
             )
@@ -1230,7 +1230,7 @@ async def execute_rebalance_plan(
             .where(
                 Device.server_id == move.source_node_id,
                 Device.revoked_at.is_(None),
-                Subscription.status == "active",
+                *entitled_active_where(),
             )
             .order_by(Device.issued_at.asc())
         )

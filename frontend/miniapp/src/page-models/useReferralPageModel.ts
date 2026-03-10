@@ -7,6 +7,7 @@ import { useSession } from "@/hooks/useSession";
 import { useTrackScreen } from "@/hooks/useTrackScreen";
 import { useTelegramHaptics } from "@/hooks/useTelegramHaptics";
 import { useTelegramMainButton } from "@/hooks/useTelegramMainButton";
+import { useI18n } from "@/hooks/useI18n";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { useToast } from "@/design-system";
 import { webappQueryKeys } from "@/lib/query-keys/webapp.query-keys";
@@ -19,6 +20,7 @@ import { telegramBotUsername } from "@/config/env";
 export function useReferralPageModel() {
   const { addToast } = useToast();
   const { notify, impact } = useTelegramHaptics();
+  const { t } = useI18n();
   const hasToken = !!useWebappToken();
   const isOnline = useOnlineStatus();
   const { data: session } = useSession(hasToken);
@@ -35,7 +37,7 @@ export function useReferralPageModel() {
   );
   const showUpsellReferral = shouldShowUpsell(currentPlan?.upsell_methods, "referral");
   const referralOffer = showUpsellReferral
-    ? getUpgradeOfferForIntent(plans as PlanLikeForUpsell[], currentPlan, "referral", "referral")
+    ? getUpgradeOfferForIntent(plans as PlanLikeForUpsell[], currentPlan, "referral", "referral", t)
     : null;
   const referralUpsellTo = referralOffer?.targetTo ?? "/plan?intent=referral";
 
@@ -104,8 +106,8 @@ export function useReferralPageModel() {
   }, [shareUrl, impact, addToast, notify, copyToClipboard]);
 
   const header: StandardPageHeader = {
-    title: "Referrals",
-    subtitle: "Share your link and track rewards",
+    title: "Invite friends",
+    subtitle: "Copy your invite link. Referral rewards stay read-only during beta.",
   };
 
   const pageState: StandardPageState = !hasToken
@@ -142,6 +144,7 @@ export function useReferralPageModel() {
   return {
     header,
     pageState,
+    readOnlyMode: true,
     statsData,
     shareUrl,
     botUsername,

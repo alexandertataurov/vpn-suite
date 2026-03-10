@@ -1,5 +1,6 @@
 /**
  * Design system patterns — composed components (MissionCard, MissionChip, etc.).
+ * Grouped by domain: mission, content, blocks, cards, home, ui.
  * Use primitives + components; no business logic in patterns.
  */
 export {
@@ -33,26 +34,28 @@ export {
   type MissionOperationLinkProps,
   type MissionProgressBarProps,
   type MissionStatusDotProps,
-} from "./MissionPrimitives";
+} from "./mission/Mission";
 
-export { FallbackScreen } from "./FallbackScreen";
-export type { FallbackScreenProps } from "./FallbackScreen";
-export { HomeDynamicBlock } from "./HomeDynamicBlock";
-export type { HomeDynamicBlockProps } from "./HomeDynamicBlock";
-export { HomeHeroPanel } from "./HomeHeroPanel";
-export type { HomeHeroPanelProps, ConnectionPhase } from "./HomeHeroPanel";
-export { HomePrimaryActionZone } from "./HomePrimaryActionZone";
-export type { HomePrimaryActionZoneProps } from "./HomePrimaryActionZone";
-export { HomeQuickActionGrid } from "./HomeQuickActionGrid";
-export type { HomeQuickActionGridProps } from "./HomeQuickActionGrid";
-export { OfflineBanner } from "./OfflineBanner";
-export { PageStateScreen } from "./PageStateScreen";
-export type { PageStateScreenProps } from "./PageStateScreen";
-export { DataGrid, DataCell } from "./DataGrid";
-export type { DataGridProps, DataCellProps, DataCellValueTone } from "./DataGrid";
+export { FallbackScreen } from "./blocks/FallbackScreen";
+export type { FallbackScreenProps } from "./blocks/FallbackScreen";
+export { HomeDynamicBlock } from "./home/HomeDynamicBlock";
+export type { HomeDynamicBlockProps } from "./home/HomeDynamicBlock";
+export { HomeHeroPanel } from "./home/HomeHeroPanel";
+export type { HomeHeroPanelProps, ConnectionPhase } from "./home/HomeHeroPanel";
+export { HomePrimaryActionZone } from "./home/HomePrimaryActionZone";
+export type { HomePrimaryActionZoneProps } from "./home/HomePrimaryActionZone";
+export { HomeQuickActionGrid } from "./home/HomeQuickActionGrid";
+export type { HomeQuickActionGridProps } from "./home/HomeQuickActionGrid";
+export { OverflowActionMenu } from "./ui/OverflowActionMenu";
+export type { OverflowActionMenuProps, OverflowActionMenuItem } from "./ui/OverflowActionMenu";
+export { OfflineBanner } from "./blocks/OfflineBanner";
+export { PageStateScreen } from "./blocks/PageStateScreen";
+export type { PageStateScreenProps } from "./blocks/PageStateScreen";
+export { DataGrid, DataCell } from "./ui/DataGrid";
+export type { DataGridProps, DataCellProps, DataCellValueTone } from "./ui/DataGrid";
 
-export { ListCard, ListRow } from "./ListCard";
-export type { ListCardProps, ListRowProps, ListRowIconTone } from "./ListCard";
+export { ListCard, ListRow } from "./cards/ListCard";
+export type { ListCardProps, ListRowProps, ListRowIconTone } from "./cards/ListCard";
 
 export {
   FormField,
@@ -60,26 +63,26 @@ export {
   SettingsDivider,
   ToggleRow,
   SegmentedControl,
-} from "./ContentLibraryForms";
+} from "./content/ContentForms";
 export type {
   FormFieldProps,
   SettingsCardProps,
   ToggleRowProps,
   SegmentedControlProps,
   SegmentedControlOption,
-} from "./ContentLibraryForms";
+} from "./content/ContentForms";
 
-export { ButtonRow, ButtonRowAuto, CardFooterLink } from "./ContentLibraryButtons";
-export type { ButtonRowProps, ButtonRowAutoProps, CardFooterLinkProps } from "./ContentLibraryButtons";
+export { ButtonRow, ButtonRowAuto, CardFooterLink } from "./content/ContentButtons";
+export type { ButtonRowProps, ButtonRowAutoProps, CardFooterLinkProps } from "./content/ContentButtons";
 
-export { StatusChip } from "./StatusChip";
-export type { StatusChipProps, StatusChipVariant } from "./StatusChip";
+export { StatusChip } from "./ui/StatusChip";
+export type { StatusChipProps, StatusChipVariant } from "./ui/StatusChip";
 
-export { ServerCard } from "./ServerCard";
-export type { ServerCardProps } from "./ServerCard";
+export { ServerCard } from "./cards/ServerCard";
+export type { ServerCardProps } from "./cards/ServerCard";
 
-export { EmptyStateBlock } from "./EmptyStateBlock";
-export type { EmptyStateBlockProps } from "./EmptyStateBlock";
+export { EmptyStateBlock } from "./blocks/EmptyStateBlock";
+export type { EmptyStateBlockProps } from "./blocks/EmptyStateBlock";
 
-export { SupportActionList } from "./SupportActionList";
-export type { SupportActionListProps, SupportActionItem } from "./SupportActionList";
+export { SupportActionList } from "./ui/SupportActionList";
+export type { SupportActionListProps, SupportActionItem } from "./ui/SupportActionList";

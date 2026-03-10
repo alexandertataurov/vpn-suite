@@ -195,7 +195,7 @@ export function DashboardSidebar({
           type="button"
           className="sidebar-overlay-backdrop"
           onClick={onCloseOverlay}
-          aria-label="Close menu"
+          aria-label="Back"
         />
       ) : null}
       <SidebarNavRoot className={isOverlayOpen ? "sidebar--overlay" : undefined}>

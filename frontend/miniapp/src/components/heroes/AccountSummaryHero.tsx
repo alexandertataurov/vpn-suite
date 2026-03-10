@@ -10,6 +10,7 @@ export interface AccountSummaryHeroProps extends Omit<HTMLAttributes<HTMLDivElem
   /** Optional display-safe account ID; when set, shown as secondary copyable line. */
   accountId?: string | null;
   badge?: ReactNode;
+  children?: ReactNode;
 }
 
 /** Content Library 3c: Account Summary Hero. */
@@ -21,6 +22,7 @@ export function AccountSummaryHero({
   memberSince,
   accountId,
   badge,
+  children,
   className = "",
   ...props
 }: AccountSummaryHeroProps) {
@@ -45,7 +47,7 @@ export function AccountSummaryHero({
         </div>
         <div className="acct-info">
           <div className="acct-name">{name}</div>
-          <div className="acct-email">{email}</div>
+          {email ? <div className="acct-email">{email}</div> : null}
           {memberSince ? <div className="acct-since">{memberSince}</div> : null}
           {accountId ? (
             <div className="acct-id-row">
@@ -64,6 +66,7 @@ export function AccountSummaryHero({
         </div>
         {badge ? <div className="acct-status">{badge}</div> : null}
       </div>
+      {children ? <div className="acct-hero-extra">{children}</div> : null}
     </div>
   );
 }

@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.constants import REFERRAL_REWARD_DAYS
 from app.models import Referral, Subscription
+from app.services.subscription_state import entitled_active_where, is_entitled_active
 
 
 async def grant_referral_reward(
@@ -37,14 +38,13 @@ async def grant_referral_reward(
         select(Subscription)
         .where(
             Subscription.user_id == ref.referrer_user_id,
-            Subscription.status == "active",
-            Subscription.valid_until > now,
+            *entitled_active_where(now=now),
         )
         .order_by(Subscription.valid_until.desc())
         .limit(1)
     )
     referrer_sub = referrer_subs.scalar_one_or_none()
-    if referrer_sub:
+    if referrer_sub and is_entitled_active(referrer_sub, now=now):
         base = referrer_sub.valid_until if referrer_sub.valid_until > now else now
         referrer_sub.valid_until = base + timedelta(days=REFERRAL_REWARD_DAYS)
         ref.reward_applied_at = now

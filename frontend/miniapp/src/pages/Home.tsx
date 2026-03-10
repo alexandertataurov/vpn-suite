@@ -1,21 +1,22 @@
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ConnectionStatusHero, SessionMissing } from "@/components";
+import { ConnectionStatusHero, SessionMissing, LimitStrip } from "@/components";
 import { FallbackScreen } from "@/design-system/patterns/FallbackScreen";
 import {
   PageFrame,
   PageSection,
   Skeleton,
-  MissionChip,
   HomeQuickActionGrid,
   HomePrimaryActionZone,
 } from "@/design-system";
 import { useTelemetry } from "@/hooks/useTelemetry";
 import { useHomePageModel } from "@/page-models";
+import { useI18n } from "@/hooks/useI18n";
 
 export function HomePage() {
   const model = useHomePageModel();
   const { track } = useTelemetry(model.planId);
+  const { t } = useI18n();
   const upsellShown = model.primaryUpsell?.show && model.primaryUpsell.targetTo;
   useEffect(() => {
     if (upsellShown && model.primaryUpsell) {
@@ -30,8 +31,8 @@ export function HomePage() {
   if (model.pageState.status === "error") {
     return (
       <FallbackScreen
-        title={model.pageState.title ?? "Could not load account status"}
-        message={model.pageState.message ?? "Could not load account status"}
+        title={model.pageState.title ?? t("common.could_not_load_account_status")}
+        message={model.pageState.message ?? t("common.could_not_load_account_status")}
         onRetry={model.pageState.onRetry}
       />
     );
@@ -40,7 +41,7 @@ export function HomePage() {
   if (model.pageState.status === "loading") {
     return (
       <PageFrame title={model.header.title} className="home-page">
-        <PageSection title="Quick Access" className="stagger-1">
+        <PageSection title={t("home.quick_access_title_with_sub")} className="stagger-1">
           <Skeleton variant="card" className="stagger-2" />
         </PageSection>
       </PageFrame>
@@ -48,22 +49,27 @@ export function HomePage() {
   }
 
   return (
-    <PageFrame title={model.header.title} className="home-page">
+    <PageFrame title={model.header.title} subtitle={model.header.subtitle} className="home-page">
       <ConnectionStatusHero {...model.connectionHero} />
-      {!model.hasSubscription ? (
+      {model.primaryUpsell?.show && model.primaryUpsell.targetTo ? (
         <div className="stagger-2">
-          <HomePrimaryActionZone
-            phase="inactive"
-            primaryTo="/plan"
-            primaryLabel="Get a plan"
-            secondaryLabel="Learn support flow"
-            secondaryTo="/support"
-          />
-        </div>
-      ) : model.primaryUpsell?.show && model.primaryUpsell.targetTo ? (
-        <div className="stagger-2">
-          <div className="limit-strip limit-strip--compact home-upsell-row">
-            <div className="limit-strip__icon" aria-hidden>
+          <LimitStrip
+            variant="compact"
+            title={model.primaryUpsell.title}
+            message={model.primaryUpsell.body}
+            action={
+              <Link
+                to={model.primaryUpsell.targetTo}
+                onClick={() =>
+                  track("upsell_clicked", { trigger: model.primaryUpsell!.trigger, screen_name: "home" })
+                }
+                className="page-anchor-link"
+              >
+                {model.primaryUpsell.ctaLabel}
+              </Link>
+            }
+            className="home-upsell-row"
+            icon={
               <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden>
                 <path
                   d="M3 8.5 6.5 12 13 4"
@@ -74,41 +80,21 @@ export function HomePage() {
                   strokeLinejoin="round"
                 />
               </svg>
-            </div>
-            <div className="limit-strip__text">
-              <div className="limit-strip__title">{model.primaryUpsell.title}</div>
-              <div className="limit-strip__message">{model.primaryUpsell.body}</div>
-            </div>
-            <div className="limit-strip__action">
-              <Link
-                to={model.primaryUpsell.targetTo}
-                onClick={() =>
-                  track("upsell_clicked", { trigger: model.primaryUpsell!.trigger, screen_name: "home" })
-                }
-                className="page-anchor-link"
-              >
-                {model.primaryUpsell.ctaLabel}
-              </Link>
-            </div>
-          </div>
+            }
+          />
         </div>
       ) : null}
+      <div className="stagger-2">
+        <HomePrimaryActionZone
+          phase={model.connectionHero.state}
+          primaryTo={model.primaryAction.to}
+          primaryLabel={model.primaryAction.label}
+          secondaryLabel={model.primaryAction.secondaryLabel}
+          secondaryTo={model.primaryAction.secondaryTo}
+        />
+      </div>
       <PageSection
-        title={
-          model.hasSubscription ? (
-            <>
-              Quick Access{" "}
-              <MissionChip
-                tone={model.quickAccessMeta.badge.tone}
-                className={`section-meta-chip ${model.quickAccessMeta.badge.emphasizeNumeric ? "miniapp-tnum" : ""}`.trim()}
-              >
-                {model.quickAccessMeta.badge.label}
-              </MissionChip>
-            </>
-          ) : (
-            "Quick Access"
-          )
-        }
+        title={model.hasSubscription ? t("home.quick_access_title_with_sub") : t("home.quick_actions_title")}
         description={model.quickAccessMeta.description}
         className="stagger-2"
       >

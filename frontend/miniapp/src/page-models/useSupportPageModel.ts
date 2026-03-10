@@ -1,34 +1,36 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useWebappToken } from "@/api/client";
 import { useSession } from "@/hooks/useSession";
 import { useTrackScreen } from "@/hooks/useTrackScreen";
+import { useTelemetry } from "@/hooks/useTelemetry";
 import type { StandardPageHeader, StandardPageState, StandardSectionBadge } from "./types";
 import { getActiveSubscription } from "./helpers";
+import { useI18n } from "@/hooks/useI18n";
 
 const TROUBLESHOOTER_STEPS = [
   {
-    title: "Is your subscription active?",
-    body: "Check Home or Plan. If there is no active plan, choose one and complete payment.",
-    nextLabel: "Yes, my subscription is active",
-    backLabel: "Back",
+    titleKey: "support.troubleshooter_step_access_title",
+    bodyKey: "support.troubleshooter_step_access_body",
+    nextLabelKey: "support.troubleshooter_step_access_next",
+    backLabelKey: "onboarding.back",
   },
   {
-    title: "Do you have a device config?",
-    body: "Go to Devices, add a device, and import the config into AmneziaVPN or a compatible app.",
-    nextLabel: "I have a config",
-    backLabel: "Back",
+    titleKey: "support.troubleshooter_step_device_title",
+    bodyKey: "support.troubleshooter_step_device_body",
+    nextLabelKey: "support.troubleshooter_step_device_next",
+    backLabelKey: "onboarding.back",
   },
   {
-    title: "Try reissuing the config",
-    body: "In Devices, revoke the device and add it again to get a fresh config.",
-    nextLabel: "Next",
-    backLabel: "Back",
+    titleKey: "support.troubleshooter_step_refresh_title",
+    bodyKey: "support.troubleshooter_step_refresh_body",
+    nextLabelKey: "support.troubleshooter_step_refresh_next",
+    backLabelKey: "onboarding.back",
   },
   {
-    title: "Contact support",
-    body: "If it still does not connect, open support chat from this page.",
-    nextLabel: "Done",
-    backLabel: "Back",
+    titleKey: "support.troubleshooter_step_support_title",
+    bodyKey: "support.troubleshooter_step_support_body",
+    nextLabelKey: "support.troubleshooter_step_support_next",
+    backLabelKey: "onboarding.back",
   },
 ] as const;
 
@@ -37,34 +39,35 @@ export function useSupportPageModel() {
   const { data, isLoading, error, refetch } = useSession(hasToken);
   const activeSub = getActiveSubscription(data);
   useTrackScreen("support", activeSub?.plan_id ?? null);
+  const { track } = useTelemetry(activeSub?.plan_id ?? null);
   const [step, setStep] = useState(0);
   const totalSteps = TROUBLESHOOTER_STEPS.length;
-  const current = TROUBLESHOOTER_STEPS[step] ?? TROUBLESHOOTER_STEPS[0];
+  const { t } = useI18n();
 
   const header: StandardPageHeader = {
-    title: "Support",
-    subtitle: "Fix connection issues quickly",
+    title: t("support.header_title"),
+    subtitle: t("support.header_subtitle"),
   };
 
   const pageState: StandardPageState = !hasToken
-    ? { status: "empty", title: "Session missing" }
+    ? { status: "empty", title: t("common.session_missing_title") }
     : isLoading
       ? { status: "loading" }
       : error
-        ? {
-            status: "error",
-            title: "Could not load",
-            message: "We could not load your session. Tap Try again to reload.",
-            onRetry: () => void refetch(),
-          }
+      ? {
+          status: "error",
+          title: t("common.could_not_load_title"),
+          message: t("common.could_not_load_generic"),
+          onRetry: () => void refetch(),
+        }
         : { status: "ready" };
 
   const hero = {
-    eyebrow: "Network status",
-    title: "All systems operational",
-    subtitle: "No known service incidents",
-    edge: "e-g" as const,
-    glow: "g-green" as const,
+    eyebrow: t("support.header_title"),
+    title: t("support.hero_title"),
+    subtitle: t("support.hero_subtitle"),
+    edge: "e-b" as const,
+    glow: "g-blue" as const,
   };
 
   const troubleshooterBadge: StandardSectionBadge = {
@@ -74,13 +77,23 @@ export function useSupportPageModel() {
   };
 
   /** Only for step 0: label for the "No" path (e.g. navigate to plan). */
-  const currentStepAltLabel = step === 0 ? "No, choose plan" : undefined;
+  const currentStepAltLabel =
+    step === 0 && !activeSub ? t("support.troubleshooter_step_access_alt") : undefined;
+
+  useEffect(() => {
+    track("support_opened", { screen_name: "support" });
+  }, [track]);
 
   return {
     header,
     pageState,
     hero,
-    currentStep: current,
+    currentStep: {
+      title: t(TROUBLESHOOTER_STEPS[step]?.titleKey ?? TROUBLESHOOTER_STEPS[0].titleKey),
+      body: t(TROUBLESHOOTER_STEPS[step]?.bodyKey ?? TROUBLESHOOTER_STEPS[0].bodyKey),
+      nextLabel: t(TROUBLESHOOTER_STEPS[step]?.nextLabelKey ?? TROUBLESHOOTER_STEPS[0].nextLabelKey),
+      backLabel: t(TROUBLESHOOTER_STEPS[step]?.backLabelKey ?? TROUBLESHOOTER_STEPS[0].backLabelKey),
+    },
     step,
     totalSteps,
     troubleshooterBadge,

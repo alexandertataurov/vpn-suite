@@ -1,6 +1,6 @@
 # Design System Refactor Roadmap
 
-Status: Phases 1–2 complete; Phases 3–5 planned/partial. See audit plan for full context.
+Status: Phases 1–2 complete; Phases 3–5 planned/partial. Library rebuild (2025): cx removed; page-recipes → recipes; patterns grouped by domain (mission, content, blocks, cards, home, ui); typography under components/typography. See audit plan for full context.
 
 ---
 
@@ -56,7 +56,7 @@ Status: Phases 1–2 complete; Phases 3–5 planned/partial. See audit plan for 
 **Done:** Content-library magic numbers partially replaced with tokens (spacing-1/2/3/4/5, size-touch-target, ds-font-page-title-size; card-body, plan-hero-body, op-meta padding).
 
 **Remaining:**
-- Continue replacing magic numbers in content-library.css
+- Continue replacing magic numbers in content/library.css
 - Consolidate radius definitions across themes
 
 ---

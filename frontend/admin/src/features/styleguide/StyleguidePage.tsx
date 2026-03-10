@@ -562,7 +562,7 @@ export function StyleguidePage() {
           </p>
           <div className="flex justify-end" style={{ gap: spacing.gap2 }}>
             <Button variant="default" onClick={() => setModalOpen(false)}>
-              Close
+              Back
             </Button>
             <Button variant="danger" onClick={() => setModalOpen(false)}>
               Confirm

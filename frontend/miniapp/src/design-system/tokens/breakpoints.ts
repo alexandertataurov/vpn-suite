@@ -1,6 +1,6 @@
 /**
  * Breakpoint tokens for miniapp viewport. Use via CSS var() or useBreakpoint().
- * CSS source: miniapp-tokens.css (--bp-sm, --bp-md).
+ * CSS source: styles/tokens/base.css (--bp-sm, --bp-md).
  */
 export const BREAKPOINT_TOKENS = {
   bpSm: "--bp-sm",

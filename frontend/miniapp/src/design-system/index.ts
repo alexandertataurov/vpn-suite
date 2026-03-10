@@ -7,7 +7,7 @@ export * from "./primitives";
 export * from "./components";
 export * from "./patterns";
 export * from "./layouts";
-export * from "./page-recipes";
+export * from "./recipes";
 export * from "./theme";
 export * from "./icons";
 export * from "./hooks";

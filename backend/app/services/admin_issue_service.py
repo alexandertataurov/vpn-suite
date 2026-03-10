@@ -27,14 +27,7 @@ from app.core.config_builder import (
 )
 from app.core.exceptions import WireGuardCommandError
 from app.core.redaction import redact_for_log
-from app.models import (
-    Device,
-    ProfileIssue,
-    Server,
-    ServerProfile,
-    Subscription,
-    User,
-)
+from app.models import Device, Plan, ProfileIssue, Server, ServerProfile, Subscription, User
 from app.services.address_allocator import allocate_address_for_device
 from app.services.issued_config_service import persist_issued_configs_with_tokens
 from app.services.node_endpoint_utils import get_endpoint_from_runtime, is_endpoint_private
@@ -44,6 +37,7 @@ from app.services.server_live_key_service import (
     live_key_fetch,
 )
 from app.services.server_obfuscation import request_params_with_server_h
+from app.services.subscription_state import entitled_active_where, is_entitled_active
 
 # tg_id for system operator (standalone peers)
 SYSTEM_TG_ID = 0
@@ -109,13 +103,12 @@ async def _resolve_system_user_sub(session: AsyncSession) -> tuple[int, str]:
         select(Subscription)
         .where(
             Subscription.user_id == user.id,
-            Subscription.status == "active",
-            Subscription.valid_until > datetime.now(timezone.utc),
+            *entitled_active_where(now=datetime.now(timezone.utc)),
         )
         .limit(1)
     )
     sub = sub_result.scalar_one_or_none()
-    if not sub:
+    if not sub or not is_entitled_active(sub):
         raise ValueError("system_operator_not_seeded")
     return user.id, sub.id
 
@@ -169,26 +162,33 @@ async def admin_issue_peer(
 
     if user_id is not None and subscription_id is not None:
         sub_result = await session.execute(
-            select(Subscription)
+            select(Subscription, Plan.device_limit)
+            .join(Plan, Plan.id == Subscription.plan_id)
             .where(
                 Subscription.id == subscription_id,
                 Subscription.user_id == user_id,
-                Subscription.status == "active",
-                Subscription.valid_until > datetime.now(timezone.utc),
+                *entitled_active_where(now=datetime.now(timezone.utc)),
             )
             .with_for_update()
         )
-        sub = sub_result.scalar_one_or_none()
-        if not sub:
+        row = sub_result.first()
+        if not row:
+            raise ValueError("subscription_invalid")
+        sub, plan_device_limit = row
+        if not is_entitled_active(sub):
             raise ValueError("subscription_invalid")
     else:
         user_id, subscription_id = await _resolve_system_user_sub(session)
         sub_result = await session.execute(
-            select(Subscription).where(Subscription.id == subscription_id).with_for_update()
+            select(Subscription, Plan.device_limit)
+            .join(Plan, Plan.id == Subscription.plan_id)
+            .where(Subscription.id == subscription_id)
+            .with_for_update()
         )
-        sub = sub_result.scalar_one_or_none()
-        if not sub:
+        row = sub_result.first()
+        if not row:
             raise ValueError("system_operator_not_seeded")
+        sub, plan_device_limit = row
 
     count = (
         await session.execute(
@@ -200,7 +200,17 @@ async def admin_issue_peer(
             )
         )
     ).scalar() or 0
-    if count >= sub.device_limit:
+    effective_device_limit = int(
+        (
+            getattr(sub, "device_limit", None)
+            if getattr(sub, "device_limit", None) is not None
+            else plan_device_limit
+        )
+        or 1
+    )
+    if getattr(sub, "device_limit", None) != effective_device_limit:
+        sub.device_limit = effective_device_limit
+    if count >= effective_device_limit:
         raise ValueError("device_limit_exceeded")
 
     profile_result = await session.execute(

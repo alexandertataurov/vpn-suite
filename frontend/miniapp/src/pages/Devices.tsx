@@ -1,6 +1,4 @@
-import { useLocation } from "react-router-dom";
 import { SummaryHero, LimitStrip, SessionMissing } from "@/components";
-import { Link } from "react-router-dom";
 import {
   IconAlertTriangle,
   Skeleton,
@@ -9,20 +7,18 @@ import {
   PageSection,
   MissionAlert,
   MissionCard,
-  MissionChip,
   MissionPrimaryLink,
-  MissionSecondaryLink,
   FallbackScreen,
   EmptyStateBlock,
 } from "@/design-system";
 import { useTelegramMainButton } from "@/hooks/useTelegramMainButton";
 import { useDevicesPageModel } from "@/page-models";
+import { useI18n } from "@/hooks/useI18n";
 import { SetupCardContent, ConfigCardContent, DeviceRow } from "./devices";
 
 export function DevicesPage() {
-  const location = useLocation();
   const model = useDevicesPageModel();
-  const fromOnboarding = (location.state as { fromOnboarding?: boolean } | null)?.fromOnboarding === true;
+  const { t } = useI18n();
 
   useTelegramMainButton(null);
 
@@ -33,8 +29,8 @@ export function DevicesPage() {
   if (model.pageState.status === "error") {
     return (
       <FallbackScreen
-        title={model.pageState.title ?? "Could not load devices"}
-        message={model.pageState.message ?? "We could not load your devices. Please try again or contact support."}
+        title={model.pageState.title ?? t("common.could_not_load_title")}
+        message={model.pageState.message ?? t("common.could_not_load_devices")}
         onRetry={model.pageState.onRetry}
       />
     );
@@ -51,29 +47,28 @@ export function DevicesPage() {
   }
 
   return (
-    <PageFrame title={model.header.title} className="devices-page home-page">
-      {fromOnboarding && (
-        <PageSection className="onboarding-return-banner">
-          <MissionSecondaryLink to="/onboarding" state={{ fromOnboarding: true }}>
-            ← Back to setup
-          </MissionSecondaryLink>
-        </PageSection>
-      )}
-      <SummaryHero {...model.summaryHero} className="stagger-1" />
+    <PageFrame title={model.header.title} subtitle={model.header.subtitle} className="devices-page home-page">
+      <SummaryHero {...model.summaryHero} metricStaticFill={false} className="stagger-1" />
 
       <PageSection
-        title="Devices"
-        action={<MissionChip tone={model.activeBadge.tone} className="section-meta-chip miniapp-tnum">{model.activeBadge.label}</MissionChip>}
+        id="devices-section"
+        title={t("devices.section_devices_title")}
         className="stagger-3"
       >
         {(model.isDeviceLimitError || model.showUpgradeCta) ? (
           <LimitStrip
             variant="compact"
-            title={model.deviceLimitUpsellCopy?.title ?? "Device limit reached"}
-            message={model.deviceLimitUpsellCopy?.body ?? "Upgrade plan or revoke device"}
+            title={
+              model.deviceLimitUpsellCopy?.title ??
+              t("devices.limit_reached_default_title")
+            }
+            message={
+              model.deviceLimitUpsellCopy?.body ??
+              t("devices.limit_reached_default_message")
+            }
             action={(
               <MissionPrimaryLink to={model.upgradeTargetTo} onClick={model.handleUpgradePlanClick}>
-                {model.deviceLimitUpsellCopy?.ctaLabel ?? "Upgrade plan"}
+                {model.deviceLimitUpsellCopy?.ctaLabel ?? t("devices.limit_reached_default_cta")}
               </MissionPrimaryLink>
             )}
             icon={<IconAlertTriangle size={20} strokeWidth={1.8} />}
@@ -81,26 +76,9 @@ export function DevicesPage() {
         ) : model.issueErrorMessage ? (
           <MissionAlert
             tone="error"
-            title="Could not issue device"
+            title={t("devices.issue_error_title")}
             message={model.issueErrorMessage}
           />
-        ) : null}
-        {model.hasSubscription && model.canAddDevice && model.activeDevices.length > 0 ? (
-          <div className="device-actions-inline">
-            <button
-              type="button"
-              className="link-interactive"
-              onClick={model.handleIssueDevice}
-              disabled={model.isAddPending}
-              aria-label="Add device"
-            >
-              {model.isAddPending ? "Issuing…" : model.issueActionLabel}
-            </button>
-            <span className="device-actions-sep" aria-hidden> · </span>
-            <Link to="/servers" className="link-interactive" aria-label="Change server routing">
-              Routing
-            </Link>
-          </div>
         ) : null}
 
         <div className="ops">
@@ -118,10 +96,12 @@ export function DevicesPage() {
           ))}
           {model.activeDevices.length === 0 ? (
             <EmptyStateBlock
-              title="No devices yet"
-              message={model.hasSubscription
-                ? "Issue your first device to receive a VPN config for AmneziaVPN."
-                : "Activate a plan first, then come back here to issue your first config."}
+              title={t("devices.empty_title")}
+              message={
+                model.hasSubscription
+                  ? t("devices.empty_message_has_sub")
+                  : t("devices.empty_message_no_sub")
+              }
             />
           ) : null}
         </div>
@@ -129,18 +109,17 @@ export function DevicesPage() {
 
       {model.showSetupCard ? (
         <PageSection
-          title="Pending setup"
-          action={<MissionChip tone={model.setupChip.tone} className="section-meta-chip">{model.setupChip.label}</MissionChip>}
+          id="setup-section"
+          title={t("devices.section_setup_title")}
           className="stagger-3"
         >
-          <MissionCard tone={model.setupCardTone} className="module-card">
+          <MissionCard tone={model.setupCardTone} className="module-card devices-utility-card">
             <SetupCardContent
               step={model.setupStep}
               onIssueDevice={model.handleIssueDevice}
               canAddDevice={model.canAddDevice}
               isAddPending={model.isAddPending}
               issueActionLabel={model.issueActionLabel}
-              recommendedRoute={model.recommendedRoute}
             />
           </MissionCard>
         </PageSection>
@@ -149,21 +128,20 @@ export function DevicesPage() {
       {model.issuedConfig ? (
         <div ref={model.configSectionRef}>
           <PageSection
-            title="Your config"
-            action={<MissionChip tone={model.configBadge.tone} className="section-meta-chip">{model.configBadge.label}</MissionChip>}
+            id="config-section"
+            title={t("devices.section_config_title")}
             className="stagger-4"
           >
-          <MissionCard tone="amber" className="module-card">
-            <ConfigCardContent
-              configText={model.configText}
-              routeReason={model.routeReason}
-              peerCreated={model.issuedConfig.peer_created}
-              onCopy={model.handleCopyConfig}
-              onDownload={model.handleDownloadConfig}
-              recommendedRoute={model.recommendedRoute}
-            />
-          </MissionCard>
-        </PageSection>
+            <MissionCard tone="amber" className="module-card devices-utility-card">
+              <ConfigCardContent
+                configText={model.configText}
+                routeReason={model.routeReason}
+                peerCreated={model.issuedConfig.peer_created}
+                onCopy={model.handleCopyConfig}
+                onDownload={model.handleDownloadConfig}
+              />
+            </MissionCard>
+          </PageSection>
         </div>
       ) : null}
 
@@ -171,10 +149,10 @@ export function DevicesPage() {
         open={model.revokeId !== null}
         onClose={() => !model.isRevoking && model.setRevokeId(null)}
         onConfirm={model.handleConfirmRevoke}
-        title="Revoke device?"
-        message="Revoking a device stops its VPN config from working. You can issue a new one later."
-        confirmLabel="Revoke device"
-        cancelLabel="Cancel"
+        title={t("devices.revoke_modal_title")}
+        message={t("devices.revoke_modal_message")}
+        confirmLabel={t("devices.revoke_modal_confirm")}
+        cancelLabel={t("devices.revoke_modal_cancel")}
         variant="danger"
         loading={model.isRevoking}
       />

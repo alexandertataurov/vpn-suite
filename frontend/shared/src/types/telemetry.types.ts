@@ -49,6 +49,15 @@ export type WebappTelemetryEventType =
   | "upsell_dismissed"
   | "upsell_suppressed"
   | "upsell_evaluated"
+  | "restore_access_started"
+  | "restore_access_succeeded"
+  | "restore_access_failed"
+  | "referral_detected"
+  | "referral_attach_started"
+  | "referral_attach_succeeded"
+  | "referral_attach_failed"
+  | "device_limit_reached"
+  | "support_opened"
   | "web_vital";
 
 export interface WebappTelemetryPayloadBase {
@@ -111,6 +120,50 @@ export interface WebappTelemetryEventMap {
     reason?: string;
     show?: boolean;
   };
+   restore_access_started: WebappTelemetryPayloadBase & {
+    screen_name?: string;
+    /** Where user started restore from (e.g. plan, support, expired_banner). */
+    entry_point?: string;
+    plan_id?: string;
+    has_grace?: boolean;
+  };
+  restore_access_succeeded: WebappTelemetryPayloadBase & {
+    screen_name?: string;
+    plan_id?: string;
+    redirect_to?: string;
+  };
+  restore_access_failed: WebappTelemetryPayloadBase & {
+    screen_name?: string;
+    plan_id?: string;
+    error_code?: string;
+    reason?: string;
+  };
+  referral_detected: WebappTelemetryPayloadBase & {
+    /** Source of capture: launch_params | query | early | storage. */
+    source: string;
+    has_code: boolean;
+  };
+  referral_attach_started: WebappTelemetryPayloadBase & {
+    source?: string;
+  };
+  referral_attach_succeeded: WebappTelemetryPayloadBase & {
+    source?: string;
+    status?: string;
+  };
+  referral_attach_failed: WebappTelemetryPayloadBase & {
+    source?: string;
+    status?: string;
+    error_code?: string;
+  };
+  device_limit_reached: WebappTelemetryPayloadBase & {
+    screen_name?: string;
+    device_limit?: number;
+    devices_used?: number;
+  };
+  support_opened: WebappTelemetryPayloadBase & {
+    /** Where support was opened from: home | plan | devices | settings | onboarding | error. */
+    entry_point?: string;
+  };
   web_vital: WebVitalTelemetryPayload;
 }
 
@@ -136,8 +189,16 @@ export type MiniappEventName =
   | "miniapp.payment_start"
   | "miniapp.payment_succeeded"
   | "miniapp.payment_failed"
+  | "miniapp.restore_access_started"
+  | "miniapp.restore_access_succeeded"
+  | "miniapp.restore_access_failed"
+  | "miniapp.referral_detected"
+  | "miniapp.referral_attach_started"
+  | "miniapp.referral_attach_succeeded"
+  | "miniapp.referral_attach_failed"
   | "miniapp.referral_attached"
   | "miniapp.server_selected"
+  | "miniapp.device_limit_reached"
   | "miniapp.config_downloaded"
   | "miniapp.vpn_connected_hint_viewed"
   | "miniapp.error_shown"
@@ -160,6 +221,7 @@ export type MiniappEventName =
   | "miniapp.upsell_dismissed"
   | "miniapp.upsell_suppressed"
   | "miniapp.upsell_evaluated"
+  | "miniapp.support_opened"
   | "miniapp.web_vital";
 
 export type AdminEventName =

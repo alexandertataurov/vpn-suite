@@ -7,7 +7,7 @@ VIOLATIONS=0
 
 # 1. Only token/shell files may define :root
 ROOT_FILES=$(grep -rl "^:root\s*{" "$SRC" --include="*.css" 2>/dev/null || true)
-ALLOWED_ROOT="$SRC/design-system/styles/miniapp-tokens.css $SRC/design-system/styles/miniapp-theme-consumer.css $SRC/design-system/styles/miniapp.css"
+ALLOWED_ROOT="$SRC/design-system/styles/tokens/base.css $SRC/design-system/styles/theme/consumer.css $SRC/design-system/styles/shell/frame.css"
 if [ -n "$ROOT_FILES" ]; then
   for f in $ROOT_FILES; do
     allowed=
@@ -15,14 +15,14 @@ if [ -n "$ROOT_FILES" ]; then
       [ "$(realpath "$f" 2>/dev/null)" = "$(realpath "$a" 2>/dev/null)" ] && allowed=1 && break
     done
     if [ -z "$allowed" ]; then
-      echo "design:check — :root only allowed in design-system/styles (miniapp-tokens, miniapp, miniapp-palette), found in: $f"
+      echo "design:check — :root only allowed in design-system/styles (tokens/base, theme/consumer, shell/frame), found in: $f"
       VIOLATIONS=$((VIOLATIONS + 1))
     fi
   done
 fi
 
-# 2. No inline style={ in miniapp-owned TSX
-APP_TSX=$(find "$SRC" -name "*.tsx" 2>/dev/null || true)
+# 2. No inline style={ in miniapp-owned TSX (exclude design-system/stories — token demos use inline var())
+APP_TSX=$(find "$SRC" -name "*.tsx" 2>/dev/null | grep -v "/design-system/stories/" || true)
 for f in $APP_TSX; do
   if grep -q 'style=\s*{{' "$f" 2>/dev/null; then
     echo "design:check — no inline styles; use CSS classes. File: $f"
@@ -47,9 +47,9 @@ EOF
 # 4. Pages/page-models should consume reusable UI from the public design-system entrypoint.
 while IFS= read -r f; do
   [ -z "$f" ] && continue
-  if grep -qE 'from\s+["'\'']@/design-system/(components|layouts|page-recipes|patterns|primitives)/' "$f" 2>/dev/null; then
+  if grep -qE 'from\s+["'\'']@/design-system/(components|layouts|recipes|patterns|primitives)/' "$f" 2>/dev/null; then
     if grep -qE 'from\s+["'\'']@/design-system/patterns/FallbackScreen["'\'']' "$f" 2>/dev/null; then
-      if grep -vE 'from\s+["'\'']@/design-system/patterns/FallbackScreen["'\'']' "$f" | grep -qE 'from\s+["'\'']@/design-system/(components|layouts|page-recipes|patterns|primitives)/' 2>/dev/null; then
+      if grep -vE 'from\s+["'\'']@/design-system/patterns/FallbackScreen["'\'']' "$f" | grep -qE 'from\s+["'\'']@/design-system/(components|layouts|recipes|patterns|primitives)/' 2>/dev/null; then
         echo "design:check — pages/page-models must import reusable UI from '@/design-system'. File: $f"
         VIOLATIONS=$((VIOLATIONS + 1))
       fi

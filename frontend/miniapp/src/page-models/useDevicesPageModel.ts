@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { RefObject } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { WebAppIssueDeviceResponse } from "@vpn-suite/shared";
+import type { WebAppIssueDeviceResponse, WebAppUsageResponse } from "@vpn-suite/shared";
 import { getPlans } from "@/api";
 import { useWebappToken, webappApi } from "@/api/client";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
@@ -11,7 +11,9 @@ import { useTelemetry } from "@/hooks/useTelemetry";
 import { useTrackScreen } from "@/hooks/useTrackScreen";
 import { useToast } from "@/design-system";
 import { webappQueryKeys } from "@/lib/query-keys/webapp.query-keys";
+import { useI18n } from "@/hooks/useI18n";
 import { getErrorMessage } from "@/lib/utils/error";
+import { formatBytes } from "@/lib/utils/format";
 import type { MissionTone } from "@/design-system";
 import type { StandardPageHeader, StandardPageState, StandardSectionBadge } from "./types";
 import type { PlansResponse } from "@/api";
@@ -23,6 +25,7 @@ import {
   shouldShowUpsell,
 } from "./helpers";
 import { getUpgradeOfferForIntent, type PlanLikeForUpsell } from "./upsell";
+import { clamp, DEFAULT_USAGE_SOFT_CAP_BYTES } from "./plan-helpers";
 
 function formatIssuedAt(value: string): string {
   const date = new Date(value);
@@ -33,7 +36,19 @@ function formatIssuedAt(value: string): string {
 export interface DevicesPageModel {
   header: StandardPageHeader;
   pageState: StandardPageState;
-  summaryHero: { eyebrow: string; title: string; subtitle?: string; edge: "e-b"; glow: "g-blue" };
+  summaryHero: {
+    eyebrow: string;
+    title: string;
+    subtitle?: string;
+    edge: "e-b";
+    glow: "g-blue";
+    metrics: Array<{
+      keyLabel: string;
+      valueLabel: string;
+      percent: number;
+      tone: "healthy" | "warning" | "danger";
+    }>;
+  };
   hasSubscription: boolean;
   activeDevices: ReturnType<typeof getActiveDevices>;
   issuedConfig: WebAppIssueDeviceResponse | null;
@@ -58,8 +73,6 @@ export interface DevicesPageModel {
   setupCardTone: MissionTone;
   /** Setup step for SetupCardContent: subscription | issue | pending. */
   setupStep: "subscription" | "issue" | "pending";
-  /** Chip for Setup section header: tone and label. */
-  setupChip: { tone: MissionTone; label: string };
   showSetupCard: boolean;
   showUpgradeCta: boolean;
   upgradeTargetTo: string;
@@ -87,6 +100,7 @@ export function useDevicesPageModel(): DevicesPageModel {
   const [revokeId, setRevokeId] = useState<string | null>(null);
   const configSectionRef = useRef<HTMLDivElement>(null);
   const { impact, notify } = useTelegramHaptics();
+  const { t } = useI18n();
   const activeSub = getActiveSubscription(data);
   const activeDevices = getActiveDevices(data);
   const recommendedRoute = data?.routing?.recommended_route ?? "/devices";
@@ -97,6 +111,12 @@ export function useDevicesPageModel(): DevicesPageModel {
     queryFn: getPlans,
     enabled: hasToken,
   });
+  const usageQuery = useQuery<WebAppUsageResponse>({
+    queryKey: [...webappQueryKeys.usage("7d")],
+    queryFn: () => webappApi.get<WebAppUsageResponse>("/webapp/usage?range=7d"),
+    enabled: hasToken && !!activeSub,
+    staleTime: 60_000,
+  });
   const plans = plansQuery.data?.items ?? [];
   const currentPlan = activeSub?.plan_id
     ? plans.find((plan) => plan.id === activeSub.plan_id)
@@ -106,7 +126,7 @@ export function useDevicesPageModel(): DevicesPageModel {
   const showUpgradeCta = atDeviceLimit && showUpsellDeviceLimit;
   const upgradeTargetTo = getUpgradeCheckoutPathForDeviceLimit(plans, activeSub?.plan_id);
   const deviceLimitOffer = showUpgradeCta
-    ? getUpgradeOfferForIntent(plans as PlanLikeForUpsell[], currentPlan, "device_limit", "devices")
+    ? getUpgradeOfferForIntent(plans as PlanLikeForUpsell[], currentPlan, "device_limit", "devices", t)
     : null;
   const deviceLimitUpsellCopy = deviceLimitOffer
     ? { title: deviceLimitOffer.title, body: deviceLimitOffer.body, ctaLabel: deviceLimitOffer.ctaLabel }
@@ -121,16 +141,23 @@ export function useDevicesPageModel(): DevicesPageModel {
       queryClient.invalidateQueries({ queryKey: [...webappQueryKeys.me()] });
       track("config_download", { screen_name: "devices" });
       if (res.peer_created) {
-        addToast("Device added and activated", "success");
+        addToast(t("devices.toast_device_added"), "success");
         notify("success");
       } else {
-        addToast("Device created. Server sync pending. If VPN fails, retry later or contact support.", "info");
+        addToast(t("devices.toast_device_created_pending"), "info");
       }
     },
     onError: (err) => {
-      const msg = getErrorMessage(err, "Failed to add device");
+      const msg = getErrorMessage(err, t("devices.toast_failed_add_device"));
       addToast(msg, "error");
       notify("error");
+      if (/device limit/i.test(getErrorMessage(err, ""))) {
+        track("device_limit_reached", {
+          screen_name: "devices",
+          device_limit: activeSub?.device_limit ?? undefined,
+          devices_used: activeDevices.length,
+        });
+      }
     },
   });
 
@@ -142,11 +169,11 @@ export function useDevicesPageModel(): DevicesPageModel {
       setIssuedConfig(res);
       queryClient.invalidateQueries({ queryKey: [...webappQueryKeys.me()] });
       track("device_issue_success", { screen_name: "devices" });
-      addToast("Device replaced. New config ready.", "success");
+      addToast(t("devices.toast_device_replaced"), "success");
       notify("success");
     },
     onError: (err) => {
-      addToast(getErrorMessage(err, "Failed to replace device"), "error");
+      addToast(getErrorMessage(err, t("devices.toast_replace_failed")), "error");
       notify("error");
     },
   });
@@ -158,11 +185,11 @@ export function useDevicesPageModel(): DevicesPageModel {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [...webappQueryKeys.me()] });
       track("connect_confirmed", { screen_name: "devices" });
-      addToast("Connection confirmed", "success");
+      addToast(t("devices.toast_connection_confirmed"), "success");
       notify("success");
     },
     onError: () => {
-      addToast("Could not confirm connection", "error");
+      addToast(t("devices.toast_confirm_failed"), "error");
     },
   });
 
@@ -172,14 +199,14 @@ export function useDevicesPageModel(): DevicesPageModel {
       await webappApi.post(`/webapp/devices/${revokeId}/revoke`);
     },
     onSuccess: () => {
-      addToast("Device revoked", "success");
+      addToast(t("devices.toast_device_revoked"), "success");
       notify("success");
       track("device_revoked", { screen_name: "devices" });
       setRevokeId(null);
       queryClient.invalidateQueries({ queryKey: [...webappQueryKeys.me()] });
     },
     onError: () => {
-      addToast("Failed to revoke device", "error");
+      addToast(t("devices.toast_revoke_failed"), "error");
       setRevokeId(null);
     },
   });
@@ -198,26 +225,79 @@ export function useDevicesPageModel(): DevicesPageModel {
   }).length;
   const configText = issuedConfig?.config_awg ?? issuedConfig?.config ?? issuedConfig?.config_wg_obf ?? issuedConfig?.config_wg ?? "";
   const canAddDevice = Boolean(activeSub && (deviceLimit == null || activeDevices.length < deviceLimit) && isOnline);
-  const issueActionLabel = activeDevices.length === 0 ? "Issue first device" : "Add device";
-  const issueErrorMessage = issueMutation.isError ? getErrorMessage(issueMutation.error, "Try again or contact support.") : null;
+  const issueActionLabel = "Add device";
+  const issueErrorMessage = issueMutation.isError
+    ? getErrorMessage(issueMutation.error, t("common.could_not_load_generic"))
+    : null;
   const isDeviceLimitError =
     issueMutation.isError && /device limit/i.test(getErrorMessage(issueMutation.error, ""));
   const deviceSummary = deviceLimit != null
-    ? `${activeDevices.length} / ${deviceLimit} active`
-    : `${activeDevices.length} device${activeDevices.length === 1 ? "" : "s"}`;
+    ? t("devices.summary_limited", { used: activeDevices.length, limit: deviceLimit })
+    : t("devices.summary_unbounded", { count: activeDevices.length });
 
   const summaryHeroTitle = !hasSubscription
-    ? "Subscription required"
+    ? t("devices.summary_title_plan_required")
     : activeDevices.length === 0
-      ? "No devices issued"
-      : deviceSummary;
+      ? t("devices.empty_title")
+      : t("devices.header_title");
   const summaryHeroSubtitle = !hasSubscription
-    ? "Activate a plan before issuing a VPN config."
+    ? t("devices.summary_subtitle_plan_required")
     : routeReason === "connection_not_confirmed"
-      ? "Import your config, connect in the VPN app, then confirm the connection."
+      ? `${deviceSummary}. ${t("devices.summary_subtitle_connection_not_confirmed")}`
       : activeDevices.length === 0
-        ? "Issue your first config to start secure access."
-        : "Manage issued configs, connection confirmation, and device replacement.";
+        ? t("devices.summary_subtitle_no_devices")
+        : `${deviceSummary}. ${t("devices.summary_subtitle_default")}`;
+  const activeDeviceCount = activeDevices.length;
+  const connectedDeviceCount = Math.max(0, activeDeviceCount - pendingConnectionCount);
+  const capacityPercent =
+    hasSubscription && deviceLimit != null && deviceLimit > 0
+      ? clamp((activeDeviceCount / deviceLimit) * 100, 0, 100)
+      : hasSubscription && activeDeviceCount > 0
+        ? 100
+        : 0;
+  const capacityTone: "healthy" | "warning" | "danger" =
+    !hasSubscription ? "danger" : capacityPercent >= 100 ? "danger" : capacityPercent >= 80 ? "warning" : "healthy";
+  const readinessPercent =
+    activeDeviceCount > 0 ? clamp((connectedDeviceCount / activeDeviceCount) * 100, 0, 100) : 0;
+  const readinessTone: "healthy" | "warning" | "danger" =
+    !hasSubscription ? "danger" : connectedDeviceCount === 0 ? "warning" : pendingConnectionCount > 0 ? "warning" : "healthy";
+  const remainingSlots = deviceLimit != null ? Math.max(deviceLimit - activeDeviceCount, 0) : null;
+  const remainingSlotsLabel = !hasSubscription
+    ? t("devices.summary_title_plan_required")
+    : remainingSlots == null
+      ? t("devices.summary_unbounded", { count: activeDeviceCount })
+      : `${remainingSlots}`;
+  const remainingSlotsPercent =
+    hasSubscription && deviceLimit != null && deviceLimit > 0
+      ? clamp((Math.max(deviceLimit - activeDeviceCount, 0) / deviceLimit) * 100, 0, 100)
+      : hasSubscription
+        ? 100
+        : 0;
+  const remainingSlotsTone: "healthy" | "warning" | "danger" =
+    !hasSubscription ? "danger" : remainingSlots === 0 ? "danger" : remainingSlots != null && remainingSlots <= 1 ? "warning" : "healthy";
+
+  const usageData = usageQuery.data;
+  const totalTrafficBytes = useMemo(
+    () =>
+      (usageData?.points ?? []).reduce(
+        (sum, point) => sum + (point.bytes_in ?? 0) + (point.bytes_out ?? 0),
+        0,
+      ),
+    [usageData?.points],
+  );
+  const dataPercent = activeSub
+    ? clamp((totalTrafficBytes / DEFAULT_USAGE_SOFT_CAP_BYTES) * 100, 0, 100)
+    : 0;
+  const setupMetricValue = !hasSubscription
+    ? t("devices.summary_title_plan_required")
+    : activeDeviceCount === 0
+      ? t("devices.empty_title")
+      : pendingConnectionCount > 0
+        ? t("devices.hero_metric_pending_value", { count: pendingConnectionCount })
+        : t("devices.hero_metric_ready_value", { count: connectedDeviceCount });
+  const trafficMetricValue = hasSubscription
+    ? formatBytes(totalTrafficBytes, { digits: 1 })
+    : t("devices.summary_title_plan_required");
 
   const handleDownloadConfig = () => {
     if (!configText) return;
@@ -249,8 +329,9 @@ export function useDevicesPageModel(): DevicesPageModel {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
+      track("config_download", { screen_name: "devices" });
     } catch {
-      addToast("Could not download config. Please copy it manually.", "error");
+      addToast(t("devices.toast_download_failed"), "error");
     }
   };
 
@@ -258,9 +339,10 @@ export function useDevicesPageModel(): DevicesPageModel {
     if (!configText) return;
     try {
       await navigator.clipboard.writeText(configText);
-      addToast("Config copied to clipboard", "success");
+      addToast(t("devices.toast_copied"), "success");
+      track("config_download", { screen_name: "devices" });
     } catch {
-      addToast("Could not copy config. Please select and copy manually.", "error");
+      addToast(t("devices.toast_copy_failed"), "error");
     }
   };
 
@@ -284,17 +366,17 @@ export function useDevicesPageModel(): DevicesPageModel {
   }, [deviceLimitUpsellVisible, track]);
 
   const header: StandardPageHeader = {
-    title: "Devices & Access",
-    subtitle: "Add and manage VPN configs",
+    title: t("devices.header_title"),
+    subtitle: t("devices.header_subtitle"),
   };
 
   const pageState: StandardPageState = !hasToken
-    ? { status: "empty", title: "Session missing" }
+    ? { status: "empty", title: t("common.session_missing_title") }
     : error
       ? {
           status: "error",
-          title: "Could not load devices",
-          message: "We could not load your devices. Please try again or contact support.",
+          title: t("common.could_not_load_title"),
+          message: t("common.could_not_load_devices"),
           onRetry: () => queryClient.invalidateQueries({ queryKey: [...webappQueryKeys.me()] }),
         }
       : isLoading
@@ -305,11 +387,31 @@ export function useDevicesPageModel(): DevicesPageModel {
     header,
     pageState,
     summaryHero: {
-      eyebrow: "Devices",
+      eyebrow: t("devices.summary_eyebrow"),
       title: summaryHeroTitle,
       subtitle: summaryHeroSubtitle,
       edge: "e-b",
       glow: "g-blue",
+      metrics: [
+        {
+          keyLabel: t("devices.hero_metric_capacity_label"),
+          valueLabel: deviceSummary,
+          percent: capacityPercent,
+          tone: capacityTone,
+        },
+        {
+          keyLabel: t("devices.hero_metric_setup_label"),
+          valueLabel: setupMetricValue,
+          percent: readinessPercent,
+          tone: readinessTone,
+        },
+        {
+          keyLabel: hasSubscription ? t("devices.hero_metric_traffic_label") : t("devices.summary_slots_left"),
+          valueLabel: hasSubscription ? trafficMetricValue : remainingSlotsLabel,
+          percent: hasSubscription ? dataPercent : remainingSlotsPercent,
+          tone: hasSubscription ? "healthy" : remainingSlotsTone,
+        },
+      ],
     },
     hasSubscription,
     activeDevices,
@@ -332,10 +434,6 @@ export function useDevicesPageModel(): DevicesPageModel {
     activeBadge: { tone: "neutral", label: `${activeDevices.length} active`, emphasizeNumeric: true },
     setupCardTone: hasSubscription && activeDevices.length > 0 ? "amber" : "blue",
     setupStep: !hasSubscription ? "subscription" : activeDevices.length === 0 ? "issue" : "pending",
-    setupChip: {
-      tone: !hasSubscription ? "blue" : "amber",
-      label: !hasSubscription ? "Step 1" : activeDevices.length === 0 ? "Step 2" : pendingConnectionCount > 0 ? `${pendingConnectionCount} device waiting` : "Pending",
-    },
     showSetupCard:
       !hasSubscription ||
       activeDevices.length === 0 ||

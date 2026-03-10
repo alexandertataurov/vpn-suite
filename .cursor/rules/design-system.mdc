@@ -6,15 +6,15 @@ alwaysApply: false
 
 # Design system (miniapp + shared)
 
-**Project context**: Token files — admin: `frontend/admin/src/design-system/tokens/tokens.css`; miniapp: `frontend/miniapp/src/design-system/styles/miniapp-tokens.css`. Tailwind must use configured token aliases, not raw colors.
+**Project context**: Token files — admin: `frontend/admin/src/design-system/tokens/tokens.css`; miniapp: `frontend/miniapp/src/design-system/styles/tokens/base.css`. Tailwind must use configured token aliases, not raw colors.
 
 For miniapp UI architecture, reusable layout/pattern/page wrappers belong under `frontend/miniapp/src/design-system/` (`layouts/`, `patterns/`, `page-recipes/`). App pages should compose those wrappers and page-model hooks; do not add new page-local structural abstractions or any CSS files under `frontend/miniapp/src/pages/` when they can be promoted into the design system.
 
 Status and header hierarchy must stay singular. Pick one owner for a given semantic state within a page zone: page-header badge, hero status/badge, or section chip. Do not stack multiple badges or headers that all say the same thing. Likewise, do not place a second header row inside `PageSection` or `PageCardSection` unless it represents a real subsection rather than the same block title repeated.
 
-- **CSS custom properties**: Any `var(--*)` used in TSX or CSS must be defined in the project's single token source. Admin: `frontend/admin/src/design-system/tokens/tokens.css`. Miniapp: `frontend/miniapp/src/design-system/styles/miniapp-tokens.css`. Do not invent new tokens without adding them there first.
+- **CSS custom properties**: Any `var(--*)` used in TSX or CSS must be defined in the project's single token source. Admin: `frontend/admin/src/design-system/tokens/tokens.css`. Miniapp: `frontend/miniapp/src/design-system/styles/tokens/base.css`. Do not invent new tokens without adding them there first.
 
-- **Single :root source**: Do not add extra `:root` token sources. Miniapp `:root` tokens live in `frontend/miniapp/src/design-system/styles/miniapp-tokens.css`; other miniapp CSS should consume tokens, not redefine them.
+- **Single :root source**: Do not add extra `:root` token sources. Miniapp `:root` tokens live in `frontend/miniapp/src/design-system/styles/tokens/base.css`; other miniapp CSS should consume tokens, not redefine them.
 
 - **Tailwind**: Use the project's configured token aliases (e.g. semantic or design-token-based classes), not raw color names like `bg-red-500`. Prefer tokens that map to the token file.
 

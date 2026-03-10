@@ -126,7 +126,7 @@ export function Modal({
           <button type="button"
             className="modal-close"
             onClick={onClose}
-            aria-label="Close"
+            aria-label="Back"
           >
             ×
           </button>

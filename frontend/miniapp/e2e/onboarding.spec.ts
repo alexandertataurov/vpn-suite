@@ -9,7 +9,7 @@ async function injectTelegram(page: import("@playwright/test").Page) {
 }
 
 test.describe("Miniapp Onboarding", () => {
-  test("first-time user completes onboarding then lands on plan", async ({ page }) => {
+  test("first-time user can move from onboarding to plan", async ({ page }) => {
     await injectTelegram(page);
 
     let onboardingStep = 0;
@@ -48,7 +48,7 @@ test.describe("Miniapp Onboarding", () => {
             onboarding: {
               completed: onboardingCompleted,
               step: onboardingStep,
-              version: 1,
+              version: 2,
               updated_at: onboardingCompleted ? new Date().toISOString() : null,
             },
           }),
@@ -64,7 +64,7 @@ test.describe("Miniapp Onboarding", () => {
         onboardingStep = Math.max(onboardingStep, body.step ?? 0);
         if (body.completed) {
           onboardingCompleted = true;
-          onboardingStep = 2;
+          onboardingStep = 3;
         }
         await route.fulfill({
           status: 200,
@@ -73,7 +73,7 @@ test.describe("Miniapp Onboarding", () => {
             onboarding: {
               completed: onboardingCompleted,
               step: onboardingStep,
-              version: 1,
+              version: 2,
               updated_at: onboardingCompleted ? new Date().toISOString() : null,
             },
           }),
@@ -96,16 +96,18 @@ test.describe("Miniapp Onboarding", () => {
     await page.goto("./?tgWebAppData=e2e-test");
 
     await expect(page).toHaveURL(/.*\/onboarding$/);
-    await expect(page.getByRole("heading", { name: /Welcome/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Set up VPN access/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Manage VPN access in Telegram/i })).toBeVisible();
+    await page.getByRole("button", { name: /Install app/i }).click();
+    await expect(page.getByText(/Step 2 of 4/i)).toBeVisible();
     await page.getByRole("button", { name: /Continue/i }).click();
-    await page.getByRole("button", { name: /Continue/i }).click();
-    await page.getByRole("button", { name: /Go to plans/i }).click();
+    await expect(page.getByText(/Step 3 of 4/i)).toBeVisible();
+    await page.getByRole("button", { name: /^Choose plan$/i }).first().click();
 
     await expect(page).toHaveURL(/.*\/plan$/);
-    await expect(page.getByRole("heading", { name: /Choose Your Plan/i })).toBeVisible();
   });
 
-  test("completion falls through to plan when onboarding endpoint fails", async ({ page }) => {
+  test("onboarding sync still lets user reach plan", async ({ page }) => {
     await injectTelegram(page);
 
     await page.route("**/*", async (route) => {
@@ -141,7 +143,7 @@ test.describe("Miniapp Onboarding", () => {
             onboarding: {
               completed: false,
               step: 0,
-              version: 1,
+              version: 2,
               updated_at: null,
             },
           }),
@@ -165,7 +167,7 @@ test.describe("Miniapp Onboarding", () => {
             onboarding: {
               completed: false,
               step: 1,
-              version: 1,
+              version: 2,
               updated_at: null,
             },
           }),
@@ -188,11 +190,12 @@ test.describe("Miniapp Onboarding", () => {
     await page.goto("./?tgWebAppData=e2e-test");
 
     await expect(page).toHaveURL(/.*\/onboarding$/);
+    await page.getByRole("button", { name: /Install app/i }).click();
+    await expect(page.getByText(/Step 2 of 4/i)).toBeVisible();
     await page.getByRole("button", { name: /Continue/i }).click();
-    await page.getByRole("button", { name: /Continue/i }).click();
-    await page.getByRole("button", { name: /Go to plans/i }).click();
+    await expect(page.getByText(/Step 3 of 4/i)).toBeVisible();
+    await page.getByRole("button", { name: /^Choose plan$/i }).first().click();
 
     await expect(page).toHaveURL(/.*\/plan$/);
-    await expect(page.getByRole("heading", { name: /Choose Your Plan/i })).toBeVisible();
   });
 });

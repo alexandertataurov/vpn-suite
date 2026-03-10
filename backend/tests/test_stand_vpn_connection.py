@@ -88,7 +88,7 @@ async def test_server_issues_correct_config(caplog):
     from app.services.issue_service import issue_device
 
     if not await check_db():
-        pytest.skip("DB not available")
+        pytest.skip("DB not available (requires Postgres)")
     caplog.set_level(logging.DEBUG, logger="vpn_test_stand")
     now = datetime.now(timezone.utc)
     async with async_session_factory() as session:

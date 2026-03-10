@@ -56,7 +56,7 @@ export const SEMANTICS = {
   },
   /**
    * Table style contract — do not hardcode paddings / row heights in components.
-   * These map to CSS vars defined in miniapp-tokens.css and consumed by table.css / table-primitives.css.
+   * These map to CSS vars defined in styles/tokens/base.css and consumed by table.css / table-primitives.css.
    */
   table: {
     rowHeightComfortable: { token: "--table-row-height-md", usage: "Default data row height" },
@@ -66,7 +66,7 @@ export const SEMANTICS = {
     cellPaddingYSm: { token: "--table-cell-padding-y-sm", usage: "Vertical padding (compact)" },
   },
   /**
-   * Chart tokens — axis, grid, tooltip chrome. Series colors are resolved via CSS vars in miniapp-tokens.css.
+   * Chart tokens — axis, grid, tooltip chrome. Series colors are resolved via CSS vars in styles/tokens/base.css.
    */
   chart: {
     axisFontSize: { token: "--chart-axis-font-size", usage: "Axis + tooltip font size" },

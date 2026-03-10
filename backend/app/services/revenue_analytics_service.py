@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.metrics import vpn_revenue_mrr, vpn_revenue_subscriptions_active
 from app.models import ChurnSurvey, FunnelEvent, Payment, Referral, Subscription
+from app.services.subscription_state import entitled_active_where
 
 
 async def get_revenue_snapshot(session: AsyncSession) -> dict:
@@ -17,11 +18,7 @@ async def get_revenue_snapshot(session: AsyncSession) -> dict:
     active_result = await session.execute(
         select(func.count())
         .select_from(Subscription)
-        .where(
-            Subscription.status == "active",
-            Subscription.valid_until > now,
-            Subscription.paused_at.is_(None),
-        )
+        .where(*entitled_active_where(now=now))
     )
     active_count = active_result.scalar() or 0
 

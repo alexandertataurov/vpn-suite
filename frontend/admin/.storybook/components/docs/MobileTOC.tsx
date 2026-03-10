@@ -88,7 +88,7 @@ export function MobileTOC({ headings, activeId, onNavigate }: MobileTOCProps) {
           <button
             type="button"
             className="docs-toc-mobile__backdrop"
-            aria-label="Close On this page navigation"
+            aria-label="Back"
             onClick={() => setOpen(false)}
           />
           <div className="docs-toc-mobile__sheet">
@@ -98,7 +98,7 @@ export function MobileTOC({ headings, activeId, onNavigate }: MobileTOCProps) {
                 variant="ghost"
                 size="md"
                 icon={<span className="docs-toc-mobile__close-icon" aria-hidden>&times;</span>}
-                aria-label="Close"
+                aria-label="Back"
                 onClick={() => setOpen(false)}
               />
             </header>

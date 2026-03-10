@@ -1,6 +1,8 @@
 /**
  * Design system color tokens. Use semantic tokens in components; do not use primitives directly.
- * CSS source: miniapp-tokens.css, miniapp-primitives-aliases.css.
+ * CSS source: styles/theme/consumer.css (consumer-dark/consumer-light), styles/tokens/base.css.
+ * Consumer dark: #000 bg, #5caeff accent, #2ed87a success.
+ * Consumer light: #fff bg, #2a82e3 accent, #1da45f success.
  *
  * Error vs danger: Semantic token is `error` (--color-error). "Danger" is legacy alias:
  * CSS --danger, .btn-danger, tokens-map SEMANTICS.danger all map to --color-error.
@@ -45,32 +47,3 @@ export const COLOR_TOKENS = {
   /** Info */
   info: "--color-info",
 } as const;
-
-/** Aliases used by miniapp (--bg, --s0, --tx-pri, --green, etc.) — map to COLOR_TOKENS in primitives-aliases. */
-export const LEGACY_ALIASES = [
-  "--bg",
-  "--s0",
-  "--s1",
-  "--s2",
-  "--s3",
-  "--s4",
-  "--tx-pri",
-  "--tx-sec",
-  "--tx-mut",
-  "--tx-dim",
-  "--bd-sub",
-  "--bd-def",
-  "--bd-hi",
-  "--bd-focus",
-  "--green",
-  "--blue",
-  "--amber",
-  "--red",
-  "--teal",
-  "--interactive",
-  "--interactive-hover",
-  "--success",
-  "--warning",
-  "--danger",
-  "--focus-ring",
-] as const;

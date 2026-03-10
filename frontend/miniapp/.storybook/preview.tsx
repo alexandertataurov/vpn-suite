@@ -7,7 +7,7 @@ const preview: Preview = {
   decorators: [
     (Story) => (
       <ThemeProvider
-        themes={["consumer-dark"]}
+        themes={["consumer-dark", "consumer-light"]}
         defaultTheme="consumer-dark"
         storageKey="vpn-suite-miniapp-storybook-theme"
       >

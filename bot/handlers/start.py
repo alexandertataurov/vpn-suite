@@ -61,9 +61,18 @@ def _referral_link(payload: str) -> str:
     return f"https://t.me/{BOT_USERNAME}?start={payload}"
 
 
+def _locale(message: Message) -> str:
+    """Best-effort user locale based on Telegram language_code."""
+    if message.from_user and message.from_user.language_code:
+        code = (message.from_user.language_code or "").lower()
+        if code.startswith("ru"):
+            return "ru"
+    return "en"
+
+
 @router.message(CommandStart())
 async def cmd_start(message: Message):
-    locale = "en"
+    locale = _locale(message)
     ref = _get_ref_from_start(message.text)
     greeting = t(locale, "welcome")
     tg_id = message.from_user.id if message.from_user else None
@@ -91,7 +100,7 @@ async def cmd_start(message: Message):
             await message.bot.set_chat_menu_button(
                 chat_id=message.chat.id,
                 menu_button=MenuButtonWebApp(
-                    text="Open App",
+                    text=t(locale, "open_app"),
                     web_app=WebAppInfo(url=menu_url),
                 ),
             )

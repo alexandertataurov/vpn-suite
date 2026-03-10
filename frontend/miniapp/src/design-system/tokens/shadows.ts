@@ -1,6 +1,6 @@
 /**
  * Design system shadow tokens. Use semantic tokens; do not hardcode box-shadow in components.
- * CSS source: miniapp-tokens.css, telegram-miniapp-design-system.css.
+ * CSS source: styles/tokens/base.css, styles/theme/telegram.css.
  */
 export const SHADOW_TOKENS = {
   none: "--shadow-none",

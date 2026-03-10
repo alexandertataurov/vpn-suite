@@ -22,7 +22,7 @@ from app.core.config import settings
 from app.core.config_builder import DEFAULT_DNS, ConfigValidationError, generate_preshared_key
 from app.core.exceptions import WireGuardCommandError
 from app.core.redaction import redact_for_log
-from app.models import Device, ProfileIssue, Server, ServerProfile, Subscription, User
+from app.models import Device, Plan, ProfileIssue, Server, ServerProfile, Subscription, User
 from app.services.address_allocator import allocate_address_for_device
 from app.services.admin_issue_service import _ensure_device_peer_on_node
 from app.services.load_balancer import select_node as load_balancer_select_node
@@ -30,6 +30,7 @@ from app.services.node_endpoint_utils import get_endpoint_from_runtime, is_endpo
 from app.services.node_runtime import NodeRuntimeAdapter, PeerConfigLike
 from app.services.server_live_key_service import _heartbeat_container_id, live_key_fetch
 from app.services.server_obfuscation import request_params_with_server_h
+from app.services.subscription_state import entitled_active_where, is_entitled_active
 
 
 class IssueResult(NamedTuple):
@@ -69,17 +70,20 @@ async def issue_device(
         raise ValueError("user_banned")
     # Lock subscription row to prevent device_limit race when two requests run in parallel (P1).
     sub_result = await session.execute(
-        select(Subscription)
+        select(Subscription, Plan.device_limit)
+        .join(Plan, Plan.id == Subscription.plan_id)
         .where(
             Subscription.id == subscription_id,
             Subscription.user_id == user_id,
-            Subscription.status == "active",
-            Subscription.valid_until > datetime.now(timezone.utc),
+            *entitled_active_where(now=datetime.now(timezone.utc)),
         )
         .with_for_update()
     )
-    sub = sub_result.scalar_one_or_none()
-    if not sub:
+    row = sub_result.first()
+    if not row:
+        raise ValueError("subscription_invalid")
+    sub, plan_device_limit = row
+    if not is_entitled_active(sub):
         raise ValueError("subscription_invalid")
     count = (
         await session.execute(
@@ -91,7 +95,17 @@ async def issue_device(
             )
         )
     ).scalar() or 0
-    if count >= sub.device_limit:
+    effective_device_limit = int(
+        (
+            getattr(sub, "device_limit", None)
+            if getattr(sub, "device_limit", None) is not None
+            else plan_device_limit
+        )
+        or 1
+    )
+    if getattr(sub, "device_limit", None) != effective_device_limit:
+        sub.device_limit = effective_device_limit
+    if count >= effective_device_limit:
         raise ValueError("device_limit_exceeded")
     resolved_server_id = server_id
     if resolved_server_id is None and get_topology is not None:

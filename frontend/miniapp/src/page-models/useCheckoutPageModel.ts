@@ -26,7 +26,11 @@ type PaymentPhase = "idle" | "creating_invoice" | "waiting" | "success" | "error
 type PromoStatus = "idle" | "validating" | "valid" | "invalid";
 type PromoErrorAction = "clear" | "retry";
 
-function resolvePromoValidationError(err: unknown): { message: string; action: PromoErrorAction; code: PromoErrorCode | null } {
+function resolvePromoValidationError(err: unknown): {
+  key: string;
+  action: PromoErrorAction;
+  code: PromoErrorCode | null;
+} {
   const e = err as Error & { code?: string };
   const code: PromoErrorCode | null =
     e?.code && ["PROMO_NOT_FOUND", "PROMO_INACTIVE", "PROMO_EXPIRED", "PROMO_PLAN_INELIGIBLE", "PROMO_ALREADY_USED", "PROMO_EXHAUSTED"].includes(e.code)
@@ -34,21 +38,21 @@ function resolvePromoValidationError(err: unknown): { message: string; action: P
       : null;
   switch (e?.code) {
     case "PROMO_EXPIRED":
-      return { message: "Promo expired for this plan. Remove the code and continue checkout.", action: "clear", code: "PROMO_EXPIRED" };
+      return { key: "checkout.promo_error_PROMO_EXPIRED", action: "clear", code: "PROMO_EXPIRED" };
     case "PROMO_ALREADY_USED":
-      return { message: "This promo was already used on your account. Remove it and continue checkout.", action: "clear", code: "PROMO_ALREADY_USED" };
+      return { key: "checkout.promo_error_PROMO_ALREADY_USED", action: "clear", code: "PROMO_ALREADY_USED" };
     case "PROMO_NOT_FOUND":
-      return { message: "Promo code not found for this plan. Check spelling or remove it to continue.", action: "clear", code: "PROMO_NOT_FOUND" };
+      return { key: "checkout.promo_error_PROMO_NOT_FOUND", action: "clear", code: "PROMO_NOT_FOUND" };
     case "PROMO_INACTIVE":
     case "PROMO_EXHAUSTED":
-      return { message: "Code unavailable.", action: "clear", code: code ?? "PROMO_INACTIVE" };
+      return { key: "checkout.promo_error_PROMO_INACTIVE", action: "clear", code: code ?? "PROMO_INACTIVE" };
     case "PROMO_PLAN_INELIGIBLE":
-      return { message: "Not valid for this plan.", action: "retry", code: "PROMO_PLAN_INELIGIBLE" };
+      return { key: "checkout.promo_error_PROMO_PLAN_INELIGIBLE", action: "retry", code: "PROMO_PLAN_INELIGIBLE" };
     case "NETWORK_UNREACHABLE":
     case "TIMEOUT":
-      return { message: "Cannot validate promo right now. Check your connection and try again.", action: "retry", code: null };
+      return { key: "checkout.promo_error_network", action: "retry", code: null };
     default:
-      return { message: "Promo code is invalid for the selected plan. Check the code and try again.", action: "retry", code: null };
+      return { key: "checkout.promo_error_invalid", action: "retry", code: null };
   }
 }
 
@@ -61,7 +65,7 @@ export function useCheckoutPageModel() {
   const isOnline = useOnlineStatus();
   const [promoCode, setPromoCode] = useState("");
   const [promoStatus, setPromoStatus] = useState<PromoStatus>("idle");
-  const [promoError, setPromoError] = useState("");
+  const [promoErrorKey, setPromoErrorKey] = useState("");
   const [promoErrorCode, setPromoErrorCode] = useState<PromoErrorCode | null>(null);
   const [promoErrorAction, setPromoErrorAction] = useState<PromoErrorAction>("retry");
   const [promoPreview, setPromoPreview] = useState<{ description: string } | null>(null);
@@ -112,7 +116,7 @@ export function useCheckoutPageModel() {
     onMutate: () => setPromoStatus("validating"),
     onSuccess: (data) => {
       setPromoStatus("valid");
-      setPromoError("");
+      setPromoErrorKey("");
       setPromoErrorCode(null);
       setPromoPreview({ description: data.display_label });
       setDiscountXtr(data.discount_xtr);
@@ -122,7 +126,7 @@ export function useCheckoutPageModel() {
     onError: (err) => {
       const resolved = resolvePromoValidationError(err);
       setPromoStatus("invalid");
-      setPromoError(resolved.message);
+      setPromoErrorKey(resolved.key);
       setPromoErrorCode(resolved.code);
       setPromoErrorAction(resolved.action);
       setPromoPreview(null);
@@ -136,7 +140,7 @@ export function useCheckoutPageModel() {
     if (promoErrorAction === "clear") {
       setPromoCode("");
       setPromoPreview(null);
-      setPromoError("");
+      setPromoErrorKey("");
       setPromoErrorCode(null);
       setPromoErrorAction("retry");
       setPromoStatus("idle");
@@ -152,7 +156,7 @@ export function useCheckoutPageModel() {
   const handlePromoRemove = () => {
     setPromoCode("");
     setPromoPreview(null);
-    setPromoError("");
+    setPromoErrorKey("");
     setPromoErrorCode(null);
     setPromoErrorAction("retry");
     setPromoStatus("idle");
@@ -274,6 +278,7 @@ export function useCheckoutPageModel() {
     hideKeyboard();
     impact("medium");
     track("cta_click", { cta_name: "checkout_continue", screen_name: "checkout", plan_id: selectedPlanId });
+    track("checkout_started", { plan_id: selectedPlanId });
     setConfirmationStep(true);
   };
 
@@ -301,21 +306,12 @@ export function useCheckoutPageModel() {
           ? "Pending"
           : "Ready";
 
-  useTelegramMainButton(
-    confirmationStep && !phase.match(/success|error|timeout/)
-      ? {
-          text: isFreePlan ? "Activate plan" : "Pay with Telegram Stars",
-          visible: true,
-          enabled: !!planId && !!hasToken && isOnline && phase !== "waiting" && !createInvoice.isPending,
-          loading: createInvoice.isPending || phase === "waiting",
-          onClick: handlePay,
-        }
-      : null,
-  );
+  // Native Telegram MainButton hidden on checkout; use in-page MissionPrimaryButton only
+  useTelegramMainButton(null);
 
   const header: StandardPageHeader = {
-    title: "Checkout",
-    subtitle: planDisplayName,
+    title: "Confirm your plan",
+    subtitle: "Review your plan and continue payment in Telegram",
   };
 
   const plansFetched = !plansLoading && !plansError;
@@ -356,7 +352,7 @@ export function useCheckoutPageModel() {
     planPriceStars,
     promoCode,
     promoStatus,
-    promoError,
+    promoErrorKey,
     promoErrorCode,
     promoErrorAction,
     promoPreview,
@@ -370,8 +366,8 @@ export function useCheckoutPageModel() {
     isValidatingPromo: validatePromo.isPending,
     setPromoCode: (value: string) => {
       setPromoCode(value);
-      if (promoError || promoStatus === "valid" || promoStatus === "invalid") {
-        setPromoError("");
+      if (promoErrorKey || promoStatus === "valid" || promoStatus === "invalid") {
+        setPromoErrorKey("");
         setPromoErrorCode(null);
         setPromoErrorAction("retry");
         setPromoStatus("idle");

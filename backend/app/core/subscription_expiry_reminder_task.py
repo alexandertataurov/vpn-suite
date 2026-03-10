@@ -12,6 +12,7 @@ from app.core.config import settings
 from app.core.logging_config import extra_for_event
 from app.core.redaction import redact_for_log
 from app.models import Subscription, User
+from app.services.subscription_state import entitled_active_where
 
 _log = logging.getLogger(__name__)
 
@@ -68,7 +69,7 @@ async def run_subscription_reminder_check(session: AsyncSession) -> tuple[int, i
         select(Subscription, User)
         .join(User, Subscription.user_id == User.id)
         .where(
-            Subscription.status == "active",
+            *entitled_active_where(),
             Subscription.valid_until >= window_3d_start,
             Subscription.valid_until <= window_3d_end,
             Subscription.reminder_3d_sent_at.is_(None),
@@ -87,7 +88,7 @@ async def run_subscription_reminder_check(session: AsyncSession) -> tuple[int, i
         select(Subscription, User)
         .join(User, Subscription.user_id == User.id)
         .where(
-            Subscription.status == "active",
+            *entitled_active_where(),
             Subscription.valid_until >= window_1d_start,
             Subscription.valid_until <= window_1d_end,
             Subscription.reminder_1d_sent_at.is_(None),

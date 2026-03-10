@@ -1,42 +1,16 @@
-import { useEffect, useRef } from "react";
 import type { HTMLAttributes } from "react";
-import { Button, ButtonRowAuto } from "@/design-system";
+import { Button, ButtonRowAuto, MissionProgressBar, type MissionHealthTone } from "@/design-system";
 
 export type PlanHeroStatus = "active" | "expiring" | "expired";
 
-/** Bar fill width set after mount (≥380ms) per content library constraint. */
-function ExpiryFill({
-  percent,
-  fillClass = "ok",
-}: {
-  percent: number;
-  fillClass?: "ok" | "warn" | "crit";
-}) {
-  const fillRef = useRef<HTMLDivElement>(null);
-  const hasAnimatedRef = useRef(false);
-
-  useEffect(() => {
-    if (hasAnimatedRef.current) return;
-    hasAnimatedRef.current = true;
-    const clamped = Math.max(0, Math.min(100, percent));
-    const t = setTimeout(() => {
-      fillRef.current?.style.setProperty("--bar-fill-width", `${clamped}%`);
-    }, 380);
-    return () => clearTimeout(t);
-  }, [percent]);
-
-  return (
-    <div
-      ref={fillRef}
-      className={`bar-fill bar-fill--animated ${fillClass}`}
-      id="expiryFill"
-      role="progressbar"
-      aria-label="Plan expiry progress"
-      aria-valuenow={percent}
-      aria-valuemin={0}
-      aria-valuemax={100}
-    />
-  );
+function mapExpiryTone(fillClass: "ok" | "warn" | "crit"): MissionHealthTone {
+  if (fillClass === "crit") {
+    return "danger";
+  }
+  if (fillClass === "warn") {
+    return "warning";
+  }
+  return "healthy";
 }
 
 export interface PlanHeroProps extends Omit<HTMLAttributes<HTMLDivElement>, "children"> {
@@ -48,9 +22,7 @@ export interface PlanHeroProps extends Omit<HTMLAttributes<HTMLDivElement>, "chi
   validUntil: string;
   expiryPercent: number;
   expiryFillClass?: "ok" | "warn" | "crit";
-  planId?: string;
   devicesLabel?: string;
-  onCopyPlanId?: (fullId: string) => void;
   onRenew?: () => void;
   onManage?: () => void;
   renewLabel?: string;
@@ -68,9 +40,7 @@ export function PlanHero({
   validUntil,
   expiryPercent,
   expiryFillClass = "ok",
-  planId,
   devicesLabel,
-  onCopyPlanId,
   onRenew,
   onManage,
   renewLabel = "Renew Plan",
@@ -80,6 +50,7 @@ export function PlanHero({
   ...props
 }: PlanHeroProps) {
   const statusClass = status === "expiring" ? "expiring" : status === "expired" ? "expired" : "";
+  const expiryTone = mapExpiryTone(expiryFillClass);
 
   return (
     <div
@@ -88,7 +59,7 @@ export function PlanHero({
     >
       <div className="plan-hero-glow" aria-hidden />
       <div className="plan-hero-body">
-        <div className="card-eyebrow">Current Subscription</div>
+        <div className="card-eyebrow">Current plan</div>
         <div className="plan-hero-header">
           <div className="plan-hero-name">
             {planName}
@@ -107,60 +78,27 @@ export function PlanHero({
               {validUntil}
             </div>
           </div>
-          <div className="bar-track">
-            <ExpiryFill percent={expiryPercent} fillClass={expiryFillClass} />
-          </div>
+          <MissionProgressBar
+            percent={expiryPercent}
+            tone={expiryTone}
+            ariaLabel="Plan expiry progress"
+          />
         </div>
-        {(planId != null || devicesLabel != null) && (
+        {devicesLabel != null && (
           <div className="data-grid plan-hero-meta">
-            {devicesLabel != null && (
-              <div className="data-cell">
-                <div className="dc-key">Devices</div>
-                <div className="dc-val amber">{devicesLabel}</div>
-              </div>
-            )}
-            <div className="data-cell">
-              <div className="dc-key">Data</div>
-              <div className="dc-val teal">Unlimited</div>
+            <div className="data-cell wide">
+              <div className="dc-key">Devices</div>
+              <div className="dc-val amber">{devicesLabel}</div>
             </div>
-            {planId != null && (
-              <div className="data-cell wide">
-                <div className="dc-key">Plan ID</div>
-                <div
-                  className={[
-                    "dc-val",
-                    "teal",
-                    "plan-hero-planid",
-                    onCopyPlanId ? "is-clickable" : "",
-                  ].filter(Boolean).join(" ")}
-                  onClick={onCopyPlanId ? () => onCopyPlanId(planId) : undefined}
-                  onKeyDown={
-                    onCopyPlanId
-                      ? (e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            onCopyPlanId(planId);
-                          }
-                        }
-                      : undefined
-                  }
-                  role={onCopyPlanId ? "button" : undefined}
-                  tabIndex={onCopyPlanId ? 0 : undefined}
-                  aria-label={onCopyPlanId ? "Copy plan ID" : undefined}
-                >
-                  {planId}
-                </div>
-              </div>
-            )}
           </div>
         )}
         {onRenew ? (
           <ButtonRowAuto className="plan-hero-actions">
-            <Button variant="primary" size="lg" onClick={onRenew}>
+            <Button variant="primary" size="md" onClick={onRenew}>
               {renewLabel}
             </Button>
             {onManage ? (
-              <Button variant="secondary" size="lg" className="is-compact" onClick={onManage}>
+              <Button variant="link" size="sm" className="miniapp-inline-link plan-hero-manage-link" onClick={onManage}>
                 {manageLabel}
               </Button>
             ) : null}

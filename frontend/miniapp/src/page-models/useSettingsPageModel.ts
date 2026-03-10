@@ -13,17 +13,11 @@ import { useTelemetry } from "@/hooks/useTelemetry";
 import { useTrackScreen } from "@/hooks/useTrackScreen";
 import { useToast } from "@/design-system";
 import { webappQueryKeys } from "@/lib/query-keys/webapp.query-keys";
-import type { StandardPageHeader, StandardPageState, StandardSectionBadge } from "./types";
+import { useI18n } from "@/hooks/useI18n";
+import { setWebappToken } from "@/api/client";
+import type { StandardPageHeader, StandardPageState } from "./types";
 import { getActiveDevices, getActiveSubscription } from "./helpers";
 
-const LOCALE_OPTIONS_BASE = [
-  { id: "en", label: "English" },
-  { id: "ru", label: "Русский" },
-] as const;
-const PROFILE_LOCALE_OPTIONS = [
-  { id: "auto", label: "Auto (Telegram)" },
-  ...LOCALE_OPTIONS_BASE,
-] as const;
 export type ProfileLocaleId = "auto" | "en" | "ru";
 
 export type CancelReasonGroup = "price" | "not_needed" | "technical" | "other";
@@ -43,6 +37,20 @@ function resolveTelegramLocale(languageCode: string | undefined): "en" | "ru" {
   return code === "ru" ? "ru" : "en";
 }
 
+function formatPlanLabel(rawPlanId: string | null | undefined, t: (key: string) => string): string {
+  if (!rawPlanId) return t("settings.plan_none_label");
+  const normalized = rawPlanId.replace(/^plan[-_]/i, "").trim();
+  if (!normalized) return t("settings.plan_active_label");
+  if (/^[a-f0-9]{20,}$/i.test(normalized) || normalized.length > 24) {
+    return t("settings.plan_active_label");
+  }
+  return normalized
+    .split(/[^a-z0-9]+/i)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .join(" ");
+}
+
 export function useSettingsPageModel() {
   const hasToken = !!useWebappToken();
   const queryClient = useQueryClient();
@@ -52,6 +60,7 @@ export function useSettingsPageModel() {
   const { addToast } = useToast();
   const activeSub = getActiveSubscription(data);
   const { track } = useTelemetry(activeSub?.plan_id ?? null);
+  const { t } = useI18n();
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState<CancelReasonGroup>("not_needed");
   const [cancelFreeText, setCancelFreeText] = useState("");
@@ -86,21 +95,21 @@ export function useSettingsPageModel() {
   const pauseMutation = useMutation({
     mutationFn: () => webappApi.post("/webapp/subscription/pause", { subscription_id: offers?.subscription_id }),
     onSuccess: () => {
-      addToast("Subscription paused", "success");
+      addToast(t("settings.pause_subscription"), "success");
       queryClient.invalidateQueries({ queryKey: [...webappQueryKeys.me()] });
       queryClient.invalidateQueries({ queryKey: [...webappQueryKeys.subscriptionOffersRoot()] });
     },
-    onError: () => addToast("Could not pause subscription", "error"),
+    onError: () => addToast(t("common.could_not_load_generic"), "error"),
   });
 
   const resumeMutation = useMutation({
     mutationFn: () => webappApi.post("/webapp/subscription/resume", { subscription_id: offers?.subscription_id }),
     onSuccess: () => {
-      addToast("Subscription resumed", "success");
+      addToast(t("settings.resume_subscription"), "success");
       queryClient.invalidateQueries({ queryKey: [...webappQueryKeys.me()] });
       queryClient.invalidateQueries({ queryKey: [...webappQueryKeys.subscriptionOffersRoot()] });
     },
-    onError: () => addToast("Could not resume subscription", "error"),
+    onError: () => addToast(t("common.could_not_load_generic"), "error"),
   });
 
   const cancelMutation = useMutation({
@@ -118,17 +127,19 @@ export function useSettingsPageModel() {
     onSuccess: (_data, vars) => {
       if (vars.pause_instead) {
         track("pause_selected", { screen_name: "settings" });
-        addToast("Subscription paused", "success");
+        addToast(t("settings.pause_subscription"), "success");
+      } else if (vars.cancel_at_period_end) {
+        addToast(t("settings.cancel_at_period_end"), "success");
+      } else {
+        addToast(t("settings.cancel_subscription"), "success");
       }
-      else if (vars.cancel_at_period_end) addToast("Subscription will cancel at period end", "success");
-      else addToast("Subscription cancelled", "success");
       queryClient.invalidateQueries({ queryKey: [...webappQueryKeys.me()] });
       queryClient.invalidateQueries({ queryKey: [...webappQueryKeys.subscriptionOffersRoot()] });
       setCancelOpen(false);
       setCancelReason("not_needed");
       setCancelFreeText("");
     },
-    onError: () => addToast("Could not update subscription", "error"),
+    onError: () => addToast(t("common.could_not_load_generic"), "error"),
   });
 
   const handleCancelAction = useCallback(
@@ -150,30 +161,52 @@ export function useSettingsPageModel() {
       }
     },
     onSuccess: () => {
-      addToast("All configs revoked", "success");
+      addToast(t("settings.danger_reset_button"), "success");
       queryClient.invalidateQueries({ queryKey: [...webappQueryKeys.me()] });
     },
-    onError: () => addToast("Failed to revoke configs", "error"),
+    onError: () => addToast(t("common.could_not_load_generic"), "error"),
   });
 
   const updateProfileMutation = useMutation({
     mutationFn: (payload: WebAppMeProfileUpdate) =>
       webappApi.patch<WebAppMeProfileUpdateResponse>("/webapp/me", payload),
     onSuccess: () => {
-      addToast("Profile updated", "success");
+      addToast(t("settings.save_profile"), "success");
       queryClient.invalidateQueries({ queryKey: [...webappQueryKeys.me()] });
       track("profile_updated", { screen_name: "settings" });
     },
     onError: (err) =>
       addToast(
-        err instanceof ApiError ? err.message : "Could not update profile",
-        "error"
+        err instanceof ApiError ? err.message : t("common.could_not_load_generic"),
+        "error",
+      ),
+  });
+
+  const deleteAccountMutation = useMutation({
+    mutationFn: async (confirmToken: string) =>
+      webappApi.request<null>("/webapp/me", {
+        method: "DELETE",
+        body: JSON.stringify({ confirm_token: confirmToken }),
+      }),
+    onSuccess: () => {
+      addToast(t("settings.delete_account_success"), "success");
+      queryClient.clear();
+      setWebappToken(null);
+    },
+    onError: (err) =>
+      addToast(
+        err instanceof ApiError ? err.message : t("common.could_not_load_generic"),
+        "error",
       ),
   });
 
   const handlePause = useCallback(() => pauseMutation.mutate(), [pauseMutation]);
   const handleResume = useCallback(() => resumeMutation.mutate(), [resumeMutation]);
   const handleRevokeAll = useCallback(() => revokeAllMutation.mutate(), [revokeAllMutation]);
+  const handleDeleteAccount = useCallback(
+    (confirmToken: string) => deleteAccountMutation.mutate(confirmToken),
+    [deleteAccountMutation],
+  );
   const handleUpdateLocale = useCallback(
     (id: ProfileLocaleId) => {
       if (id === "auto") {
@@ -207,14 +240,14 @@ export function useSettingsPageModel() {
   ]);
 
   const activeDevices = getActiveDevices(data);
-  const planLabel = activeSub?.plan_id?.replace(/^plan_/, "") ?? "Free";
+  const planLabel = formatPlanLabel(activeSub?.plan_id ?? null, t);
 
   const accountSummary = (() => {
     const u = data?.user;
-    const displayName = (u?.display_name ?? "").trim() || "Account";
+    const displayName = (u?.display_name ?? "").trim() || t("settings.header_title");
     const name = displayName;
     const initial = name.charAt(0).toUpperCase();
-    const email = (u?.email ?? "").trim() || "—";
+    const email = (u?.email ?? "").trim();
     const phone = (u?.phone ?? "").trim() || "—";
     const photoUrl = (u?.photo_url ?? "").trim() || undefined;
     let memberSince: string | undefined;
@@ -223,7 +256,9 @@ export function useSettingsPageModel() {
       try {
         const d = new Date(firstAt);
         if (!Number.isNaN(d.getTime())) {
-          memberSince = `Member since ${d.toLocaleDateString(undefined, { month: "short", year: "numeric" })}`;
+          memberSince = t("settings.member_since", {
+            date: d.toLocaleDateString(undefined, { month: "short", year: "numeric" }),
+          });
         }
       } catch {
         // leave undefined
@@ -232,16 +267,10 @@ export function useSettingsPageModel() {
     return { initial, name, email, phone, photoUrl, memberSince };
   })();
 
-  const offersBadge: StandardSectionBadge = {
-    tone: "amber",
-    label: `${offers?.discount_percent ?? 0}%`,
-    emphasizeNumeric: true,
-  };
-
   const header: StandardPageHeader = {
-    title: "Account",
-    subtitle: "Profile, subscription, and app controls",
-    badge: { tone: "success", label: planLabel },
+    title: t("settings.header_title"),
+    subtitle: t("settings.header_subtitle"),
+    badge: activeSub ? { tone: "success", label: planLabel } : undefined,
   };
 
   const profileIncomplete =
@@ -250,17 +279,23 @@ export function useSettingsPageModel() {
     !profilePhone.trim();
 
   const pageState: StandardPageState = !hasToken
-    ? { status: "empty", title: "Session missing" }
+    ? { status: "empty", title: t("common.session_missing_title") }
     : error
       ? {
           status: "error",
-          title: "Could not load",
-          message: "We could not load settings. Please try again or contact support.",
+          title: t("common.could_not_load_title"),
+          message: t("common.could_not_load_settings"),
           onRetry: () => queryClient.invalidateQueries({ queryKey: [...webappQueryKeys.me()] }),
         }
       : isLoading
         ? { status: "loading" }
         : { status: "ready" };
+
+  const profileLocaleOptions = [
+    { id: "auto" as const, label: t("settings.language_auto") },
+    { id: "en" as const, label: t("settings.language_en") },
+    { id: "ru" as const, label: t("settings.language_ru") },
+  ];
 
   return {
     header,
@@ -278,7 +313,7 @@ export function useSettingsPageModel() {
     isSavingProfile: updateProfileMutation.isPending,
     handleUpdateLocale,
     profileIncomplete,
-    profileLocaleOptions: [...PROFILE_LOCALE_OPTIONS],
+    profileLocaleOptions,
     effectiveTelegramLocale,
     offers,
     offersLoading,
@@ -295,11 +330,12 @@ export function useSettingsPageModel() {
     handlePause,
     handleResume,
     handleRevokeAll,
+    handleDeleteAccount,
     isPausing: pauseMutation.isPending,
     isResuming: resumeMutation.isPending,
     isCancelling: cancelMutation.isPending,
     isRevoking: revokeAllMutation.isPending,
-    offersBadge,
+    isDeletingAccount: deleteAccountMutation.isPending,
     refetchOffers: () => queryClient.invalidateQueries({ queryKey: [...webappQueryKeys.subscriptionOffers()] }),
     openCancelFlow: () => {
       setCancelOpen(true);

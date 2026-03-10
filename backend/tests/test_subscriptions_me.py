@@ -8,12 +8,24 @@ from decimal import Decimal
 
 import pytest
 from httpx import ASGITransport, AsyncClient
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.security import create_webapp_session_token
 from app.main import app
 from app.models import Plan, Subscription, User
+
+
+async def _ensure_user(session: AsyncSession, tg_id: int) -> User:
+    row = await session.execute(select(User).where(User.tg_id == tg_id))
+    user = row.scalar_one_or_none()
+    if user:
+        return user
+    user = User(tg_id=tg_id)
+    session.add(user)
+    await session.flush()
+    return user
 
 
 @pytest.mark.asyncio
@@ -35,9 +47,7 @@ async def test_subscriptions_me_patch_with_webapp_token_updates_auto_renew(
     """PATCH /api/v1/subscriptions/me with webapp Bearer updates subscription auto_renew and user meta."""
     now = datetime.now(timezone.utc)
     tg_id = 700000001
-    user = User(tg_id=tg_id)
-    async_session.add(user)
-    await async_session.flush()
+    user = await _ensure_user(async_session, tg_id)
     plan = Plan(
         id=uuid.uuid4().hex[:32],
         name="Pro",

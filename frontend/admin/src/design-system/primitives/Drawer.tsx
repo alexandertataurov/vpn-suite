@@ -113,7 +113,7 @@ export function Drawer({
           <h2 id={titleId} className="drawer-title">
             {title}
           </h2>
-          <button type="button" className="drawer-close" onClick={onClose} aria-label="Close">
+          <button type="button" className="drawer-close" onClick={onClose} aria-label="Back">
             ×
           </button>
         </div>

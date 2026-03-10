@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { ApiError } from "@vpn-suite/shared";
+import { ApiError, track } from "@vpn-suite/shared";
 import { useTelegramInitData } from "@/hooks/telegram/useTelegramInitData";
 import { useWebappToken, webappApi } from "@/api/client";
 import { useToast } from "@/design-system";
@@ -33,6 +33,10 @@ function getReferralCodeWithSource(
     const code = normalizeReferralCode(startParam);
     if (code) {
       persistPendingRef(code, "launch_params");
+      track("miniapp.referral_detected", {
+        source: "launch_params",
+        has_code: true,
+      });
       return { code, source: "launch_params" };
     }
   }
@@ -42,6 +46,10 @@ function getReferralCodeWithSource(
     const code = normalizeReferralCode(fromQuery);
     if (code) {
       persistPendingRef(code, "query");
+      track("miniapp.referral_detected", {
+        source: "query",
+        has_code: true,
+      });
       return { code, source: "query" };
     }
   }
@@ -49,11 +57,21 @@ function getReferralCodeWithSource(
   const early = getEarlyCapturedRef();
   if (early) {
     persistPendingRef(early, getEarlyCapturedSource());
+    track("miniapp.referral_detected", {
+      source: getEarlyCapturedSource(),
+      has_code: true,
+    });
     return { code: early, source: getEarlyCapturedSource() };
   }
 
   const fromStorage = getPendingRefFromStorage();
-  if (fromStorage) return fromStorage;
+  if (fromStorage) {
+    track("miniapp.referral_detected", {
+      source: fromStorage.source,
+      has_code: !!fromStorage.code,
+    });
+    return fromStorage;
+  }
 
   return { code: null, source: "query" };
 }
@@ -110,6 +128,10 @@ export function useReferralAttach(): void {
     if (!captured) return;
     attachAttemptedRef.current = true;
 
+    track("referral_attach_started", {
+      source: captured.source,
+    });
+
     if (process.env.NODE_ENV === "development") {
       console.debug("[referral] attach_attempt", { source: captured.source, code: captured.code });
     }
@@ -123,15 +145,19 @@ export function useReferralAttach(): void {
         .then((body) => {
           if (isAttachSuccess(body)) {
             clearPendingRef();
+            const result =
+              body.status === "attached"
+                ? "attached"
+                : body.status === "already_attached"
+                  ? "already_attached"
+                  : body.attached === true
+                    ? "attached"
+                    : "already_attached";
+            track("referral_attach_succeeded", {
+              source: captured.source,
+              status: result,
+            });
             if (process.env.NODE_ENV === "development") {
-              const result =
-                body.status === "attached"
-                  ? "attached"
-                  : body.status === "already_attached"
-                    ? "already_attached"
-                    : body.attached === true
-                      ? "attached"
-                      : "already_attached";
               console.debug("[referral] attach_result", {
                 ref_capture_source: captured.source,
                 attach_result: result,
@@ -149,6 +175,11 @@ export function useReferralAttach(): void {
           if (isTerminalStatus(detailStatus)) {
             clearPendingRef();
           }
+          track("referral_attach_failed", {
+            source: captured.source,
+            status: detailStatus,
+            error_code: err instanceof ApiError ? err.code : undefined,
+          });
           if (process.env.NODE_ENV === "development") {
             console.debug("[referral] attach_result", {
               ref_capture_source: captured.source,

@@ -7,7 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.models import Subscription
-from app.services.entitlement_service import emit_entitlement_event
+from app.services.subscription_lifecycle_events import emit_access_paused, emit_access_resumed
+from app.services.subscription_state import mark_paused, resume_active_access
 
 
 async def pause_subscription(
@@ -28,17 +29,13 @@ async def pause_subscription(
     if not sub:
         return False
     if sub.paused_at is not None:
+        if getattr(sub, "access_status", None) != "paused":
+            mark_paused(sub, now=sub.paused_at, reason=sub.pause_reason)
+            await session.flush()
         return True
-    sub.paused_at = datetime.now(timezone.utc)
-    sub.pause_reason = reason[:64] if reason else None
+    mark_paused(sub, now=datetime.now(timezone.utc), reason=reason)
     await session.flush()
-    await emit_entitlement_event(
-        session,
-        subscription_id=subscription_id,
-        user_id=user_id,
-        event_type="access_paused",
-        payload={"reason": reason},
-    )
+    await emit_access_paused(session, subscription_id=subscription_id, user_id=user_id, reason=reason)
     return True
 
 
@@ -58,16 +55,9 @@ async def resume_subscription(
     sub = result.scalar_one_or_none()
     if not sub:
         return False
-    sub.paused_at = None
-    sub.pause_reason = None
+    resume_active_access(sub)
     await session.flush()
-    await emit_entitlement_event(
-        session,
-        subscription_id=subscription_id,
-        user_id=user_id,
-        event_type="access_resumed",
-        payload={},
-    )
+    await emit_access_resumed(session, subscription_id=subscription_id, user_id=user_id)
     return True
 
 

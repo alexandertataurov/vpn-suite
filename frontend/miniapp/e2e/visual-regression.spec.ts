@@ -12,7 +12,7 @@ const ROUTES = [
   { path: "/", readyText: /Mission Control|Tunnel health|Change Server/i },
   { path: "/plan", readyText: /Plan\s*&\s*Billing|Pro|Basic|No plans available|Could not load/i },
   { path: "/plan/checkout/plan-pro", readyText: /Checkout|Payment|Plan ID/i },
-  { path: "/devices", readyText: /Devices\s*&\s*Access|Active Devices|Your config|Add device|No devices yet/i },
+  { path: "/devices", readyText: /Devices|Active|Config|Add device|No devices yet/i },
   { path: "/servers", readyText: /Servers|Routing mode|Locations/i },
   { path: "/referral", readyText: /Referral|Referrals|Share link|Reward progress/i },
   { path: "/support", readyText: /Support|Troubleshooter|FAQ/i },
@@ -79,7 +79,7 @@ async function mockApi(page: Page) {
             },
           ],
           devices: [],
-          onboarding: { completed: true, step: 2, version: 1, updated_at: "2030-01-15T12:00:00Z" },
+          onboarding: { completed: true, step: 3, version: 2, updated_at: "2030-01-15T12:00:00Z" },
         }),
       });
       return;

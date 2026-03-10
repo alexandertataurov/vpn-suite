@@ -101,6 +101,24 @@ function getDefaultOnboardingState(): WebAppOnboardingState {
   };
 }
 
+function hasActiveSubscription(session?: WebAppMeResponse): boolean {
+  return (
+    session?.subscriptions?.some((subscription) => {
+      const subscriptionStatus = subscription.subscription_status ?? subscription.status;
+      const accessStatus = subscription.access_status ?? "enabled";
+      return subscriptionStatus === "active" && accessStatus === "enabled";
+    }) ?? false
+  );
+}
+
+function hasIssuedDevice(session?: WebAppMeResponse): boolean {
+  return session?.devices?.some((device) => !device.revoked_at) ?? false;
+}
+
+function shouldExitOnboarding(session?: WebAppMeResponse): boolean {
+  return hasActiveSubscription(session) && hasIssuedDevice(session);
+}
+
 export function useBootstrapMachine({
   initData,
   isInsideTelegram,
@@ -120,6 +138,7 @@ export function useBootstrapMachine({
   const [onboardingError, setOnboardingError] = useState<string | null>(null);
   const onboardingInitialized = useRef(false);
   const currentUserId = useRef<number | null>(null);
+  const autoCompletedUserId = useRef<number | null>(null);
   const bootStartRef = useRef<number>(typeof performance !== "undefined" ? performance.now() : 0);
   const prevPhaseRef = useRef<BootPhase>("boot_init");
 
@@ -159,6 +178,7 @@ export function useBootstrapMachine({
     if (!hasToken) {
       onboardingInitialized.current = false;
       currentUserId.current = null;
+      autoCompletedUserId.current = null;
     }
   }, [hasToken]);
 
@@ -451,6 +471,27 @@ export function useBootstrapMachine({
       setIsCompletingOnboarding(false);
     }
   }, [onboardingState.version, queryClient]);
+
+  useEffect(() => {
+    const session = sessionQuery.data;
+    const userId = session?.user?.id ?? null;
+    if (currentUserId.current !== userId) {
+      autoCompletedUserId.current = null;
+    }
+    if (phase !== "onboarding") return;
+    if (!session || onboardingState.completed || isCompletingOnboarding) return;
+    if (!shouldExitOnboarding(session)) return;
+    if (autoCompletedUserId.current === userId) return;
+
+    autoCompletedUserId.current = userId;
+    void completeOnboarding();
+  }, [
+    completeOnboarding,
+    isCompletingOnboarding,
+    onboardingState.completed,
+    phase,
+    sessionQuery.data,
+  ]);
 
   const state: BootstrapState =
     phase === "startup_error"

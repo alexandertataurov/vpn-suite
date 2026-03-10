@@ -11,14 +11,14 @@ Use this checklist in code review and before merge. Every item is pass/fail.
 ## 1) Layer Boundaries
 
 - `PASS`: `tokens/` exports values only (no runtime logic, no app imports).
-- `PASS`: `foundations/` wires global CSS/theme only.
+- `PASS`: `theme/` wires global CSS/theme only.
 - `PASS`: `primitives/` contain layout/typography/accessibility primitives only.
 - `PASS`: `components/` compose primitives into reusable UI without feature business logic.
 - `PASS`: `patterns/` compose DS components/primitives without data fetching or domain side effects.
-- `PASS`: `page-recipes/` contain reusable page-shaped wrappers only; they do not fetch data or import app-layer services.
+- `PASS`: `recipes/` contain reusable page-shaped wrappers only; they do not fetch data or import app-layer services.
 - `PASS`: feature logic stays in app layer (`src/pages`, `src/hooks`, feature services).
 - `FAIL`: DS code imports page/domain services, API clients, or query/mutation logic directly.
-- `FAIL`: new page-local structural wrappers are introduced when they should be promoted to `design-system/page-recipes` or `design-system/patterns`.
+- `FAIL`: new page-local structural wrappers are introduced when they should be promoted to `design-system/recipes` or `design-system/patterns`.
 
 ## 2) Token-Only Styling
 
@@ -32,7 +32,7 @@ Use this checklist in code review and before merge. Every item is pass/fail.
 
 - `PASS`: component variants use structured props (`variant`, `size`, `tone`, `disabled`, `loading`).
 - `PASS`: composition is preferred over mega-prop surfaces.
-- `PASS`: page containers compose page-model hooks with design-system/page-recipe components rather than deriving all state inline in TSX.
+- `PASS`: page containers compose page-model hooks with design-system/recipes components rather than deriving all state inline in TSX.
 - `PASS`: pages do not own local CSS under `src/pages`; route styling is expressed through shared design-system styles and page recipes.
 - `PASS`: each page zone has a single status owner. Do not repeat one state in a page-header badge, hero status, and section chip at the same time.
 - `PASS`: section cards do not render a second header row inside a `PageSection` or `PageCardSection` unless that inner header introduces a real subsection.

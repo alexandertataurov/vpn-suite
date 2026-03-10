@@ -1,4 +1,4 @@
-import { IconSmartphone, MissionOperationArticle } from "@/design-system";
+import { IconSmartphone, MissionOperationArticle, StatusChip } from "@/design-system";
 import { DeviceRowActions } from "../DeviceRowActions";
 
 export interface DeviceRowProps {
@@ -45,11 +45,11 @@ export function DeviceRow({
   isReplacingId,
 }: DeviceRowProps) {
   const status = device.status ?? "config_pending";
-  const statusLabel = status === "connected" ? "Active" : status === "idle" ? "Inactive" : status === "config_pending" ? "Pending" : "Revoked";
+  const statusLabel = status === "connected" ? "Setup confirmed" : status === "idle" ? "Setup incomplete" : status === "config_pending" ? "Config ready" : "Revoked";
   const tone: "green" | "amber" | "blue" = status === "connected" ? "green" : status === "idle" ? "amber" : "blue";
   const metaParts: string[] = [];
   if (device.last_seen_handshake_at) {
-    metaParts.push(`Last active ${formatLastSeen(device.last_seen_handshake_at)}`);
+    metaParts.push(`Last sync ${formatLastSeen(device.last_seen_handshake_at)}`);
   }
   metaParts.push(`Issued ${formatIssuedAt(device.issued_at)}`);
   const metaLine = metaParts.join(" · ");
@@ -62,8 +62,8 @@ export function DeviceRow({
       title={device.device_name || `Device #${device.id.slice(-6)}`}
       description={(
         <span className="device-row-meta miniapp-tnum">
-          <span
-            className={`status-chip ${
+          <StatusChip
+            variant={
               status === "connected"
                 ? "active"
                 : status === "idle"
@@ -71,10 +71,10 @@ export function DeviceRow({
                   : status === "config_pending"
                     ? "pend"
                     : "offline"
-            }`}
+            }
           >
             {statusLabel}
-          </span>
+          </StatusChip>
           <span className="device-row-meta-text">{metaLine}</span>
         </span>
       )}

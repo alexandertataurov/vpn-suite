@@ -45,6 +45,11 @@ from app.services.funnel_service import log_funnel_event
 from app.services.issued_config_service import persist_issued_configs
 from app.services.payment_webhook_service import complete_pending_payment_by_bot
 from app.services.retention_service import pause_subscription, retention_discount_percent
+from app.services.subscription_state import (
+    apply_subscription_cycle,
+    commercially_active_where,
+    normalize_pending_state,
+)
 from app.services.topology_engine import TopologyEngine
 from app.services.trial_service import start_trial
 
@@ -122,8 +127,7 @@ async def create_or_get_subscription(
         .where(
             Subscription.user_id == user.id,
             Subscription.plan_id == plan_id,
-            Subscription.status == "active",
-            Subscription.valid_until > now,
+            *commercially_active_where(now=now),
         )
         .limit(1)
     )
@@ -148,8 +152,9 @@ async def create_or_get_subscription(
             valid_from=now,
             valid_until=now,
             device_limit=int(getattr(plan, "device_limit", 1) or 1),
-            status="pending",
+            auto_renew=False,
         )
+        normalize_pending_state(sub)
         db.add(sub)
         await db.flush()
     await db.commit()
@@ -208,8 +213,7 @@ async def create_invoice(
             .where(
                 Subscription.user_id == user.id,
                 Subscription.plan_id == body.plan_id,
-                Subscription.status == "active",
-                Subscription.valid_until > now,
+                *commercially_active_where(now=now),
             )
             .limit(1)
         )
@@ -260,11 +264,11 @@ async def create_invoice(
         await db.flush()
         if is_free and sub.status != "active":
             now = datetime.now(timezone.utc)
-            sub.status = "active"
-            sub.valid_from = now
-            sub.valid_until = now + timedelta(days=plan.duration_days)
-            sub.device_limit = int(
-                getattr(plan, "device_limit", sub.device_limit) or sub.device_limit
+            apply_subscription_cycle(
+                sub,
+                now=now,
+                duration_days=plan.duration_days,
+                device_limit=int(getattr(plan, "device_limit", sub.device_limit) or sub.device_limit),
             )
         await db.commit()
         await db.refresh(payment)

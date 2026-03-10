@@ -3,35 +3,20 @@ import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { webappApi } from "@/api/client";
 import { useTrackScreen } from "@/hooks/useTrackScreen";
+import { useTelemetry } from "@/hooks/useTelemetry";
 import { useSession } from "@/hooks/useSession";
 import { webappQueryKeys } from "@/lib/query-keys/webapp.query-keys";
+import { useI18n } from "@/hooks/useI18n";
+import { getPrimarySubscription } from "./helpers";
 
 export function useRestoreAccessPageModel() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: session } = useSession(true);
-  const activeSubId = session?.subscriptions?.[0]?.plan_id ?? null;
+  const primarySub = getPrimarySubscription(session);
+  const activeSubId = primarySub?.plan_id ?? null;
   useTrackScreen("restore-access", activeSubId ?? null);
-
-  const restoreMutation = useMutation({
-    mutationFn: async () => {
-      const sub = session?.subscriptions?.[0];
-      const planId = sub?.plan_id ?? null;
-      return webappApi.post<{ status: string; plan_id?: string; redirect_to?: string }>(
-        "/webapp/subscription/restore",
-        planId ? { plan_id: planId } : {},
-      );
-    },
-    onSuccess: (data) => {
-      void queryClient.invalidateQueries({ queryKey: [...webappQueryKeys.me()] });
-      const path = data.redirect_to ?? (data.plan_id ? `/plan/checkout/${data.plan_id}` : "/plan");
-      navigate(path, { replace: true });
-    },
-  });
-
-  const restoreAccess = useCallback(() => {
-    restoreMutation.mutate();
-  }, [restoreMutation]);
+  const { track } = useTelemetry(activeSubId ?? null);
 
   const hasGraceOrExpired =
     session?.subscriptions?.some(
@@ -40,19 +25,84 @@ export function useRestoreAccessPageModel() {
         (s.subscription_status ?? s.status) === "expired",
     ) ?? false;
 
+  const restoreMutation = useMutation({
+    mutationFn: async () => {
+      const sub =
+        session?.subscriptions?.find(
+          (candidate) =>
+            candidate.access_status === "grace" ||
+            (candidate.subscription_status ?? candidate.status) === "expired",
+        ) ?? primarySub;
+      const planId = sub?.plan_id ?? null;
+      return webappApi.post<{ status: string; plan_id?: string; redirect_to?: string }>(
+        "/webapp/subscription/restore",
+        sub
+          ? {
+              subscription_id: sub.id,
+              ...(planId ? { plan_id: planId } : {}),
+            }
+          : {},
+      );
+    },
+    onSuccess: (data) => {
+      track("restore_access_succeeded", {
+        screen_name: "restore-access",
+        plan_id: data.plan_id ?? activeSubId ?? undefined,
+        redirect_to: data.redirect_to,
+      });
+      void queryClient.invalidateQueries({ queryKey: [...webappQueryKeys.me()] });
+      const path = data.redirect_to ?? (data.plan_id ? `/plan/checkout/${data.plan_id}` : "/plan");
+      navigate(path, { replace: true });
+    },
+    onError: (error) => {
+      const err = error as { code?: string; message?: string };
+      track("restore_access_failed", {
+        screen_name: "restore-access",
+        plan_id: activeSubId ?? undefined,
+        error_code: err.code,
+        reason: err.message,
+      });
+    },
+  });
+
+  const restoreAccess = useCallback(() => {
+    track("restore_access_started", {
+      screen_name: "restore-access",
+      plan_id: activeSubId ?? undefined,
+      has_grace: hasGraceOrExpired,
+    });
+    restoreMutation.mutate();
+  }, [activeSubId, hasGraceOrExpired, restoreMutation, track]);
+
+  const { t } = useI18n();
+
   const pageState =
-    !session?.user || !hasGraceOrExpired
+    !session?.user
       ? { status: "empty" as const }
-      : { status: "ready" as const };
+      : !hasGraceOrExpired
+        ? {
+            status: "empty" as const,
+            title: t("restore.inline_no_expired_title"),
+            message: t("restore.inline_no_expired_message"),
+          }
+        : restoreMutation.isPending
+          ? { status: "loading" as const }
+          : restoreMutation.isError
+            ? {
+                status: "error" as const,
+                title: t("common.could_not_load_title"),
+                message: t("common.could_not_load_generic"),
+              }
+            : { status: "ready" as const };
 
   return {
     header: {
-      title: "Restore access",
-      subtitle: "Your subscription has expired",
+      title: t("restore.header_title"),
+      subtitle: t("support.hero_subtitle"),
     },
-    description:
-      "Restore your connection in one tap and keep your previous setup. You'll complete payment on the plan page. Any pending referral days will apply when you restore.",
+    description: t("restore.info_message"),
     pageState,
+    hasGraceOrExpired,
     isRestoring: restoreMutation.isPending,
     restoreAccess,
   };

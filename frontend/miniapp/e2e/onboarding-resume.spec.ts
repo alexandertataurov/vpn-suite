@@ -39,7 +39,7 @@ async function mockBootstrapApis(page: import("@playwright/test").Page) {
           user: { id: 1, tg_id: 12345 },
           subscriptions: [],
           devices: [],
-          onboarding: { completed: false, step: 0, version: 1, updated_at: null },
+          onboarding: { completed: false, step: 0, version: 2, updated_at: null },
         }),
       });
       return;
@@ -52,8 +52,8 @@ async function mockBootstrapApis(page: import("@playwright/test").Page) {
         body: JSON.stringify({
           onboarding: {
             completed: !!body.completed,
-            step: body.completed ? 2 : body.step ?? 0,
-            version: 1,
+            step: body.completed ? 3 : body.step ?? 0,
+            version: 2,
             updated_at: body.completed ? new Date().toISOString() : null,
           },
         }),
@@ -75,15 +75,19 @@ test.describe("Miniapp Onboarding Resume", () => {
     await page.goto("./?tgWebAppData=e2e-test");
 
     await expect(page).toHaveURL(/.*\/onboarding$/, { timeout: 15000 });
-    await expect(page.getByText(/Step 1 of 3/i)).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Manage VPN access in Telegram/i })).toBeVisible();
     const storedValue = await page.evaluate(() =>
       window.localStorage.getItem("vpn-suite-miniapp-onboarding:1"),
     );
     expect(storedValue).not.toBeNull();
-    const parsed = JSON.parse(storedValue ?? "{}") as { step?: number; completed?: boolean; version?: number };
+    const parsed = JSON.parse(storedValue ?? "{}") as {
+      step?: number;
+      completed?: boolean;
+      version?: number;
+    };
     expect(parsed.step).toBe(0);
     expect(parsed.completed).toBe(false);
-    expect(parsed.version).toBe(1);
+    expect(parsed.version).toBe(2);
   });
 
   test("valid onboarding resume state restores mid-flow step", async ({ page }) => {
@@ -92,8 +96,8 @@ test.describe("Miniapp Onboarding Resume", () => {
       window.localStorage.setItem(
         "vpn-suite-miniapp-onboarding:1",
         JSON.stringify({
-          step: 1,
-          version: 1,
+          step: 2,
+          version: 2,
           completed: false,
           updatedAt: new Date().toISOString(),
         }),
@@ -104,7 +108,11 @@ test.describe("Miniapp Onboarding Resume", () => {
     await page.goto("./?tgWebAppData=e2e-test");
 
     await expect(page).toHaveURL(/.*\/onboarding$/, { timeout: 15000 });
-    await expect(page.getByText(/Step 2 of 3/i)).toBeVisible();
-    await expect(page.getByText(/Connect every device/i)).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: /Get your config|Получите свой конфиг/i }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /Choose plan|Выбрать тариф/i }),
+    ).toBeVisible();
   });
 });

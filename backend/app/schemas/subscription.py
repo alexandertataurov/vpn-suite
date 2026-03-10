@@ -48,14 +48,31 @@ class SubscriptionOut(OrmSchema):
     @computed_field  # type: ignore[prop-decorator]
     @property
     def effective_status(self) -> str:
-        """Expired when valid_until < now, else status. Use for display so list shows correct state."""
+        """Derived display status from split-state lifecycle, not legacy status alone."""
         now = datetime.now(timezone.utc)
         until = (
             self.valid_until.replace(tzinfo=timezone.utc)
             if self.valid_until.tzinfo is None
             else self.valid_until
         )
-        return "expired" if until < now else self.status
+        sub_status = (self.subscription_status or self.status or "").strip().lower()
+        access_status = (self.access_status or "enabled").strip().lower()
+
+        if sub_status == "pending":
+            return "pending"
+        if sub_status == "cancelled":
+            return "cancelled"
+        if access_status == "paused" and sub_status == "active":
+            return "paused"
+        if access_status == "grace":
+            return "grace"
+        if sub_status == "expired" or until < now:
+            return "expired"
+        if access_status == "blocked" and sub_status == "active":
+            return "blocked"
+        if self.cancel_at_period_end and sub_status == "active" and access_status == "enabled":
+            return "cancel_at_period_end"
+        return sub_status or (self.status or "")
 
 
 class SubscriptionList(BaseModel):

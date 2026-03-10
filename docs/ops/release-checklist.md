@@ -57,7 +57,7 @@
 | Node mode | Режим ноды mock/real/agent | — | `NODE_MODE=mock` (по умолчанию). **Production:** рекомендуется `NODE_MODE=agent` (через node-agent). Режим `real` (docker exec) допустим только для single-host/dev и требует Docker runtime доступа в control-plane. |
 | Monitoring UI | Нет отдельного UI для 7/30/90 дней метрик по нодам | Низкая | Prometheus + Grafana при наличии; админка показывает текущие stats. |
 | CryptoPay | Только Telegram Stars; CryptoPay опционален | Низкая | Добавить провайдер по тому же контракту webhook. |
-| Subscription status | В API возвращается `effective_status` (expired при valid_until < now) | — | Админка использует effective_status для отображения; выдача/продление по-прежнему по valid_until. |
+| Subscription status | В API возвращается `effective_status` из split-state lifecycle (`pending`, `active`, `paused`, `grace`, `blocked`, `cancelled`, `cancel_at_period_end`, `expired`) | — | Админка и бот используют effective_status для отображения; выдача/продление по-прежнему по canonical entitlement rules. |
 | CI | Build выполняется из корня репо без `working-directory` | — | `docker compose build admin-api` корректен. |
 
 ### Контур runtime provisioning (для production)

@@ -1,6 +1,6 @@
 /**
  * Design system radius tokens. Use semantic tokens; do not hardcode border-radius in components.
- * CSS source: miniapp-tokens.css, miniapp-primitives-aliases.css, telegram-miniapp-design-system.css.
+ * CSS source: styles/tokens/base.css, styles/theme/telegram.css.
  */
 export const RADIUS_TOKENS = {
   none: "--radius-none",
@@ -13,11 +13,4 @@ export const RADIUS_TOKENS = {
   control: "--radius-control",
   surface: "--radius-surface",
   button: "--radius-button",
-  /** Legacy (miniapp) */
-  r: "--r",
-  rSm: "--r-sm",
-  rMd: "--r-md",
-  rLg: "--r-lg",
-  /** Telegram DS */
-  dsRadiusMd: "--ds-radius-md",
 } as const;

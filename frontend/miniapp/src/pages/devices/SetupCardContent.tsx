@@ -1,10 +1,8 @@
 import {
   MissionAlert,
   MissionPrimaryButton,
-  MissionPrimaryLink,
-  MissionSecondaryLink,
-  ButtonRow,
 } from "@/design-system";
+import { useI18n } from "@/hooks/useI18n";
 
 export type SetupStep = "subscription" | "issue" | "pending";
 
@@ -14,7 +12,6 @@ export interface SetupCardContentProps {
   canAddDevice?: boolean;
   isAddPending?: boolean;
   issueActionLabel?: string;
-  recommendedRoute?: string;
 }
 
 /** Reusable setup step content: alert + actions. */
@@ -24,20 +21,15 @@ export function SetupCardContent({
   canAddDevice = false,
   isAddPending = false,
   issueActionLabel = "Add device",
-  recommendedRoute = "/devices",
 }: SetupCardContentProps) {
+  const { t } = useI18n();
+
   if (step === "subscription") {
     return (
       <MissionAlert
         tone="info"
-        title="No active subscription"
-        message="Choose a plan first. You'll return to device setup after payment."
-        actions={(
-          <ButtonRow>
-            <MissionPrimaryLink to="/plan">Choose plan</MissionPrimaryLink>
-            <MissionSecondaryLink to="/support">Support</MissionSecondaryLink>
-          </ButtonRow>
-        )}
+        title={t("plan.next_step_no_subscription_alert_title")}
+        message={t("plan.next_step_no_subscription_alert_message")}
       />
     );
   }
@@ -45,18 +37,18 @@ export function SetupCardContent({
     return (
       <MissionAlert
         tone="warning"
-        title="Issue your first device"
-        message="Generate a config here, import in your VPN app, then confirm."
+        title={t("devices.summary_subtitle_no_devices")}
+        message={t("devices.summary_subtitle_connection_not_confirmed")}
         actions={(
-          <ButtonRow>
+          <div className="miniapp-compact-actions">
             <MissionPrimaryButton
               onClick={onIssueDevice}
               disabled={!canAddDevice || isAddPending}
+              className="miniapp-compact-action"
             >
-              {isAddPending ? "Issuing…" : issueActionLabel}
+              {isAddPending ? t("devices.issue_primary_label_pending") : issueActionLabel}
             </MissionPrimaryButton>
-            <MissionSecondaryLink to="/servers">Routing</MissionSecondaryLink>
-          </ButtonRow>
+          </div>
         )}
       />
     );
@@ -64,14 +56,8 @@ export function SetupCardContent({
   return (
     <MissionAlert
       tone="info"
-      title="Device setup in progress"
-      message="Complete installation in your VPN app."
-      actions={(
-        <ButtonRow>
-          <MissionPrimaryLink to={recommendedRoute}>Continue setup</MissionPrimaryLink>
-          <MissionSecondaryLink to="/support">Installation guide</MissionSecondaryLink>
-        </ButtonRow>
-      )}
+      title={t("home.header_default_subtitle")}
+      message={t("home.status_connecting_hint")}
     />
   );
 }

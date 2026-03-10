@@ -22,7 +22,7 @@ The recommended architecture follows a **layered model**:
 ```
 Design Tokens
       ↓
-Foundations
+Theme
       ↓
 Primitives
       ↓
@@ -35,7 +35,7 @@ Page Recipes
 Feature Components (Application Layer)
 ```
 
-Each layer has strict responsibilities.
+Each layer has strict responsibilities. In this repo, implementation lives under `primitives/`, `components/`, `patterns/`, `layouts/`, and `recipes/`; see the design-system [README](../README.md) for the folder map and "I want to…" table.
 
 ---
 
@@ -113,9 +113,9 @@ No logic allowed.
 
 ---
 
-# 2. Foundations
+# 2. Theme
 
-Foundations apply tokens globally.
+Theme applies tokens globally.
 
 Responsibilities:
 
@@ -128,10 +128,10 @@ Responsibilities:
 ### Files
 
 ```
-foundations/
-  theme.ts
-  css-variables.css
-  global.css
+theme/
+  ThemeProvider.tsx
+  tokens-map.ts
+  z-index.ts
 ```
 
 ---
@@ -246,6 +246,11 @@ Patterns **should not include business logic**.
 
 They only combine components.
 
+### Field vs FormField
+
+- **Field** (components/forms): semantic label + slot + description + error; uses Label, HelperText. Prefer for new forms.
+- **FormField** (patterns/ContentLibraryForms): content-library class-based; different API (label, input, action). Use for content-library layouts.
+
 ---
 
 # 6. Feature Components
@@ -313,10 +318,10 @@ src/
       motion.ts
       breakpoints.ts
 
-    foundations/
-      theme.ts
-      css-variables.css
-      global.css
+    theme/
+      ThemeProvider.tsx
+      tokens-map.ts
+      z-index.ts
 
     primitives/
       Box/
@@ -359,9 +364,7 @@ src/
       useThemeMode.ts
 
     utils/
-      cx.ts
-      polymorphic.ts
-      accessibility.ts
+      accessibility.ts   // class merge: use cn from @vpn-suite/shared
 
     icons/
     types/
@@ -508,9 +511,7 @@ Shared utilities improve consistency.
 Examples:
 
 ```
-cx.ts            // class merging
-polymorphic.ts   // polymorphic components
-accessibility.ts // aria helpers
+accessibility.ts // aria helpers. Class merging: use cn from @vpn-suite/shared.
 ```
 
 ---
@@ -600,7 +601,7 @@ A maintainable React design system requires strict layering.
 ```
 Tokens
 ↓
-Foundations
+Theme
 ↓
 Primitives
 ↓

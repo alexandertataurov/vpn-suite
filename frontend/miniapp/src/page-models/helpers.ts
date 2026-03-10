@@ -12,12 +12,83 @@ export interface PlanLikeWithDeviceLimit extends PlanLike {
   device_limit?: number;
 }
 
+function isCommerciallyActive(subscription: NonNullable<WebAppMeResponse["subscriptions"]>[number]) {
+  return (subscription.subscription_status ?? subscription.status) === "active";
+}
+
+function isAccessEnabled(subscription: NonNullable<WebAppMeResponse["subscriptions"]>[number]) {
+  return (subscription.access_status ?? "enabled") === "enabled";
+}
+
+function isGrace(subscription: NonNullable<WebAppMeResponse["subscriptions"]>[number]) {
+  return (subscription.access_status ?? "enabled") === "grace";
+}
+
+function isPaused(subscription: NonNullable<WebAppMeResponse["subscriptions"]>[number]) {
+  return (subscription.access_status ?? "enabled") === "paused";
+}
+
+function timeValue(iso?: string | null): number {
+  if (!iso) return 0;
+  const value = new Date(iso).getTime();
+  return Number.isFinite(value) ? value : 0;
+}
+
+function subscriptionPriority(subscription: NonNullable<WebAppMeResponse["subscriptions"]>[number]): number {
+  if (isCommerciallyActive(subscription) && isAccessEnabled(subscription)) return 0;
+  if (isGrace(subscription)) return 1;
+  if (isPaused(subscription) && isCommerciallyActive(subscription)) return 2;
+  if (subscription.cancel_at_period_end && isCommerciallyActive(subscription)) return 3;
+  if ((subscription.subscription_status ?? subscription.status) === "pending") return 4;
+  if ((subscription.subscription_status ?? subscription.status) === "expired") return 5;
+  return 6;
+}
+
+export function getPrimarySubscription(session?: WebAppMeResponse | null) {
+  const subscriptions = session?.subscriptions ?? [];
+  if (subscriptions.length === 0) return null;
+  return [...subscriptions].sort((a, b) => {
+    const priorityDelta = subscriptionPriority(a) - subscriptionPriority(b);
+    if (priorityDelta !== 0) return priorityDelta;
+    return timeValue(b.valid_until) - timeValue(a.valid_until);
+  })[0] ?? null;
+}
+
 export function getActiveSubscription(session?: WebAppMeResponse | null) {
-  return session?.subscriptions?.find((subscription) => subscription.status === "active") ?? null;
+  return (
+    session?.subscriptions?.find(
+      (subscription) => isCommerciallyActive(subscription) && isAccessEnabled(subscription),
+    ) ?? null
+  );
 }
 
 export function getActiveDevices(session?: WebAppMeResponse | null) {
   return session?.devices?.filter((device) => !device.revoked_at) ?? [];
+}
+
+export function getConfirmedDevices(session?: WebAppMeResponse | null) {
+  return getActiveDevices(session).filter((device) => device.status === "connected");
+}
+
+export function hasConfirmedConnection(session?: WebAppMeResponse | null) {
+  if (!session) return false;
+
+  // Persistent confirmation from backend: once a connection is confirmed (by handshake
+  // or explicit user action), we should treat VPN setup as done even if the device is
+  // currently idle. This uses durable fields that the server updates:
+  // - user.last_connection_confirmed_at (per-user milestone)
+  // - device.last_connection_confirmed_at (per-device milestone)
+  if (session.user?.last_connection_confirmed_at) return true;
+  if (getActiveDevices(session).some((device) => device.last_connection_confirmed_at)) {
+    return true;
+  }
+
+  // Fallback: live status-based confirmation (connected device in current session).
+  return getConfirmedDevices(session).length > 0;
+}
+
+export function getLatestActiveDevice(session?: WebAppMeResponse | null) {
+  return getActiveDevices(session)[0] ?? null;
 }
 
 export function daysUntil(iso?: string | null): number {

@@ -10,6 +10,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import AbuseSignal, Device, Payment, Referral, Subscription
+from app.services.subscription_state import entitled_active_where
 
 
 def _median(values: list[float]) -> float:
@@ -94,9 +95,7 @@ async def run_abuse_detection(session: AsyncSession) -> dict:
     sub_plan = (
         await session.execute(
             select(Subscription.user_id, Subscription.plan_id, Subscription.device_limit).where(
-                Subscription.status == "active",
-                Subscription.valid_until > now,
-                Subscription.paused_at.is_(None),
+                *entitled_active_where(now=now)
             )
         )
     ).all()

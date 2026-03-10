@@ -16,7 +16,8 @@ from app.core.config import settings
 from app.core.logging_config import extra_for_event
 from app.core.redaction import redact_for_log
 from app.models import Subscription
-from app.services.entitlement_service import emit_entitlement_event
+from app.services.subscription_lifecycle_events import emit_access_blocked, emit_grace_started
+from app.services.subscription_state import block_access, start_grace_period
 
 _log = logging.getLogger(__name__)
 
@@ -39,18 +40,19 @@ async def run_grace_on_expiry_check(session: AsyncSession) -> tuple[int, int]:
             )
         )
         for sub in result.scalars().all():
-            sub.subscription_status = "expired"
-            sub.status = "expired"
-            sub.access_status = "grace"
-            sub.grace_until = now + timedelta(hours=grace_hours)
-            sub.grace_reason = "period_end"
+            start_grace_period(
+                sub,
+                now=now,
+                grace_until=now + timedelta(hours=grace_hours),
+                reason="period_end",
+            )
             await session.flush()
-            await emit_entitlement_event(
+            await emit_grace_started(
                 session,
                 subscription_id=sub.id,
                 user_id=sub.user_id,
-                event_type="grace_started",
-                payload={"grace_until": sub.grace_until.isoformat(), "reason": "period_end"},
+                grace_until=sub.grace_until.isoformat(),
+                reason="period_end",
             )
             grace_applied += 1
 
@@ -62,15 +64,10 @@ async def run_grace_on_expiry_check(session: AsyncSession) -> tuple[int, int]:
         )
     )
     for sub in result2.scalars().all():
-        sub.access_status = "blocked"
-        sub.grace_reason = None
+        block_access(sub)
         await session.flush()
-        await emit_entitlement_event(
-            session,
-            subscription_id=sub.id,
-            user_id=sub.user_id,
-            event_type="access_blocked",
-            payload={"reason": "grace_elapsed"},
+        await emit_access_blocked(
+            session, subscription_id=sub.id, user_id=sub.user_id, reason="grace_elapsed"
         )
         blocked += 1
 

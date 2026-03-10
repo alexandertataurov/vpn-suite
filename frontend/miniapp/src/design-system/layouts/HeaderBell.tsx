@@ -17,6 +17,7 @@ export function HeaderBell() {
     <Popover
       open={popoverOpen}
       onOpenChange={setPopoverOpen}
+      panelAriaLabel="Notifications"
       renderTrigger={(triggerProps) => (
         <button
           type="button"
@@ -37,7 +38,7 @@ export function HeaderBell() {
         </button>
       )}
     >
-      <HeaderAlertsContent alerts={unifiedItems} title="Notifications" />
+      <HeaderAlertsContent alerts={unifiedItems} title="Notifications" onAction={() => setPopoverOpen(false)} />
     </Popover>
   );
 }

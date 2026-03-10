@@ -5,7 +5,7 @@ export const webappMeCompleted: WebAppMeResponse = {
   user: { id: 1, tg_id: 100 },
   subscriptions: [],
   devices: [],
-  onboarding: { completed: true, step: 1, version: 1, updated_at: null },
+  onboarding: { completed: true, step: 3, version: 2, updated_at: null },
 };
 
 /** Session with active subscription for tests. */
@@ -22,5 +22,5 @@ export const webappMeActive: WebAppMeResponse = {
   ],
   devices: [],
   public_ip: "185.199.110.42",
-  onboarding: { completed: true, step: 2, version: 1, updated_at: "2026-02-01T00:00:00Z" },
+  onboarding: { completed: true, step: 3, version: 2, updated_at: "2026-02-01T00:00:00Z" },
 };

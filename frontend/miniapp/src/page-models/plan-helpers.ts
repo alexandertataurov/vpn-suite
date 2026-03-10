@@ -5,6 +5,7 @@
  */
 import type { WebAppBillingHistoryItem, WebAppBillingHistoryStatus } from "@vpn-suite/shared";
 import type { PlanItem } from "@/api";
+import { translate } from "@/lib/i18n";
 
 export const YEARLY_DURATION_THRESHOLD = 45;
 export const LIFETIME_DURATION_THRESHOLD = 36500;
@@ -33,18 +34,11 @@ export function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
 
-/** Strip Beta/developer prefixes for billing UI display. Keeps backend plan.name unchanged. */
-export function sanitizePlanDisplayName(name: string): string {
+/** Use plan.name from backend as-is for display, falling back only when empty. */
+export function sanitizePlanDisplayName(name: string, locale: "en" | "ru" = "en"): string {
   const s = (name ?? "").trim();
-  if (!s) return "Plan";
-  const stripped = s
-    .replace(/^beta\s*[–-]\s*/i, "")
-    .replace(/^beta\s+/i, "")
-    .replace(/^beta$/i, "")
-    .trim();
-  const periodWords = /^(annual|monthly|lifetime)$/i;
-  if (!stripped || periodWords.test(stripped)) return "Pro";
-  return stripped;
+  if (s) return s;
+  return translate(locale, "plan.fallback_plan_name");
 }
 
 export function normalizeTierKey(rawName: string): string {
@@ -56,18 +50,18 @@ export function normalizeTierKey(rawName: string): string {
   return slug || "plan";
 }
 
-export function tierLabelForKey(key: string, fallbackName: string): string {
-  if (key === "basic") return "Basic";
-  if (key === "pro") return "Pro";
-  if (key === "team") return "Team";
-  return fallbackName || "Plan";
+export function tierLabelForKey(key: string, fallbackName: string, locale: "en" | "ru" = "en"): string {
+  if (key === "basic") return translate(locale, "plan.tier_basic_label");
+  if (key === "pro") return translate(locale, "plan.tier_pro_label");
+  if (key === "team") return translate(locale, "plan.tier_team_label");
+  return fallbackName || translate(locale, "plan.fallback_plan_name");
 }
 
-export function tierDescriptionForKey(key: string): string {
-  if (key === "basic") return "Personal use · 1 device";
-  if (key === "pro") return "Power users · 3 devices";
-  if (key === "team") return "Shared access · multi-device";
-  return "Secure VPN access";
+export function tierDescriptionForKey(key: string, locale: "en" | "ru" = "en"): string {
+  if (key === "basic") return translate(locale, "plan.tier_basic_description");
+  if (key === "pro") return translate(locale, "plan.tier_pro_description");
+  if (key === "team") return translate(locale, "plan.tier_team_description");
+  return translate(locale, "plan.tier_default_description");
 }
 
 export function tierSortRank(key: string): number {
@@ -80,28 +74,28 @@ export function tierSortRank(key: string): number {
 export function featuresForTier(key: string): TierFeature[] {
   if (key === "basic") {
     return [
-      { id: "devices", icon: "yes", text: "Connected devices", value: "1 slot" },
-      { id: "network", icon: "yes", text: "AmneziaWG protocol", value: "AWG" },
-      { id: "killswitch", icon: "no", text: "Kill switch" },
+      { id: "devices", icon: "yes", text: "plan.tier_feature_devices_label", value: "plan.tier_feature_basic_devices_value" },
+      { id: "network", icon: "yes", text: "plan.tier_feature_network_label", value: "plan.tier_feature_network_value" },
+      { id: "killswitch", icon: "no", text: "plan.tier_feature_controls_label" },
     ];
   }
   if (key === "pro") {
     return [
-      { id: "devices", icon: "yes", text: "Connected devices", value: "3 slots" },
-      { id: "network", icon: "yes", text: "AmneziaWG protocol", value: "AWG" },
-      { id: "support", icon: "amber", text: "Priority support", value: "Fast lane" },
+      { id: "devices", icon: "yes", text: "plan.tier_feature_devices_label", value: "plan.tier_feature_pro_devices_value" },
+      { id: "network", icon: "yes", text: "plan.tier_feature_network_label", value: "plan.tier_feature_network_value" },
+      { id: "support", icon: "amber", text: "plan.tier_feature_support_label", value: "plan.tier_feature_support_value" },
     ];
   }
   if (key === "team") {
     return [
-      { id: "devices", icon: "yes", text: "Connected devices", value: "10 slots" },
-      { id: "network", icon: "yes", text: "AmneziaWG protocol", value: "AWG" },
-      { id: "support", icon: "amber", text: "Shared workspace", value: "Team" },
+      { id: "devices", icon: "yes", text: "plan.tier_feature_devices_label", value: "plan.tier_feature_team_devices_value" },
+      { id: "network", icon: "yes", text: "plan.tier_feature_network_label", value: "plan.tier_feature_network_value" },
+      { id: "support", icon: "amber", text: "plan.tier_feature_team_label", value: "plan.tier_feature_team_value" },
     ];
   }
   return [
-    { id: "devices", icon: "yes", text: "Connected devices", value: "Flexible" },
-    { id: "network", icon: "yes", text: "AmneziaWG protocol", value: "AWG" },
+    { id: "devices", icon: "yes", text: "plan.tier_feature_devices_label", value: "plan.tier_feature_flexible_devices_value" },
+    { id: "network", icon: "yes", text: "plan.tier_feature_network_label", value: "plan.tier_feature_network_value" },
   ];
 }
 
@@ -231,14 +225,14 @@ export function buildNextStepCard(params: {
   const { isSubscribed, routeReason, recommendedRoute } = params;
   if (!isSubscribed) {
     return {
-      title: "Setup",
-      description: "Choose a plan first, then continue device setup in the next step.",
+      title: "Next step",
+      description: "Choose a plan first, then continue setup.",
       alertTone: "info",
       alertTitle: "No active subscription",
       alertMessage: "Your account is signed in, but access starts only after plan activation.",
-      primaryLabel: "Compare plans",
+      primaryLabel: "Choose plan",
       primaryActionType: "scrollToPlans" as const,
-      secondaryLabel: "Open support",
+      secondaryLabel: "Contact support",
       secondaryTo: "/support",
       badgeTone: "blue",
       badgeLabel: "Step 1",
@@ -246,14 +240,14 @@ export function buildNextStepCard(params: {
   }
   if (routeReason === "no_device") {
     return {
-      title: "Setup",
-      description: "Billing is active. The next step is issuing your first device.",
+      title: "Next step",
+      description: "Issue your first device to continue setup.",
       alertTone: "warning",
       alertTitle: "Setup is not complete",
       alertMessage: "You still need a device config before you can connect.",
-      primaryLabel: "Open device setup",
+      primaryLabel: "Add device",
       primaryTo: recommendedRoute,
-      secondaryLabel: "Open support",
+      secondaryLabel: "Contact support",
       secondaryTo: "/support",
       badgeTone: "amber",
       badgeLabel: "Step 2",
@@ -261,14 +255,14 @@ export function buildNextStepCard(params: {
   }
   if (routeReason === "connection_not_confirmed") {
     return {
-      title: "Setup",
-      description: "A device exists, but the connection is not confirmed yet.",
+      title: "Next step",
+      description: "Finish setup confirmation for the issued device.",
       alertTone: "warning",
-      alertTitle: "Connection pending",
-      alertMessage: "Finish the connection check so the app can move you to the active dashboard flow.",
-      primaryLabel: "Continue setup",
+      alertTitle: "Setup confirmation pending",
+      alertMessage: "Finish the setup check after opening the VPN app with the issued config.",
+      primaryLabel: "View setup",
       primaryTo: recommendedRoute,
-      secondaryLabel: "Open devices",
+      secondaryLabel: "Manage devices",
       secondaryTo: "/devices",
       badgeTone: "amber",
       badgeLabel: "Step 3",
@@ -277,28 +271,43 @@ export function buildNextStepCard(params: {
   if (routeReason === "grace" || routeReason === "expired_with_grace") {
     return {
       title: "Access state",
-      description: "Your plan is outside the normal active state, but grace access is still available.",
+      description: "Grace access is still available for now.",
       alertTone: "warning",
       alertTitle: "Grace period active",
       alertMessage: "Restore billing before grace ends to avoid losing access.",
       primaryLabel: "Restore access",
       primaryTo: recommendedRoute,
-      secondaryLabel: "View support",
+      secondaryLabel: "Contact support",
       secondaryTo: "/support",
       badgeTone: "amber",
       badgeLabel: "Grace",
     };
   }
+  if (routeReason === "paused_access") {
+    return {
+      title: "Access state",
+      description: "The subscription is on the account, but access is paused.",
+      alertTone: "info",
+      alertTitle: "Access paused",
+      alertMessage: "Resume the subscription from settings before issuing or using configs again.",
+      primaryLabel: "Open settings",
+      primaryTo: "/settings",
+      secondaryLabel: "Contact support",
+      secondaryTo: "/support",
+      badgeTone: "blue",
+      badgeLabel: "Paused",
+    };
+  }
   if (routeReason === "cancelled_at_period_end") {
     return {
       title: "Access state",
-      description: "Your subscription is still active, but it is set to stop at the period end.",
+      description: "The subscription is active, but it will stop at period end.",
       alertTone: "info",
       alertTitle: "Access remains active",
       alertMessage: "Review billing settings if you want to keep renewal turned on.",
       primaryLabel: "Open settings",
       primaryTo: "/settings",
-      secondaryLabel: "Open devices",
+      secondaryLabel: "Manage devices",
       secondaryTo: "/devices",
       badgeTone: "blue",
       badgeLabel: "Scheduled",

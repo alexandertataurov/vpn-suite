@@ -7,6 +7,7 @@ import type { UpgradeIntent, UpsellContext, UpsellDecision, PlanLikeForUpsell } 
 import { TRIGGER_PRIORITY } from "./upsell.constants";
 import { shouldSuppressUpsell } from "./shouldSuppressUpsell";
 import { getUpgradeOfferForIntent } from "./getUpgradeOfferForIntent";
+import type { TranslateFn } from "./getUpsellCopy";
 import { shouldShowUpsell } from "../helpers";
 
 function triggerAllowed(plan: PlanLikeForUpsell | null | undefined, trigger: UpgradeIntent): boolean {
@@ -25,13 +26,17 @@ function buildCandidates(context: UpsellContext): Array<{ intent: UpgradeIntent;
     }
   }
 
-  if (
-    subscriptionStatus === "expired" ||
-    subscriptionStatus === "grace" ||
-    (daysToExpiry != null && daysToExpiry <= 30)
-  ) {
-    if (triggerAllowed(currentPlan, "expiry")) {
-      candidates.push({ intent: "expiry", priority: TRIGGER_PRIORITY.expiry });
+  // Expiry upsell: excluded from home page (shown in notifications via useHeaderAlerts instead).
+  // Only trigger when ≤7 days left to avoid false positives for fresh plans.
+  if (page !== "home") {
+    if (
+      subscriptionStatus === "expired" ||
+      subscriptionStatus === "grace" ||
+      (daysToExpiry != null && daysToExpiry <= 7)
+    ) {
+      if (triggerAllowed(currentPlan, "expiry")) {
+        candidates.push({ intent: "expiry", priority: TRIGGER_PRIORITY.expiry });
+      }
     }
   }
 
@@ -48,7 +53,7 @@ function buildCandidates(context: UpsellContext): Array<{ intent: UpgradeIntent;
   return candidates.sort((a, b) => b.priority - a.priority);
 }
 
-export function evaluateUpsell(context: UpsellContext): UpsellDecision | null {
+export function evaluateUpsell(context: UpsellContext, t: TranslateFn): UpsellDecision | null {
   const now = new Date();
   const candidates = buildCandidates(context);
 
@@ -66,6 +71,7 @@ export function evaluateUpsell(context: UpsellContext): UpsellDecision | null {
       context.currentPlan,
       intent,
       context.page,
+      t,
     );
     if (offer) return offer;
   }

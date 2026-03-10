@@ -1,5 +1,5 @@
 import type { HTMLAttributes, ReactNode } from "react";
-import { Button, ButtonRow } from "@/design-system";
+import { Button, ButtonRow, MissionProgressBar, type MissionHealthTone } from "@/design-system";
 
 export type ConnectionState = "inactive" | "connecting" | "connected";
 
@@ -25,15 +25,9 @@ export interface ConnectionStatusHeroProps extends Omit<HTMLAttributes<HTMLDivEl
   state: ConnectionState;
   serverKeyLabel?: string;
   serverLabel?: string;
-  latencyKeyLabel?: string;
-  latencyLabel?: string;
   currentIpKeyLabel?: string;
   currentIp?: string;
   showCurrentIpCell?: boolean;
-  durationKeyLabel?: string;
-  durationLabel?: string;
-  trafficKeyLabel?: string;
-  trafficLabel?: string;
   protocolKeyLabel?: string;
   protocolLabel?: string;
   onConnect?: () => void;
@@ -42,36 +36,42 @@ export interface ConnectionStatusHeroProps extends Omit<HTMLAttributes<HTMLDivEl
   title?: string;
   hint?: string;
   actions?: ReactNode;
+  metrics?: Array<{
+    keyLabel: string;
+    valueLabel: string;
+    percent: number;
+    tone?: MissionHealthTone;
+  }>;
 }
 
 const DEFAULT_TITLE: Record<ConnectionState, string> = {
-  inactive: "Config inactive",
-  connecting: "Config pending",
-  connected: "Configuration active",
+  inactive: "No active plan",
+  connecting: "Setup pending",
+  connected: "Setup confirmed",
 };
 
 const DEFAULT_HINT: Record<ConnectionState, string> = {
-  inactive: "Set up config on a device",
-  connecting: "Add device to get config",
-  connected: "Last synced with device",
+  inactive: "Choose a plan before you issue a device config.",
+  connecting: "Finish setup in your VPN app, then confirm it here.",
+  connected: "This confirms setup, not a live VPN connection.",
 };
 
 const BTN_LABEL: Record<ConnectionState, string> = {
   inactive: "Add device",
-  connecting: "Finish setup",
-  connected: "Disconnect",
+  connecting: "View setup",
+  connected: "Manage devices",
 };
 
 const BTN_ARIA_LABEL: Record<ConnectionState, string> = {
   inactive: "Add device",
-  connecting: "Finish setup",
-  connected: "Manage Connection",
+  connecting: "View setup",
+  connected: "Manage devices",
 };
 
 const BTN_TONE: Record<ConnectionState, "default" | "warning" | "danger"> = {
   inactive: "default",
   connecting: "warning",
-  connected: "danger",
+  connected: "default",
 };
 
 /** Content Library 3a: Connection Status Hero. Config-centric copy (mini-app cannot control VPN connection). */
@@ -79,15 +79,9 @@ export function ConnectionStatusHero({
   state,
   serverKeyLabel = "Server preset",
   serverLabel = "Fastest available",
-  latencyKeyLabel = "Server latency",
-  latencyLabel = "--",
   currentIpKeyLabel = "Current IP",
   currentIp = "--",
   showCurrentIpCell = true,
-  durationKeyLabel = "Duration",
-  durationLabel = "--",
-  trafficKeyLabel = "Traffic",
-  trafficLabel = "--",
   protocolKeyLabel = "Protocol",
   protocolLabel = "--",
   onConnect,
@@ -96,16 +90,17 @@ export function ConnectionStatusHero({
   title,
   hint,
   actions,
+  metrics = [],
   className = "",
   ...props
 }: ConnectionStatusHeroProps) {
   const cardClass = STATE_CARD_CLASS[state];
   const glowClass = STATE_GLOW_CLASS[state];
   const dotClass = STATE_DOT_CLASS[state];
-  const latencyValClass = "mut";
-  const durationValClass = "mut";
-  const trafficValClass = state === "connected" ? "teal" : "mut";
   const showProtocolPill = protocolLabel != null && protocolLabel !== "--";
+  const showServerRail = serverLabel != null && serverLabel !== "";
+  const showIpRail = showCurrentIpCell && currentIp != null && currentIp !== "--";
+  const hasContextRail = showServerRail || showIpRail;
 
   return (
     <div
@@ -155,50 +150,55 @@ export function ConnectionStatusHero({
             </div>
           </div>
         </div>
-        <div className="data-grid conn-status-data-grid">
-          <div className="data-cell wide">
-            <div className="dc-key">{serverKeyLabel}</div>
-            {onChangeServer != null && state !== "inactive" ? (
-              <button
-                type="button"
-                className="dc-val teal conn-server-link"
-                onClick={onChangeServer}
-                aria-label="Change server"
-              >
-                {serverLabel}
-              </button>
-            ) : (
-              <div className="dc-val teal">{serverLabel}</div>
-            )}
-          </div>
-          <div className="data-cell">
-            <div className="dc-key">{latencyKeyLabel}</div>
-            <div className={`dc-val ${latencyValClass}`} id="dcLatency">
-              {latencyLabel}
-            </div>
-          </div>
-          <div className="data-cell">
-            <div className="dc-key">{durationKeyLabel}</div>
-            <div className={`dc-val ${durationValClass}`} id="dcDuration">
-              {durationLabel}
-            </div>
-          </div>
-          <div className="data-cell">
-            <div className="dc-key">{trafficKeyLabel}</div>
-            <div className={`dc-val ${trafficValClass}`} id="dcTraffic">
-              {trafficLabel}
-            </div>
-          </div>
-          {showCurrentIpCell ? (
-            <div className="data-cell">
-              <div className="dc-key">{currentIpKeyLabel}</div>
-              <div className="dc-val ip" id="dcIp">
-                {currentIp}
+        {metrics.length > 0 ? (
+          <div className="hero-visual-grid" aria-label="Connection overview">
+            {metrics.map((metric) => (
+              <div key={metric.keyLabel} className="hero-visual-tile">
+                <div className="hero-visual-topline">
+                  <span className="hero-visual-key">{metric.keyLabel}</span>
+                  <span className="hero-visual-value">{metric.valueLabel}</span>
+                </div>
+                <MissionProgressBar
+                  percent={metric.percent}
+                  tone={metric.tone ?? "healthy"}
+                  staticFill
+                  ariaLabel={`${metric.keyLabel} ${metric.valueLabel}`}
+                  className="hero-visual-progress"
+                />
               </div>
-            </div>
-          ) : null}
-        </div>
-        {state !== "connected" && (
+            ))}
+          </div>
+        ) : null}
+        {hasContextRail ? (
+          <div className="conn-context-rail" aria-label="Connection context">
+            {showServerRail ? (
+              <div className="conn-context-chip">
+                <span className="conn-context-key">{serverKeyLabel}</span>
+                {onChangeServer != null && state !== "inactive" ? (
+                  <button
+                    type="button"
+                    className="conn-context-value conn-context-value--link"
+                    onClick={onChangeServer}
+                    aria-label="Change server"
+                  >
+                    {serverLabel}
+                  </button>
+                ) : (
+                  <span className="conn-context-value">{serverLabel}</span>
+                )}
+              </div>
+            ) : null}
+            {showIpRail ? (
+              <div className="conn-context-chip">
+                <span className="conn-context-key">{currentIpKeyLabel}</span>
+                <span className="conn-context-value conn-context-value--ip" id="dcIp">
+                  {currentIp}
+                </span>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+        {onConnect != null && (
           <ButtonRow className="conn-status-btn-row">
             <Button
               variant="primary"
@@ -206,7 +206,7 @@ export function ConnectionStatusHero({
               tone={BTN_TONE[state]}
               id="connectBtn"
               onClick={onConnect}
-              disabled={state === "connecting"}
+              disabled={false}
               aria-label={BTN_ARIA_LABEL[state]}
             >
               {BTN_LABEL[state]}

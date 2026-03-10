@@ -75,7 +75,7 @@ def _mock_live_key(
 async def test_issue_device_merges_runtime_obfuscation_into_config(monkeypatch):
     """When runtime_adapter.get_obfuscation_from_node returns S1/S2, issued config contains them."""
     if not await check_db():
-        pytest.skip("DB not available")
+        pytest.skip("DB not available (requires Postgres)")
     monkeypatch.setattr("app.services.issue_service.settings.node_mode", "mock")
     monkeypatch.setattr(
         "app.services.issue_service.live_key_fetch",
@@ -106,7 +106,7 @@ async def test_issue_device_merges_runtime_obfuscation_into_config(monkeypatch):
 async def test_issue_device_uses_profile_defaults_when_runtime_returns_none(monkeypatch):
     """When get_obfuscation_from_node returns None, config uses profile defaults (S1=0, S2=0)."""
     if not await check_db():
-        pytest.skip("DB not available")
+        pytest.skip("DB not available (requires Postgres)")
     monkeypatch.setattr("app.services.issue_service.settings.node_mode", "mock")
     monkeypatch.setattr(
         "app.services.issue_service.live_key_fetch",
@@ -136,7 +136,7 @@ async def test_issue_device_uses_profile_defaults_when_runtime_returns_none(monk
 async def test_issue_device_uses_profile_defaults_when_runtime_raises(monkeypatch):
     """When get_obfuscation_from_node raises, config still built with profile defaults."""
     if not await check_db():
-        pytest.skip("DB not available")
+        pytest.skip("DB not available (requires Postgres)")
     monkeypatch.setattr("app.services.issue_service.settings.node_mode", "mock")
     monkeypatch.setattr(
         "app.services.issue_service.live_key_fetch",

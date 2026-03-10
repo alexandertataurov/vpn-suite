@@ -18,6 +18,7 @@ from app.core.logging_config import extra_for_event
 from app.core.rbac import require_permission
 from app.core.telemetry_polling_task import get_dashboard_timeseries
 from app.models import Device, Plan, Server, ServerSnapshot, Subscription, User
+from app.services.subscription_state import entitled_active_where
 
 logger = logging.getLogger(__name__)
 
@@ -257,10 +258,7 @@ async def get_overview(
         await db.execute(
             select(func.count())
             .select_from(Subscription)
-            .where(
-                Subscription.status == "active",
-                Subscription.valid_until > now,
-            )
+            .where(*entitled_active_where(now=now))
         )
     ).scalar() or 0
 
@@ -269,10 +267,7 @@ async def get_overview(
         select(Plan.price_amount, Plan.duration_days)
         .select_from(Subscription)
         .join(Plan, Plan.id == Subscription.plan_id)
-        .where(
-            Subscription.status == "active",
-            Subscription.valid_until > now,
-        )
+        .where(*entitled_active_where(now=now))
     )
     rows = (await db.execute(mrr_subq)).all()
     mrr = 0.0

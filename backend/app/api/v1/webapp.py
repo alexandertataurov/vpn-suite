@@ -6,7 +6,7 @@ import re
 from datetime import datetime, timedelta, timezone
 
 import httpx
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request, Response, status
 from starlette.responses import JSONResponse
 from pydantic import BaseModel, Field, field_validator, model_validator
 from sqlalchemy import func, select
@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.api.v1.device_cache import invalidate_devices_list_cache, invalidate_devices_summary_cache
+from app.api.v1.users import _delete_user_cascade
 from app.core.config import settings
 from app.core.config_builder import ConfigValidationError
 from app.core.constants import REDIS_KEY_RATELIMIT_ISSUE_PREFIX, STARS_PER_LEGACY_UNIT
@@ -56,13 +57,28 @@ from app.services.retention_service import (
     resume_subscription,
     retention_discount_percent,
 )
+from app.services.subscription_state import (
+    access_status as subscription_access_status,
+    apply_subscription_cycle,
+    block_access,
+    entitled_active_where,
+    commercial_status as subscription_commercial_status,
+    is_commercially_active,
+    is_entitled_active,
+    is_restorable,
+    mark_cancel_at_period_end,
+    mark_cancelled,
+    normalize_pending_state,
+    sort_subscriptions,
+)
+from app.services.subscription_lifecycle_events import emit_access_blocked
 
 router = APIRouter(prefix="/webapp", tags=["webapp"])
 
 _WEBAPP_SERVER_SELECT_LIMIT = 20
 _WEBAPP_SERVER_SELECT_WINDOW_SECONDS = 60
-_WEBAPP_ONBOARDING_VERSION = 1
-_WEBAPP_ONBOARDING_MAX_STEP = 2
+_WEBAPP_ONBOARDING_VERSION = 2
+_WEBAPP_ONBOARDING_MAX_STEP = 3
 
 
 def _looks_like_ip(host: str) -> bool:
@@ -102,34 +118,29 @@ def _resolve_route(
         (
             s
             for s in subscriptions
-            if (getattr(s, "subscription_status", s.status) in ("active", "pending"))
-            and (s.valid_until > now or getattr(s, "access_status", "") == "grace")
+            if (
+                subscription_commercial_status(s) in ("active", "pending")
+                and (getattr(s, "valid_until", None) and s.valid_until > now or is_restorable(s, now=now))
+            )
         ),
         None,
     )
     if not primary_sub:
         # Check for grace/expired
-        grace_sub = next(
-            (
-                s
-                for s in subscriptions
-                if getattr(s, "access_status", "") == "grace"
-                and getattr(s, "grace_until", None)
-                and getattr(s, "grace_until") > now
-            ),
-            None,
-        )
+        grace_sub = next((s for s in subscriptions if is_restorable(s, now=now)), None)
         if grace_sub:
             return "/restore-access", "expired_with_grace"
         # No active subscription
         return "/plan", "no_subscription"
 
-    access_status = getattr(primary_sub, "access_status", "enabled")
+    access_status = subscription_access_status(primary_sub)
     cancel_at_end = bool(getattr(primary_sub, "cancel_at_period_end", False))
 
     grace_until = getattr(primary_sub, "grace_until", None)
     if access_status == "grace" and grace_until and grace_until > now:
         return "/restore-access", "grace"
+    if access_status == "paused":
+        return "/settings", "paused_access"
     if cancel_at_end and primary_sub.valid_until > now:
         return "/account/subscription", "cancelled_at_period_end"
 
@@ -352,6 +363,7 @@ async def webapp_me(request: Request, db: AsyncSession = Depends(get_db)):
             return "connected" if age < 300 else "idle"
         return "config_pending"
 
+    ordered_subscriptions = sort_subscriptions(list(user.subscriptions))
     subs = [
         {
             "id": s.id,
@@ -376,7 +388,7 @@ async def webapp_me(request: Request, db: AsyncSession = Depends(get_db)):
                 te.isoformat() if (te := getattr(s, "trial_ends_at", None)) else None
             ),
         }
-        for s in user.subscriptions
+        for s in ordered_subscriptions
     ]
     devs = [
         {
@@ -403,7 +415,7 @@ async def webapp_me(request: Request, db: AsyncSession = Depends(get_db)):
     )
     miniapp_events_total.labels(event="dashboard_open").inc()
 
-    recommended_route, route_reason = _resolve_route(user, user.subscriptions, active_devices)
+    recommended_route, route_reason = _resolve_route(user, ordered_subscriptions, active_devices)
     routing = {"recommended_route": recommended_route, "reason": route_reason}
 
     meta = user.meta or {}
@@ -478,6 +490,10 @@ class WebAppMeProfileUpdateBody(BaseModel):
         return self
 
 
+class WebAppDeleteMeBody(BaseModel):
+    confirm_token: str = Field(min_length=1)
+
+
 @router.patch("/me")
 async def webapp_me_update(
     body: WebAppMeProfileUpdateBody,
@@ -550,6 +566,39 @@ async def webapp_me_update(
             ),
         },
     }
+
+
+@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+async def webapp_me_delete(
+    body: WebAppDeleteMeBody,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    tg_id = _get_tg_id_from_bearer(request)
+    if not tg_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"code": "UNAUTHORIZED", "message": "Invalid session"},
+        )
+    if body.confirm_token.strip() != "DELETE":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"code": "INVALID_CONFIRM_TOKEN", "message": "Type DELETE to confirm"},
+        )
+
+    result = await db.execute(select(User).where(User.tg_id == tg_id))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"code": "USER_NOT_FOUND", "message": "User not found"},
+        )
+
+    await _delete_user_cascade(db, user.id)
+    await db.commit()
+    await invalidate_devices_summary_cache()
+    await invalidate_devices_list_cache()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.post("/onboarding/state")
@@ -958,8 +1007,7 @@ async def webapp_issue_device(
         select(Subscription)
         .where(
             Subscription.user_id == user.id,
-            Subscription.status == "active",
-            Subscription.valid_until > now,
+            *entitled_active_where(now=now),
         )
         .limit(1)
     )
@@ -1123,7 +1171,6 @@ async def webapp_confirm_connected(
     if not user.first_connected_at:
         user.first_connected_at = now
     user.last_connection_confirmed_at = now
-    await db.commit()
     await log_funnel_event(
         db,
         event_type="connect_confirmed",
@@ -1131,6 +1178,7 @@ async def webapp_confirm_connected(
         payload={"device_id": device_id, "source": "webapp"},
     )
     miniapp_events_total.labels(event="connect_confirmed").inc()
+    await db.commit()
     return {"status": "ok"}
 
 
@@ -1719,8 +1767,7 @@ async def webapp_create_invoice(
         .where(
             Subscription.user_id == user.id,
             Subscription.plan_id == plan.id,
-            Subscription.status == "active",
-            Subscription.valid_until > now,
+            *entitled_active_where(now=now),
         )
         .limit(1)
     )
@@ -1746,8 +1793,8 @@ async def webapp_create_invoice(
             valid_until=now,
             device_limit=int(getattr(plan, "device_limit", 1) or 1),
             auto_renew=bool((user.meta or {}).get("webapp_auto_renew_default", True)),
-            status="pending",
         )
+        normalize_pending_state(sub)
         db.add(sub)
         await db.flush()
     stars_amount = _stars_amount(plan.price_amount, plan.price_currency)
@@ -1855,10 +1902,12 @@ async def webapp_create_invoice(
                 detail={"code": e.code.value, "message": e.message},
             ) from e
     if is_free and sub.status != "active":
-        sub.status = "active"
-        sub.valid_from = now
-        sub.valid_until = now + timedelta(days=plan.duration_days or 365)
-        sub.device_limit = int(getattr(plan, "device_limit", sub.device_limit) or sub.device_limit)
+        apply_subscription_cycle(
+            sub,
+            now=now,
+            duration_days=plan.duration_days or 365,
+            device_limit=int(getattr(plan, "device_limit", sub.device_limit) or sub.device_limit),
+        )
     await log_funnel_event(
         db,
         event_type="plan_selected",
@@ -2327,10 +2376,16 @@ async def webapp_subscription_offers(
         .where(
             Subscription.user_id == user.id,
         )
-        .order_by(Subscription.valid_until.desc())
-        .limit(1)
     )
-    sub = sub_result.scalar_one_or_none()
+    subs = sort_subscriptions(list(sub_result.scalars().all()))
+    sub = next(
+        (
+            candidate
+            for candidate in subs
+            if is_commercially_active(candidate)
+        ),
+        subs[0] if subs else None,
+    )
     if not sub:
         discount_pct = retention_discount_percent()
         op, od, odw = _offers_for_reason(reason_group, False, discount_pct)
@@ -2346,8 +2401,20 @@ async def webapp_subscription_offers(
             offer_downgrade=odw,
             reason_group=reason_group,
         )
-    can_pause = sub.paused_at is None and sub.valid_until > now
-    can_resume = sub.paused_at is not None and sub.valid_until > now
+    commercial_status = subscription_commercial_status(sub)
+    access_status = subscription_access_status(sub)
+    can_pause = (
+        commercial_status == "active"
+        and access_status == "enabled"
+        and sub.paused_at is None
+        and sub.valid_until > now
+    )
+    can_resume = (
+        commercial_status == "active"
+        and access_status == "paused"
+        and sub.paused_at is not None
+        and sub.valid_until > now
+    )
     discount_pct = retention_discount_percent()
     offer_pause, offer_discount, offer_downgrade = _offers_for_reason(
         reason_group, can_pause, discount_pct
@@ -2360,7 +2427,7 @@ async def webapp_subscription_offers(
     )
     return WebAppSubscriptionOffersOut(
         subscription_id=sub.id,
-        status=sub.status,
+        status=commercial_status,
         valid_until=sub.valid_until.isoformat(),
         discount_percent=discount_pct,
         can_pause=can_pause,
@@ -2417,7 +2484,8 @@ async def webapp_subscription_access_state(
     access_status = getattr(sub, "access_status", "enabled")
     grace_until = getattr(sub, "grace_until", None)
     sub_status = getattr(sub, "subscription_status", sub.status)
-    can_restore = (access_status == "grace" or sub_status == "expired") and sub.plan_id
+    # can_restore should be a real boolean, not the plan_id value.
+    can_restore = bool(sub.plan_id) and (access_status == "grace" or sub_status == "expired")
     return WebAppSubscriptionAccessStateOut(
         subscription_id=sub.id,
         access_status=access_status,
@@ -2429,6 +2497,7 @@ async def webapp_subscription_access_state(
 
 
 class WebAppSubscriptionRestoreBody(BaseModel):
+    subscription_id: str | None = None
     plan_id: str | None = None
 
 
@@ -2450,21 +2519,37 @@ async def webapp_subscription_restore(
         raise HTTPException(
             status_code=404, detail={"code": "USER_NOT_FOUND", "message": "User not found"}
         )
-    sub_result = await db.execute(
-        select(Subscription)
-        .where(Subscription.user_id == user.id)
-        .order_by(Subscription.valid_until.desc())
-        .limit(1)
-    )
-    sub = sub_result.scalar_one_or_none()
+    if body.subscription_id:
+        sub_result = await db.execute(
+            select(Subscription).where(
+                Subscription.id == body.subscription_id,
+                Subscription.user_id == user.id,
+            )
+        )
+        sub = sub_result.scalar_one_or_none()
+    else:
+        sub_result = await db.execute(
+            select(Subscription)
+            .where(Subscription.user_id == user.id)
+            .order_by(Subscription.valid_until.desc())
+        )
+        subs = list(sub_result.scalars().all())
+        sub = next(
+            (
+                candidate
+                for candidate in subs
+                if is_restorable(candidate)
+            ),
+            subs[0] if subs else None,
+        )
     if not sub:
         raise HTTPException(
             status_code=400,
             detail={"code": "NO_SUBSCRIPTION", "message": "No subscription to restore"},
         )
-    access_status = getattr(sub, "access_status", "enabled")
-    sub_status = getattr(sub, "subscription_status", sub.status)
-    if access_status != "grace" and sub_status != "expired":
+    access_status = subscription_access_status(sub)
+    sub_status = subscription_commercial_status(sub)
+    if not is_restorable(sub):
         raise HTTPException(
             status_code=400,
             detail={"code": "NOT_RESTORABLE", "message": "Subscription is not in restore state"},
@@ -2680,19 +2765,11 @@ async def webapp_subscription_cancel(
         await db.commit()
         return {"status": "ok", "action": "paused"}
     if body.cancel_at_period_end:
-        sub.cancel_at_period_end = True
-        sub.subscription_status = "active"
-        sub.status = "active"
+        mark_cancel_at_period_end(sub)
     else:
-        sub.status = "cancelled"
-        setattr(sub, "subscription_status", "cancelled")
-        setattr(sub, "access_status", "blocked")
-        await emit_entitlement_event(
-            db,
-            subscription_id=sub.id,
-            user_id=user.id,
-            event_type="access_blocked",
-            payload={"reason": body.reason_code},
+        mark_cancelled(sub)
+        await emit_access_blocked(
+            db, subscription_id=sub.id, user_id=user.id, reason=body.reason_code
         )
     survey = ChurnSurvey(
         user_id=user.id,

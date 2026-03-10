@@ -8188,6 +8188,18 @@
             }
           },
           {
+            "name": "include_archived",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Include archived plans (admin list)",
+              "default": true,
+              "title": "Include Archived"
+            },
+            "description": "Include archived plans (admin list)"
+          },
+          {
             "name": "X-API-Key",
             "in": "header",
             "required": false,
@@ -8226,6 +8238,53 @@
             }
           }
         }
+      }
+    },
+    "/api/v1/plans/reorder": {
+      "patch": {
+        "tags": [
+          "plans"
+        ],
+        "summary": "Reorder Plans",
+        "description": "Set display_order by array index (plan_ids[0] -> 0, plan_ids[1] -> 1, ...).",
+        "operationId": "reorder_plans_api_v1_plans_reorder_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanReorderBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/api/v1/plans/{plan_id}": {
@@ -8354,6 +8413,54 @@
         "responses": {
           "204": {
             "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/plans/{plan_id}/clone": {
+      "post": {
+        "tags": [
+          "plans"
+        ],
+        "summary": "Clone Plan",
+        "description": "Create a copy of a plan with a new id and \" (copy)\" suffix in name.",
+        "operationId": "clone_plan_api_v1_plans__plan_id__clone_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "plan_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Plan Id"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanOut"
+                }
+              }
+            }
           },
           "422": {
             "description": "Validation Error",
@@ -18278,6 +18385,27 @@
               }
             ],
             "title": "Upsell Methods"
+          },
+          "is_archived": {
+            "type": "boolean",
+            "title": "Is Archived",
+            "default": false
+          },
+          "display_order": {
+            "type": "integer",
+            "title": "Display Order",
+            "default": 0
+          },
+          "subscription_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subscription Count"
           }
         },
         "type": "object",
@@ -18291,6 +18419,23 @@
           "created_at"
         ],
         "title": "PlanOut"
+      },
+      "PlanReorderBody": {
+        "properties": {
+          "plan_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Plan Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "plan_ids"
+        ],
+        "title": "PlanReorderBody",
+        "description": "List of plan IDs in desired display order (index = display_order)."
       },
       "PlanUpdate": {
         "properties": {
@@ -18366,6 +18511,28 @@
               }
             ],
             "title": "Upsell Methods"
+          },
+          "is_archived": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Archived"
+          },
+          "display_order": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Order"
           }
         },
         "type": "object",
@@ -21473,7 +21640,7 @@
           "effective_status": {
             "type": "string",
             "title": "Effective Status",
-            "description": "Expired when valid_until < now, else status. Use for display so list shows correct state.",
+            "description": "Derived display status from split-state lifecycle, not legacy status alone.",
             "readOnly": true
           }
         },
@@ -23759,6 +23926,17 @@
       },
       "WebAppSubscriptionRestoreBody": {
         "properties": {
+          "subscription_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subscription Id"
+          },
           "plan_id": {
             "anyOf": [
               {

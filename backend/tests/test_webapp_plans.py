@@ -47,7 +47,10 @@ async def test_webapp_plans_returns_device_limit(async_session: AsyncSession):
             )
         assert response.status_code == 200, response.text
         payload = response.json()
-        assert payload["items"][0]["device_limit"] == 5
-        assert payload["items"][0]["upsell_methods"] == ["device_limit"]
+        items = payload["items"]
+        # Find the plan we just created by id to avoid coupling to ordering or other seeded plans.
+        created = next(item for item in items if item["id"] == plan.id)
+        assert created["device_limit"] == 5
+        assert created["upsell_methods"] == ["device_limit"]
     finally:
         app.dependency_overrides.pop(get_db, None)

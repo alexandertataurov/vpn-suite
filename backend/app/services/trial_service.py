@@ -13,6 +13,7 @@ from app.core.metrics import vpn_revenue_trial_started_total
 from app.models import Plan, Server, Subscription, User
 from app.services.funnel_service import log_funnel_event
 from app.services.issue_service import issue_device
+from app.services.subscription_state import normalize_active_state
 
 
 @dataclass
@@ -91,10 +92,10 @@ async def start_trial(
         valid_from=now,
         valid_until=valid_until,
         device_limit=1,
-        status="active",
         is_trial=True,
         trial_ends_at=trial_ends_at,
     )
+    normalize_active_state(sub)
     session.add(sub)
     await session.flush()
 

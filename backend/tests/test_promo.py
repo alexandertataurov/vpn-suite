@@ -7,7 +7,7 @@ from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 
 import pytest
-from sqlalchemy import select
+from sqlalchemy import select, delete
 
 from app.core.constants import MIN_PRICE_XTR, PROMO_1FREESTAR_DISCOUNT_XTR
 from app.core.database import check_db
@@ -60,6 +60,13 @@ async def _create_promo(
     expires_at: datetime | None = None,
     applicable_plan_ids: list[str] | None = None,
 ) -> PromoCode:
+    # Idempotent helper: reuse existing promo with same code if present.
+    existing = await db.execute(
+        select(PromoCode).where(PromoCode.code == code.upper())
+    )
+    promo = existing.scalar_one_or_none()
+    if promo:
+        return promo
     promo = PromoCode(
         code=code.upper(),
         type="fixed_xtr",
@@ -79,7 +86,7 @@ async def _create_promo(
 
 async def test_validate_promo_code_valid(async_session):
     if not await check_db():
-        pytest.skip("DB not available")
+        pytest.skip("DB not available (requires Postgres)")
     db = async_session
     plan = await _ensure_plan(db)
     user = await _ensure_user(db, tg_id=999001)
@@ -94,7 +101,7 @@ async def test_validate_promo_code_valid(async_session):
 
 async def test_validate_promo_price_floor(async_session):
     if not await check_db():
-        pytest.skip("DB not available")
+        pytest.skip("DB not available (requires Postgres)")
     db = async_session
     plan = await _ensure_plan(db)
     user = await _ensure_user(db, tg_id=999002)
@@ -108,7 +115,7 @@ async def test_validate_promo_price_floor(async_session):
 
 async def test_validate_promo_not_found(async_session):
     if not await check_db():
-        pytest.skip("DB not available")
+        pytest.skip("DB not available (requires Postgres)")
     db = async_session
     plan = await _ensure_plan(db)
     user = await _ensure_user(db, tg_id=999003)
@@ -121,7 +128,7 @@ async def test_validate_promo_not_found(async_session):
 
 async def test_validate_promo_inactive(async_session):
     if not await check_db():
-        pytest.skip("DB not available")
+        pytest.skip("DB not available (requires Postgres)")
     db = async_session
     plan = await _ensure_plan(db)
     user = await _ensure_user(db, tg_id=999004)
@@ -135,7 +142,7 @@ async def test_validate_promo_inactive(async_session):
 
 async def test_validate_promo_expired(async_session):
     if not await check_db():
-        pytest.skip("DB not available")
+        pytest.skip("DB not available (requires Postgres)")
     db = async_session
     plan = await _ensure_plan(db)
     user = await _ensure_user(db, tg_id=999005)
@@ -150,7 +157,7 @@ async def test_validate_promo_expired(async_session):
 
 async def test_validate_promo_case_insensitive(async_session):
     if not await check_db():
-        pytest.skip("DB not available")
+        pytest.skip("DB not available (requires Postgres)")
     db = async_session
     plan = await _ensure_plan(db)
     user = await _ensure_user(db, tg_id=999006)
@@ -166,11 +173,18 @@ async def test_validate_promo_case_insensitive(async_session):
 
 async def test_redeem_promo_code_per_user_idempotency(async_session):
     if not await check_db():
-        pytest.skip("DB not available")
+        pytest.skip("DB not available (requires Postgres)")
     db = async_session
     plan = await _ensure_plan(db)
     user = await _ensure_user(db, tg_id=999007)
     promo = await _create_promo(db, "ONCE1")
+    # Ensure no leftover redemptions from previous runs for this user/promo.
+    await db.execute(
+        delete(PromoRedemption).where(
+            PromoRedemption.promo_code_id == promo.id,
+            PromoRedemption.user_id == user.id,
+        )
+    )
     # Create a fake payment for redemption
     from app.models import Payment, Subscription
 

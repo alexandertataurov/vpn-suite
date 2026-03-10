@@ -37,9 +37,9 @@ async def test_login_then_servers_then_users():
                     json={"email": email, "password": password},
                 )
             except (ConnectionRefusedError, OSError) as e:
-                pytest.skip(f"DB/Redis not available: {e}")
+                pytest.skip(f"DB/Redis not available (requires Postgres/Redis): {e}")
             if r.status_code == 401:
-                pytest.skip("Login failed (no DB or admin not seeded)")
+                pytest.skip("Login failed (no DB or admin not seeded; skipping E2E without DB)")
             assert r.status_code == 200, r.text
         data = r.json()
         token = data.get("access_token")

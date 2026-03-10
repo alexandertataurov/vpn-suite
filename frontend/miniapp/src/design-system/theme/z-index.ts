@@ -1,5 +1,5 @@
 /**
- * Z-index values for JS (inline styles). Single source; must match --z-* in miniapp-tokens.css / miniapp.css.
+ * Z-index values for JS (inline styles). Single source; must match --z-* in styles/tokens/base.css / styles/shell/frame.css.
  * Use CSS var() in stylesheets; use these constants for inline style.
  */
 export const Z_DROPDOWN = 100;

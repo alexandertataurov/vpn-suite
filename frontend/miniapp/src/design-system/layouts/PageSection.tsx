@@ -1,6 +1,6 @@
 import type { HTMLAttributes, ReactNode } from "react";
 import { Stack } from "../primitives/Stack";
-import { Body } from "../components/Typography";
+import { Body } from "../components/typography";
 
 export interface SectionHeaderRowProps extends Omit<HTMLAttributes<HTMLDivElement>, "title"> {
   title?: ReactNode;

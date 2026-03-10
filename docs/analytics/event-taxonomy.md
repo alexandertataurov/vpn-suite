@@ -164,10 +164,19 @@ Map existing `WebappTelemetryEventType` to `miniapp.*`:
 | checkout_viewed | miniapp.checkout_viewed |
 | payment_success | miniapp.payment_succeeded |
 | payment_fail | miniapp.payment_failed |
+| restore_access_started | miniapp.restore_access_started |
+| restore_access_succeeded | miniapp.restore_access_succeeded |
+| restore_access_failed | miniapp.restore_access_failed |
+| referral_detected | miniapp.referral_detected |
+| referral_attach_started | miniapp.referral_attach_started |
+| referral_attach_succeeded | miniapp.referral_attach_succeeded |
+| referral_attach_failed | miniapp.referral_attach_failed |
+| device_limit_reached | miniapp.device_limit_reached |
 | config_download | miniapp.config_downloaded |
 | device_issue_success | miniapp.device_issue_success |
 | device_revoked | miniapp.device_revoked |
 | server_switched | miniapp.server_switched |
+| support_opened | miniapp.support_opened |
 | web_vital | miniapp.web_vital |
 
 ---

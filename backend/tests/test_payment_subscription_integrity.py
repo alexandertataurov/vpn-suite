@@ -66,7 +66,7 @@ async def test_bot_create_or_get_persists_telegram_user_requisites(
 ):
     """POST create-or-get with telegram_user stores User.meta['tg'] and returns it in response."""
     if not await check_db():
-        pytest.skip("DB not available")
+        pytest.skip("DB not available (requires Postgres)")
     monkeypatch.setattr(config.settings, "bot_api_key", "test-bot-key")
     plan = await _create_plan(duration_days=30)
     tg_id = int(uuid.uuid4().int % 10_000_000_000)
@@ -98,7 +98,7 @@ async def test_bot_create_or_get_persists_telegram_user_requisites(
 @pytest.mark.asyncio
 async def test_create_or_get_creates_pending_subscription(client: AsyncClient, monkeypatch):
     if not await check_db():
-        pytest.skip("DB not available")
+        pytest.skip("DB not available (requires Postgres)")
     monkeypatch.setattr(config.settings, "bot_api_key", "test-bot-key")
     plan = await _create_plan(duration_days=30)
     tg_id = int(uuid.uuid4().int % 10_000_000_000)
@@ -123,7 +123,7 @@ async def test_pending_subscription_cannot_issue_device_before_payment(
     client: AsyncClient, monkeypatch
 ):
     if not await check_db():
-        pytest.skip("DB not available")
+        pytest.skip("DB not available (requires Postgres)")
     monkeypatch.setattr(config.settings, "bot_api_key", "test-bot-key")
     plan = await _create_plan(duration_days=30)
     tg_id = int(uuid.uuid4().int % 10_000_000_000)
@@ -152,7 +152,7 @@ async def test_first_completed_webhook_activates_pending_single_period(
     client: AsyncClient, monkeypatch
 ):
     if not await check_db():
-        pytest.skip("DB not available")
+        pytest.skip("DB not available (requires Postgres)")
     monkeypatch.setattr(config.settings, "bot_api_key", "test-bot-key")
     monkeypatch.setattr(config.settings, "telegram_stars_webhook_secret", "")
     duration_days = 30
@@ -203,7 +203,7 @@ async def test_completed_webhook_updates_subscription_device_limit_from_plan(
     client: AsyncClient, monkeypatch
 ):
     if not await check_db():
-        pytest.skip("DB not available")
+        pytest.skip("DB not available (requires Postgres)")
     monkeypatch.setattr(config.settings, "bot_api_key", "test-bot-key")
     monkeypatch.setattr(config.settings, "telegram_stars_webhook_secret", "")
 
@@ -258,7 +258,7 @@ async def test_completed_webhook_updates_subscription_device_limit_from_plan(
 async def test_webhook_replay_is_idempotent_and_audited(client: AsyncClient, monkeypatch):
     """Same external_id must be safe to replay: 200, created=false, no double extension, audit logged."""
     if not await check_db():
-        pytest.skip("DB not available")
+        pytest.skip("DB not available (requires Postgres)")
     monkeypatch.setattr(config.settings, "bot_api_key", "test-bot-key")
     monkeypatch.setattr(config.settings, "telegram_stars_webhook_secret", "")
 
@@ -342,7 +342,7 @@ async def test_webhook_replay_is_idempotent_and_audited(client: AsyncClient, mon
 @pytest.mark.asyncio
 async def test_create_or_get_concurrent_requests_no_500(monkeypatch):
     if not await check_db():
-        pytest.skip("DB not available")
+        pytest.skip("DB not available (requires Postgres)")
     monkeypatch.setattr(config.settings, "bot_api_key", "test-bot-key")
     plan = await _create_plan(duration_days=30)
     tg_id = int(uuid.uuid4().int % 10_000_000_000)
@@ -370,7 +370,7 @@ async def test_create_or_get_concurrent_requests_no_500(monkeypatch):
 async def test_webhook_concurrent_replay_single_payment(client: AsyncClient, monkeypatch):
     """Concurrent webhooks with same external_id: both 200, exactly one Payment, one subscription extension."""
     if not await check_db():
-        pytest.skip("DB not available")
+        pytest.skip("DB not available (requires Postgres)")
     monkeypatch.setattr(config.settings, "bot_api_key", "test-bot-key")
     monkeypatch.setattr(config.settings, "telegram_stars_webhook_secret", "")
 
@@ -415,7 +415,7 @@ async def test_webhook_concurrent_replay_single_payment(client: AsyncClient, mon
 async def test_audit_log_webhook_has_required_fields(client: AsyncClient, monkeypatch):
     """After webhook, audit log row has admin_id, action, resource_type, resource_id (audit model correctness)."""
     if not await check_db():
-        pytest.skip("DB not available")
+        pytest.skip("DB not available (requires Postgres)")
     monkeypatch.setattr(config.settings, "bot_api_key", "test-bot-key")
     monkeypatch.setattr(config.settings, "telegram_stars_webhook_secret", "")
 

@@ -24,13 +24,23 @@ export interface PopoverProps {
   onOpenChange: (open: boolean) => void;
   /** Optional id for the popover panel. */
   id?: string;
+  panelClassName?: string;
+  panelAriaLabel?: string;
 }
 
 /**
  * Minimal popover: trigger + panel in portal. Click outside and Escape close.
  * Panel is positioned below the trigger using getBoundingClientRect.
  */
-export function Popover({ renderTrigger, children, open, onOpenChange, id: idProp }: PopoverProps) {
+export function Popover({
+  renderTrigger,
+  children,
+  open,
+  onOpenChange,
+  id: idProp,
+  panelClassName,
+  panelAriaLabel,
+}: PopoverProps) {
   const generatedId = useId();
   const panelId = idProp ?? `popover-${generatedId.replace(/:/g, "")}`;
   const triggerRef = useRef<HTMLDivElement>(null);
@@ -97,8 +107,8 @@ export function Popover({ renderTrigger, children, open, onOpenChange, id: idPro
       ref={panelRef}
       id={panelId}
       role="dialog"
-      aria-label="Notifications"
-      className="miniapp-popover-panel"
+      aria-label={panelAriaLabel}
+      className={["miniapp-popover-panel", panelClassName].filter(Boolean).join(" ")}
     >
       {children}
     </div>

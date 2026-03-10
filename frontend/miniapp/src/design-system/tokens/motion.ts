@@ -1,6 +1,6 @@
 /**
  * Motion tokens — duration and easing. Use via CSS var() in components.
- * CSS source: miniapp-tokens.css (--duration-*, --ease-*).
+ * CSS source: styles/tokens/base.css (--duration-*, --ease-*).
  */
 export const MOTION_TOKENS = {
   durationFast: "--duration-fast",

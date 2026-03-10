@@ -1,5 +1,4 @@
-import { Link } from "react-router-dom";
-import { MissionAlert } from "@/design-system";
+import { MissionAlert, Button, IconDownload } from "@/design-system";
 
 export interface ConfigCardContentProps {
   configText: string;
@@ -7,7 +6,6 @@ export interface ConfigCardContentProps {
   peerCreated?: boolean;
   onCopy: () => Promise<void>;
   onDownload: () => void;
-  recommendedRoute: string;
 }
 
 /** Reusable config block: alert(s) + copy/download actions + pre. */
@@ -17,7 +15,6 @@ export function ConfigCardContent({
   peerCreated = true,
   onCopy,
   onDownload,
-  recommendedRoute,
 }: ConfigCardContentProps) {
   const isPending = routeReason === "connection_not_confirmed";
   const message = isPending
@@ -31,32 +28,21 @@ export function ConfigCardContent({
         title="Shown only once"
         message={message}
         actions={(
-          <div className="device-actions-inline">
-            <button
+          <div className="miniapp-compact-actions">
+            <Button
               type="button"
-              className="link-interactive"
+              variant="secondary"
+              size="sm"
               onClick={() => void onCopy()}
               aria-label="Copy config"
+              className="miniapp-compact-action"
             >
               Copy config
-            </button>
-            <span className="device-actions-sep" aria-hidden> · </span>
-            <button
-              type="button"
-              className="link-interactive"
-              onClick={onDownload}
-              aria-label="Download config file"
-            >
-              Download .conf file
-            </button>
-            {isPending ? (
-              <>
-                <span className="device-actions-sep" aria-hidden> · </span>
-                <Link to={recommendedRoute} className="link-interactive" aria-label="Confirm device installation">
-                  Confirm device installation
-                </Link>
-              </>
-            ) : null}
+            </Button>
+            <Button type="button" variant="link" size="sm" onClick={onDownload} className="miniapp-inline-link">
+              <IconDownload size={14} strokeWidth={1.8} />
+              <span>Download config</span>
+            </Button>
           </div>
         )}
       />
@@ -64,7 +50,7 @@ export function ConfigCardContent({
         <MissionAlert
           tone="warning"
           title="Server sync pending"
-          message="The device is registered. If connection fails, retry later or contact support."
+          message="The device is registered, but backend provisioning is still finishing. Retry later or contact support if setup does not complete."
         />
       ) : null}
       <pre className="config-pre config-block">{configText}</pre>

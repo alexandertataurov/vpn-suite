@@ -34,7 +34,7 @@ export const webappMeActive: WebAppMeResponse = {
   subscriptions: [baseSubscription],
   devices,
   public_ip: "185.199.110.42",
-  onboarding: { completed: true, step: 2, version: 1, updated_at: "2026-02-01T00:00:00Z" },
+  onboarding: { completed: true, step: 3, version: 2, updated_at: "2026-02-01T00:00:00Z" },
 };
 
 export const webappMeNoSubscription: WebAppMeResponse = {
@@ -42,7 +42,7 @@ export const webappMeNoSubscription: WebAppMeResponse = {
   subscriptions: [],
   devices: [],
   public_ip: null,
-  onboarding: { completed: true, step: 2, version: 1, updated_at: "2026-02-01T00:00:00Z" },
+  onboarding: { completed: true, step: 3, version: 2, updated_at: "2026-02-01T00:00:00Z" },
 };
 
 export const webappMeNoDevices: WebAppMeResponse = {
@@ -50,7 +50,7 @@ export const webappMeNoDevices: WebAppMeResponse = {
   subscriptions: [baseSubscription],
   devices: [],
   public_ip: "185.199.110.42",
-  onboarding: { completed: true, step: 2, version: 1, updated_at: "2026-02-01T00:00:00Z" },
+  onboarding: { completed: true, step: 3, version: 2, updated_at: "2026-02-01T00:00:00Z" },
 };
 
 /** Placeholder text for form/story edge-case stories. */
@@ -66,5 +66,5 @@ export const webappMeRevokedOnly: WebAppMeResponse = {
   subscriptions: [baseSubscription],
   devices: devices.map((d) => ({ ...d, revoked_at: d.revoked_at ?? "2026-02-20T11:00:00Z" })),
   public_ip: "185.199.110.42",
-  onboarding: { completed: true, step: 2, version: 1, updated_at: "2026-02-01T00:00:00Z" },
+  onboarding: { completed: true, step: 3, version: 2, updated_at: "2026-02-01T00:00:00Z" },
 };

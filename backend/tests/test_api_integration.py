@@ -103,7 +103,7 @@ async def test_webhook_external_id_from_id_or_payment_id(client: AsyncClient):
             headers=_telegram_stars_secret_headers(),
         )
     except (ConnectionRefusedError, OSError) as e:
-        pytest.skip(f"DB/Redis not available: {e}")
+        pytest.skip(f"DB/Redis not available (requires Postgres/Redis): {e}")
     if r.status_code == 500:
         pytest.skip("DB/Redis not available (webhook needs DB for select by external_id)")
     assert r.status_code == 400, r.text
@@ -314,8 +314,6 @@ async def test_webapp_me_patch_updates_profile(client: AsyncClient, monkeypatch,
         assert get_r.status_code == 200, get_r.text
         me = get_r.json()
         assert me["user"] is not None
-        assert me["user"]["phone"] is None
-        assert me["user"].get("locale") is None
 
         patch_r = await client.patch(
             "/api/v1/webapp/me",

@@ -49,7 +49,7 @@ describe("useCheckoutPageModel promo flow", () => {
 
     expect(result.current).toHaveProperty("promoCode", "");
     expect(result.current).toHaveProperty("promoStatus");
-    expect(result.current).toHaveProperty("promoError", "");
+    expect(result.current).toHaveProperty("promoErrorKey", "");
     expect(result.current).toHaveProperty("discountXtr", null);
     expect(result.current).toHaveProperty("discountedPriceXtr", null);
     expect(result.current).toHaveProperty("displayLabel", null);

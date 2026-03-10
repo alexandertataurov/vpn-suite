@@ -1,44 +1,76 @@
 """Async database engine and session for Postgres."""
 
 from collections.abc import AsyncGenerator
+import asyncio
+from typing import Dict
 
 from sqlalchemy import event, text
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
 from app.core.config import settings
 
-engine = create_async_engine(
-    settings.database_url,
-    echo=False,
-    pool_pre_ping=True,
-)
+# Engines and session makers are keyed by the current event loop.
+# This ensures each asyncpg connection pool is only ever used from the
+# event loop that created it, preventing "Future attached to a different loop" errors.
+_engines_by_loop: Dict[int, AsyncEngine] = {}
+_session_makers_by_loop: Dict[int, async_sessionmaker[AsyncSession]] = {}
 
 
-def _before_cursor(conn, cursor, statement, parameters, context, executemany):
-    from app.core.db_metrics import before_cursor_execute
-
-    before_cursor_execute()
-
-
-def _after_cursor(conn, cursor, statement, parameters, context, executemany):
-    from app.core.db_metrics import after_cursor_execute
-
-    after_cursor_execute()
+def _current_loop_key() -> int:
+    """Return a stable key for the currently running event loop."""
+    loop = asyncio.get_running_loop()
+    return id(loop)
 
 
-try:
-    event.listen(engine.sync_engine, "before_cursor_execute", _before_cursor)
-    event.listen(engine.sync_engine, "after_cursor_execute", _after_cursor)
-except Exception:
-    pass  # sync_engine may not exist on all drivers
+def _ensure_session_maker() -> async_sessionmaker[AsyncSession]:
+    """Lazily initialize the async engine and session maker for the current event loop."""
+    loop_key = _current_loop_key()
 
-async_session_factory = async_sessionmaker(
-    engine,
-    class_=AsyncSession,
-    expire_on_commit=False,
-    autocommit=False,
-    autoflush=False,
-)
+    session_maker = _session_makers_by_loop.get(loop_key)
+    engine = _engines_by_loop.get(loop_key)
+    if session_maker is not None and engine is not None:
+        return session_maker
+
+    engine = create_async_engine(
+        settings.database_url,
+        echo=False,
+        pool_pre_ping=True,
+    )
+
+    def _before_cursor(conn, cursor, statement, parameters, context, executemany):
+        from app.core.db_metrics import before_cursor_execute
+
+        before_cursor_execute()
+
+    def _after_cursor(conn, cursor, statement, parameters, context, executemany):
+        from app.core.db_metrics import after_cursor_execute
+
+        after_cursor_execute()
+
+    try:
+        event.listen(engine.sync_engine, "before_cursor_execute", _before_cursor)
+        event.listen(engine.sync_engine, "after_cursor_execute", _after_cursor)
+    except Exception:
+        # sync_engine may not exist on all drivers
+        pass
+
+    session_maker = async_sessionmaker(
+        engine,
+        class_=AsyncSession,
+        expire_on_commit=False,
+        autocommit=False,
+        autoflush=False,
+    )
+
+    _engines_by_loop[loop_key] = engine
+    _session_makers_by_loop[loop_key] = session_maker
+
+    return session_maker
+
+
+def async_session_factory() -> AsyncSession:
+    """Return a new AsyncSession bound to the lazily-initialized engine."""
+    return _ensure_session_maker()()
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:

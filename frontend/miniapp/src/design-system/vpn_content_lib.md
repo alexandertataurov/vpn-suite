@@ -1,8 +1,8 @@
 # VPN Suite · Content Library Prompt
 
-> **Source of truth:** This document is the **canonical spec for scrollable page content only** — everything inside `.page`. Implementations (React components, CSS in `content-library.css` / `miniapp.css`) must align with the class names, token usage, and constraints defined here. The rest of the design system (tokens, theme, shell, primitives) lives in `frontend/miniapp/src/design-system/` and is loaded first; see `styles/index.css` for CSS order.
+> **Source of truth:** This document is the **canonical spec for scrollable page content only** — everything inside `.page`. Implementations (React components, CSS in `styles/content/library.css` / `styles/shell/frame.css`) must align with the class names, token usage, and constraints defined here. The rest of the design system (tokens, theme, shell, primitives) lives in `frontend/miniapp/src/design-system/` and is loaded first; see `styles/index.css` for CSS order.
 >
-> **Scope:** Topbar, bottom nav, shell boilerplate, token `:root`, CSS reset, animation keyframes, and JS utilities live in the **main design system**, which must be loaded first. Font aliases `--ui` and `--mono` are defined there (miniapp-primitives-aliases.css), before content-library.css.
+> **Scope:** Topbar, bottom nav, shell boilerplate, token `:root`, CSS reset, animation keyframes, and JS utilities live in the **main design system**, which must be loaded first. Font aliases `--ui` and `--mono` are defined in theme/consumer.css (consumer-dark/consumer-light), before content/library.css.
 >
 > **How to use:** Pick a page from Section 1 to understand composition intent, then assemble from the component library in Sections 2–12. Every component is self-contained — HTML + CSS + variants + state rules in one block.
 
@@ -34,7 +34,7 @@ Five main pages in the app (with bottom nav). Onboarding is a full-screen flow b
 
 ### Onboarding (`/onboarding`)
 
-Pre-app flow (no nav). 3 outcome-based steps: (1) **Install AmneziaVPN** — body: download the app for your device, tap store below; store badges (App Store, Google Play). (2) **Get your config** — body: subscribe if needed → Devices → Issue device → one-time config (copy or .conf); in AmneziaVPN: Add configuration → Import file or paste; store config carefully, may appear once. Diagram: This app: Plan → Devices → Issue device → Copy/download .conf → AmneziaVPN: Add configuration → Import file or paste. CTAs: Choose plan, Go to Devices. (3) **Confirm connected** — body: once VPN connected, confirm here. CTA: I'm connected. No QR in miniapp; use import file or paste only.
+Pre-app flow (no nav). Step 1 is a single-page onboarding landing block: headline **Private access, managed in Telegram**, short explainer, visual showing Telegram miniapp → config → AmneziaVPN, three benefit cards, three-step "How it works", and explicit trust note that the connection happens in AmneziaVPN while the miniapp manages plans and configs. Primary CTA: **Get started**. Secondary CTA: **Restore access**. Step 2: **Get your config** — body: choose plan if needed → Devices → Issue device → one-time config (copy or .conf); in AmneziaVPN: Add configuration → Import file or paste. CTAs: Choose plan, Go to Devices. Step 3: **Connect in the VPN app** — body: once VPN connected, confirm here. CTA: I'm connected. No QR in miniapp; use import file or paste only.
 
 ### Home (`/`)
 **Nav active:** Home  
@@ -168,7 +168,7 @@ State-driven. All visual elements must update together when state changes — se
     <!-- Data grid. Config-centric: mini-app cannot control VPN connection. Current IP cell hidden when no public_ip. -->
     <div class="data-grid" style="margin-top:14px;">
       <div class="data-cell"><div class="dc-key">Server preset</div><div class="dc-val teal" id="dcServer">Fastest available</div></div>
-      <div class="data-cell"><div class="dc-key">Server latency</div><div class="dc-val mut" id="dcLatency">--</div></div>
+      <div class="data-cell"><div class="dc-key">VPN latency</div><div class="dc-val mut" id="dcLatency">--</div></div>
       <div class="data-cell wide"><div class="dc-key">Current IP</div><div class="dc-val ip" id="dcIp">212.58.121.102</div></div>
       <div class="data-cell"><div class="dc-key">Device last active</div><div class="dc-val mut" id="dcDuration">--</div></div>
       <div class="data-cell"><div class="dc-key">Account traffic (7 days)</div><div class="dc-val mut" id="dcTraffic">--</div></div>

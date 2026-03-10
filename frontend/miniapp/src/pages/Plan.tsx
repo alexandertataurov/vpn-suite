@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import type { KeyboardEventHandler } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useBootstrapContext } from "@/bootstrap/BootstrapController";
 import {
   PlanHero,
   TierCard,
-  UsageSummaryCard,
   BillingHistoryCard,
   SessionMissing,
 } from "@/components";
@@ -19,6 +19,7 @@ import {
   SegmentedControl,
   ToggleRow,
   MissionAlert,
+  MissionChip,
   MissionPrimaryButton,
   MissionPrimaryLink,
   MissionSecondaryLink,
@@ -26,11 +27,10 @@ import {
   useToast,
   EmptyStateBlock,
 } from "@/design-system";
+import { LimitStrip } from "@/components";
 import { useUpdateSubscription } from "@/hooks";
-import { formatBytes } from "@/lib/utils/format";
-import { percentClass } from "@/lib/percentClass";
-import { clamp } from "@/page-models/plan-helpers";
 import { usePlanPageModel, tierFeatureToRow, type BillingPeriod } from "@/page-models";
+import { useI18n } from "@/hooks/useI18n";
 
 const BAR_ANIMATION_DELAY_MS = 380;
 
@@ -74,32 +74,19 @@ function historyIcon(status: "paid" | "pend" | "crit") {
   );
 }
 
-interface UsageProgressFillProps {
-  className: string;
-  percent: number;
-}
-
-function UsageProgressFill({ className, percent }: UsageProgressFillProps) {
-  const fillRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    fillRef.current?.style.setProperty("--pct", String(clamp(percent, 0, 100)));
-  }, [percent]);
-
-  return <div ref={fillRef} className={className} />;
-}
-
 export function PlanPage() {
   const model = usePlanPageModel();
   const location = useLocation();
   const navigate = useNavigate();
+  const { phase } = useBootstrapContext();
   const fromOnboarding = (location.state as { fromOnboarding?: boolean } | null)?.fromOnboarding === true;
   const { addToast } = useToast();
+  const { t } = useI18n();
   const {
-    activeSub,
     primarySub,
     isSubscribed,
     subscriptionState,
+    canShowRenew,
     showUpsellExpiry,
     showUpsellTrialEnd,
     renewalTargetTo,
@@ -110,7 +97,6 @@ export function PlanPage() {
     visibleTierPairs,
     hasAnnualOptions,
     shouldShowPlanOptions,
-    usageSummary,
     billingHistoryItems,
     historyLoading,
     historyError,
@@ -118,7 +104,7 @@ export function PlanPage() {
     heroView,
     formatStars: formatStarsFn,
   } = model;
-  const showRenewOrUpgradeCta = showUpsellExpiry || showUpsellTrialEnd;
+  const showRenewOrUpgradeCta = (canShowRenew && showUpsellExpiry) || showUpsellTrialEnd;
 
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>("annual");
   const [selectedTierKey, setSelectedTierKey] = useState<string>("");
@@ -159,21 +145,9 @@ export function PlanPage() {
       if (selectedTierKey && tierPairs.some((tier) => tier.key === selectedTierKey)) return;
       const firstTier = tierPairs[0];
       if (!firstTier) return;
-      const currentTier = tierPairs.find((tier) => tier.isCurrent);
+              const currentTier = tierPairs.find((tier) => tier.isCurrent);
       setSelectedTierKey(currentTier?.key ?? firstTier.key);
     }, [selectedTierKey, tierPairs]);
-
-  const {
-    activeDeviceCount,
-    deviceLimit,
-    devicePercent,
-    dataPercent,
-    deviceTone,
-    totalTrafficBytes,
-  } = usageSummary;
-
-  const animatedDevicePercentClass = percentClass(barsReady ? Math.round(devicePercent) : 0);
-  const animatedDataPercentClass = percentClass(barsReady ? Math.round(dataPercent) : 0);
 
   useEffect(() => {
     if (isE2EMode()) {
@@ -183,7 +157,7 @@ export function PlanPage() {
     setBarsReady(false);
     const timer = window.setTimeout(() => setBarsReady(true), BAR_ANIMATION_DELAY_MS);
     return () => window.clearTimeout(timer);
-  }, [devicePercent, dataPercent]);
+  }, [heroView.expiryPercent]);
 
   const visibleHistoryItems = historyExpanded ? billingHistoryItems : billingHistoryItems.slice(0, 3);
   const canExpandHistory = billingHistoryItems.length > 3;
@@ -205,8 +179,8 @@ export function PlanPage() {
     if (model.pageState.status === "error") {
       return (
         <FallbackScreen
-          title={model.pageState.title ?? "Could not load"}
-          message={model.pageState.message ?? "We could not load your plan or options. Please try again or contact support."}
+          title={model.pageState.title ?? t("common.could_not_load_title")}
+          message={model.pageState.message ?? t("common.could_not_load_plan")}
           onRetry={model.pageState.onRetry}
         />
       );
@@ -252,8 +226,9 @@ export function PlanPage() {
         } else {
           navigate("/plan");
         }
-      } else if (subscriptionState === "expiring" || subscriptionState === "expired") {
-        scrollToPlans();
+      } else if (subscriptionState === "active" && canShowRenew) {
+        track("cta_click", { cta_name: "renew_plan", screen_name: "plan", plan_id: primarySub?.plan_id ?? undefined });
+        navigate(renewalTargetTo);
       } else {
         scrollToPlans();
       }
@@ -295,136 +270,127 @@ export function PlanPage() {
     };
 
   const autoRenewDescription =
-      isSubscribed && autoRenew && primarySub?.valid_until
-        ? `Renews on ${new Date(primarySub.valid_until).toLocaleDateString(undefined, {
+    isSubscribed && autoRenew && primarySub?.valid_until
+      ? t("plan.renewal_description_with_date", {
+          date: new Date(primarySub.valid_until).toLocaleDateString(undefined, {
             day: "2-digit",
             month: "short",
             year: "numeric",
-          })}. Charged via Telegram.`
-        : "Renews automatically when your plan is active.";
+          }),
+        })
+      : t("plan.renewal_description_generic");
 
   return (
     <PageFrame
       title={model.header.title}
+      subtitle={model.header.subtitle}
       className="plan-billing-page"
     >
-      {fromOnboarding && (
+      {fromOnboarding && phase === "onboarding" && (
         <PageSection className="onboarding-return-banner">
           <MissionSecondaryLink to="/onboarding" state={{ fromOnboarding: true }}>
-            ← Back to setup
+            {t("plan.onboarding_back_to_setup")}
           </MissionSecondaryLink>
         </PageSection>
       )}
-        <section>
-        <PlanHero
-          planName={`${heroView.heroPlanName} — ${heroView.heroPlanPeriod}`}
-          priceMain={formatStarsFn(heroView.heroStars)}
-          period={heroView.heroPeriodDetail}
-          validUntil={heroView.expiryText}
-          expiryPercent={barsReady ? Math.round(heroView.expiryPercent) : 0}
-          expiryFillClass={heroView.expiryFillClass}
-          devicesLabel={heroView.devicesLabel}
-          onRenew={handleHeroRenew}
-          renewLabel={heroView.renewLabel}
-          onManage={isSubscribed ? handleHeroSecondary : undefined}
-          manageLabel={heroView.manageLabel}
-          status={subscriptionState}
-          className="stagger-1"
-        />
-      </section>
+      {isSubscribed ? (
+        <>
+          <section>
+            <PlanHero
+              planName={`${heroView.heroPlanName} — ${heroView.heroPlanPeriod}`}
+              priceMain={formatStarsFn(heroView.heroStars)}
+              period={heroView.heroPeriodDetail}
+              validUntil={heroView.expiryText}
+              expiryPercent={barsReady ? Math.round(heroView.expiryPercent) : 0}
+              expiryFillClass={heroView.expiryFillClass}
+              devicesLabel={heroView.devicesLabel}
+              onRenew={handleHeroRenew}
+              renewLabel={heroView.renewLabel}
+              onManage={handleHeroSecondary}
+              manageLabel={heroView.manageLabel}
+              status={subscriptionState}
+              className="stagger-1"
+            />
+          </section>
 
-      {nextStepCard ? (
-        <PageCardSection
-          title={nextStepCard.title}
-          description={nextStepCard.description}
-          className="stagger-2"
-        >
-          <MissionAlert
-            tone={nextStepCard.alertTone}
-            title={nextStepCard.alertTitle}
-            message={nextStepCard.alertMessage}
-          />
-          <ButtonRow>
-            {nextStepCard.primaryTo ? (
-              <MissionPrimaryLink to={nextStepCard.primaryTo}>{nextStepCard.primaryLabel}</MissionPrimaryLink>
-            ) : (
-              <MissionPrimaryButton onClick={nextStepCard.primaryActionType === "scrollToPlans" ? scrollToPlans : undefined}>
-                {nextStepCard.primaryLabel}
-              </MissionPrimaryButton>
-            )}
-            {nextStepCard.secondaryLabel && nextStepCard.secondaryTo ? (
-              <MissionSecondaryLink to={nextStepCard.secondaryTo}>
-                {nextStepCard.secondaryLabel}
-              </MissionSecondaryLink>
-            ) : null}
-          </ButtonRow>
-        </PageCardSection>
+          {nextStepCard ? (
+            <PageCardSection
+              title={nextStepCard.title}
+              action={<MissionChip tone={nextStepCard.badgeTone} className="section-meta-chip">{nextStepCard.badgeLabel}</MissionChip>}
+              sectionClassName="plan-billing-page__next-step-section stagger-2"
+              cardClassName="module-card plan-billing-page__next-step-card"
+              >
+              <MissionAlert
+                tone={nextStepCard.alertTone}
+                title={nextStepCard.alertTitle}
+                message={nextStepCard.alertMessage}
+              />
+              <ButtonRow>
+                {nextStepCard.primaryTo ? (
+                  <MissionPrimaryLink to={nextStepCard.primaryTo}>{nextStepCard.primaryLabel}</MissionPrimaryLink>
+                ) : (
+                  <MissionPrimaryButton onClick={nextStepCard.primaryActionType === "scrollToPlans" ? scrollToPlans : undefined}>
+                    {nextStepCard.primaryLabel}
+                  </MissionPrimaryButton>
+                )}
+                {nextStepCard.secondaryLabel && nextStepCard.secondaryTo ? (
+                  <MissionSecondaryLink to={nextStepCard.secondaryTo} className="plan-billing-page__secondary-link">
+                    {nextStepCard.secondaryLabel}
+                  </MissionSecondaryLink>
+                ) : null}
+              </ButtonRow>
+            </PageCardSection>
+          ) : null}
+        </>
       ) : null}
 
-        {isSubscribed && (
-        <PageSection title="Renewal" className="stagger-3">
-          <div className="limit-strip limit-strip--compact plan-renew-strip">
-            <div className="limit-strip__icon" aria-hidden>
-              <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden>
-                <path
-                  d="M3 8a5 5 0 1 1 1.5 3.6"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M3 5v3h3"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </div>
-            <div className="limit-strip__text">
-              <div className="limit-strip__title">Auto-renew</div>
-              <div className="limit-strip__message">{autoRenewDescription}</div>
-            </div>
-            <div className="limit-strip__action">
-              <ToggleRow
-                name="Auto-renew"
-                description={undefined}
-                checked={autoRenew}
-                onChange={handleAutoRenewChange}
-              />
-            </div>
-          </div>
-        </PageSection>
-      )}
-
       {shouldShowPlanOptions ? (
-      <PageSection title="Available Plans" className="stagger-4">
-        <LabeledControlRow label="Billing period">
+      <PageSection
+        title={
+          isSubscribed
+            ? t("plan.section_available_plans_title_subscribed")
+            : t("plan.section_available_plans_title_new")
+        }
+        className="plan-billing-page__plans-section stagger-4"
+      >
+        <LabeledControlRow
+          label={t("plan.billing_period_label")}
+          className="plan-billing-page__billing-period"
+        >
           <SegmentedControl
-            ariaLabel="Billing period"
+            className="plan-billing-page__period-toggle"
+            ariaLabel={t("plan.billing_period_label")}
             activeId={billingPeriod}
             onSelect={(id) => setBillingPeriod(id as BillingPeriod)}
             options={[
-              { id: "monthly", label: "Monthly" },
-              { id: "annual", label: "Annual", tag: "−20%", disabled: !hasAnnualOptions },
+              { id: "monthly", label: t("plan.billing_monthly_compact") },
+              {
+                id: "annual",
+                label: t("plan.billing_annual_compact"),
+                tag: t("plan.billing_annual_tag"),
+                disabled: !hasAnnualOptions,
+              },
             ]}
           />
         </LabeledControlRow>
 
         {visibleTierPairs.length === 0 ? (
           <EmptyStateBlock
-            title={isSubscribed ? "You're on the highest plan" : "No plans available"}
-            message={isSubscribed
-              ? "No higher-tier plans are available right now."
-              : "Try again later or contact support."}
+            title={
+              isSubscribed
+                ? t("plan.no_plans_title_subscribed")
+                : t("plan.no_plans_title_new")
+            }
+            message={
+              isSubscribed
+                ? t("plan.no_plans_message_subscribed")
+                : t("plan.no_plans_message_new")
+            }
           />
         ) : (
         <SnapCarousel
           ref={carouselRef}
-          className="snap-carousel--cards"
+          className={`snap-carousel--cards plan-billing-page__carousel ${visibleTierPairs.length <= 1 ? "plan-billing-page__carousel--single" : ""}`.trim()}
           id="availablePlans"
           role="region"
           aria-label="Plans carousel"
@@ -442,32 +408,42 @@ export function PlanPage() {
                 (subscriptionState === "expiring" || subscriptionState === "expired");
               const showRenewCta = isCurrentAndNeedsRenewal && showRenewOrUpgradeCta;
               const stars = displayed?.price_amount ?? 0;
-              const periodLabel = displayed ? `for ${displayed.duration_days} days` : "";
+              const periodLabel = displayed
+                ? t("plan.hero_period_for_days", { days: displayed.duration_days })
+                : "";
               const selectLabel = currentForPeriod
                 ? isCurrentAndNeedsRenewal
                   ? showRenewOrUpgradeCta
-                    ? "Renew plan"
-                    : "Current Plan"
-                  : "Current Plan"
+                    ? t("plan.cta_renew_plan")
+                    : t("plan.current_plan_label")
+                  : t("plan.current_plan_label")
                 : isSubscribed
-                  ? "Upgrade Plan"
-                  : "Choose plan";
+                  ? t("plan.cta_upgrade_plan")
+                  : t("plan.cta_continue_to_checkout");
 
               return (
                 <TierCard
                   key={tier.key}
                   className={[
+                    "plan-tier-card",
                     index === 0 ? "stagger-3" : index === 1 ? "stagger-4" : "stagger-5",
                   ]
                     .filter(Boolean)
                     .join(" ")}
                   data-tier={tier.key}
-                  badge={tier.isCurrent ? "Current plan" : undefined}
+                  badge={tier.isCurrent ? t("plan.current_plan_label") : undefined}
                   name={tier.label}
                   description={tier.description}
                   priceMain={formatStarsFn(stars)}
                   period={periodLabel}
-                  features={tier.features.map(tierFeatureToRow)}
+                  features={tier.features.map((f) => {
+                    const row = tierFeatureToRow(f);
+                    return {
+                      ...row,
+                      text: t(row.text as string),
+                      value: row.value != null ? t(row.value as string) : undefined,
+                    };
+                  })}
                   selectLabel={selectLabel}
                   selected={selected}
                   featured={tier.isCurrent}
@@ -495,59 +471,56 @@ export function PlanPage() {
       </PageSection>
       ) : null}
 
-      {isSubscribed ? (
-      <PageSection title="Usage this cycle" className="stagger-4 plan-billing-page__usage">
-        <UsageSummaryCard
-          items={[
-            {
-              id: "devices",
-              label: "Devices used",
-              value: deviceLimit > 0 ? `${activeDeviceCount} / ${deviceLimit} used` : `${activeDeviceCount} used`,
-              tone: deviceTone,
-              progress: (
-                <UsageProgressFill
-                  className={`usage-fill h-fill crit ${animatedDevicePercentClass}`.trim()}
-                  percent={barsReady ? devicePercent : 0}
+      {isSubscribed && (
+        <PageSection title={t("plan.renewal_section_title")} className="plan-billing-page__secondary-section stagger-3">
+          <LimitStrip
+            variant="compact"
+            title={t("plan.renewal_strip_title")}
+            message={autoRenewDescription}
+            action={
+              <ToggleRow
+                name={t("plan.renewal_strip_title")}
+                description={undefined}
+                checked={autoRenew}
+                onChange={handleAutoRenewChange}
+              />
+            }
+            className="plan-renew-strip"
+            icon={
+              <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden>
+                <path
+                  d="M3 8a5 5 0 1 1 1.5 3.6"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 />
-              ),
-            },
-            {
-              id: "traffic",
-              label: "Data transferred this cycle",
-              value: activeSub
-                ? (
-                  <>
-                    {formatBytes(totalTrafficBytes, { digits: 1 })} used{" "}
-                    <span className="status-chip info">Unlimited</span>
-                  </>
-                )
-                : "--",
-              tone: "ok",
-              progress: (
-                <UsageProgressFill
-                  className={`usage-fill h-fill warn ${animatedDataPercentClass}`.trim()}
-                  percent={barsReady ? dataPercent : 0}
+                <path
+                  d="M3 5v3h3"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 />
-              ),
-            },
-          ]}
-        />
-      </PageSection>
-      ) : (
-        <PageSection title="Usage & Billing" className="stagger-4">
-          <p className="page-placeholder-message type-body-sm">
-            Usage and billing appear after you activate a plan.
-          </p>
+              </svg>
+            }
+          />
         </PageSection>
       )}
 
         {isSubscribed && (
-        <PageSection title="Billing History" className="stagger-6">
+        <PageSection title={t("plan.payment_history_title")} className="plan-billing-page__secondary-section stagger-6">
           <BillingHistoryCard
             loading={historyLoading}
-            errorMessage={historyError ? "Could not load billing history." : null}
+            errorMessage={historyError ? t("plan.payment_history_error") : null}
             items={billingHistoryView}
-            footerLabel={historyExpanded ? "Show recent" : "View all"}
+            footerLabel={
+              historyExpanded
+                ? t("plan.payment_history_show_recent")
+                : t("plan.payment_history_view_all")
+            }
             footerDisabled={!canExpandHistory}
             onFooterClick={() => {
               setHistoryExpanded((value) => !value);

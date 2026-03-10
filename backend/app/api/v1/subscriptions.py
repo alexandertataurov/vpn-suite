@@ -14,6 +14,7 @@ from app.schemas.subscription import (
     SubscriptionOut,
     SubscriptionUpdate,
 )
+from app.services.subscription_state import apply_state_overrides, normalize_active_state
 
 router = APIRouter(prefix="/subscriptions", tags=["subscriptions"])
 
@@ -35,8 +36,8 @@ async def create_subscription(
         valid_from=body.valid_from,
         valid_until=body.valid_until,
         device_limit=body.device_limit,
-        status="active",
     )
+    normalize_active_state(sub)
     db.add(sub)
     await db.flush()
     request.state.audit_resource_type = "subscription"
@@ -105,13 +106,36 @@ async def update_subscription(
         "valid_until": _json_val(sub.valid_until),
         "device_limit": sub.device_limit,
         "status": sub.status,
+        "subscription_status": getattr(sub, "subscription_status", None),
         "access_status": getattr(sub, "access_status", None),
+        "billing_status": getattr(sub, "billing_status", None),
+        "renewal_status": getattr(sub, "renewal_status", None),
         "grace_until": _json_val(getattr(sub, "grace_until", None)),
         "grace_reason": getattr(sub, "grace_reason", None),
     }
     data = body.model_dump(exclude_unset=True)
+    state_status = data.pop("status", None)
+    state_access = data.pop("access_status", None)
+    state_grace_until = data.get("grace_until")
+    state_grace_reason = data.get("grace_reason")
     for k, v in data.items():
         setattr(sub, k, v)
+    if (
+        state_status is not None
+        or state_access is not None
+        or state_grace_until is not None
+        or state_grace_reason is not None
+    ):
+        from datetime import datetime, timezone
+
+        apply_state_overrides(
+            sub,
+            now=datetime.now(timezone.utc),
+            status=state_status,
+            access_state=state_access,
+            grace_until=state_grace_until,
+            grace_reason=state_grace_reason,
+        )
     await db.flush()
     request.state.audit_resource_type = "subscription"
     request.state.audit_resource_id = sub.id

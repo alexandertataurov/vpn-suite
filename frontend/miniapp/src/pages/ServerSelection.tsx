@@ -5,27 +5,27 @@ import {
   PageCardSection,
   PageFrame,
   PageSection,
-  MissionChip,
   MissionPrimaryButton,
   MissionSecondaryButton,
-  ButtonRow,
   ServerCard,
   EmptyStateBlock,
 } from "@/design-system";
 import { useServerSelectionPageModel } from "@/page-models";
+import { useI18n } from "@/hooks/useI18n";
 
 export function ServerSelectionPage() {
   const model = useServerSelectionPageModel();
+  const { t } = useI18n();
 
   if (model.pageState.status === "empty") {
-    return <SessionMissing message="Your Telegram session is not active. Close and reopen the mini app from the bot." />;
+    return <SessionMissing message={t("servers.session_missing_message")} />;
   }
 
   if (model.pageState.status === "error") {
     return (
       <FallbackScreen
-        title={model.pageState.title ?? "Could not load servers"}
-        message={model.pageState.message ?? "We could not load server list. Please try again later."}
+        title={model.pageState.title ?? t("common.could_not_load_title")}
+        message={model.pageState.message ?? t("common.could_not_load_generic")}
         onRetry={model.pageState.onRetry}
       />
     );
@@ -41,41 +41,50 @@ export function ServerSelectionPage() {
   }
 
   return (
-    <PageFrame title={model.header.title} className="server-selection-page">
-      <PageCardSection title="Routing mode" description="Use automatic routing or lock a preferred location.">
+    <PageFrame title={model.header.title} subtitle={model.header.subtitle} className="server-selection-page">
+      <PageCardSection
+        title={t("servers.routing_mode_title")}
+        description={t("servers.routing_mode_description")}
+      >
         <p className="op-desc type-body-sm">
-          {model.data.auto_select ? "Automatic server selection is enabled." : "Manual server preference is enabled."}
+          {model.data.auto_select ? t("servers.routing_status_auto") : t("servers.routing_status_manual")}
         </p>
-        <p className="op-desc type-body-sm">We prioritize healthy, low-load servers near your region.</p>
-        <ButtonRow>
+        <p className="type-body-sm muted server-selection-note">
+          {t("servers.routing_latency_note")}
+        </p>
+        <div className="miniapp-compact-actions">
           {model.data.auto_select ? (
             <MissionSecondaryButton
               onClick={model.handleAutoSelect}
               disabled={!model.isOnline || (model.isMutating && model.pendingServerId === "auto")}
+              className="miniapp-compact-action"
             >
-              {model.isMutating && model.pendingServerId === "auto" ? "Applying…" : "Use best server"}
+              {model.isMutating && model.pendingServerId === "auto"
+                ? t("servers.saving")
+                : t("servers.use_best_location")}
             </MissionSecondaryButton>
           ) : (
             <MissionPrimaryButton
               onClick={model.handleAutoSelect}
               disabled={!model.isOnline || (model.isMutating && model.pendingServerId === "auto")}
+              className="miniapp-compact-action"
             >
-              {model.isMutating && model.pendingServerId === "auto" ? "Applying…" : "Use best server"}
+              {model.isMutating && model.pendingServerId === "auto"
+                ? t("servers.saving")
+                : t("servers.use_best_location")}
             </MissionPrimaryButton>
           )}
-        </ButtonRow>
+        </div>
       </PageCardSection>
 
       <PageSection
-        title="Locations"
-        action={<MissionChip tone={model.locationsBadge.tone} className="section-meta-chip miniapp-tnum">{model.locationsBadge.label}</MissionChip>}
-        description="Compare location, latency, and load before pinning a preferred route."
+        title={t("servers.locations_title")}
       >
         <div className="stack">
           {model.data.items.length === 0 ? (
             <EmptyStateBlock
-              title="No servers available"
-              message="Server list is empty. Try again later or contact support."
+              title={t("servers.empty_title")}
+              message={t("servers.empty_message")}
             />
           ) : (
             model.data.items.map((server) => (
@@ -85,7 +94,7 @@ export function ServerSelectionPage() {
                 name={server.name}
                 region={server.region}
                 avgPingMs={server.avg_ping_ms}
-                loadPercent={server.load_percent ?? 0}
+                loadPercent={server.load_percent ?? null}
                 isCurrent={server.is_current}
                 isPending={model.isMutating && model.pendingServerId === server.id}
                 onSelect={() => model.handleSelectServer(server)}

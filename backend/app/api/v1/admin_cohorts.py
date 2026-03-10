@@ -14,6 +14,7 @@ from app.core.constants import PERM_CLUSTER_READ
 from app.core.database import get_db
 from app.core.rbac import require_permission
 from app.models import Subscription, User
+from app.services.subscription_state import entitled_active_where
 
 router = APIRouter(prefix="/admin/cohorts", tags=["admin-cohorts"])
 
@@ -52,8 +53,7 @@ async def _cohort_retention_data(db: AsyncSession, months: int) -> list[CohortRe
                 .where(
                     User.created_at >= start,
                     User.created_at < end,
-                    Subscription.status == "active",
-                    Subscription.valid_until > now,
+                    *entitled_active_where(now=now),
                 )
             )
         ).scalar() or 0

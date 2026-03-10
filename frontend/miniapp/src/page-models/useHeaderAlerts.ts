@@ -2,7 +2,6 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getPlans } from "@/api";
 import { useWebappToken } from "@/api/client";
-import { useApiHealth } from "@/hooks/useApiHealth";
 import { useSession } from "@/hooks/useSession";
 import { webappQueryKeys } from "@/lib/query-keys/webapp.query-keys";
 import type { HeaderAlertItem, HeaderAlertTone } from "@/design-system";
@@ -28,7 +27,6 @@ function toHeaderTone(tone: "info" | "warning" | "error" | "success"): HeaderAle
 export function useHeaderAlerts(): HeaderAlertItem[] {
   const hasToken = !!useWebappToken();
   const { data, isLoading } = useSession(hasToken);
-  const { error: healthError } = useApiHealth(hasToken);
   const activeSub = getActiveSubscription(data);
   const activeDevices = getActiveDevices(data);
 
@@ -56,19 +54,10 @@ export function useHeaderAlerts(): HeaderAlertItem[] {
 
     const items: HeaderAlertItem[] = [];
 
-    if (healthError) {
-      items.push({
-        id: "account-health",
-        tone: "warning",
-        title: "Service health",
-        message: "Service telemetry reports degradation. Connection may be unstable.",
-      });
-    }
-
     if (hasSub && isTrial && trialDaysLeft <= TRIAL_ENDING_DAYS) {
       const message =
         trialDaysLeft <= 0
-          ? "Your trial ended. Upgrade to keep secure access."
+          ? "Your trial ended. Choose a paid plan to keep access."
           : trialDaysLeft === 1
             ? "Your trial ends tomorrow. Upgrade to keep access."
             : `Your trial ends in ${trialDaysLeft} days. Upgrade to keep access.`;
@@ -77,11 +66,13 @@ export function useHeaderAlerts(): HeaderAlertItem[] {
         tone: toHeaderTone(trialDaysLeft <= 0 ? "error" : "warning"),
         title: "Trial",
         message,
+        actionLabel: trialDaysLeft <= 0 ? "Choose plan" : "View plans",
+        actionTo: "/plan",
       });
     } else if (hasSub && daysLeft <= 7) {
       const message =
         daysLeft <= 0
-          ? "Your plan expired. Renew to restore secure traffic."
+          ? "Your plan expired. Renew to restore access."
           : daysLeft === 1
             ? "Your plan ends tomorrow. Renew to avoid interruption."
             : `Your plan ends in ${daysLeft} days. Renew to avoid interruption.`;
@@ -90,6 +81,8 @@ export function useHeaderAlerts(): HeaderAlertItem[] {
         tone: toHeaderTone(daysLeft <= 0 ? "error" : "warning"),
         title: "Subscription",
         message,
+        actionLabel: daysLeft <= 0 ? "Restore access" : "Manage plan",
+        actionTo: daysLeft <= 0 ? "/restore-access" : "/plan",
       });
     }
 
@@ -103,6 +96,8 @@ export function useHeaderAlerts(): HeaderAlertItem[] {
         tone: toHeaderTone(atLimit ? "error" : "info"),
         title: "Device capacity",
         message,
+        actionLabel: atLimit ? "Manage devices" : "Open devices",
+        actionTo: "/devices",
       });
     }
 
@@ -110,7 +105,6 @@ export function useHeaderAlerts(): HeaderAlertItem[] {
   }, [
     hasToken,
     isLoading,
-    healthError,
     hasSub,
     isTrial,
     trialDaysLeft,

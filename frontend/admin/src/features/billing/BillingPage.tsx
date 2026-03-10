@@ -48,6 +48,7 @@ interface PlanRow extends Record<string, unknown> {
   id: string;
   name: string;
   duration: string;
+  deviceLimit: string;
   price: string;
   style: string;
   subscriptions: string;
@@ -61,6 +62,7 @@ interface PlanRow extends Record<string, unknown> {
 interface PlanFormState {
   name: string;
   durationDays: string;
+  deviceLimit: string;
   priceCurrency: string;
   priceAmount: string;
   style: PlanStyle;
@@ -119,6 +121,7 @@ export function BillingPage() {
   const [form, setForm] = useState<PlanFormState>({
     name: "",
     durationDays: "",
+    deviceLimit: "",
     priceCurrency: "XTR",
     priceAmount: "",
     style: "normal",
@@ -229,6 +232,7 @@ export function BillingPage() {
         id: p.id,
         name: cleanName || p.id,
         duration: `${p.duration_days} days`,
+        deviceLimit: `${p.device_limit ?? 1}`,
         price: `${p.price_amount} ${p.price_currency}`,
         style: styleLabel,
         subscriptions: subCount > 0 ? `${subCount}` : "0 (can delete)",
@@ -270,6 +274,7 @@ export function BillingPage() {
                 setForm({
                   name: cleanName,
                   durationDays: String(p.duration_days),
+                  deviceLimit: String(p.device_limit ?? 1),
                   priceCurrency: p.price_currency,
                   priceAmount: String(p.price_amount),
                   style,
@@ -336,6 +341,7 @@ export function BillingPage() {
     setForm({
       name: "",
       durationDays: "",
+      deviceLimit: "",
       priceCurrency: "XTR",
       priceAmount: "",
       style: "normal",
@@ -358,6 +364,7 @@ export function BillingPage() {
   const canSubmit =
     form.name.trim().length > 0 &&
     form.durationDays.trim().length > 0 &&
+    form.deviceLimit.trim().length > 0 &&
     form.priceCurrency.trim().length > 0 &&
     form.priceAmount.trim().length > 0;
 
@@ -439,6 +446,7 @@ export function BillingPage() {
       const body = {
         name: styledName,
         duration_days: Number.parseInt(form.durationDays, 10),
+        device_limit: Number.parseInt(form.deviceLimit, 10),
         price_currency: form.priceCurrency.trim(),
         price_amount: form.priceAmount.trim(),
         upsell_methods: form.upsellMethods.length > 0 ? form.upsellMethods : null,
@@ -520,6 +528,7 @@ export function BillingPage() {
                         { key: "order", header: "Order" },
                         { key: "name", header: "Plan" },
                         { key: "duration", header: "Duration" },
+                        { key: "deviceLimit", header: "Devices" },
                         { key: "price", header: "Price" },
                         { key: "subscriptions", header: "Subscriptions" },
                         { key: "archived", header: "Archived" },
@@ -564,6 +573,18 @@ export function BillingPage() {
                       value={form.durationDays}
                       onChange={(e) => handleFormChange({ durationDays: e.target.value })}
                       placeholder="30"
+                    />
+                  </label>
+                </div>
+                <div className="input-wrap">
+                  <label className="input-label">
+                    Device limit
+                    <Input
+                      type="number"
+                      min={1}
+                      value={form.deviceLimit}
+                      onChange={(e) => handleFormChange({ deviceLimit: e.target.value })}
+                      placeholder="5"
                     />
                   </label>
                 </div>

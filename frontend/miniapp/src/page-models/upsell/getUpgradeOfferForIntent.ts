@@ -5,7 +5,7 @@
 import type { UpgradeIntent, UpsellDecision, UpsellOfferType, UpsellUiVariant } from "./upsell.types";
 import type { PlanLikeForUpsell } from "./upsell.types";
 import { TRIGGER_PRIORITY } from "./upsell.constants";
-import { getUpsellCopy } from "./getUpsellCopy";
+import { getUpsellCopy, type TranslateFn } from "./getUpsellCopy";
 
 function sortByUpgradeRelevanceForDeviceLimit(a: PlanLikeForUpsell, b: PlanLikeForUpsell): number {
   const orderA = a.display_order ?? 999_999;
@@ -92,6 +92,7 @@ export function getUpgradeOfferForIntent(
   currentPlan: PlanLikeForUpsell | null | undefined,
   intent: UpgradeIntent,
   _page: string, // Reserved for placement rules (UPSELL-ENGINE-SPEC §11)
+  t: TranslateFn,
 ): UpsellDecision | null {
   void _page;
   const offerType: UpsellOfferType =
@@ -146,7 +147,7 @@ export function getUpgradeOfferForIntent(
     targetPlanId: target.targetPlanId,
   };
 
-  const copy = getUpsellCopy(decision, { currentPlan, plans });
+  const copy = getUpsellCopy(t, decision, { currentPlan, plans });
   decision.title = copy.title;
   decision.body = copy.body;
   decision.ctaLabel = copy.ctaLabel;

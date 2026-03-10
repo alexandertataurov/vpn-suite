@@ -5,22 +5,19 @@ import {
   PageCardSection,
   PageFrame,
   MissionAlert,
-  MissionChip,
   MissionPrimaryButton,
-  MissionProgressBar,
-  MissionSecondaryButton,
-  MissionSecondaryLink,
-  ButtonRow,
 } from "@/design-system";
 import { useReferralPageModel } from "@/page-models";
+import { useI18n } from "@/hooks/useI18n";
 
 export function ReferralPage() {
   const model = useReferralPageModel();
+  const { t } = useI18n();
 
   if (model.pageState.status === "empty") {
     return (
       <PageFrame title={model.header.title} className="referral-page">
-        <SessionMissing message="Your Telegram session is not active. Tap Reconnect to sign in again, or close and reopen the app from the bot to access referrals." />
+        <SessionMissing message={t("referral.session_missing_message")} />
       </PageFrame>
     );
   }
@@ -28,8 +25,8 @@ export function ReferralPage() {
   if (model.pageState.status === "error") {
     return (
       <FallbackScreen
-        title={model.pageState.title ?? "Referrals temporarily unavailable"}
-        message={model.pageState.message ?? "We could not load your referral data. Please try again later."}
+        title={model.pageState.title ?? t("referral.error_title_generic")}
+        message={model.pageState.message ?? t("referral.error_message_generic")}
         onRetry={model.pageState.onRetry}
       />
     );
@@ -44,66 +41,41 @@ export function ReferralPage() {
   }
 
   return (
-    <PageFrame title={model.header.title} className="referral-page">
+    <PageFrame title={model.header.title} subtitle={model.header.subtitle} className="referral-page">
       {model.showUpsellReferral ? (
-        <PageCardSection description="Upgrade your plan to get more from referrals." cardTone="blue">
-          <MissionSecondaryLink to={model.referralUpsellTo}>Upgrade plan</MissionSecondaryLink>
+        <PageCardSection description={t("referral.upsell_description")} cardTone="amber">
+          <MissionAlert
+            tone="info"
+            title={t("plan.cta_upgrade_plan")}
+            message={t("referral.upsell_description")}
+          />
         </PageCardSection>
       ) : null}
-      <PageCardSection title="Share link" description="Invite friends and unlock bonus days." cardTone="green">
+      <PageCardSection
+        title={t("referral.share_link_card_title")}
+        description={undefined}
+        cardTone="green"
+      >
         {!model.botUsername ? (
           <MissionAlert
             tone="warning"
-            title="Bot username missing"
-            message="Referral links are unavailable: bot username is not configured."
+            title={t("referral.share_link_unavailable_alert_title")}
+            message={t("referral.share_link_unavailable_alert_message")}
           />
         ) : null}
-        <code className="code-block type-meta">{model.shareUrl || "Unavailable"}</code>
-        <ButtonRow>
-          <MissionPrimaryButton onClick={() => void model.handleShare()} disabled={!model.shareUrl || !model.isOnline}>
-            Share secure access
+        <code className="code-block type-meta">
+          {model.shareUrl || t("referral.share_url_unavailable_placeholder")}
+        </code>
+        <div className="miniapp-compact-actions">
+          <MissionPrimaryButton
+            onClick={() => void model.copyToClipboard()}
+            disabled={!model.shareUrl || !model.isOnline}
+            className="miniapp-compact-action"
+          >
+            {t("referral.copy_link_button")}
           </MissionPrimaryButton>
-          <MissionSecondaryButton onClick={() => void model.copyToClipboard()} disabled={!model.shareUrl || !model.isOnline}>
-            Copy link
-          </MissionSecondaryButton>
-        </ButtonRow>
+        </div>
       </PageCardSection>
-
-      {model.statsData ? (
-        <PageCardSection
-          title="Reward progress"
-          action={<MissionChip tone={model.rewardBadge.tone} className="section-meta-chip miniapp-tnum">{model.rewardBadge.label}</MissionChip>}
-          description="Track reward velocity, current invite goal, and pending bonus days."
-        >
-          <div className="data-grid three">
-            <div className="data-cell">
-              <div className="dc-key">Earned days</div>
-              <div className="dc-val miniapp-tnum">{model.earnedDays}</div>
-            </div>
-            <div className="data-cell">
-              <div className="dc-key">Active referrals</div>
-              <div className="dc-val miniapp-tnum">{model.activeReferrals}</div>
-            </div>
-            <div className="data-cell">
-              <div className="dc-key">Pending rewards</div>
-              <div className="dc-val miniapp-tnum">{model.pendingRewards}</div>
-            </div>
-          </div>
-          <div className="data-grid wide">
-            <div className="data-cell">
-              <div className="dc-key">Total referrals</div>
-              <div className="dc-val miniapp-tnum">{model.totalReferrals}</div>
-            </div>
-          </div>
-          <p className="op-desc type-body-sm">
-            Invite {model.inviteRemaining} more {model.inviteRemaining === 1 ? "friend" : "friends"} to unlock {model.nextBonusDays} bonus days
-          </p>
-          <MissionProgressBar percent={model.progressPercent} staticFill ariaLabel="Referral reward progress" />
-          <p className="dc-key type-meta miniapp-tnum">
-            {model.inviteProgress}/{model.inviteGoal} towards next bonus · Total invites: {model.totalReferrals}
-          </p>
-        </PageCardSection>
-      ) : null}
     </PageFrame>
   );
 }

@@ -1,119 +1,82 @@
 import { test, expect } from "@playwright/test";
-
-async function injectTelegram(page: import("@playwright/test").Page) {
-  await page.addInitScript(() => {
-    (window as unknown as { Telegram?: { WebApp: { initData: string; ready: () => void } } }).Telegram = {
-      WebApp: { initData: "e2e-test", ready: () => {} },
-    };
-  });
-}
+import { createPlan, createSession, gotoMiniapp, injectTelegram, setupMiniappApi } from "./helpers/miniapp";
 
 test.describe("Miniapp Checkout Flow", () => {
-    test("user can navigate from plans to checkout and request an invoice", async ({ page }) => {
-        await injectTelegram(page);
-        await page.route("**/*", async (route) => {
-            const url = route.request().url();
-            if (url.includes("/api/v1/webapp/telemetry")) {
-                await route.fulfill({ status: 204, body: "" });
-                return;
-            }
-            if (url.includes("/api/v1/health/ready")) {
-                await route.fulfill({
-                    status: 200,
-                    contentType: "application/json",
-                    body: JSON.stringify({ status: "ok" }),
-                });
-                return;
-            }
-            if (url.includes("/api/v1/webapp/auth")) {
-                await route.fulfill({
-                    status: 200,
-                    contentType: "application/json",
-                    body: JSON.stringify({ session_token: "e2e-session", expires_in: 3600 }),
-                });
-                return;
-            }
-            if (url.includes("/api/v1/webapp/me")) {
-                await route.fulfill({
-                    status: 200,
-                    contentType: "application/json",
-                    body: JSON.stringify({
-                        user: { id: 1, tg_id: 12345 },
-                        subscriptions: [],
-                        devices: [],
-                        onboarding: { completed: true, step: 2, version: 1, updated_at: new Date().toISOString() },
-                    }),
-                });
-                return;
-            }
-            if (url.includes("/api/v1/webapp/plans")) {
-                await route.fulfill({
-                    status: 200,
-                    contentType: "application/json",
-                    body: JSON.stringify({
-                        items: [
-                            {
-                                id: "test-plan-1",
-                                name: "Test Plan 1",
-                                duration_days: 30,
-                                price_amount: 500,
-                                price_currency: "Stars",
-                            },
-                        ],
-                    }),
-                });
-                return;
-            }
-            if (url.includes("/webapp/payments/create-invoice")) {
-                await route.fulfill({
-                    status: 200,
-                    contentType: "application/json",
-                    body: JSON.stringify({
-                        invoice_id: "e2e-payment-1",
-                        payment_id: "e2e-payment-1",
-                        title: "Test Plan 1",
-                        description: "VPN plan, 30 days",
-                        currency: "XTR",
-                        star_count: 500,
-                        payload: "e2e-payment-1",
-                        server_id: "s1",
-                        subscription_id: "sub1",
-                        invoice_link: "https://t.me/$invoice/test",
-                    }),
-                });
-                return;
-            }
-            if (url.includes("/webapp/payments/") && url.endsWith("/status")) {
-                await route.fulfill({
-                    status: 200,
-                    contentType: "application/json",
-                    body: JSON.stringify({ payment_id: "e2e-payment-1", status: "pending" }),
-                });
-                return;
-            }
-            await route.continue();
-        });
-
-        await page.goto("./?tgWebAppData=e2e-test");
-
-        await expect(page.getByRole("link", { name: /Plan/i }).first()).toBeVisible({ timeout: 10000 });
-
-        await page.getByRole("link", { name: /Plan/i }).first().click();
-
-        await expect(page.locator("h1")).toContainText(/Choose Your Plan|Plan/i);
-        await page.getByRole("link", { name: /Get Test Plan 1/i }).click();
-
-        await expect(page).toHaveURL(/.*checkout\/test-plan-1/);
-        await expect(page.getByText("Plan test-plan-1")).toBeVisible();
-
-        await page.getByRole("button", { name: /Pay with Telegram Stars/i }).click();
-
-        const paymentWaiting = page.locator(".payment-status-waiting");
-        const reachedWaitingState = await paymentWaiting
-            .isVisible({ timeout: 10000 })
-            .catch(() => false);
-        if (!reachedWaitingState) {
-            await expect(page).toHaveURL(/.*\/devices$/, { timeout: 10000 });
-        }
+  test("user can navigate from plans to checkout and complete payment", async ({ page }) => {
+    await injectTelegram(page);
+    await setupMiniappApi(page, {
+      session: createSession({
+        subscriptions: [],
+        routing: { recommended_route: "/plan", reason: "no_subscription" },
+      }),
+      plans: {
+        items: [
+          createPlan({ id: "test-plan-1", name: "Test Plan 1", price_amount: 500, device_limit: 1 }),
+        ],
+      },
+      createInvoiceReplies: [
+        {
+          status: 200,
+          body: {
+            invoice_id: "invoice-test-plan-1",
+            payment_id: "payment-test-plan-1",
+            title: "Test Plan 1",
+            description: "VPN plan",
+            currency: "XTR",
+            star_count: 500,
+            payload: "payload-test-plan-1",
+            server_id: "srv-us",
+            subscription_id: "sub-test-plan-1",
+          },
+        },
+      ],
     });
+
+    await gotoMiniapp(page, "/plan");
+
+    await expect(page.getByRole("heading", { name: /Plan|Choose plan/i })).toBeVisible({ timeout: 10000 });
+    await page.locator(".tier-select-btn").first().click();
+
+    await expect(page).toHaveURL(/\/plan\/checkout\/test-plan-1$/);
+    await expect(page.getByRole("heading", { name: /Checkout/i })).toBeVisible();
+
+    await page.getByRole("button", { name: /Pay/i }).click();
+    await page.getByRole("button", { name: /Pay with Telegram Stars/i }).click();
+
+    await expect(page).toHaveURL(/\/devices$/, { timeout: 10000 });
+  });
+
+  test("payment failure exposes retry and support recovery path", async ({ page }) => {
+    await injectTelegram(page);
+    await setupMiniappApi(page, {
+      session: createSession({
+        subscriptions: [],
+        routing: { recommended_route: "/plan", reason: "no_subscription" },
+      }),
+      plans: {
+        items: [
+          createPlan({ id: "test-plan-2", name: "Test Plan 2", price_amount: 500, device_limit: 1 }),
+        ],
+      },
+      createInvoiceReplies: [
+        {
+          status: 500,
+          body: {
+            code: "PAYMENT_UNAVAILABLE",
+            message: "Payment backend unavailable",
+          },
+        },
+      ],
+    });
+
+    await gotoMiniapp(page, "/plan/checkout/test-plan-2");
+
+    await expect(page.getByRole("heading", { name: /Checkout/i })).toBeVisible();
+    await page.getByRole("button", { name: /Pay/i }).click();
+    await page.getByRole("button", { name: /Pay with Telegram Stars/i }).click();
+
+    await expect(page.getByText(/Payment failed/i)).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole("button", { name: /Try again/i })).toBeVisible();
+    await expect(page.getByRole("link", { name: /Contact support/i })).toBeVisible();
+  });
 });

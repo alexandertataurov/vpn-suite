@@ -70,7 +70,7 @@ async def test_admin_issue_peer_two_phase_applied(monkeypatch):
     from app.core.database import check_db
 
     if not await check_db():
-        pytest.skip("DB not available")
+        pytest.skip("DB not available (requires Postgres)")
     monkeypatch.setattr(settings, "node_mode", "real")
     monkeypatch.setattr(settings, "node_discovery", "docker")
 

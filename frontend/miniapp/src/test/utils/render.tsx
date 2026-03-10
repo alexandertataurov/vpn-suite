@@ -2,6 +2,8 @@ import type { ReactElement, ReactNode } from "react";
 import { render, type RenderOptions } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
+import { LayoutProvider } from "@/context/LayoutContext";
+import { ToastContainer } from "@/design-system";
 
 export function createWrapper(options?: { initialEntries?: string[] }) {
   const queryClient = new QueryClient({
@@ -12,7 +14,11 @@ export function createWrapper(options?: { initialEntries?: string[] }) {
   return function Wrapper({ children }: { children: ReactNode }) {
     return (
       <QueryClientProvider client={queryClient}>
-        <MemoryRouter initialEntries={initialEntries}>{children}</MemoryRouter>
+        <MemoryRouter initialEntries={initialEntries}>
+          <ToastContainer>
+            <LayoutProvider stackFlow={false}>{children}</LayoutProvider>
+          </ToastContainer>
+        </MemoryRouter>
       </QueryClientProvider>
     );
   };

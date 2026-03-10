@@ -1,5 +1,5 @@
 import type { HTMLAttributes, ReactNode } from "react";
-import { H1, Body } from "../components/Typography";
+import { H1, Body } from "../components/typography";
 
 export interface PageHeaderProps extends HTMLAttributes<HTMLDivElement> {
   title: string;

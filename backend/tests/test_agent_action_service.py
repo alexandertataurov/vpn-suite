@@ -22,7 +22,7 @@ async def test_create_action_and_get_pending():
             r = await session.execute(select(Server).limit(1))
             server = r.scalar_one_or_none()
             if not server:
-                pytest.skip("No server in DB")
+                pytest.fail("No server in DB")
             server_id = server.id
 
             action = await create_action(
@@ -56,7 +56,7 @@ async def test_create_action_and_get_pending():
             assert got.status == "completed"
             assert len(got.logs) >= 1
     except (ConnectionRefusedError, OSError):
-        pytest.skip("Postgres not available")
+        pytest.skip("Postgres not available (requires Postgres)")
     except Exception as e:
         exc_chain = [e]
         while getattr(exc_chain[-1], "__cause__", None):
@@ -65,5 +65,5 @@ async def test_create_action_and_get_pending():
             "connection refused" in str(x).lower() or isinstance(x, ConnectionRefusedError)
             for x in exc_chain
         ):
-            pytest.skip("Postgres not available")
+            pytest.skip("Postgres not available (requires Postgres)")
         raise
