@@ -78,7 +78,7 @@ export function useSupportPageModel() {
 
   /** Only for step 0: label for the "No" path (e.g. navigate to plan). */
   const currentStepAltLabel =
-    step === 0 && !activeSub ? t("support.troubleshooter_step_access_alt") : undefined;
+    step === 0 ? t("support.troubleshooter_step_access_alt") : undefined;
 
   useEffect(() => {
     track("support_opened", { screen_name: "support" });

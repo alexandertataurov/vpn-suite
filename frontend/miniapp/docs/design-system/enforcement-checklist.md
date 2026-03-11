@@ -53,8 +53,8 @@ Use this checklist in code review and before merge. Every item is pass/fail.
 
 - `PASS`: DS behavior changes include or update tests where behavior changed.
 - `PASS`: component/pattern public changes include Storybook/story or doc updates.
-- `PASS`: architecture-impacting changes keep `design-system-architecture.md` in sync.
-- `PASS`: new reusable page wrappers are documented in `design-system/README.md`.
+- `PASS`: architecture-impacting changes keep [architecture.md](./architecture.md) in sync.
+- `PASS`: new reusable page wrappers are documented in [README.md](./README.md).
 - `FAIL`: API or behavioral changes merged without docs/test coverage.
 
 ## 6) Required Local Checks
@@ -79,7 +79,7 @@ CI mapping:
 
 ## 7) Mobile Platform Guidelines
 
-- `PASS`: mobile UI changes follow `docs/mobile-platform-guidelines.md`.
+- `PASS`: mobile UI changes follow [mobile-platform-guidelines.md](./mobile-platform-guidelines.md).
 - `PASS`: tap targets, spacing, readable text, and focus states remain compliant with the shared iOS/Android subset.
 - `FAIL`: platform guidance is bypassed by shrinking controls or text to fit.
 

@@ -1,3 +1,4 @@
+/* eslint-disable react/forbid-dom-props */
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Accordion,

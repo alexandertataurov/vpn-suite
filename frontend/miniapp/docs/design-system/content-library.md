@@ -66,7 +66,7 @@ Pre-app flow (no nav). Step 1 is a single-page onboarding landing block: headlin
 - Diagnostics — Metric tile strip (ping, packet loss, DNS response)
 - Recent Tickets — List rows
 
-### Account (`/account`)
+### Account (route `/settings`, nav label "Account")
 **Nav active:** Account  
 **Hero:** Account summary card (avatar initial, username, email, member-since)  
 **Sections:**

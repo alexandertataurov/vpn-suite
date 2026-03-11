@@ -3,7 +3,7 @@ import { MOTION_DURATION_MS, MOTION_TOKENS } from "../tokens";
 import { StoryCard, StoryPage, StorySection, ThreeColumn, TokenTable, UsageExample } from "./foundations.story-helpers";
 
 const meta = {
-  title: "Design System/Foundations/Motion",
+  title: "Foundations/Motion",
   tags: ["autodocs"],
   parameters: {
     docs: {
@@ -27,6 +27,13 @@ const motionSpecs = [
   { name: "Ease out", token: MOTION_TOKENS.easeOut, usage: "Exit or reveal motion that needs to feel responsive immediately.", preview: <CurveBadge label="out" /> },
   { name: "Ease in out", token: MOTION_TOKENS.easeInOut, usage: "Balanced transition when both start and end matter.", preview: <CurveBadge label="in-out" /> },
 ];
+
+const motionUsageRows = [
+  { token: MOTION_TOKENS.durationFast, value: `${MOTION_DURATION_MS.fast}ms`, usedFor: "Press states, hover, chips, toggles", easing: "var(--ease-out)" },
+  { token: MOTION_TOKENS.durationNormal, value: `${MOTION_DURATION_MS.normal}ms`, usedFor: "Panel slide, tab switch, accordion, progress fill", easing: "var(--ease-in-out)" },
+  { token: MOTION_TOKENS.durationSlow, value: `${MOTION_DURATION_MS.slow}ms`, usedFor: "Modal entry and larger state transitions only", easing: "var(--ease-default)" },
+  { token: "--duration-instant", value: "0ms", usedFor: "Reduced-motion override", easing: "none" },
+] as const;
 
 export const Reference: Story = {
   render: () => (
@@ -65,8 +72,24 @@ export const Reference: Story = {
       </StorySection>
 
       <StorySection
+        title="Usage mapping"
+        description="Duration choice should be predictable. Pick from this table instead of improvising a new tempo."
+      >
+        <div style={usageTableStyle}>
+          {motionUsageRows.map((row) => (
+            <div key={row.token} style={usageRowStyle}>
+              <code style={metaStyle}>{row.token}</code>
+              <span style={valueStyle}>{row.value}</span>
+              <span style={captionStyle}>{row.usedFor}</span>
+              <code style={metaStyle}>{row.easing}</code>
+            </div>
+          ))}
+        </div>
+      </StorySection>
+
+      <StorySection
         title="Miniapp use case"
-        description="Motion should help the user understand what changed, especially in status-heavy operational flows."
+        description="Motion should help the user understand what changed, especially in status-heavy operational flows. Every transition must also have a reduced-motion fallback."
       >
         <UsageExample title="Connection state transition" description="Status chips, banners, and progress indicators should move on the same timing grid so the screen feels coherent during reconnects.">
           <div style={transitionCardStyle}>
@@ -78,6 +101,14 @@ export const Reference: Story = {
               <div style={progressFillStyle} />
             </div>
             <div style={captionStyle}>Use normal duration for the bar fill and fast duration for the chip tone update.</div>
+            <pre style={reducedMotionBlockStyle}>
+{`@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 0ms !important;
+    animation-duration: 0ms !important;
+  }
+}`}
+            </pre>
           </div>
         </UsageExample>
       </StorySection>
@@ -142,6 +173,27 @@ const animatedFillStyle = {
   transition: "width var(--duration-normal) var(--ease-in-out)",
 } as const;
 
+const usageTableStyle = {
+  display: "grid",
+  gap: "var(--spacing-2)",
+} as const;
+
+const usageRowStyle = {
+  display: "grid",
+  gridTemplateColumns: "minmax(0, 1fr) 96px minmax(0, 1.8fr) minmax(0, 1fr)",
+  gap: "var(--spacing-3)",
+  alignItems: "center",
+  padding: "var(--spacing-3)",
+  borderRadius: "var(--radius-md)",
+  background: "color-mix(in oklch, var(--color-surface) 92%, var(--color-surface-2) 8%)",
+} as const;
+
+const valueStyle = {
+  fontFamily: "var(--font-mono)",
+  fontSize: "var(--typo-caption-size)",
+  color: "var(--color-text)",
+} as const;
+
 const transitionCardStyle = {
   display: "grid",
   gap: "var(--spacing-3)",
@@ -200,4 +252,17 @@ const captionStyle = {
   fontFamily: "var(--font-sans)",
   fontSize: "var(--typo-caption-size)",
   lineHeight: 1.6,
+} as const;
+
+const reducedMotionBlockStyle = {
+  margin: 0,
+  padding: "var(--spacing-3)",
+  borderRadius: "var(--radius-md)",
+  background: "var(--color-bg)",
+  border: "1px solid var(--color-border-subtle)",
+  color: "var(--color-text-muted)",
+  fontFamily: "var(--font-mono)",
+  fontSize: "11px",
+  lineHeight: 1.6,
+  whiteSpace: "pre-wrap",
 } as const;

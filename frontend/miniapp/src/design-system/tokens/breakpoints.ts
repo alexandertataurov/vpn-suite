@@ -9,6 +9,11 @@ export const BREAKPOINT_TOKENS = {
 
 /** Min-width values (px) for JS (e.g. useBreakpoint). */
 export const BREAKPOINT_PX = {
-  sm: 360,
+  sm: 390,
   md: 600,
+} as const;
+
+export const BREAKPOINT_VALUES = {
+  [BREAKPOINT_TOKENS.bpSm]: `${BREAKPOINT_PX.sm}px`,
+  [BREAKPOINT_TOKENS.bpMd]: `${BREAKPOINT_PX.md}px`,
 } as const;

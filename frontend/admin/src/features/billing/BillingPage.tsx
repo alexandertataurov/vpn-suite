@@ -216,6 +216,7 @@ export function BillingPage() {
     { retry: 1, enabled: active === "cancellation-reasons" }
   );
 
+  // Action handlers are defined later in the component and intentionally referenced here.
   const planRows: PlanRow[] = useMemo(() => {
     if (!plans?.items?.length) return [];
     const sorted = [...plans.items].sort(
@@ -334,6 +335,7 @@ export function BillingPage() {
         ),
       };
     });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plans, actionPending]);
 
   const openCreateModal = () => {
@@ -410,14 +412,16 @@ export function BillingPage() {
 
   const handleMoveUp = (p: PlanOut) => {
     if (!plans?.items?.length) return;
-    const idx = plans.items.findIndex((x) => x.id === p.id);
-    if (idx <= 0) return;
     const reordered = [...plans.items].sort(
       (a, b) => (a.display_order ?? 0) - (b.display_order ?? 0)
     );
     const planIdx = reordered.findIndex((x) => x.id === p.id);
     if (planIdx <= 0) return;
-    [reordered[planIdx - 1], reordered[planIdx]] = [reordered[planIdx], reordered[planIdx - 1]];
+    const previousPlan = reordered[planIdx - 1];
+    const currentPlan = reordered[planIdx];
+    if (!previousPlan || !currentPlan) return;
+    reordered[planIdx - 1] = currentPlan;
+    reordered[planIdx] = previousPlan;
     runPlanAction(() =>
       api.patch<PlanList>("/plans/reorder", { plan_ids: reordered.map((x) => x.id) })
     );
@@ -430,7 +434,11 @@ export function BillingPage() {
     );
     const planIdx = reordered.findIndex((x) => x.id === p.id);
     if (planIdx < 0 || planIdx >= reordered.length - 1) return;
-    [reordered[planIdx], reordered[planIdx + 1]] = [reordered[planIdx + 1], reordered[planIdx]];
+    const currentPlan = reordered[planIdx];
+    const nextPlan = reordered[planIdx + 1];
+    if (!currentPlan || !nextPlan) return;
+    reordered[planIdx] = nextPlan;
+    reordered[planIdx + 1] = currentPlan;
     runPlanAction(() =>
       api.patch<PlanList>("/plans/reorder", { plan_ids: reordered.map((x) => x.id) })
     );

@@ -25,7 +25,7 @@
     "e2e:admin": "npm run test:e2e -w admin",
     "e2e:miniapp": "npm run test:e2e -w miniapp",
     "ci": "npm run typecheck && npm run lint && npm run test && npm run build",
-    "guardrails": "true",
+    "guardrails": "npm run design:check -w miniapp",
     "storybook": "npm run storybook -w admin",
     "storybook:admin": "npm run storybook -w admin",
     "storybook:miniapp": "npm run storybook -w miniapp"

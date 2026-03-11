@@ -27,7 +27,7 @@ export { InlineAlert, type InlineAlertProps } from "./feedback/InlineAlert";
 export { Modal, ConfirmModal, ConfirmDanger } from "./feedback/Modal";
 export type { ConfirmDangerPayload, ConfirmDangerProps } from "./feedback/Modal";
 export { Popover, type PopoverProps, type PopoverTriggerProps } from "./feedback/Popover";
-export { ToastContainer, useToast } from "./feedback/Toast";
+export { Toast, ToastContainer, ToastViewport, useToast } from "./feedback/Toast";
 
 // —— Display ——
 export { ProgressBar, type ProgressBarProps } from "./display/ProgressBar";

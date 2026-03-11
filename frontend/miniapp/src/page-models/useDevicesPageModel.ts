@@ -12,6 +12,7 @@ import { useTrackScreen } from "@/hooks/useTrackScreen";
 import { useToast } from "@/design-system";
 import { webappQueryKeys } from "@/lib/query-keys/webapp.query-keys";
 import { useI18n } from "@/hooks/useI18n";
+import type { SupportedLocale } from "@/lib/i18n";
 import { getErrorMessage } from "@/lib/utils/error";
 import { formatBytes } from "@/lib/utils/format";
 import type { MissionTone } from "@/design-system";
@@ -21,16 +22,25 @@ import type { RecommendedRouteReason } from "./usePlanPageModel";
 import {
   getActiveDevices,
   getActiveSubscription,
+  getUpgradeCheckoutPath,
   getUpgradeCheckoutPathForDeviceLimit,
   shouldShowUpsell,
 } from "./helpers";
 import { getUpgradeOfferForIntent, type PlanLikeForUpsell } from "./upsell";
 import { clamp, DEFAULT_USAGE_SOFT_CAP_BYTES } from "./plan-helpers";
 
-function formatIssuedAt(value: string): string {
+function toIntlLocale(locale: SupportedLocale): string {
+  return locale === "ru" ? "ru-RU" : "en-US";
+}
+
+function formatIssuedAt(value: string, locale: SupportedLocale): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "--";
-  return date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  return new Intl.DateTimeFormat(toIntlLocale(locale), {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(date);
 }
 
 export interface DevicesPageModel {
@@ -46,9 +56,16 @@ export interface DevicesPageModel {
       keyLabel: string;
       valueLabel: string;
       percent: number;
-      tone: "healthy" | "warning" | "danger";
+      tone: "healthy" | "warning" | "danger" | "neutral";
+      showProgress: boolean;
     }>;
   };
+  planRequiredAlert: {
+    title: string;
+    body: string;
+    ctaLabel: string;
+    to: string;
+  } | null;
   hasSubscription: boolean;
   activeDevices: ReturnType<typeof getActiveDevices>;
   issuedConfig: WebAppIssueDeviceResponse | null;
@@ -85,8 +102,10 @@ export interface DevicesPageModel {
   handleConfirmRevoke: () => void;
   handleReplaceDevice: (deviceId: string) => void;
   handleConfirmConnected: (deviceId: string) => void;
+  handleRenameDevice: (deviceId: string, deviceName: string) => void;
   isReplacingId: string | null;
   isConfirmingId: string | null;
+  isRenamePending: boolean;
   formatIssuedAt: (value: string) => string;
 }
 
@@ -100,7 +119,7 @@ export function useDevicesPageModel(): DevicesPageModel {
   const [revokeId, setRevokeId] = useState<string | null>(null);
   const configSectionRef = useRef<HTMLDivElement>(null);
   const { impact, notify } = useTelegramHaptics();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const activeSub = getActiveSubscription(data);
   const activeDevices = getActiveDevices(data);
   const recommendedRoute = data?.routing?.recommended_route ?? "/devices";
@@ -125,6 +144,7 @@ export function useDevicesPageModel(): DevicesPageModel {
   const atDeviceLimit = Boolean(activeSub && activeDevices.length >= (activeSub.device_limit ?? 0));
   const showUpgradeCta = atDeviceLimit && showUpsellDeviceLimit;
   const upgradeTargetTo = getUpgradeCheckoutPathForDeviceLimit(plans, activeSub?.plan_id);
+  const planTargetTo = getUpgradeCheckoutPath(plans, activeSub?.plan_id);
   const deviceLimitOffer = showUpgradeCta
     ? getUpgradeOfferForIntent(plans as PlanLikeForUpsell[], currentPlan, "device_limit", "devices", t)
     : null;
@@ -211,6 +231,22 @@ export function useDevicesPageModel(): DevicesPageModel {
     },
   });
 
+  const renameMutation = useMutation({
+    mutationFn: async ({ deviceId, deviceName }: { deviceId: string; deviceName: string }) => {
+      await webappApi.patch(`/webapp/devices/${deviceId}`, {
+        device_name: deviceName.trim() || null,
+      });
+    },
+    onSuccess: () => {
+      addToast(t("devices.toast_rename_success"), "success");
+      notify("success");
+      queryClient.invalidateQueries({ queryKey: [...webappQueryKeys.me()] });
+    },
+    onError: () => {
+      addToast(t("devices.toast_rename_failed"), "error");
+    },
+  });
+
   useEffect(() => {
     if (issuedConfig && configSectionRef.current) {
       configSectionRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -236,12 +272,12 @@ export function useDevicesPageModel(): DevicesPageModel {
     : t("devices.summary_unbounded", { count: activeDevices.length });
 
   const summaryHeroTitle = !hasSubscription
-    ? t("devices.summary_title_plan_required")
+    ? t("devices.header_title")
     : activeDevices.length === 0
       ? t("devices.empty_title")
       : t("devices.header_title");
   const summaryHeroSubtitle = !hasSubscription
-    ? t("devices.summary_subtitle_plan_required")
+    ? undefined
     : routeReason === "connection_not_confirmed"
       ? `${deviceSummary}. ${t("devices.summary_subtitle_connection_not_confirmed")}`
       : activeDevices.length === 0
@@ -255,15 +291,15 @@ export function useDevicesPageModel(): DevicesPageModel {
       : hasSubscription && activeDeviceCount > 0
         ? 100
         : 0;
-  const capacityTone: "healthy" | "warning" | "danger" =
-    !hasSubscription ? "danger" : capacityPercent >= 100 ? "danger" : capacityPercent >= 80 ? "warning" : "healthy";
+  const capacityTone: "healthy" | "warning" | "danger" | "neutral" =
+    !hasSubscription ? "neutral" : capacityPercent >= 100 ? "danger" : capacityPercent >= 80 ? "warning" : "healthy";
   const readinessPercent =
     activeDeviceCount > 0 ? clamp((connectedDeviceCount / activeDeviceCount) * 100, 0, 100) : 0;
-  const readinessTone: "healthy" | "warning" | "danger" =
-    !hasSubscription ? "danger" : connectedDeviceCount === 0 ? "warning" : pendingConnectionCount > 0 ? "warning" : "healthy";
+  const readinessTone: "healthy" | "warning" | "danger" | "neutral" =
+    !hasSubscription ? "neutral" : connectedDeviceCount === 0 ? "warning" : pendingConnectionCount > 0 ? "warning" : "healthy";
   const remainingSlots = deviceLimit != null ? Math.max(deviceLimit - activeDeviceCount, 0) : null;
   const remainingSlotsLabel = !hasSubscription
-    ? t("devices.summary_title_plan_required")
+    ? "—"
     : remainingSlots == null
       ? t("devices.summary_unbounded", { count: activeDeviceCount })
       : `${remainingSlots}`;
@@ -273,8 +309,8 @@ export function useDevicesPageModel(): DevicesPageModel {
       : hasSubscription
         ? 100
         : 0;
-  const remainingSlotsTone: "healthy" | "warning" | "danger" =
-    !hasSubscription ? "danger" : remainingSlots === 0 ? "danger" : remainingSlots != null && remainingSlots <= 1 ? "warning" : "healthy";
+  const remainingSlotsTone: "healthy" | "warning" | "danger" | "neutral" =
+    !hasSubscription ? "neutral" : remainingSlots === 0 ? "danger" : remainingSlots != null && remainingSlots <= 1 ? "warning" : "healthy";
 
   const usageData = usageQuery.data;
   const totalTrafficBytes = useMemo(
@@ -289,15 +325,13 @@ export function useDevicesPageModel(): DevicesPageModel {
     ? clamp((totalTrafficBytes / DEFAULT_USAGE_SOFT_CAP_BYTES) * 100, 0, 100)
     : 0;
   const setupMetricValue = !hasSubscription
-    ? t("devices.summary_title_plan_required")
+    ? t("devices.metric_inactive")
     : activeDeviceCount === 0
       ? t("devices.empty_title")
       : pendingConnectionCount > 0
         ? t("devices.hero_metric_pending_value", { count: pendingConnectionCount })
         : t("devices.hero_metric_ready_value", { count: connectedDeviceCount });
-  const trafficMetricValue = hasSubscription
-    ? formatBytes(totalTrafficBytes, { digits: 1 })
-    : t("devices.summary_title_plan_required");
+  const trafficMetricValue = hasSubscription ? formatBytes(totalTrafficBytes, { digits: 1 }) : "—";
 
   const handleDownloadConfig = () => {
     if (!configText) return;
@@ -395,24 +429,35 @@ export function useDevicesPageModel(): DevicesPageModel {
       metrics: [
         {
           keyLabel: t("devices.hero_metric_capacity_label"),
-          valueLabel: deviceSummary,
+          valueLabel: hasSubscription ? deviceSummary : "—",
           percent: capacityPercent,
           tone: capacityTone,
+          showProgress: hasSubscription,
         },
         {
           keyLabel: t("devices.hero_metric_setup_label"),
           valueLabel: setupMetricValue,
           percent: readinessPercent,
           tone: readinessTone,
+          showProgress: hasSubscription,
         },
         {
           keyLabel: hasSubscription ? t("devices.hero_metric_traffic_label") : t("devices.summary_slots_left"),
           valueLabel: hasSubscription ? trafficMetricValue : remainingSlotsLabel,
           percent: hasSubscription ? dataPercent : remainingSlotsPercent,
           tone: hasSubscription ? "healthy" : remainingSlotsTone,
+          showProgress: hasSubscription,
         },
       ],
     },
+    planRequiredAlert: !hasSubscription
+      ? {
+          title: t("devices.summary_title_plan_required"),
+          body: t("devices.summary_subtitle_plan_required"),
+          ctaLabel: t("home.primary_choose_plan"),
+          to: planTargetTo,
+        }
+      : null,
     hasSubscription,
     activeDevices,
     issuedConfig,
@@ -454,8 +499,13 @@ export function useDevicesPageModel(): DevicesPageModel {
       impact("medium");
       confirmConnectedMutation.mutate(deviceId);
     },
+    handleRenameDevice: (deviceId: string, deviceName: string) => {
+      impact("light");
+      renameMutation.mutate({ deviceId, deviceName });
+    },
     isReplacingId: replaceMutation.isPending && replaceMutation.variables != null ? replaceMutation.variables : null,
     isConfirmingId: confirmConnectedMutation.isPending && confirmConnectedMutation.variables != null ? confirmConnectedMutation.variables : null,
-    formatIssuedAt,
+    isRenamePending: renameMutation.isPending,
+    formatIssuedAt: (value) => formatIssuedAt(value, locale),
   };
 }

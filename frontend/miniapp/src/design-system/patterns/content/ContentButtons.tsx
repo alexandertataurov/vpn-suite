@@ -22,6 +22,7 @@ export interface CardFooterLinkProps extends Omit<HTMLAttributes<HTMLDivElement>
   children: ReactNode;
   onClick?: () => void;
   disabled?: boolean;
+  variant?: "default" | "muted" | "destructive";
 }
 
 /** Content Library 13: "see all" card footer link. */
@@ -29,12 +30,13 @@ export function CardFooterLink({
   children,
   onClick,
   disabled,
+  variant = "default",
   className = "",
   ...props
 }: CardFooterLinkProps) {
   return (
     <div
-      className={`card-footer-link ${disabled ? "is-disabled" : ""} ${className}`.trim()}
+      className={`card-footer-link card-footer-link--${variant} ${disabled ? "is-disabled" : ""} ${className}`.trim()}
       role="button"
       aria-disabled={disabled}
       tabIndex={disabled ? -1 : 0}

@@ -4,6 +4,8 @@ import {
   ApiError,
   type WebAppMeProfileUpdate,
   type WebAppMeProfileUpdateResponse,
+  type WebAppLogoutResponse,
+  type WebAppReferralStatsResponse,
   type WebAppSubscriptionOffersResponse,
 } from "@vpn-suite/shared";
 import { useSession } from "@/hooks/useSession";
@@ -15,12 +17,14 @@ import { useToast } from "@/design-system";
 import { webappQueryKeys } from "@/lib/query-keys/webapp.query-keys";
 import { useI18n } from "@/hooks/useI18n";
 import { setWebappToken } from "@/api/client";
+import { appVersion, buildId } from "@/config/env";
 import type { StandardPageHeader, StandardPageState } from "./types";
-import { getActiveDevices, getActiveSubscription } from "./helpers";
+import { daysUntil, getActiveDevices, getActiveSubscription } from "./helpers";
 
 export type ProfileLocaleId = "auto" | "en" | "ru";
 
 export type CancelReasonGroup = "price" | "not_needed" | "technical" | "other";
+export type CancelReasonSelection = CancelReasonGroup | null;
 
 export interface CancelActionPayload {
   reason_group: CancelReasonGroup;
@@ -35,6 +39,21 @@ function resolveTelegramLocale(languageCode: string | undefined): "en" | "ru" {
   if (!languageCode) return "en";
   const code = languageCode.trim().toLowerCase().slice(0, 2);
   return code === "ru" ? "ru" : "en";
+}
+
+function toIntlLocale(locale: "en" | "ru"): string {
+  return locale === "ru" ? "ru-RU" : "en-US";
+}
+
+function formatShortDate(value: string | null | undefined, locale: "en" | "ru"): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return new Intl.DateTimeFormat(toIntlLocale(locale), {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(date);
 }
 
 function formatPlanLabel(rawPlanId: string | null | undefined, t: (key: string) => string): string {
@@ -60,9 +79,9 @@ export function useSettingsPageModel() {
   const { addToast } = useToast();
   const activeSub = getActiveSubscription(data);
   const { track } = useTelemetry(activeSub?.plan_id ?? null);
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [cancelOpen, setCancelOpen] = useState(false);
-  const [cancelReason, setCancelReason] = useState<CancelReasonGroup>("not_needed");
+  const [cancelReason, setCancelReason] = useState<CancelReasonSelection>(null);
   const [cancelFreeText, setCancelFreeText] = useState("");
   const [profileDisplayName, setProfileDisplayName] = useState("");
   const [profileEmail, setProfileEmail] = useState("");
@@ -80,7 +99,7 @@ export function useSettingsPageModel() {
     setProfileLocale(loc === "ru" || loc === "en" ? loc : "en");
   }, [data?.user]);
 
-  const offersReasonGroup = cancelOpen ? cancelReason : "";
+  const offersReasonGroup = cancelOpen && cancelReason ? cancelReason : "";
   const { data: offers, isLoading: offersLoading, error: offersError } = useQuery<WebAppSubscriptionOffersResponse>({
     queryKey: [...webappQueryKeys.subscriptionOffers(offersReasonGroup)],
     queryFn: () => {
@@ -89,6 +108,11 @@ export function useSettingsPageModel() {
         : "/webapp/subscription/offers";
       return webappApi.get<WebAppSubscriptionOffersResponse>(path);
     },
+    enabled: hasToken,
+  });
+  const { data: referralStats } = useQuery<WebAppReferralStatsResponse>({
+    queryKey: [...webappQueryKeys.referralStats()],
+    queryFn: () => webappApi.get<WebAppReferralStatsResponse>("/webapp/referral/stats"),
     enabled: hasToken,
   });
 
@@ -136,7 +160,7 @@ export function useSettingsPageModel() {
       queryClient.invalidateQueries({ queryKey: [...webappQueryKeys.me()] });
       queryClient.invalidateQueries({ queryKey: [...webappQueryKeys.subscriptionOffersRoot()] });
       setCancelOpen(false);
-      setCancelReason("not_needed");
+      setCancelReason(null);
       setCancelFreeText("");
     },
     onError: () => addToast(t("common.could_not_load_generic"), "error"),
@@ -145,8 +169,8 @@ export function useSettingsPageModel() {
   const handleCancelAction = useCallback(
     (payload: Omit<CancelActionPayload, "reason_group" | "reason_code">) => {
       cancelMutation.mutate({
-        reason_group: cancelReason,
-        reason_code: cancelReason,
+        reason_group: cancelReason ?? "not_needed",
+        reason_code: cancelReason ?? "not_needed",
         ...payload,
       });
     },
@@ -200,6 +224,20 @@ export function useSettingsPageModel() {
       ),
   });
 
+  const logoutMutation = useMutation({
+    mutationFn: async () => webappApi.post<WebAppLogoutResponse>("/webapp/logout", {}),
+    onSuccess: () => {
+      track("cta_click", { cta_name: "logout", screen_name: "settings" });
+    },
+    onError: () => {
+      addToast(t("settings.logout_local_fallback"), "info");
+    },
+    onSettled: () => {
+      queryClient.clear();
+      setWebappToken(null);
+    },
+  });
+
   const handlePause = useCallback(() => pauseMutation.mutate(), [pauseMutation]);
   const handleResume = useCallback(() => resumeMutation.mutate(), [resumeMutation]);
   const handleRevokeAll = useCallback(() => revokeAllMutation.mutate(), [revokeAllMutation]);
@@ -207,6 +245,7 @@ export function useSettingsPageModel() {
     (confirmToken: string) => deleteAccountMutation.mutate(confirmToken),
     [deleteAccountMutation],
   );
+  const handleLogout = useCallback(() => logoutMutation.mutate(), [logoutMutation]);
   const handleUpdateLocale = useCallback(
     (id: ProfileLocaleId) => {
       if (id === "auto") {
@@ -241,7 +280,39 @@ export function useSettingsPageModel() {
 
   const activeDevices = getActiveDevices(data);
   const planLabel = formatPlanLabel(activeSub?.plan_id ?? null, t);
-
+  const renewalDate = formatShortDate(activeSub?.valid_until ?? null, locale);
+  const renewalDays = daysUntil(activeSub?.valid_until ?? null);
+  const renewalCountdownLabel = activeSub
+    ? renewalDays <= 0
+      ? t("settings.renews_today")
+      : renewalDays === 1
+        ? t("settings.renews_tomorrow")
+        : t("settings.renews_in_days", { count: renewalDays })
+    : t("settings.banner_no_plan_title");
+  const deviceCountLabel = t("settings.device_count_active", { count: activeDevices.length });
+  const totalReferrals = referralStats?.total_referrals ?? 0;
+  const activeReferrals = referralStats?.active_referrals ?? 0;
+  const referralSummary =
+    totalReferrals > 0
+      ? t("settings.referral_summary_with_stats", {
+          invites: totalReferrals,
+          active: activeReferrals,
+        })
+      : t("settings.referral_summary_empty");
+  const buildLabel = `vpn-suite  v${appVersion}  (build ${buildId})`;
+  const buildCopyValue = `vpn-suite v${appVersion} (${buildId})`;
+  const copyBuildInfo = useCallback(async () => {
+    if (!navigator.clipboard?.writeText) {
+      addToast(t("devices.toast_copy_failed"), "error");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(buildCopyValue);
+      addToast(t("settings.build_info_copied"), "success");
+    } catch {
+      addToast(t("devices.toast_copy_failed"), "error");
+    }
+  }, [addToast, buildCopyValue, t]);
   const accountSummary = (() => {
     const u = data?.user;
     const displayName = (u?.display_name ?? "").trim() || t("settings.header_title");
@@ -256,9 +327,10 @@ export function useSettingsPageModel() {
       try {
         const d = new Date(firstAt);
         if (!Number.isNaN(d.getTime())) {
-          memberSince = t("settings.member_since", {
-            date: d.toLocaleDateString(undefined, { month: "short", year: "numeric" }),
-          });
+          memberSince = new Intl.DateTimeFormat(toIntlLocale(locale), {
+            month: "long",
+            year: "numeric",
+          }).format(d);
         }
       } catch {
         // leave undefined
@@ -296,6 +368,22 @@ export function useSettingsPageModel() {
     { id: "en" as const, label: t("settings.language_en") },
     { id: "ru" as const, label: t("settings.language_ru") },
   ];
+  const resolvedLocaleLabel = t(
+    effectiveTelegramLocale === "ru" ? "settings.language_ru" : "settings.language_en",
+  );
+  const languageActiveId =
+    profileLocale === effectiveTelegramLocale ? "auto" : profileLocale;
+  const languageSummary =
+    languageActiveId === "auto"
+      ? `${t("settings.language_auto")} → ${resolvedLocaleLabel}`
+      : profileLocaleOptions.find((option) => option.id === languageActiveId)?.label ??
+        resolvedLocaleLabel;
+
+  const closeCancelFlow = useCallback(() => {
+    setCancelOpen(false);
+    setCancelReason(null);
+    setCancelFreeText("");
+  }, []);
 
   return {
     header,
@@ -315,13 +403,27 @@ export function useSettingsPageModel() {
     profileIncomplete,
     profileLocaleOptions,
     effectiveTelegramLocale,
+    languageSummary,
     offers,
     offersLoading,
     offersError,
     planLabel,
+    renewalDate,
+    renewalCountdownLabel,
+    hasPlan: Boolean(activeSub),
     activeDevices,
+    deviceCountLabel,
+    referralSummary,
+    buildLabel,
+    buildCopyValue,
+    buildProtocolLabel: "AmneziaWG protocol",
+    copyBuildInfo,
+    planActionTo: "/plan",
+    devicesActionTo: "/devices",
+    supportActionTo: "/support",
     cancelOpen,
     setCancelOpen,
+    closeCancelFlow,
     cancelReason,
     setCancelReason,
     cancelFreeText,
@@ -331,14 +433,18 @@ export function useSettingsPageModel() {
     handleResume,
     handleRevokeAll,
     handleDeleteAccount,
+    handleLogout,
     isPausing: pauseMutation.isPending,
     isResuming: resumeMutation.isPending,
     isCancelling: cancelMutation.isPending,
     isRevoking: revokeAllMutation.isPending,
     isDeletingAccount: deleteAccountMutation.isPending,
+    isLoggingOut: logoutMutation.isPending,
     refetchOffers: () => queryClient.invalidateQueries({ queryKey: [...webappQueryKeys.subscriptionOffers()] }),
     openCancelFlow: () => {
       setCancelOpen(true);
+      setCancelReason(null);
+      setCancelFreeText("");
       track("cancel_flow_started", { screen_name: "settings" });
     },
     setCancelReasonWithTrack: (id: CancelReasonGroup) => {

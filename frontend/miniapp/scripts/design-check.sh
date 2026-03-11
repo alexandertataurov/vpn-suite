@@ -85,8 +85,31 @@ $PAGE_STYLE_IMPORTS
 EOF
 fi
 
-# 6. Token drift — tokens-map PRIMITIVES vs tokens/*.ts
+# 6. No raw hex/rgba in design-system CSS except in token source files (base, consumer, telegram, frame).
+STYLES_DIR="$SRC/design-system/styles"
+ALLOWED_CSS="$STYLES_DIR/tokens/base.css $STYLES_DIR/theme/consumer.css $STYLES_DIR/theme/telegram.css $STYLES_DIR/shell/frame.css"
+while IFS= read -r f; do
+  [ -z "$f" ] && continue
+  allowed=
+  for a in $ALLOWED_CSS; do
+    [ "$(realpath "$f" 2>/dev/null)" = "$(realpath "$a" 2>/dev/null)" ] && allowed=1 && break
+  done
+  if [ -z "$allowed" ] && grep -qE '#[0-9a-fA-F]{3}\b|#[0-9a-fA-F]{6}\b|rgba\s*\(' "$f" 2>/dev/null; then
+    echo "design:check — no raw hex/rgba in design-system CSS outside token sources (tokens/base, theme/consumer, theme/telegram, shell/frame). File: $f"
+    VIOLATIONS=$((VIOLATIONS + 1))
+  fi
+done <<EOF
+$(find "$STYLES_DIR" -name "*.css" 2>/dev/null)
+EOF
+
+# 7. Token drift — tokens-map PRIMITIVES vs tokens/*.ts
 if ! node "$ROOT/scripts/check-token-drift.mjs" 2>/dev/null; then
+  VIOLATIONS=$((VIOLATIONS + 1))
+fi
+
+# 8. Typography parity test must pass whenever token or CSS layers drift.
+if ! npm run test -- --run src/test/token-parity.test.ts >/dev/null 2>&1; then
+  echo "design:check — typography/breakpoint token parity failed. Run: npm run test -- --run src/test/token-parity.test.ts"
   VIOLATIONS=$((VIOLATIONS + 1))
 fi
 

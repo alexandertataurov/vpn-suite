@@ -8,6 +8,7 @@ import { webappQueryKeys } from "@/lib/query-keys/webapp.query-keys";
 import { wireGlobalErrors } from "@/telemetry/errors";
 import App from "./App";
 import "@/design-system/styles/index.css";
+import "@/styles/app/index.css";
 
 /**
  * Layer 0: Telemetry bootstrap. main.tsx owns analytics (PostHog, Faro, Sentry),

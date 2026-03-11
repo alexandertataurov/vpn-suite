@@ -19,6 +19,7 @@ html[data-theme="consumer-dark"] {
   --miniapp-shadow-strong: rgb(0 0 0 / 0.68);
   --miniapp-sheen: rgb(255 255 255 / 0.015);
   --miniapp-debug-outline-color: rgb(255 255 255 / 0.16);
+  --scanline-color: rgba(0, 0, 0, 0.012);
 
   --color-bg: var(--space-black);
   --color-surface: var(--space-carbon);
@@ -26,6 +27,7 @@ html[data-theme="consumer-dark"] {
   --color-text: var(--space-white);
   --color-text-muted: #7b8f9f;
   --color-text-tertiary: #495d6c;
+  --color-label: rgba(242, 246, 249, 0.55);
   --color-border: rgb(255 255 255 / 0.09);
   --color-border-subtle: rgb(255 255 255 / 0.055);
   --color-border-strong: rgb(255 255 255 / 0.16);
@@ -58,6 +60,37 @@ html[data-theme="consumer-dark"] {
   --red-b: rgba(232, 88, 88, 0.22);
   --green-glow: rgba(46, 216, 122, 0.18);
   --overlay-scrim: rgba(0, 0, 0, 0.65);
+  --surface-overlay-hover: rgba(255, 255, 255, 0.03);
+  --shadow-soft: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-card-emphasis: 0 8px 20px rgba(0, 0, 0, 0.22);
+  --shadow-floating: 0 2px 8px rgba(0, 0, 0, 0.34);
+  --shadow-dialog: 0 24px 48px rgba(0, 0, 0, 0.45);
+  --control-ghost-hover-bg: color-mix(in oklch, var(--color-text) 8%, transparent);
+  --control-outline-hover-bg: color-mix(in oklch, var(--color-text) 6%, transparent);
+  --control-outline-hover-border: color-mix(in oklch, var(--color-text) 40%, transparent);
+  --control-muted-border: color-mix(in oklch, var(--color-border) 88%, var(--color-text) 12%);
+  --control-muted-bg: color-mix(in oklch, var(--color-surface-2) 92%, transparent);
+  --control-muted-fg: color-mix(in oklch, var(--color-text) 95%, transparent);
+  --control-placeholder: color-mix(in oklch, var(--color-text) 35%, transparent);
+  --control-disabled-bg: color-mix(in oklch, var(--color-surface-2) 88%, transparent);
+  --control-disabled-fg: color-mix(in oklch, var(--color-text) 35%, transparent);
+  --control-disabled-placeholder: color-mix(in oklch, var(--color-text) 25%, transparent);
+  --control-pressed-bg: color-mix(in oklch, var(--color-text) 5%, var(--color-surface-2));
+  --control-segment-bg: color-mix(in oklch, var(--color-surface-2) 86%, var(--color-text) 8%);
+  --control-segment-border: color-mix(in oklch, var(--color-border) 90%, var(--color-text) 10%);
+  --control-segment-indicator-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  --hero-success-tint: color-mix(in oklch, var(--color-success) 6%, transparent);
+  --hero-success-glow: color-mix(in oklch, var(--color-success) 8%, transparent);
+  --hero-warning-tint: color-mix(in oklch, var(--color-warning) 6%, transparent);
+  --hero-warning-glow: color-mix(in oklch, var(--color-warning) 8%, transparent);
+  --hero-danger-tint: color-mix(in oklch, var(--color-error) 6%, transparent);
+  --hero-danger-glow: color-mix(in oklch, var(--color-error) 8%, transparent);
+  --hero-metric-border: color-mix(in oklch, var(--color-border-subtle) 90%, transparent);
+  --hero-metric-hover-bg: color-mix(in oklch, var(--color-text) 3%, transparent);
+  --hero-metric-active-bg: color-mix(in oklch, var(--color-text) 4%, transparent);
+  --hero-metric-warning-bg: color-mix(in oklch, var(--color-warning) 6%, var(--color-surface-2));
+  --hero-metric-critical-bg: color-mix(in oklch, var(--color-warning) 10%, var(--color-surface-2));
+  --hero-metric-expired-bg: color-mix(in oklch, var(--color-error) 12%, var(--color-surface-2));
 
   --miniapp-font-sans: "Space Grotesk", "IBM Plex Sans", "Inter Variable", "Inter", "Segoe UI", sans-serif;
   --miniapp-font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", "Roboto Mono", monospace;
@@ -86,10 +119,10 @@ html[data-theme="consumer-dark"] {
   --miniapp-space-5: var(--spacing-10);
   --miniapp-space-6: var(--spacing-12);
 
-  --miniapp-text-display-size: 32px;
-  --miniapp-text-h1-size: 24px;
+  --miniapp-text-display-size: 28px;
+  --miniapp-text-h1-size: 22px;
   --miniapp-text-h2-size: 18px;
-  --miniapp-text-h3-size: 16px;
+  --miniapp-text-h3-size: 15px;
   --miniapp-text-body-size: 14px;
   --miniapp-text-caption-size: 12px;
   /* --typo-* used by content-library and Mission system */
@@ -137,6 +170,7 @@ html[data-theme="consumer-dark"] {
 
 html[data-theme="consumer-light"] {
   color-scheme: light;
+  --scanline-color: rgba(16, 34, 53, 0.015);
   --miniapp-font-sans: "Space Grotesk", "IBM Plex Sans", "Inter Variable", "Inter", "Segoe UI", sans-serif;
   --miniapp-font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", "Roboto Mono", monospace;
   --font-sans: var(--miniapp-font-sans);
@@ -156,6 +190,7 @@ html[data-theme="consumer-light"] {
   --color-text: #0b1724;
   --color-text-muted: #476177;
   --color-text-tertiary: #6a8195;
+  --color-label: rgba(0, 0, 0, 0.55);
   --color-success: #1da45f;
   --color-accent: #2a82e3;
   --color-warning: #ba7a12;
@@ -174,6 +209,35 @@ html[data-theme="consumer-light"] {
   --red-d: rgba(193, 67, 67, 0.12);
   --red-b: rgba(193, 67, 67, 0.24);
   --green-glow: rgba(29, 164, 95, 0.12);
+  --shadow-soft: 0 1px 3px rgba(10, 22, 35, 0.14);
+  --shadow-floating: 0 6px 16px rgba(10, 22, 35, 0.12);
+  --shadow-dialog: 0 28px 64px rgba(10, 22, 35, 0.18);
+  --control-ghost-hover-bg: color-mix(in oklch, var(--color-accent) 6%, transparent);
+  --control-outline-hover-bg: color-mix(in oklch, var(--color-accent) 4%, transparent);
+  --control-outline-hover-border: color-mix(in oklch, var(--color-accent) 28%, var(--color-border));
+  --control-muted-border: color-mix(in oklch, var(--color-border) 82%, var(--color-text) 18%);
+  --control-muted-bg: color-mix(in oklch, var(--color-surface-2) 82%, transparent);
+  --control-muted-fg: color-mix(in oklch, var(--color-text) 96%, transparent);
+  --control-placeholder: color-mix(in oklch, var(--color-text) 42%, transparent);
+  --control-disabled-bg: color-mix(in oklch, var(--color-surface-2) 92%, var(--color-bg) 8%);
+  --control-disabled-fg: color-mix(in oklch, var(--color-text) 42%, transparent);
+  --control-disabled-placeholder: color-mix(in oklch, var(--color-text) 30%, transparent);
+  --control-pressed-bg: color-mix(in oklch, var(--color-accent) 4%, var(--color-surface-2));
+  --control-segment-bg: color-mix(in oklch, var(--color-surface-2) 94%, var(--color-text) 6%);
+  --control-segment-border: color-mix(in oklch, var(--color-border) 88%, var(--color-text) 12%);
+  --control-segment-indicator-shadow: 0 1px 4px rgba(10, 22, 35, 0.12);
+  --hero-success-tint: color-mix(in oklch, var(--color-success) 8%, transparent);
+  --hero-success-glow: color-mix(in oklch, var(--color-success) 10%, transparent);
+  --hero-warning-tint: color-mix(in oklch, var(--color-warning) 9%, transparent);
+  --hero-warning-glow: color-mix(in oklch, var(--color-warning) 11%, transparent);
+  --hero-danger-tint: color-mix(in oklch, var(--color-error) 8%, transparent);
+  --hero-danger-glow: color-mix(in oklch, var(--color-error) 10%, transparent);
+  --hero-metric-border: color-mix(in oklch, var(--color-border) 70%, var(--color-bg) 30%);
+  --hero-metric-hover-bg: color-mix(in oklch, var(--color-accent) 4%, transparent);
+  --hero-metric-active-bg: color-mix(in oklch, var(--color-accent) 6%, transparent);
+  --hero-metric-warning-bg: color-mix(in oklch, var(--color-warning) 8%, var(--color-surface-2));
+  --hero-metric-critical-bg: color-mix(in oklch, var(--color-warning) 12%, var(--color-surface-2));
+  --hero-metric-expired-bg: color-mix(in oklch, var(--color-error) 10%, var(--color-surface-2));
   /* --typo-* used by content-library and Mission system */
   --typo-display-size: 32px;
   --typo-h1-size: 24px;
@@ -196,6 +260,8 @@ html[data-theme="consumer-light"] {
   --text-hero: 42px;
   --size-touch-target: 48px;
   --overlay-scrim: rgba(10, 22, 35, 0.42);
+  --surface-overlay-hover: rgba(0, 0, 0, 0.04);
+  --shadow-card-emphasis: 0 8px 20px rgba(10, 22, 35, 0.12);
   --miniapp-backdrop-top: color-mix(in oklch, var(--color-surface) 56%, white 44%);
   --miniapp-backdrop-glow: color-mix(in oklch, var(--color-accent) 4.5%, transparent);
   --miniapp-backdrop-sheen: color-mix(in oklch, var(--color-text) 1.5%, transparent);

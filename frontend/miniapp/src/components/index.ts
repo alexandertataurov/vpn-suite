@@ -4,6 +4,14 @@
  */
 export * from "./heroes";
 export * from "./cards";
+export * from "./checkout";
+export * from "./connect-status";
+export * from "./devices";
+export * from "./onboarding";
+export * from "./plan";
+export * from "./referral";
+export * from "./settings";
+export * from "./support";
 export { DangerZone } from "./DangerZone";
 export type { DangerZoneProps } from "./DangerZone";
 export { LimitStrip } from "./LimitStrip";

@@ -21,7 +21,7 @@
     "test:e2e": "npm run build:ci && npm exec playwright test",
     "test:visual": "npm run build:ci && npm exec playwright test e2e/visual-regression.spec.ts",
     "test:e2e:dev": "PLAYWRIGHT_WEB_SERVER_MODE=dev npm exec playwright test",
-    "storybook": "storybook dev -p 6007",
+    "storybook": "storybook dev -p 6007 --exact-port",
     "build-storybook": "storybook build",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -42,7 +42,11 @@
   "devDependencies": {
     "@eslint/js": "^9.39.3",
     "@playwright/test": "1.58.2",
+    "@chromatic-com/storybook": "^5.0.1",
+    "@storybook/addon-a11y": "^10.2.17",
+    "@storybook/addon-docs": "^10.2.17",
     "@storybook/addon-links": "^10.2.17",
+    "@storybook/addon-vitest": "^10.2.17",
     "@storybook/react": "^10.2.17",
     "@storybook/react-vite": "^10.2.17",
     "@testing-library/jest-dom": "^6.9.1",
@@ -63,6 +67,8 @@
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.56.0",
     "vite": "^6.0.1",
-    "vitest": "^4.0.18"
+    "vitest": "^4.0.18",
+    "playwright": "^1.58.2",
+    "@vitest/browser-playwright": "4.0.18"
   }
 }

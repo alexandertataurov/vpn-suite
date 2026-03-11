@@ -173,7 +173,7 @@ html[data-theme="dim"] {
   --ease-out: cubic-bezier(0, 0, 0.2, 1);
   --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
   /* Breakpoints — single source: tokens/breakpoints.ts */
-  --bp-sm: 360px;
+  --bp-sm: 390px;
   --bp-md: 600px;
 }
 
@@ -378,10 +378,10 @@ html {
   --table-row-height-compact: 40px;
   --z-sticky: 50;
   --z-header: 210;
-  --z-dropdown: 100;
+  --z-dropdown: 250;
   --z-overlay: 200;
-  --z-modal: 300;
-  --z-toast: 400;
+  --z-toast: 300;
+  --z-modal: 400;
   --breakpoint-sm: 640px;
   --breakpoint-md: 768px;
   --breakpoint-lg: 1024px;
@@ -617,12 +617,12 @@ html[data-theme="dark"] [data-console="operator"] {
   --sidebar-width: 256px;
   --header-height: 56px;
 
-  /* Breakpoints (for reference / JS) */
-  --bp-sm: 640px;
-  --bp-md: 768px;
-  --bp-lg: 1024px;
-  --bp-xl: 1280px;
-  --bp-2xl: 1536px;
+  /* Legacy layout breakpoints kept for reference only. Do not use for miniapp runtime logic. */
+  --layout-bp-sm: 640px;
+  --layout-bp-md: 768px;
+  --layout-bp-lg: 1024px;
+  --layout-bp-xl: 1280px;
+  --layout-bp-2xl: 1536px;
 
   /* Motion */
   --duration-instant: 0ms;
@@ -713,10 +713,10 @@ html[data-theme="starlink"] {
  * XL: > 120rem  (ultrawide)
  */
 :root {
-  --bp-xs: 40rem;
-  --bp-sm: 64rem;
-  --bp-md: 90rem;
-  --bp-lg: 120rem;
+  --adaptive-bp-xs: 40rem;
+  --adaptive-bp-sm: 64rem;
+  --adaptive-bp-md: 90rem;
+  --adaptive-bp-lg: 120rem;
 
   /* Spacing scale aliases (4px base): space-1 … space-12 */
   --space-1: var(--spacing-1);

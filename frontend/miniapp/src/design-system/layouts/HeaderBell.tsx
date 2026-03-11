@@ -31,9 +31,7 @@ export function HeaderBell() {
         >
           <IconBell size={20} strokeWidth={1.9} />
           {unifiedCount > 0 ? (
-            <span className="miniapp-content-bell-badge" aria-hidden>
-              {unifiedCount > 99 ? "99+" : unifiedCount}
-            </span>
+            <span className="miniapp-content-bell-indicator" aria-hidden />
           ) : null}
         </button>
       )}

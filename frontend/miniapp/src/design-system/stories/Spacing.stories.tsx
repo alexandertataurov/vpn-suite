@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { SPACING_TOKENS, TOUCH_TARGET_MIN } from "../tokens";
+import { getTokenCoverage, resolveTokenValue } from "../tokens/runtime";
 import {
   BoxPreview,
   StoryCard,
@@ -13,7 +14,7 @@ import {
 } from "./foundations.story-helpers";
 
 const meta = {
-  title: "Design System/Foundations/Spacing",
+  title: "Foundations/Spacing",
   tags: ["autodocs"],
   parameters: {
     docs: {
@@ -34,26 +35,27 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const spacingSpecs = [
-  { name: "Spacing 1", token: SPACING_TOKENS["1"], usage: "Micro gaps inside pills and icon chips.", note: "4px", preview: <WidthPreview token={SPACING_TOKENS["1"]} /> },
-  { name: "Spacing 2", token: SPACING_TOKENS["2"], usage: "Tight inline gaps and compact row spacing.", note: "8px", preview: <WidthPreview token={SPACING_TOKENS["2"]} /> },
-  { name: "Spacing 3", token: SPACING_TOKENS["3"], usage: "Default content rhythm between label and helper text.", note: "12px", preview: <WidthPreview token={SPACING_TOKENS["3"]} /> },
-  { name: "Spacing 4", token: SPACING_TOKENS["4"], usage: "Standard card padding and stack gap.", note: "16px", preview: <WidthPreview token={SPACING_TOKENS["4"]} /> },
-  { name: "Spacing 5", token: SPACING_TOKENS["5"], usage: "Hero padding and larger internal separation.", note: "20px", preview: <WidthPreview token={SPACING_TOKENS["5"]} /> },
-  { name: "Spacing 6", token: SPACING_TOKENS["6"], usage: "Section spacing and form group separation.", note: "24px", preview: <WidthPreview token={SPACING_TOKENS["6"]} /> },
-  { name: "Spacing 8", token: SPACING_TOKENS["8"], usage: "Page-level spacing between major blocks.", note: "32px", preview: <WidthPreview token={SPACING_TOKENS["8"]} /> },
-  { name: "Spacing 10", token: SPACING_TOKENS["10"], usage: "Large shell spacing and generous emphasis blocks.", note: "40px", preview: <WidthPreview token={SPACING_TOKENS["10"]} /> },
-  { name: "Spacing 12", token: SPACING_TOKENS["12"], usage: "Maximum exported spacing for prominent separations.", note: "48px", preview: <WidthPreview token={SPACING_TOKENS["12"]} /> },
-];
-
 export const Reference: Story = {
-  render: () => (
+  render: () => {
+    const spacingSpecs = [
+      { name: "Spacing 1", token: SPACING_TOKENS["1"], usage: "Micro gaps inside pills and icon chips.", value: resolveTokenValue(SPACING_TOKENS["1"]), preview: <WidthPreview token={SPACING_TOKENS["1"]} /> },
+      { name: "Spacing 2", token: SPACING_TOKENS["2"], usage: "Tight inline gaps and compact row spacing.", value: resolveTokenValue(SPACING_TOKENS["2"]), preview: <WidthPreview token={SPACING_TOKENS["2"]} /> },
+      { name: "Spacing 3", token: SPACING_TOKENS["3"], usage: "Default content rhythm between label and helper text.", value: resolveTokenValue(SPACING_TOKENS["3"]), preview: <WidthPreview token={SPACING_TOKENS["3"]} /> },
+      { name: "Spacing 4", token: SPACING_TOKENS["4"], usage: "Standard card padding and stack gap.", value: resolveTokenValue(SPACING_TOKENS["4"]), preview: <WidthPreview token={SPACING_TOKENS["4"]} /> },
+      { name: "Spacing 5", token: SPACING_TOKENS["5"], usage: "Hero padding and larger internal separation.", value: resolveTokenValue(SPACING_TOKENS["5"]), preview: <WidthPreview token={SPACING_TOKENS["5"]} /> },
+      { name: "Spacing 6", token: SPACING_TOKENS["6"], usage: "Section spacing and form group separation.", value: resolveTokenValue(SPACING_TOKENS["6"]), preview: <WidthPreview token={SPACING_TOKENS["6"]} /> },
+      { name: "Spacing 8", token: SPACING_TOKENS["8"], usage: "Page-level spacing between major blocks.", value: resolveTokenValue(SPACING_TOKENS["8"]), preview: <WidthPreview token={SPACING_TOKENS["8"]} /> },
+      { name: "Spacing 10", token: SPACING_TOKENS["10"], usage: "Large shell spacing and generous emphasis blocks.", value: resolveTokenValue(SPACING_TOKENS["10"]), preview: <WidthPreview token={SPACING_TOKENS["10"]} /> },
+      { name: "Spacing 12", token: SPACING_TOKENS["12"], usage: "Maximum exported spacing for prominent separations.", value: resolveTokenValue(SPACING_TOKENS["12"]), preview: <WidthPreview token={SPACING_TOKENS["12"]} /> },
+    ];
+    const coverage = getTokenCoverage(SPACING_TOKENS);
+    return (
     <StoryPage
       eyebrow="Foundations"
       title="Spacing system"
       summary="The miniapp uses a constrained spacing scale to preserve rhythm on narrow viewports, align card internals, and protect touch interactions. This page covers the full exported spacing set and how it maps to layout behavior."
       stats={[
-        { label: "Spacing tokens", value: String(spacingSpecs.length) },
+        { label: "Spacing tokens", value: `${coverage.passing} / ${coverage.total}` },
         { label: "Touch target", value: `${TOUCH_TARGET_MIN}px` },
         { label: "Layout examples", value: "3" },
       ]}
@@ -63,6 +65,30 @@ export const Reference: Story = {
         description="These are the exported spacing tokens used across primitives, components, and page recipes."
       >
         <TokenTable specs={spacingSpecs} />
+      </StorySection>
+
+      <StorySection
+        title="Spacing rules"
+        description="Spacing is not decorative. These rules decide which token to choose before layout work drifts into one-off values."
+      >
+        <div style={rulesGridStyle}>
+          <StoryCard title="Component internals" caption="Use the smallest token that preserves tap clarity and scan rhythm.">
+            <div style={rulesListStyle}>
+              <ValuePill value="4-8px" tone="neutral" />
+              <div style={ruleTextStyle}>Inline gaps, chip padding, icon-to-label spacing.</div>
+              <ValuePill value="12-16px" tone="accent" />
+              <div style={ruleTextStyle}>Default card padding, label/helper separation, stacked controls.</div>
+            </div>
+          </StoryCard>
+          <StoryCard title="Sections and shells" caption="Only page-scale boundaries should move into the larger end of the scale.">
+            <div style={rulesListStyle}>
+              <ValuePill value="24px" tone="success" />
+              <div style={ruleTextStyle}>Separate form groups, distinct modules, and action zones.</div>
+              <ValuePill value="32-48px" tone="warning" />
+              <div style={ruleTextStyle}>Reserve for page breaks and major emphasis blocks, not routine card content.</div>
+            </div>
+          </StoryCard>
+        </div>
       </StorySection>
 
       <StorySection
@@ -113,7 +139,8 @@ export const Reference: Story = {
         </TwoColumn>
       </StorySection>
     </StoryPage>
-  ),
+  );
+  },
 };
 
 function WidthPreview({ token }: { token: string }) {
@@ -260,6 +287,24 @@ const touchTargetButtonStyle = {
   fontFamily: "var(--font-sans)",
   fontSize: "var(--typo-body-size)",
   fontWeight: 600,
+} as const;
+
+const rulesGridStyle = {
+  display: "grid",
+  gap: "var(--spacing-4)",
+  gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+} as const;
+
+const rulesListStyle = {
+  display: "grid",
+  gap: "var(--spacing-2)",
+} as const;
+
+const ruleTextStyle = {
+  fontFamily: "var(--font-sans)",
+  fontSize: "var(--typo-body-sm-size)",
+  lineHeight: 1.6,
+  color: "var(--color-text-muted)",
 } as const;
 
 const settingsCardStyle = {

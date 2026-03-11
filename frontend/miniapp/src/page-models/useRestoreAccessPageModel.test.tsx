@@ -13,6 +13,7 @@ vi.mock("react-router-dom", () => ({
 }));
 
 vi.mock("@/api/client", () => ({
+  useWebappToken: () => "token",
   webappApi: {
     post: (...args: unknown[]) => mockPost(...args),
   },

@@ -13,7 +13,7 @@ import {
 } from "./foundations.story-helpers";
 
 const meta = {
-  title: "Design System/Foundations/Color",
+  title: "Foundations/Colors",
   tags: ["autodocs"],
   parameters: {
     docs: {
@@ -59,6 +59,36 @@ const colorSpecs = [
   { name: "Error", token: COLOR_TOKENS.error, usage: "Blocking, destructive, or failed states.", preview: <Swatch token={COLOR_TOKENS.error} /> },
   { name: "Info", token: COLOR_TOKENS.info, usage: "Neutral guidance and informative emphasis.", preview: <Swatch token={COLOR_TOKENS.info} /> },
 ];
+
+const semanticRuleGroups = [
+  {
+    context: "Latency value",
+    rules: [
+      { condition: "< 100ms", token: "--color-text", label: "Healthy" },
+      { condition: "100-500ms", token: "--color-warning", label: "Advisory" },
+      { condition: "> 500ms", token: "--color-error", label: "High" },
+      { condition: "> 1500ms", token: "--color-error", label: "Very high" },
+    ],
+  },
+  {
+    context: "Time remaining",
+    rules: [
+      { condition: "> 7 days", token: "--color-text-tertiary", label: "Default" },
+      { condition: "4-7 days", token: "--color-text-muted", label: "Elevated" },
+      { condition: "1-3 days", token: "--color-warning", label: "Warning" },
+      { condition: "0 days", token: "--color-error", label: "Critical" },
+    ],
+  },
+  {
+    context: "Bandwidth usage",
+    rules: [
+      { condition: "0-74%", token: "--color-success", label: "Normal" },
+      { condition: "75-89%", token: "--color-warning", label: "High" },
+      { condition: "90-99%", token: "--color-error", label: "Critical" },
+      { condition: "100%", token: "--color-error", label: "Limit reached" },
+    ],
+  },
+] as const;
 
 export const Reference: Story = {
   render: () => (
@@ -173,6 +203,45 @@ export const Reference: Story = {
   ),
 };
 
+export const SemanticRules: Story = {
+  render: () => (
+    <StoryPage
+      eyebrow="Foundations"
+      title="Color semantics"
+      summary="Swatches alone are not enough. These rules document which semantic token should be used for common live-data states so the same metric does not drift between accent, warning, and error treatments."
+      stats={[
+        { label: "Contexts", value: String(semanticRuleGroups.length) },
+        { label: "Rules", value: String(semanticRuleGroups.flatMap((group) => group.rules).length) },
+        { label: "Decision type", value: "Threshold-based" },
+      ]}
+    >
+      <StorySection
+        title="Decision rules"
+        description="When a developer asks which color a metric should use, this is the canonical mapping."
+      >
+        <div style={{ display: "grid", gap: "var(--spacing-4)" }}>
+          {semanticRuleGroups.map((group) => (
+            <StoryCard key={group.context} title={group.context}>
+              <div style={rulesTableStyle}>
+                {group.rules.map((rule) => (
+                  <div key={`${group.context}-${rule.condition}`} style={ruleRowStyle}>
+                    <span style={ruleConditionStyle}>{rule.condition}</span>
+                    <code style={tokenCodeStyle}>{rule.token}</code>
+                    <ValuePill
+                      value={rule.label}
+                      tone={rule.token.includes("warning") ? "warning" : rule.token.includes("error") ? "danger" : rule.token.includes("success") ? "success" : "neutral"}
+                    />
+                  </div>
+                ))}
+              </div>
+            </StoryCard>
+          ))}
+        </div>
+      </StorySection>
+    </StoryPage>
+  ),
+};
+
 function Swatch({ token, borderToken = "--color-border" }: { token: string; borderToken?: string }) {
   return <BoxPreview label="" style={{ width: 72, background: `var(${token})`, borderColor: `var(${borderToken})` }} />;
 }
@@ -253,6 +322,27 @@ const paletteRowStyle = {
   display: "flex",
   alignItems: "center",
   gap: "var(--spacing-2)",
+} as const;
+
+const rulesTableStyle = {
+  display: "grid",
+  gap: "var(--spacing-2)",
+} as const;
+
+const ruleRowStyle = {
+  display: "grid",
+  gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr) auto",
+  alignItems: "center",
+  gap: "var(--spacing-3)",
+  padding: "var(--spacing-3)",
+  borderRadius: "var(--radius-md)",
+  background: "color-mix(in oklch, var(--color-surface) 92%, var(--color-surface-2) 8%)",
+} as const;
+
+const ruleConditionStyle = {
+  fontFamily: "var(--font-mono)",
+  fontSize: "var(--typo-caption-size)",
+  color: "var(--color-text)",
 } as const;
 
 const statusCardStyle = {

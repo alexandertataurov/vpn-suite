@@ -19,10 +19,11 @@ export function SectionHeaderRow({
   ...props
 }: SectionHeaderRowProps) {
   if (!title && !description && !action) return null;
+  const hasTitle = title != null && title !== "";
   return (
     <div className={`shead ${className}`.trim()} {...props}>
-      <span className="shead-lbl">{title ?? "\u00A0"}</span>
-      <span className="shead-rule" aria-hidden />
+      {hasTitle ? <span className="shead-lbl">{title}</span> : null}
+      {hasTitle ? <span className="shead-rule" aria-hidden /> : null}
       {(action ?? description) ? (
         <span className={["shead-note", noteClassName].filter(Boolean).join(" ")}>{action ?? description}</span>
       ) : null}
@@ -73,13 +74,21 @@ export function PageSection({
             ) : null}
           </>
         ) : hasMeta ? (
-          <SectionHeaderRow
-            title={null}
-            description={description}
-            action={action}
-            className={headerClassName}
-            noteClassName={noteClassName}
-          />
+          <>
+            {action ? (
+              <SectionHeaderRow
+                title={null}
+                action={action}
+                className={headerClassName}
+                noteClassName={noteClassName}
+              />
+            ) : null}
+            {description ? (
+              <div className={["type-body-sm", descriptionClassName].filter(Boolean).join(" ")}>
+                {typeof description === "string" ? description : <Body as="span">{description}</Body>}
+              </div>
+            ) : null}
+          </>
         ) : null}
         {children}
       </Stack>

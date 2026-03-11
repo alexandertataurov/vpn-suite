@@ -493,6 +493,11 @@ export async function setupMiniappApi(
       return;
     }
 
+    if (path === "/api/v1/webapp/logout" && method === "POST") {
+      await fulfillJson(route, 200, { status: "ok" });
+      return;
+    }
+
     if (path === "/api/v1/subscriptions/me" && method === "PATCH") {
       requests.subscription.push({ path, body: postBody ?? null });
       const subscription = activeSubscription(state.session);
@@ -644,6 +649,18 @@ export async function setupMiniappApi(
         device.status = "revoked";
       }
       await fulfillJson(route, 200, {});
+      return;
+    }
+
+    if (/^\/api\/v1\/webapp\/devices\/[^/]+$/.test(path) && method === "PATCH") {
+      requests.devices.push({ path, body: postBody ?? null });
+      const deviceId = path.split("/")[5] ?? "device-1";
+      const device = state.session.devices.find((item) => item.id === deviceId);
+      const body = postBody as { device_name?: string | null };
+      if (device && body?.device_name !== undefined) {
+        device.device_name = body.device_name ?? null;
+      }
+      await fulfillJson(route, 200, { status: "ok" });
       return;
     }
 

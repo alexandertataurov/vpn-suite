@@ -1,9 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Z_INDEX_TOKENS } from "../tokens";
+import { getTokenCoverage, resolveTokenValue } from "../tokens/runtime";
 import { StoryCard, StoryPage, StorySection, ThreeColumn, TokenTable, UsageExample, ValuePill } from "./foundations.story-helpers";
 
 const meta = {
-  title: "Design System/Foundations/Z-Index",
+  title: "Foundations/Z-Index",
   tags: ["autodocs"],
   parameters: {
     docs: {
@@ -18,24 +19,25 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const zIndexSpecs = [
-  { name: "Dropdown", token: Z_INDEX_TOKENS.dropdown, usage: "Menus and select popovers.", preview: <ValuePill value="Dropdown" /> },
-  { name: "Overlay", token: Z_INDEX_TOKENS.overlay, usage: "Scrims and blocking backdrops.", preview: <ValuePill value="Overlay" tone="neutral" /> },
-  { name: "Modal", token: Z_INDEX_TOKENS.modal, usage: "Dialog and sheet content above overlays.", preview: <ValuePill value="Modal" tone="accent" /> },
-  { name: "Toast", token: Z_INDEX_TOKENS.toast, usage: "Temporary feedback layered over active UI.", preview: <ValuePill value="Toast" tone="success" /> },
-  { name: "Header", token: Z_INDEX_TOKENS.header, usage: "Sticky shell header.", preview: <ValuePill value="Header" /> },
-  { name: "Nav", token: Z_INDEX_TOKENS.nav, usage: "Persistent bottom navigation.", preview: <ValuePill value="Nav" /> },
-  { name: "Scanline", token: Z_INDEX_TOKENS.scanline, usage: "Reserved top-most decorative or debugging overlay.", preview: <ValuePill value="Top" tone="danger" /> },
-];
-
 export const Reference: Story = {
-  render: () => (
+  render: () => {
+    const zIndexSpecs = [
+      { name: "Dropdown", token: Z_INDEX_TOKENS.dropdown, usage: "Menus and select popovers.", value: resolveTokenValue(Z_INDEX_TOKENS.dropdown), preview: <ValuePill value="Dropdown" /> },
+      { name: "Overlay", token: Z_INDEX_TOKENS.overlay, usage: "Scrims and blocking backdrops.", value: resolveTokenValue(Z_INDEX_TOKENS.overlay), preview: <ValuePill value="Overlay" tone="neutral" /> },
+      { name: "Modal", token: Z_INDEX_TOKENS.modal, usage: "Dialog and sheet content above overlays.", value: resolveTokenValue(Z_INDEX_TOKENS.modal), preview: <ValuePill value="Modal" tone="accent" /> },
+      { name: "Toast", token: Z_INDEX_TOKENS.toast, usage: "Temporary feedback layered over active UI.", value: resolveTokenValue(Z_INDEX_TOKENS.toast), preview: <ValuePill value="Toast" tone="success" /> },
+      { name: "Header", token: Z_INDEX_TOKENS.header, usage: "Sticky shell header.", value: resolveTokenValue(Z_INDEX_TOKENS.header), preview: <ValuePill value="Header" /> },
+      { name: "Nav", token: Z_INDEX_TOKENS.nav, usage: "Persistent bottom navigation.", value: resolveTokenValue(Z_INDEX_TOKENS.nav), preview: <ValuePill value="Nav" /> },
+      { name: "Scanline", token: Z_INDEX_TOKENS.scanline, usage: "Reserved top-most decorative or debugging overlay.", value: resolveTokenValue(Z_INDEX_TOKENS.scanline), preview: <ValuePill value="Top" tone="danger" /> },
+    ];
+    const coverage = getTokenCoverage(Z_INDEX_TOKENS);
+    return (
     <StoryPage
       eyebrow="Foundations"
       title="Z-index system"
       summary="Layering bugs are usually logic bugs with visual symptoms. The miniapp uses a fixed stack contract so sticky chrome, dialogs, popovers, and toast feedback do not fight each other."
       stats={[
-        { label: "Layer tokens", value: String(zIndexSpecs.length) },
+        { label: "Layer tokens", value: `${coverage.passing} / ${coverage.total}` },
         { label: "Shell layers", value: "2" },
         { label: "Examples", value: "3" },
       ]}
@@ -45,6 +47,20 @@ export const Reference: Story = {
         description="Each exported z-index token and the layer it owns."
       >
         <TokenTable specs={zIndexSpecs} />
+      </StorySection>
+
+      <StorySection
+        title="Layer rules"
+        description="Z-index should behave like a reserved stack, not a number line developers keep extending."
+      >
+        <div style={layerRulesStyle}>
+          <StoryCard title="Persistent chrome" caption="Header and nav keep the shell readable but never outrank modal content.">
+            <div style={layerRuleTextStyle}>Use only the shell tokens for sticky chrome. Do not add local offsets unless the shell itself owns the interaction.</div>
+          </StoryCard>
+          <StoryCard title="Transient UI" caption="Dropdown, overlay, modal, and toast each own a specific tier.">
+            <div style={layerRuleTextStyle}>Pick the nearest semantic layer token. If a new value is needed, it is a foundations change, not a component-local tweak.</div>
+          </StoryCard>
+        </div>
       </StorySection>
 
       <StorySection
@@ -98,7 +114,8 @@ export const Reference: Story = {
         </UsageExample>
       </StorySection>
     </StoryPage>
-  ),
+  );
+  },
 };
 
 function LayerStack({ items }: { items: Array<{ label: string; color: string }> }) {
@@ -207,4 +224,17 @@ const toastLayerStyle = {
   fontFamily: "var(--font-mono)",
   fontSize: "var(--typo-caption-size)",
   fontWeight: 600,
+} as const;
+
+const layerRulesStyle = {
+  display: "grid",
+  gap: "var(--spacing-4)",
+  gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+} as const;
+
+const layerRuleTextStyle = {
+  fontFamily: "var(--font-sans)",
+  fontSize: "var(--typo-body-sm-size)",
+  lineHeight: 1.6,
+  color: "var(--color-text-muted)",
 } as const;

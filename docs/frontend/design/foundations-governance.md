@@ -5,9 +5,11 @@ Design system token usage rules and enforcement. All contributors must follow th
 ## Source of truth
 
 - **Admin:** `frontend/admin/src/design-system/tokens.css`
-- **Miniapp:** `frontend/miniapp/src/shared-inline/theme/tokens.css`
+- **Miniapp base:** `frontend/miniapp/src/design-system/styles/tokens/base.css`
+- **Miniapp consumer theme:** `frontend/miniapp/src/design-system/styles/theme/consumer.css`
+- **Miniapp theme aliases:** `frontend/miniapp/src/design-system/styles/theme/telegram.css`
 
-These files define the canonical design tokens (CSS variables). All other layers consume them.
+These files define the canonical design tokens and aliases. All other layers consume them.
 
 ## Rules
 
@@ -52,20 +54,37 @@ All semantic tokens adapt to `data-theme`. Never hardcode theme-specific values.
 
 When adding a new component, document its token usage in `tokens-map.ts` → `COMPONENT_TOKENS`.
 
+### 5. Inline Style Policy
+
+Inline styles are forbidden in app and design-system production code.
+
+- Allowed: `src/design-system/stories/**` and `src/storybook/**` when used for foundations documentation or isolated visual scaffolding.
+- Forbidden: `src/components/**`, `src/pages/**`, `src/design-system/**` outside stories.
+- Prefer extracting recurring story layout objects into shared story helpers instead of redeclaring them inline.
+
+### 6. Typography Policy
+
+- Use `--typo-*` or `--ds-font-*` tokens for size and weight decisions.
+- Do not introduce raw `px` or `rem` font-size values in product code.
+- Use `data-typo-tone` or semantic status classes for live-data color changes instead of hardcoded status colors.
+
 ## Enforcement
 
 - **tokens-map.ts** — single source of truth for primitive vs semantic classification
-- **storybook:check** — validates story coverage
-- **foundations:lint** — (optional) ESLint rule or script to detect primitive/hex usage in components
-- **guardrails** — `npm run guardrails` (from frontend root): raw-color check + `FOUNDATIONS_STRICT=1` foundations lint + storybook check
+- **`src/test/token-parity.test.ts`** — verifies runtime CSS parity for typography and breakpoints
+- **storybook foundations** — documents environment parity, motion usage, color semantics, and production examples
+- **ESLint** — forbids inline `style` props outside Storybook-only folders
+- **`design:check`** — runs token drift plus runtime parity checks
+- **guardrails** — `npm run guardrails` (from frontend root): runs miniapp `design:check` (single :root, no inline styles in app code, no direct lucide imports, page imports from `@/design-system`, no page-local CSS, token drift, token-parity test)
 
 ## PR / review checklist (UI)
 
 Before merging changes that touch UI or design:
 
-- [ ] No new hex/rgb/hsl in components or pages (run `npm run guardrails` from frontend root).
+- [ ] No new hex/rgb/hsl in components or pages; no inline styles outside stories (run `npm run guardrails` from frontend root).
 - [ ] New or changed components use semantic tokens only; Tailwind/classes use `var(--*)` where applicable.
-- [ ] Typography uses `--text-*` or `--font-size-*` / shared `Text` / `Heading`.
+- [ ] New or changed shared components: token usage documented in `tokens-map.ts` → `COMPONENT_TOKENS` (see miniapp design-system).
+- [ ] Typography uses `--typo-*` / `--ds-font-*` tokens or shared text primitives.
 - [ ] New shared components have a Storybook story with title and description.
 - [ ] No new page-level visual CSS unless justified (layout-only is acceptable).
 - [ ] Shared component preferred; app-local only when feature-specific.

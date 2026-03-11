@@ -1,4 +1,3 @@
-import { ApiError } from "@vpn-suite/shared";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createApiClient } from "./create-client";
 

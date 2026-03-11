@@ -1,4 +1,5 @@
 import { IconSmartphone, MissionOperationArticle, StatusChip } from "@/design-system";
+import { useI18n } from "@/hooks/useI18n";
 import { DeviceRowActions } from "../DeviceRowActions";
 
 export interface DeviceRowProps {
@@ -15,43 +16,71 @@ export interface DeviceRowProps {
   onConfirm: (id: string) => void;
   onReplace: (id: string) => void;
   onRevoke: (id: string) => void;
+  onRename?: (id: string) => void;
   isConfirmingId: string | null;
   isReplacingId: string | null;
 }
 
 /** Reusable device list row: icon, title, description, actions. */
-function formatLastSeenDefault(value: string): string {
+function normalizeDeviceStatus(status?: string | null): "connected" | "idle" | "config_pending" | "revoked" {
+  if (status === "connected" || status === "active") return "connected";
+  if (status === "idle") return "idle";
+  if (status === "revoked") return "revoked";
+  return "config_pending";
+}
+
+function toIntlLocale(locale: "en" | "ru"): string {
+  return locale === "ru" ? "ru-RU" : "en-US";
+}
+
+function formatLastSeenDefault(
+  value: string,
+  locale: "en" | "ru",
+  formatAbsoluteDate: (value: string) => string,
+): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "--";
   const diff = Date.now() - date.getTime();
-  const mins = Math.floor(diff / 60_000);
+  const mins = Math.max(0, Math.floor(diff / 60_000));
   const hours = Math.floor(mins / 60);
   const days = Math.floor(hours / 24);
-  if (mins < 1) return "now";
-  if (mins < 60) return `${mins}m ago`;
-  if (hours < 24) return `${hours}h ago`;
-  if (days < 7) return `${days}d ago`;
-  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  const formatter = new Intl.RelativeTimeFormat(toIntlLocale(locale), { numeric: "auto", style: "short" });
+  if (mins < 1) return formatter.format(0, "minute");
+  if (mins < 60) return formatter.format(-mins, "minute");
+  if (hours < 24) return formatter.format(-hours, "hour");
+  if (days < 7) return formatter.format(-days, "day");
+  return formatAbsoluteDate(value);
 }
 
 export function DeviceRow({
   device,
   formatIssuedAt,
-  formatLastSeen = formatLastSeenDefault,
+  formatLastSeen,
   onConfirm,
   onReplace,
   onRevoke,
+  onRename,
   isConfirmingId,
   isReplacingId,
 }: DeviceRowProps) {
-  const status = device.status ?? "config_pending";
-  const statusLabel = status === "connected" ? "Setup confirmed" : status === "idle" ? "Setup incomplete" : status === "config_pending" ? "Config ready" : "Revoked";
-  const tone: "green" | "amber" | "blue" = status === "connected" ? "green" : status === "idle" ? "amber" : "blue";
+  const { t, locale } = useI18n();
+  const status = normalizeDeviceStatus(device.status);
+  const resolvedFormatLastSeen =
+    formatLastSeen ?? ((value: string) => formatLastSeenDefault(value, locale, formatIssuedAt));
+  const statusLabel =
+    status === "connected"
+      ? t("devices.menu_status_connected")
+      : status === "idle"
+        ? t("devices.menu_status_idle")
+        : status === "config_pending"
+          ? t("devices.menu_status_config_pending")
+          : t("devices.menu_status_revoked");
+  const tone: "green" | "amber" | "red" = status === "idle" ? "amber" : status === "revoked" ? "red" : "green";
   const metaParts: string[] = [];
   if (device.last_seen_handshake_at) {
-    metaParts.push(`Last sync ${formatLastSeen(device.last_seen_handshake_at)}`);
+    metaParts.push(`${t("devices.row_last_sync_prefix")} ${resolvedFormatLastSeen(device.last_seen_handshake_at)}`);
   }
-  metaParts.push(`Issued ${formatIssuedAt(device.issued_at)}`);
+  metaParts.push(`${t("devices.row_issued_prefix")} ${formatIssuedAt(device.issued_at)}`);
   const metaLine = metaParts.join(" · ");
 
   return (
@@ -67,9 +96,9 @@ export function DeviceRow({
               status === "connected"
                 ? "active"
                 : status === "idle"
-                  ? "info"
+                  ? "pending"
                   : status === "config_pending"
-                    ? "pend"
+                    ? "active"
                     : "offline"
             }
           >
@@ -81,10 +110,11 @@ export function DeviceRow({
       trailing={(
         <DeviceRowActions
           deviceId={device.id}
-          deviceStatus={status as "connected" | "idle" | "config_pending" | "revoked"}
+          deviceStatus={status}
           onConfirm={onConfirm}
           onReplace={onReplace}
           onRevoke={onRevoke}
+          onRename={onRename}
           isConfirmingId={isConfirmingId}
           isReplacingId={isReplacingId}
         />

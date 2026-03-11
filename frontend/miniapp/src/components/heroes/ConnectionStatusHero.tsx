@@ -145,9 +145,9 @@ export function ConnectionStatusHero({
                 )}
               </div>
             </div>
-            <div className="card-hint" id="cardHint">
+            <p className="card-hint" id="cardHint">
               {hint ?? DEFAULT_HINT[state]}
-            </div>
+            </p>
           </div>
         </div>
         {metrics.length > 0 ? (

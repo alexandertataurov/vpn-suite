@@ -568,6 +568,17 @@ async def webapp_me_update(
     }
 
 
+@router.post("/logout")
+async def webapp_logout(request: Request):
+    tg_id = _get_tg_id_from_bearer(request)
+    if not tg_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"code": "UNAUTHORIZED", "message": "Invalid session"},
+        )
+    return {"status": "ok"}
+
+
 @router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
 async def webapp_me_delete(
     body: WebAppDeleteMeBody,
@@ -1367,6 +1378,59 @@ async def webapp_revoke_device(
         )
     device.revoked_at = datetime.now(timezone.utc)
     await db.commit()
+    return {"status": "ok"}
+
+
+class WebAppDeviceNameUpdate(BaseModel):
+    """Body for PATCH /webapp/devices/{device_id}: user can set device_name only."""
+
+    device_name: str | None = None
+
+    @field_validator("device_name")
+    @classmethod
+    def trim_and_cap(cls, v: str | None) -> str | None:
+        if v is None:
+            return None
+        s = (v or "").strip()
+        return s[:128] if s else None
+
+
+@router.patch("/devices/{device_id}")
+async def webapp_update_device_name(
+    device_id: str,
+    body: WebAppDeviceNameUpdate,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    """Update own device name. Bearer session token required. Only device_name is allowed."""
+    tg_id = _get_tg_id_from_bearer(request)
+    if not tg_id:
+        raise HTTPException(
+            status_code=401, detail={"code": "UNAUTHORIZED", "message": "Invalid session"}
+        )
+    user_result = await db.execute(select(User).where(User.tg_id == tg_id))
+    user = user_result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(
+            status_code=404, detail={"code": "USER_NOT_FOUND", "message": "User not found"}
+        )
+    device_result = await db.execute(
+        select(Device).where(Device.id == device_id, Device.user_id == user.id)
+    )
+    device = device_result.scalar_one_or_none()
+    if not device:
+        raise HTTPException(
+            status_code=404, detail={"code": "DEVICE_NOT_FOUND", "message": "Device not found"}
+        )
+    if device.revoked_at:
+        raise HTTPException(
+            status_code=400, detail={"code": "ALREADY_REVOKED", "message": "Already revoked"}
+        )
+    if body.device_name is not None:
+        device.device_name = body.device_name
+    await db.commit()
+    await invalidate_devices_summary_cache()
+    await invalidate_devices_list_cache()
     return {"status": "ok"}
 
 

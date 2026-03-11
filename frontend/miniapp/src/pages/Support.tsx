@@ -1,62 +1,27 @@
-import { useId, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { SummaryHero, SessionMissing, TroubleshooterStep } from "@/components";
+import { SessionMissing, SupportContactCard, TroubleshooterStep } from "@/components";
 import {
   FallbackScreen,
+  FaqDisclosureItem,
   PageFrame,
-  PageCardSection,
   PageSection,
+  PageHeaderBadge,
   Skeleton,
-  MissionPrimaryAnchor,
+  SupportActionList,
+  IconCreditCard,
+  IconRotateCw,
+  IconServer,
 } from "@/design-system";
 import { useSupportPageModel } from "@/page-models";
 import { useI18n } from "@/hooks/useI18n";
 import { telegramBotUsername } from "@/config/env";
 
-interface SupportFaqItemProps {
-  title: string;
-  body: string;
-  isOpen: boolean;
-  onToggle: () => void;
-}
-
-function SupportFaqItem({ title, body, isOpen, onToggle }: SupportFaqItemProps) {
-  const panelId = useId();
-  const triggerId = `${panelId}-trigger`;
-
-  return (
-    <li className="support-faq-item">
-      <button
-        id={triggerId}
-        type="button"
-        className="support-faq-trigger"
-        aria-expanded={isOpen}
-        aria-controls={panelId}
-        onClick={onToggle}
-      >
-        <span className="op-name type-h3">{title}</span>
-        <span className="support-faq-symbol" aria-hidden>
-          {isOpen ? "−" : "+"}
-        </span>
-      </button>
-      <div
-        id={panelId}
-        role="region"
-        aria-labelledby={triggerId}
-        className="support-faq-panel"
-        hidden={!isOpen}
-      >
-        <p className="op-desc type-body-sm">{body}</p>
-      </div>
-    </li>
-  );
-}
-
 export function SupportPage() {
   const navigate = useNavigate();
   const model = useSupportPageModel();
   const supportHref = telegramBotUsername ? `https://t.me/${telegramBotUsername}` : null;
-  const { t } = useI18n();
+  const { t, tOr } = useI18n();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   const faqItems = [
@@ -88,6 +53,18 @@ export function SupportPage() {
       title: t("support.faq_item_support_title"),
       body: t("support.faq_item_support_body"),
     },
+    {
+      title: t("support.faq_item_slow_title"),
+      body: t("support.faq_item_slow_body"),
+    },
+    {
+      title: t("support.faq_item_cancel_title"),
+      body: t("support.faq_item_cancel_body"),
+    },
+    {
+      title: t("support.faq_item_data_title"),
+      body: t("support.faq_item_data_body"),
+    },
   ];
 
   if (model.pageState.status === "empty") {
@@ -106,45 +83,61 @@ export function SupportPage() {
 
   if (model.pageState.status === "loading") {
     return (
-      <PageFrame title={model.header.title} className="support-page">
+      <PageFrame title={model.header.title} className="page-shell--default page-shell--sectioned">
         <Skeleton variant="card" />
       </PageFrame>
     );
   }
 
   return (
-    <PageFrame title={model.header.title} subtitle={model.header.subtitle} className="support-page">
-      <SummaryHero {...model.hero} className="stagger-1" />
-      <PageCardSection
+    <PageFrame title={model.header.title} subtitle={model.header.subtitle} className="page-shell--default page-shell--sectioned">
+      <SupportContactCard
+        title={model.hero.title}
+        description={model.hero.subtitle ?? t("support.contact_card_description")}
+        supportHref={supportHref}
+      />
+      <PageSection
         title={t("support.contact_card_title")}
-        cardTone={supportHref ? "green" : "amber"}
         className="stagger-2"
       >
-        <div className="support-contact-stack">
-          <p className="op-desc type-body-sm">{t("support.contact_card_description")}</p>
-          {supportHref ? (
-            <MissionPrimaryAnchor
-              aria-label={t("support.contact_button_label")}
-              href={supportHref}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {t("support.contact_button_label")}
-            </MissionPrimaryAnchor>
-          ) : (
-            <div className="support-inline-note">
-              <h3 className="op-name type-h3">{t("support.support_link_unavailable_title")}</h3>
-              <p className="op-desc type-body-sm">
-                {t("support.support_link_unavailable_message")}
-              </p>
-            </div>
-          )}
-        </div>
-      </PageCardSection>
+        <SupportActionList
+          items={[
+            {
+              to: "/restore-access",
+              title: t("onboarding.restore_access"),
+              description: t("restore.info_message"),
+              icon: <IconRotateCw size={18} strokeWidth={1.8} />,
+            },
+            {
+              to: "/devices",
+              title: t("devices.header_title"),
+              description: t("devices.summary_subtitle_default"),
+              icon: <IconServer size={18} strokeWidth={1.8} />,
+              tone: "green",
+            },
+            {
+              to: "/plan",
+              title: t("plan.header_title"),
+              description: t("plan.renewal_description_generic"),
+              icon: <IconCreditCard size={18} strokeWidth={1.8} />,
+              tone: "amber",
+            },
+          ]}
+        />
+      </PageSection>
       <PageSection
         title={t("support.troubleshooter_title")}
         description={t("support.troubleshooter_description")}
         className="stagger-3"
+        action={
+          <PageHeaderBadge
+            tone="warning"
+            label={tOr("support.troubleshooter_step_badge", String(model.troubleshooterBadge.label ?? ""), {
+              index: model.step + 1,
+              total: model.totalSteps,
+            })}
+          />
+        }
       >
         <TroubleshooterStep
           stepIndex={model.step + 1}
@@ -154,13 +147,9 @@ export function SupportPage() {
           nextLabel={model.currentStep.nextLabel}
           onNext={model.nextStep}
           backLabel={model.currentStep.backLabel}
-          onBack={model.previousStep}
-          altLabel={model.currentStepAltLabel}
-          onAlt={
-            model.currentStepAltLabel
-              ? () => navigate("/plan", { state: { fromSupport: true } })
-              : undefined
-          }
+          onBack={model.previousStep ?? undefined}
+          altLabel={model.currentStepAltLabel ?? undefined}
+          onAlt={model.currentStepAltLabel ? () => navigate("/plan", { state: { fromSupport: true } }) : undefined}
         />
       </PageSection>
       <PageSection
@@ -170,7 +159,7 @@ export function SupportPage() {
       >
         <ul className="support-faq-list stagger-5" role="list">
           {faqItems.map((item, index) => (
-            <SupportFaqItem
+            <FaqDisclosureItem
               key={item.title}
               title={item.title}
               body={item.body}

@@ -1,9 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { SHADOW_TOKENS } from "../tokens";
+import { getTokenCoverage, resolveTokenValue } from "../tokens/runtime";
 import { BoxPreview, StoryCard, StoryPage, StorySection, ThreeColumn, TokenTable, UsageExample } from "./foundations.story-helpers";
 
 const meta = {
-  title: "Design System/Foundations/Shadows",
+  title: "Foundations/Shadows",
   tags: ["autodocs"],
   parameters: {
     docs: {
@@ -18,23 +19,24 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const shadowSpecs = [
-  { name: "None", token: SHADOW_TOKENS.none, usage: "Default flat surfaces and dark-theme cards.", preview: <ShadowPreview token={SHADOW_TOKENS.none} /> },
-  { name: "Small", token: SHADOW_TOKENS.sm, usage: "Minimal separation in lighter contexts.", preview: <ShadowPreview token={SHADOW_TOKENS.sm} /> },
-  { name: "Medium", token: SHADOW_TOKENS.md, usage: "Elevated surfaces with moderate emphasis.", preview: <ShadowPreview token={SHADOW_TOKENS.md} /> },
-  { name: "Large", token: SHADOW_TOKENS.lg, usage: "Dialogs and strongly elevated overlays.", preview: <ShadowPreview token={SHADOW_TOKENS.lg} /> },
-  { name: "Card", token: SHADOW_TOKENS.card, usage: "Canonical card elevation token.", preview: <ShadowPreview token={SHADOW_TOKENS.card} /> },
-  { name: "Focus ring", token: SHADOW_TOKENS.focusRing, usage: "Accessible focus outline rendered as a shadow.", preview: <FocusRingPreview /> },
-];
-
 export const Reference: Story = {
-  render: () => (
+  render: () => {
+    const shadowSpecs = [
+      { name: "None", token: SHADOW_TOKENS.none, usage: "Default flat surfaces and dark-theme cards.", value: resolveTokenValue(SHADOW_TOKENS.none), preview: <ShadowPreview token={SHADOW_TOKENS.none} /> },
+      { name: "Small", token: SHADOW_TOKENS.sm, usage: "Minimal separation in lighter contexts.", value: resolveTokenValue(SHADOW_TOKENS.sm), preview: <ShadowPreview token={SHADOW_TOKENS.sm} /> },
+      { name: "Medium", token: SHADOW_TOKENS.md, usage: "Elevated surfaces with moderate emphasis.", value: resolveTokenValue(SHADOW_TOKENS.md), preview: <ShadowPreview token={SHADOW_TOKENS.md} /> },
+      { name: "Large", token: SHADOW_TOKENS.lg, usage: "Dialogs and strongly elevated overlays.", value: resolveTokenValue(SHADOW_TOKENS.lg), preview: <ShadowPreview token={SHADOW_TOKENS.lg} /> },
+      { name: "Card", token: SHADOW_TOKENS.card, usage: "Canonical card elevation token.", value: resolveTokenValue(SHADOW_TOKENS.card), preview: <ShadowPreview token={SHADOW_TOKENS.card} /> },
+      { name: "Focus ring", token: SHADOW_TOKENS.focusRing, usage: "Accessible focus outline rendered as a shadow.", value: resolveTokenValue(SHADOW_TOKENS.focusRing), preview: <FocusRingPreview /> },
+    ];
+    const coverage = getTokenCoverage(SHADOW_TOKENS);
+    return (
     <StoryPage
       eyebrow="Foundations"
       title="Shadow system"
       summary="The miniapp mostly communicates depth through color, border, and radius. Shadow tokens still exist for cases where a stronger layer cue is necessary, especially on light backgrounds and interactive focus states."
       stats={[
-        { label: "Shadow tokens", value: String(shadowSpecs.length) },
+        { label: "Shadow tokens", value: `${coverage.passing} / ${coverage.total}` },
         { label: "Default card depth", value: "Flat" },
         { label: "Examples", value: "3" },
       ]}
@@ -44,6 +46,20 @@ export const Reference: Story = {
         description="Every exported shadow token and its intended usage."
       >
         <TokenTable specs={shadowSpecs} />
+      </StorySection>
+
+      <StorySection
+        title="Shadow policy"
+        description="Shadow is an exception, not the default depth language. Reach for it only after border and surface contrast are insufficient."
+      >
+        <div style={shadowPolicyGridStyle}>
+          <StoryCard title="Allowed" caption="Floating layers, focus states, and some light-theme utilities.">
+            <div style={shadowPolicyTextStyle}>Use `--shadow-md`, `--shadow-lg`, or `--focus-ring` when the layer must detach from active content.</div>
+          </StoryCard>
+          <StoryCard title="Avoid" caption="Routine dark-theme cards and standard module surfaces.">
+            <div style={shadowPolicyTextStyle}>Prefer flat cards with border and surface contrast before adding elevation.</div>
+          </StoryCard>
+        </div>
       </StorySection>
 
       <StorySection
@@ -77,7 +93,8 @@ export const Reference: Story = {
         </UsageExample>
       </StorySection>
     </StoryPage>
-  ),
+  );
+  },
 };
 
 function ShadowPreview({ token }: { token: string }) {
@@ -143,4 +160,17 @@ const popoverItemStyle = {
   fontFamily: "var(--font-sans)",
   fontSize: "var(--typo-body-sm-size)",
   lineHeight: 1.4,
+} as const;
+
+const shadowPolicyGridStyle = {
+  display: "grid",
+  gap: "var(--spacing-4)",
+  gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+} as const;
+
+const shadowPolicyTextStyle = {
+  fontFamily: "var(--font-sans)",
+  fontSize: "var(--typo-body-sm-size)",
+  lineHeight: 1.6,
+  color: "var(--color-text-muted)",
 } as const;

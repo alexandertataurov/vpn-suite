@@ -36,6 +36,10 @@ export interface WebAppMeProfileUpdateResponse {
   user: WebAppMeUser;
 }
 
+export interface WebAppLogoutResponse {
+  status: "ok";
+}
+
 export interface WebAppMeSubscription {
   id: string;
   plan_id: string;

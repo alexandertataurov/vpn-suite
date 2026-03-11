@@ -212,6 +212,7 @@ export function usePlanPageModel() {
       showUpsellTrialEnd,
       isSubscribed,
       routeReason,
+      t,
     ],
   );
 

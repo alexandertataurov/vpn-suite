@@ -17,8 +17,8 @@ export const PRIMITIVES = {
     ink: ["800", "900"],
   },
   spacing: ["0", "1", "2", "3", "4", "5", "6", "8", "10", "12", "16"],
-  radius: ["0", "2", "4"],
-  shadow: ["none", "sm"],
+  radius: ["none", "sm", "md", "lg", "xl", "2xl", "full", "control", "surface", "button"],
+  shadow: ["none", "sm", "md", "lg", "card", "focusRing"],
   zIndex: ["dropdown", "overlay", "modal", "toast", "header", "nav", "scanline"],
   duration: ["instant", "fast", "normal", "slow"],
   easing: ["linear", "in", "out", "in-out", "standard"],
@@ -80,7 +80,7 @@ export const SEMANTICS = {
   },
 } as const;
 
-/** Component → token mapping. Required for governance. */
+/** Component → token mapping. Required for governance. When adding a new component, document its token usage here. */
 export const COMPONENT_TOKENS = {
   Button: {
     primary: ["--color-accent", "--color-on-accent", "--radius-control", "--text-body"],
@@ -89,6 +89,11 @@ export const COMPONENT_TOKENS = {
   Panel: ["--color-surface", "--color-border-subtle", "--radius-surface", "--shadow-sm"],
   Input: ["--color-surface", "--color-border", "--color-text", "--radius-control"],
   Table: ["--color-border-subtle", "--color-text", "--color-text-muted"],
+  Modal: ["--color-surface", "--color-border", "--overlay-scrim", "--shadow-dialog", "--radius-surface", "--z-modal"],
+  InlineAlert: ["--color-text", "--color-accent", "--color-warning", "--color-error", "--color-success", "--blue-d", "--amber-d", "--red-d", "--green-d", "--color-border"],
+  Field: ["--color-text", "--color-text-muted", "--color-border", "--color-error", "--radius-control", "--typo-body-sm-size"],
+  Select: ["--color-surface", "--color-border", "--color-text", "--radius-control", "--typo-body-sm-size"],
+  ProgressBar: ["--color-success", "--color-surface-2", "--radius-sm"],
 } as const;
 
 export type PrimitiveColorScale = keyof (typeof PRIMITIVES)["color"];

@@ -35,7 +35,7 @@ Page Recipes
 Feature Components (Application Layer)
 ```
 
-Each layer has strict responsibilities. In this repo, implementation lives under `primitives/`, `components/`, `patterns/`, `layouts/`, and `recipes/`; see the design-system [README](../README.md) for the folder map and "I want to…" table.
+Each layer has strict responsibilities. In this repo, implementation lives under `primitives/`, `components/`, `patterns/`, `layouts/`, and `recipes/`; see the design-system [README](./README.md) for the folder map and "I want to…" table.
 
 ---
 
@@ -628,5 +628,5 @@ A design system that follows these rules remains stable even as applications gro
 
 # Related Docs
 
-- [Design System Enforcement Checklist](./design-system-enforcement-checklist.md)
-- [Miniapp Design System README](../README.md)
+- [Design System Enforcement Checklist](./enforcement-checklist.md)
+- [Miniapp Design System README](./README.md)

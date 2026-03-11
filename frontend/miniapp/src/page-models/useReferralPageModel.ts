@@ -81,13 +81,13 @@ export function useReferralPageModel() {
     impact("medium");
     try {
       await navigator.clipboard.writeText(shareUrl);
-      addToast("Link copied", "success");
+      addToast(t("referral.toast_link_copied"), "success");
       notify("success");
     } catch {
-      addToast("Could not copy. Select and copy the link below.", "error");
+      addToast(t("referral.toast_copy_failed"), "error");
       notify("error");
     }
-  }, [shareUrl, impact, addToast, notify]);
+  }, [shareUrl, impact, addToast, notify, t]);
 
   const handleShare = useCallback(async () => {
     if (!shareUrl) return;
@@ -95,7 +95,7 @@ export function useReferralPageModel() {
     if (navigator.share) {
       try {
         await navigator.share({ title: "VPN", url: shareUrl });
-        addToast("Link shared", "success");
+        addToast(t("referral.toast_link_shared"), "success");
         notify("success");
       } catch {
         await copyToClipboard();
@@ -103,20 +103,20 @@ export function useReferralPageModel() {
     } else {
       await copyToClipboard();
     }
-  }, [shareUrl, impact, addToast, notify, copyToClipboard]);
+  }, [shareUrl, impact, addToast, notify, copyToClipboard, t]);
 
   const header: StandardPageHeader = {
-    title: "Invite friends",
-    subtitle: "Copy your invite link. Referral rewards stay read-only during beta.",
+    title: t("referral.header_title"),
+    subtitle: t("referral.header_subtitle"),
   };
 
   const pageState: StandardPageState = !hasToken
-    ? { status: "empty", title: "Session missing" }
+    ? { status: "empty", title: t("common.session_missing_title") }
     : linkError || statsError
       ? {
           status: "error",
-          title: "Referrals temporarily unavailable",
-          message: "We could not load your referral data. Please try again later.",
+          title: t("referral.error_title_generic"),
+          message: t("referral.error_message_generic"),
           onRetry: () => {
             refetchLink();
             refetchStats();

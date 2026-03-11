@@ -24,6 +24,16 @@ type TokenSpec = {
   name: string;
   token: string;
   usage: string;
+  /** Canonical desktop value, e.g. `24px` or `1.25`. */
+  value?: string;
+  /** Mobile-focused note, e.g. `32px → 28px on mobile` or `unchanged`. */
+  mobileValue?: string;
+  /** Line-height guidance, e.g. `1.1` or `lh 1.5`. */
+  lineHeight?: string;
+  /** Weight guidance, e.g. `400` / `600` / `700`. */
+  weight?: string;
+  /** Font family, e.g. `Space Grotesk` or `IBM Plex Mono`. */
+  family?: string;
   note?: string;
   preview?: ReactNode;
 };
@@ -100,8 +110,14 @@ export function ThreeColumn({ children }: { children: ReactNode }) {
 export function TokenTable({ specs }: TokenTableProps) {
   return (
     <div style={tokenTableStyle}>
-      {specs.map((spec) => (
-        <div key={spec.name} style={tokenRowStyle}>
+      {specs.map((spec, index) => (
+        <div
+          key={spec.name}
+          style={{
+            ...tokenRowStyle,
+            background: index % 2 === 0 ? "var(--color-surface)" : "color-mix(in oklch, var(--color-surface) 96%, var(--color-surface-2) 4%)",
+          }}
+        >
           <div style={tokenMetaStyle}>
             <div style={tokenNameStyle}>{spec.name}</div>
             <code style={tokenCodeStyle}>{spec.token}</code>
@@ -109,6 +125,10 @@ export function TokenTable({ specs }: TokenTableProps) {
           <div style={tokenUsageStyle}>
             <div>{spec.usage}</div>
             {spec.note ? <div style={tokenNoteStyle}>{spec.note}</div> : null}
+          </div>
+          <div style={tokenValueCellStyle}>
+            {spec.value ? <span style={tokenValuePrimaryStyle}>{spec.value}</span> : null}
+            {spec.mobileValue ? <span style={tokenValueSecondaryStyle}>{spec.mobileValue}</span> : null}
           </div>
           <div style={tokenPreviewCellStyle}>{spec.preview ?? <code style={tokenCodeStyle}>var({spec.token})</code>}</div>
         </div>
@@ -211,7 +231,7 @@ const titleStyle: CSSProperties = {
 
 const summaryStyle: CSSProperties = {
   margin: 0,
-  maxWidth: "64ch",
+  maxWidth: "640px",
   fontFamily: "var(--font-sans)",
   fontSize: "var(--typo-body-size)",
   lineHeight: 1.6,
@@ -251,12 +271,12 @@ const statLabelStyle: CSSProperties = {
 
 const sectionStyle: CSSProperties = {
   display: "grid",
-  gap: "var(--spacing-4)",
+  gap: "var(--spacing-5)",
 };
 
 const sectionHeadingStyle: CSSProperties = {
   display: "grid",
-  gap: "var(--spacing-2)",
+  gap: "4px",
 };
 
 const sectionTitleStyle: CSSProperties = {
@@ -279,21 +299,25 @@ const twoColumnStyle: CSSProperties = {
   display: "grid",
   gap: "var(--spacing-4)",
   gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+  alignItems: "stretch",
 };
 
 const threeColumnStyle: CSSProperties = {
   display: "grid",
   gap: "var(--spacing-4)",
   gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+  alignItems: "stretch",
 };
 
 const cardStyle: CSSProperties = {
   display: "grid",
   gap: "var(--spacing-4)",
+  gridTemplateRows: "auto minmax(0, 1fr)",
   padding: "var(--spacing-4)",
   borderRadius: "var(--radius-lg)",
   background: "var(--color-surface)",
-  border: "1px solid var(--color-border)",
+  border: "1px solid color-mix(in oklch, var(--color-border) 70%, var(--color-text) 30%)",
+  boxShadow: "0 1px 3px color-mix(in oklch, black 6%, transparent)",
 };
 
 const cardHeaderStyle: CSSProperties = {
@@ -327,11 +351,11 @@ const tokenTableStyle: CSSProperties = {
 const tokenRowStyle: CSSProperties = {
   display: "grid",
   gap: "var(--spacing-3)",
-  gridTemplateColumns: "minmax(160px, 0.9fr) minmax(240px, 1.4fr) minmax(180px, 0.8fr)",
+  gridTemplateColumns:
+    "minmax(160px, 0.9fr) minmax(240px, 1.2fr) minmax(160px, 0.8fr) minmax(200px, 1fr)",
   alignItems: "center",
   padding: "var(--spacing-3) var(--spacing-4)",
   borderBottom: "1px solid var(--color-border-subtle)",
-  background: "var(--color-surface)",
 };
 
 const tokenMetaStyle: CSSProperties = {
@@ -362,15 +386,35 @@ const tokenUsageStyle: CSSProperties = {
   lineHeight: 1.6,
 };
 
+const tokenValueCellStyle: CSSProperties = {
+  display: "grid",
+  gap: "2px",
+  justifyContent: "flex-start",
+  alignItems: "center",
+  fontFamily: "var(--font-mono)",
+  fontSize: "var(--typo-caption-size)",
+  lineHeight: 1.4,
+};
+
+const tokenValuePrimaryStyle: CSSProperties = {
+  color: "var(--color-text)",
+};
+
+const tokenValueSecondaryStyle: CSSProperties = {
+  color: "var(--color-text-tertiary)",
+};
+
 const tokenNoteStyle: CSSProperties = {
   color: "var(--color-text-tertiary)",
 };
 
 const tokenPreviewCellStyle: CSSProperties = {
   display: "flex",
-  justifyContent: "flex-end",
-  alignItems: "center",
-  minHeight: "48px",
+  flexDirection: "column",
+  alignItems: "flex-end",
+  justifyContent: "center",
+  minHeight: "56px",
+  gap: "4px",
 };
 
 const usageExampleStyle: CSSProperties = {
@@ -427,6 +471,7 @@ const boxPreviewStyle: CSSProperties = {
   padding: "var(--spacing-2)",
   border: "1px solid var(--color-border)",
   background: "var(--color-surface-2)",
+  boxShadow: "var(--shadow-soft)",
   color: "var(--color-text)",
   fontFamily: "var(--font-mono)",
   fontSize: "var(--typo-caption-size)",

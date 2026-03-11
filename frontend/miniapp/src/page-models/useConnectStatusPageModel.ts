@@ -4,6 +4,7 @@ import { webappApi } from "@/api/client";
 import { useTrackScreen } from "@/hooks/useTrackScreen";
 import { useTelemetry } from "@/hooks/useTelemetry";
 import { useSession } from "@/hooks/useSession";
+import { useI18n } from "@/hooks/useI18n";
 import { webappQueryKeys } from "@/lib/query-keys/webapp.query-keys";
 import {
   getActiveDevices,
@@ -15,6 +16,7 @@ import {
 export function useConnectStatusPageModel() {
   const queryClient = useQueryClient();
   const { data: session } = useSession(true);
+  const { t } = useI18n();
 
   const activeDevices = getActiveDevices(session);
   const latestDevice = getLatestActiveDevice(session);
@@ -53,60 +55,60 @@ export function useConnectStatusPageModel() {
 
   const summary = !activeSub
     ? {
-        eyebrow: "Access",
-        title: "No active plan",
-        subtitle: "Choose a plan before issuing a config or connecting in your VPN app.",
+        eyebrow: t("connect_status.summary_access_eyebrow"),
+        title: t("connect_status.summary_no_plan_title"),
+        subtitle: t("connect_status.summary_no_plan_subtitle"),
         edge: "e-r" as const,
         glow: "g-red" as const,
       }
     : activeDevices.length === 0
       ? {
-          eyebrow: "Setup",
-          title: "No device config yet",
-          subtitle: "Issue a device first, then import the config in your VPN app.",
+          eyebrow: t("connect_status.summary_setup_eyebrow"),
+          title: t("connect_status.summary_no_device_title"),
+          subtitle: t("connect_status.summary_no_device_subtitle"),
           edge: "e-a" as const,
           glow: "g-amber" as const,
         }
       : connectionConfirmed
         ? {
-            eyebrow: "Setup",
-            title: "Setup confirmed",
-            subtitle: "At least one device has completed setup in the VPN app.",
+            eyebrow: t("connect_status.summary_setup_eyebrow"),
+            title: t("connect_status.summary_confirmed_title"),
+            subtitle: t("connect_status.summary_confirmed_subtitle"),
             edge: "e-g" as const,
             glow: "g-green" as const,
           }
         : {
-            eyebrow: "Setup",
-            title: "Setup pending",
-            subtitle: "Import the config in your VPN app, connect there, then confirm here.",
+            eyebrow: t("connect_status.summary_setup_eyebrow"),
+            title: t("connect_status.summary_pending_title"),
+            subtitle: t("connect_status.summary_pending_subtitle"),
             edge: "e-a" as const,
             glow: "g-amber" as const,
           };
 
   const primaryAction = !activeSub
-    ? { label: "Choose plan", to: "/plan" }
+    ? { label: t("home.primary_choose_plan"), to: "/plan" }
     : activeDevices.length === 0
-      ? { label: "Add device", to: "/devices/issue" }
+      ? { label: t("home.primary_add_device"), to: "/devices/issue" }
       : connectionConfirmed
-        ? { label: "Manage devices", to: "/devices" }
+        ? { label: t("home.primary_manage_devices"), to: "/devices" }
         : null;
 
   return {
     header: {
-      title: "VPN setup status",
-      subtitle: latestDevice?.device_name ?? "Access and device setup",
+      title: t("connect_status.header_title"),
+      subtitle: latestDevice?.device_name ?? t("connect_status.header_subtitle_fallback"),
     },
     summary,
     description: !activeSub
-      ? "The mini app manages access and configs. The VPN connection itself happens in your native VPN app."
+      ? t("connect_status.description_no_plan")
       : activeDevices.length === 0
-        ? "Issue a device to receive a config, then continue setup in your VPN app."
+        ? t("connect_status.description_no_device")
         : connectionConfirmed
-          ? "The app can confirm setup completion, but it does not directly control the VPN connection."
-          : "Use this screen only after you have imported the config and connected in your native VPN app.",
+          ? t("connect_status.description_confirmed")
+          : t("connect_status.description_pending"),
     pageState,
     primaryAction,
-    latestDeviceName: latestDevice?.device_name ?? "your device",
+    latestDeviceName: latestDevice?.device_name ?? t("connect_status.latest_device_fallback"),
     showConfirmAction: Boolean(activeSub && latestDevice && !connectionConfirmed),
     isConfirming: confirmMutation.isPending,
     confirmConnected,

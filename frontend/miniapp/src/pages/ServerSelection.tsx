@@ -5,6 +5,7 @@ import {
   PageCardSection,
   PageFrame,
   PageSection,
+  PageHeaderBadge,
   MissionPrimaryButton,
   MissionSecondaryButton,
   ServerCard,
@@ -45,14 +46,17 @@ export function ServerSelectionPage() {
       <PageCardSection
         title={t("servers.routing_mode_title")}
         description={t("servers.routing_mode_description")}
+        action={
+          <PageHeaderBadge
+            tone={model.data.auto_select ? "success" : "info"}
+            label={model.data.auto_select ? t("servers.routing_status_auto") : t("servers.routing_status_manual")}
+          />
+        }
       >
-        <p className="op-desc type-body-sm">
-          {model.data.auto_select ? t("servers.routing_status_auto") : t("servers.routing_status_manual")}
-        </p>
         <p className="type-body-sm muted server-selection-note">
           {t("servers.routing_latency_note")}
         </p>
-        <div className="miniapp-compact-actions">
+        <div className="miniapp-compact-actions server-selection-page__routing-actions">
           {model.data.auto_select ? (
             <MissionSecondaryButton
               onClick={model.handleAutoSelect}
@@ -79,6 +83,8 @@ export function ServerSelectionPage() {
 
       <PageSection
         title={t("servers.locations_title")}
+        description={t("servers.locations_description")}
+        action={<PageHeaderBadge tone="neutral" label={model.locationsBadge.label} />}
       >
         <div className="stack">
           {model.data.items.length === 0 ? (

@@ -14,7 +14,7 @@ export type MissionTone = "blue" | "green" | "amber" | "red";
 export type MissionChipTone = "neutral" | "blue" | "green" | "amber" | "red";
 export type MissionAlertTone = "info" | "warning" | "error" | "success";
 export type MissionPrimaryButtonTone = "default" | "warning" | "danger";
-export type MissionStatusTone = "inactive" | "connecting" | "online";
+export type MissionStatusTone = "inactive" | "connecting" | "online" | "warning" | "error" | "idle";
 export type MissionHealthTone = "healthy" | "warning" | "danger";
 
 const CARD_EDGE_CLASS_MAP: Record<MissionTone, string> = {
@@ -55,6 +55,9 @@ const STATUS_DOT_CLASS_MAP: Record<MissionStatusTone, string> = {
   inactive: "status-dot",
   connecting: "status-dot connecting",
   online: "status-dot online",
+  warning: "status-dot warning",
+  error: "status-dot error",
+  idle: "status-dot idle",
 };
 
 const HEALTH_FILL_CLASS_MAP: Record<MissionHealthTone, string> = {
@@ -71,7 +74,7 @@ const OP_EDGE_CLASS_MAP: Record<MissionTone, string> = {
 };
 
 const OP_ICON_CLASS_MAP: Record<MissionTone, string> = {
-  blue: "b",
+  blue: "n",
   green: "g",
   amber: "a",
   red: "r",
@@ -99,7 +102,7 @@ export function MissionCard({
   const Component = as;
   return (
     <Component
-      className={joinClasses("card", CARD_EDGE_CLASS_MAP[tone], className)}
+      className={joinClasses("card", "mission-card", CARD_EDGE_CLASS_MAP[tone], className)}
       {...props}
     >
       {glowTone ? (

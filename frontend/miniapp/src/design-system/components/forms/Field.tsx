@@ -10,30 +10,53 @@ import { HelperText } from "./HelperText";
 export interface FieldProps {
   id?: string;
   label?: ReactNode;
+  required?: boolean;
   /** Optional hint or description below the control (hidden when error is shown) */
   description?: ReactNode;
   error?: string;
+  success?: ReactNode;
+  helperPosition?: "top" | "bottom";
   children: ReactNode;
   className?: string;
 }
 
-export function Field({ id, label, description, error, children, className = "" }: FieldProps) {
+export function Field({
+  id,
+  label,
+  required = false,
+  description,
+  error,
+  success,
+  helperPosition = "bottom",
+  children,
+  className = "",
+}: FieldProps) {
+  const hint = description != null && !error ? (
+    <HelperText variant="hint" id={id ? `${id}-hint` : undefined}>
+      {description}
+    </HelperText>
+  ) : null;
+
+  const successMessage = success != null && !error ? (
+    <HelperText variant="success" id={id ? `${id}-success` : undefined}>
+      {success}
+    </HelperText>
+  ) : null;
+
+  const errorMessage = error != null && error !== "" ? (
+    <HelperText variant="error" role="alert" id={id ? `${id}-error` : undefined}>
+      {error}
+    </HelperText>
+  ) : null;
+
   return (
     <div className={cn("field", className)}>
       {label != null && (
-        <Label htmlFor={id}>{label}</Label>
+        <Label htmlFor={id} required={required}>{label}</Label>
       )}
+      {helperPosition === "top" ? errorMessage ?? successMessage ?? hint : null}
       {children}
-      {description != null && !error && (
-        <HelperText variant="hint" id={id ? `${id}-hint` : undefined}>
-          {description}
-        </HelperText>
-      )}
-      {error != null && error !== "" && (
-        <HelperText variant="error" role="alert" id={id ? `${id}-error` : undefined}>
-          {error}
-        </HelperText>
-      )}
+      {helperPosition === "bottom" ? errorMessage ?? successMessage ?? hint : null}
     </div>
   );
 }

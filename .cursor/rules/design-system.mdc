@@ -18,4 +18,4 @@ Status and header hierarchy must stay singular. Pick one owner for a given seman
 
 - **Tailwind**: Use the project's configured token aliases (e.g. semantic or design-token-based classes), not raw color names like `bg-red-500`. Prefer tokens that map to the token file.
 
-CI design checks enforce: no hardcoded hex, no inline styles, no direct lucide in miniapp, single token source, and no CSS files or CSS imports in `frontend/miniapp/src/pages`. Run `design:check` locally and follow `frontend/miniapp/src/design-system/docs/design-system-enforcement-checklist.md`.
+CI design checks enforce: no hardcoded hex, no inline styles, no direct lucide in miniapp, single token source, and no CSS files or CSS imports in `frontend/miniapp/src/pages`. Run `design:check` locally and follow `frontend/miniapp/docs/design-system/enforcement-checklist.md`.

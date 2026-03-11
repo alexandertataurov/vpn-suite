@@ -1,9 +1,12 @@
 /**
  * Design system typography tokens. Use semantic tokens; do not hardcode font-size in components.
-* CSS source: styles/theme/consumer.css (consumer-dark/consumer-light), styles/shell/frame.css (fallback),
-* styles/theme/telegram.css.
+ * CSS source: styles/theme/consumer.css (consumer-dark/consumer-light), styles/shell/frame.css (fallback),
+ * styles/theme/telegram.css.
  *
- * Miniapp consumer scale: Space Grotesk + IBM Plex Mono; display 32, h1 24, h2 18, h3 16, body 14, caption 12, meta 12.
+ * Miniapp consumer scale (consumer-light canonical):
+ * - Space Grotesk for UI, IBM Plex Mono for metadata
+ * - display 32px, h1 24px, h2 18px, h3 16px, h4 15px
+ * - body 14px, body-sm 14px, caption 12px, meta 12px
  */
 export const TYPOGRAPHY_TOKENS = {
   fontSans: "--font-sans",
@@ -32,4 +35,53 @@ export const TYPOGRAPHY_TOKENS = {
   typoMetaSize: "--typo-meta-size",
   fontWeightRegular: "--ds-font-weight-regular",
   fontWeightSemibold: "--ds-font-weight-semibold",
+} as const;
+
+/**
+ * Canonical resolved token values by consumer theme.
+ * These power parity tests and Storybook audits.
+ */
+export const TYPOGRAPHY_THEME_VALUES = {
+  "consumer-dark": {
+    [TYPOGRAPHY_TOKENS.fontSans]: '"Space Grotesk", "IBM Plex Sans", "Inter Variable", "Inter", "Segoe UI", sans-serif',
+    [TYPOGRAPHY_TOKENS.fontMono]: '"IBM Plex Mono", ui-monospace, "SFMono-Regular", "Roboto Mono", monospace',
+    [TYPOGRAPHY_TOKENS.fontPageTitleSize]: "22px",
+    [TYPOGRAPHY_TOKENS.fontSectionTitleSize]: "18px",
+    [TYPOGRAPHY_TOKENS.fontCardTitleSize]: "15px",
+    [TYPOGRAPHY_TOKENS.fontBodySize]: "14px",
+    [TYPOGRAPHY_TOKENS.fontCaptionSize]: "12px",
+    [TYPOGRAPHY_TOKENS.fontLabelSize]: "12px",
+    [TYPOGRAPHY_TOKENS.typoDisplaySize]: "28px",
+    [TYPOGRAPHY_TOKENS.typoH1Size]: "22px",
+    [TYPOGRAPHY_TOKENS.typoH2Size]: "18px",
+    [TYPOGRAPHY_TOKENS.typoH3Size]: "15px",
+    [TYPOGRAPHY_TOKENS.typoH4Size]: "15px",
+    [TYPOGRAPHY_TOKENS.typoBodySize]: "14px",
+    [TYPOGRAPHY_TOKENS.typoBodySmSize]: "14px",
+    [TYPOGRAPHY_TOKENS.typoCaptionSize]: "12px",
+    [TYPOGRAPHY_TOKENS.typoMetaSize]: "12px",
+    [TYPOGRAPHY_TOKENS.fontWeightRegular]: "400",
+    [TYPOGRAPHY_TOKENS.fontWeightSemibold]: "600",
+  },
+  "consumer-light": {
+    [TYPOGRAPHY_TOKENS.fontSans]: '"Space Grotesk", "IBM Plex Sans", "Inter Variable", "Inter", "Segoe UI", sans-serif',
+    [TYPOGRAPHY_TOKENS.fontMono]: '"IBM Plex Mono", ui-monospace, "SFMono-Regular", "Roboto Mono", monospace',
+    [TYPOGRAPHY_TOKENS.fontPageTitleSize]: "22px",
+    [TYPOGRAPHY_TOKENS.fontSectionTitleSize]: "18px",
+    [TYPOGRAPHY_TOKENS.fontCardTitleSize]: "16px",
+    [TYPOGRAPHY_TOKENS.fontBodySize]: "14px",
+    [TYPOGRAPHY_TOKENS.fontCaptionSize]: "12px",
+    [TYPOGRAPHY_TOKENS.fontLabelSize]: "12px",
+    [TYPOGRAPHY_TOKENS.typoDisplaySize]: "32px",
+    [TYPOGRAPHY_TOKENS.typoH1Size]: "24px",
+    [TYPOGRAPHY_TOKENS.typoH2Size]: "18px",
+    [TYPOGRAPHY_TOKENS.typoH3Size]: "16px",
+    [TYPOGRAPHY_TOKENS.typoH4Size]: "15px",
+    [TYPOGRAPHY_TOKENS.typoBodySize]: "14px",
+    [TYPOGRAPHY_TOKENS.typoBodySmSize]: "14px",
+    [TYPOGRAPHY_TOKENS.typoCaptionSize]: "12px",
+    [TYPOGRAPHY_TOKENS.typoMetaSize]: "12px",
+    [TYPOGRAPHY_TOKENS.fontWeightRegular]: "400",
+    [TYPOGRAPHY_TOKENS.fontWeightSemibold]: "600",
+  },
 } as const;

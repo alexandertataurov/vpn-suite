@@ -11,10 +11,24 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 - Admin Servers operator console (snapshot sync): server state from AmneziaWG nodes as source of truth; manual `POST /servers/:id/sync`, auto-sync loop, snapshot (CPU/RAM, peers, IP pool); telemetry columns and Sync button; Prometheus metrics and config (SERVER_SYNC_*).
 - Admin Servers Operator Console: issue config from chosen server, one-time download/QR by token; rotate and revoke peers; audit with request_id; idempotency and rate limiting; Prometheus metrics and alert rules.
+- Promo/referral services and miniapp promo flows.
+- Miniapp design system consolidation: single token source, layouts, patterns, Storybook stories, design-check CI.
+- Frontend shared package; CI pnpm10; hook consolidation.
+- Miniapp: Plan, Settings, Usage, Support, ServerSelection pages; shared theme.
+- Admin: dashboard (peers, typography), abuse, churn, revenue, retention pages; design-system alignment; Devices, ServerDetail, operator dashboard, adaptive UI.
+- Bot: churn, trial, menu handlers; consolidated start/commands and i18n; API client, metrics.
+- Backend: admin APIs, control center tasks, metrics; devices config health and operator peers; one-time download links and AWG tooling; admin_configs and users API; address_allocator, issue services, node_runtime_docker, reconciliation, server_obfuscation; amnezia config builder; DB metrics middleware, handshake quality gate, NO_HANDSHAKE reconciliation.
+- Services and models: abuse, churn, retention, revenue, trial, pricing, promo.
+- Docker discovery: filter by container prefix, dedupe VPN servers by container_name.
+- Ops: diagnose-no-traffic script, incident report template, amnezia-nat-setup systemd unit; launch KPIs, ops guide, Grafana dashboards.
+- Config and monitoring: alert rules, discovery, Grafana, Prometheus, Loki, OpenAPI export.
+- CI: frontend-e2e reuses admin dev server for Playwright; hardened workflows; API happy-path contract optional; buildx + GHA cache for admin-api; Dockerfile HEALTHCHECK.
+- Docs: observability and miniapp specs, revenue-engine specs, codebase-map, runbook, bot codebase-map; remove Outline from observability config.
 
 ### Changed
 
-- (None)
+- Design system: single `:root` token source; admin/miniapp parity; design-system checks in CI.
+- issue/rotate: persistent_keepalive from request_params; defaults for restrictive networks (MTU 1200, keepalive 15, DNS 8.8.8.8 and 8.8.4.4).
 
 ### Deprecated
 
@@ -23,10 +37,13 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 ### Removed
 
 - **Breaking:** `Server.integration_type` (migration 036) and `Device.outline_key_id` (migration 035). Outline integration removed; use AmneziaWG + node-agent only.
+- Deprecated documentation files; obsolete root docs.
 
 ### Fixed
 
-- (None)
+- Backend: skip live key fetch in mock mode; finalize one-time downloads and telemetry; ruff cleanups; format public download endpoint.
+- CI: ruff/mypy/Storybook/design-system steps, pip-audit/storybook-runner non-blocking, shell strictness, cache-dependency-path for pnpm; install base deps, stabilize backend tests; design-system hardcoded-color check and empty grep; avoid secrets in if/env.
+- Frontend: devices table typing; cn helper deps; miniapp unused-vars and typecheck layers.
 
 ### Security
 

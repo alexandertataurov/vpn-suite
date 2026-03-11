@@ -56,9 +56,9 @@ export const webappMeNoDevices: WebAppMeResponse = {
 /** Placeholder text for form/story edge-case stories. */
 export const storyText = {
   veryLong:
-    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+    "This connected device is already using the maximum profile label length, so the row should wrap cleanly without pushing actions off-screen.",
   longLabel:
-    "A medium-length placeholder that demonstrates how text wraps in constrained layouts.",
+    "Use Telegram language preference unless this account needs a different support and billing language.",
 } as const;
 
 export const webappMeRevokedOnly: WebAppMeResponse = {

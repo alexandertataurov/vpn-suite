@@ -1,10 +1,14 @@
 import { SessionMissing } from "@/components";
 import {
+  ButtonRow,
+  MissionPrimaryLink,
+  MissionSecondaryLink,
   PageFrame,
-  PageSection,
+  PageStateScreen,
   MissionPrimaryButton,
   InlineAlert,
   StickyBottomBar,
+  PageCardSection,
 } from "@/design-system";
 import { useRestoreAccessPageModel } from "@/page-models";
 import { useI18n } from "@/hooks/useI18n";
@@ -17,7 +21,9 @@ export function RestoreAccessPage() {
     if (!model.hasGraceOrExpired) {
       return (
         <PageFrame title={model.header.title} className="restore-access-page">
-          <PageSection description={model.description}>
+          <PageCardSection
+            description={model.description}
+          >
             <InlineAlert
               variant="info"
               title={model.pageState.title ?? t("restore.inline_no_expired_title")}
@@ -26,7 +32,15 @@ export function RestoreAccessPage() {
                 t("restore.inline_no_expired_message")
               }
             />
-          </PageSection>
+            <ButtonRow>
+              <MissionPrimaryLink to="/support">
+                {t("common.contact_support")}
+              </MissionPrimaryLink>
+              <MissionSecondaryLink to="/devices">
+                {t("restore.manage_devices_action")}
+              </MissionSecondaryLink>
+            </ButtonRow>
+          </PageCardSection>
         </PageFrame>
       );
     }
@@ -36,49 +50,47 @@ export function RestoreAccessPage() {
   if (model.pageState.status === "loading") {
     return (
       <PageFrame title={model.header.title} subtitle={model.header.subtitle} className="restore-access-page">
-        <PageSection description={model.description}>
+        <PageCardSection description={model.description}>
           <p className="type-body-sm muted">{t("restore.loading_status_message")}</p>
-        </PageSection>
+        </PageCardSection>
       </PageFrame>
     );
   }
 
   if (model.pageState.status === "error") {
     return (
-      <PageFrame title={model.header.title} subtitle={model.header.subtitle} className="restore-access-page">
-        <PageSection description={model.description}>
-          <InlineAlert
-            variant="error"
-            title={model.pageState.title}
-            message={model.pageState.message}
-          />
-        </PageSection>
-        <StickyBottomBar>
-          <div className="miniapp-compact-actions">
-            <MissionPrimaryButton
-              onClick={() => model.restoreAccess()}
-              disabled={model.isRestoring}
-              className="miniapp-compact-action"
-            >
-              {model.isRestoring
-                ? t("restore.primary_button_loading_label")
-                : t("restore.primary_button_label")}
-            </MissionPrimaryButton>
-          </div>
-        </StickyBottomBar>
-      </PageFrame>
+      <PageStateScreen
+        variant="attention"
+        mode="replace"
+        label={t("restore.header_title")}
+        chipText={t("common.attention")}
+        alertTitle={model.pageState.title ?? model.header.title}
+        alertMessage={model.pageState.message ?? model.description}
+        actions={
+          <MissionPrimaryButton
+            onClick={() => model.restoreAccess()}
+            disabled={model.isRestoring}
+          >
+            {model.isRestoring
+              ? t("restore.primary_button_loading_label")
+              : t("restore.primary_button_label")}
+          </MissionPrimaryButton>
+        }
+      />
     );
   }
 
   return (
     <PageFrame title={model.header.title} subtitle={model.header.subtitle} className="restore-access-page">
-      <PageSection description={model.description}>
+      <PageCardSection
+        description={model.description}
+      >
         <InlineAlert
           variant="info"
           title={t("restore.info_title")}
           message={t("restore.info_message")}
         />
-      </PageSection>
+      </PageCardSection>
       <StickyBottomBar>
         <div className="miniapp-compact-actions">
           <MissionPrimaryButton

@@ -4,6 +4,7 @@ import { cn } from "@vpn-suite/shared";
 export interface InlineAlertProps {
   variant: "info" | "warning" | "error" | "success";
   title: string;
+  body?: ReactNode;
   message?: string;
   actions?: ReactNode;
   className?: string;
@@ -27,11 +28,14 @@ const variantClass = {
 export function InlineAlert({
   variant,
   title,
+  body,
   message,
   actions,
   className,
   "data-testid": dataTestId,
 }: InlineAlertProps) {
+  const resolvedBody = body ?? message;
+
   return (
     <div
       role={variantRole[variant]}
@@ -40,11 +44,9 @@ export function InlineAlert({
       data-testid={dataTestId}
     >
       <span className="alert-icon" aria-hidden>●</span>
-      <div>
-        <div className="alert-title inline-alert-title">{title}</div>
-        {message ? <div className="alert-desc inline-alert-message">{message}</div> : null}
-        {actions ? <div className="inline-alert-actions">{actions}</div> : null}
-      </div>
+      <div className="alert-title inline-alert-title">{title}</div>
+      {resolvedBody ? <div className="alert-desc inline-alert-message">{resolvedBody}</div> : null}
+      {actions ? <div className="inline-alert-actions">{actions}</div> : null}
     </div>
   );
 }

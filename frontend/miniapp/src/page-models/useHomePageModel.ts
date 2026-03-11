@@ -17,10 +17,64 @@ import {
 } from "./helpers";
 import { evaluateUpsell, type UpsellDecision } from "./upsell";
 import { DEFAULT_USAGE_SOFT_CAP_BYTES, clamp } from "./plan-helpers";
+import type { HomeDynamicBlockProps, HomeHeroPanelProps, HomePrimaryActionState } from "@/design-system/patterns";
+
+type HomeScreenPhase =
+  | "loading"
+  | "onboarding"
+  | "no_plan"
+  | "disconnected"
+  | "connecting"
+  | "connected"
+  | "degraded"
+  | "error";
+
+function deriveHomeScreenPhase(params: {
+  hasToken: boolean;
+  isLoading: boolean;
+  isFetching: boolean;
+  error: unknown;
+  hasSubscription: boolean;
+  hasConfirmedDevice: boolean;
+  activeDevicesCount: number;
+  latencyMs: number | null;
+}): HomeScreenPhase {
+  const { hasToken, isLoading, isFetching, error, hasSubscription, hasConfirmedDevice, activeDevicesCount, latencyMs } = params;
+
+  if (!hasToken || isLoading || (error != null && isFetching)) {
+    return "loading";
+  }
+
+  if (error != null) {
+    return "error";
+  }
+
+  if (!hasSubscription) {
+    return "no_plan";
+  }
+
+  if (!hasConfirmedDevice && activeDevicesCount === 0) {
+    return "onboarding";
+  }
+
+  if (!hasConfirmedDevice) {
+    return "connecting";
+  }
+
+  if (latencyMs != null && latencyMs > 500) {
+    return "degraded";
+  }
+
+  return "connected";
+}
 
 export interface HomePageModel {
   header: StandardPageHeader;
   pageState: StandardPageState;
+  homePhase: HomeScreenPhase;
+  homeHero: HomeHeroPanelProps;
+  homeSignals: HomeDynamicBlockProps;
+  isHomeTransitioning: boolean;
   connectionHero: {
     state: "inactive" | "connecting" | "connected";
     serverKeyLabel: string;
@@ -44,6 +98,13 @@ export interface HomePageModel {
     to: string;
     secondaryLabel?: string;
     secondaryTo?: string;
+  };
+  primaryActionState: HomePrimaryActionState;
+  quickActionContext: {
+    status: "connected" | "disconnected" | "connecting" | "error";
+    deviceCount: number;
+    planLimit: number | null;
+    planKind: "trial" | "paid";
   };
   quickAccessMeta: { badge: StandardSectionBadge; description: string };
   /** Primary monetization card (spec §14.1). */
@@ -176,6 +237,34 @@ export function useHomePageModel(): HomePageModel {
   const trafficTone: "healthy" | "warning" | "danger" =
     trafficPercent >= 100 ? "danger" : trafficPercent >= 80 ? "warning" : "healthy";
 
+  const subscriptionDaysLeft = activeSub?.valid_until ? daysUntil(activeSub.valid_until) : 0;
+  const subscriptionLabel =
+    currentPlan?.name
+    ?? (activeSub?.is_trial ? "Trial" : activeSub?.plan_id ? "Subscription" : "No plan");
+  const subscriptionShortLabel =
+    currentPlan?.name
+    ?? (activeSub?.is_trial ? "Trial" : activeSub?.plan_id ? "Plan" : "No plan");
+  const isHomeTransitioning = isFetching && !isLoading;
+  const homeScreenPhase: HomeScreenPhase = deriveHomeScreenPhase({
+    hasToken,
+    isLoading,
+    isFetching,
+    error,
+    hasSubscription: Boolean(activeSub),
+    hasConfirmedDevice,
+    activeDevicesCount: activeDevices.length,
+    latencyMs,
+  });
+
+  const homeVariant: HomeHeroPanelProps["variant"] =
+    homeScreenPhase === "loading"
+      ? "loading"
+      : homeScreenPhase === "onboarding"
+        ? "onboarding"
+        : homeScreenPhase === "no_plan"
+          ? "disconnected"
+          : homeScreenPhase;
+
   const header: StandardPageHeader = {
     title: t("home.header_title"),
     subtitle: !activeSub
@@ -198,9 +287,81 @@ export function useHomePageModel(): HomePageModel {
           }
         : { status: "ready" };
 
+  const homeLatencyLabel = homeScreenPhase === "loading" || homeScreenPhase === "connecting"
+    ? "Pending"
+    : !activeSub
+      ? "Offline"
+      : latencyMs != null
+        ? `${Math.round(latencyMs)} ms`
+        : "--";
+  const homeLatencyTone: NonNullable<HomeHeroPanelProps["latencyTone"]> =
+    !activeSub || latencyMs == null
+      ? "mut"
+      : homeScreenPhase === "error"
+        ? "red"
+        : latencyMs > 500
+          ? "red"
+          : latencyMs >= 100
+            ? "amber"
+            : "green";
+  const homeSubscriptionTone: NonNullable<HomeHeroPanelProps["subscriptionTone"]> =
+    !activeSub
+      ? "mut"
+      : homeScreenPhase === "error"
+        ? "red"
+        : latencyMs != null && latencyMs > 500
+          ? "amber"
+          : "green";
+  const serverIdLabel = currentServer?.id ? `#${currentServer.id.slice(0, 4)}` : undefined;
+
   return {
     header,
     pageState,
+    homePhase: homeScreenPhase,
+    homeHero: {
+      variant: homeVariant,
+      statusText,
+      statusHint,
+      subscriptionLabel: activeSub ? subscriptionLabel : "No plan",
+      subscriptionShortLabel: activeSub ? subscriptionShortLabel : "No plan",
+      subscriptionTone: homeSubscriptionTone,
+      latencyLabel: homeLatencyLabel,
+      latencyTone: homeLatencyTone,
+      bandwidthLabel: activeSub && totalTrafficBytes != null ? formatBytes(totalTrafficBytes, { digits: 1 }) : "--",
+      bandwidthTone: activeSub ? "teal" : "mut",
+      timeLeftLabel: !activeSub ? "Not started" : `${Math.max(0, subscriptionDaysLeft)} days`,
+      timeLeftTone: !activeSub ? "mut" : subscriptionDaysLeft <= 1 ? "red" : subscriptionDaysLeft <= 3 ? "amber" : "green",
+      showServerRow: Boolean(activeSub),
+      lastUpdated: lastActiveLabel !== "--" ? `${lastActiveLabel} ago` : undefined,
+      isDataStale: Boolean(error) || isHomeTransitioning,
+      flashLatency: phase === "connected",
+      serverFlag: "🌐",
+      serverLocation: activeSub ? locationLabel : undefined,
+      serverId: serverIdLabel,
+      routeQuality: error ? "forced" : latencyMs != null && latencyMs > 500 ? "degraded" : "optimal",
+      isServerLoading: !serversData || isLoading || homeVariant === "connecting",
+      heroActionLabel: phase === "connected" ? "Disconnect" : "Connect",
+    },
+    isHomeTransitioning,
+    homeSignals: {
+      daysLeft: Math.max(0, subscriptionDaysLeft),
+      hasSub: Boolean(activeSub),
+      deviceLimit,
+      usedDevices,
+      healthError: homeScreenPhase === "error" || homeScreenPhase === "degraded",
+      bandwidthRemainingPercent:
+        activeSub && totalTrafficBytes != null
+          ? clamp(100 - trafficPercent, 0, 100)
+          : null,
+      showUpsellExpiry: true,
+      showUpsellDeviceLimit: true,
+      renewalTargetTo: "/plan",
+      upgradeTargetTo: "/plan",
+      maxVisible: 2,
+      isTrial: Boolean(activeSub?.is_trial),
+      trialDaysLeft: activeSub?.trial_ends_at ? Math.max(0, daysUntil(activeSub.trial_ends_at)) : 0,
+      showUpsellTrialEnd: Boolean(activeSub?.is_trial),
+    },
     connectionHero: {
       state: phase,
       serverKeyLabel: t("home.connection_server_key"),
@@ -260,6 +421,26 @@ export function useHomePageModel(): HomePageModel {
               secondaryLabel: t("home.primary_manage_devices"),
               secondaryTo: "/devices",
             },
+    primaryActionState: !activeSub
+      ? "no_plan"
+      : hasConfirmedDevice
+        ? "connected"
+        : activeDevices.length === 0
+          ? "disconnected"
+          : "connecting",
+    quickActionContext: {
+      status:
+        homeScreenPhase === "connected" || homeScreenPhase === "degraded"
+          ? "connected"
+          : homeScreenPhase === "connecting"
+            ? "connecting"
+            : homeScreenPhase === "error"
+              ? "error"
+              : "disconnected",
+      deviceCount: usedDevices,
+      planLimit: deviceLimit,
+      planKind: activeSub?.is_trial ? "trial" : "paid",
+    },
     primaryUpsell,
     planId: activeSub?.plan_id ?? null,
     quickAccessMeta: {

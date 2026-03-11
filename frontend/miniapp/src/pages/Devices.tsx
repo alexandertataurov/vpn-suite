@@ -1,24 +1,65 @@
-import { SummaryHero, LimitStrip, SessionMissing } from "@/components";
+import { DevicesSummaryCard, SessionMissing } from "@/components";
+import { useCallback, useState } from "react";
 import {
-  IconAlertTriangle,
   Skeleton,
+  Button,
   ConfirmModal,
+  IconSmartphone,
+  IconPlus,
+  InlineAlert,
+  Modal,
   PageFrame,
   PageSection,
+  PageHeaderBadge,
+  ListCard,
   MissionAlert,
-  MissionCard,
+  PageCardSection,
   MissionPrimaryLink,
   FallbackScreen,
   EmptyStateBlock,
+  Input,
 } from "@/design-system";
 import { useTelegramMainButton } from "@/hooks/useTelegramMainButton";
 import { useDevicesPageModel } from "@/page-models";
 import { useI18n } from "@/hooks/useI18n";
+import { Link } from "react-router-dom";
 import { SetupCardContent, ConfigCardContent, DeviceRow } from "./devices";
+
+const DEVICE_NAME_MAX_LENGTH = 128;
 
 export function DevicesPage() {
   const model = useDevicesPageModel();
+  const { activeDevices, handleRenameDevice } = model;
   const { t } = useI18n();
+  const [renameDeviceId, setRenameDeviceId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState("");
+  const renameDevice = renameDeviceId
+    ? activeDevices.find((d) => d.id === renameDeviceId)
+    : null;
+  const openRename = useCallback(
+    (deviceId: string) => {
+      const d = activeDevices.find((x) => x.id === deviceId);
+      setRenameDeviceId(deviceId);
+      setRenameValue((d?.device_name ?? "").trim() || "");
+    },
+    [activeDevices]
+  );
+  const closeRename = useCallback(() => {
+    setRenameDeviceId(null);
+    setRenameValue("");
+  }, []);
+  const handleRenameSubmit = useCallback(() => {
+    if (!renameDeviceId) return;
+    const name = renameValue.trim().slice(0, DEVICE_NAME_MAX_LENGTH) || "";
+    handleRenameDevice(renameDeviceId, name);
+    closeRename();
+  }, [renameDeviceId, renameValue, handleRenameDevice, closeRename]);
+  const summaryTitle =
+    model.summaryHero.title === model.header.title ? undefined : model.summaryHero.title;
+  const summaryBadge =
+    model.hasSubscription && model.summaryHero.eyebrow !== model.header.title
+      ? <PageHeaderBadge tone="info" label={model.summaryHero.eyebrow} />
+      : undefined;
 
   useTelegramMainButton(null);
 
@@ -38,7 +79,7 @@ export function DevicesPage() {
 
   if (model.pageState.status === "loading") {
     return (
-      <PageFrame title={model.header.title} className="devices-page">
+      <PageFrame title={model.header.title} className="page-shell--default page-shell--sectioned page-shell--devices">
         <Skeleton className="skeleton-h-hero" />
         <Skeleton className="skeleton-h-lg" />
         <Skeleton className="skeleton-h-lg" />
@@ -47,31 +88,63 @@ export function DevicesPage() {
   }
 
   return (
-    <PageFrame title={model.header.title} subtitle={model.header.subtitle} className="devices-page home-page">
-      <SummaryHero {...model.summaryHero} metricStaticFill={false} className="stagger-1" />
+    <PageFrame
+      title={model.header.title}
+      subtitle={model.header.subtitle}
+      className="page-shell--default page-shell--sectioned page-shell--devices"
+    >
+      {model.planRequiredAlert ? (
+        <InlineAlert
+          variant="warning"
+          title={model.planRequiredAlert.title}
+          body={model.planRequiredAlert.body}
+          className="devices-plan-required-alert stagger-1"
+          actions={(
+            <Link className="inline-alert-action-link devices-plan-required-link" to={model.planRequiredAlert.to}>
+              {model.planRequiredAlert.ctaLabel}
+            </Link>
+          )}
+        />
+      ) : null}
+
+      <DevicesSummaryCard
+        title={model.hasSubscription ? summaryTitle : undefined}
+        description={model.hasSubscription ? model.summaryHero.subtitle : undefined}
+        action={summaryBadge}
+        className={model.planRequiredAlert ? "stagger-2 devices-summary-section" : "stagger-1 devices-summary-section"}
+        metrics={model.summaryHero.metrics}
+      />
 
       <PageSection
         id="devices-section"
-        title={t("devices.section_devices_title")}
         className="stagger-3"
+        title={t("devices.section_devices_title")}
+        action={
+          model.canAddDevice ? (
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              onClick={model.handleIssueDevice}
+              disabled={model.isAddPending}
+              aria-label={t("devices.add_new_device")}
+              startIcon={<IconPlus size={16} strokeWidth={2} aria-hidden />}
+            >
+              {model.isAddPending ? "…" : t("devices.add_new_device")}
+            </Button>
+          ) : undefined
+        }
       >
         {(model.isDeviceLimitError || model.showUpgradeCta) ? (
-          <LimitStrip
-            variant="compact"
-            title={
-              model.deviceLimitUpsellCopy?.title ??
-              t("devices.limit_reached_default_title")
-            }
-            message={
-              model.deviceLimitUpsellCopy?.body ??
-              t("devices.limit_reached_default_message")
-            }
-            action={(
+          <MissionAlert
+            tone="warning"
+            title={model.deviceLimitUpsellCopy?.title ?? t("devices.limit_reached_default_title")}
+            message={model.deviceLimitUpsellCopy?.body ?? t("devices.limit_reached_default_message")}
+            actions={
               <MissionPrimaryLink to={model.upgradeTargetTo} onClick={model.handleUpgradePlanClick}>
                 {model.deviceLimitUpsellCopy?.ctaLabel ?? t("devices.limit_reached_default_cta")}
               </MissionPrimaryLink>
-            )}
-            icon={<IconAlertTriangle size={20} strokeWidth={1.8} />}
+            }
           />
         ) : model.issueErrorMessage ? (
           <MissionAlert
@@ -81,19 +154,7 @@ export function DevicesPage() {
           />
         ) : null}
 
-        <div className="ops">
-          {model.activeDevices.map((device) => (
-            <DeviceRow
-              key={device.id}
-              device={device}
-              formatIssuedAt={model.formatIssuedAt}
-              onConfirm={model.handleConfirmConnected}
-              onReplace={model.handleReplaceDevice}
-              onRevoke={model.setRevokeId}
-              isConfirmingId={model.isConfirmingId}
-              isReplacingId={model.isReplacingId}
-            />
-          ))}
+        <ListCard className="devices-list-card">
           {model.activeDevices.length === 0 ? (
             <EmptyStateBlock
               title={t("devices.empty_title")}
@@ -102,46 +163,61 @@ export function DevicesPage() {
                   ? t("devices.empty_message_has_sub")
                   : t("devices.empty_message_no_sub")
               }
+              icon={<IconSmartphone size={48} strokeWidth={1.55} aria-hidden />}
             />
-          ) : null}
-        </div>
+          ) : (
+            model.activeDevices.map((device) => (
+              <DeviceRow
+                key={device.id}
+                device={device}
+                formatIssuedAt={model.formatIssuedAt}
+                onConfirm={model.handleConfirmConnected}
+                onReplace={model.handleReplaceDevice}
+                onRevoke={model.setRevokeId}
+                onRename={openRename}
+                isConfirmingId={model.isConfirmingId}
+                isReplacingId={model.isReplacingId}
+              />
+            ))
+          )}
+        </ListCard>
       </PageSection>
 
       {model.showSetupCard ? (
-        <PageSection
+        <PageCardSection
           id="setup-section"
           title={t("devices.section_setup_title")}
           className="stagger-3"
+          cardTone={model.setupCardTone}
+          cardClassName="module-card devices-utility-card"
         >
-          <MissionCard tone={model.setupCardTone} className="module-card devices-utility-card">
-            <SetupCardContent
-              step={model.setupStep}
-              onIssueDevice={model.handleIssueDevice}
-              canAddDevice={model.canAddDevice}
-              isAddPending={model.isAddPending}
-              issueActionLabel={model.issueActionLabel}
-            />
-          </MissionCard>
-        </PageSection>
+          <SetupCardContent
+            step={model.setupStep}
+            onIssueDevice={model.handleIssueDevice}
+            canAddDevice={model.canAddDevice}
+            isAddPending={model.isAddPending}
+            issueActionLabel={model.issueActionLabel}
+          />
+        </PageCardSection>
       ) : null}
 
       {model.issuedConfig ? (
         <div ref={model.configSectionRef}>
-          <PageSection
+          <PageCardSection
             id="config-section"
             title={t("devices.section_config_title")}
             className="stagger-4"
+            cardTone="amber"
+            cardClassName="module-card devices-utility-card"
           >
-            <MissionCard tone="amber" className="module-card devices-utility-card">
-              <ConfigCardContent
-                configText={model.configText}
-                routeReason={model.routeReason}
-                peerCreated={model.issuedConfig.peer_created}
-                onCopy={model.handleCopyConfig}
-                onDownload={model.handleDownloadConfig}
-              />
-            </MissionCard>
-          </PageSection>
+            <ConfigCardContent
+              configText={model.configText}
+              routeReason={model.routeReason}
+              peerCreated={model.issuedConfig.peer_created}
+              onCopy={model.handleCopyConfig}
+              onDownload={model.handleDownloadConfig}
+            />
+          </PageCardSection>
         </div>
       ) : null}
 
@@ -156,6 +232,39 @@ export function DevicesPage() {
         variant="danger"
         loading={model.isRevoking}
       />
+
+      <Modal
+        open={renameDeviceId !== null}
+        onClose={closeRename}
+        title={t("devices.rename_modal_title")}
+        variant="plain"
+        footer={
+          <>
+            <Button type="button" variant="secondary" size="sm" onClick={closeRename}>
+              {t("devices.revoke_modal_cancel")}
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              onClick={handleRenameSubmit}
+              disabled={model.isRenamePending}
+            >
+              {model.isRenamePending ? "…" : t("devices.menu_rename_device")}
+            </Button>
+          </>
+        }
+      >
+        <Input
+          type="text"
+          label={t("devices.rename_modal_placeholder")}
+          value={renameValue}
+          onChange={(e) => setRenameValue(e.target.value.slice(0, DEVICE_NAME_MAX_LENGTH))}
+          maxLength={DEVICE_NAME_MAX_LENGTH}
+          placeholder={renameDevice ? `Device #${renameDevice.id.slice(-6)}` : ""}
+          aria-label={t("devices.rename_modal_placeholder")}
+        />
+      </Modal>
     </PageFrame>
   );
 }

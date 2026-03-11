@@ -1,11 +1,11 @@
-import { useEffect } from "react";
-import { Link } from "react-router-dom";
-import { ConnectionStatusHero, SessionMissing, LimitStrip } from "@/components";
+import { useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { SessionMissing } from "@/components";
 import { FallbackScreen } from "@/design-system/patterns/FallbackScreen";
 import {
   PageFrame,
-  PageSection,
-  Skeleton,
+  HomeDynamicBlock,
+  HomeHeroPanel,
   HomeQuickActionGrid,
   HomePrimaryActionZone,
 } from "@/design-system";
@@ -17,12 +17,68 @@ export function HomePage() {
   const model = useHomePageModel();
   const { track } = useTelemetry(model.planId);
   const { t } = useI18n();
+  const navigate = useNavigate();
+
   const upsellShown = model.primaryUpsell?.show && model.primaryUpsell.targetTo;
   useEffect(() => {
     if (upsellShown && model.primaryUpsell) {
       track("upsell_impression", { trigger: model.primaryUpsell.trigger, screen_name: "home" });
     }
   }, [upsellShown, model.primaryUpsell, track]);
+
+  const heroHandlers = useMemo(() => {
+    const variant = model.homeHero.variant;
+    const isHeroInteractive = variant !== "loading" && variant !== "onboarding";
+    const canSelectServer = model.hasSubscription && !model.homeHero.isServerLoading;
+    return {
+      onHeroPress: isHeroInteractive ? () => navigate("/connect-status") : undefined,
+      onServerSelect: canSelectServer ? () => navigate("/servers") : undefined,
+    };
+  }, [model.hasSubscription, model.homeHero.isServerLoading, model.homeHero.variant, navigate]);
+
+  const quickActionDisabled = useMemo(() => {
+    const unavailable =
+      model.hasSubscription &&
+      model.quickActionContext.status === "connecting" &&
+      model.quickActionContext.deviceCount === 0;
+    return unavailable ? { download_config: t("home.download_config_loading_unavailable") } : undefined;
+  }, [model.hasSubscription, model.quickActionContext.deviceCount, model.quickActionContext.status, t]);
+
+  const primaryActionZoneProps = useMemo(
+    () => ({
+      state: model.primaryActionState,
+      isLoading: model.pageState.status === "loading" || model.homePhase === "loading" || model.isHomeTransitioning,
+      loadingLabel:
+        model.homePhase === "error"
+          ? t("home.retrying_label")
+          : model.homePhase === "connecting" || model.isHomeTransitioning
+            ? t("home.connecting_label")
+            : t("home.loading_label"),
+      planTo: model.primaryActionState === "no_plan" ? model.primaryAction.to : "/plan",
+      connectTo: model.primaryActionState === "disconnected" ? model.primaryAction.to : "/connect-status",
+      setupTo: model.primaryActionState === "connecting" ? model.primaryAction.to : "/connect-status",
+      devicesTo: model.primaryActionState === "connected" ? model.primaryAction.to : "/devices",
+      serverTo: "/servers",
+      supportTo: model.primaryAction.secondaryTo,
+    }),
+    [
+      model.primaryAction,
+      model.primaryActionState,
+      model.pageState.status,
+      model.homePhase,
+      model.isHomeTransitioning,
+      t,
+    ],
+  );
+
+  const dynamicBlockProps = useMemo(
+    () => ({
+      ...model.homeSignals,
+      renewalTargetTo: model.primaryUpsell?.show && model.primaryUpsell.targetTo ? model.primaryUpsell.targetTo : "/plan",
+      upgradeTargetTo: model.primaryUpsell?.show && model.primaryUpsell.targetTo ? model.primaryUpsell.targetTo : "/plan",
+    }),
+    [model.homeSignals, model.primaryUpsell],
+  );
 
   if (model.pageState.status === "empty") {
     return <SessionMissing />;
@@ -38,68 +94,29 @@ export function HomePage() {
     );
   }
 
-  if (model.pageState.status === "loading") {
-    return (
-      <PageFrame title={model.header.title} className="home-page">
-        <PageSection title={t("home.quick_access_title_with_sub")} className="stagger-1">
-          <Skeleton variant="card" className="stagger-2" />
-        </PageSection>
-      </PageFrame>
-    );
-  }
-
   return (
-    <PageFrame title={model.header.title} subtitle={model.header.subtitle} className="home-page">
-      <ConnectionStatusHero {...model.connectionHero} />
-      {model.primaryUpsell?.show && model.primaryUpsell.targetTo ? (
-        <div className="stagger-2">
-          <LimitStrip
-            variant="compact"
-            title={model.primaryUpsell.title}
-            message={model.primaryUpsell.body}
-            action={
-              <Link
-                to={model.primaryUpsell.targetTo}
-                onClick={() =>
-                  track("upsell_clicked", { trigger: model.primaryUpsell!.trigger, screen_name: "home" })
-                }
-                className="page-anchor-link"
-              >
-                {model.primaryUpsell.ctaLabel}
-              </Link>
-            }
-            className="home-upsell-row"
-            icon={
-              <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden>
-                <path
-                  d="M3 8.5 6.5 12 13 4"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.6"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            }
-          />
-        </div>
-      ) : null}
-      <div className="stagger-2">
-        <HomePrimaryActionZone
-          phase={model.connectionHero.state}
-          primaryTo={model.primaryAction.to}
-          primaryLabel={model.primaryAction.label}
-          secondaryLabel={model.primaryAction.secondaryLabel}
-          secondaryTo={model.primaryAction.secondaryTo}
+    <PageFrame
+      title={model.header.title}
+      subtitle={model.header.subtitle}
+      className="page-shell--default page-shell--sectioned page-shell--centered"
+    >
+      <div className="page-stack--home">
+        <HomeHeroPanel
+          {...model.homeHero}
+          onServerSelect={heroHandlers.onServerSelect}
+          onHeroPress={heroHandlers.onHeroPress}
+        />
+        <HomePrimaryActionZone {...primaryActionZoneProps} />
+        <HomeDynamicBlock {...dynamicBlockProps} />
+        <HomeQuickActionGrid
+          hasSub={model.hasSubscription}
+          status={model.quickActionContext.status}
+          deviceCount={model.quickActionContext.deviceCount}
+          planLimit={model.quickActionContext.planLimit}
+          planKind={model.quickActionContext.planKind}
+          disabledActions={quickActionDisabled}
         />
       </div>
-      <PageSection
-        title={model.hasSubscription ? t("home.quick_access_title_with_sub") : t("home.quick_actions_title")}
-        description={model.quickAccessMeta.description}
-        className="stagger-2"
-      >
-        <HomeQuickActionGrid hasSub={model.hasSubscription} />
-      </PageSection>
     </PageFrame>
   );
 }

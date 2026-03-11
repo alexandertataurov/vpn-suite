@@ -39,7 +39,11 @@ export function useUnifiedAlerts(stackFlow: boolean): UseUnifiedAlertsResult {
 
     const toastAlerts: HeaderAlertItem[] = toasts.map((toast) => {
       const tone: HeaderAlertItem["tone"] =
-        toast.variant === "error" ? "warning" : toast.variant;
+        toast.variant === "error"
+          ? "warning"
+          : toast.variant === "persistent"
+            ? "info"
+            : toast.variant;
       const title =
         toast.variant === "success"
           ? "Success"

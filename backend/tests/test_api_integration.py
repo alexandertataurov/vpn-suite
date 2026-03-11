@@ -428,6 +428,42 @@ async def test_webapp_me_patch_invalid_email_422(client: AsyncClient, monkeypatc
 
 
 @pytest.mark.asyncio
+async def test_webapp_logout_returns_ok_for_valid_session(client: AsyncClient, monkeypatch, async_session):
+    from app.core import config
+
+    tg_id = 101202303
+    tg_user = {"id": tg_id, "first_name": "Logout", "language_code": "en"}
+    monkeypatch.setattr(config.settings, "telegram_bot_token", "TEST_BOT_TOKEN")
+    monkeypatch.setattr(
+        config.settings,
+        "secret_key",
+        getattr(config.settings, "secret_key", "test-secret"),
+    )
+    monkeypatch.setattr(
+        "app.api.v1.webapp.validate_telegram_init_data",
+        lambda init_data, bot_token: tg_user if bot_token else None,
+    )
+
+    async def override_get_db():
+        yield async_session
+
+    app.dependency_overrides[get_db] = override_get_db
+    try:
+        auth_r = await client.post("/api/v1/webapp/auth", json={"init_data": "x"})
+        assert auth_r.status_code == 200, auth_r.text
+        token = auth_r.json()["session_token"]
+
+        logout_r = await client.post(
+            "/api/v1/webapp/logout",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert logout_r.status_code == 200, logout_r.text
+        assert logout_r.json() == {"status": "ok"}
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+
+
+@pytest.mark.asyncio
 async def test_webapp_debug_test_telegram_config_sends_to_expected_chat(monkeypatch):
     """POST /api/v1/webapp/debug/test-telegram-config uses WebApp tg_id as chat_id."""
     from app.api.v1 import webapp as webapp_module

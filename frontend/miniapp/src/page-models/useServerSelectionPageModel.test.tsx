@@ -45,6 +45,11 @@ vi.mock("@/lib/query-keys/webapp.query-keys", () => ({
   },
 }));
 
+vi.mock("react-router-dom", () => ({
+  useNavigate: () => vi.fn(),
+  useLocation: () => ({ pathname: "/servers" }),
+}));
+
 function wrapper({ children }: { children: React.ReactNode }) {
   const client = new QueryClient();
   return <QueryClientProvider client={client}>{children}</QueryClientProvider>;

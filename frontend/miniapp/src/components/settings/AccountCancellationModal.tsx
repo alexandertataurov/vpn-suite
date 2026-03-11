@@ -1,0 +1,34 @@
+import { ConfirmDanger } from "@/design-system";
+import { useI18n } from "@/hooks/useI18n";
+
+export interface AccountCancellationModalProps {
+  open: boolean;
+  onClose: () => void;
+  onConfirm: (confirmToken: string) => void | Promise<void>;
+  loading?: boolean;
+}
+
+export function AccountCancellationModal({
+  open,
+  onClose,
+  onConfirm,
+  loading = false,
+}: AccountCancellationModalProps) {
+  const { t } = useI18n();
+
+  return (
+    <ConfirmDanger
+      open={open}
+      onClose={onClose}
+      title={t("settings.delete_account_confirm_title")}
+      message={t("settings.delete_account_confirm_message")}
+      confirmLabel={t("settings.delete_account_confirm_label")}
+      cancelLabel={t("settings.delete_account_cancel_label")}
+      confirmTokenRequired
+      confirmTokenLabel={t("settings.delete_account_token_label")}
+      expectedConfirmValue="DELETE"
+      onConfirm={(payload) => onConfirm(payload.confirm_token ?? "")}
+      loading={loading}
+    />
+  );
+}

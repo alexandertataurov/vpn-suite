@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { translate } from "@/lib/i18n";
 import { evaluateUpsell } from "./evaluateUpsell";
 import { getUpgradeCheckoutPathForDeviceLimit, getUpgradeOfferForIntent } from "./getUpgradeOfferForIntent";
@@ -97,6 +97,7 @@ describe("upsell engine", () => {
   });
 
   it("skips suppressed trigger and falls back to next candidate", () => {
+    vi.setSystemTime(new Date("2026-03-09T12:00:00Z"));
     const history: UpsellHistoryEntry[] = [
       {
         trigger: "device_limit",

@@ -1,12 +1,15 @@
 import type { ReactNode } from "react";
-import { MissionOperationLink } from "../mission/Mission";
+import { MissionOperationArticle, MissionOperationLink } from "../mission/Mission";
 
 export interface SupportActionItem {
   to: string;
   title: string;
   description: string;
   tone?: "blue" | "green" | "amber" | "red";
+  iconTone?: "blue" | "green" | "amber" | "red";
   icon: ReactNode;
+  variant?: "default" | "destructive";
+  disabled?: boolean;
 }
 
 export interface SupportActionListProps {
@@ -21,19 +24,31 @@ export interface SupportActionListProps {
 export function SupportActionList({ items, onItemClick, className = "" }: SupportActionListProps) {
   return (
     <div className={`support-action-list ops ${className}`.trim()} role="list">
-      {items.map((item) => (
-        <MissionOperationLink
-          key={item.to}
-          to={item.to}
-          tone={item.tone ?? "blue"}
-          iconTone={item.tone ?? "blue"}
-          icon={item.icon}
-          title={item.title}
-          description={item.description}
-          onClick={onItemClick}
-          aria-label={item.title}
-        />
-      ))}
+      {items.map((item) =>
+        item.disabled ? (
+          <MissionOperationArticle
+            key={item.to}
+            tone={item.variant === "destructive" ? "red" : (item.tone ?? "blue")}
+            iconTone={item.iconTone ?? item.tone ?? "blue"}
+            icon={item.icon}
+            title={item.title}
+            description={item.description}
+            className="support-action-list-item--disabled"
+          />
+        ) : (
+          <MissionOperationLink
+            key={item.to}
+            to={item.to}
+            tone={item.variant === "destructive" ? "red" : (item.tone ?? "blue")}
+            iconTone={item.iconTone ?? item.tone ?? "blue"}
+            icon={item.icon}
+            title={item.title}
+            description={item.description}
+            onClick={onItemClick}
+            aria-label={item.title}
+          />
+        )
+      )}
     </div>
   );
 }

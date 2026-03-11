@@ -44,7 +44,7 @@ export function getButtonClassName(
   size: ButtonSize = "md",
   extra = ""
 ): string {
-  const sizeCls = size === "icon" ? "btn-sm btn-icon" : sizeClass[size];
+  const sizeCls = size === "icon" ? "btn-md btn-icon" : sizeClass[size];
   return `btn ${variantClass[variant]} ${sizeCls} ${extra}`.trim();
 }
 
@@ -78,32 +78,34 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     console.warn("[Button] iconOnly requires aria-label for accessibility");
   }
 
-  const sizeCls = effectiveSize === "icon" ? "btn-sm btn-icon" : sizeClass[effectiveSize];
+  const sizeCls = effectiveSize === "icon" ? "btn-md btn-icon" : sizeClass[effectiveSize];
   const connectClass = kind === "connect" ? "connect-button" : "";
   const toneClass = variant === "primary" && tone && tone !== "default" ? tone : "";
 
   const content = loading ? (
-    <>
+    <span className="btn-content">
       <span className="btn-spinner" aria-hidden />
-      {loadingText ? <span aria-live="polite">{loadingText}</span> : children}
-    </>
+      <span className="btn-label" aria-live="polite">{loadingText ? loadingText : children}</span>
+    </span>
   ) : (
-    <>
+    <span className="btn-content">
       {startIcon ? <span className="btn-icon-slot" aria-hidden>{startIcon}</span> : null}
-      {children}
+      <span className="btn-label">{children}</span>
       {endIcon ? <span className="btn-icon-slot" aria-hidden>{endIcon}</span> : null}
-    </>
+    </span>
   );
 
   const mergedClassName = cn(
-        "btn",
-        variantClass[variant],
-        sizeCls,
-        connectClass,
-        toneClass,
-        fullWidth && "btn-full-width",
-        className
-      );
+    "btn",
+    variantClass[variant],
+    sizeCls,
+    connectClass,
+    toneClass,
+    iconOnly && "btn-icon-only",
+    loading && "btn-loading",
+    fullWidth && "btn-full-width",
+    className
+  );
 
   if (asChild) {
     return (
@@ -117,6 +119,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     <button ref={ref} type="button"
       className={mergedClassName}
       disabled={disabled ?? loading}
+      data-loading={loading ? "true" : undefined}
       aria-busy={loading}
       aria-label={resolvedAriaLabel}
       {...props}

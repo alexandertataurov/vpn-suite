@@ -17,7 +17,7 @@ import { useTelegramBackButtonController } from "../hooks/useTelegramBackButtonC
 import { ONBOARDING_ALLOWED_PATHS } from "./constants";
 import { useBootstrapMachine, type BootPhase } from "./useBootstrapMachine";
 
-interface BootstrapContextValue {
+export interface BootstrapContextValue {
   phase: BootPhase;
   onboardingStep: number;
   onboardingVersion: number;
@@ -28,6 +28,16 @@ interface BootstrapContextValue {
 }
 
 const BootstrapContext = createContext<BootstrapContextValue | null>(null);
+
+export function BootstrapContextProvider({
+  value,
+  children,
+}: {
+  value: BootstrapContextValue;
+  children: ReactNode;
+}) {
+  return <BootstrapContext.Provider value={value}>{children}</BootstrapContext.Provider>;
+}
 
 function isOnboardingAllowedPath(pathname: string): boolean {
   if (pathname === "/onboarding") return true;
@@ -209,5 +219,5 @@ export function BootstrapController({ children }: { children: ReactNode }) {
     return <BootLoadingScreen slowNetwork={false} onRetry={retry} />;
   }
 
-  return <BootstrapContext.Provider value={contextValue}>{children}</BootstrapContext.Provider>;
+  return <BootstrapContextProvider value={contextValue}>{children}</BootstrapContextProvider>;
 }

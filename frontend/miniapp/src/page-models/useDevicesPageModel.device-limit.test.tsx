@@ -47,6 +47,7 @@ vi.mock("@/lib/query-keys/webapp.query-keys", () => ({
   webappQueryKeys: {
     me: () => ["me"],
     plans: () => ["plans"],
+    usage: (range: string) => ["usage", range],
   },
 }));
 
@@ -56,6 +57,24 @@ function wrapper({ children }: { children: React.ReactNode }) {
 }
 
 describe("useDevicesPageModel device limit telemetry", () => {
+  const session: WebAppMeResponse = {
+    user: { id: 1, tg_id: 1, locale: "en" } as WebAppMeResponse["user"],
+    subscriptions: [
+      {
+        id: "sub-1",
+        plan_id: "plan-basic",
+        device_limit: 1,
+        access_status: "active",
+      } as WebAppMeResponse["subscriptions"][number],
+    ],
+    devices: [
+      {
+        id: "dev-1",
+        status: "idle",
+      } as WebAppMeResponse["devices"][number],
+    ],
+  };
+
   beforeEach(() => {
     mockUseWebappToken.mockReturnValue("token");
     mockUseOnlineStatus.mockReturnValue(true);
@@ -63,23 +82,6 @@ describe("useDevicesPageModel device limit telemetry", () => {
     mockGetPlans.mockResolvedValue({ items: [] });
     mockAddToast.mockReset();
     mockTrack.mockReset();
-    const session: WebAppMeResponse = {
-      user: { id: 1, tg_id: 1 } as WebAppMeResponse["user"],
-      subscriptions: [
-        {
-          id: "sub-1",
-          plan_id: "plan-basic",
-          device_limit: 1,
-          access_status: "active",
-        } as WebAppMeResponse["subscriptions"][number],
-      ],
-      devices: [
-        {
-          id: "dev-1",
-          status: "idle",
-        } as WebAppMeResponse["devices"][number],
-      ],
-    };
     mockUseSession.mockReturnValue({
       data: session,
       isLoading: false,
@@ -108,5 +110,51 @@ describe("useDevicesPageModel device limit telemetry", () => {
       }),
     );
   });
-});
 
+  it("returns neutral metric placeholders and a blocking alert when no subscription is active", () => {
+    mockUseSession.mockReturnValue({
+      data: {
+        ...session,
+        subscriptions: [],
+        devices: [],
+      } satisfies WebAppMeResponse,
+      isLoading: false,
+      error: null,
+    });
+
+    const { result } = renderHook(() => useDevicesPageModel(), { wrapper });
+
+    expect(result.current.planRequiredAlert).toEqual(
+      expect.objectContaining({
+        title: "Plan required",
+        ctaLabel: "Choose plan",
+      }),
+    );
+    expect(result.current.summaryHero.metrics.map((metric) => metric.valueLabel)).toEqual(["—", "Inactive", "—"]);
+    expect(result.current.summaryHero.metrics.every((metric) => metric.tone === "neutral" && !metric.showProgress)).toBe(true);
+  });
+
+  it("formats issued dates using the active app locale", () => {
+    mockUseSession.mockReturnValue({
+      data: {
+        ...session,
+        user: {
+          ...session.user,
+          locale: "ru",
+        },
+      } satisfies WebAppMeResponse,
+      isLoading: false,
+      error: null,
+    });
+
+    const { result } = renderHook(() => useDevicesPageModel(), { wrapper });
+
+    expect(result.current.formatIssuedAt("2026-02-10T08:12:00Z")).toBe(
+      new Intl.DateTimeFormat("ru-RU", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }).format(new Date("2026-02-10T08:12:00Z")),
+    );
+  });
+});

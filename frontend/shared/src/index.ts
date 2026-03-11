@@ -78,6 +78,7 @@ export type {
   WebAppCreateInvoiceResponse,
   WebAppIssueDeviceResponse,
   WebAppMeDevice,
+  WebAppLogoutResponse,
   WebAppMeProfileUpdate,
   WebAppMeProfileUpdateResponse,
   WebAppMeResponse,

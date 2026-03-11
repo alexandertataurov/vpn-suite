@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { Outlet, NavLink, useLocation } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { OfflineBanner } from "@/design-system";
@@ -81,6 +81,15 @@ export function TabbedShellLayout() {
     return location.pathname === to || location.pathname.startsWith(`${to}/`);
   };
 
+  useEffect(() => {
+    document.documentElement.dataset.shellNav = "tabbed";
+    return () => {
+      if (document.documentElement.dataset.shellNav === "tabbed") {
+        delete document.documentElement.dataset.shellNav;
+      }
+    };
+  }, []);
+
   return (
     <div className="miniapp-shell miniapp-shell--tabbed">
       <OfflineBanner />
@@ -158,6 +167,15 @@ export function StackFlowLayout() {
   ]
     .filter(Boolean)
     .join(" ");
+
+  useEffect(() => {
+    document.documentElement.dataset.shellNav = "stack";
+    return () => {
+      if (document.documentElement.dataset.shellNav === "stack") {
+        delete document.documentElement.dataset.shellNav;
+      }
+    };
+  }, []);
 
   return (
     <div className="miniapp-shell miniapp-shell--stack">

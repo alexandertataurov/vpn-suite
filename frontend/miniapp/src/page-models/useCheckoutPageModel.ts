@@ -15,6 +15,7 @@ import { useTelegramHaptics } from "@/hooks/useTelegramHaptics";
 import { useTelegramMainButton } from "@/hooks/useTelegramMainButton";
 import { useTelemetry } from "@/hooks/useTelemetry";
 import { useTrackScreen } from "@/hooks/useTrackScreen";
+import { useI18n } from "@/hooks/useI18n";
 import { webappQueryKeys } from "@/lib/query-keys/webapp.query-keys";
 import type { PromoErrorCode } from "./promoTypes";
 import type { StandardPageHeader, StandardPageState, StandardSectionBadge } from "./types";
@@ -81,6 +82,7 @@ export function useCheckoutPageModel() {
   const { impact, notify } = useTelegramHaptics();
   const { openInvoice } = usePayments();
   const hideKeyboard = useHideKeyboard();
+  const { t } = useI18n();
   useTrackScreen("checkout", null);
   const { track } = useTelemetry(null);
 
@@ -101,7 +103,9 @@ export function useCheckoutPageModel() {
   const selectedPlan = plansData?.items?.find((plan) => plan.id === selectedPlanId);
   const isFreePlan = selectedPlan != null && Number(selectedPlan.price_amount) <= 0;
   const planDisplayName = selectedPlan?.name?.trim() || (planId ? `${planId.slice(0, 8)}···` : "N/A");
-  const planPriceStars = selectedPlan != null && Number(selectedPlan.price_amount) > 0 ? `⭐${Math.round(Number(selectedPlan.price_amount))}` : null;
+  const planPriceStars = selectedPlan != null && Number(selectedPlan.price_amount) > 0
+    ? Math.round(Number(selectedPlan.price_amount))
+    : null;
   const planDurationDays = selectedPlan?.duration_days ?? 30;
   const planDeviceLimit = selectedPlan?.device_limit ?? 1;
 
@@ -257,8 +261,12 @@ export function useCheckoutPageModel() {
     onError: (err: unknown) => {
       setPhase("error");
       const e = err as Error & { code?: string; statusCode?: number; details?: { message?: string } };
-      const msg = e?.details?.message ?? e?.message ?? "Could not activate. Please try again.";
-      setErrorMessage(e?.code === "NETWORK_UNREACHABLE" || e?.code === "TIMEOUT" ? "Cannot reach server. Check your connection and try again." : msg);
+      const msg = e?.details?.message ?? e?.message ?? t("checkout.activate_failed_message");
+      setErrorMessage(
+        e?.code === "NETWORK_UNREACHABLE" || e?.code === "TIMEOUT"
+          ? t("checkout.network_unreachable_message")
+          : msg,
+      );
       notify("error");
       track("payment_fail", { plan_id: selectedPlanId, reason: "api_error" });
     },
@@ -297,40 +305,40 @@ export function useCheckoutPageModel() {
         ? "amber"
         : "neutral";
   const paymentPhaseLabel = phase === "success"
-    ? "Success"
+    ? t("checkout.payment_phase_success")
     : phase === "error"
-      ? "Failed"
+      ? t("checkout.payment_phase_failed")
       : phase === "timeout"
-        ? "Timeout"
+        ? t("checkout.payment_phase_timeout")
         : phase === "waiting" || phase === "creating_invoice"
-          ? "Pending"
-          : "Ready";
+          ? t("checkout.payment_phase_pending")
+          : t("checkout.payment_phase_ready");
 
   // Native Telegram MainButton hidden on checkout; use in-page MissionPrimaryButton only
   useTelegramMainButton(null);
 
   const header: StandardPageHeader = {
-    title: "Confirm your plan",
-    subtitle: "Review your plan and continue payment in Telegram",
+    title: t("checkout.header_title"),
+    subtitle: t("checkout.header_subtitle"),
   };
 
   const plansFetched = !plansLoading && !plansError;
   const pageState: StandardPageState = !hasToken
-    ? { status: "empty", title: "Session missing" }
+    ? { status: "empty", title: t("common.session_missing_title") }
     : selectedPlanId && plansLoading
       ? { status: "loading" }
       : selectedPlanId && plansError
         ? {
             status: "error",
-            title: "Could not load plan",
-            message: "We could not load plan details. Please try again or go back to choose a plan.",
+            title: t("common.could_not_load_plan"),
+            message: t("checkout.could_not_load_plan_message"),
             onRetry: () => void refetchPlans(),
           }
         : plansFetched && selectedPlanId && !selectedPlan
           ? {
               status: "error",
-              title: "Plan not found",
-              message: `Plan "${selectedPlanId}" is not available. Please choose a plan from the list.`,
+              title: t("checkout.plan_not_found_title"),
+              message: t("checkout.plan_not_found_message", { planId: selectedPlanId }),
             }
           : { status: "ready" };
 
