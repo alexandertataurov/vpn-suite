@@ -1,7 +1,7 @@
 -r requirements.txt
 # Dev / test / OpenAPI export
 pyyaml>=6.0.0,<7
-ruff>=0.4.0,<0.8
+ruff>=0.4.0,<0.16
 mypy>=1.8.0,<2
 pytest>=8.0.0,<9
 pytest-asyncio>=0.23.0,<0.25
