@@ -211,7 +211,7 @@ urllib3==2.6.3
     # via
     #   docker
     #   requests
-uvicorn[standard]==0.31.1
+uvicorn[standard]==0.41.0
     # via -r requirements.in
 uvloop==0.22.1
     # via uvicorn
