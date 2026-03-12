@@ -16,7 +16,7 @@ import { Inline, Stack } from "../primitives";
 import { StoryCard, StoryPage, StorySection, ThreeColumn, TwoColumn, UsageExample } from "./foundations.story-helpers";
 
 const meta = {
-  title: "Primitives/Button",
+  title: "Components/Button",
   tags: ["autodocs"],
   component: Button,
   parameters: {

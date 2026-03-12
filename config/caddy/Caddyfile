@@ -120,6 +120,18 @@ reverse-proxy:8443 {
 				lb_try_duration 5s
 			}
 		}
+		# Health endpoint: map external /api/health -> backend /health (must precede /api/*; first-match wins)
+		handle /api/health {
+			header Cache-Control "no-store"
+			@health_head method HEAD
+			respond @health_head "" 200
+			rewrite * /health
+			reverse_proxy admin-api:8000 {
+				header_up Host {host}
+				header_up X-Forwarded-Proto {scheme}
+				header_up X-Forwarded-For {remote_host}
+			}
+		}
 		handle /api/* {
 			reverse_proxy admin-api:8000 {
 				health_uri /health

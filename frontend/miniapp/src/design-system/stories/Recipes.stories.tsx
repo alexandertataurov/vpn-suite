@@ -9,7 +9,7 @@ import { IconAlertTriangle, IconGlobe } from "../icons";
 import { StoryCard, StoryPage, StorySection, TokenTable, TwoColumn, UsageExample, ValuePill } from "./foundations.story-helpers";
 
 const meta = {
-  title: "Compositions/Page Recipes",
+  title: "Layouts/Page Recipes",
   tags: ["autodocs"],
   parameters: {
     docs: {

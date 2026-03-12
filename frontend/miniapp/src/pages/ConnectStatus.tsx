@@ -1,8 +1,6 @@
 import { ConnectStatusSummaryCard, ConnectStatusVerifyCard, SessionMissing } from "@/components";
-import {
-  PageFrame,
-  PageSection,
-} from "@/design-system";
+import { PageFrame } from "@/design-system/layouts/PageFrame";
+import { PageSection } from "@/design-system";
 import { useConnectStatusPageModel } from "@/page-models";
 import { useI18n } from "@/hooks/useI18n";
 

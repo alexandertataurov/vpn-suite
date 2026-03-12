@@ -3,7 +3,7 @@ import { Skeleton, SkeletonLine, SkeletonCard, SkeletonList } from "../component
 import { StoryCard, StoryPage, StorySection, ThreeColumn, UsageExample } from "./foundations.story-helpers";
 
 const meta = {
-  title: "Primitives/Skeleton",
+  title: "Components/Skeleton",
   tags: ["autodocs"],
   parameters: {
     docs: { description: { component: "Skeleton loaders for body, card, list." } },

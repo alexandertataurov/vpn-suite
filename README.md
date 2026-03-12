@@ -126,6 +126,7 @@ Full list: [docs/ops/required-secrets.md](docs/ops/required-secrets.md).
 - **API overview and auth:** [docs/api/overview.md](docs/api/overview.md)
 - **Domain model:** [docs/api/domain-model.md](docs/api/domain-model.md)
 - **Doc index:** [docs/README.md](docs/README.md) — guides (ops, observability, development), runbook, codebase map
+- **Miniapp Storybook contract:** [docs/storybook-ai-contract.md](docs/storybook-ai-contract.md), [docs/ai-ui-workflow.md](docs/ai-ui-workflow.md), and [docs/frontend/storybook/README.md](docs/frontend/storybook/README.md)
 
 ---
 
@@ -163,3 +164,9 @@ Detailed map: [docs/codebase-map.md](docs/codebase-map.md).
 [CONTRIBUTING.md](CONTRIBUTING.md) — design-system contract (tokens, components, Storybook), PR checklist, guardrails.
 
 For agents and automation: [AGENTS.MD](AGENTS.MD).
+
+### Storybook contract commands
+
+- `npm run storybook:contract -w miniapp` verifies the required executable Storybook contract stories and tags.
+- `npm run test-storybook -w miniapp` runs the required reduced Storybook contract suite.
+- `npm run test-storybook:official -w miniapp` probes the standalone official Storybook runner. This is non-blocking until the current Storybook 10 metadata issue is resolved.

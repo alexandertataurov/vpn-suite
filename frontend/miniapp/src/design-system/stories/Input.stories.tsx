@@ -4,7 +4,7 @@ import { Stack } from "../primitives";
 import { StoryCard, StoryPage, StorySection, ThreeColumn, TwoColumn, UsageExample, ValuePill } from "./foundations.story-helpers";
 
 const meta = {
-  title: "Primitives/Input",
+  title: "Components/Input",
   tags: ["autodocs"],
   component: Input,
   parameters: {

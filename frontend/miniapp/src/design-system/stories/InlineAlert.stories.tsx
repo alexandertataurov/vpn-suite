@@ -4,7 +4,7 @@ import { Stack } from "../primitives";
 import { StoryCard, StoryPage, StorySection, ThreeColumn, UsageExample } from "./foundations.story-helpers";
 
 const meta = {
-  title: "Primitives/InlineAlert",
+  title: "Components/InlineAlert",
   tags: ["autodocs"],
   component: InlineAlert,
   parameters: {

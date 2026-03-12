@@ -1,29 +1,10 @@
 import type { Preview } from "@storybook/react";
-import React, { useEffect } from "react";
-import { ThemeProvider, useTheme, type Theme } from "../src/design-system/theme";
-import { StorybookMiniappShell } from "../src/storybook/StorybookMiniappShell";
-import { withTelegramEnvironment, type TelegramPlatform } from "../src/storybook/telegramEnvironment";
+import React from "react";
+import { withTelegramEnvironment } from "../src/storybook/telegramEnvironment";
+import { withMiniAppShell } from "../src/storybook/decorators/withMiniAppShell";
 import "../src/design-system/styles/index.css";
 import "../src/styles/app/index.css";
 import "../src/storybook/preview.css";
-
-const storybookThemes = ["consumer-dark", "consumer-light"] as const satisfies readonly Theme[];
-
-function isPageStory(title: string | undefined) {
-  return title?.startsWith("Pages/") === true;
-}
-
-function StorybookThemeSync({ theme }: { theme: Theme }) {
-  const { setTheme } = useTheme();
-
-  useEffect(() => {
-    setTheme(theme);
-    document.documentElement.setAttribute("data-theme", theme);
-    document.documentElement.setAttribute("data-tg", "true");
-  }, [setTheme, theme]);
-
-  return null;
-}
 
 const preview: Preview = {
   globalTypes: {
@@ -87,29 +68,14 @@ const preview: Preview = {
   },
   decorators: [
     withTelegramEnvironment,
-    (Story, context) => (
-      <ThemeProvider
-        themes={storybookThemes}
-        defaultTheme={context.globals.theme as Theme}
-        storageKey="vpn-suite-miniapp-storybook-theme"
-      >
-        <StorybookMiniappShell
-          isPageStory={isPageStory(context.title)}
-          viewportWidth={Number(context.globals.viewportWidth ?? 390)}
-          isDesktop={((context.globals.tgPlatform ?? "ios") as TelegramPlatform) === "other"}
-        >
-          <StorybookThemeSync theme={context.globals.theme as Theme} />
-          <Story />
-        </StorybookMiniappShell>
-      </ThemeProvider>
-    ),
+    withMiniAppShell,
   ],
   parameters: {
     layout: "fullscreen",
     controls: { matchers: { color: /(background|color)$/i, date: /Date$/i } },
     options: {
       storySort: {
-        order: ["Foundations", "Primitives", "Components", "Patterns", "Layouts", "Pages", "States", "*"],
+        order: ["Foundations", "Primitives", "Patterns", "Layouts", "Pages", "States", "*"],
       },
     },
   },

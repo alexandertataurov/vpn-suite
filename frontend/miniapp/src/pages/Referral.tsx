@@ -1,9 +1,9 @@
 import { ReferralShareCard, SessionMissing } from "@/components";
+import { PageFrame } from "@/design-system/layouts/PageFrame";
+import { FallbackScreen } from "@/design-system/patterns/FallbackScreen";
 import {
-  FallbackScreen,
   Skeleton,
   PageCardSection,
-  PageFrame,
   MissionAlert,
 } from "@/design-system";
 import { useReferralPageModel } from "@/page-models";

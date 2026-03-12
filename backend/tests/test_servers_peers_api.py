@@ -20,6 +20,9 @@ class _FakeResult:
     def scalar_one_or_none(self):
         return self._value
 
+    def all(self):
+        return []
+
     def scalars(self):
         return SimpleNamespace(all=lambda: [self._value] if self._value else [])
 
@@ -128,5 +131,41 @@ async def test_create_server_peer_route_exists(client: AsyncClient):
             assert "config_awg" in r.json()
             assert "config_wg_obf" in r.json()
             assert "config_wg" in r.json()
+    finally:
+        app.dependency_overrides.clear()
+
+
+@pytest.mark.asyncio
+async def test_get_server_peers_live_route_exists(client: AsyncClient, monkeypatch):
+    """Verify that GET /servers/{server_id}/peers-live returns live peers via docker adapter."""
+    role = SimpleNamespace(id="r1", permissions=["servers:read"])
+    server = SimpleNamespace(id="srv-1", status="online")
+    # Second execute() call is for Device mapping; return empty.
+    session = _FakeSession([_FakeResult(role), _FakeResult(server), _FakeResult(None)])
+
+    app.dependency_overrides[get_db] = lambda: session
+    app.dependency_overrides[get_current_admin] = lambda: SimpleNamespace(id="admin-1", role_id="r1")
+
+    try:
+        fake_adapter = SimpleNamespace(
+            list_peers=AsyncMock(
+                return_value=[
+                    {
+                        "public_key": "pk",
+                        "allowed_ips": "10.8.1.2/32",
+                        "last_handshake": 1700000000,
+                        "transfer_rx": 1,
+                        "transfer_tx": 2,
+                    }
+                ]
+            )
+        )
+        with patch("app.services.node_runtime_docker.DockerNodeRuntimeAdapter", return_value=fake_adapter):
+            r = await client.get("/api/v1/servers/srv-1/peers-live")
+            assert r.status_code == 200
+            data = r.json()
+            assert data["node_reachable"] is True
+            assert data["total"] == 1
+            assert data["peers"][0]["public_key"] == "pk"
     finally:
         app.dependency_overrides.clear()

@@ -4,7 +4,7 @@ import { HelperText, Input, Label } from "../components";
 import { StoryCard, StoryPage, StorySection, ThreeColumn, TwoColumn, UsageExample } from "./foundations.story-helpers";
 
 const meta = {
-  title: "Primitives/HelperText",
+  title: "Components/HelperText",
   tags: ["autodocs"],
   component: HelperText,
   parameters: {

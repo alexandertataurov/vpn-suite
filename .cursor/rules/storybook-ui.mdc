@@ -1,0 +1,17 @@
+---
+description: Storybook-first UI workflow for reusable frontend changes.
+globs: ["frontend/miniapp/**", "frontend/admin/**"]
+alwaysApply: false
+---
+
+Before modifying any reusable UI:
+- inspect the relevant stories first
+- treat stories as the contract
+- do not patch page-local CSS if the issue belongs in the design system
+- do not create a new component if an existing primitive, pattern, or layout can be extended
+- do not consider the task complete until stories and tests are updated
+
+For miniapp UI:
+- Storybook is the source of truth for reusable UI behavior and state coverage
+- update `play` coverage when changing interactive behavior
+- use realistic miniapp fixtures, not placeholder lorem or fake desktop layouts

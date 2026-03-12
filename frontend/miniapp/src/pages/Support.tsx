@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SessionMissing, SupportContactCard, TroubleshooterStep } from "@/components";
+import { PageFrame } from "@/design-system/layouts/PageFrame";
+import { FallbackScreen } from "@/design-system/patterns/FallbackScreen";
 import {
-  FallbackScreen,
   FaqDisclosureItem,
-  PageFrame,
   PageSection,
   PageHeaderBadge,
   Skeleton,

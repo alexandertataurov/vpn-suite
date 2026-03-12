@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { EmptyStateBlock, FallbackScreen, OfflineBanner, PageStateScreen } from "../patterns";
+import { EmptyStateBlock, OfflineBanner } from "../patterns";
+import { FallbackScreen } from "../patterns/blocks/FallbackScreen";
+import { PageStateScreen } from "../patterns/blocks/PageStateScreen";
 import { Button } from "../components";
 import { SessionMissing } from "@/components";
 import { ViewportShellProviders } from "@/storybook";

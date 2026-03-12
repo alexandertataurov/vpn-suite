@@ -1,9 +1,9 @@
 import { SessionMissing } from "@/components";
+import { PageFrame } from "@/design-system/layouts/PageFrame";
+import { FallbackScreen } from "@/design-system/patterns/FallbackScreen";
 import {
-  FallbackScreen,
   Skeleton,
   PageCardSection,
-  PageFrame,
   PageSection,
   PageHeaderBadge,
   MissionPrimaryButton,

@@ -1,0 +1,19 @@
+.sb-sandbox-grid {
+  display: grid;
+  gap: var(--spacing-5);
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  align-items: start;
+}
+
+.sb-sandbox-frame {
+  display: grid;
+  gap: var(--spacing-3);
+}
+
+.sb-sandbox-label {
+  font-family: var(--font-mono);
+  font-size: var(--typo-meta-size);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}

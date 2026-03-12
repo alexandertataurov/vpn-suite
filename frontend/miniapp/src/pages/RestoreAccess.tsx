@@ -1,10 +1,10 @@
 import { SessionMissing } from "@/components";
+import { PageFrame } from "@/design-system/layouts/PageFrame";
+import { PageStateScreen } from "@/design-system/patterns/PageStateScreen";
 import {
   ButtonRow,
   MissionPrimaryLink,
   MissionSecondaryLink,
-  PageFrame,
-  PageStateScreen,
   MissionPrimaryButton,
   InlineAlert,
   StickyBottomBar,

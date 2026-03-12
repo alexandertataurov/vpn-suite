@@ -13,7 +13,7 @@ The design system follows a **layered model**. Each layer has strict responsibil
 | **Primitives** | Low-level layout and typography (Box, Stack, Text, Heading, etc.). No business logic. |
 | **Components** | Reusable UI (Button, Input, Modal, Toast, etc.). Consistent variant/size/tone APIs. |
 | **Patterns** | Composed structures (FormField, PageHeader, Hero blocks). No data fetching. |
-| **Page Recipes** | Canonical page-shaped wrappers built from layouts + patterns (header badges, card sections, hero-first page blocks). |
+| **Layouts / Recipes** | Canonical page-shaped wrappers built from layouts + patterns (header badges, card sections, hero-first page blocks). |
 | **App** | Feature components and pages; business logic lives here, not in the design system. |
 
 ## Content Library (page content source of truth)
@@ -83,19 +83,37 @@ Within a page, keep hierarchy singular:
 - one owner for a given status signal in a page zone (`PageHeaderBadge` or hero status or section chip, not all three)
 - no nested header chrome for the same block (`PageCardSection` title plus `MissionModuleHead` repeating it)
 
-## Zero Page CSS
+## Route Styling Contract
 
 Miniapp pages do not own local CSS files under `src/pages`.
 
-- Route styling must live in shared design-system styles.
-- If a page needs a new structural wrapper or page-shaped layout, promote it into `design-system/recipes` or `design-system/patterns`.
-- CI enforces this through `npm --prefix frontend run design:check -w miniapp`.
+- Reusable UI styling lives in `design-system/styles/`.
+- Route-owned page-family presentation lives in `src/styles/app/`.
+- `design-system/styles/` must not contain page ancestor selectors such as `.home-page` or `.settings-page`.
+- If a page needs a reusable structural wrapper or page-shaped layout, promote it into `design-system/recipes` or `design-system/patterns`.
+- CI enforces this through `npm run design:check`.
 
 ## Import Rules
 
 - **Page-models:** Import from `@/design-system` barrel only. Allowed: `useToast`, types (`MissionChipTone`, `PageHeaderBadgeTone`, `MissionTone`). No components.
-- **Pages and sub-pages:** Import from `@/design-system` barrel only. No deep paths like `@/design-system/patterns/FallbackScreen`.
+- **Pages and sub-pages:** Import from `@/design-system` barrel by default. The only allowed direct imports are chunk-safe ownership paths:
+  `@/design-system/layouts/PageFrame`,
+  `@/design-system/patterns/FallbackScreen`,
+  `@/design-system/patterns/PageStateScreen`.
 - **Page-model hooks in pages:** Import from `@/page-models` barrel only. No `@/page-models/useXxxPageModel` or `@/page-models/helpers` deep paths.
+
+## Storybook taxonomy
+
+- `Foundations` for tokens, theme, motion, spacing, color, breakpoints, environment parity.
+- `Primitives` for low-level layout and typography building blocks.
+- `Components` for reusable controls and feedback primitives like Button, Input, Modal, Toast, Popover, InlineAlert, Skeleton.
+- `Patterns` for composed reusable structures.
+- `Layouts` for shell and page-composition contracts, including page recipes.
+- `Pages/Contracts` for production-faithful route coverage.
+- `Pages/Sandbox` for redesign and side-by-side review boards.
+- `States` for cross-cutting state contracts.
+
+`npm run storybook:taxonomy` and `npm run design:check` enforce this structure.
 
 ## Tone Type Reference
 

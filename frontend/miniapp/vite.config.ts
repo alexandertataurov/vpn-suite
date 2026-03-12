@@ -3,12 +3,16 @@ import react from "@vitejs/plugin-react";
 import { visualizer } from "rollup-plugin-visualizer";
 import { fileURLToPath } from "url";
 import path from "path";
+import { createManualChunks } from "./build/viteChunks";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const enableSourcemap = process.env.VITE_SENTRY_SOURCEMAPS === "1";
 const analyzeBundle = process.env.ANALYZE === "1";
 
 export default defineConfig({
+  optimizeDeps: {
+    include: ["storybook/test"],
+  },
   plugins: [
     react(),
     analyzeBundle
@@ -45,30 +49,7 @@ export default defineConfig({
     chunkSizeWarningLimit: 400,
     rollupOptions: {
       output: {
-        manualChunks: (id) => {
-          if (id.includes("/shared/src/")) return "shared";
-          if (id.includes("/design-system/patterns/") || id.includes("/design-system/layouts/")) return "design-system-core";
-          if (
-            id.includes("node_modules/react/") ||
-            id.includes("node_modules/react-dom/") ||
-            id.includes("node_modules/scheduler/") ||
-            id.includes("node_modules/use-sync-external-store/")
-          ) {
-            return "vendor-react";
-          }
-          if (id.includes("node_modules/react-router-dom/") || id.includes("node_modules/@remix-run/router/")) {
-            return "vendor-router";
-          }
-          if (id.includes("node_modules/@tanstack/react-query/")) {
-            return "vendor-query";
-          }
-          if (id.includes("node_modules/lucide-react/")) {
-            return "vendor-icons";
-          }
-          if (id.includes("node_modules/@radix-ui/")) {
-            return "vendor-ui";
-          }
-        },
+        manualChunks: createManualChunks("app"),
       },
     },
   },

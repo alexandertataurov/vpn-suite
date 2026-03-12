@@ -113,6 +113,8 @@ Single source for VPN Suite frontend: apps, design system, components, tables, t
 
 | Doc | Purpose |
 |-----|---------|
+| [../storybook-ai-contract.md](../storybook-ai-contract.md) | Repo-level Storybook contract for reusable UI |
+| [../ai-ui-workflow.md](../ai-ui-workflow.md) | Required UI workflow for AI and engineers |
 | [structure.md](storybook/structure.md) | IA, sidebar hierarchy |
 | [conventions.md](storybook/conventions.md) | Story conventions |
 | [guardrails.md](storybook/guardrails.md) | Guardrails, checks |

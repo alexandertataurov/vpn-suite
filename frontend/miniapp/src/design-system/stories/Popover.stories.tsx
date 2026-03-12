@@ -6,7 +6,7 @@ import { IconCircleX, IconDownload, IconMoreVertical, IconPencil } from "../icon
 import { StoryCard, StoryPage, StorySection, TwoColumn, UsageExample, ValuePill } from "./foundations.story-helpers";
 
 const meta = {
-  title: "Primitives/Popover",
+  title: "Components/Popover",
   tags: ["autodocs"],
   component: Popover,
   parameters: {

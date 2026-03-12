@@ -185,3 +185,7 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
+
+.layout-story-full-width-action {
+  width: 100%;
+}

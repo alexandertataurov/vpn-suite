@@ -12,6 +12,7 @@ export * from "./plan";
 export * from "./referral";
 export * from "./settings";
 export * from "./support";
+export * from "./BottomSheet";
 export { DangerZone } from "./DangerZone";
 export type { DangerZoneProps } from "./DangerZone";
 export { LimitStrip } from "./LimitStrip";

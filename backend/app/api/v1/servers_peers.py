@@ -485,6 +485,76 @@ async def get_server_peers(
     return ServerPeersOut(peers=peers, total=len(peers), node_reachable=node_reachable)
 
 
+@router.get("/{server_id}/peers-live", response_model=ServerPeersOut)
+async def get_server_peers_live(
+    request: Request,
+    server_id: str,
+    db: AsyncSession = Depends(get_db),
+    _admin=Depends(require_permission(PERM_SERVERS_READ)),
+):
+    """Fetch peers live from local docker runtime (wg show dump via Docker SDK).
+
+    This endpoint is intended to remove the peer visibility blind spot when agent heartbeats
+    are missing/stale, without requiring host `wg` tooling.
+    """
+    result = await db.execute(select(Server).where(Server.id == server_id))
+    server = result.scalar_one_or_none()
+    if not server:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Server not found")
+
+    from app.services.node_runtime_docker import DockerNodeRuntimeAdapter
+
+    # NOTE: docker socket is mounted read-only into admin-api; adapter uses Docker SDK exec.
+    adapter = DockerNodeRuntimeAdapter(
+        container_filter=getattr(settings, "docker_vpn_container_prefixes", "amnezia-awg") or "amnezia-awg",
+        interface=getattr(settings, "agent_interface_name", "awg0") or "awg0",
+    )
+    try:
+        raw = await adapter.list_peers(server.id)
+    except Exception:
+        logger.exception("Live peer fetch failed")
+        return ServerPeersOut(peers=[], total=0, node_reachable=False)
+
+    now_ts = int(datetime.now(timezone.utc).timestamp())
+    dev_result = await db.execute(
+        select(Device.id, Device.public_key, Device.device_name).where(
+            Device.server_id == server_id, Device.revoked_at.is_(None)
+        )
+    )
+    pk_to_dev = {row[1]: (row[0], (row[2] or "").strip() or None) for row in dev_result.all()}
+
+    peers: list[PeerOut] = []
+    for p in raw:
+        pk = str(p.get("public_key") or "")
+        last = int(p.get("last_handshake") or 0)
+        peer_status = "unknown"
+        last_handshake_ts = None
+        if last > 0:
+            last_handshake_ts = datetime.fromtimestamp(last, tz=timezone.utc)
+            peer_status = "online" if (now_ts - last) <= 180 else "offline"
+        rx = int(p.get("transfer_rx") or 0)
+        tx = int(p.get("transfer_tx") or 0)
+        allowed_ips_str = str(p.get("allowed_ips") or "")
+        dev = pk_to_dev.get(pk)
+        peer_id = dev[0] if dev else None
+        device_name = dev[1] if dev else None
+        issues = _peer_issues(allowed_ips_str, last_handshake_ts, rx, tx, now_ts)
+        peers.append(
+            PeerOut(
+                public_key=pk,
+                peer_id=peer_id,
+                device_name=device_name,
+                allowed_ips=allowed_ips_str,
+                last_handshake_ts=last_handshake_ts,
+                rx_bytes=rx,
+                tx_bytes=tx,
+                status=peer_status,
+                issues=issues,
+            )
+        )
+    return ServerPeersOut(peers=peers, total=len(peers), node_reachable=True)
+
+
 @router.post("/{server_id}/peers/block")
 async def block_server_peer(
     request: Request,

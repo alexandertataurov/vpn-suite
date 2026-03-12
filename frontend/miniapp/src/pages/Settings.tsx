@@ -4,13 +4,14 @@ import { ApiError } from "@vpn-suite/shared";
 import { postAuth } from "@/api";
 import { setWebappToken } from "@/api/client";
 import { AccountCancellationModal, SessionMissing, SettingsAccountOverviewCard, SettingsLanguageMenuRow, SettingsReconnectCard, SubscriptionCancellationModal } from "@/components";
+import { PageFrame } from "@/design-system/layouts/PageFrame";
+import { FallbackScreen } from "@/design-system/patterns/FallbackScreen";
 import {
   Button,
   ButtonRow,
   ConfirmDanger,
   DataCell,
   DataGrid,
-  FallbackScreen,
   FormField,
   IconAlertTriangle,
   IconCreditCard,
@@ -22,7 +23,6 @@ import {
   MissionSecondaryButton,
   Modal,
   PageCardSection,
-  PageFrame,
   PageSection,
   SettingsCard,
   SettingsActionRow,

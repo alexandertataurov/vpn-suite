@@ -612,8 +612,9 @@ def _pick_containers(container_filter: str, explicit: str | None, *, timeout: fl
         if explicit and explicit not in (cid, name):
             continue
         conf, evidence = _classify_awg_candidate(ins)
-        if conf < 0.6:
-            # Probe to avoid false negatives.
+        if conf < 0.6 and evidence:
+            # Probe only when we already have *some* AWG evidence.
+            # Probing every running container via `docker exec ... awg show` is noisy and expensive.
             probe_timeout = min(3.0, max(1.0, timeout))
             if _probe_awg(cid, "awg0", timeout=probe_timeout):
                 conf = max(conf, 0.8)

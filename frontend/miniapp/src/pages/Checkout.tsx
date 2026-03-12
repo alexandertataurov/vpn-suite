@@ -1,8 +1,8 @@
 import { CheckoutFlowCard, CheckoutSummaryCard, SessionMissing } from "@/components";
+import { PageFrame } from "@/design-system/layouts/PageFrame";
+import { FallbackScreen } from "@/design-system/patterns/FallbackScreen";
 import {
-  FallbackScreen,
   PageCardSection,
-  PageFrame,
   Skeleton,
   MissionAlert,
   MissionChip,

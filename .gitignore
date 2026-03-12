@@ -91,6 +91,7 @@ Thumbs.db
 
 # Local serve / dev artifacts
 .serve/
+output/
 
 # Discovery runtime state
 config/monitoring/discovery/.targets_state.json

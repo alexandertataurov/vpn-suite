@@ -24,6 +24,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - Config and monitoring: alert rules, discovery, Grafana, Prometheus, Loki, OpenAPI export.
 - CI: frontend-e2e reuses admin dev server for Playwright; hardened workflows; API happy-path contract optional; buildx + GHA cache for admin-api; Dockerfile HEALTHCHECK.
 - Docs: observability and miniapp specs, revenue-engine specs, codebase-map, runbook, bot codebase-map; remove Outline from observability config.
+- Miniapp Storybook contract governance: reduced executable contract suite, contract inventory check, CI workflow enforcement, non-blocking official runner probe, and repo-level docs/PR guidance.
 
 ### Changed
 

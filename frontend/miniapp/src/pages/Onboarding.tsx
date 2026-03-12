@@ -7,10 +7,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { OnboardingBottomActions, ONBOARDING_STEPS, OnboardingStepCard } from "@/components";
-import {
-  PageFrame,
-  useToast,
-} from "@/design-system";
+import { useToast } from "@/design-system";
+import { PageFrame } from "@/design-system/layouts/PageFrame";
 import { useBootstrapContext } from "@/bootstrap/BootstrapController";
 import { webappApi } from "@/api/client";
 import { useOpenLink } from "@/hooks/features/useOpenLink";

@@ -1,8 +1,10 @@
 export { TokenSwatch } from "./TokenSwatch";
-export * from "./fixtures";
+export * from "./fixtures/index";
+export * from "./factories/index";
 export * from "./page-contracts";
 export { MockWebappApi } from "./webappMocks";
 export { MobileFrame } from "./layout-frame";
 export { applyTelegramEnvironment, withTelegramEnvironment } from "./telegramEnvironment";
+export { withMiniAppShell } from "./decorators/withMiniAppShell";
 export { ViewportShellProviders, ViewportShellRoutes, withViewportShell, isStackFlowStoryRoute } from "./withViewportShell";
 export { StorybookMiniappShell } from "./StorybookMiniappShell";

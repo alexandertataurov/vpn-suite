@@ -1,9 +1,9 @@
 import { useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { SessionMissing } from "@/components";
+import { PageFrame } from "@/design-system/layouts/PageFrame";
 import { FallbackScreen } from "@/design-system/patterns/FallbackScreen";
 import {
-  PageFrame,
   HomeDynamicBlock,
   HomeHeroPanel,
   HomeQuickActionGrid,

@@ -16,13 +16,13 @@ import {
 import { SafeAreaLayer } from "@/app/SafeAreaLayer";
 import { Body, Caption } from "@/design-system";
 import { PageFrame } from "@/design-system/layouts/PageFrame";
-import { MobileFrame, ViewportShellProviders, ViewportShellRoutes, applyTelegramEnvironment, withViewportShell } from "@/storybook";
+import { MobileFrame, ViewportShellProviders, ViewportShellRoutes, withViewportShell } from "@/storybook";
 import { StoryCard, StoryPage, StorySection, ValuePill } from "./foundations.story-helpers";
 import "./layout-story.css";
 
 const meta = {
-  title: "Compositions/Page Shell",
-  tags: ["autodocs"],
+  title: "Layouts/Page Shell",
+  tags: ["autodocs", "contract-test"],
   parameters: {
     docs: {
       description: {
@@ -49,9 +49,9 @@ export const DangerZoneLayout: Story = {
     },
   },
   render: () => (
-    <PageScaffold className="settings-page">
+    <PageScaffold className="page-shell--dense page-shell--sectioned">
       <PageSection title="Profile">
-        <SettingsCard className="settings-page module-card settings-list-card">
+        <SettingsCard className="module-card settings-list-card">
           <SettingsActionRow
             icon={<IconAlertTriangle size={20} strokeWidth={1.6} />}
             title="Session alerts"
@@ -64,7 +64,7 @@ export const DangerZoneLayout: Story = {
       <div className="danger-zone-section">
         <PageSection>
           <SectionHeaderRow title="Account" />
-          <SettingsCard className="settings-page module-card danger-zone-card" divider={false}>
+          <SettingsCard className="module-card danger-zone-card" divider={false}>
             <div className="danger-zone-content">
               <span className="danger-zone-icon" aria-hidden>
                 <IconAlertTriangle size={20} strokeWidth={1.8} />
@@ -78,7 +78,7 @@ export const DangerZoneLayout: Story = {
         </PageSection>
 
         <PageSection>
-          <SettingsCard className="settings-page module-card danger-zone-card" divider={false}>
+          <SettingsCard className="module-card danger-zone-card" divider={false}>
             <SettingsActionRow
               icon={<IconTrash2 size={20} strokeWidth={1.6} />}
               title="Delete account"
@@ -101,9 +101,9 @@ export const StackFlowVsTabbed: Story = {
         variant="tabbed"
         initialEntries={["/settings"]}
         element={
-          <PageFrame title="Settings" className="settings-page">
+          <PageFrame title="Settings" className="page-shell--dense page-shell--sectioned">
             <PageSection title="Route behavior" description="Bell remains available and the tab bar stays visible.">
-              <SettingsCard className="settings-page module-card settings-list-card">
+              <SettingsCard className="module-card settings-list-card">
                 <SettingsActionRow
                   icon={<IconAlertTriangle size={20} strokeWidth={1.6} />}
                   title="Primary destination"
@@ -120,9 +120,9 @@ export const StackFlowVsTabbed: Story = {
         variant="stack"
         initialEntries={["/devices/issue"]}
         element={
-          <PageFrame title="Device detail" className="devices-page" hideTrailingAction>
+          <PageFrame title="Device detail" className="page-shell--default page-shell--sectioned page-shell--devices" hideTrailingAction>
             <PageSection title="Route behavior" description="Stack routes rely on back navigation and hide tab chrome.">
-              <SettingsCard className="devices-page module-card" divider={false}>
+              <SettingsCard className="module-card" divider={false}>
                 <SettingsActionRow
                   icon={<IconAlertTriangle size={20} strokeWidth={1.6} />}
                   title="Sub-route flow"
@@ -149,7 +149,7 @@ export const KeyboardRealInput: Story = {
     },
   },
   render: () => (
-    <PageScaffold className="settings-page">
+    <PageScaffold className="page-shell--dense page-shell--sectioned">
       <PageSection title="Device profile" description="Real inputs replace the old diagram-only keyboard demo.">
         <div className="layout-contracts-grid">
           {Array.from({ length: 8 }, (_, index) => (
@@ -164,7 +164,7 @@ export const KeyboardRealInput: Story = {
         </div>
       </PageSection>
       <StickyBottomBar>
-        <Button variant="primary" size="lg" style={{ width: "100%" }}>Save changes</Button>
+        <Button variant="primary" size="lg" className="layout-story-full-width-action">Save changes</Button>
       </StickyBottomBar>
     </PageScaffold>
   ),
@@ -248,10 +248,11 @@ export const StackShell_WithBackButton: Story = {
 export const Shell_Fullscreen_iOS: Story = {
   decorators: [withViewportShell("tabbed", { initialEntries: ["/settings"] })],
   parameters: { chromatic: { viewports: [390] } },
-  render: () => <ShellAnchorPage title="Settings" rows={5} />,
-  play: async () => {
-    applyTelegramEnvironment({ platform: "ios", fullscreen: true });
+  globals: {
+    tgPlatform: "ios",
+    tgFullscreen: "true",
   },
+  render: () => <ShellAnchorPage title="Settings" rows={5} />,
 };
 
 function ContractShellPreview({
@@ -283,11 +284,11 @@ function ContractShellPreview({
 
 function ScrollContractPage({ rows }: { rows: number }) {
   return (
-    <PageFrame title="Scroll contract" className="settings-page">
+    <PageFrame title="Scroll contract" className="page-shell--dense page-shell--sectioned">
       <PageSection title="Rows" description="Short content should still leave the bottom chrome fixed and stable.">
         <div className="layout-contracts-grid">
           {Array.from({ length: rows }, (_, index) => (
-            <SettingsCard key={index} className="settings-page module-card" divider={false}>
+            <SettingsCard key={index} className="module-card" divider={false}>
               <SettingsActionRow
                 icon={<IconAlertTriangle size={20} strokeWidth={1.6} />}
                 title={`State ${index + 1}`}
@@ -312,11 +313,19 @@ function ShellAnchorPage({
   title: string;
 }) {
   return (
-    <PageFrame title={title} className={detail ? "devices-page" : "settings-page"} hideTrailingAction={detail}>
+    <PageFrame
+      title={title}
+      className={
+        detail
+          ? "page-shell--default page-shell--sectioned page-shell--devices"
+          : "page-shell--dense page-shell--sectioned"
+      }
+      hideTrailingAction={detail}
+    >
       <PageSection title="Regression anchor" description="This story exists to catch geometry shifts in shell padding and bottom action clearance.">
         <div className="layout-contracts-grid">
           {Array.from({ length: rows }, (_, index) => (
-            <SettingsCard key={index} className={`${detail ? "devices-page" : "settings-page"} module-card`} divider={false}>
+            <SettingsCard key={index} className="module-card" divider={false}>
               <SettingsActionRow
                 icon={<IconAlertTriangle size={20} strokeWidth={1.6} />}
                 title={`Anchor row ${index + 1}`}
@@ -328,7 +337,7 @@ function ShellAnchorPage({
         </div>
         {!detail ? (
           <StickyBottomBar>
-            <Button variant="primary" size="lg" style={{ width: "100%" }}>Continue</Button>
+            <Button variant="primary" size="lg" className="layout-story-full-width-action">Continue</Button>
           </StickyBottomBar>
         ) : null}
       </PageSection>

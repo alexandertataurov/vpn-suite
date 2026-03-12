@@ -11,7 +11,7 @@ const STATIC_TOASTS = [
 ] as const;
 
 const meta = {
-  title: "Primitives/Toast",
+  title: "Components/Toast",
   tags: ["autodocs"],
   component: Toast,
   parameters: {

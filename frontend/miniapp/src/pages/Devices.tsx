@@ -1,5 +1,7 @@
 import { DevicesSummaryCard, SessionMissing } from "@/components";
 import { useCallback, useState } from "react";
+import { PageFrame } from "@/design-system/layouts/PageFrame";
+import { FallbackScreen } from "@/design-system/patterns/FallbackScreen";
 import {
   Skeleton,
   Button,
@@ -8,14 +10,12 @@ import {
   IconPlus,
   InlineAlert,
   Modal,
-  PageFrame,
   PageSection,
   PageHeaderBadge,
   ListCard,
   MissionAlert,
   PageCardSection,
   MissionPrimaryLink,
-  FallbackScreen,
   EmptyStateBlock,
   Input,
 } from "@/design-system";

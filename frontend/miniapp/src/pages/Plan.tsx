@@ -3,9 +3,9 @@ import type { KeyboardEventHandler } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useBootstrapContext } from "@/bootstrap/BootstrapController";
 import { PlanBillingHistorySection, PlanHeroCard, PlanNextStepCard, PlanOptionsSection, SessionMissing } from "@/components";
+import { PageFrame } from "@/design-system/layouts/PageFrame";
 import { FallbackScreen } from "@/design-system/patterns/FallbackScreen";
 import {
-  PageFrame,
   PageSection,
   PageCardSection,
   PageHeaderBadge,

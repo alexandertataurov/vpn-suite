@@ -5,11 +5,11 @@ import { postAuth } from "@/api";
 import { setWebappToken } from "@/api/client";
 import {
   useToast,
-  PageStateScreen,
   MissionPrimaryAnchor,
   MissionPrimaryButton,
   MissionSecondaryAnchor,
 } from "@/design-system";
+import { PageStateScreen } from "@/design-system/patterns/PageStateScreen";
 import { telegramBotUsername } from "@/config/env";
 import { useI18n } from "@/hooks/useI18n";
 import { useTelegramWebApp } from "@/hooks/useTelegramWebApp";

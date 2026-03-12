@@ -3,6 +3,7 @@
 set -e
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SRC="$ROOT/src"
+STYLES_DIR="$SRC/design-system/styles"
 VIOLATIONS=0
 
 # 1. Only token/shell files may define :root
@@ -48,8 +49,8 @@ EOF
 while IFS= read -r f; do
   [ -z "$f" ] && continue
   if grep -qE 'from\s+["'\'']@/design-system/(components|layouts|recipes|patterns|primitives)/' "$f" 2>/dev/null; then
-    if grep -qE 'from\s+["'\'']@/design-system/patterns/FallbackScreen["'\'']' "$f" 2>/dev/null; then
-      if grep -vE 'from\s+["'\'']@/design-system/patterns/FallbackScreen["'\'']' "$f" | grep -qE 'from\s+["'\'']@/design-system/(components|layouts|recipes|patterns|primitives)/' 2>/dev/null; then
+    if grep -qE 'from\s+["'\'']@/design-system/(patterns/FallbackScreen|patterns/PageStateScreen|layouts/PageFrame)["'\'']' "$f" 2>/dev/null; then
+      if grep -vE 'from\s+["'\'']@/design-system/(patterns/FallbackScreen|patterns/PageStateScreen|layouts/PageFrame)["'\'']' "$f" | grep -qE 'from\s+["'\'']@/design-system/(components|layouts|recipes|patterns|primitives)/' 2>/dev/null; then
         echo "design:check — pages/page-models must import reusable UI from '@/design-system'. File: $f"
         VIOLATIONS=$((VIOLATIONS + 1))
       fi
@@ -62,12 +63,12 @@ done <<EOF
 $(find "$SRC/pages" "$SRC/page-models" \( -name "*.ts" -o -name "*.tsx" \) 2>/dev/null)
 EOF
 
-# 5. No page-local stylesheets under src/pages; styling belongs in shared design-system layers.
+# 5. No page-local stylesheets under src/pages; route styling belongs in src/styles/app or reusable design-system layers.
 PAGE_CSS_FILES=$(find "$SRC/pages" -name "*.css" 2>/dev/null || true)
 if [ -n "$PAGE_CSS_FILES" ]; then
   while IFS= read -r f; do
     [ -z "$f" ] && continue
-    echo "design:check — page-local stylesheets are not allowed; move styles into design-system shared layers. File: $f"
+    echo "design:check — page-local stylesheets are not allowed; move styles into src/styles/app or reusable design-system layers. File: $f"
     VIOLATIONS=$((VIOLATIONS + 1))
   done <<EOF
 $PAGE_CSS_FILES
@@ -78,15 +79,26 @@ PAGE_STYLE_IMPORTS=$(grep -RInE 'import\s+["'"'"']\./[^"'"'"']+\.css["'"'"'];?' 
 if [ -n "$PAGE_STYLE_IMPORTS" ]; then
   while IFS= read -r line; do
     [ -z "$line" ] && continue
-    echo "design:check — page-local stylesheet imports are not allowed; use shared design-system styles. $line"
+    echo "design:check — page-local stylesheet imports are not allowed; use src/styles/app or reusable design-system styles. $line"
     VIOLATIONS=$((VIOLATIONS + 1))
   done <<EOF
 $PAGE_STYLE_IMPORTS
 EOF
 fi
 
-# 6. No raw hex/rgba in design-system CSS except in token source files (base, consumer, telegram, frame).
-STYLES_DIR="$SRC/design-system/styles"
+# 6. Shared design-system CSS must not contain route/page ancestor selectors for app-owned page families.
+PAGE_ANCESTOR_SELECTORS=$(grep -RInE '\.(home-page|settings-page|devices-page|support-page|onboarding-page)\b' "$STYLES_DIR" --include="*.css" 2>/dev/null || true)
+if [ -n "$PAGE_ANCESTOR_SELECTORS" ]; then
+  while IFS= read -r line; do
+    [ -z "$line" ] && continue
+    echo "design:check — page ancestor selectors are not allowed in design-system CSS; move route styling to src/styles/app. $line"
+    VIOLATIONS=$((VIOLATIONS + 1))
+  done <<EOF
+$PAGE_ANCESTOR_SELECTORS
+EOF
+fi
+
+# 7. No raw hex/rgba in design-system CSS except in token source files (base, consumer, telegram, frame).
 ALLOWED_CSS="$STYLES_DIR/tokens/base.css $STYLES_DIR/theme/consumer.css $STYLES_DIR/theme/telegram.css $STYLES_DIR/shell/frame.css"
 while IFS= read -r f; do
   [ -z "$f" ] && continue
@@ -102,14 +114,20 @@ done <<EOF
 $(find "$STYLES_DIR" -name "*.css" 2>/dev/null)
 EOF
 
-# 7. Token drift — tokens-map PRIMITIVES vs tokens/*.ts
+# 8. Token drift — tokens-map PRIMITIVES vs tokens/*.ts
 if ! node "$ROOT/scripts/check-token-drift.mjs" 2>/dev/null; then
   VIOLATIONS=$((VIOLATIONS + 1))
 fi
 
-# 8. Typography parity test must pass whenever token or CSS layers drift.
+# 9. Typography parity test must pass whenever token or CSS layers drift.
 if ! npm run test -- --run src/test/token-parity.test.ts >/dev/null 2>&1; then
   echo "design:check — typography/breakpoint token parity failed. Run: npm run test -- --run src/test/token-parity.test.ts"
+  VIOLATIONS=$((VIOLATIONS + 1))
+fi
+
+# 10. Storybook taxonomy must stay aligned with the UI-platform layer model.
+if ! node "$ROOT/scripts/check-storybook-taxonomy.mjs" >/dev/null 2>&1; then
+  echo "design:check — Storybook taxonomy drifted. Run: npm run storybook:taxonomy"
   VIOLATIONS=$((VIOLATIONS + 1))
 fi
 

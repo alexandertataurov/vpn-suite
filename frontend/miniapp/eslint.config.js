@@ -68,6 +68,18 @@ export default tseslint.config(
               message:
                 "Import FallbackScreen from '@/design-system/patterns/FallbackScreen' to avoid barrel chunk cycles.",
             },
+            {
+              name: "@/design-system",
+              importNames: ["PageFrame"],
+              message:
+                "Import PageFrame from '@/design-system/layouts/PageFrame' to avoid barrel chunk cycles.",
+            },
+            {
+              name: "@/design-system",
+              importNames: ["PageStateScreen"],
+              message:
+                "Import PageStateScreen from '@/design-system/patterns/PageStateScreen' to avoid barrel chunk cycles.",
+            },
           ],
         },
       ],
@@ -101,9 +113,11 @@ export default tseslint.config(
                 "@/design-system/patterns/*",
                 "@/design-system/primitives/*",
                 "!@/design-system/patterns/FallbackScreen",
+                "!@/design-system/patterns/PageStateScreen",
+                "!@/design-system/layouts/PageFrame",
               ],
               message:
-                "Import reusable UI from '@/design-system'. Only FallbackScreen may be imported from its direct pattern path.",
+                "Import reusable UI from '@/design-system'. Only chunk-cycle-safe direct imports are allowed: PageFrame, FallbackScreen, and PageStateScreen.",
             },
             {
               group: [
