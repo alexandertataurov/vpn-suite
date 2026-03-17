@@ -30,8 +30,8 @@ else
   echo "Skipping backend migrate/pytest and bot pytest (VERIFY_SKIP_DB=1)."
 fi
 
-step "Frontend: npm ci"
-(cd frontend && npm ci)
+step "Frontend: pnpm install"
+(cd frontend && pnpm install --no-frozen-lockfile)
 frontend_checks
 
 # --- Compose config ---
