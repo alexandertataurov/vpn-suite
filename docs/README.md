@@ -75,11 +75,21 @@
 | Validation (targets, queries) | [observability/validation.md](observability/validation.md) |
 | AWG data contract | [observability/data-contract.md](observability/data-contract.md) |
 
+## Product & business
+
+| Topic | Doc |
+|-------|-----|
+| Business logic, entities, user journeys | [BUSINESS_LOGIC_AND_USER_JOURNEYS.md](BUSINESS_LOGIC_AND_USER_JOURNEYS.md) |
+| Revenue funnel (trial, payment, retention) | [revenue-engine-funnel.md](revenue-engine-funnel.md) |
+| Referral pipeline (attach API, capture) | [referral-pipeline.md](referral-pipeline.md) |
+| Telegram Mini App guidelines | [TELEGRAM-MINIAPP-GUIDELINES.md](TELEGRAM-MINIAPP-GUIDELINES.md) |
+
 ## Audits & security
 
 | Topic | Doc |
 |-------|-----|
 | Audits (logs, perf, security, UI, release readiness) | [audits/](audits/) |
+| Frontend telemetry audit | [audits/telemetry-audit.md](audits/telemetry-audit.md) |
 | Hardening | [security/hardening.md](security/hardening.md) |
 | Threat model | [security/threat-model.md](security/threat-model.md) |
 | Infrastructure map | [ops/infrastructure-map.md](ops/infrastructure-map.md) |
@@ -90,8 +100,10 @@
 |-------|-----|
 | **Index** (apps, routes, design, tables, testing) | [frontend/README.md](frontend/README.md) |
 | Design system, typography, UI guide | [frontend/design/](frontend/design/) |
+| Admin design tokens | [frontend/design-tokens.md](frontend/design-tokens.md) |
 | Table guides, QA, migration | [frontend/tables/](frontend/tables/) |
 | Storybook | [frontend/storybook/](frontend/storybook/) |
+| Performance (Lighthouse, bundle) | [frontend/performance-audit.md](frontend/performance-audit.md) |
 
 ## Ops (runbooks, troubleshooting)
 
