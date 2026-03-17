@@ -110,7 +110,7 @@ async def test_grant_referral_reward_extends_referrer_sub(async_session: AsyncSe
     async_session.add(sub_ref)
     async_session.add(sub_refee)
     await async_session.flush()
-    ref = await _ensure_pending_referral(
+    await _ensure_pending_referral(
         async_session,
         referrer_user_id=referrer.id,
         referee_user_id=referee.id,
@@ -150,7 +150,7 @@ async def test_grant_referral_reward_idempotent(async_session: AsyncSession, pla
     )
     async_session.add(sub_ref)
     await async_session.flush()
-    ref = await _ensure_pending_referral(
+    await _ensure_pending_referral(
         async_session,
         referrer_user_id=referrer.id,
         referee_user_id=referee.id,
@@ -187,7 +187,7 @@ async def test_grant_referral_reward_paused_referrer_accrues_pending_days(
     )
     async_session.add(sub_ref)
     await async_session.flush()
-    ref = await _ensure_pending_referral(
+    await _ensure_pending_referral(
         async_session,
         referrer_user_id=referrer.id,
         referee_user_id=referee.id,
@@ -236,7 +236,7 @@ async def test_referral_reward_failure_does_not_fail_payment(
     )
     async_session.add(sub_refee)
     await async_session.flush()
-    ref = await _ensure_pending_referral(
+    await _ensure_pending_referral(
         async_session,
         referrer_user_id=referrer.id,
         referee_user_id=referee.id,

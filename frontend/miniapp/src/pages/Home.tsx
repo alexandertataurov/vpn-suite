@@ -4,6 +4,7 @@ import {
   ActionCard,
   Button,
   FallbackScreen,
+  PillChip,
   Skeleton,
   PageScaffold,
   ModernHeader,
@@ -13,10 +14,6 @@ import { SessionMissing } from "@/components";
 import { useWebappToken } from "@/api/client";
 import { useSession } from "@/hooks";
 import { useAccessHomePageModel } from "@/page-models";
-
-function getHeaderSubtitle(hasPlan: boolean): string {
-  return hasPlan ? "" : "No plan";
-}
 
 export function HomePage() {
   const model = useAccessHomePageModel();
@@ -70,7 +67,11 @@ export function HomePage() {
         displayName={profileName}
         avatarUrl={profilePhotoUrl}
         avatarInitial={profileInitial}
-        subtitle={model.data ? getHeaderSubtitle(model.data.has_plan) : undefined}
+        pillChip={
+          model.pillChip ? (
+            <PillChip variant={model.pillChip.variant}>{model.pillChip.label}</PillChip>
+          ) : undefined
+        }
         showSettings={false}
       />
 

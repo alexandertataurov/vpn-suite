@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.security import create_webapp_session_token
 from app.main import app
-from app.models import Device, IssuedConfig, Plan, Server, Subscription, User
+from app.models import Plan, Subscription, User
 
 
 @pytest.mark.asyncio

@@ -14,8 +14,8 @@ from app.core.database import get_db
 from app.core.security import create_webapp_session_token
 from app.main import app
 from app.models import Device, EntitlementEvent, FunnelEvent, Plan, Subscription, User
-from app.services.issued_config_service import persist_issued_configs
 from app.schemas.subscription import SubscriptionOut
+from app.services.issued_config_service import persist_issued_configs
 from app.services.subscription_lifecycle_events import (
     emit_access_blocked,
     emit_payment_lifecycle,
