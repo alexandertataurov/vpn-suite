@@ -43,6 +43,9 @@ backend/.venv-mypy/
 # Backups (cron dumps)
 backups/
 
+# Local data snapshots from VPS (dumps)
+snapshots/
+
 # IDE
 .idea/
 .vscode/*
