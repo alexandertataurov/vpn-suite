@@ -5,6 +5,7 @@
 @import "./tokens/base.css";
 @import "./theme/telegram.css";
 @import "./theme/consumer.css";
+@import "./theme/amnezia.css";
 @import "./layout/zones.css";
 @import "./shell/frame.css";
 @import "./content/library.css";

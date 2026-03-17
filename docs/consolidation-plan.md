@@ -38,7 +38,7 @@ Master index: [docs/README.md](README.md) — links to guides + full doc tree.
 | SECURITY_RISK_REPORT.md | Audit | → docs/audits/SECURITY_RISK_REPORT.md |
 | HARDENING_ACTION_PLAN.md | Security | → docs/security/hardening.md (done) |
 | THREAT_MODEL.md | Security | → docs/security/threat-model.md (done) |
-| INFRASTRUCTURE_MAP.md | Ops | → docs/INFRASTRUCTURE_MAP.md |
+| INFRASTRUCTURE_MAP.md | Ops | → docs/ops/infrastructure-map.md |
 | TABLE_*.md, MIGRATION_PLAN.md, ARCH_TABLE_SYSTEM.md | UI | → docs/frontend/ |
 
 ### 1.2 docs/ (primary)

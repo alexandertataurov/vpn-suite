@@ -15,7 +15,7 @@ die() { log ERROR "$1"; exit 1; }
 usage() {
   cat >&2 <<'USAGE'
 Usage: ./manage.sh <cmd>
-See README.md for: up-core, down-core, up-monitoring, bootstrap, rebuild-restart, restart-admin, build-all, migrate, seed*, node-*, restore-devices-from-peers, server:verify, server:sync, server:reconcile, server:drift, device:reissue, support-bundle, setup-backend-venv, check, verify, smoke-staging, config, config-validate, build, build-admin, build-webapp, backup-db, backup-monitoring, restore-db, openapi, ps, logs.
+See README.md for: up-core, down-core, up-monitoring, bootstrap, rebuild-restart, restart-admin, build-all, migrate, seed*, node-*, restore-devices-from-peers, server:verify, server:sync, server:reconcile, server:drift, device:reissue, support-bundle, setup-backend-venv, check, verify, pre-deploy-smoke, pre-deploy-verify, smoke-staging, config, config-validate, build, build-admin, build-webapp, backup-db, backup-monitoring, restore-db, openapi, ps, logs.
 STRICT=1 makes optional failures fatal.
 USAGE
 }
@@ -346,6 +346,14 @@ case "$cmd" in
       sudo systemctl daemon-reload &&
       sudo systemctl enable "$SVC" &&
       log INFO "Enabled $SVC. Run: sudo systemctl start $SVC  # apply NAT now"
+    ;;
+  pre-deploy-smoke)
+    # 2-minute smoke (check, health, login). See docs/ops/pre-deploy-checklist.md
+    bash scripts/pre_deploy_smoke.sh 2min
+    ;;
+  pre-deploy-verify)
+    # 10-minute pre-release (verify, up-core, health, build, API smoke).
+    bash scripts/pre_deploy_smoke.sh 10min
     ;;
   smoke-staging)
     # Full staging validation (tests + build + e2e + authenticated API smoke).

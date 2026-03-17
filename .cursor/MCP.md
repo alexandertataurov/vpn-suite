@@ -1,8 +1,9 @@
 # MCP configuration
 
-- **postgres** and **redis**: Connection strings in `mcp.json` must point at **localhost only** (local dev). Never use staging or production.
-- **github**: Replace `<YOUR_GITHUB_PAT>` with a PAT (github.com/settings/tokens, `repo` scope). Use `read` only unless you want AI-assisted PR creation.
-- **git**: Requires `uv` installed (`pip install uv` or `brew install uv`).
+- **postgres** and **redis**: Connection strings must point at **localhost only** (local dev). Start services with `./manage.sh up-core` before using.
+- **github**: Set `GITHUB_PERSONAL_ACCESS_TOKEN` in env (github.com/settings/tokens, `repo` scope). Add to `.env` and source before launching Cursor.
+- **context7**: Set `CONTEXT7_API_KEY` in env. Add to `.env` and source before launching Cursor.
+- **git**: Uses `backend/.venv/bin/python`. Create venv if needed: `cd backend && python -m venv .venv && .venv/bin/pip install -r requirements.txt -r requirements-dev.txt`.
 
 ## Consider later (enable when ready)
 

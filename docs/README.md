@@ -39,6 +39,7 @@
 |-------|-----|
 | Design system | [frontend/design/design-system.md](frontend/design/design-system.md) |
 | Typography | [frontend/design/typography-tokens.md](frontend/design/typography-tokens.md) |
+| Miniapp design guidelines | [frontend/design/amnezia-miniapp-design-guidelines.md](frontend/design/amnezia-miniapp-design-guidelines.md) |
 | Specs index | [specs/README.md](specs/README.md) |
 | Control-plane | [specs/ultra-spec-control-plane.md](specs/ultra-spec-control-plane.md) |
 | Telemetry | [specs/telemetry-spec.md](specs/telemetry-spec.md) |
@@ -99,11 +100,21 @@
 | Topic | Doc |
 |-------|-----|
 | Runbook, agent mode, AmneziaWG, no-traffic troubleshooting | [ops/](ops/) |
+| Deploy setup (GitHub Secrets) | [DEPLOY_SETUP.md](DEPLOY_SETUP.md) |
+| Pre-deploy checklist & smoke test | [ops/pre-deploy-checklist.md](ops/pre-deploy-checklist.md) |
 | Config not working | [ops/config-not-working-checklist.md](ops/config-not-working-checklist.md) |
 | Config not found (reissue) | [ops/config-not-found-deep-dive.md](ops/config-not-found-deep-dive.md) |
 | No traffic (handshake OK) | [ops/no-traffic-troubleshooting.md](ops/no-traffic-troubleshooting.md) |
 | Telemetry degraded | [ops/telemetry-degraded-troubleshooting.md](ops/telemetry-degraded-troubleshooting.md) |
 | Miniapp session error | [troubleshooting/miniapp-session-error.md](troubleshooting/miniapp-session-error.md) |
+
+## Local development
+
+| Topic | Doc |
+|-------|-----|
+| Local dev environment (WSL2, Docker, setup) | [ops/local-dev-environment.md](ops/local-dev-environment.md) |
+| Dev modes (local full-stack / beta API / deployed) | [ops/local-dev-modes.md](ops/local-dev-modes.md) |
+| Data sync from VPS (dump, restore, sanitize) | [ops/local-first-data-sync.md](ops/local-first-data-sync.md) |
 
 ## Workflow
 
@@ -112,9 +123,12 @@
 | Multi-agent workflow (skills, subagents) | [workflow.md](workflow.md) |
 | Doc naming conventions | [naming-conventions.md](naming-conventions.md) |
 
-## Other (root)
+## Reference
 
 - [api/reference.md](api/reference.md) — API reference links  
 - [audits/analytics.md](audits/analytics.md) — funnel events  
 - [audits/baseline.md](audits/baseline.md) — perf baseline capture (admin)  
-- [DOCUMENTATION-OVERHAUL-2026-03.md](DOCUMENTATION-OVERHAUL-2026-03.md) — doc overhaul deliverables (audit, deletion/merge logs, gap report)  
+
+## Maintenance
+
+- [DOCUMENTATION-OVERHAUL-2026-03.md](DOCUMENTATION-OVERHAUL-2026-03.md) — doc overhaul (audit, deletion/merge logs, gap report)

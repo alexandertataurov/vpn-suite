@@ -358,7 +358,8 @@ cd frontend/admin && npx playwright test
 4. `git push origin beta-release`
 5. VPS: webhook/CI делает pull и deploy (VPS — только runtime).
 
-**Data sync:** для работы с реалистичными данными с VPS см. [local-first-data-sync.md](local-first-data-sync.md).
+**Data sync:** [local-first-data-sync.md](local-first-data-sync.md)  
+**Mode switching:** [local-dev-modes.md](local-dev-modes.md) — local full-stack, frontend+beta API, beta deployed
 6. VPS не используется как IDE или основная dev-машина.
 
 ---

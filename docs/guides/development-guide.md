@@ -56,7 +56,14 @@ Codebase layout, API, quality gates, and release flow.
 
 ---
 
-## 5. Backlog & planning
+## 5. Local development
+
+- [ops/local-dev-environment.md](../ops/local-dev-environment.md) — setup (WSL2, Docker, Node, Python)
+- [ops/local-dev-modes.md](../ops/local-dev-modes.md) — full-stack vs beta API vs deployed
+- [ops/local-first-data-sync.md](../ops/local-first-data-sync.md) — data sync from VPS
+- [ops/pre-deploy-checklist.md](../ops/pre-deploy-checklist.md) — pre-commit, smoke, UI test plan
+
+## 6. Backlog & planning
 
 - [backlog/backlog.md](../backlog/backlog.md)
 - [backlog/execution-roadmap.md](../backlog/execution-roadmap.md)

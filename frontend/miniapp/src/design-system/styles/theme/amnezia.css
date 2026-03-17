@@ -1,0 +1,109 @@
+/* AmneziaVPN Mini App — design token layer.
+   Overrides consumer-light per docs/frontend/design/amnezia-miniapp-design-guidelines.md
+   Import after consumer.css. */
+
+html[data-theme="consumer-light"] {
+  /* Surfaces — spec aliases */
+  --bg: #f2f2ef;
+  --white: #ffffff;
+  --color-bg: #f2f2ef;
+  --color-bg-gradient: linear-gradient(180deg, #f2f2ef 0%, #f2f2ef 100%);
+  --color-surface: #ffffff;
+  --text: #111110;
+  --text2: #63625f;
+  --text3: #a8a7a3;
+  --border: rgba(0, 0, 0, 0.07);
+  --border-med: rgba(0, 0, 0, 0.11);
+  --color-surface-2: #f2f2ef;
+
+  /* Borders — no shadows, depth via borders only */
+  --color-border: rgba(0, 0, 0, 0.07);
+  --color-border-subtle: rgba(0, 0, 0, 0.07);
+  --color-border-strong: rgba(0, 0, 0, 0.11);
+
+  /* Text */
+  --color-text: #111110;
+  --color-text-muted: #63625f;
+  --color-text-tertiary: #a8a7a3;
+
+  /* Semantic — success */
+  --color-success: #166534;
+  --color-success-soft: #f0fdf4;
+  --green: #166534;
+  --green-bg: #f0fdf4;
+  --green-border: rgba(22, 101, 52, 0.14);
+  --green-d: #f0fdf4;
+  --green-b: rgba(22, 101, 52, 0.14);
+
+  /* Semantic — warning */
+  --color-warning: #92400e;
+  --color-warning-soft: #fffbeb;
+  --amber: #92400e;
+  --amber-bg: #fffbeb;
+  --amber-border: rgba(146, 64, 14, 0.15);
+  --amber-d: #fffbeb;
+  --amber-b: rgba(146, 64, 14, 0.15);
+
+  /* Semantic — error / expired */
+  --color-error: #991b1b;
+  --color-error-soft: #fef2f2;
+  --red: #991b1b;
+  --red-bg: #fef2f2;
+  --red-border: rgba(153, 27, 27, 0.15);
+  --red-d: #fef2f2;
+  --red-b: rgba(153, 27, 27, 0.15);
+  --danger-dim: #fef2f2;
+
+  /* Primary button: always near-black, no colored primary */
+  --color-accent: #111110;
+  --color-accent-hover: #2d2d2b;
+  --color-on-accent: #ffffff;
+
+  /* Radius — spec */
+  --r: 14px;
+  --r-sm: 10px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 14px;
+  --radius-xl: 14px;
+
+  /* No drop shadows */
+  --shadow-sm: none;
+  --shadow-card: none;
+  --shadow-elevated: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+  --shadow-dialog: none;
+  --shadow-btn-primary: none;
+
+  /* Spacing — spec */
+  --amnezia-page-pad-h: 16px;
+  --amnezia-page-pad-top: 24px;
+  --amnezia-page-pad-bottom: 110px;
+  --amnezia-card-gap: 8px;
+  --amnezia-card-padding: 18px;
+  --amnezia-row-pad-v: 13px;
+  --amnezia-row-pad-h: 16px;
+  --amnezia-profile-margin-bottom: 20px;
+
+  /* Typography — spec roles */
+  --amnezia-profile-name: 15px;
+  --amnezia-plan-name: 28px;
+  --amnezia-plan-eyebrow: 10px;
+  --amnezia-plan-subtitle: 12.5px;
+  --amnezia-stat-value: 19px;
+  --amnezia-stat-label: 9px;
+  --amnezia-stat-dim: 13px;
+  --amnezia-hero-title: 20px;
+  --amnezia-hero-desc: 13px;
+  --amnezia-badge-text: 11px;
+  --amnezia-row-label: 13.5px;
+  --amnezia-row-sub: 11.5px;
+  --amnezia-banner-title: 13px;
+  --amnezia-banner-sub: 11.5px;
+  --amnezia-btn-primary: 14px;
+  --amnezia-btn-secondary: 13.5px;
+  --amnezia-cta-pill: 12px;
+  --amnezia-help-text: 12px;
+  --amnezia-avatar-initials: 11.5px;
+}

@@ -2,7 +2,7 @@
   "mcpServers": {
     "filesystem": {
       "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/opt/vpn-suite"],
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/home/alex/projects/vpn"],
       "disabled": false
     },
     "memory": {
@@ -11,32 +11,24 @@
       "disabled": false
     },
     "sequential-thinking": {
-      "command": "docker",
-      "args": ["run", "--rm", "-i", "-e", "DISABLE_THOUGHT_LOGGING=true", "mcp/sequentialthinking"],
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
+      "env": { "DISABLE_THOUGHT_LOGGING": "true" },
       "disabled": false
     },
     "context7": {
       "command": "npx",
-      "args": ["-y", "@upstash/context7-mcp", "--api-key", "ctx7sk-f4e33846-5d0a-49bb-a378-d8bf5072b44c"],
+      "args": ["-y", "@upstash/context7-mcp"],
       "disabled": false
     },
     "git": {
-      "command": "docker",
-      "args": [
-        "run",
-        "--rm",
-        "-i",
-        "--mount", "type=bind,src=/opt/vpn-suite,dst=/workspace",
-        "mcp/git"
-      ],
+      "command": "backend/.venv/bin/python",
+      "args": ["-m", "mcp_server_git", "--repository", "/home/alex/projects/vpn"],
       "disabled": false
     },
     "github": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-github"],
-      "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": ""
-      },
+      "command": "/home/alex/projects/vpn/.cursor/run-github-mcp.sh",
+      "args": [],
       "disabled": false
     },
     "postgres": {

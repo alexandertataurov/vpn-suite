@@ -85,6 +85,8 @@ Single source for VPN Suite frontend: apps, design system, components, tables, t
 | [typography-tokens.md](design/typography-tokens.md) | Typography scale, Tailwind mapping |
 | [foundations-governance.md](design/foundations-governance.md) | Token usage rules, enforcement |
 | [ui-guide.md](design/ui-guide.md) | Component usage, patterns, don'ts |
+| [amnezia-miniapp-design-guidelines.md](design/amnezia-miniapp-design-guidelines.md) | Miniapp design guidelines |
+
 
 ### [components/](components/) — Component inventory
 
@@ -134,4 +136,4 @@ Single source for VPN Suite frontend: apps, design system, components, tables, t
 
 - **Codebase map:** [docs/codebase-map.md](../codebase-map.md) §3 Frontend
 - **Frontend audits:** [docs/audits/](../audits/) (frontend-audit-expanded, tables-audit)
-- **File inventory (in repo):** [frontend/FILE_INVENTORY.md](../../frontend/FILE_INVENTORY.md)
+- **File manifest:** [audits/frontend-file-manifest.md](audits/frontend-file-manifest.md)

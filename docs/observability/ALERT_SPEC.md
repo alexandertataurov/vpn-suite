@@ -13,7 +13,7 @@ Alert groups, rules, routing, and annotations.
 ## Rule Files
 
 - config/monitoring/alert_rules.yml: main rules (vpn-suite, admin-operator, docker-telemetry, business, infrastructure-extra, application).
-- ALERTS/unified-alerts.yml: unified-observability group.
+- config/monitoring/alerts/unified-alerts.yml: unified-observability group.
 
 ## Groups and Rules (Summary)
 

@@ -85,6 +85,30 @@ function formatExpiry(expiresAt: string | null): string {
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
+export type PillChipVariant = "beta" | "active" | "expiring" | "expired";
+
+function daysUntil(expiresAt: string): number {
+  const now = new Date();
+  const exp = new Date(expiresAt);
+  return Math.ceil((exp.getTime() - now.getTime()) / (24 * 60 * 60 * 1000));
+}
+
+export function getPillChipForAccess(
+  status: AccessStatus,
+  hasPlan: boolean,
+  expiresAt: string | null
+): { variant: PillChipVariant; label: string } | null {
+  if (status === "no_plan" || !hasPlan) return { variant: "beta", label: "Beta" };
+  if (status === "expired") return { variant: "expired", label: "Expired" };
+  if (!hasPlan) return { variant: "beta", label: "Beta" };
+  if (expiresAt) {
+    const days = daysUntil(expiresAt);
+    if (days <= 0) return { variant: "expired", label: "Expired" };
+    if (days <= 14) return { variant: "expiring", label: `PRO · ${days}d left` };
+  }
+  return { variant: "active", label: "PRO" };
+}
+
 export function useAccessHomePageModel() {
   const hasToken = !!useWebappToken();
   const navigate = useNavigate();
@@ -140,6 +164,11 @@ export function useAccessHomePageModel() {
   const expiryValue = data?.expires_at ? formatExpiry(data.expires_at) : "";
   const expiryLabel = uiConfig?.expiryLabel ?? "Valid until";
 
+  const pillChip =
+    data != null
+      ? getPillChipForAccess(status, data.has_plan, data.expires_at)
+      : null;
+
   return {
     pageState,
     status,
@@ -150,6 +179,7 @@ export function useAccessHomePageModel() {
     devicesValue,
     expiryValue,
     expiryLabel,
+    pillChip,
     onRetry: () => void queryClient.invalidateQueries({ queryKey: [...webappQueryKeys.access()] }),
   };
 }

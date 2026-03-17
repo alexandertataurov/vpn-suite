@@ -13,7 +13,7 @@
 | Tempo | `config/monitoring/tempo/tempo.yaml` | 8760h (365d) | OK |
 | Grafana | `config/monitoring/grafana/`, dashboards | — | OK |
 | OTEL Collector | `otel-collector/config.yaml` | — | OK |
-| Alerts | `ALERTS/unified-alerts.yml` | — | OK |
+| Alerts | `config/monitoring/alerts/unified-alerts.yml` | — | OK |
 
 ---
 

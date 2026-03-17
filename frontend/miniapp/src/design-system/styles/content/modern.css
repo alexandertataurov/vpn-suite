@@ -130,6 +130,97 @@
   background: var(--color-surface-2);
 }
 
+/* ---- Pill Chip (amnezia spec §4.2) ---------------- */
+.pill-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 100px;
+  font-size: var(--amnezia-badge-text, 11px);
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  padding: 4px 11px;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.pill-chip--beta {
+  background: var(--white, var(--color-surface));
+  border: 1px solid var(--border, var(--color-border));
+  color: var(--text3, var(--color-text-tertiary));
+}
+
+.pill-chip--active {
+  background: var(--white, var(--color-surface));
+  border: 1px solid var(--border-med, var(--color-border-strong));
+  color: var(--text2, var(--color-text-muted));
+}
+
+.pill-chip--expiring {
+  background: var(--amber-bg, var(--color-warning-soft));
+  border: 1px solid var(--amber-border, var(--surface-border-warning));
+  color: var(--amber, var(--color-warning));
+}
+
+.pill-chip--expired {
+  background: var(--red-bg, var(--color-error-soft));
+  border: 1px solid var(--red-border, var(--surface-border-error));
+  color: var(--red, var(--color-error));
+}
+
+/* ---- Profile row (amnezia spec §4.1) ---------------- */
+.modern-profile-row {
+  gap: 10px;
+  margin-bottom: var(--amnezia-profile-margin-bottom, 20px);
+}
+
+.modern-profile-row .modern-avatar--profile {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(140deg, #bbf7d0 0%, #99f6e4 100%);
+  border: none;
+  box-shadow: none;
+  font-size: var(--amnezia-avatar-initials, 11.5px);
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  color: #065f46;
+}
+
+.modern-profile-row .modern-avatar--profile img {
+  object-fit: cover;
+}
+
+.modern-profile-info--row {
+  flex: 1;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.modern-profile-info--row .modern-header-title {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--amnezia-profile-name, 15px);
+  font-weight: 600;
+  letter-spacing: -0.3px;
+}
+
+.modern-profile-row .modern-icon-button {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--white, var(--color-surface));
+  border: 1px solid var(--border-med, var(--color-border-strong));
+  color: var(--text3, var(--color-text-tertiary));
+  box-shadow: none;
+}
+
+.modern-profile-row .modern-icon-button:hover {
+  color: var(--text2, var(--color-text-muted));
+}
+
 /* ---- Hero Status Card ------------------------------ */
 .modern-hero-card {
   background: var(--color-surface);

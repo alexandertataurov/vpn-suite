@@ -57,9 +57,6 @@ export default defineConfig({
           if (id.includes("node_modules/zustand/")) {
             return "vendor-zustand";
           }
-          if (id.includes("node_modules/echarts/") || id.includes("node_modules/echarts-for-react/")) {
-            return "vendor-echarts";
-          }
           if (id.includes("node_modules/recharts/")) {
             return "vendor-recharts";
           }
@@ -76,9 +73,6 @@ export default defineConfig({
           }
           if (id.includes("node_modules/lucide-react/")) {
             return "vendor-icons";
-          }
-          if (id.includes("node_modules/cmdk/") || id.includes("node_modules/@radix-ui/")) {
-            return "vendor-ui";
           }
         },
       },

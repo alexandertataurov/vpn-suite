@@ -123,7 +123,7 @@ When TELEMETRY_PROMETHEUS_URL unset:
 1. **Production:** Set `TELEMETRY_PROMETHEUS_URL` when running the monitoring stack so ScrapeStatusPanel, MetricsKpisPanel, and operator dashboard show live data.
 2. **Verification:** After `./manage.sh up-monitoring`, open `/telemetry` — Scrape status and Metrics KPIs should show targets and numbers if Prometheus is scraping.
 3. **Optional:** Add a "Debug: raw targets" link on the Telemetry page (e.g. to `/_debug/metrics-targets` in new tab or copy URL) for ops debugging.
-4. **Alerts:** PrometheusTargetDown and other rules in [ALERTS/unified-alerts.yml](../ALERTS/unified-alerts.yml) are evaluated by Prometheus; ensure Alertmanager is configured if you want notifications.
+4. **Alerts:** PrometheusTargetDown and other rules in [config/monitoring/alerts/unified-alerts.yml](../../config/monitoring/alerts/unified-alerts.yml) are evaluated by Prometheus; ensure Alertmanager is configured if you want notifications.
 
 ---
 

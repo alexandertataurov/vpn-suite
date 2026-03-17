@@ -39,11 +39,12 @@ export const ButtonPrimitive = forwardRef<
       <Slot
         ref={ref}
         className={className}
-        disabled={isDisabled}
+        data-disabled={isDisabled ? "true" : undefined}
         data-loading={status === "loading" ? "true" : undefined}
         data-status={status}
         data-pressable="true"
         aria-busy={status === "loading"}
+        aria-disabled={isDisabled}
         aria-label={ariaLabel}
         {...props}
       >

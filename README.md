@@ -125,7 +125,7 @@ Full list: [docs/ops/required-secrets.md](docs/ops/required-secrets.md).
 - **OpenAPI:** `openapi/openapi.yaml` (generate with `./manage.sh openapi`)
 - **API overview and auth:** [docs/api/overview.md](docs/api/overview.md)
 - **Domain model:** [docs/api/domain-model.md](docs/api/domain-model.md)
-- **Doc index:** [docs/README.md](docs/README.md) — guides (ops, observability, development), runbook, codebase map
+- **Doc index:** [docs/README.md](docs/README.md) — guides (ops, observability, development), runbook, local dev, codebase map
 - **Miniapp Storybook contract:** [docs/storybook-ai-contract.md](docs/storybook-ai-contract.md), [docs/ai-ui-workflow.md](docs/ai-ui-workflow.md), and [docs/frontend/storybook/README.md](docs/frontend/storybook/README.md)
 
 ---

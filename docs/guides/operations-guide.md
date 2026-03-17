@@ -61,10 +61,19 @@ Consolidated ops reference for VPN Suite control plane and AmneziaWG nodes.
 
 - [ops/release-checklist.md](../ops/release-checklist.md)
 - [ops/quality-gates.md](../ops/quality-gates.md)
+- [ops/pre-deploy-checklist.md](../ops/pre-deploy-checklist.md) — pre-commit, smoke, UI test plan
 
 ---
 
-## 6. Public Beta — Launch Day Checklist
+## 6. Local development
+
+- [ops/local-dev-environment.md](../ops/local-dev-environment.md) — WSL2, Docker, Node, Python setup
+- [ops/local-dev-modes.md](../ops/local-dev-modes.md) — full-stack vs beta API vs deployed
+- [ops/local-first-data-sync.md](../ops/local-first-data-sync.md) — dump, restore, sanitize from VPS
+
+---
+
+## 7. Public Beta — Launch Day Checklist
 
 Owner is the operator running the control plane unless noted otherwise.
 
