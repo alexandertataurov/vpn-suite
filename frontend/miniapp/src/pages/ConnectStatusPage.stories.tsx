@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Route } from "react-router-dom";
-import { ConnectStatusPage } from "./ConnectStatus";
+import { ConnectStatusPage } from "@/future/connect-status/ConnectStatus";
 import { PageSandbox, connectedScenario } from "@/storybook/page-contracts";
 
 const meta = {

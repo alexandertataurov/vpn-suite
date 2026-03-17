@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Route } from "react-router-dom";
-import { ServerSelectionPage } from "./ServerSelection";
+import { ServerSelectionPage } from "@/future/servers/ServerSelection";
 import { manualServerScenario, PageSandbox, readyScenario } from "@/storybook/page-contracts";
 
 const meta = {
