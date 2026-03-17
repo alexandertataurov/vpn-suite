@@ -30,7 +30,10 @@ describe("ReferralPage", () => {
       </LayoutProvider>,
     );
 
-    expect(screen.getByText("Read-only beta")).toBeInTheDocument();
+    expect(screen.getByText("Share link")).toBeInTheDocument();
+    expect(
+      screen.getByText("Referral rewards stay hidden during beta, but you can still copy your invite link."),
+    ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Copy link" })).toBeInTheDocument();
     expect(screen.queryByText("Reward progress")).not.toBeInTheDocument();
   });

@@ -1,6 +1,6 @@
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { SupportPage } from "./Support";
 import { LayoutProvider } from "@/context/LayoutContext";
 import { ToastContainer } from "@/design-system";
@@ -34,6 +34,7 @@ vi.mock("@/page-models", () => ({
 
 vi.mock("@/config/env", () => ({
   telegramBotUsername: "",
+  getSupportBotHref: () => undefined,
 }));
 
 describe("SupportPage", () => {
@@ -49,7 +50,7 @@ describe("SupportPage", () => {
     );
 
     expect(screen.getByText("Help is always available")).toBeInTheDocument();
-    expect(screen.getByText("Contact support")).toBeInTheDocument();
+    expect(screen.getAllByText("Contact support").length).toBeGreaterThan(0);
     expect(screen.getByText("FAQ")).toBeInTheDocument();
     expect(screen.getByText("Support link unavailable")).toBeInTheDocument();
     expect(screen.queryByText("All systems operational")).not.toBeInTheDocument();

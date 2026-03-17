@@ -201,7 +201,9 @@ async def get_metrics_targets(
     request: Request,
     _admin=Depends(require_permission(PERM_CLUSTER_READ)),
 ):
-    """Prometheus targets (auth-protected)."""
+    """Prometheus targets (auth-protected). Dev only."""
+    if settings.environment.lower() != "development":
+        raise HTTPException(status_code=404, detail="Not found")
     started = time.perf_counter()
     from app.services.prometheus_query_service import PrometheusQueryService
 

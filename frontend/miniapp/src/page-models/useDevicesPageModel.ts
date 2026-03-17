@@ -4,17 +4,19 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { WebAppIssueDeviceResponse, WebAppUsageResponse } from "@vpn-suite/shared";
 import { getPlans } from "@/api";
 import { useWebappToken, webappApi } from "@/api/client";
-import { useOnlineStatus } from "@/hooks/useOnlineStatus";
-import { useSession } from "@/hooks/useSession";
-import { useTelegramHaptics } from "@/hooks/useTelegramHaptics";
-import { useTelemetry } from "@/hooks/useTelemetry";
-import { useTrackScreen } from "@/hooks/useTrackScreen";
+import {
+  useOnlineStatus,
+  useSession,
+  useTelegramHaptics,
+  useTelemetry,
+  useTrackScreen,
+  useI18n,
+} from "@/hooks";
 import { useToast } from "@/design-system";
-import { webappQueryKeys } from "@/lib/query-keys/webapp.query-keys";
-import { useI18n } from "@/hooks/useI18n";
+import { usePrefersReducedMotion } from "@/design-system";
+import { webappQueryKeys } from "@/lib";
 import type { SupportedLocale } from "@/lib/i18n";
-import { getErrorMessage } from "@/lib/utils/error";
-import { formatBytes } from "@/lib/utils/format";
+import { getErrorMessage, formatBytes } from "@/lib";
 import type { MissionTone } from "@/design-system";
 import type { StandardPageHeader, StandardPageState, StandardSectionBadge } from "./types";
 import type { PlansResponse } from "@/api";
@@ -95,9 +97,9 @@ export interface DevicesPageModel {
   upgradeTargetTo: string;
   /** Intent-specific copy for device-limit upsell (spec §15). */
   deviceLimitUpsellCopy: { title: string; body: string; ctaLabel: string } | null;
-  handleIssueDevice: () => void;
+  handleIssueDevice: (deviceName?: string) => void;
   handleUpgradePlanClick: () => void;
-  handleCopyConfig: () => Promise<void>;
+  handleCopyConfig: () => Promise<boolean>;
   handleDownloadConfig: () => void;
   handleConfirmRevoke: () => void;
   handleReplaceDevice: (deviceId: string) => void;
@@ -115,6 +117,7 @@ export function useDevicesPageModel(): DevicesPageModel {
   const queryClient = useQueryClient();
   const { data, isLoading, error } = useSession(hasToken);
   const { addToast } = useToast();
+  const prefersReducedMotion = usePrefersReducedMotion();
   const [issuedConfig, setIssuedConfig] = useState<WebAppIssueDeviceResponse | null>(null);
   const [revokeId, setRevokeId] = useState<string | null>(null);
   const configSectionRef = useRef<HTMLDivElement>(null);
@@ -155,12 +158,23 @@ export function useDevicesPageModel(): DevicesPageModel {
   const { track } = useTelemetry(activeSub?.plan_id ?? null);
 
   const issueMutation = useMutation({
-    mutationFn: () => webappApi.post<WebAppIssueDeviceResponse>("/webapp/devices/issue", {}),
-    onSuccess: (res) => {
-      setIssuedConfig(res);
+    mutationFn: async (deviceName?: string) => {
+      const response = await webappApi.post<WebAppIssueDeviceResponse>("/webapp/devices/issue", {});
+      return { response, deviceName };
+    },
+    onSuccess: async ({ response, deviceName }) => {
+      const trimmedDeviceName = deviceName?.trim();
+      setIssuedConfig(response);
+      if (trimmedDeviceName && response.device_id) {
+        try {
+          await webappApi.patch(`/webapp/devices/${response.device_id}`, { device_name: trimmedDeviceName });
+        } catch {
+          addToast(t("devices.toast_name_saved_later"), "info");
+        }
+      }
       queryClient.invalidateQueries({ queryKey: [...webappQueryKeys.me()] });
       track("config_download", { screen_name: "devices" });
-      if (res.peer_created) {
+      if (response.peer_created) {
         addToast(t("devices.toast_device_added"), "success");
         notify("success");
       } else {
@@ -249,9 +263,12 @@ export function useDevicesPageModel(): DevicesPageModel {
 
   useEffect(() => {
     if (issuedConfig && configSectionRef.current) {
-      configSectionRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      configSectionRef.current.scrollIntoView({
+        behavior: prefersReducedMotion ? "auto" : "smooth",
+        block: "nearest",
+      });
     }
-  }, [issuedConfig]);
+  }, [issuedConfig, prefersReducedMotion]);
 
   const hasSubscription = Boolean(activeSub);
   const deviceLimit = activeSub?.device_limit ?? null;
@@ -370,20 +387,23 @@ export function useDevicesPageModel(): DevicesPageModel {
   };
 
   const handleCopyConfig = async () => {
-    if (!configText) return;
+    if (!configText) return false;
     try {
       await navigator.clipboard.writeText(configText);
-      addToast(t("devices.toast_copied"), "success");
+      notify("success");
       track("config_download", { screen_name: "devices" });
+      return true;
     } catch {
       addToast(t("devices.toast_copy_failed"), "error");
+      notify("error");
+      return false;
     }
   };
 
-  const handleIssueDevice = () => {
+  const handleIssueDevice = (deviceName?: string) => {
     impact("medium");
     track("device_issue_started", { screen_name: "devices" });
-    issueMutation.mutate();
+    issueMutation.mutate(deviceName);
   };
 
   const handleUpgradePlanClick = () => {

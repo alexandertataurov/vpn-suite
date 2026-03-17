@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import type { Decorator } from "@storybook/react";
-import { ThemeProvider, useTheme, type Theme } from "@/design-system/theme";
+import { ThemeProvider, useTheme, type Theme } from "@/design-system/core/theme";
 import { StorybookMiniappShell } from "../StorybookMiniappShell";
 
 const storybookThemes = ["consumer-dark", "consumer-light"] as const satisfies readonly Theme[];

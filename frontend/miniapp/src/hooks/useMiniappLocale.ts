@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useSession } from "@/hooks/useSession";
+import { useSession } from "@/hooks";
 import { useWebappToken } from "@/api/client";
 import { useTelegramInitData } from "@/hooks/telegram/useTelegramInitData";
 import { resolveUserLocale, type SupportedLocale } from "@/lib/i18n";

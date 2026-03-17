@@ -9,11 +9,11 @@ import {
   MissionPrimaryButton,
   MissionSecondaryAnchor,
 } from "@/design-system";
-import { PageStateScreen } from "@/design-system/patterns/PageStateScreen";
-import { telegramBotUsername } from "@/config/env";
-import { useI18n } from "@/hooks/useI18n";
-import { useTelegramWebApp } from "@/hooks/useTelegramWebApp";
-import { webappQueryKeys } from "@/lib/query-keys/webapp.query-keys";
+import { PageStateScreen } from "@/design-system/compositions/patterns/PageStateScreen";
+import { getSupportBotHref } from "@/config/env";
+import { useI18n } from "@/hooks";
+import { useTelegramWebApp } from "@/hooks";
+import { webappQueryKeys } from "@/lib";
 
 export interface SessionMissingProps {
   message?: string;
@@ -27,7 +27,7 @@ export function SessionMissing({
   const { addToast } = useToast();
   const { t } = useI18n();
   const [loading, setLoading] = useState(false);
-  const botHref = telegramBotUsername ? `https://t.me/${telegramBotUsername}` : null;
+  const botHref = getSupportBotHref();
 
   const reconnect = useCallback(() => {
     if (!initData) return;
@@ -55,18 +55,13 @@ export function SessionMissing({
       actions={
         <>
           {initData ? (
-            <MissionPrimaryButton onClick={reconnect} disabled={loading}>
-              {loading ? (
-                <>
-                  <svg className="spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
-                    <circle cx="12" cy="12" r="8" strokeOpacity="0.35" />
-                    <path d="M20 12a8 8 0 0 0-8-8" />
-                  </svg>
-                  <span>{t("common.reconnecting")}</span>
-                </>
-              ) : (
-                t("common.reconnect")
-              )}
+            <MissionPrimaryButton
+              status={loading ? "loading" : "idle"}
+              statusText={t("common.reconnecting")}
+              onClick={reconnect}
+              disabled={loading}
+            >
+              {t("common.reconnect")}
             </MissionPrimaryButton>
           ) : botHref ? (
             <MissionPrimaryAnchor href={botHref} target="_blank" rel="noopener noreferrer">

@@ -1,0 +1,232 @@
+.layout-story-preview-frame {
+  display: grid;
+  justify-items: center;
+}
+
+.layout-story-preview-inner {
+  width: min(100%, 420px);
+}
+
+.layout-story-shell-preview {
+  display: grid;
+  justify-items: center;
+  width: 100%;
+  position: relative;
+  transform: translateZ(0);
+  min-width: 0;
+}
+
+.layout-story-grid {
+  display: grid;
+  gap: var(--spacing-4);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+  align-items: start;
+}
+
+.layout-story-mobile-grid {
+  display: grid;
+  gap: var(--spacing-4);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+  align-items: start;
+}
+
+.layout-story-stack {
+  display: grid;
+  gap: var(--spacing-4);
+}
+
+.layout-story-mobile-preview {
+  display: grid;
+  gap: var(--spacing-3);
+  justify-items: center;
+}
+
+.layout-story-mobile-label {
+  color: var(--color-text-tertiary);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.modal-story-disconnect-sheet .modal-body {
+  padding: 20px 16px 16px;
+}
+
+.modal-story-disconnect-sheet .modal-footer {
+  padding: 12px 16px max(16px, env(safe-area-inset-bottom));
+  gap: 10px;
+}
+
+.modal-story-disconnect-sheet .modal-handle {
+  margin: 8px auto 16px;
+}
+
+.modal-story-disconnect-message {
+  color: color-mix(in oklch, var(--color-text) 70%, transparent);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.modal-story-disconnect-btn {
+  flex: 1 1 0;
+  min-height: 52px;
+  border-radius: 10px;
+  text-transform: none;
+  letter-spacing: 0;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.modal-story-disconnect-btn--cancel {
+  color: var(--color-text);
+  border-color: color-mix(in oklch, var(--color-border) 82%, var(--color-text) 18%);
+  background: color-mix(in oklch, var(--color-surface-2) 88%, var(--color-surface) 12%);
+}
+
+.modal-story-disconnect-btn--confirm {
+  color: var(--color-on-accent);
+  background: var(--color-warning);
+  border-color: color-mix(in oklch, var(--color-warning) 72%, black 28%);
+  box-shadow: none;
+}
+
+.layout-story-surface {
+  display: grid;
+  gap: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-2);
+  overflow: hidden;
+}
+
+.layout-story-metric-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+  min-height: 48px;
+  padding: 0 var(--miniapp-card-padding);
+  border-bottom: 1px solid color-mix(in oklch, var(--color-text) 6%, transparent);
+}
+
+.layout-story-metric-row:last-child {
+  border-bottom: 0;
+}
+
+.layout-contracts-grid {
+  display: grid;
+  gap: var(--spacing-4);
+}
+
+.layout-contracts-grid--devices {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+}
+
+.layout-contracts-device {
+  display: grid;
+  gap: var(--spacing-3);
+}
+
+.layout-contracts-device__frame {
+  position: relative;
+  border: 1px solid var(--color-border);
+  border-radius: 28px;
+  overflow: hidden;
+  background: var(--color-bg);
+  min-height: 400px;
+}
+
+.layout-contracts-device__top,
+.layout-contracts-device__bottom,
+.layout-contracts-device__body {
+  display: grid;
+  place-items: center;
+  font: 600 11px/1 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.layout-contracts-device__top {
+  background: color-mix(in oklch, var(--color-error) 16%, transparent);
+  color: var(--color-error);
+}
+
+.layout-contracts-device__body {
+  background: color-mix(in oklch, var(--color-success) 10%, transparent);
+  color: color-mix(in oklch, var(--color-success) 82%, var(--color-text) 18%);
+}
+
+.layout-contracts-device__bottom {
+  background: color-mix(in oklch, var(--color-accent) 12%, transparent);
+  color: var(--color-accent);
+}
+
+.layout-contracts-rules,
+.layout-contracts-table {
+  display: grid;
+  gap: var(--spacing-2);
+}
+
+.layout-contracts-rule,
+.layout-contracts-table__row {
+  padding: var(--spacing-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: color-mix(in oklch, var(--color-surface) 96%, var(--color-bg) 4%);
+}
+
+.layout-contracts-table__row {
+  display: grid;
+  gap: 4px;
+}
+
+.layout-contracts-caption {
+  color: var(--color-text-tertiary);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.layout-story-full-width-action {
+  width: 100%;
+}
+
+/* Story decorator — token-based layout (replaces inline style={{ gap, padding }}) */
+.story-decorator {
+  display: grid;
+  gap: var(--spacing-4);
+  padding: var(--spacing-4);
+}
+
+/* Story text utilities — replace inline color/margin in stories */
+.story-text-muted {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.story-text-tertiary {
+  margin: 0;
+  color: var(--color-text-tertiary);
+}
+
+.story-text-reset {
+  margin: 0;
+}
+
+.story-home-stack {
+  width: 100%;
+  max-width: 420px;
+  display: grid;
+  gap: var(--spacing-4);
+}
+
+.story-checklist {
+  display: grid;
+  gap: var(--spacing-2);
+}
+
+.story-theme-rule-text {
+  font-family: var(--font-sans);
+  font-size: var(--typo-body-sm-size);
+  line-height: 1.6;
+  color: var(--color-text-muted);
+}

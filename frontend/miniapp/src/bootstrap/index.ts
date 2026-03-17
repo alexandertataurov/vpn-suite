@@ -1,5 +1,7 @@
-export { BootstrapController, BootstrapContextProvider, useBootstrapContext } from "./BootstrapController";
-export { initAnalytics, enrichContextAtAppReady } from "./analytics";
+export { BootstrapController } from "./BootstrapController";
+export { BootstrapContextProvider, useBootstrapContext } from "./context";
+export { initAnalytics } from "./analytics";
+export { enrichContextAtAppReady } from "./analyticsContext";
 export { authenticateWebApp, resetAuthForTest } from "./authBootstrap";
 export {
   loadOnboardingResume,

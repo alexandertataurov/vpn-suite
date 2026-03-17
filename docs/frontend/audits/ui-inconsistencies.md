@@ -6,7 +6,7 @@
 |-------|----------|--------|
 | Spacing/typography | shared/src/ui/styles | Tokens in tokens.css; typography.css |
 | Table alignment/overflow | shared/src/ui/table, cellUtils | CellUtils, TableContainer |
-| Button/icon sizes | shared/src/ui/buttons/Button.tsx | PrimitiveButton sizes: sm, md, lg |
+| Button/icon sizes | design-system/components/Button/ | Button sizes: sm, md, lg, icon |
 | Z-index | shared/src/theme/z-index.ts | modal, drawer, dropdown, toast |
 | Dark mode | ThemeProvider, localStorage vpn-suite-theme | Supported |
 | Breakpoints | Tailwind defaults | sm, md, lg, xl |
@@ -21,7 +21,7 @@
 ## Component Paths
 
 - Table: shared/src/ui/table/Table.tsx, cellUtils.tsx
-- Button: shared/src/ui/buttons/Button.tsx
+- Button: design-system/components/Button/
 - Typography: shared/src/ui/typography/Text.tsx, Heading.tsx
 - Z-index: shared/src/theme/z-index.ts
 

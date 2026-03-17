@@ -3,14 +3,16 @@ import { useQuery } from "@tanstack/react-query";
 import type { WebAppReferralMyLinkResponse, WebAppReferralStatsResponse } from "@vpn-suite/shared";
 import { getPlans } from "@/api";
 import { useWebappToken, webappApi } from "@/api/client";
-import { useSession } from "@/hooks/useSession";
-import { useTrackScreen } from "@/hooks/useTrackScreen";
-import { useTelegramHaptics } from "@/hooks/useTelegramHaptics";
-import { useTelegramMainButton } from "@/hooks/useTelegramMainButton";
-import { useI18n } from "@/hooks/useI18n";
-import { useOnlineStatus } from "@/hooks/useOnlineStatus";
+import {
+  useSession,
+  useTrackScreen,
+  useTelegramHaptics,
+  useTelegramMainButton,
+  useI18n,
+  useOnlineStatus,
+} from "@/hooks";
 import { useToast } from "@/design-system";
-import { webappQueryKeys } from "@/lib/query-keys/webapp.query-keys";
+import { webappQueryKeys } from "@/lib";
 import type { PlanItem, PlansResponse } from "@/api";
 import type { StandardPageHeader, StandardPageState, StandardSectionBadge } from "./types";
 import { getActiveSubscription, shouldShowUpsell } from "./helpers";
@@ -77,15 +79,16 @@ export function useReferralPageModel() {
   const shareUrl = linkPayload && botUsername ? `https://t.me/${botUsername}?startapp=${linkPayload}` : "";
 
   const copyToClipboard = useCallback(async () => {
-    if (!shareUrl) return;
+    if (!shareUrl) return false;
     impact("medium");
     try {
       await navigator.clipboard.writeText(shareUrl);
-      addToast(t("referral.toast_link_copied"), "success");
       notify("success");
+      return true;
     } catch {
       addToast(t("referral.toast_copy_failed"), "error");
       notify("error");
+      return false;
     }
   }, [shareUrl, impact, addToast, notify, t]);
 

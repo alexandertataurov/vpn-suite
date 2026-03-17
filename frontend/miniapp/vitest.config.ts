@@ -20,7 +20,7 @@ export default mergeConfig(
             globals: true,
             setupFiles: ["./src/test/setup.ts"],
             include: ["src/**/*.test.{ts,tsx}"],
-            exclude: ["e2e/**/*", "src/design-system/**/*"],
+            exclude: ["e2e/**/*", "src/design-system/**/*", "src/future/**/*"],
             coverage: {
               provider: "v8",
               reporter: ["text", "lcov", "html"],

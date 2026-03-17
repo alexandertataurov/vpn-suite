@@ -8,6 +8,7 @@ const mockTrack = vi.fn();
 const mockUseSession = vi.fn();
 
 vi.mock("@/api/client", () => ({
+  useWebappToken: () => "token",
   webappApi: {
     post: (...args: unknown[]) => mockPost(...args),
   },
@@ -50,7 +51,8 @@ describe("useConnectStatusPageModel", () => {
     const { result } = renderHook(() => useConnectStatusPageModel(), { wrapper });
 
     expect(result.current.summary.title).toBe("No active plan");
-    expect(result.current.primaryAction).toEqual({ label: "Choose plan", to: "/plan" });
+    expect(result.current.header.title).toBe("Connect in AmneziaVPN");
+    expect(result.current.primaryAction).toEqual({ kind: "route", label: "Choose plan", to: "/plan" });
     expect(result.current.showConfirmAction).toBe(false);
   });
 
@@ -66,7 +68,7 @@ describe("useConnectStatusPageModel", () => {
 
     const { result } = renderHook(() => useConnectStatusPageModel(), { wrapper });
 
-    expect(result.current.summary.title).toBe("Setup pending");
+    expect(result.current.summary.title).toBe("Finish setup");
     expect(result.current.showConfirmAction).toBe(true);
 
     await act(async () => {
@@ -79,16 +81,43 @@ describe("useConnectStatusPageModel", () => {
   it("uses device management as the default action once setup is confirmed", () => {
     mockUseSession.mockReturnValue({
       data: {
-        user: { id: 1 },
+        user: { id: 1, last_connection_confirmed_at: "2026-03-10T00:00:00Z" },
         subscriptions: [{ id: "sub-1", plan_id: "plan-basic", status: "active" }],
         devices: [{ id: "dev-1", device_name: "iPhone", status: "connected" }],
+        latest_device_delivery: { amnezia_vpn_key: "vpn://payload" },
       },
     });
 
     const { result } = renderHook(() => useConnectStatusPageModel(), { wrapper });
 
-    expect(result.current.summary.title).toBe("Setup confirmed");
-    expect(result.current.primaryAction).toEqual({ label: "Manage devices", to: "/devices" });
+    expect(result.current.summary.title).toBe("Access ready");
+    expect(result.current.primaryAction).toEqual({ kind: "open_app", label: "Open AmneziaVPN", payload: "vpn://payload" });
     expect(result.current.showConfirmAction).toBe(false);
+  });
+
+  it("shows a live connection state when backend handshake telemetry says the tunnel is active", () => {
+    mockUseSession.mockReturnValue({
+      data: {
+        user: { id: 1 },
+        subscriptions: [{ id: "sub-1", plan_id: "plan-basic", status: "active" }],
+        devices: [{ id: "dev-1", device_name: "iPhone", status: "idle" }],
+        latest_device_delivery: { amnezia_vpn_key: "vpn://payload" },
+        live_connection: {
+          status: "connected",
+          source: "server_handshake",
+          device_id: "dev-1",
+          device_name: "iPhone",
+          last_handshake_at: "2026-03-10T00:00:00Z",
+          handshake_age_sec: 30,
+          telemetry_updated_at: "2026-03-10T00:00:20Z",
+        },
+      },
+    });
+
+    const { result } = renderHook(() => useConnectStatusPageModel(), { wrapper });
+
+    expect(result.current.summary.title).toBe("Connected now");
+    expect(result.current.primaryAction).toEqual({ kind: "open_app", label: "Open AmneziaVPN", payload: "vpn://payload" });
+    expect(result.current.showConfirmAction).toBe(true);
   });
 });

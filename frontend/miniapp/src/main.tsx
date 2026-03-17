@@ -4,7 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "@/design-system";
 import { ApiError } from "@vpn-suite/shared";
-import { webappQueryKeys } from "@/lib/query-keys/webapp.query-keys";
+import { webappQueryKeys } from "@/lib";
 import { wireGlobalErrors } from "@/telemetry/errors";
 import App from "./App";
 import "@/design-system/styles/index.css";

@@ -34,6 +34,12 @@ Follow the workflow in **PROMPT.md**. Summary:
 
 **Rule**: Do not implement across boundaries (e.g. backend + frontend in one step). Use orchestrator handoff and separate subagent runs. When in doubt, invoke system-architect-gatekeeper before making non-trivial changes.
 
+### Remote / resource-constrained VPS (Cursor Remote, Antigravity)
+
+- **Do not run** `full:check`, `frontend:check`, or `npm test` / `pnpm test` on resource-constrained VPS. These spawn vitest+storybook+chromium and can exhaust RAM.
+- **Use instead**: `npm run typecheck`, `npm run lint`, `npm run design:check` (miniapp). Unit tests: `pnpm --filter miniapp test` (unit only). Full tests: run in CI or on a dedicated machine.
+- **stop.sh** runs typecheck+lint only; heavy tests are excluded by design.
+
 ---
 
 ## Cross-cutting rules
@@ -142,7 +148,7 @@ Follow the workflow in **PROMPT.md**. Summary:
 
 - **No hardcoded hex colors**: Do not use `#rrggbb` or `#rgb` in TSX, TS, or CSS. Use CSS variables from the token file only.
 - **No inline styles**: Do not use `style={{}}` in JSX. Use Tailwind utility classes or CSS modules.
-- **Miniapp icons**: In `frontend/miniapp/src`, do not import directly from `lucide-react`. Import only from `@/shared-inline/icons`.
+- **Miniapp icons**: In `frontend/miniapp/src`, do not import directly from `lucide-react`. Import only from `@/lib/icons` or `@/design-system/icons`.
 - **No circular imports**: If adding a new import would create a cycle, restructure (e.g. move shared types to a separate file) instead of adding the import.
 - **Exports**: Every new exported symbol (component, hook, util) must be imported somewhere, or have a JSDoc comment explaining it is a public API.
 - **API calls**: New API calls must use the existing typed API client. No raw `fetch()` or `axios` calls outside the client layer.

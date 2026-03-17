@@ -1,4 +1,5 @@
 import {
+  useCallback,
   useEffect,
   useId,
   useMemo,
@@ -8,14 +9,15 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/design-system";
+import { usePrefersReducedMotion } from "@/design-system";
+import { getMotionDurationMs } from "@/design-system/core/tokens";
+import { useSheetSwipeDismiss } from "@/design-system/hooks";
+import { decrementBlockingOverlayCount, incrementBlockingOverlayCount } from "@/design-system/utils/overlayStack";
 import { cn } from "@vpn-suite/shared";
 import styles from "./BottomSheet.module.css";
 
 const FOCUSABLE =
   'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
-
-const DISMISS_MS = 400;
-const SWIPE_THRESHOLD = 80;
 
 export interface BottomSheetProps {
   title: string;
@@ -75,15 +77,14 @@ export function BottomSheet({
   onClose,
   open,
 }: BottomSheetProps) {
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const dismissMs = getMotionDurationMs("sheet", prefersReducedMotion);
   const titleId = useId();
   const bodyId = useId();
   const sheetRef = useRef<HTMLDivElement | null>(null);
+  const scrollAreaRef = useRef<HTMLDivElement | null>(null);
   const restoreFocusRef = useRef<HTMLElement | null>(null);
   const dismissTimerRef = useRef<number | null>(null);
-  const swipeStartYRef = useRef<number | null>(null);
-  const swipeActiveRef = useRef(false);
-  const scrollTopAtStartRef = useRef(0);
-  const scrollAreaRef = useRef<HTMLElement | null>(null);
   const [mounted, setMounted] = useState(open);
   const [phase, setPhase] = useState<"entering" | "open" | "closing">("entering");
 
@@ -119,11 +120,37 @@ export function BottomSheet({
 
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    incrementBlockingOverlayCount();
 
     return () => {
       document.body.style.overflow = previousOverflow;
+      decrementBlockingOverlayCount();
     };
   }, [mounted]);
+
+  useEffect(() => {
+    return () => {
+      if (dismissTimerRef.current != null) {
+        window.clearTimeout(dismissTimerRef.current);
+      }
+    };
+  }, []);
+
+  const finishClose = useCallback(() => {
+    restoreFocusRef.current?.focus();
+    restoreFocusRef.current = null;
+    dismissTimerRef.current = null;
+    onClose();
+  }, [onClose]);
+
+  const requestClose = useCallback(() => {
+    if (phase === "closing") {
+      return;
+    }
+
+    setPhase("closing");
+    dismissTimerRef.current = window.setTimeout(finishClose, dismissMs);
+  }, [dismissMs, finishClose, phase]);
 
   useEffect(() => {
     if (!mounted || phase === "closing") {
@@ -187,97 +214,33 @@ export function BottomSheet({
     return () => {
       dialog.removeEventListener("keydown", handleKeyDown);
     };
-  }, [mounted, phase]);
+  }, [mounted, phase, requestClose]);
+
+  const swipeGesture = useSheetSwipeDismiss({
+    enabled: mounted && phase !== "closing",
+    onDismiss: requestClose,
+    resolveStartContext: (target) => {
+      const startedInHandle = target?.closest("[data-bottom-sheet-drag-handle='true'], .header") != null;
+      const startedInScrollArea = target?.closest("[data-bottom-sheet-scroll-area='true']") != null;
+      if (!startedInHandle && !startedInScrollArea) {
+        return { allowStart: false };
+      }
+      return {
+        allowStart: true,
+        scrollElement: startedInScrollArea ? scrollAreaRef.current : null,
+      };
+    },
+  });
 
   useEffect(() => {
-    return () => {
-      if (dismissTimerRef.current != null) {
-        window.clearTimeout(dismissTimerRef.current);
-      }
-    };
-  }, []);
-
-  function finishClose() {
-    restoreFocusRef.current?.focus();
-    restoreFocusRef.current = null;
-    dismissTimerRef.current = null;
-    onClose();
-  }
-
-  function requestClose() {
-    if (phase === "closing") {
+    if (!sheetRef.current) return;
+    if (phase !== "open" || swipeGesture.offset <= 0) {
+      sheetRef.current.style.removeProperty("transform");
       return;
     }
 
-    setPhase("closing");
-    dismissTimerRef.current = window.setTimeout(finishClose, DISMISS_MS);
-  }
-
-  function resetSwipeTracking() {
-    swipeStartYRef.current = null;
-    swipeActiveRef.current = false;
-    scrollTopAtStartRef.current = 0;
-    scrollAreaRef.current = null;
-  }
-
-  function handleTouchStart(event: React.TouchEvent<HTMLDivElement>) {
-    if (phase === "closing") {
-      return;
-    }
-
-    const touch = event.touches[0];
-    if (touch == null) {
-      return;
-    }
-    swipeStartYRef.current = touch.clientY;
-    const scrollArea = (event.target as HTMLElement | null)?.closest<HTMLElement>(
-      "[data-bottom-sheet-scroll-area='true']",
-    );
-    scrollAreaRef.current = scrollArea ?? null;
-    scrollTopAtStartRef.current = scrollArea?.scrollTop ?? 0;
-    swipeActiveRef.current = scrollArea == null || scrollTopAtStartRef.current <= 0;
-  }
-
-  function handleTouchMove(event: React.TouchEvent<HTMLDivElement>) {
-    if (!swipeActiveRef.current || swipeStartYRef.current == null) {
-      return;
-    }
-
-    const touch = event.touches[0];
-    if (touch == null) {
-      return;
-    }
-    const deltaY = touch.clientY - swipeStartYRef.current;
-    const scrollArea = scrollAreaRef.current;
-
-    if (scrollArea != null && scrollArea.scrollTop > 0) {
-      swipeActiveRef.current = false;
-      return;
-    }
-
-    if (deltaY > 0) {
-      event.preventDefault();
-    }
-  }
-
-  function handleTouchEnd(event: React.TouchEvent<HTMLDivElement>) {
-    if (!swipeActiveRef.current || swipeStartYRef.current == null) {
-      resetSwipeTracking();
-      return;
-    }
-
-    const touch = event.changedTouches[0];
-    if (touch == null) {
-      resetSwipeTracking();
-      return;
-    }
-    const deltaY = touch.clientY - swipeStartYRef.current;
-    resetSwipeTracking();
-
-    if (deltaY > SWIPE_THRESHOLD) {
-      requestClose();
-    }
-  }
+    sheetRef.current.style.transform = `translateY(${swipeGesture.offset}px)`;
+  }, [phase, swipeGesture.offset]);
 
   if (!mounted) {
     return null;
@@ -287,6 +250,8 @@ export function BottomSheet({
     <div
       className={styles.overlay}
       data-state={phase}
+      data-swipe-active={swipeGesture.isDragging ? "true" : "false"}
+      data-swipe-ready={swipeGesture.isReady ? "true" : "false"}
       role="presentation"
     >
       <div
@@ -298,11 +263,11 @@ export function BottomSheet({
         aria-labelledby={titleId}
         aria-describedby={bodyText ? bodyId : undefined}
         tabIndex={-1}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
+        data-swipe-state={swipeGesture.isDragging ? "dragging" : "idle"}
+        data-swipe-ready={swipeGesture.isReady ? "true" : "false"}
+        {...swipeGesture.bind}
       >
-        <div className={styles.dragHandleWrap} aria-hidden="true">
+        <div className={styles.dragHandleWrap} data-bottom-sheet-drag-handle="true" aria-hidden="true">
           <div className={styles.dragHandle} />
         </div>
 
@@ -344,6 +309,7 @@ export function BottomSheet({
             <div className={styles.scrollBlock}>
               <div className={styles.contextLabel}>CONTEXTUAL</div>
               <div
+                ref={scrollAreaRef}
                 className={styles.scrollArea}
                 data-bottom-sheet-scroll-area="true"
               >

@@ -7,6 +7,7 @@
   background: var(--bg);
 }
 
+
 /* Page head */
 .ph {
   display: flex;
@@ -899,6 +900,48 @@ div[role="button"].widget--interactive {
 
 .sb-sep {
   color: var(--bd-hi);
+}
+
+@media (max-width: 720px) {
+  .statusbar {
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+    padding: var(--sp-2);
+    border-radius: var(--rc);
+  }
+
+  .sb-ql-label {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--bd-sub);
+    padding: var(--sp-1) var(--sp-2);
+  }
+
+  .sb-links {
+    flex-wrap: wrap;
+    gap: var(--sp-1);
+    padding: var(--sp-1) var(--sp-2);
+  }
+
+  .sb-right {
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid var(--bd-sub);
+    padding: var(--sp-1) var(--sp-2);
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--sp-1);
+  }
+
+  .sb-stat {
+    flex: 1;
+    min-width: 120px;
+    white-space: normal;
+  }
+
+  .sb-sep {
+    display: none;
+  }
 }
 
 /* Entrance animation & chart draw */

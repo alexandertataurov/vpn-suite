@@ -22,12 +22,16 @@ export {
   IconHome,
   IconSmartphone,
   IconUser,
+  IconSettings,
   IconPencil,
   IconChevronLeft,
   IconAlertTriangle,
   IconCircleX,
   IconMoreVertical,
   IconDownload,
+  IconArrowRight,
+  IconExternalLink,
+  IconChevronRight,
 } from "@/lib/icons";
 export { IconTelegramStar } from "./icons/IconTelegramStar";
 

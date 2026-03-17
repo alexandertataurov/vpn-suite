@@ -6,16 +6,26 @@ import re
 from datetime import datetime, timedelta, timezone
 
 import httpx
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request, Response, status
-from starlette.responses import JSONResponse
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    HTTPException,
+    Query,
+    Request,
+    Response,
+    status,
+)
 from pydantic import BaseModel, Field, field_validator, model_validator
 from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+from starlette.responses import JSONResponse
 
 from app.api.v1.device_cache import invalidate_devices_list_cache, invalidate_devices_summary_cache
 from app.api.v1.users import _delete_user_cascade
+from app.core.amnezia_vpn_key import encode_awg_conf_vpn_key, sanitize_awg_conf
 from app.core.config import settings
 from app.core.config_builder import ConfigValidationError
 from app.core.constants import REDIS_KEY_RATELIMIT_ISSUE_PREFIX, STARS_PER_LEGACY_UNIT
@@ -28,26 +38,34 @@ from app.core.metrics import (
     referral_attach_total,
     vpn_revenue_referral_signup_total,
 )
+from app.core.one_time_download import create_one_time_token
 from app.core.rate_limit import rate_limit_promo_validate, rate_limit_webapp_me_patch
 from app.core.redaction import redact_for_log
 from app.core.redis_client import get_redis
-from app.core.security import create_webapp_session_token, decode_token, validate_telegram_init_data
+from app.core.security import (
+    create_webapp_session_token,
+    decode_token,
+    decrypt_config,
+    validate_telegram_init_data,
+)
 from app.core.telegram_user import build_tg_requisites
 from app.models import (
     ChurnSurvey,
     Device,
+    IssuedConfig,
     Payment,
     PaymentEvent,
     Plan,
-    PromoCode,
-    PromoRedemption,
     Referral,
     Server,
     Subscription,
     User,
 )
-from app.services.device_telemetry_cache import get_device_telemetry_bulk
-from app.services.entitlement_service import emit_entitlement_event
+from app.services.device_telemetry_cache import (
+    HANDSHAKE_OK_SEC,
+    get_device_telemetry_bulk,
+    get_telemetry_last_updated,
+)
 from app.services.funnel_service import log_funnel_event
 from app.services.issue_service import issue_device
 from app.services.issued_config_service import persist_issued_configs
@@ -57,21 +75,23 @@ from app.services.retention_service import (
     resume_subscription,
     retention_discount_percent,
 )
+from app.services.subscription_lifecycle_events import emit_access_blocked
 from app.services.subscription_state import (
     access_status as subscription_access_status,
+)
+from app.services.subscription_state import (
     apply_subscription_cycle,
-    block_access,
     entitled_active_where,
-    commercial_status as subscription_commercial_status,
     is_commercially_active,
-    is_entitled_active,
     is_restorable,
     mark_cancel_at_period_end,
     mark_cancelled,
     normalize_pending_state,
     sort_subscriptions,
 )
-from app.services.subscription_lifecycle_events import emit_access_blocked
+from app.services.subscription_state import (
+    commercial_status as subscription_commercial_status,
+)
 
 router = APIRouter(prefix="/webapp", tags=["webapp"])
 
@@ -79,6 +99,7 @@ _WEBAPP_SERVER_SELECT_LIMIT = 20
 _WEBAPP_SERVER_SELECT_WINDOW_SECONDS = 60
 _WEBAPP_ONBOARDING_VERSION = 2
 _WEBAPP_ONBOARDING_MAX_STEP = 3
+_WEBAPP_LIVE_TELEMETRY_STALE_SEC = 180
 
 
 def _looks_like_ip(host: str) -> bool:
@@ -105,6 +126,169 @@ def _server_public_ip(server: Server | None) -> str | None:
     if not host or not _looks_like_ip(host):
         return None
     return host
+
+
+def _is_telemetry_fresh(
+    telemetry_last_updated: datetime | None,
+    *,
+    now: datetime,
+) -> bool:
+    if telemetry_last_updated is None:
+        return False
+    return (now - telemetry_last_updated).total_seconds() <= _WEBAPP_LIVE_TELEMETRY_STALE_SEC
+
+
+def _effective_handshake_for_live(
+    device: Device,
+    *,
+    telemetry_map: dict[str, object],
+) -> tuple[datetime | None, int | None]:
+    telemetry = telemetry_map.get(device.id) if isinstance(device.id, str) else telemetry_map.get(str(device.id))
+    if telemetry and getattr(telemetry, "handshake_latest_at", None) is not None:
+        return telemetry.handshake_latest_at, getattr(telemetry, "handshake_age_sec", None)
+    if device.last_seen_handshake_at is not None:
+        return device.last_seen_handshake_at, None
+    return None, None
+
+
+def _build_live_connection(
+    *,
+    active_devices: list[Device],
+    telemetry_map: dict[str, object],
+    telemetry_last_updated: datetime | None,
+    now: datetime,
+) -> dict:
+    telemetry_fresh = _is_telemetry_fresh(telemetry_last_updated, now=now)
+    base = {
+        "status": "unknown",
+        "source": "server_handshake",
+        "device_id": None,
+        "device_name": None,
+        "last_handshake_at": None,
+        "handshake_age_sec": None,
+        "telemetry_updated_at": telemetry_last_updated.isoformat() if telemetry_last_updated else None,
+    }
+    if not active_devices:
+        return base
+
+    ranked_devices = sorted(
+        active_devices,
+        key=lambda device: (
+            _effective_handshake_for_live(device, telemetry_map=telemetry_map)[0] or device.issued_at,
+            device.issued_at,
+        ),
+        reverse=True,
+    )
+    latest_device = ranked_devices[0]
+    latest_handshake_at, latest_handshake_age = _effective_handshake_for_live(
+        latest_device,
+        telemetry_map=telemetry_map,
+    )
+
+    for device in ranked_devices:
+        handshake_at, handshake_age = _effective_handshake_for_live(device, telemetry_map=telemetry_map)
+        if not telemetry_fresh or handshake_at is None:
+            continue
+        resolved_age = handshake_age
+        if resolved_age is None:
+            resolved_age = max(0, int((now - handshake_at).total_seconds()))
+        if resolved_age <= HANDSHAKE_OK_SEC:
+            return {
+                **base,
+                "status": "connected",
+                "device_id": device.id,
+                "device_name": device.device_name,
+                "last_handshake_at": handshake_at.isoformat(),
+                "handshake_age_sec": resolved_age,
+            }
+
+    if telemetry_fresh:
+        resolved_age = latest_handshake_age
+        if resolved_age is None and latest_handshake_at is not None:
+            resolved_age = max(0, int((now - latest_handshake_at).total_seconds()))
+        return {
+            **base,
+            "status": "disconnected",
+            "device_id": latest_device.id,
+            "device_name": latest_device.device_name,
+            "last_handshake_at": latest_handshake_at.isoformat() if latest_handshake_at else None,
+            "handshake_age_sec": resolved_age,
+        }
+
+    return {
+        **base,
+        "device_id": latest_device.id,
+        "device_name": latest_device.device_name,
+        "last_handshake_at": latest_handshake_at.isoformat() if latest_handshake_at else None,
+        "handshake_age_sec": latest_handshake_age,
+    }
+
+
+async def _build_latest_device_delivery(
+    db: AsyncSession,
+    *,
+    active_devices: list[Device],
+) -> dict | None:
+    if not active_devices:
+        return None
+    ranked_devices = sorted(
+        active_devices,
+        key=lambda device: (
+            device.last_seen_handshake_at or device.issued_at,
+            device.issued_at,
+        ),
+        reverse=True,
+    )
+    latest_device = ranked_devices[0]
+    cfg_result = await db.execute(
+        select(IssuedConfig)
+        .where(
+            IssuedConfig.device_id == latest_device.id,
+            IssuedConfig.profile_type == "awg",
+        )
+        .order_by(IssuedConfig.created_at.desc())
+        .limit(1)
+    )
+    issued = cfg_result.scalar_one_or_none()
+    if not issued or not issued.config_encrypted:
+        return None
+    try:
+        config_text = sanitize_awg_conf(decrypt_config(issued.config_encrypted))
+        amnezia_vpn_key = encode_awg_conf_vpn_key(config_text)
+    except Exception:
+        logging.getLogger(__name__).warning(
+            "webapp_latest_device_delivery_encode_failed",
+            extra={"device_id": latest_device.id},
+            exc_info=True,
+        )
+        return None
+
+    download_url = None
+    public_host = getattr(settings, "public_domain", None) or getattr(settings, "vpn_default_host", "")
+    if public_host:
+        ttl = getattr(settings, "awg_download_token_ttl_seconds", 600) or 600
+        try:
+            token = await create_one_time_token(
+                db,
+                device_id=latest_device.id,
+                kind="awg_conf",
+                ttl_seconds=ttl,
+            )
+            download_url = f"https://{public_host}/d/{token}"
+        except Exception:
+            logging.getLogger(__name__).warning(
+                "webapp_latest_device_delivery_download_url_failed",
+                extra={"device_id": latest_device.id},
+                exc_info=True,
+            )
+
+    return {
+        "device_id": latest_device.id,
+        "device_name": latest_device.device_name,
+        "issued_at": latest_device.issued_at.isoformat(),
+        "download_url": download_url,
+        "amnezia_vpn_key": amnezia_vpn_key,
+    }
 
 
 def _resolve_route(
@@ -154,6 +338,36 @@ def _resolve_route(
     if not has_confirmed:
         return "/connect-status", "connection_not_confirmed"
     return "/", "connected_user"
+
+
+def _webapp_issue_requires_runtime_adapter() -> bool:
+    return settings.node_mode == "real" and settings.node_discovery != "agent"
+
+
+async def _select_webapp_issue_server_id(
+    db: AsyncSession,
+    *,
+    preferred_server_id: str | None = None,
+) -> str | None:
+    if preferred_server_id:
+        preferred_result = await db.execute(
+            select(Server.id).where(
+                Server.id == preferred_server_id,
+                Server.is_active.is_(True),
+            )
+        )
+        preferred_id = preferred_result.scalar_one_or_none()
+        if preferred_id:
+            return str(preferred_id)
+
+    fallback_result = await db.execute(
+        select(Server.id)
+        .where(Server.is_active.is_(True))
+        .order_by(Server.is_draining.asc(), Server.created_at.asc())
+        .limit(1)
+    )
+    fallback_id = fallback_result.scalar_one_or_none()
+    return str(fallback_id) if fallback_id else None
 
 
 def _stars_amount(amount: object, currency: str) -> int:
@@ -317,6 +531,16 @@ async def webapp_me(request: Request, db: AsyncSession = Depends(get_db)):
             "subscriptions": [],
             "devices": [],
             "public_ip": None,
+            "latest_device_delivery": None,
+            "live_connection": {
+                "status": "unknown",
+                "source": "server_handshake",
+                "device_id": None,
+                "device_name": None,
+                "last_handshake_at": None,
+                "handshake_age_sec": None,
+                "telemetry_updated_at": None,
+            },
             "onboarding": _serialize_onboarding_state(None),
         }
     active_devices = [d for d in user.devices if d.revoked_at is None]
@@ -343,6 +567,7 @@ async def webapp_me(request: Request, db: AsyncSession = Depends(get_db)):
 
     device_ids = [d.id for d in active_devices] if active_devices else []
     telemetry_map = await get_device_telemetry_bulk(device_ids) if device_ids else {}
+    telemetry_last_updated = await get_telemetry_last_updated() if device_ids else None
 
     def _effective_last_seen(d: Device):
         if d.last_seen_handshake_at:
@@ -417,6 +642,13 @@ async def webapp_me(request: Request, db: AsyncSession = Depends(get_db)):
 
     recommended_route, route_reason = _resolve_route(user, ordered_subscriptions, active_devices)
     routing = {"recommended_route": recommended_route, "reason": route_reason}
+    latest_device_delivery = await _build_latest_device_delivery(db, active_devices=active_devices)
+    live_connection = _build_live_connection(
+        active_devices=active_devices,
+        telemetry_map=telemetry_map,
+        telemetry_last_updated=telemetry_last_updated,
+        now=now,
+    )
 
     meta = user.meta or {}
     tg_meta = meta.get("tg") or {}
@@ -453,9 +685,208 @@ async def webapp_me(request: Request, db: AsyncSession = Depends(get_db)):
         "subscriptions": subs,
         "devices": devs,
         "public_ip": public_ip,
+        "latest_device_delivery": latest_device_delivery,
+        "live_connection": live_connection,
         "onboarding": _serialize_onboarding_state(user),
         "routing": routing,
     }
+
+
+class UserAccessResponse(BaseModel):
+    """Flat access state for state-driven Home UI. GET /webapp/user/access."""
+
+    status: str  # no_plan | needs_device | generating_config | ready | expired | device_limit | error
+    has_plan: bool
+    devices_used: int
+    device_limit: int | None
+    config_ready: bool
+    config_id: str | None
+    expires_at: str | None
+    amnezia_vpn_key: str | None = None
+
+
+@router.get("/user/access", response_model=UserAccessResponse)
+async def webapp_user_access(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+) -> UserAccessResponse:
+    """Return flat access state for state-driven Home UI. Requires Bearer session token."""
+    tg_id = _get_tg_id_from_bearer(request)
+    if not tg_id:
+        raise HTTPException(
+            status_code=401, detail={"code": "UNAUTHORIZED", "message": "Invalid session"}
+        )
+    result = await db.execute(
+        select(User)
+        .where(User.tg_id == tg_id)
+        .options(selectinload(User.subscriptions), selectinload(User.devices))
+    )
+    user = result.scalar_one_or_none()
+    if not user:
+        return UserAccessResponse(
+            status="no_plan",
+            has_plan=False,
+            devices_used=0,
+            device_limit=None,
+            config_ready=False,
+            config_id=None,
+            expires_at=None,
+            amnezia_vpn_key=None,
+        )
+
+    now = datetime.now(timezone.utc)
+    active_devices = [d for d in user.devices if d.revoked_at is None]
+    ordered_subs = sort_subscriptions(list(user.subscriptions))
+
+    primary_sub = next(
+        (
+            s
+            for s in ordered_subs
+            if (
+                subscription_commercial_status(s) in ("active", "pending")
+                and (
+                    getattr(s, "valid_until", None)
+                    and s.valid_until > now
+                    or is_restorable(s, now=now)
+                )
+            )
+        ),
+        None,
+    )
+
+    if not primary_sub:
+        grace_sub = next((s for s in ordered_subs if is_restorable(s, now=now)), None)
+        if grace_sub:
+            valid_until = grace_sub.valid_until.isoformat()[:10] if grace_sub.valid_until else None
+            return UserAccessResponse(
+                status="expired",
+                has_plan=bool(grace_sub.plan_id),
+                devices_used=len(active_devices),
+                device_limit=getattr(grace_sub, "device_limit", None),
+                config_ready=False,
+                config_id=None,
+                expires_at=valid_until,
+                amnezia_vpn_key=None,
+            )
+        return UserAccessResponse(
+            status="no_plan",
+            has_plan=False,
+            devices_used=len(active_devices),
+            device_limit=None,
+            config_ready=False,
+            config_id=None,
+            expires_at=None,
+            amnezia_vpn_key=None,
+        )
+
+    access_status_val = subscription_access_status(primary_sub)
+    grace_until = getattr(primary_sub, "grace_until", None)
+    if access_status_val == "grace" and grace_until and grace_until > now:
+        valid_until = primary_sub.valid_until.isoformat()[:10] if primary_sub.valid_until else None
+        return UserAccessResponse(
+            status="expired",
+            has_plan=True,
+            devices_used=len(active_devices),
+            device_limit=getattr(primary_sub, "device_limit", None),
+            config_ready=False,
+            config_id=None,
+            expires_at=valid_until,
+            amnezia_vpn_key=None,
+        )
+    if access_status_val == "paused":
+        valid_until = primary_sub.valid_until.isoformat()[:10] if primary_sub.valid_until else None
+        return UserAccessResponse(
+            status="expired",
+            has_plan=True,
+            devices_used=len(active_devices),
+            device_limit=getattr(primary_sub, "device_limit", None),
+            config_ready=False,
+            config_id=None,
+            expires_at=valid_until,
+            amnezia_vpn_key=None,
+        )
+
+    device_limit_val = getattr(primary_sub, "device_limit", None)
+    if not active_devices:
+        return UserAccessResponse(
+            status="needs_device",
+            has_plan=True,
+            devices_used=0,
+            device_limit=device_limit_val,
+            config_ready=False,
+            config_id=None,
+            expires_at=None,
+            amnezia_vpn_key=None,
+        )
+
+    if device_limit_val is not None and len(active_devices) >= device_limit_val:
+        latest_delivery = await _build_latest_device_delivery(db, active_devices=active_devices)
+        config_ready = latest_delivery is not None
+        config_id = latest_delivery["device_id"] if latest_delivery else None
+        amnezia_key = latest_delivery.get("amnezia_vpn_key") if latest_delivery else None
+        valid_until = primary_sub.valid_until.isoformat()[:10] if primary_sub.valid_until else None
+        if config_ready and primary_sub.valid_until > now:
+            return UserAccessResponse(
+                status="ready",
+                has_plan=True,
+                devices_used=len(active_devices),
+                device_limit=device_limit_val,
+                config_ready=True,
+                config_id=str(config_id) if config_id else None,
+                expires_at=valid_until,
+                amnezia_vpn_key=amnezia_key,
+            )
+        return UserAccessResponse(
+            status="device_limit",
+            has_plan=True,
+            devices_used=len(active_devices),
+            device_limit=device_limit_val,
+            config_ready=config_ready,
+            config_id=str(config_id) if config_id else None,
+            expires_at=None,
+            amnezia_vpn_key=None,
+        )
+
+    latest_delivery = await _build_latest_device_delivery(db, active_devices=active_devices)
+    config_ready = latest_delivery is not None
+    config_id = latest_delivery["device_id"] if latest_delivery else None
+    amnezia_key = latest_delivery.get("amnezia_vpn_key") if latest_delivery else None
+    valid_until = primary_sub.valid_until.isoformat()[:10] if primary_sub.valid_until else None
+
+    if config_ready and primary_sub.valid_until > now:
+        return UserAccessResponse(
+            status="ready",
+            has_plan=True,
+            devices_used=len(active_devices),
+            device_limit=device_limit_val,
+            config_ready=True,
+            config_id=str(config_id) if config_id else None,
+            expires_at=valid_until,
+            amnezia_vpn_key=amnezia_key,
+        )
+
+    if primary_sub.valid_until <= now:
+        return UserAccessResponse(
+            status="expired",
+            has_plan=True,
+            devices_used=len(active_devices),
+            device_limit=device_limit_val,
+            config_ready=config_ready,
+            config_id=str(config_id) if config_id else None,
+            expires_at=valid_until,
+            amnezia_vpn_key=None,
+        )
+
+    return UserAccessResponse(
+        status="needs_device",
+        has_plan=True,
+        devices_used=len(active_devices),
+        device_limit=device_limit_val,
+        config_ready=config_ready,
+        config_id=str(config_id) if config_id else None,
+        expires_at=None,
+        amnezia_vpn_key=None,
+    )
 
 
 _WEBAPP_ALLOWED_LOCALES = frozenset({"en", "ru"})
@@ -854,6 +1285,7 @@ class WebAppIssueDeviceResponse(BaseModel):
     config_awg: str | None = None
     config_wg_obf: str | None = None
     config_wg: str | None = None
+    amnezia_vpn_key: str | None = None
     issued_at: datetime
     node_mode: str  # "mock" | "real"; when mock, peer not created on node
     peer_created: bool  # True when peer was created on VPN node
@@ -871,6 +1303,19 @@ def _select_delivery_config_text(out: object) -> str:
         if isinstance(raw, str) and raw.strip():
             return raw
     return ""
+
+
+def _build_amnezia_vpn_key(config_text: str | None) -> str | None:
+    if not isinstance(config_text, str) or not config_text.strip():
+        return None
+    try:
+        return encode_awg_conf_vpn_key(sanitize_awg_conf(config_text))
+    except Exception:
+        logging.getLogger(__name__).warning(
+            "webapp_amnezia_vpn_key_build_failed",
+            exc_info=True,
+        )
+        return None
 
 
 async def _send_webapp_config_to_telegram(
@@ -934,7 +1379,9 @@ async def _send_webapp_config_to_telegram(
 
 @router.post("/debug/test-telegram-config")
 async def webapp_test_telegram_config(request: Request):
-    """Debug helper: send test config message + file to Telegram for current WebApp user."""
+    """Debug helper: send test config message + file to Telegram for current WebApp user. Dev only."""
+    if settings.environment.lower() != "development":
+        raise HTTPException(status_code=404, detail="Not found")
     tg_id = _get_tg_id_from_bearer(request)
     if not tg_id:
         raise HTTPException(
@@ -1029,7 +1476,7 @@ async def webapp_issue_device(
             detail={"code": "NO_ACTIVE_SUBSCRIPTION", "message": "No active subscription"},
         )
     adapter = getattr(request.app.state, "node_runtime_adapter", None)
-    if adapter is None:
+    if adapter is None and _webapp_issue_requires_runtime_adapter():
         raise HTTPException(
             status_code=503,
             detail={
@@ -1037,16 +1484,28 @@ async def webapp_issue_device(
                 "message": "Device issuance is temporarily unavailable. Try again later.",
             },
         )
-    from app.services.topology_engine import TopologyEngine
+    get_topology = None
+    if adapter is not None:
+        from app.services.topology_engine import TopologyEngine
 
-    engine = TopologyEngine(adapter)
-    get_topology = engine.get_topology
+        engine = TopologyEngine(adapter)
+        get_topology = engine.get_topology
     preferred_server_id: str | None = None
     meta = user.meta or {}
     if not meta.get("server_auto_select", True):
         raw_server_id = str(meta.get("preferred_server_id") or "").strip()
         if raw_server_id:
             preferred_server_id = raw_server_id
+    if get_topology is None:
+        preferred_server_id = await _select_webapp_issue_server_id(
+            db,
+            preferred_server_id=preferred_server_id,
+        )
+        if preferred_server_id is None:
+            raise HTTPException(
+                status_code=503,
+                detail={"code": "NO_NODE", "message": "No active server available for device issuance."},
+            )
     try:
         out = await issue_device(
             db,
@@ -1143,6 +1602,7 @@ async def webapp_issue_device(
         config_awg=out.config_awg,
         config_wg_obf=out.config_wg_obf,
         config_wg=out.config_wg,
+        amnezia_vpn_key=_build_amnezia_vpn_key(out.config_awg),
         node_mode=settings.node_mode,
         peer_created=out.peer_created,
         issued_at=out.device.issued_at,
@@ -1253,7 +1713,7 @@ async def webapp_replace_device(
             detail={"code": "NO_ACTIVE_SUBSCRIPTION", "message": "No active subscription"},
         )
     adapter = getattr(request.app.state, "node_runtime_adapter", None)
-    if adapter is None:
+    if adapter is None and _webapp_issue_requires_runtime_adapter():
         raise HTTPException(
             status_code=503,
             detail={"code": "NODE_RUNTIME_UNAVAILABLE", "message": "Device issuance unavailable."},
@@ -1266,10 +1726,22 @@ async def webapp_replace_device(
         raw = str(meta.get("preferred_server_id") or "").strip()
         if raw:
             preferred_server_id = raw
-    from app.services.topology_engine import TopologyEngine
+    get_topology = None
+    if adapter is not None:
+        from app.services.topology_engine import TopologyEngine
 
-    engine = TopologyEngine(adapter)
-    get_topology = engine.get_topology
+        engine = TopologyEngine(adapter)
+        get_topology = engine.get_topology
+    if get_topology is None:
+        preferred_server_id = await _select_webapp_issue_server_id(
+            db,
+            preferred_server_id=preferred_server_id,
+        )
+        if preferred_server_id is None:
+            raise HTTPException(
+                status_code=503,
+                detail={"code": "NO_NODE", "message": "No active server available for device issuance."},
+            )
     try:
         out = await issue_device(
             db,
@@ -1342,6 +1814,7 @@ async def webapp_replace_device(
         config_awg=out.config_awg,
         config_wg_obf=out.config_wg_obf,
         config_wg=out.config_wg,
+        amnezia_vpn_key=_build_amnezia_vpn_key(out.config_awg),
         node_mode=settings.node_mode,
         peer_created=out.peer_created,
         issued_at=out.device.issued_at,

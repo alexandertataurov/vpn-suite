@@ -2,6 +2,10 @@
 
 Single entry for layout, page recipes, patterns, components, primitives, tokens, theme, icons, hooks, and utils. Import reusable UI from `@/design-system`.
 
+## Theme Runtime
+
+Miniapp uses **consumer-light** | **consumer-dark** only. See [THEME-RUNTIME.md](./THEME-RUNTIME.md) for load order and deprecations.
+
 ## Architecture
 
 The design system follows a **layered model**. Each layer has strict responsibilities; see **[architecture.md](./architecture.md)** for the full guide, **[enforcement-checklist.md](./enforcement-checklist.md)** for PR/CI checks, and **[mobile-platform-guidelines.md](./mobile-platform-guidelines.md)** for iOS/Android-compatible mobile UI rules.
@@ -62,7 +66,7 @@ Layers: **tokens** → **theme** → **primitives** → **components** → **pat
 
 - **Field** (components/forms): label + slot + description + error; uses Label, HelperText; semantic structure. Prefer for new forms.
 - **FormField** (patterns/content/ContentForms): content-library class-based (`.field-group`, `.field-label`); different API (label, input, action). Use for content-library layouts.
-- **layouts/** — PageScaffold, PageFrame, PageHeader, HeaderBell, PageSection, SectionDivider, ScrollZone, ActionZone, HeaderZone, ShellContextBlock, StickyBottomBar; layout CSS in styles/layout/zones.css
+- **layouts/** — PageScaffold, PageSection, SectionDivider, ScrollZone, ActionZone, HeaderZone, ShellContextBlock, StickyBottomBar; layout CSS in styles/layout/zones.css
 - **recipes/** — PageHeaderBadge, PageCardSection, LabeledControlRow, FaqDisclosureItem, SettingsActionRow, SnapCarousel
 - **hooks/** — useThemeMode, useBreakpoint
 - **utils/** — getAriaLabelProps (accessibility). Class merge: use `cn` from `@vpn-suite/shared`.
@@ -158,3 +162,4 @@ Raw `.btn-primary`, `.btn-secondary`, `.btn-row` are legacy. New code must use `
 - **Sub-components:** domain-specific UX copy (e.g. SetupCardContent, ConfigCardContent) when fixed per step/variant.
 
 Deferred: move FallbackScreen fallbacks into model; move Plan `nextStepCard` config into model.
+lan `nextStepCard` config into model.

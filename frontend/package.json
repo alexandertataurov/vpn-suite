@@ -17,6 +17,7 @@
     "lint": "pnpm --filter admin lint && pnpm --filter miniapp lint",
     "typecheck": "pnpm --filter admin typecheck && pnpm --filter miniapp typecheck && pnpm --filter @vpn-suite/shared typecheck",
     "test": "pnpm --filter admin test && pnpm --filter miniapp test",
+    "test:all": "pnpm --filter admin test && pnpm --filter miniapp test:all",
     "test:coverage": "pnpm --filter admin test:coverage && pnpm --filter miniapp test:coverage",
     "test:e2e": "pnpm --filter admin test:e2e",
     "test:e2e:ci": "pnpm --filter admin test:e2e:dev",

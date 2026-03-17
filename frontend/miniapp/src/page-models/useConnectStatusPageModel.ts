@@ -1,14 +1,13 @@
 import { useCallback } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { webappApi } from "@/api/client";
-import { useTrackScreen } from "@/hooks/useTrackScreen";
-import { useTelemetry } from "@/hooks/useTelemetry";
-import { useSession } from "@/hooks/useSession";
-import { useI18n } from "@/hooks/useI18n";
-import { webappQueryKeys } from "@/lib/query-keys/webapp.query-keys";
+import { useTrackScreen, useTelemetry, useSession } from "@/hooks";
+import { useI18n } from "@/hooks";
+import { webappQueryKeys } from "@/lib";
 import {
   getActiveDevices,
   getActiveSubscription,
+  getLiveConnection,
   getLatestActiveDevice,
   hasConfirmedConnection,
 } from "./helpers";
@@ -23,6 +22,8 @@ export function useConnectStatusPageModel() {
   const activeSub = getActiveSubscription(session);
   const activeSubId = activeSub?.plan_id ?? null;
   const connectionConfirmed = hasConfirmedConnection(session);
+  const liveConnected = getLiveConnection(session)?.status === "connected";
+  const amneziaVpnKey = session?.latest_device_delivery?.amnezia_vpn_key ?? null;
   useTrackScreen("connect-status", activeSubId ?? null);
   const { track } = useTelemetry(activeSubId ?? null);
 
@@ -61,14 +62,22 @@ export function useConnectStatusPageModel() {
         edge: "e-r" as const,
         glow: "g-red" as const,
       }
-    : activeDevices.length === 0
-      ? {
-          eyebrow: t("connect_status.summary_setup_eyebrow"),
-          title: t("connect_status.summary_no_device_title"),
-          subtitle: t("connect_status.summary_no_device_subtitle"),
-          edge: "e-a" as const,
-          glow: "g-amber" as const,
-        }
+      : activeDevices.length === 0
+        ? {
+            eyebrow: t("connect_status.summary_setup_eyebrow"),
+            title: t("connect_status.summary_no_device_title"),
+            subtitle: t("connect_status.summary_no_device_subtitle"),
+            edge: "e-a" as const,
+            glow: "g-amber" as const,
+          }
+      : liveConnected
+        ? {
+            eyebrow: t("connect_status.summary_setup_eyebrow"),
+            title: t("connect_status.summary_live_title"),
+            subtitle: t("connect_status.summary_live_subtitle"),
+            edge: "e-g" as const,
+            glow: "g-green" as const,
+          }
       : connectionConfirmed
         ? {
             eyebrow: t("connect_status.summary_setup_eyebrow"),
@@ -86,17 +95,23 @@ export function useConnectStatusPageModel() {
           };
 
   const primaryAction = !activeSub
-    ? { label: t("home.primary_choose_plan"), to: "/plan" }
+    ? { kind: "route" as const, label: t("home.primary_choose_plan"), to: "/plan" }
     : activeDevices.length === 0
-      ? { label: t("home.primary_add_device"), to: "/devices/issue" }
+      ? { kind: "route" as const, label: t("onboarding.go_to_devices"), to: "/devices" }
+      : liveConnected
+        ? amneziaVpnKey
+          ? { kind: "open_app" as const, label: t("onboarding.open_amneziavpn"), payload: amneziaVpnKey }
+          : { kind: "route" as const, label: t("onboarding.go_to_devices"), to: "/devices" }
       : connectionConfirmed
-        ? { label: t("home.primary_manage_devices"), to: "/devices" }
+        ? amneziaVpnKey
+          ? { kind: "open_app" as const, label: t("onboarding.open_amneziavpn"), payload: amneziaVpnKey }
+          : { kind: "route" as const, label: t("onboarding.go_to_devices"), to: "/devices" }
         : null;
 
   return {
     header: {
       title: t("connect_status.header_title"),
-      subtitle: latestDevice?.device_name ?? t("connect_status.header_subtitle_fallback"),
+      subtitle: t("connect_status.header_subtitle"),
     },
     summary,
     description: !activeSub

@@ -1,122 +1,137 @@
-import { useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { SessionMissing } from "@/components";
-import { PageFrame } from "@/design-system/layouts/PageFrame";
-import { FallbackScreen } from "@/design-system/patterns/FallbackScreen";
+import { IconArrowRight, IconExternalLink, IconShield, IconAlertTriangle } from "@/design-system/icons";
 import {
-  HomeDynamicBlock,
-  HomeHeroPanel,
-  HomeQuickActionGrid,
-  HomePrimaryActionZone,
+  ActionCard,
+  Button,
+  FallbackScreen,
+  Skeleton,
+  PageScaffold,
+  ModernHeader,
+  ModernHeroCard,
 } from "@/design-system";
-import { useTelemetry } from "@/hooks/useTelemetry";
-import { useHomePageModel } from "@/page-models";
-import { useI18n } from "@/hooks/useI18n";
+import { SessionMissing } from "@/components";
+import { useWebappToken } from "@/api/client";
+import { useSession } from "@/hooks";
+import { useAccessHomePageModel } from "@/page-models";
+
+function getHeaderSubtitle(hasPlan: boolean): string {
+  return hasPlan ? "" : "No plan";
+}
 
 export function HomePage() {
-  const model = useHomePageModel();
-  const { track } = useTelemetry(model.planId);
-  const { t } = useI18n();
+  const model = useAccessHomePageModel();
   const navigate = useNavigate();
-
-  const upsellShown = model.primaryUpsell?.show && model.primaryUpsell.targetTo;
-  useEffect(() => {
-    if (upsellShown && model.primaryUpsell) {
-      track("upsell_impression", { trigger: model.primaryUpsell.trigger, screen_name: "home" });
-    }
-  }, [upsellShown, model.primaryUpsell, track]);
-
-  const heroHandlers = useMemo(() => {
-    const variant = model.homeHero.variant;
-    const isHeroInteractive = variant !== "loading" && variant !== "onboarding";
-    const canSelectServer = model.hasSubscription && !model.homeHero.isServerLoading;
-    return {
-      onHeroPress: isHeroInteractive ? () => navigate("/connect-status") : undefined,
-      onServerSelect: canSelectServer ? () => navigate("/servers") : undefined,
-    };
-  }, [model.hasSubscription, model.homeHero.isServerLoading, model.homeHero.variant, navigate]);
-
-  const quickActionDisabled = useMemo(() => {
-    const unavailable =
-      model.hasSubscription &&
-      model.quickActionContext.status === "connecting" &&
-      model.quickActionContext.deviceCount === 0;
-    return unavailable ? { download_config: t("home.download_config_loading_unavailable") } : undefined;
-  }, [model.hasSubscription, model.quickActionContext.deviceCount, model.quickActionContext.status, t]);
-
-  const primaryActionZoneProps = useMemo(
-    () => ({
-      state: model.primaryActionState,
-      isLoading: model.pageState.status === "loading" || model.homePhase === "loading" || model.isHomeTransitioning,
-      loadingLabel:
-        model.homePhase === "error"
-          ? t("home.retrying_label")
-          : model.homePhase === "connecting" || model.isHomeTransitioning
-            ? t("home.connecting_label")
-            : t("home.loading_label"),
-      planTo: model.primaryActionState === "no_plan" ? model.primaryAction.to : "/plan",
-      connectTo: model.primaryActionState === "disconnected" ? model.primaryAction.to : "/connect-status",
-      setupTo: model.primaryActionState === "connecting" ? model.primaryAction.to : "/connect-status",
-      devicesTo: model.primaryActionState === "connected" ? model.primaryAction.to : "/devices",
-      serverTo: "/servers",
-      supportTo: model.primaryAction.secondaryTo,
-    }),
-    [
-      model.primaryAction,
-      model.primaryActionState,
-      model.pageState.status,
-      model.homePhase,
-      model.isHomeTransitioning,
-      t,
-    ],
-  );
-
-  const dynamicBlockProps = useMemo(
-    () => ({
-      ...model.homeSignals,
-      renewalTargetTo: model.primaryUpsell?.show && model.primaryUpsell.targetTo ? model.primaryUpsell.targetTo : "/plan",
-      upgradeTargetTo: model.primaryUpsell?.show && model.primaryUpsell.targetTo ? model.primaryUpsell.targetTo : "/plan",
-    }),
-    [model.homeSignals, model.primaryUpsell],
-  );
+  const hasToken = !!useWebappToken();
+  const session = useSession(hasToken).data;
+  const profileName = (session?.user?.display_name ?? "").trim() || "Guest";
+  const profileInitial = profileName.charAt(0).toUpperCase() || "G";
+  const profilePhotoUrl = (session?.user?.photo_url ?? "").trim() || undefined;
 
   if (model.pageState.status === "empty") {
     return <SessionMissing />;
   }
 
+  if (model.pageState.status === "loading") {
+    return (
+      <PageScaffold>
+        <ModernHeader title="Amnezia" showSettings={false} />
+        <div className="modern-content-pad stagger-1">
+          <Skeleton variant="card" height={260} />
+          <div className="modern-action-grid u-mt-16">
+            <Skeleton variant="card" height={80} />
+            <Skeleton variant="card" height={80} />
+          </div>
+          <Skeleton variant="card" height={72} className="u-mt-16" />
+        </div>
+      </PageScaffold>
+    );
+  }
+
   if (model.pageState.status === "error") {
     return (
       <FallbackScreen
-        title={model.pageState.title ?? t("common.could_not_load_account_status")}
-        message={model.pageState.message ?? t("common.could_not_load_account_status")}
-        onRetry={model.pageState.onRetry}
+        title={model.pageState.title}
+        message={model.pageState.message}
+        onRetry={model.onRetry}
+        retryLabel="Retry"
       />
     );
   }
 
+  const uiConfig = model.uiConfig;
+  const status = model.status;
+  const isGenerating = status === "generating_config";
+  const heroStatus =
+    status === "expired" ? "danger" : status === "ready" ? "active" : "default";
+
   return (
-    <PageFrame
-      title={model.header.title}
-      subtitle={model.header.subtitle}
-      className="page-shell--default page-shell--sectioned page-shell--centered"
-    >
-      <div className="page-stack--home">
-        <HomeHeroPanel
-          {...model.homeHero}
-          onServerSelect={heroHandlers.onServerSelect}
-          onHeroPress={heroHandlers.onHeroPress}
-        />
-        <HomePrimaryActionZone {...primaryActionZoneProps} />
-        <HomeDynamicBlock {...dynamicBlockProps} />
-        <HomeQuickActionGrid
-          hasSub={model.hasSubscription}
-          status={model.quickActionContext.status}
-          deviceCount={model.quickActionContext.deviceCount}
-          planLimit={model.quickActionContext.planLimit}
-          planKind={model.quickActionContext.planKind}
-          disabledActions={quickActionDisabled}
-        />
+    <PageScaffold>
+      <ModernHeader
+        displayName={profileName}
+        avatarUrl={profilePhotoUrl}
+        avatarInitial={profileInitial}
+        subtitle={model.data ? getHeaderSubtitle(model.data.has_plan) : undefined}
+        showSettings={false}
+      />
+
+      <ModernHeroCard
+        status={heroStatus}
+        icon={
+          status === "expired" ? (
+            <IconAlertTriangle size={36} />
+          ) : (
+            <IconShield size={36} strokeWidth={status === "ready" ? 3 : 2} />
+          )
+        }
+        title={uiConfig?.title ?? ""}
+        description={uiConfig?.description ?? ""}
+        actions={
+          !isGenerating && uiConfig && !uiConfig.ctaDisabled ? (
+            <Button
+              variant="primary"
+              tone={status === "ready" ? "success" : "default"}
+              fullWidth
+              size="lg"
+              onClick={uiConfig.ctaAction}
+              endIcon={
+                status === "ready" ? (
+                  <IconExternalLink />
+                ) : (
+                  <IconArrowRight />
+                )
+              }
+            >
+              {uiConfig.ctaLabel}
+            </Button>
+          ) : null
+        }
+      />
+
+      {(model.showDevices || model.showExpiry) && (
+        <div className="modern-action-grid">
+          {model.showDevices && model.devicesValue ? (
+            <ActionCard label="Devices" value={model.devicesValue} onClick={() => navigate("/devices")} />
+          ) : null}
+          {model.showExpiry && model.expiryValue ? (
+            <ActionCard
+              label={model.expiryLabel}
+              value={model.expiryValue}
+              onClick={() => (status === "expired" ? navigate("/restore-access") : navigate("/plan"))}
+            />
+          ) : null}
+        </div>
+      )}
+
+      <div className="modern-footer-help">
+        <p className="modern-help-note">
+          Having trouble?{" "}
+          <span className="modern-help-link" onClick={() => navigate("/support")}>
+            View setup guide
+          </span>
+        </p>
       </div>
-    </PageFrame>
+    </PageScaffold>
   );
 }
+
+export default HomePage;

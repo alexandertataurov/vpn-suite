@@ -1,268 +1,221 @@
 /* Canonical consumer theme — single source for consumer-dark and consumer-light.
-   Import after miniapp-tokens; primitives-aliases and miniapp.css depend on these vars. */
-
-html[data-theme="consumer-dark"] {
-  color-scheme: dark;
-  --space-black: #000000;
-  --space-carbon: #07090b;
-  --space-gray: #10151a;
-  --space-gray-light: #70818f;
-  --space-white: #f2f6f9;
-  --space-alert-red: #e85858;
-  --miniapp-ink-950: #000000;
-  --miniapp-ink-900: #05070a;
-  --miniapp-ink-850: #07090b;
-  --miniapp-ink-800: #10151a;
-  --miniapp-ink-200: #f2f6f9;
-  --miniapp-grid-line: rgb(255 255 255 / 0.05);
-  --miniapp-glow: rgb(46 216 122 / 0.1);
-  --miniapp-shadow-strong: rgb(0 0 0 / 0.68);
-  --miniapp-sheen: rgb(255 255 255 / 0.015);
-  --miniapp-debug-outline-color: rgb(255 255 255 / 0.16);
-  --scanline-color: rgba(0, 0, 0, 0.012);
-
-  --color-bg: var(--space-black);
-  --color-surface: var(--space-carbon);
-  --color-surface-2: #0e1317;
-  --color-text: var(--space-white);
-  --color-text-muted: #7b8f9f;
-  --color-text-tertiary: #495d6c;
-  --color-label: rgba(242, 246, 249, 0.55);
-  --color-border: rgb(255 255 255 / 0.09);
-  --color-border-subtle: rgb(255 255 255 / 0.055);
-  --color-border-strong: rgb(255 255 255 / 0.16);
-  --color-accent: #5caeff;
-  --color-accent-hover: #4aa3fa;
-  --color-accent-active: #3a92e8;
-  --color-on-accent: #07090b;
-  --color-focus-ring: #5caeff;
-  --color-success: #2ed87a;
-  --color-warning: #f0a428;
-  --color-error: var(--space-alert-red);
-  --color-danger: var(--space-alert-red);
-  --color-info: #30b8d8;
-  --shadow-none: none;
-  --shadow-sm: none;
-  --shadow-md: none;
-  --shadow-lg: none;
-  --focus-ring: 0 0 0 2px rgb(74 168 255 / 0.28);
-  --miniapp-backdrop-top: color-mix(in oklch, var(--color-surface) 12%, var(--color-bg) 88%);
-  --miniapp-backdrop-glow: color-mix(in oklch, var(--color-accent) 6%, transparent);
-  --miniapp-backdrop-sheen: color-mix(in oklch, white 2.5%, transparent);
-
-  --blue-d: rgba(74, 168, 255, 0.08);
-  --blue-b: rgba(74, 168, 255, 0.22);
-  --green-d: rgba(46, 216, 122, 0.08);
-  --green-b: rgba(46, 216, 122, 0.22);
-  --amber-d: rgba(240, 164, 40, 0.08);
-  --amber-b: rgba(240, 164, 40, 0.22);
-  --red-d: rgba(232, 88, 88, 0.08);
-  --red-b: rgba(232, 88, 88, 0.22);
-  --green-glow: rgba(46, 216, 122, 0.18);
-  --overlay-scrim: rgba(0, 0, 0, 0.65);
-  --surface-overlay-hover: rgba(255, 255, 255, 0.03);
-  --shadow-soft: 0 1px 3px rgba(0, 0, 0, 0.4);
-  --shadow-card-emphasis: 0 8px 20px rgba(0, 0, 0, 0.22);
-  --shadow-floating: 0 2px 8px rgba(0, 0, 0, 0.34);
-  --shadow-dialog: 0 24px 48px rgba(0, 0, 0, 0.45);
-  --control-ghost-hover-bg: color-mix(in oklch, var(--color-text) 8%, transparent);
-  --control-outline-hover-bg: color-mix(in oklch, var(--color-text) 6%, transparent);
-  --control-outline-hover-border: color-mix(in oklch, var(--color-text) 40%, transparent);
-  --control-muted-border: color-mix(in oklch, var(--color-border) 88%, var(--color-text) 12%);
-  --control-muted-bg: color-mix(in oklch, var(--color-surface-2) 92%, transparent);
-  --control-muted-fg: color-mix(in oklch, var(--color-text) 95%, transparent);
-  --control-placeholder: color-mix(in oklch, var(--color-text) 35%, transparent);
-  --control-disabled-bg: color-mix(in oklch, var(--color-surface-2) 88%, transparent);
-  --control-disabled-fg: color-mix(in oklch, var(--color-text) 35%, transparent);
-  --control-disabled-placeholder: color-mix(in oklch, var(--color-text) 25%, transparent);
-  --control-pressed-bg: color-mix(in oklch, var(--color-text) 5%, var(--color-surface-2));
-  --control-segment-bg: color-mix(in oklch, var(--color-surface-2) 86%, var(--color-text) 8%);
-  --control-segment-border: color-mix(in oklch, var(--color-border) 90%, var(--color-text) 10%);
-  --control-segment-indicator-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
-  --hero-success-tint: color-mix(in oklch, var(--color-success) 6%, transparent);
-  --hero-success-glow: color-mix(in oklch, var(--color-success) 8%, transparent);
-  --hero-warning-tint: color-mix(in oklch, var(--color-warning) 6%, transparent);
-  --hero-warning-glow: color-mix(in oklch, var(--color-warning) 8%, transparent);
-  --hero-danger-tint: color-mix(in oklch, var(--color-error) 6%, transparent);
-  --hero-danger-glow: color-mix(in oklch, var(--color-error) 8%, transparent);
-  --hero-metric-border: color-mix(in oklch, var(--color-border-subtle) 90%, transparent);
-  --hero-metric-hover-bg: color-mix(in oklch, var(--color-text) 3%, transparent);
-  --hero-metric-active-bg: color-mix(in oklch, var(--color-text) 4%, transparent);
-  --hero-metric-warning-bg: color-mix(in oklch, var(--color-warning) 6%, var(--color-surface-2));
-  --hero-metric-critical-bg: color-mix(in oklch, var(--color-warning) 10%, var(--color-surface-2));
-  --hero-metric-expired-bg: color-mix(in oklch, var(--color-error) 12%, var(--color-surface-2));
-
-  --miniapp-font-sans: "Space Grotesk", "IBM Plex Sans", "Inter Variable", "Inter", "Segoe UI", sans-serif;
-  --miniapp-font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", "Roboto Mono", monospace;
-  --font-sans: var(--miniapp-font-sans);
-  --font-mono: var(--miniapp-font-mono);
-  --ui: var(--font-sans);
-  --mono: var(--font-mono);
-  --tx-pri: var(--color-text);
-  --tx-sec: var(--color-text-muted);
-  --tx-mut: var(--color-text-tertiary);
-  --blue: var(--color-accent);
-
-  --miniapp-shell-max: 420px;
-  --miniapp-header-height: 62px;
-  --miniapp-nav-height: 72px;
-  --miniapp-main-button-reserve: 120px;
-  --miniapp-safe-top-min: 60px;
-  --miniapp-safe-bottom-extra: 20px;
-  --miniapp-surface-gap: var(--spacing-3);
-
-  --miniapp-space-micro: var(--spacing-1);
-  --miniapp-space-1: var(--spacing-2);
-  --miniapp-space-2: var(--spacing-4);
-  --miniapp-space-3: var(--spacing-6);
-  --miniapp-space-4: var(--spacing-8);
-  --miniapp-space-5: var(--spacing-10);
-  --miniapp-space-6: var(--spacing-12);
-
-  --miniapp-text-display-size: 28px;
-  --miniapp-text-h1-size: 22px;
-  --miniapp-text-h2-size: 18px;
-  --miniapp-text-h3-size: 15px;
-  --miniapp-text-body-size: 14px;
-  --miniapp-text-caption-size: 12px;
-  /* --typo-* used by content-library and Mission system */
-  --typo-display-size: var(--miniapp-text-display-size);
-  --typo-h1-size: var(--miniapp-text-h1-size);
-  --typo-h2-size: var(--miniapp-text-h2-size);
-  --typo-h3-size: var(--miniapp-text-h3-size);
-  --typo-h4-size: 15px;
-  --typo-body-size: var(--miniapp-text-body-size);
-  --typo-body-sm-size: 14px;
-  --typo-caption-size: var(--miniapp-text-caption-size);
-  --typo-meta-size: 12px;
-  --text-2xs: 11px;
-  --text-xs: 12px;
-  --text-sm: 13px;
-  --text-md: 16px;
-  --text-base: 16px;
-  --text-lg: 18px;
-  --text-xl: 20px;
-  --text-2xl: 24px;
-  --text-4xl: 36px;
-  --text-hero: 42px;
-
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 18px;
-  --radius-xl: 24px;
-  --radius-2xl: 24px;
-  --radius-control: 12px;
-  --radius-surface: 18px;
-  --radius-button: 18px;
-  --miniapp-radius-control: 12px;
-  --miniapp-radius-surface: 18px;
-  --size-touch-target: 48px;
-  --height-btn-sm: 40px;
-  --height-btn-md: 48px;
-  --height-btn-lg: 48px;
-  --miniapp-motion-fast: var(--duration-fast);
-  --miniapp-motion-normal: var(--duration-normal);
-  --miniapp-ease: var(--ease-mechanical);
-
-  --z-nav: 180;
-  --z-above: 220;
-}
+   Import after miniapp-tokens; primitives-aliases and miniapp.css depend on these vars.
+   Spec: Stripe/Apple/Linear — light commercial, neutral-first. */
 
 html[data-theme="consumer-light"] {
   color-scheme: light;
-  --scanline-color: rgba(16, 34, 53, 0.015);
-  --miniapp-font-sans: "Space Grotesk", "IBM Plex Sans", "Inter Variable", "Inter", "Segoe UI", sans-serif;
-  --miniapp-font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", "Roboto Mono", monospace;
-  --font-sans: var(--miniapp-font-sans);
-  --font-mono: var(--miniapp-font-mono);
-  --ui: var(--font-sans);
-  --mono: var(--font-mono);
-  --tx-pri: var(--color-text);
-  --tx-sec: var(--color-text-muted);
-  --tx-mut: var(--color-text-tertiary);
-  --blue: var(--color-accent);
-  --color-bg: #ffffff;
-  --color-surface: #ffffff;
-  --color-surface-2: #f7f9fc;
-  --color-border-subtle: rgba(16, 34, 53, 0.07);
-  --color-border: rgba(16, 34, 53, 0.12);
-  --color-border-strong: rgba(16, 34, 53, 0.18);
-  --color-text: #0b1724;
-  --color-text-muted: #476177;
-  --color-text-tertiary: #6a8195;
-  --color-label: rgba(0, 0, 0, 0.55);
-  --color-success: #1da45f;
-  --color-accent: #2a82e3;
-  --color-warning: #ba7a12;
-  --color-error: #c14343;
-  --color-info: #177ca4;
-  --color-accent-hover: #1e72cf;
-  --color-accent-active: #1e72cf;
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+
+  /* Core */
+  --color-bg: #F7F8FB;
+  --color-bg-gradient: linear-gradient(180deg, #F7F8FB 0%, color-mix(in oklch, #F3F5F8 3%, #F7F8FB) 100%);
+  --color-surface: #FFFFFF;
+  --color-surface-2: #F3F5F8;
+  --color-text: #0F172A;
+  --color-text-muted: #6B7280;
+  --color-text-tertiary: #9CA3AF;
+  --color-border: #E6E8EC;
+  --color-border-subtle: #EEF1F5;
+  --color-border-strong: #D1D5DB;
+
+  /* Brand / Actions */
+  --color-accent: #2563EB;
+  --color-accent-hover: #1D4ED8;
   --color-on-accent: #ffffff;
-  --color-focus-ring: rgba(42, 130, 227, 0.24);
-  --blue-d: rgba(42, 130, 227, 0.12);
-  --blue-b: rgba(42, 130, 227, 0.24);
-  --green-d: rgba(29, 164, 95, 0.12);
-  --green-b: rgba(29, 164, 95, 0.24);
-  --amber-d: rgba(186, 122, 18, 0.12);
-  --amber-b: rgba(186, 122, 18, 0.24);
-  --red-d: rgba(193, 67, 67, 0.12);
-  --red-b: rgba(193, 67, 67, 0.24);
-  --green-glow: rgba(29, 164, 95, 0.12);
-  --shadow-soft: 0 1px 3px rgba(10, 22, 35, 0.14);
-  --shadow-floating: 0 6px 16px rgba(10, 22, 35, 0.12);
-  --shadow-dialog: 0 28px 64px rgba(10, 22, 35, 0.18);
-  --control-ghost-hover-bg: color-mix(in oklch, var(--color-accent) 6%, transparent);
-  --control-outline-hover-bg: color-mix(in oklch, var(--color-accent) 4%, transparent);
-  --control-outline-hover-border: color-mix(in oklch, var(--color-accent) 28%, var(--color-border));
-  --control-muted-border: color-mix(in oklch, var(--color-border) 82%, var(--color-text) 18%);
-  --control-muted-bg: color-mix(in oklch, var(--color-surface-2) 82%, transparent);
-  --control-muted-fg: color-mix(in oklch, var(--color-text) 96%, transparent);
-  --control-placeholder: color-mix(in oklch, var(--color-text) 42%, transparent);
-  --control-disabled-bg: color-mix(in oklch, var(--color-surface-2) 92%, var(--color-bg) 8%);
-  --control-disabled-fg: color-mix(in oklch, var(--color-text) 42%, transparent);
-  --control-disabled-placeholder: color-mix(in oklch, var(--color-text) 30%, transparent);
-  --control-pressed-bg: color-mix(in oklch, var(--color-accent) 4%, var(--color-surface-2));
-  --control-segment-bg: color-mix(in oklch, var(--color-surface-2) 94%, var(--color-text) 6%);
-  --control-segment-border: color-mix(in oklch, var(--color-border) 88%, var(--color-text) 12%);
-  --control-segment-indicator-shadow: 0 1px 4px rgba(10, 22, 35, 0.12);
-  --hero-success-tint: color-mix(in oklch, var(--color-success) 8%, transparent);
-  --hero-success-glow: color-mix(in oklch, var(--color-success) 10%, transparent);
-  --hero-warning-tint: color-mix(in oklch, var(--color-warning) 9%, transparent);
-  --hero-warning-glow: color-mix(in oklch, var(--color-warning) 11%, transparent);
-  --hero-danger-tint: color-mix(in oklch, var(--color-error) 8%, transparent);
-  --hero-danger-glow: color-mix(in oklch, var(--color-error) 10%, transparent);
-  --hero-metric-border: color-mix(in oklch, var(--color-border) 70%, var(--color-bg) 30%);
-  --hero-metric-hover-bg: color-mix(in oklch, var(--color-accent) 4%, transparent);
-  --hero-metric-active-bg: color-mix(in oklch, var(--color-accent) 6%, transparent);
-  --hero-metric-warning-bg: color-mix(in oklch, var(--color-warning) 8%, var(--color-surface-2));
-  --hero-metric-critical-bg: color-mix(in oklch, var(--color-warning) 12%, var(--color-surface-2));
-  --hero-metric-expired-bg: color-mix(in oklch, var(--color-error) 10%, var(--color-surface-2));
-  /* --typo-* used by content-library and Mission system */
-  --typo-display-size: 32px;
+  --color-primary-subtle: #EFF6FF;
+
+  /* States */
+  --color-success: #22C55E;
+  --color-success-soft: #E8F7EE;
+  --color-warning: #F59E0B;
+  --color-warning-soft: #FEF3C7;
+  --color-error: #EF4444;
+  --color-error-soft: #FEE2E2;
+
+  /* Neutral UI */
+  --color-hover: #F3F5F8;
+  --color-disabled: #E5E7EB;
+
+  /* Tone triplets (content-library, chips, badges) — semantic aliases */
+  --blue: var(--color-accent);
+  --blue-d: var(--color-primary-subtle);
+  --blue-b: color-mix(in oklch, var(--color-accent) 18%, transparent);
+  --green: var(--color-success);
+  --green-d: var(--color-success-soft);
+  --green-b: color-mix(in oklch, var(--color-success) 18%, transparent);
+  --amber: var(--color-warning);
+  --amber-d: var(--color-warning-soft);
+  --amber-b: color-mix(in oklch, var(--color-warning) 18%, transparent);
+  --red: var(--color-error);
+  --red-d: var(--color-error-soft);
+  --red-b: color-mix(in oklch, var(--color-error) 18%, transparent);
+  --danger-dim: var(--color-error-soft);
+  --surface-border: var(--color-border-subtle);
+  --surface-border-emphasis: var(--color-border-subtle);
+  --surface-border-accent: color-mix(in oklch, var(--color-accent) 25%, transparent);
+  --surface-border-success: color-mix(in oklch, var(--color-success) 25%, transparent);
+  --surface-border-warning: color-mix(in oklch, var(--color-warning) 25%, transparent);
+  --surface-border-error: color-mix(in oklch, var(--color-error) 25%, transparent);
+
+  /* Typography (canonical: 24/12/16/14/11) */
+  --text-title: 24px;
+  --text-section: 12px;
+  --text-body: 16px;
+  --text-small: 14px;
+  --text-meta: 11px;
+  --text-hero: 24px;
+  --text-title-lg: 24px;
+  --text-title-md: 20px;
+  --text-caption: 14px;
+  --text-label: 11px;
+  --typo-display-size: 24px;
   --typo-h1-size: 24px;
   --typo-h2-size: 18px;
   --typo-h3-size: 16px;
   --typo-h4-size: 15px;
-  --typo-body-size: 14px;
+  --typo-body-size: 16px;
   --typo-body-sm-size: 14px;
-  --typo-caption-size: 12px;
-  --typo-meta-size: 12px;
-  --text-2xs: 11px;
-  --text-xs: 12px;
-  --text-sm: 13px;
-  --text-md: 16px;
-  --text-base: 16px;
-  --text-lg: 18px;
-  --text-xl: 20px;
-  --text-2xl: 24px;
-  --text-4xl: 36px;
-  --text-hero: 42px;
-  --size-touch-target: 48px;
-  --overlay-scrim: rgba(10, 22, 35, 0.42);
-  --surface-overlay-hover: rgba(0, 0, 0, 0.04);
-  --shadow-card-emphasis: 0 8px 20px rgba(10, 22, 35, 0.12);
-  --miniapp-backdrop-top: color-mix(in oklch, var(--color-surface) 56%, white 44%);
-  --miniapp-backdrop-glow: color-mix(in oklch, var(--color-accent) 4.5%, transparent);
-  --miniapp-backdrop-sheen: color-mix(in oklch, var(--color-text) 1.5%, transparent);
+  --typo-caption-size: 14px;
+  --typo-meta-size: 11px;
+  --ds-font-page-title-size: 24px;
+  --ds-font-section-title-size: 18px;
+  --ds-font-card-title-size: 16px;
+  --ds-font-body-size: 16px;
+  --ds-font-caption-size: 14px;
+  --ds-font-label-size: 11px;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --letter-spacing-label: 0.08em;
+
+  /* Radius (tighter, production-grade) */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 14px;
+  --radius-xl: 16px;
+
+  /* Shadows (2 canonical: card + elevated) */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.06);
+  --shadow-elevated: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-md: 0 1px 3px rgba(0,0,0,0.06);
+  --shadow-lg: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-dialog: 0 4px 24px -4px rgba(0,0,0,0.12);
+  --shadow-btn-primary: 0 2px 6px color-mix(in oklch, var(--color-accent) 15%, transparent);
+
+  /* Layout (4px scale) */
+  --space-gutter: var(--spacing-5);
+  --space-section: var(--spacing-6);
+  --space-card: var(--spacing-5);
+  --size-icon-container: 44px;
+}
+
+html[data-theme="consumer-dark"] {
+  color-scheme: dark;
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+
+  /* Core (Stripe/Linear dark) */
+  --color-bg: #0F1419;
+  --color-bg-gradient: linear-gradient(180deg, #0F1419 0%, color-mix(in oklch, #1A1F26 3%, #0F1419) 100%);
+  --color-surface: #1A1F26;
+  --color-surface-2: #252B33;
+  --color-text: #E6EDF3;
+  --color-text-muted: #8B949E;
+  --color-text-tertiary: #6E7681;
+  --color-border: #30363D;
+  --color-border-subtle: #21262D;
+  --color-border-strong: #484F58;
+
+  /* Brand / Actions */
+  --color-accent: #58A6FF;
+  --color-accent-hover: #79B8FF;
+  --color-on-accent: #ffffff;
+  --color-primary-subtle: rgba(56,139,253,0.15);
+
+  /* States */
+  --color-success: #3FB950;
+  --color-success-soft: rgba(63,185,80,0.15);
+  --color-warning: #D29922;
+  --color-warning-soft: rgba(210,153,34,0.15);
+  --color-error: #F85149;
+  --color-error-soft: rgba(248,81,73,0.15);
+
+  /* Neutral UI */
+  --color-hover: #21262D;
+  --color-disabled: #484F58;
+
+  /* Tone triplets (content-library, chips, badges) — semantic aliases */
+  --blue: var(--color-accent);
+  --blue-d: var(--color-primary-subtle);
+  --blue-b: color-mix(in oklch, var(--color-accent) 18%, transparent);
+  --green: var(--color-success);
+  --green-d: var(--color-success-soft);
+  --green-b: color-mix(in oklch, var(--color-success) 18%, transparent);
+  --amber: var(--color-warning);
+  --amber-d: var(--color-warning-soft);
+  --amber-b: color-mix(in oklch, var(--color-warning) 18%, transparent);
+  --red: var(--color-error);
+  --red-d: var(--color-error-soft);
+  --red-b: color-mix(in oklch, var(--color-error) 18%, transparent);
+  --danger-dim: var(--color-error-soft);
+  --surface-border: var(--color-border-subtle);
+  --surface-border-emphasis: var(--color-border);
+  --surface-border-accent: color-mix(in oklch, var(--color-accent) 25%, transparent);
+  --surface-border-success: color-mix(in oklch, var(--color-success) 25%, transparent);
+  --surface-border-warning: color-mix(in oklch, var(--color-warning) 25%, transparent);
+  --surface-border-error: color-mix(in oklch, var(--color-error) 25%, transparent);
+
+  /* Typography (same scale) */
+  --text-title: 24px;
+  --text-section: 12px;
+  --text-body: 16px;
+  --text-small: 14px;
+  --text-meta: 11px;
+  --text-hero: 24px;
+  --text-title-lg: 24px;
+  --text-title-md: 20px;
+  --text-caption: 14px;
+  --text-label: 11px;
+  --typo-display-size: 24px;
+  --typo-h1-size: 24px;
+  --typo-h2-size: 18px;
+  --typo-h3-size: 16px;
+  --typo-h4-size: 15px;
+  --typo-body-size: 16px;
+  --typo-body-sm-size: 14px;
+  --typo-caption-size: 14px;
+  --typo-meta-size: 11px;
+  --ds-font-page-title-size: 24px;
+  --ds-font-section-title-size: 18px;
+  --ds-font-card-title-size: 16px;
+  --ds-font-body-size: 16px;
+  --ds-font-caption-size: 14px;
+  --ds-font-label-size: 11px;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --letter-spacing-label: 0.08em;
+
+  /* Radius (tighter, production-grade) */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 14px;
+  --radius-xl: 16px;
+
+  /* Shadows (2 canonical: card + elevated) */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.2);
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.2);
+  --shadow-elevated: 0 2px 8px rgba(0,0,0,0.25);
+  --shadow-md: 0 1px 3px rgba(0,0,0,0.2);
+  --shadow-lg: 0 2px 8px rgba(0,0,0,0.25);
+  --shadow-dialog: 0 -4px 40px color-mix(in oklch, black 40%, transparent);
+  --shadow-btn-primary: 0 2px 6px color-mix(in oklch, var(--color-accent) 15%, transparent);
+
+  /* Layout (4px scale) */
+  --space-gutter: var(--spacing-5);
+  --space-section: var(--spacing-6);
+  --space-card: var(--spacing-5);
+  --size-icon-container: 44px;
 }

@@ -116,9 +116,12 @@ async def _generic_exception_handler(request: Request, exc: Exception) -> JSONRe
 
 
 async def _validation_exception_handler(
-    request: Request, exc: RequestValidationError
+    request: Request, exc: Exception
 ) -> JSONResponse:
     """Return unified 422 error shape for validation errors."""
+    if not isinstance(exc, RequestValidationError):
+        return await _generic_exception_handler(request, exc)
+
     rid = getattr(request.state, "request_id", None) or request_id_ctx.get()
     cid = getattr(request.state, "correlation_id", None) or rid
     path_tpl = path_template(request.url.path)

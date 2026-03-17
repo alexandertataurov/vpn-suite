@@ -9,4 +9,6 @@ Design system docs have moved to **[../../docs/design-system/](../../docs/design
 
 Import reusable UI from `@/design-system`. Code lives in this folder (`tokens/`, `theme/`, `primitives/`, `components/`, `patterns/`, `recipes/`, `layouts/`, `styles/`).
 
+**Icons**: Import from `@/design-system/icons` for better tree-shaking (e.g. `import { IconShield } from "@/design-system/icons"`).
+
 Route-owned presentation does not live here anymore. App-layer page families such as onboarding and page-specific route polish live under [`src/styles/app/`](/opt/vpn-suite/frontend/miniapp/src/styles/app/index.css) and must not add ancestor-driven selectors back into `design-system/styles/`.

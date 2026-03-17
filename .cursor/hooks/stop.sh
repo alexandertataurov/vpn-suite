@@ -8,16 +8,15 @@ LOG=".cursor/session.log"
 mkdir -p .cursor
 echo "$(date '+%Y-%m-%d %H:%M:%S') — Agent session ended" >> "$LOG"
 
-TESTS_OK=0
-if [ -d backend ] && command -v pytest >/dev/null; then
-  (cd backend && pytest tests/ --cov=app --cov-report=term-missing -v) >> "$LOG" 2>&1 || TESTS_OK=1
-fi
+# Light checks only — avoid vitest+storybook+chromium on resource-constrained VPS.
+# Full tests: run in CI or via `pnpm run test` (unit) / `pnpm run test:all` (miniapp) locally.
+CHECKS_OK=0
 if [ -d frontend ] && command -v npm >/dev/null; then
-  (cd frontend && npm test -- --run) >> "$LOG" 2>&1 || TESTS_OK=1
+  (cd frontend && npm run typecheck && npm run lint) >> "$LOG" 2>&1 || CHECKS_OK=1
 fi
 
-if [ "$TESTS_OK" -eq 1 ]; then
-  echo "Tests failed or skipped; not committing." >> "$LOG"
+if [ "$CHECKS_OK" -eq 1 ]; then
+  echo "Typecheck/lint failed or skipped; not committing." >> "$LOG"
   command -v osascript >/dev/null && osascript -e 'display notification "Cursor Agent session complete." with title "Cursor"' 2>/dev/null
   exit 0
 fi

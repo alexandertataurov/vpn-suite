@@ -1,22 +1,20 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { Outlet, NavLink, useLocation } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { OfflineBanner } from "@/design-system";
 import {
   IconCreditCard,
   IconHelpCircle,
   IconHome,
   IconSmartphone,
   IconUser,
-} from "@/design-system";
+} from "@/design-system/icons";
+import type { IconType } from "@/design-system/icons";
 import { LayoutProvider } from "@/context/LayoutContext";
 import { useMainButtonReserve } from "@/context/MainButtonReserveContext";
-import { useTelegramHaptics } from "@/hooks/useTelegramHaptics";
-import { useOnlineStatus } from "@/hooks/useOnlineStatus";
+import { useTelegramHaptics, useOnlineStatus } from "@/hooks";
 import { useTelegramApp } from "@/hooks/telegram/useTelegramApp";
-import { ScrollZone, ActionZone, ShellContextBlock } from "@/design-system";
-import { HeaderZone } from "@/design-system/layouts/HeaderZone";
-import type { IconType } from "@/design-system";
+import { OfflineBanner, ScrollZone, ActionZone, ShellContextBlock } from "@/design-system";
+import { HeaderZone } from "@/design-system/compositions/layouts/HeaderZone";
 
 interface TabItem {
   to: string;
@@ -115,10 +113,8 @@ export function TabbedShellLayout() {
                 key={to}
                 to={to}
                 end={end}
-                role="tab"
-                aria-selected={active}
                 aria-label={label}
-                tabIndex={0}
+                aria-current={active ? "page" : undefined}
                 onClick={() => {
                   impact("light");
                   selectionChanged();
@@ -147,8 +143,9 @@ export function StackFlowLayout() {
   const location = useLocation();
   const { impact, notify } = useTelegramHaptics();
   const isOnline = useOnlineStatus();
-  const { reserve: mainButtonReserve } = useMainButtonReserve();
   const { isDesktop } = useTelegramApp();
+  const { reserve: mainButtonReserve } = useMainButtonReserve();
+  const scrollRef = useRef<HTMLElement | null>(null);
   const handlePullRefresh = useCallback(async () => {
     if (!isOnline) {
       notify("warning");
@@ -181,9 +178,9 @@ export function StackFlowLayout() {
     <div className="miniapp-shell miniapp-shell--stack">
       <OfflineBanner />
       {!isDesktop && <HeaderZone stackFlow />}
-      <ScrollZone className={mainClass} onRefresh={handlePullRefresh}>
+      <ScrollZone className={mainClass} onRefresh={handlePullRefresh} scrollRef={scrollRef}>
         <LayoutProvider stackFlow>
-          <ShellContextBlock stackFlow />
+          <ShellContextBlock stackFlow gestureRef={scrollRef} />
           <div key={location.pathname} className="tab-content miniapp-shell-screen">
             <Outlet />
           </div>

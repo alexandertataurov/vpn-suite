@@ -1,11 +1,9 @@
 import { useEffect, useState } from "react";
 import { useWebappToken } from "@/api/client";
-import { useSession } from "@/hooks/useSession";
-import { useTrackScreen } from "@/hooks/useTrackScreen";
-import { useTelemetry } from "@/hooks/useTelemetry";
-import type { StandardPageHeader, StandardPageState, StandardSectionBadge } from "./types";
+import { useSession, useTrackScreen, useTelemetry } from "@/hooks";
+import type { StandardPageHeader, StandardPageState } from "./types";
 import { getActiveSubscription } from "./helpers";
-import { useI18n } from "@/hooks/useI18n";
+import { useI18n } from "@/hooks";
 
 const TROUBLESHOOTER_STEPS = [
   {
@@ -70,12 +68,6 @@ export function useSupportPageModel() {
     glow: "g-blue" as const,
   };
 
-  const troubleshooterBadge: StandardSectionBadge = {
-    tone: "neutral",
-    label: `Step ${step + 1}/${totalSteps}`,
-    emphasizeNumeric: true,
-  };
-
   /** Only for step 0: label for the "No" path (e.g. navigate to plan). */
   const currentStepAltLabel =
     step === 0 ? t("support.troubleshooter_step_access_alt") : undefined;
@@ -96,7 +88,6 @@ export function useSupportPageModel() {
     },
     step,
     totalSteps,
-    troubleshooterBadge,
     currentStepAltLabel,
     nextStep: () => setStep((value) => (value + 1 < totalSteps ? value + 1 : 0)),
     previousStep: step > 0 ? () => setStep((value) => value - 1) : undefined,

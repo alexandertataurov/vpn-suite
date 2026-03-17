@@ -4,13 +4,25 @@ import { Link, type LinkProps } from "react-router-dom";
 interface SidebarNavRootProps {
   children: ReactNode;
   className?: string;
+  id?: string;
+  ariaLabel?: string;
 }
 
-export function SidebarNavRoot({ children, className }: SidebarNavRootProps) {
+export function SidebarNavRoot({
+  children,
+  className,
+  id,
+  ariaLabel = "Dashboard navigation",
+}: SidebarNavRootProps) {
   return (
-    <aside className={["sidebar", className].filter(Boolean).join(" ")}>
+    <nav
+      id={id}
+      role="navigation"
+      aria-label={ariaLabel}
+      className={["sidebar", className].filter(Boolean).join(" ")}
+    >
       {children}
-    </aside>
+    </nav>
   );
 }
 

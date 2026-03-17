@@ -3,3 +3,5 @@
  */
 export { useThemeMode, type ThemeMode } from "./useThemeMode";
 export { useBreakpoint, type BreakpointKey } from "./useBreakpoint";
+export { usePrefersReducedMotion } from "./usePrefersReducedMotion";
+export { useSheetSwipeDismiss } from "./useSheetSwipeDismiss";

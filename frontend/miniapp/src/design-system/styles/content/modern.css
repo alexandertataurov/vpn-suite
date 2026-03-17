@@ -1,0 +1,681 @@
+/**
+ * Modern patterns — used by design-system components (ListCard, SettingsActionRow,
+ * ActionCard, ModernHeroCard, SupportContactCard, TroubleshooterStep).
+ * Single source for .modern-* and .troubleshooter-card classes.
+ */
+
+/* ---- Page Scaffold & Headers ----------------------- */
+.modern-header {
+  padding: var(--spacing-6) var(--space-gutter) var(--spacing-4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modern-header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  min-width: 0;
+}
+
+.modern-header-back-button {
+  width: var(--size-touch-target, 44px);
+  height: var(--size-touch-target, 44px);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+}
+
+.modern-header-back-button:active {
+  transform: scale(0.92);
+  background: var(--color-surface-2);
+}
+
+.modern-profile-block {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+}
+
+.modern-avatar {
+  width: var(--size-touch-target, 44px);
+  height: var(--size-touch-target, 44px);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: var(--color-text);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.modern-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.modern-profile-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-px);
+}
+
+.modern-header-title {
+  font-size: var(--text-body, 16px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+}
+
+.modern-header-label {
+  font-size: var(--text-label, 12px);
+  font-weight: 600;
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.modern-header-formal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.modern-header-page-title {
+  font-size: var(--text-title-lg, 28px);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  margin: 0;
+  color: var(--color-text);
+}
+
+.modern-header-page-subtitle {
+  font-size: var(--text-body, 14px);
+  color: var(--color-text-muted);
+  margin: 0;
+  font-weight: 500;
+}
+
+.modern-icon-button {
+  width: var(--size-touch-target, 44px);
+  height: var(--size-touch-target, 44px);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+  box-shadow: var(--shadow-sm);
+}
+
+.modern-icon-button:active {
+  transform: scale(0.92);
+  background: var(--color-surface-2);
+}
+
+/* ---- Hero Status Card ------------------------------ */
+.modern-hero-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-8) var(--spacing-6);
+  margin: 0 var(--spacing-4) var(--spacing-4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--spacing-6);
+  box-shadow: var(--shadow-card);
+}
+
+.modern-hero-indicator {
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in oklch, var(--color-accent) 6%, var(--color-surface-2));
+  color: var(--color-text-tertiary);
+  transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.modern-hero-indicator--active {
+  background: color-mix(in oklch, var(--color-success) 6%, var(--color-surface-2));
+  color: var(--color-success);
+}
+
+.modern-hero-indicator--warning {
+  background: color-mix(in oklch, var(--color-warning) 6%, var(--color-surface-2));
+  color: var(--color-warning);
+}
+
+.modern-hero-indicator--danger {
+  background: color-mix(in oklch, var(--color-error) 6%, var(--color-surface-2));
+  color: var(--color-error);
+}
+
+.modern-hero-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.modern-hero-title {
+  font-size: var(--text-title-md, 24px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+}
+
+.modern-hero-desc {
+  font-size: var(--text-body, 15px);
+  color: var(--color-text-muted);
+  line-height: 1.5;
+  max-width: 300px;
+}
+
+.modern-hero-actions {
+  width: 100%;
+}
+
+/* ---- Action Grid ----------------------------------- */
+.modern-action-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-4);
+  padding: 0 var(--spacing-4) var(--spacing-4);
+}
+
+.modern-action-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  box-shadow: var(--shadow-card);
+  line-height: var(--line-height-label, 1.3);
+}
+
+.modern-action-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.modern-action-value {
+  font-size: var(--text-body, 15px);
+  font-weight: 700;
+  color: var(--color-text);
+  line-height: 1.3;
+}
+
+/* ---- Banner ---------------------------------------- */
+.modern-banner {
+  margin: 0 var(--spacing-4) var(--spacing-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modern-banner:active {
+  background: var(--color-surface-2);
+  transform: scale(0.98);
+}
+
+.modern-banner-content {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  min-height: 44px;
+}
+
+.modern-banner-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: color-mix(in oklch, var(--color-accent) 6%, var(--color-surface-2));
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modern-banner-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.modern-banner-title {
+  font-size: var(--text-body, 15px);
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+.modern-banner-desc {
+  font-size: var(--text-caption, 13px);
+  color: var(--color-text-tertiary);
+}
+
+/* ---- List Items & Action Rows ---------------------- */
+.modern-list {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin: var(--spacing-4);
+  padding: 0;
+  list-style: none;
+}
+
+.modern-list--rounded {
+  margin: var(--spacing-4);
+}
+
+.modern-list-item {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-4) var(--spacing-5);
+  gap: var(--spacing-4);
+  min-height: 44px;
+  background: transparent;
+  width: 100%;
+  border: none;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border-subtle, var(--color-border));
+  transition: background 0.2s ease;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.modern-list-item:last-child {
+  border-bottom: none;
+}
+
+.modern-list-item:active {
+  background: var(--color-surface-2);
+}
+
+.modern-list-item-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-accent);
+  background: color-mix(in oklch, var(--color-accent) 6%, var(--color-surface-2));
+  flex-shrink: 0;
+}
+
+.modern-list-item-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.modern-list-item-title {
+  font-size: var(--text-body, 16px);
+  font-weight: 600;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.modern-list-item-subtitle {
+  font-size: var(--text-caption, 13px);
+  color: var(--color-text-muted);
+  margin-top: var(--spacing-px);
+}
+
+.modern-list-item-right {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+/* Tone Modifiers for Icons — 6% intensity */
+.modern-icon-tone--blue { background: color-mix(in oklch, var(--color-accent) 6%, var(--color-surface-2)); color: var(--color-accent); }
+.modern-icon-tone--green { background: color-mix(in oklch, var(--color-success) 6%, var(--color-surface-2)); color: var(--color-success); }
+.modern-icon-tone--amber { background: color-mix(in oklch, var(--color-warning) 6%, var(--color-surface-2)); color: var(--color-warning); }
+.modern-icon-tone--red { background: color-mix(in oklch, var(--color-error) 6%, var(--color-surface-2)); color: var(--color-error); }
+.modern-icon-tone--neutral { background: var(--color-hover, var(--color-surface-2)); color: var(--color-text-muted); }
+
+/* ---- Plan Options ---------------------------------- */
+.modern-plan-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  padding: 0 var(--spacing-4) var(--spacing-6);
+}
+
+.modern-plan-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+}
+
+.modern-plan-card--selected {
+  border-color: var(--color-accent);
+  box-shadow: 0 2px 8px color-mix(in oklch, var(--color-accent) 12%, transparent);
+}
+
+.modern-plan-card--current {
+  background: linear-gradient(to bottom right, var(--color-surface), color-mix(in srgb, var(--color-accent) 4%, var(--color-surface)));
+}
+
+.modern-plan-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.modern-plan-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.modern-plan-title {
+  font-size: var(--text-title-md, 20px);
+  font-weight: 700;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.modern-plan-price {
+  font-size: var(--text-title-md, 20px);
+  font-weight: 700;
+  color: var(--color-accent);
+}
+
+.modern-plan-features {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.modern-plan-feature {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--text-body, 14px);
+}
+
+.modern-plan-feature-label {
+  color: var(--color-text-muted);
+}
+
+.modern-plan-feature-value {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+/* ---- Device Metrics --------------------------------- */
+.modern-device-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-4);
+  width: 100%;
+}
+
+.modern-device-metric {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.modern-progress-bar-bg {
+  height: 6px;
+  background: var(--color-surface-2);
+  border-radius: var(--radius-2);
+  overflow: hidden;
+  width: 100%;
+}
+
+.modern-progress-bar-fill {
+  height: 100%;
+  border-radius: var(--radius-2);
+  transition: width 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.modern-progress-bar-fill--healthy { background: var(--color-success); }
+.modern-progress-bar-fill--warning { background: var(--color-warning); }
+.modern-progress-bar-fill--danger { background: var(--color-error); }
+
+/* ---- Utilities ------------------------------------- */
+.modern-content-pad {
+  padding: 0 var(--miniapp-content-gutter);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+.modern-clickable {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.modern-loading-state {
+  opacity: 0.6;
+}
+
+.modern-text-tertiary {
+  color: var(--color-text-tertiary);
+}
+
+.glass-effect {
+  background: var(--color-surface-2);
+}
+
+.modern-mt-4 { margin-top: var(--spacing-4); }
+.modern-mt-3 { margin-top: var(--spacing-3); }
+.modern-p-0 { padding: 0 !important; }
+.modern-m-0 { margin: 0 !important; }
+.modern-h-24 { height: var(--spacing-6); }
+.modern-px-6 { padding-left: var(--spacing-6) !important; padding-right: var(--spacing-6) !important; }
+.modern-px-4 { padding-left: var(--spacing-4) !important; padding-right: var(--spacing-4) !important; }
+
+.modern-store-buttons {
+  display: flex;
+  gap: var(--spacing-3);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.modern-store-badge {
+  height: var(--spacing-8);
+  width: auto;
+}
+
+/* ---- Support Contact Card -------------------------- */
+.modern-contact-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-6);
+  margin: 0 var(--spacing-4) var(--spacing-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  box-shadow: var(--shadow-card);
+}
+
+.modern-contact-card__header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-3);
+}
+
+.modern-contact-card__icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: color-mix(in oklch, var(--color-accent) 6%, var(--color-surface-2));
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.modern-contact-card__meta {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.modern-contact-card__title {
+  font-size: var(--text-body, 18px);
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: -0.02em;
+}
+
+.modern-contact-card__desc {
+  font-size: var(--text-body, 14px);
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.modern-contact-card__status {
+  display: flex;
+}
+
+.modern-contact-card__cta {
+  text-decoration: none;
+  height: 52px;
+}
+
+.modern-contact-card__unavailable {
+  background: color-mix(in srgb, var(--color-warning) 6%, var(--color-surface));
+  border: 1px solid color-mix(in srgb, var(--color-warning) 20%, transparent);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-3) var(--spacing-4);
+  font-size: var(--text-caption, 13px);
+  color: var(--color-text-muted);
+}
+
+.modern-contact-card__unavailable strong {
+  display: block;
+  color: var(--color-text);
+  margin-bottom: var(--spacing-1);
+  font-size: var(--text-body, 14px);
+}
+
+.modern-contact-card__unavailable p {
+  margin: 0;
+}
+
+/* ---- Troubleshooter Card --------------------------- */
+.troubleshooter-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-left: 4px solid var(--color-warning);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-6);
+  margin: 0 var(--spacing-4) var(--spacing-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-5);
+  box-shadow: var(--shadow-card);
+}
+
+.troubleshooter-card__head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-3);
+}
+
+.troubleshooter-card__icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: color-mix(in oklch, var(--color-warning) 6%, var(--color-surface-2));
+  color: var(--color-warning);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.troubleshooter-card__meta {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.troubleshooter-card__title {
+  font-size: var(--text-body, 17px);
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: -0.01em;
+}
+
+.troubleshooter-card__body {
+  font-size: var(--text-body, 14px);
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.troubleshooter-card__chip {
+  flex-shrink: 0;
+}
+
+.troubleshooter-card__actions {
+  display: flex;
+  gap: var(--spacing-2);
+}
+
+.troubleshooter-card__action {
+  flex: 1;
+}
+
+.troubleshooter-card__action--primary {
+  flex: 2;
+  height: 56px;
+}

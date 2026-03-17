@@ -6,14 +6,18 @@
   align-items: flex-end;
   justify-content: stretch;
   padding-top: var(--space-6);
-  background: color-mix(in oklch, var(--color-bg) 44%, transparent);
-  backdrop-filter: blur(4px);
+  background: color-mix(in oklch, var(--color-overlay) 56%, transparent);
+  backdrop-filter: blur(calc(var(--blur-sm) / 2));
+  -webkit-backdrop-filter: blur(calc(var(--blur-sm) / 2));
   opacity: 0;
-  animation: overlay-enter 250ms ease forwards;
+  animation: overlay-enter var(--duration-sheet) var(--ease-standard) forwards;
+  transition:
+    backdrop-filter var(--duration-micro) var(--ease-standard),
+    -webkit-backdrop-filter var(--duration-micro) var(--ease-standard);
 }
 
 .overlay[data-state="closing"] {
-  animation: overlay-exit 250ms ease forwards;
+  animation: overlay-exit var(--duration-enter) var(--ease-exit) forwards;
 }
 
 .sheet {
@@ -29,13 +33,16 @@
     0 -1px 0 color-mix(in oklch, white 8%, transparent),
     0 -20px 48px color-mix(in oklch, black 38%, transparent);
   transform: translateY(100%);
-  animation: sheet-enter 400ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: sheet-enter var(--duration-sheet) var(--ease-enter) forwards;
   overscroll-behavior: contain;
   max-height: min(100dvh, calc(var(--app-height, 100dvh) - var(--space-4)));
+  transition:
+    transform var(--duration-panel) var(--ease-enter),
+    box-shadow var(--duration-micro) var(--ease-standard);
 }
 
 .sheetClosing {
-  animation: sheet-exit 400ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: sheet-exit var(--duration-enter) var(--ease-exit) forwards;
 }
 
 .dragHandleWrap {
@@ -50,6 +57,36 @@
   height: 4px;
   border-radius: 999px;
   background: var(--color-border-mid, var(--color-border));
+  transition:
+    width var(--duration-micro) var(--ease-standard),
+    background-color var(--duration-micro) var(--ease-standard),
+    transform var(--duration-micro) var(--ease-release);
+  box-shadow: 0 0 0 0 color-mix(in oklch, var(--color-accent) 0%, transparent);
+}
+
+.sheet[data-swipe-state="dragging"] {
+  transition: none;
+  box-shadow:
+    0 -1px 0 color-mix(in oklch, white 8%, transparent),
+    0 -10px 32px color-mix(in oklch, black 28%, transparent);
+}
+
+.sheet[data-swipe-ready="true"] .dragHandle {
+  width: 46px;
+  background: color-mix(in oklch, var(--color-accent) 36%, transparent);
+  transform: scaleX(1.02);
+}
+
+.overlay[data-swipe-active="true"] {
+  backdrop-filter: blur(calc(var(--blur-sm) / 3));
+  -webkit-backdrop-filter: blur(calc(var(--blur-sm) / 3));
+}
+
+.overlay[data-swipe-ready="true"] .sheet {
+  box-shadow:
+    0 -1px 0 color-mix(in oklch, white 8%, transparent),
+    0 -12px 36px color-mix(in oklch, black 30%, transparent),
+    0 0 0 1px color-mix(in oklch, var(--color-accent) 14%, transparent);
 }
 
 .header {
@@ -306,6 +343,8 @@
 @keyframes overlay-enter {
   from {
     opacity: 0;
+    backdrop-filter: blur(0);
+    -webkit-backdrop-filter: blur(0);
   }
 
   to {
@@ -320,12 +359,18 @@
 
   to {
     opacity: 0;
+    backdrop-filter: blur(0);
+    -webkit-backdrop-filter: blur(0);
   }
 }
 
 @keyframes sheet-enter {
   from {
-    transform: translateY(100%);
+    transform: translateY(100%) scale(0.984);
+  }
+
+  72% {
+    transform: translateY(-4px) scale(1.004);
   }
 
   to {
@@ -339,7 +384,17 @@
   }
 
   to {
-    transform: translateY(100%);
+    transform: translateY(100%) scale(0.992);
+  }
+}
+
+@keyframes gesture-handle-pulse {
+  from {
+    box-shadow: 0 0 0 0 color-mix(in oklch, var(--color-accent) 16%, transparent);
+  }
+
+  to {
+    box-shadow: 0 0 0 6px color-mix(in oklch, var(--color-accent) 0%, transparent);
   }
 }
 
@@ -353,5 +408,14 @@
   50% {
     opacity: 0.55;
     transform: scale(1.35);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay,
+  .sheet,
+  .dragHandle {
+    transition: none;
+    animation: none;
   }
 }

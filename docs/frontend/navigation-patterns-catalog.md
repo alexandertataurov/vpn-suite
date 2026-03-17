@@ -51,7 +51,7 @@ All navigation-related components, Storybook stories, and app pages in the proje
 | **Components/CommandPalette/ServersCommandPalette** | `src/components/ServersCommandPalette.stories.tsx` |
 | **Patterns/OperatorHeader** (PageHeader) | `src/components/PageHeader.stories.tsx` |
 | **Patterns/OperatorToolbar**| `src/components/Toolbar.stories.tsx` |
-| **Components/Buttons/ButtonLink**   | `src/design-system/stories/buttons/ButtonLink.stories.tsx` |
+| **Components/Button**   | `src/design-system/stories/Button.stories.tsx` |
 
 ---
 

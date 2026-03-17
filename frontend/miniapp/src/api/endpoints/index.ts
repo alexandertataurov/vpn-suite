@@ -1,3 +1,4 @@
+export { getUserAccess } from "./access";
 export { postAuth } from "./auth";
 export { getMe } from "./me";
 export { getPlans } from "./plans";

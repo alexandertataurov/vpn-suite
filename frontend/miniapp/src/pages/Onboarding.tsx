@@ -6,22 +6,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { OnboardingBottomActions, ONBOARDING_STEPS, OnboardingStepCard } from "@/components";
-import { useToast } from "@/design-system";
-import { PageFrame } from "@/design-system/layouts/PageFrame";
-import { useBootstrapContext } from "@/bootstrap/BootstrapController";
+import { ONBOARDING_STEPS, OnboardingStepCard } from "@/components";
+import { PageScaffold, ModernHeader, useToast } from "@/design-system";
+import { useBootstrapContext } from "@/bootstrap/context";
 import { webappApi } from "@/api/client";
-import { useOpenLink } from "@/hooks/features/useOpenLink";
-import { useSession } from "@/hooks/useSession";
-import { useTelemetry } from "@/hooks/useTelemetry";
-import { useTelegramWebApp } from "@/hooks/useTelegramWebApp";
-import { webappQueryKeys } from "@/lib/query-keys/webapp.query-keys";
-import { getActiveDevices } from "@/page-models";
-import { telegramBotUsername } from "@/config/env";
-import { useI18n } from "@/hooks/useI18n";
-
-const IOS_APP_URL = "https://apps.apple.com/app/amneziavpn/id1600529900";
-const ANDROID_APP_URL = "https://play.google.com/store/apps/details?id=org.amnezia.vpn";
+import { useOpenLink, useSession, useTelemetry, useTelegramWebApp } from "@/hooks";
+import { webappQueryKeys } from "@/lib";
+import { getActiveDevices, getActiveSubscription } from "@/page-models";
+import { getSupportBotHref } from "@/config/env";
+import { useI18n } from "@/hooks";
+import { AMNEZIA_VPN_ANDROID_URL, AMNEZIA_VPN_IOS_URL } from "@/lib";
 
 export function OnboardingPage() {
   const navigate = useNavigate();
@@ -39,9 +33,6 @@ export function OnboardingPage() {
   const completedThisSessionRef = useRef(false);
   const lastStepIndexRef = useRef(0);
 
-  const user = session?.user ?? null;
-  const displayName = (user?.display_name ?? "").trim() || t("onboarding.guest_name");
-
   const stepIndex = useMemo(
     () => Math.max(0, Math.min(ONBOARDING_STEPS.length - 1, onboardingStep)),
     [onboardingStep],
@@ -51,7 +42,7 @@ export function OnboardingPage() {
   useEffect(() => {
     if (session == null) return;
     track("onboarding_started", {});
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- fire once on mount
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     track("onboarding_step_viewed", { step: stepIndex, step_id: step.id });
@@ -71,9 +62,11 @@ export function OnboardingPage() {
   const isLastStep = stepIndex === ONBOARDING_STEPS.length - 1;
   const activeDevices = useMemo(() => getActiveDevices(session), [session]);
   const hasActiveDevice = activeDevices.length > 0;
-  const isConfigStep = step.id === "get_config";
+  const hasActivePlan = Boolean(getActiveSubscription(session));
+  const hasDetectedActivity = Boolean(session?.public_ip || activeDevices.some((d) => d.last_seen_handshake_at));
+  const launchPayload = session?.latest_device_delivery?.amnezia_vpn_key ?? null;
 
-  const botAppLink = telegramBotUsername ? `https://t.me/${telegramBotUsername}` : "";
+  const botAppLink = getSupportBotHref() ?? "";
 
   const confirmConnected = useCallback(async (): Promise<boolean> => {
     const devices = getActiveDevices(session);
@@ -120,14 +113,42 @@ export function OnboardingPage() {
     if (step.id === "install_app") {
       await withAdvance(async () => {
         await goToStep(2);
+        if (!hasActivePlan) {
+          navigate("/plan", { state: { fromOnboarding: true } });
+        }
       });
       return;
     }
 
     if (step.id === "get_config") {
+      if (!hasActivePlan) {
+        navigate("/plan", { state: { fromOnboarding: true } });
+        return;
+      }
+
+      if (!hasActiveDevice) {
+        navigate("/devices", { state: { fromOnboarding: true } });
+        return;
+      }
+
       await withAdvance(async () => {
         await goToStep(3);
-        navigate("/plan", { state: { fromOnboarding: true } });
+      });
+      return;
+    }
+
+    if (step.id === "open_vpn") {
+      if (!hasActiveDevice) {
+        navigate("/devices", { state: { fromOnboarding: true } });
+        return;
+      }
+
+      if (!hasDetectedActivity && launchPayload) {
+        openLink(launchPayload);
+      }
+      
+      await withAdvance(async () => {
+        await goToStep(4);
       });
       return;
     }
@@ -150,16 +171,18 @@ export function OnboardingPage() {
     confirmConnected,
     goToStep,
     hasActiveDevice,
+    hasActivePlan,
     isInsideTelegram,
+    launchPayload,
     navigate,
     openLink,
     step.id,
+    hasDetectedActivity,
     withAdvance,
     t,
   ]);
 
   const handleSkipForNow = useCallback(async () => {
-    if (!isLastStep) return;
     completedThisSessionRef.current = true;
     const result = await completeOnboarding();
     if (result?.done) {
@@ -168,7 +191,13 @@ export function OnboardingPage() {
       }
       if (botAppLink && !isInsideTelegram) openLink(botAppLink);
     }
-  }, [addToast, botAppLink, completeOnboarding, isInsideTelegram, isLastStep, openLink, t]);
+  }, [addToast, botAppLink, completeOnboarding, isInsideTelegram, openLink, t]);
+
+  useEffect(() => {
+    if (step.id === "get_config" && hasActivePlan && hasActiveDevice && !isAdvancing) {
+      void goToStep(3);
+    }
+  }, [step.id, hasActivePlan, hasActiveDevice, goToStep, isAdvancing]);
 
   const handleBack = useCallback(async () => {
     if (stepIndex <= 0) return;
@@ -177,59 +206,49 @@ export function OnboardingPage() {
     });
   }, [setOnboardingStep, stepIndex, withAdvance]);
 
-  const handleChoosePlan = useCallback(async () => {
-    await withAdvance(async () => {
-      await goToStep(3);
-      navigate("/plan", { state: { fromOnboarding: true } });
-    });
-  }, [goToStep, navigate, withAdvance]);
+
   const pageTitle = t("onboarding.page_title");
   const pageSubtitle =
     stepIndex === 0
-      ? t("onboarding.page_subtitle_intro", {
-          comma_name: displayName === t("onboarding.guest_name") ? "" : `, ${displayName}`,
-        })
+      ? t("onboarding.page_subtitle_intro")
       : step.id === "install_app"
         ? t("onboarding.page_subtitle_install")
-      : step.id === "get_config"
-        ? t("onboarding.page_subtitle_get_config")
-        : t("onboarding.page_subtitle_confirm");
+        : step.id === "get_config"
+          ? t("onboarding.page_subtitle_get_config")
+          : t("onboarding.page_subtitle_confirm");
 
   return (
-    <PageFrame
-      title={pageTitle}
-      subtitle={pageSubtitle}
-      className="onboarding-page"
-      hideTrailingAction
-    >
+    <PageScaffold>
+      <ModernHeader
+        title={pageTitle}
+        subtitle={pageSubtitle}
+        showSettings={false}
+        onBack={stepIndex > 0 ? () => void handleBack() : undefined}
+      />
       <OnboardingStepCard
-        stepIndex={stepIndex}
         step={step}
         onboardingError={onboardingError}
         appAlreadyInstalled={appAlreadyInstalled}
-        onOpenIos={() => openLink(IOS_APP_URL)}
-        onOpenAndroid={() => openLink(ANDROID_APP_URL)}
+        onOpenIos={() => openLink(AMNEZIA_VPN_IOS_URL)}
+        onOpenAndroid={() => openLink(AMNEZIA_VPN_ANDROID_URL)}
         onMarkInstalled={() => setAppAlreadyInstalled(true)}
-        onChoosePlan={() => void handleChoosePlan()}
-        choosePlanDisabled={isCompletingOnboarding || isAdvancing}
-        choosePlanLoadingLabel={t("onboarding.loading")}
-        choosePlanLabel={t("onboarding.choose_plan")}
+        onPrimaryAction={() => void handlePrimaryAction()}
+        isBusy={isCompletingOnboarding || isAdvancing}
+        hasActivePlan={hasActivePlan}
         hasActiveDevice={hasActiveDevice}
-        hasDetectedActivity={Boolean(session?.public_ip || activeDevices.some((d) => d.last_seen_handshake_at))}
+        hasDetectedActivity={hasDetectedActivity}
         detectedIp={session?.public_ip}
       />
 
-      <OnboardingBottomActions
-        stepIndex={stepIndex}
-        step={step}
-        isLastStep={isLastStep}
-        isConfigStep={isConfigStep}
-        hasActiveDevice={hasActiveDevice}
-        isBusy={isCompletingOnboarding || isAdvancing}
-        onBack={() => void handleBack()}
-        onPrimaryAction={() => void handlePrimaryAction()}
-        onSkipForNow={() => void handleSkipForNow()}
-      />
-    </PageFrame>
+      {(isLastStep || !hasActivePlan) && (
+        <div className="modern-footer-help">
+          <p className="modern-help-note">
+            <span className="modern-help-link" onClick={() => void handleSkipForNow()}>
+              {t("onboarding.skip_for_now")}
+            </span>
+          </p>
+        </div>
+      )}
+    </PageScaffold>
   );
 }

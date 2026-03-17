@@ -29,6 +29,10 @@ test.describe("Miniapp Device Issue Flow", () => {
     await expect(page.getByRole("heading", { name: /Devices/i })).toBeVisible({ timeout: 10000 });
 
     await page.getByRole("button", { name: /^Add device$/i }).click();
+    await page.getByRole("textbox", { name: /^Device name$/i }).fill("My iPhone");
+    await page.getByRole("button", { name: /^Continue$/i }).click();
+    await expect(page.getByText(/^Installation guide$/i)).toBeVisible({ timeout: 5000 });
+    await page.getByRole("button", { name: /^Create device$/i }).click();
 
     await expect(page.getByText(/^Config$/i)).toBeVisible({ timeout: 5000 });
     await expect(page.locator("pre.config-block")).toContainText("[Interface]");

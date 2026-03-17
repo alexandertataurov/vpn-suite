@@ -9,14 +9,14 @@ const VIEWPORTS = [
 ] as const;
 
 const ROUTES = [
-  { path: "/", readyText: /Mission Control|Tunnel health|Change Server/i },
+  { path: "/", readyText: /Access is ready|Access active|Restore access|Choose your plan/i },
   { path: "/plan", readyText: /Plan\s*&\s*Billing|Pro|Basic|No plans available|Could not load/i },
   { path: "/plan/checkout/plan-pro", readyText: /Checkout|Payment|Plan ID/i },
   { path: "/devices", readyText: /Devices|Active|Config|Add device|No devices yet/i },
   { path: "/servers", readyText: /Servers|Routing mode|Locations/i },
   { path: "/referral", readyText: /Referral|Referrals|Share link|Reward progress/i },
   { path: "/support", readyText: /Support|Troubleshooter|FAQ/i },
-  { path: "/settings", readyText: /Account|Profile and app controls|Plans\s*&\s*billing|Reset configs/i },
+  { path: "/settings", readyText: /Settings|Plan\s*&\s*billing|Help|Danger zone/i },
 ] as const;
 
 async function injectTelegram(page: Page) {

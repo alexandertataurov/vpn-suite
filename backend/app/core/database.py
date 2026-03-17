@@ -1,19 +1,23 @@
 """Async database engine and session for Postgres."""
 
-from collections.abc import AsyncGenerator
 import asyncio
-from typing import Dict
+from collections.abc import AsyncGenerator
 
 from sqlalchemy import event, text
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 
 from app.core.config import settings
 
 # Engines and session makers are keyed by the current event loop.
 # This ensures each asyncpg connection pool is only ever used from the
 # event loop that created it, preventing "Future attached to a different loop" errors.
-_engines_by_loop: Dict[int, AsyncEngine] = {}
-_session_makers_by_loop: Dict[int, async_sessionmaker[AsyncSession]] = {}
+_engines_by_loop: dict[int, AsyncEngine] = {}
+_session_makers_by_loop: dict[int, async_sessionmaker[AsyncSession]] = {}
 
 
 def _current_loop_key() -> int:

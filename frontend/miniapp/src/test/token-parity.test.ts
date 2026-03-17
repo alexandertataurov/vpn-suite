@@ -1,5 +1,5 @@
-import { BREAKPOINT_TOKENS, BREAKPOINT_VALUES, TYPOGRAPHY_THEME_VALUES, TYPOGRAPHY_TOKENS } from "@/design-system/tokens";
-import { getTokenCoverage, normalizeCssValue } from "@/design-system/tokens/runtime";
+import { BREAKPOINT_TOKENS, BREAKPOINT_VALUES, TYPOGRAPHY_THEME_VALUES, TYPOGRAPHY_TOKENS } from "@/design-system/core/tokens";
+import { getTokenCoverage, normalizeCssValue } from "@/design-system/core/tokens/runtime";
 import { loadDesignSystemCss } from "./utils/loadDesignSystemCss";
 
 describe("Design token CSS parity", () => {

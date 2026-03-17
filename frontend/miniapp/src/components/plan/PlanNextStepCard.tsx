@@ -1,9 +1,15 @@
-import { ButtonRow, MissionAlert, MissionChip, MissionPrimaryButton, MissionPrimaryLink, MissionSecondaryLink, PageCardSection } from "@/design-system";
+import {
+  ButtonRow,
+  CompactSummaryCard,
+  HelperNote,
+  MissionPrimaryButton,
+  MissionPrimaryLink,
+  MissionSecondaryLink,
+} from "@/design-system";
+import { useI18n } from "@/hooks";
 
 export interface PlanNextStepCardProps {
   title: string;
-  badgeLabel: string;
-  badgeTone: "neutral" | "blue" | "green" | "amber" | "red";
   alertTone: "info" | "success" | "warning" | "error";
   alertTitle: string;
   alertMessage: string;
@@ -17,8 +23,6 @@ export interface PlanNextStepCardProps {
 
 export function PlanNextStepCard({
   title,
-  badgeLabel,
-  badgeTone,
   alertTone,
   alertTitle,
   alertMessage,
@@ -29,14 +33,18 @@ export function PlanNextStepCard({
   secondaryTo,
   onPrimaryScrollAction,
 }: PlanNextStepCardProps) {
+  const { t } = useI18n();
+
   return (
-    <PageCardSection
+    <CompactSummaryCard
+      eyebrow={t("plan.next_step_eyebrow")}
       title={title}
-      action={<MissionChip tone={badgeTone} className="section-meta-chip">{badgeLabel}</MissionChip>}
-      sectionClassName="plan-billing-page__next-step-section stagger-2"
-      cardClassName="module-card plan-billing-page__next-step-card"
+      subtitle={alertTitle}
+      className="plan-billing-page__next-step-card stagger-6"
     >
-      <MissionAlert tone={alertTone} title={alertTitle} message={alertMessage} />
+      <HelperNote tone={alertTone === "error" ? "danger" : alertTone === "warning" ? "warning" : "info"}>
+        {alertMessage}
+      </HelperNote>
       <ButtonRow>
         {primaryTo ? (
           <MissionPrimaryLink to={primaryTo}>{primaryLabel}</MissionPrimaryLink>
@@ -51,6 +59,6 @@ export function PlanNextStepCard({
           </MissionSecondaryLink>
         ) : null}
       </ButtonRow>
-    </PageCardSection>
+    </CompactSummaryCard>
   );
 }

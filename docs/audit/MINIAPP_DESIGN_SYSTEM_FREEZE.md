@@ -50,7 +50,7 @@ New screens must compose from these building blocks; no one-off page-specific sy
 
 **Button**
 
-- Canonical button: `Button` (`design-system/components/buttons/Button.tsx`).
+- Canonical button: `Button` (`design-system/components/Button/`).
   - Variants: `primary`, `secondary`, `ghost`, `outline`, `danger`, `link`.
   - Sizes: `sm`, `md`, `lg`, `icon`.
   - Special `kind="connect"` for primary connection/setup CTAs.

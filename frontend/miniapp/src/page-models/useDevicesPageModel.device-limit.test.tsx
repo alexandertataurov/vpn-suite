@@ -1,4 +1,4 @@
-import { renderHook, act } from "@testing-library/react";
+import { renderHook, act, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { vi } from "vitest";
 import type { WebAppMeResponse } from "@vpn-suite/shared";
@@ -7,6 +7,7 @@ import { useDevicesPageModel } from "./useDevicesPageModel";
 const mockUseWebappToken = vi.fn();
 const mockUseOnlineStatus = vi.fn();
 const mockWebappPost = vi.fn();
+const mockWebappPatch = vi.fn();
 const mockGetPlans = vi.fn();
 const mockUseSession = vi.fn();
 const mockAddToast = vi.fn();
@@ -16,6 +17,7 @@ vi.mock("@/api/client", () => ({
   useWebappToken: () => mockUseWebappToken(),
   webappApi: {
     post: (...args: unknown[]) => mockWebappPost(...args),
+    patch: (...args: unknown[]) => mockWebappPatch(...args),
   },
 }));
 
@@ -79,6 +81,7 @@ describe("useDevicesPageModel device limit telemetry", () => {
     mockUseWebappToken.mockReturnValue("token");
     mockUseOnlineStatus.mockReturnValue(true);
     mockWebappPost.mockReset();
+    mockWebappPatch.mockReset();
     mockGetPlans.mockResolvedValue({ items: [] });
     mockAddToast.mockReset();
     mockTrack.mockReset();
@@ -156,5 +159,27 @@ describe("useDevicesPageModel device limit telemetry", () => {
         year: "numeric",
       }).format(new Date("2026-02-10T08:12:00Z")),
     );
+  });
+
+  it("keeps device issuance successful even if the post-issue rename fails", async () => {
+    mockWebappPost.mockResolvedValue({
+      device_id: "dev-2",
+      config_awg: "[Interface]\nPrivateKey = test",
+      peer_created: true,
+    });
+    mockWebappPatch.mockRejectedValue(new Error("rename failed"));
+
+    const { result } = renderHook(() => useDevicesPageModel(), { wrapper });
+
+    await act(async () => {
+      result.current.handleIssueDevice("My iPhone");
+    });
+
+    await waitFor(() => {
+      expect(mockWebappPost).toHaveBeenCalledWith("/webapp/devices/issue", {});
+      expect(mockWebappPatch).toHaveBeenCalledWith("/webapp/devices/dev-2", { device_name: "My iPhone" });
+      expect(mockAddToast).toHaveBeenCalledWith("Device added, but the name could not be saved.", "info");
+      expect(mockAddToast).toHaveBeenCalledWith("Device added", "success");
+    });
   });
 });

@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { ApiError, track, trackError, trackTiming, type WebAppMeResponse, type WebAppOnboardingState, type WebAppOnboardingStateRequest, type WebAppOnboardingStateResponse } from "@vpn-suite/shared";
 import { setWebappToken, useWebappToken, webappApi } from "../api/client";
 import { useSession } from "../hooks/useSession";
-import { webappQueryKeys } from "@/lib/query-keys/webapp.query-keys";
+import { webappQueryKeys } from "@/lib";
 import { authenticateWebApp } from "./authBootstrap";
 import {
   clearOnboardingResume,

@@ -21,3 +21,8 @@ export const buildId: string = (
   readEnv("VITE_BUILD_VERSION") ??
   "release"
 ).trim();
+
+/** Returns the bot t.me link or null. Eliminates repeated inline construction. */
+export function getSupportBotHref(): string | null {
+  return telegramBotUsername ? `https://t.me/${telegramBotUsername}` : null;
+}

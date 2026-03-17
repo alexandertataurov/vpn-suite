@@ -3,6 +3,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
+from types import SimpleNamespace
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -12,7 +13,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.security import create_webapp_session_token
 from app.main import app
-from app.models import EntitlementEvent, FunnelEvent, Plan, Subscription, User
+from app.models import Device, EntitlementEvent, FunnelEvent, Plan, Subscription, User
+from app.services.issued_config_service import persist_issued_configs
 from app.schemas.subscription import SubscriptionOut
 from app.services.subscription_lifecycle_events import (
     emit_access_blocked,
@@ -635,6 +637,343 @@ async def test_webapp_me_routes_connected_user_with_device_to_home(async_session
         payload = response.json()
         assert payload["routing"]["recommended_route"] == "/"
         assert payload["routing"]["reason"] == "connected_user"
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+
+
+@pytest.mark.asyncio
+async def test_webapp_me_includes_latest_device_delivery_when_awg_config_exists(
+    async_session: AsyncSession, monkeypatch
+) -> None:
+    now = datetime.now(timezone.utc)
+    tg_id = int(uuid.uuid4().int % 10_000_000_000)
+    user = User(tg_id=tg_id)
+    async_session.add(user)
+    await async_session.flush()
+
+    plan = Plan(
+        id=uuid.uuid4().hex[:32],
+        name="Pro",
+        duration_days=30,
+        price_currency="XTR",
+        price_amount=Decimal("100"),
+    )
+    async_session.add(plan)
+    await async_session.flush()
+
+    sub = Subscription(
+        id=uuid.uuid4().hex[:32],
+        user_id=user.id,
+        plan_id=plan.id,
+        valid_from=now - timedelta(days=1),
+        valid_until=now + timedelta(days=29),
+        device_limit=1,
+        status="active",
+        subscription_status="active",
+        access_status="enabled",
+        billing_status="paid",
+        renewal_status="auto_renew_on",
+    )
+    async_session.add(sub)
+    await async_session.flush()
+
+    device = Device(
+        id=uuid.uuid4().hex[:32],
+        user_id=user.id,
+        subscription_id=sub.id,
+        server_id="srv-1",
+        device_name="MacBook Pro",
+        public_key="pk",
+        allowed_ips="10.8.1.2/32",
+        issued_at=now - timedelta(hours=1),
+        last_connection_confirmed_at=now - timedelta(minutes=1),
+    )
+    async_session.add(device)
+    await async_session.flush()
+    await persist_issued_configs(
+        async_session,
+        device_id=device.id,
+        server_id=device.server_id,
+        config_awg="[Interface]\nPrivateKey = test\nAddress = 10.8.1.2/32\n[Peer]\nPublicKey = server\nAllowedIPs = 0.0.0.0/0\nEndpoint = 203.0.113.10:51820\n",
+        config_wg_obf=None,
+        config_wg=None,
+    )
+    await async_session.commit()
+
+    monkeypatch.setattr("app.api.v1.webapp.settings.public_domain", "downloads.example")
+    token = create_webapp_session_token(tg_id)
+
+    async def override_get_db():
+        yield async_session
+
+    app.dependency_overrides[get_db] = override_get_db
+    try:
+        async with AsyncClient(
+            transport=ASGITransport(app=app),
+            base_url="http://test",
+            timeout=5.0,
+        ) as client:
+            response = await client.get(
+                "/api/v1/webapp/me",
+                headers={"Authorization": f"Bearer {token}"},
+            )
+        assert response.status_code == 200, response.text
+        payload = response.json()
+        assert payload["latest_device_delivery"]["device_id"] == device.id
+        assert payload["latest_device_delivery"]["device_name"] == "MacBook Pro"
+        assert payload["latest_device_delivery"]["amnezia_vpn_key"].startswith("vpn://")
+        assert payload["latest_device_delivery"]["download_url"].startswith("https://downloads.example/d/")
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+
+
+@pytest.mark.asyncio
+async def test_webapp_me_includes_live_connection_from_recent_handshake(
+    async_session: AsyncSession, monkeypatch
+) -> None:
+    now = datetime.now(timezone.utc)
+    tg_id = int(uuid.uuid4().int % 10_000_000_000)
+    user = User(tg_id=tg_id)
+    async_session.add(user)
+    await async_session.flush()
+
+    plan = Plan(
+        id=uuid.uuid4().hex[:32],
+        name="Pro",
+        duration_days=30,
+        price_currency="XTR",
+        price_amount=Decimal("100"),
+    )
+    async_session.add(plan)
+    await async_session.flush()
+
+    sub = Subscription(
+        id=uuid.uuid4().hex[:32],
+        user_id=user.id,
+        plan_id=plan.id,
+        valid_from=now - timedelta(days=1),
+        valid_until=now + timedelta(days=29),
+        device_limit=1,
+        status="active",
+        subscription_status="active",
+        access_status="enabled",
+        billing_status="paid",
+        renewal_status="auto_renew_on",
+    )
+    async_session.add(sub)
+    await async_session.flush()
+
+    device = Device(
+        id=uuid.uuid4().hex[:32],
+        user_id=user.id,
+        subscription_id=sub.id,
+        server_id="srv-1",
+        device_name="MacBook Pro",
+        public_key="pk",
+        allowed_ips="10.8.1.2/32",
+        issued_at=now - timedelta(hours=1),
+    )
+    async_session.add(device)
+    await async_session.commit()
+
+    async def _fake_telemetry_bulk(_device_ids):
+        return {
+            device.id: SimpleNamespace(
+                handshake_latest_at=now - timedelta(seconds=30),
+                handshake_age_sec=30,
+            )
+        }
+
+    async def _fake_telemetry_last_updated():
+        return now
+
+    monkeypatch.setattr("app.api.v1.webapp.get_device_telemetry_bulk", _fake_telemetry_bulk)
+    monkeypatch.setattr("app.api.v1.webapp.get_telemetry_last_updated", _fake_telemetry_last_updated)
+
+    token = create_webapp_session_token(tg_id)
+
+    async def override_get_db():
+        yield async_session
+
+    app.dependency_overrides[get_db] = override_get_db
+    try:
+        async with AsyncClient(
+            transport=ASGITransport(app=app),
+            base_url="http://test",
+            timeout=5.0,
+        ) as client:
+            response = await client.get(
+                "/api/v1/webapp/me",
+                headers={"Authorization": f"Bearer {token}"},
+            )
+        assert response.status_code == 200, response.text
+        payload = response.json()
+        assert payload["live_connection"]["status"] == "connected"
+        assert payload["live_connection"]["source"] == "server_handshake"
+        assert payload["live_connection"]["device_id"] == device.id
+        assert payload["live_connection"]["handshake_age_sec"] == 30
+        assert payload["live_connection"]["telemetry_updated_at"] == now.isoformat()
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+
+
+@pytest.mark.asyncio
+async def test_webapp_me_marks_live_connection_unknown_when_telemetry_is_stale(
+    async_session: AsyncSession, monkeypatch
+) -> None:
+    now = datetime.now(timezone.utc)
+    tg_id = int(uuid.uuid4().int % 10_000_000_000)
+    user = User(tg_id=tg_id)
+    async_session.add(user)
+    await async_session.flush()
+
+    plan = Plan(
+        id=uuid.uuid4().hex[:32],
+        name="Pro",
+        duration_days=30,
+        price_currency="XTR",
+        price_amount=Decimal("100"),
+    )
+    async_session.add(plan)
+    await async_session.flush()
+
+    sub = Subscription(
+        id=uuid.uuid4().hex[:32],
+        user_id=user.id,
+        plan_id=plan.id,
+        valid_from=now - timedelta(days=1),
+        valid_until=now + timedelta(days=29),
+        device_limit=1,
+        status="active",
+        subscription_status="active",
+        access_status="enabled",
+        billing_status="paid",
+        renewal_status="auto_renew_on",
+    )
+    async_session.add(sub)
+    await async_session.flush()
+
+    device = Device(
+        id=uuid.uuid4().hex[:32],
+        user_id=user.id,
+        subscription_id=sub.id,
+        server_id="srv-1",
+        device_name="MacBook Pro",
+        public_key="pk",
+        allowed_ips="10.8.1.2/32",
+        issued_at=now - timedelta(hours=1),
+    )
+    async_session.add(device)
+    await async_session.commit()
+
+    async def _fake_telemetry_bulk(_device_ids):
+        return {
+            device.id: SimpleNamespace(
+                handshake_latest_at=now - timedelta(seconds=30),
+                handshake_age_sec=30,
+            )
+        }
+
+    async def _fake_telemetry_last_updated():
+        return now - timedelta(minutes=10)
+
+    monkeypatch.setattr("app.api.v1.webapp.get_device_telemetry_bulk", _fake_telemetry_bulk)
+    monkeypatch.setattr("app.api.v1.webapp.get_telemetry_last_updated", _fake_telemetry_last_updated)
+
+    token = create_webapp_session_token(tg_id)
+
+    async def override_get_db():
+        yield async_session
+
+    app.dependency_overrides[get_db] = override_get_db
+    try:
+        async with AsyncClient(
+            transport=ASGITransport(app=app),
+            base_url="http://test",
+            timeout=5.0,
+        ) as client:
+            response = await client.get(
+                "/api/v1/webapp/me",
+                headers={"Authorization": f"Bearer {token}"},
+            )
+        assert response.status_code == 200, response.text
+        payload = response.json()
+        assert payload["live_connection"]["status"] == "unknown"
+        assert payload["live_connection"]["device_id"] == device.id
+        assert payload["live_connection"]["last_handshake_at"] == (now - timedelta(seconds=30)).isoformat()
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+
+
+@pytest.mark.asyncio
+async def test_webapp_me_omits_latest_device_delivery_without_awg_config(
+    async_session: AsyncSession,
+) -> None:
+    now = datetime.now(timezone.utc)
+    tg_id = int(uuid.uuid4().int % 10_000_000_000)
+    user = User(tg_id=tg_id)
+    async_session.add(user)
+    await async_session.flush()
+
+    plan = Plan(
+        id=uuid.uuid4().hex[:32],
+        name="Pro",
+        duration_days=30,
+        price_currency="XTR",
+        price_amount=Decimal("100"),
+    )
+    async_session.add(plan)
+    await async_session.flush()
+
+    sub = Subscription(
+        id=uuid.uuid4().hex[:32],
+        user_id=user.id,
+        plan_id=plan.id,
+        valid_from=now - timedelta(days=1),
+        valid_until=now + timedelta(days=29),
+        device_limit=1,
+        status="active",
+        subscription_status="active",
+        access_status="enabled",
+        billing_status="paid",
+        renewal_status="auto_renew_on",
+    )
+    async_session.add(sub)
+    await async_session.flush()
+
+    device = Device(
+        id=uuid.uuid4().hex[:32],
+        user_id=user.id,
+        subscription_id=sub.id,
+        server_id="srv-1",
+        device_name="MacBook Pro",
+        public_key="pk",
+        allowed_ips="10.8.1.2/32",
+        issued_at=now - timedelta(hours=1),
+        last_connection_confirmed_at=now - timedelta(minutes=1),
+    )
+    async_session.add(device)
+    await async_session.commit()
+
+    token = create_webapp_session_token(tg_id)
+
+    async def override_get_db():
+        yield async_session
+
+    app.dependency_overrides[get_db] = override_get_db
+    try:
+        async with AsyncClient(
+            transport=ASGITransport(app=app),
+            base_url="http://test",
+            timeout=5.0,
+        ) as client:
+            response = await client.get(
+                "/api/v1/webapp/me",
+                headers={"Authorization": f"Bearer {token}"},
+            )
+        assert response.status_code == 200, response.text
+        payload = response.json()
+        assert payload["latest_device_delivery"] is None
     finally:
         app.dependency_overrides.pop(get_db, None)
 

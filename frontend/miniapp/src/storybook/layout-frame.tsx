@@ -15,7 +15,7 @@ export function MobileFrame({
     maxWidth: width,
     minWidth: 0,
     height: minHeight,
-    border: "10px solid #17181b",
+    border: "10px solid var(--color-border-strong)",
     borderRadius: 44,
     overflow: "hidden",
     position: "relative",

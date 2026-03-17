@@ -1,112 +1,97 @@
-import { useEffect, useRef, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { ApiError } from "@vpn-suite/shared";
-import { postAuth } from "@/api";
-import { setWebappToken } from "@/api/client";
-import { AccountCancellationModal, SessionMissing, SettingsAccountOverviewCard, SettingsLanguageMenuRow, SettingsReconnectCard, SubscriptionCancellationModal } from "@/components";
-import { PageFrame } from "@/design-system/layouts/PageFrame";
-import { FallbackScreen } from "@/design-system/patterns/FallbackScreen";
+import { useEffect, useState } from "react";
+
+import { useNavigate, useSearchParams } from "react-router-dom";
+import {
+  AccountCancellationModal,
+  SessionMissing,
+  SettingsAccountOverviewCard,
+  SettingsLanguageMenuRow,
+  SubscriptionCancellationModal,
+} from "@/components";
+import { getSupportBotHref } from "@/config/env";
+import {
+  IconCircleX,
+  IconCreditCard,
+  IconHelpCircle,
+  IconMessageCircle,
+  IconPencil,
+  IconRotateCw,
+  IconShield,
+  IconSmartphone,
+  IconTrash2,
+} from "@/design-system/icons";
 import {
   Button,
-  ButtonRow,
-  ConfirmDanger,
-  DataCell,
-  DataGrid,
-  FormField,
-  IconAlertTriangle,
-  IconCreditCard,
-  IconLock,
-  IconMessageCircle,
-  IconTrash2,
-  IconUsers,
-  MissionAlert,
-  MissionSecondaryButton,
+  FallbackScreen,
+  HelperNote,
+  Input,
   Modal,
-  PageCardSection,
+  ModernHeader,
+  PageScaffold,
   PageSection,
-  SettingsCard,
   SettingsActionRow,
-  SettingsDivider,
+  SettingsCard,
   Skeleton,
-  SupportActionList,
+  ToggleRow,
   useToast,
 } from "@/design-system";
-import { useTelegramHaptics } from "@/hooks/useTelegramHaptics";
-import { useTelegramWebApp } from "@/hooks/useTelegramWebApp";
+import { useOpenLink, useI18n, useTelegramWebApp, useUpdateSubscription } from "@/hooks";
 import { useSettingsPageModel } from "@/page-models";
-import { useI18n } from "@/hooks/useI18n";
-import { webappQueryKeys } from "@/lib/query-keys/webapp.query-keys";
 
 export function SettingsPage() {
-  const { impact } = useTelegramHaptics();
   const model = useSettingsPageModel();
-  const { t } = useI18n();
-  const queryClient = useQueryClient();
-  const { initData } = useTelegramWebApp();
+  const { openLink } = useOpenLink();
   const { addToast } = useToast();
-  const [profileEditing, setProfileEditing] = useState(false);
-  const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
-  const [resetConfigsOpen, setResetConfigsOpen] = useState(false);
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { initData } = useTelegramWebApp();
+  const { t } = useI18n();
   const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
-  const [reconnecting, setReconnecting] = useState(false);
-  const buildInfoPressTimer = useRef<number | null>(null);
-  const discountPercent = model.offers?.discount_percent;
-  const cancelOpen = model.cancelOpen;
-  const track = model.track;
-  const languageActiveId =
-    model.profileLocale === model.effectiveTelegramLocale ? "auto" : model.profileLocale;
+  const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
+  const supportHref = getSupportBotHref();
+  const autoRenewEnabled = model.activeSub?.auto_renew ?? true;
+  const [autoRenew, setAutoRenew] = useState(autoRenewEnabled);
+  const profileModalOpen = searchParams.get("modal") === "profile";
+  const autoRenewDescription =
+    model.renewalDate && autoRenew
+      ? t("plan.renewal_description_with_date", { date: model.renewalDate })
+      : model.activeSub
+        ? model.cancelPlanDescription
+        : t("settings.auto_renew_description");
+
+  const { mutate: updateAutoRenew, isPending: isAutoRenewUpdating } = useUpdateSubscription({
+    primarySubId: model.activeSub?.id ?? null,
+    onError: (message) => {
+      setAutoRenew(autoRenewEnabled);
+      addToast(message, "error");
+    },
+  });
 
   useEffect(() => {
-    if (cancelOpen && discountPercent && discountPercent > 0) {
-      track("retention_offer_shown", { discount_percent: discountPercent });
-    }
-  }, [cancelOpen, discountPercent, track]);
+    setAutoRenew(autoRenewEnabled);
+  }, [autoRenewEnabled]);
 
-  useEffect(() => {
-    return () => {
-      if (buildInfoPressTimer.current != null) {
-        window.clearTimeout(buildInfoPressTimer.current);
-      }
-    };
-  }, []);
+  const openProfileModal = () => {
+    const next = new URLSearchParams(searchParams);
+    next.set("modal", "profile");
+    setSearchParams(next, { replace: true });
+  };
+
+  const closeProfileModal = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete("modal");
+    setSearchParams(next, { replace: true });
+  };
 
   if (model.pageState.status === "empty") {
-    if (!initData) {
-      return <SessionMissing message={t("settings.logged_out_message")} />;
-    }
-
-    return (
-      <PageFrame title={t("settings.header_title")} className="page-shell--dense page-shell--sectioned">
-        <PageSection id="logged-out-section" className="page-section--compact settings-account-section">
-          <SettingsReconnectCard
-            title={t("settings.logged_out_title")}
-            message={t("settings.logged_out_message")}
-            ctaLabel={t("settings.logged_out_cta")}
-            loadingLabel={t("onboarding.loading")}
-            reconnecting={reconnecting}
-            onReconnect={() => {
-              setReconnecting(true);
-              postAuth(initData)
-                .then((res) => {
-                  setWebappToken(res.session_token, res.expires_in);
-                  queryClient.invalidateQueries({ queryKey: [...webappQueryKeys.me()] });
-                })
-                .catch((err) => {
-                  addToast(err instanceof ApiError ? err.message : t("common.could_not_reconnect"), "error");
-                })
-                .finally(() => setReconnecting(false));
-            }}
-          />
-        </PageSection>
-      </PageFrame>
-    );
+    return <SessionMissing message={initData ? "Your session expired. Reconnect to continue managing your VPN access." : "Reopen this mini app from Telegram to manage your access."} />;
   }
 
   if (model.pageState.status === "error") {
     return (
       <FallbackScreen
-        title={model.pageState.title ?? t("common.could_not_load_title")}
-        message={model.pageState.message ?? t("common.could_not_load_settings")}
+        title={model.pageState.title ?? "Could not load settings"}
+        message={model.pageState.message ?? "Please try again."}
         onRetry={model.pageState.onRetry}
       />
     );
@@ -114,383 +99,180 @@ export function SettingsPage() {
 
   if (model.pageState.status === "loading") {
     return (
-      <PageFrame title={model.header.title} className="page-shell--dense page-shell--sectioned">
-        <PageSection id="account-section" className="page-section--compact settings-account-section">
-          <SettingsCard className="module-card settings-account-card">
-            <div className="settings-account-banner settings-account-banner--loading">
-              <Skeleton width={40} height={40} className="settings-account-avatar-skeleton" />
-              <div className="settings-account-banner__copy">
-                <Skeleton width="48%" height={16} />
-                <Skeleton width="72%" height={13} />
-                <Skeleton width="44%" height={13} />
-              </div>
-            </div>
-            <DataGrid columns={2}>
-              <DataCell label={t("settings.account_overview_plan_key")} value="" loading />
-              <DataCell label={t("settings.account_overview_devices_key")} value="" loading />
-              <DataCell label={t("settings.renews_on_label")} value="" loading />
-              <DataCell label={t("settings.language_label")} value="" loading />
-            </DataGrid>
-          </SettingsCard>
-        </PageSection>
-        <PageSection id="app-section" title={t("settings.section_preferences")} className="page-section--compact">
-          <SettingsCard className="module-card settings-list-card">
-            <Skeleton className="settings-row-skeleton" />
-          </SettingsCard>
-        </PageSection>
-      </PageFrame>
+      <PageScaffold>
+        <ModernHeader title={t("settings.header_title")} subtitle={t("settings.header_subtitle")} showSettings={false} />
+        <div className="modern-content-pad">
+          <Skeleton width="60%" height={18} />
+          <Skeleton width="100%" height={72} />
+        </div>
+      </PageScaffold>
     );
   }
 
   return (
-    <PageFrame
-      title={model.header.title}
-      className="page-shell--dense page-shell--sectioned"
-    >
-      <PageSection id="account-section" className="stagger-1 page-section--compact settings-account-section">
+    <PageScaffold>
+      <ModernHeader
+        title={t("settings.header_title")}
+        subtitle={t("settings.header_subtitle")}
+        showSettings={false}
+        onBack={() => navigate("/")}
+      />
+
+      <PageSection className="page-section--compact stagger-1">
         <SettingsAccountOverviewCard
           initial={model.accountSummary.initial}
           name={model.accountSummary.name}
-          hasPlan={model.hasPlan}
-          planLabel={model.planLabel}
-          renewalCountdownLabel={model.renewalCountdownLabel}
-          deviceCountLabel={model.deviceCountLabel}
+          photoUrl={model.accountSummary.photoUrl}
+          eyebrowLabel={t("settings.account_section_title")}
+          statusLabel={model.accountStatusLabel}
+          renewalLabel={model.accountRenewalLabel}
+          planBadgeLabel={model.hasPlan ? model.planLabel : null}
           planActionTo={model.planActionTo}
-          noPlanLabel={t("settings.banner_no_plan_title")}
-          planCtaLabel={t("settings.plan_cta_cell")}
-          renewalDateValue={model.renewalDate ?? "--"}
-          languageLabel={t("settings.language_label")}
-          languageValue={model.languageSummary}
-          overviewPlanLabel={t("settings.account_overview_plan_key")}
-          overviewDevicesLabel={t("settings.account_overview_devices_key")}
-          overviewRenewsLabel={t("settings.renews_on_label")}
+          hasPlan={model.hasPlan}
+          planCtaLabel={t("plan.cta_choose_plan")}
         />
       </PageSection>
 
-      <PageSection id="app-section" title={t("settings.section_preferences")} className="stagger-2 page-section--compact">
+      <PageSection
+        id="profile"
+        title={t("settings.section_profile")}
+        className="page-section--compact stagger-2"
+      >
         <SettingsCard className="module-card settings-list-card">
+          <SettingsActionRow
+            icon={<IconPencil size={20} strokeWidth={1.6} />}
+            title={t("settings.edit_profile_title")}
+            description={t("settings.edit_profile_description")}
+            onClick={openProfileModal}
+          />
           <SettingsLanguageMenuRow
             open={languageMenuOpen}
             onOpenChange={setLanguageMenuOpen}
             menuId="settings-language-menu"
             menuAriaLabel={t("settings.language_aria")}
             title={t("settings.language_label")}
-            description={t("settings.language_helper")}
-            value={model.languageSummary}
-            activeId={languageActiveId}
+            description={model.languageSummary}
+            activeId={model.languageActiveId}
             options={model.profileLocaleOptions}
-            onTriggerClick={() => {
-              impact("light");
-              setLanguageMenuOpen((open) => !open);
-            }}
+            onTriggerClick={() => setLanguageMenuOpen((current) => !current)}
             onSelect={(id) => {
-              impact("light");
-              model.setProfileLocale(id);
-              model.handleUpdateLocale(id);
               setLanguageMenuOpen(false);
+              model.handleUpdateLocale(id);
             }}
           />
         </SettingsCard>
       </PageSection>
 
-      <PageSection id="actions-section" title={t("settings.section_account_links")} className="stagger-3 page-section--compact">
-        <SettingsCard className="module-card settings-quick-actions-card">
-          <div className="settings-quick-actions">
-            <SupportActionList
-              className="settings-quick-actions__list quick-action-grid"
-              items={[
-                {
-                  to: "/referral",
-                  title: t("settings.account_links_referral_title"),
-                  description: model.referralSummary,
-                  icon: <IconUsers size={16} strokeWidth={1.6} />,
-                },
-                {
-                  to: "/plan",
-                  title: t("settings.account_links_plan_title"),
-                  description: model.hasPlan && model.renewalDate
-                    ? `${t("settings.account_links_plan_description")} · ${model.renewalDate}`
-                    : t("settings.account_links_plan_description"),
-                  icon: <IconCreditCard size={16} strokeWidth={1.6} />,
-                },
-                {
-                  to: "/support",
-                  title: t("settings.account_links_support_title"),
-                  description: t("settings.account_links_support_description"),
-                  icon: <IconMessageCircle size={16} strokeWidth={1.6} />,
-                },
-              ]}
-              onItemClick={() => impact("light")}
+      <PageSection
+        id="plan-management"
+        title={t("settings.section_plan_billing")}
+        className="page-section--compact stagger-3"
+      >
+        <SettingsCard className="module-card settings-list-card">
+          <SettingsActionRow
+            icon={<IconCreditCard size={20} strokeWidth={1.6} />}
+            title={model.hasPlan ? t("settings.change_plan_title") : t("plan.cta_choose_plan")}
+            description={model.hasPlan ? t("settings.change_plan_description") : t("checkout.header_subtitle")}
+            onClick={() => navigate(model.planActionTo)}
+          />
+          <SettingsActionRow
+            icon={<IconSmartphone size={20} strokeWidth={1.6} />}
+            title={t("devices.header_title")}
+            description={model.activeDevices.length > 0 ? `${model.deviceCountLabel}. Get the latest config there.` : "Add your first device and get its config."}
+            onClick={() => navigate(model.devicesActionTo)}
+          />
+          {model.hasPlan ? (
+            <SettingsActionRow
+              icon={<IconRotateCw size={20} strokeWidth={1.6} />}
+              title={t("settings.cancel_plan_title")}
+              description={model.cancelPlanDescription}
+              tone="warning"
+              onClick={model.openCancelFlow}
             />
-          </div>
-        </SettingsCard>
-
-        <SettingsCard className="module-card settings-list-card">
-          <SettingsActionRow
-            icon={<IconUsers size={20} strokeWidth={1.6} />}
-            title={t("settings.profile_menu_edit")}
-            description={t("settings.profile_card_description")}
-            onClick={() => {
-              impact("light");
-              setProfileEditing(true);
+          ) : null}
+          <ToggleRow
+            name={t("settings.auto_renew_title")}
+            description={autoRenewDescription}
+            checked={autoRenew}
+            className="settings-toggle-row"
+            disabled={!model.activeSub || isAutoRenewUpdating}
+            disabledReason={!model.activeSub ? t("settings.auto_renew_disabled_reason") : undefined}
+            onChange={(next) => {
+              setAutoRenew(next);
+              updateAutoRenew(next);
             }}
           />
         </SettingsCard>
       </PageSection>
 
       <PageSection
-        id="subscription-section"
-        title={t("settings.subscription_section_title")}
-        description={t("settings.subscription_section_description")}
-        className="stagger-3 page-section--compact"
+        id="support"
+        title={t("settings.section_help")}
+        className="page-section--compact stagger-4"
       >
         <SettingsCard className="module-card settings-list-card">
-          {model.offers && !model.offersError && (model.offers.can_pause || model.offers.can_resume) ? (
-            <>
-              <SettingsActionRow
-                icon={<IconCreditCard size={20} strokeWidth={1.6} />}
-                title={model.offers.can_pause ? t("settings.pause_subscription") : t("settings.resume_subscription")}
-                description={t("settings.subscription_section_description")}
-                onClick={() => {
-                  impact("light");
-                  if (model.offers?.can_pause) {
-                    model.handlePause();
-                  } else {
-                    model.handleResume();
-                  }
-                }}
-              />
-              <SettingsDivider />
-            </>
-          ) : null}
-
+          <SettingsActionRow
+            icon={<IconShield size={20} strokeWidth={1.6} />}
+            title="Setup guide"
+            description="Manage devices and review connection instructions."
+            onClick={() => navigate("/devices")}
+          />
+          <SettingsActionRow
+            icon={<IconHelpCircle size={20} strokeWidth={1.6} />}
+            title={t("settings.faq_title")}
+            description={t("settings.faq_description")}
+            onClick={() => navigate(model.supportActionTo)}
+          />
+          <SettingsActionRow
+            icon={<IconMessageCircle size={20} strokeWidth={1.6} />}
+            title={t("settings.contact_support_title")}
+            description={t("settings.contact_support_description")}
+            actionIndicator="external"
+            onClick={() => {
+              if (supportHref) {
+                openLink(supportHref);
+              } else {
+                addToast("Support link is unavailable", "error");
+              }
+            }}
+          />
         </SettingsCard>
       </PageSection>
 
       <PageSection
-        id="session-section"
-        title={t("settings.session_section_title")}
-        className="stagger-5 page-section--compact settings-danger-section"
+        id="destructive"
+        title={t("settings.danger_section_title")}
+        className="page-section--compact settings-danger-section stagger-5"
       >
+        <HelperNote tone="warning">{t("settings.danger_warning")}</HelperNote>
         <SettingsCard className="module-card settings-list-card">
+          {model.activeDevices.length > 0 ? (
+            <SettingsActionRow
+              icon={<IconRotateCw size={20} strokeWidth={1.6} />}
+              title={t("settings.reset_configs_title")}
+              description={t("settings.reset_configs_description")}
+              tone="warning"
+              onClick={model.handleRevokeAll}
+              buttonProps={{ disabled: model.isRevoking }}
+            />
+          ) : null}
           <SettingsActionRow
-            icon={<IconLock size={20} strokeWidth={1.6} />}
+            icon={<IconCircleX size={20} strokeWidth={1.6} />}
             title={t("settings.logout_title")}
             description={t("settings.logout_description")}
-            onClick={() => {
-              impact("light");
-              model.handleLogout();
-            }}
+            tone="warning"
+            onClick={model.handleLogout}
             buttonProps={{ disabled: model.isLoggingOut }}
+          />
+          <SettingsActionRow
+            icon={<IconTrash2 size={20} strokeWidth={1.6} />}
+            title={t("settings.delete_account_title")}
+            description={t("settings.delete_account_description")}
+            tone="danger"
+            onClick={() => setDeleteAccountOpen(true)}
           />
         </SettingsCard>
       </PageSection>
-
-      <PageSection
-        id="danger-section"
-        title={t("settings.danger_section_title")}
-        className="stagger-6 page-section--compact settings-danger-section"
-      >
-        {model.activeDevices.length > 0 || (model.offers && !model.offersError) ? (
-          <SettingsCard className="module-card settings-list-card">
-            {model.activeDevices.length > 0 ? (
-              <SettingsActionRow
-                icon={<IconAlertTriangle size={20} strokeWidth={1.6} />}
-                title={t("settings.reset_configs_menu_title")}
-                description={t("settings.reset_configs_menu_description")}
-                tone="warning"
-                onClick={() => {
-                  impact("light");
-                  setResetConfigsOpen(true);
-                }}
-              />
-            ) : null}
-            {model.activeDevices.length > 0 && model.offers && !model.offersError ? <SettingsDivider /> : null}
-            {model.offers && !model.offersError ? (
-              <SettingsActionRow
-                icon={<IconCreditCard size={20} strokeWidth={1.6} />}
-                title={t("settings.cancel_subscription")}
-                description={
-                  model.renewalDate
-                    ? t("settings.subscription_access_until", { date: model.renewalDate })
-                    : t("settings.subscription_section_description")
-                }
-                tone="warning"
-                onClick={() => {
-                  impact("light");
-                  model.openCancelFlow();
-                }}
-              />
-            ) : null}
-          </SettingsCard>
-        ) : null}
-
-        {model.pageState.status === "ready" ? (
-          <SettingsCard className="module-card settings-list-card">
-            <SettingsActionRow
-              icon={<IconTrash2 size={20} strokeWidth={1.6} />}
-              title={t("settings.profile_menu_delete")}
-              description={t("settings.delete_account_confirm_message")}
-              tone="danger"
-              onClick={() => {
-                impact("light");
-                setDeleteAccountOpen(true);
-              }}
-            />
-          </SettingsCard>
-        ) : null}
-      </PageSection>
-
-      {model.offersLoading ? (
-        <PageCardSection cardClassName="module-card settings-loading-card">
-          <Skeleton className="skeleton-h-md" />
-          <Skeleton className="skeleton-h-sm" />
-        </PageCardSection>
-      ) : null}
-      {model.offersError ? (
-        <PageCardSection cardTone="red">
-          <MissionAlert
-            tone="error"
-            title={t("settings.offers_unavailable_title")}
-            message={t("settings.offers_unavailable_message")}
-          />
-          <ButtonRow>
-            <MissionSecondaryButton onClick={model.refetchOffers}>
-              {t("settings.offers_try_again")}
-            </MissionSecondaryButton>
-          </ButtonRow>
-        </PageCardSection>
-      ) : null}
-
-      <div
-        className="settings-build-footer"
-        role="button"
-        tabIndex={0}
-        aria-label={t("settings.build_info_copy_aria")}
-        onContextMenu={(event) => {
-          event.preventDefault();
-          void model.copyBuildInfo();
-        }}
-        onPointerDown={() => {
-          buildInfoPressTimer.current = window.setTimeout(() => {
-            void model.copyBuildInfo();
-            buildInfoPressTimer.current = null;
-          }, 600);
-        }}
-        onPointerUp={() => {
-          if (buildInfoPressTimer.current != null) {
-            window.clearTimeout(buildInfoPressTimer.current);
-            buildInfoPressTimer.current = null;
-          }
-        }}
-        onPointerCancel={() => {
-          if (buildInfoPressTimer.current != null) {
-            window.clearTimeout(buildInfoPressTimer.current);
-            buildInfoPressTimer.current = null;
-          }
-        }}
-        onKeyDown={(event) => {
-          if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            void model.copyBuildInfo();
-          }
-        }}
-      >
-        <div>{model.buildLabel}</div>
-        <div>{model.buildProtocolLabel}</div>
-      </div>
-
-      <Modal
-        open={profileEditing}
-        onClose={() => !model.isSavingProfile && setProfileEditing(false)}
-        title={t("settings.profile_card_title_editing")}
-        footer={
-          <>
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => setProfileEditing(false)}
-              disabled={model.isSavingProfile}
-            >
-              {t("common.cancel")}
-            </Button>
-            <Button
-              type="button"
-              variant="primary"
-              onClick={() => {
-                model.saveProfile();
-                setProfileEditing(false);
-              }}
-              disabled={model.isSavingProfile}
-            >
-              {model.isSavingProfile ? t("onboarding.loading") : t("settings.save_profile")}
-            </Button>
-          </>
-        }
-      >
-        <FormField
-          label={t("settings.field_name")}
-          input={
-            <input
-              type="text"
-              className="input field-input"
-              value={model.profileDisplayName}
-              onChange={(e) => model.setProfileDisplayName(e.target.value)}
-              placeholder={t("settings.field_name_placeholder")}
-              aria-label={t("settings.field_name_aria")}
-            />
-          }
-        />
-        <SettingsDivider />
-        <FormField
-          label={t("settings.field_email")}
-          input={
-            <input
-              type="email"
-              className="input field-input"
-              value={model.profileEmail}
-              onChange={(e) => model.setProfileEmail(e.target.value)}
-              placeholder={t("settings.field_email_placeholder")}
-              aria-label={t("settings.field_email")}
-            />
-          }
-        />
-        <SettingsDivider />
-        <FormField
-          label={t("settings.field_phone")}
-          input={
-            <input
-              type="tel"
-              className="input field-input"
-              value={model.profilePhone}
-              onChange={(e) => model.setProfilePhone(e.target.value)}
-              placeholder={t("settings.field_phone_placeholder")}
-              aria-label={t("settings.field_phone")}
-            />
-          }
-        />
-      </Modal>
-
-      <ConfirmDanger
-        open={resetConfigsOpen}
-        onClose={() => !model.isRevoking && setResetConfigsOpen(false)}
-        title={t("settings.danger_reset_confirm_title")}
-        message={t("settings.danger_reset_confirm_message")}
-        confirmLabel={t("settings.danger_reset_confirm_label")}
-        cancelLabel={t("settings.danger_reset_cancel_label")}
-        confirmTokenRequired
-        confirmTokenLabel={t("settings.danger_reset_token_label")}
-        expectedConfirmValue="RESET"
-        onConfirm={() => model.handleRevokeAll()}
-        loading={model.isRevoking}
-      />
-
-      <AccountCancellationModal
-        open={deleteAccountOpen}
-        onClose={() => !model.isDeletingAccount && setDeleteAccountOpen(false)}
-        onConfirm={model.handleDeleteAccount}
-        loading={model.isDeletingAccount}
-      />
 
       <SubscriptionCancellationModal
         open={model.cancelOpen}
@@ -511,6 +293,77 @@ export function SettingsPage() {
             offer_accepted: false,
           })}
       />
-    </PageFrame>
+
+      <AccountCancellationModal
+        open={deleteAccountOpen}
+        onClose={() => !model.isDeletingAccount && setDeleteAccountOpen(false)}
+        onConfirm={model.handleDeleteAccount}
+        loading={model.isDeletingAccount}
+      />
+
+      <Modal
+        open={profileModalOpen}
+        onClose={() => {
+          if (!model.isSavingProfile) closeProfileModal();
+        }}
+        title={t("settings.edit_profile_title")}
+        description={t("settings.profile_modal_description")}
+        className="settings-profile-modal"
+        footer={(
+          <>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={closeProfileModal}
+              disabled={model.isSavingProfile}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              onClick={() => {
+                void model.saveProfile().then(closeProfileModal).catch(() => { });
+              }}
+              disabled={model.isSavingProfile}
+              status={model.isSavingProfile ? "loading" : "idle"}
+              statusText="Saving…"
+            >
+              Save profile
+            </Button>
+          </>
+        )}
+      >
+        <div className="settings-profile-modal__body">
+          <p className="settings-profile-modal__hint">
+            {t("settings.profile_modal_hint")}
+          </p>
+          <Input
+            type="text"
+            label="Name"
+            value={model.profileDisplayName}
+            onChange={(event) => model.setProfileDisplayName(event.target.value)}
+            placeholder="Your name"
+            autoComplete="name"
+          />
+          <Input
+            type="email"
+            label="Email"
+            value={model.profileEmail}
+            onChange={(event) => model.setProfileEmail(event.target.value)}
+            placeholder="you@example.com"
+            autoComplete="email"
+          />
+          <Input
+            type="tel"
+            label="Phone"
+            value={model.profilePhone}
+            onChange={(event) => model.setProfilePhone(event.target.value)}
+            placeholder="+1 234 567 8900"
+            autoComplete="tel"
+          />
+        </div>
+      </Modal>
+    </PageScaffold>
   );
 }

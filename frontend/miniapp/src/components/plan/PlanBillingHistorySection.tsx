@@ -1,5 +1,6 @@
-import { ButtonRow, ListCard, ListRow, MissionSecondaryLink, PageSection } from "@/design-system";
-import { useI18n } from "@/hooks/useI18n";
+import { IconFileText } from "@/design-system/icons";
+import { MissionSecondaryLink, PageSection, SettingsActionRow, SettingsCard } from "@/design-system";
+import { useI18n } from "@/hooks";
 
 export interface PlanBillingHistoryItem {
   id: string;
@@ -30,29 +31,50 @@ export function PlanBillingHistorySection({
   return (
     <PageSection
       title={t("plan.payment_history_title")}
-      className="plan-billing-page__secondary-section stagger-6"
+      className="plan-billing-page__secondary-section stagger-5"
     >
-      <ListCard title={t("plan.payment_history_title")}>
+      <SettingsCard className="module-card settings-list-card billing-history-list-card">
         {loading ? (
           <>
-            <ListRow title={t("plan.payment_history_loading")} />
-            <ListRow title={t("plan.payment_history_loading")} />
+            <SettingsActionRow
+              icon={<IconFileText size={18} strokeWidth={1.7} />}
+              title={t("plan.payment_history_loading")}
+              actionIndicator="none"
+            />
+            <SettingsActionRow
+              icon={<IconFileText size={18} strokeWidth={1.7} />}
+              title={t("plan.payment_history_loading")}
+              actionIndicator="none"
+            />
           </>
         ) : error ? (
-          <ListRow title={t("plan.payment_history_error")} />
+          <SettingsActionRow
+            icon={<IconFileText size={18} strokeWidth={1.7} />}
+            title={t("plan.payment_history_error")}
+            actionIndicator="none"
+          />
+        ) : items.length === 0 ? (
+          <SettingsActionRow
+            icon={<IconFileText size={18} strokeWidth={1.7} />}
+            title={t("plan.payment_history_empty")}
+            description={t("plan.payment_history_empty_message")}
+            actionIndicator="none"
+          />
         ) : (
           items.map((item) => (
-            <ListRow
+            <SettingsActionRow
               key={item.id}
+              icon={<IconFileText size={18} strokeWidth={1.7} />}
               title={item.title}
-              subtitle={item.subtitle}
-              right={<span className="miniapp-tnum">{item.amount}</span>}
+              description={item.subtitle}
+              value={item.amount}
+              actionIndicator="none"
             />
           ))
         )}
-      </ListCard>
+      </SettingsCard>
       {canExpand ? (
-        <ButtonRow>
+        <div className="plan-billing-page__history-actions">
           <MissionSecondaryLink
             to="#"
             onClick={(event) => {
@@ -62,7 +84,7 @@ export function PlanBillingHistorySection({
           >
             {expanded ? t("plan.payment_history_show_recent") : t("plan.payment_history_view_all")}
           </MissionSecondaryLink>
-        </ButtonRow>
+        </div>
       ) : null}
     </PageSection>
   );

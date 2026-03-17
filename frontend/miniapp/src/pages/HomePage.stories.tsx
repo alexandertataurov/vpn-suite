@@ -2,6 +2,8 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { Route } from "react-router-dom";
 import { HomePage } from "./Home";
 import {
+  connectedScenario,
+  emptyDevicesScenario,
   PageSandbox,
   expiredScenario,
   loadingSessionScenario,
@@ -29,6 +31,22 @@ type Story = StoryObj<typeof meta>;
 export const ActiveSubscription: Story = {
   render: () => (
     <PageSandbox scenario={readyScenario} initialEntries={["/"]}>
+      <Route path="/" element={<HomePage />} />
+    </PageSandbox>
+  ),
+};
+
+export const AccessReady: Story = {
+  render: () => (
+    <PageSandbox scenario={connectedScenario} initialEntries={["/"]}>
+      <Route path="/" element={<HomePage />} />
+    </PageSandbox>
+  ),
+};
+
+export const NoDevicesYet: Story = {
+  render: () => (
+    <PageSandbox scenario={emptyDevicesScenario} initialEntries={["/"]}>
       <Route path="/" element={<HomePage />} />
     </PageSandbox>
   ),

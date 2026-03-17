@@ -250,6 +250,7 @@ services:
 
   prometheus:
     <<: [*monitoring_default, *resource_large]
+    mem_limit: "${MEM_PROMETHEUS:-512m}"
     image: prom/prometheus@sha256:f6639335d34a77d9d9db382b92eeb7fc00934be8eae81dbc03b31cfe90411a94
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
@@ -291,6 +292,7 @@ services:
 
   cadvisor:
     <<: [*monitoring_default, *resource_small]
+    mem_limit: "${MEM_CADVISOR:-256m}"
     image: gcr.io/cadvisor/cadvisor:v0.52.0
     command:
       - "--docker_only=true"
@@ -349,6 +351,7 @@ services:
 
   loki:
     <<: [*monitoring_default, *resource_medium]
+    mem_limit: "${MEM_LOKI:-384m}"
     image: grafana/loki@sha256:09a53b4a4ff81ffcd8f13886df19d33fac7a8d3aaf952e3c7e66cbade5b2fc31
     user: "0"
     command:

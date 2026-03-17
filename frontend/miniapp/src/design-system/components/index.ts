@@ -8,8 +8,15 @@
 export { Display, H1, H2, H3, Body, Caption } from "./typography";
 
 // —— Buttons ——
-export { Button, getButtonClassName } from "./buttons/Button";
-export type { ButtonVariant, ButtonSize, ButtonTone, ButtonProps } from "./buttons/Button";
+export { Button, ButtonPrimitive, getButtonClassName } from "./Button";
+export type {
+  ButtonVariant,
+  ButtonSize,
+  ButtonTone,
+  ButtonStatus,
+  ButtonProps,
+  ButtonPrimitiveProps,
+} from "./Button";
 
 // —— Forms ——
 export { Field } from "./forms/Field";

@@ -31,7 +31,7 @@ Use this summary for targeted polish prompts (UI visuals, spacing, animations, r
 | **Virtualization** | @tanstack/react-virtual | — |
 | **Animations** | framer-motion (BootSequence, ServersBulkToolbar), CSS keyframes (utilities.css `.animate-in`), Tailwind `animate-spin` | CSS only (transitions in buttons/inputs); no animation library |
 | **Icons** | lucide-react | lucide-react |
-| **Styling** | **Dual:** (1) Design system CSS — `admin.css` imports 50+ files from `design-system/` (tokens, base, primitives, table, layout, data-display, feedback, navigation, console, typography, utilities). (2) Tailwind — `tailwind.css` (base/components/utilities), `tailwind-merge` via `shared/utils/cn.ts`. No CSS modules; BEM-like `.ds-*` and component-specific classes. | **Single:** Plain CSS — `miniapp.css` + `styles/miniapp-*.css`, `shared-inline/theme/tokens.css` → `styles/miniapp-tokens.css`. Token-driven; no Tailwind, no CSS modules. Shared-inline UI styles in `shared-inline/ui/styles/` (buttons, inputs, card, modal-drawer, etc.). |
+| **Styling** | **Dual:** (1) Design system CSS — `admin.css` imports 50+ files from `design-system/` (tokens, base, primitives, table, layout, data-display, feedback, navigation, console, typography, utilities). (2) Tailwind — `tailwind.css` (base/components/utilities), `tailwind-merge` via `shared/utils/cn.ts`. No CSS modules; BEM-like `.ds-*` and component-specific classes. | **Single:** Plain CSS — `miniapp.css` + `styles/miniapp-*.css`, `design-system/styles/tokens/base.css` + `theme/consumer.css`. Token-driven; no Tailwind, no CSS modules. Design-system styles in `design-system/styles/content/` (buttons, inputs, card, modal-drawer, etc.). |
 | **Theme** | `@vpn-suite/shared/theme` (ThemeProvider); themes: dark, dim, light; key `vpn-suite-admin-theme` | Same ThemeProvider; themes: consumer-light, consumer-dark; key `vpn-suite-miniapp-theme` |
 | **Other** | cmdk (command palette), Sentry | Sentry, Telegram WebApp SDK (via hooks) |
 
@@ -70,12 +70,12 @@ Use this summary for targeted polish prompts (UI visuals, spacing, animations, r
 ### Miniapp
 - **Layout:** `TabbedShellLayout` (header + main + bottom nav with tabs), `StackFlowLayout` (full-height scroll). `MiniappLayout.tsx` defines both; tabs: Home, Devices, Plan, Support, Account.
 - **Bootstrap:** `BootstrapController.tsx`, `useBootstrapMachine.ts` — splash, onboarding, session loading, error screens.
-- **UI:** `shared-inline/ui/` + `src/ui/` — Button, InlineAlert, Skeleton, PageScaffold, ActionRow, etc.; pages use `@/components` and `../ui`.
+- **UI:** `design-system/` — Button, InlineAlert, Skeleton, PageScaffold, ActionRow, etc.; pages use `@/design-system` and `@/components`.
 - **Pages:** Self-contained; use `useSession`, `useWebappToken`, shared components (SessionMissing, FallbackScreen, DeviceCard, etc.).
 
 ### Shared (design / code)
 - **Admin:** `shared/` under admin (theme, api-client, types) + design-system.
-- **Miniapp:** `shared-inline/` — theme (tokens), api-client (create-client, getBaseUrl), types (api-error, WebApp types), ui (re-exports), icons. No separate shared package; aliased as `@vpn-suite/shared/*`.
+- **Miniapp:** `design-system/` + `lib/` — theme (tokens), api-client via `@vpn-suite/shared`, types, icons (`lib/icons.ts`). Design-system at `@ds` or `@/design-system`.
 
 ---
 
@@ -124,7 +124,7 @@ Use this summary for targeted polish prompts (UI visuals, spacing, animations, r
 - **Admin:** `OperatorServerTable.tsx`, `HealthBar.tsx`, `ServerRowDrawer.tsx`, `OperatorDashboardContent.tsx`, `Revenue.tsx`, `DeviceDetailDrawer.tsx`, `ConfigContentModal.tsx`, `DashboardSettings.tsx`, `ConnectionNodesSection.tsx` — reduce inline styles and align to tokens.
 - **Admin layout:** `Shell.css`, `Operator.css` — responsive and container-query behavior; `NavRail`/sidebar collapse animation.
 - **Miniapp:** `miniapp.css` / `miniapp-layout.css` — spacing and responsive rules; `Home.tsx`, `Plan.tsx`, `Checkout.tsx`, `Devices.tsx` — layout and CTA sizing.
-- **Shared:** `design-system/primitives/Button.css`, `design-system/feedback/Modal.css`, `design-system/feedback/Drawer.css` — transitions and focus; miniapp `shared-inline/ui` button/input styles — align with tokens.
+- **Shared:** `design-system/primitives/Button.css`, `design-system/feedback/Modal.css`, `design-system/feedback/Drawer.css` — transitions and focus; miniapp `design-system/styles/content/` button/input styles — align with tokens.
 
 ---
 

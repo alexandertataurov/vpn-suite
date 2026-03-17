@@ -19,7 +19,7 @@ npx tsc --noEmit
 
 **Spec:** Zero `#[0-9a-fA-F]{3,6}` or `rgb(` or `rgba(` outside token definitions.
 
-**Result:** 174 matches across design-system tokens, Badge.css, Button.css, charts/theme, shared-inline theme, docs.
+**Result:** 174 matches across design-system tokens, Badge.css, Button.css, charts/theme, design-system theme, docs.
 
 **Target:** 0 outside token files
 
@@ -29,7 +29,7 @@ npx tsc --noEmit
 
 **Spec:** Zero `<table>`, `<thead>`, `<tbody>` — use DataGrid.
 
-**Result:** 39 matches across 17 files: Servers.tsx, OperatorServerTable, UserSessionsTable, PromoCampaigns, CohortAnalytics, ChurnPrediction, PricingEngine, RetentionAutomation, AbuseRisk, PaymentsMonitor, TableSection.stories, shared-inline Table/VirtualTable.
+**Result:** 39 matches across 17 files: Servers.tsx, OperatorServerTable, UserSessionsTable, PromoCampaigns, CohortAnalytics, ChurnPrediction, PricingEngine, RetentionAutomation, AbuseRisk, PaymentsMonitor, TableSection.stories, design-system Table/VirtualTable.
 
 **Target:** 0 in pages/components
 
@@ -47,7 +47,7 @@ npx tsc --noEmit
 
 **Spec:** Zero on UI elements.
 
-**Result:** 36 files (design-system, styles/, shared-inline)
+**Result:** 36 files (design-system, styles/)
 
 **Target:** 0
 

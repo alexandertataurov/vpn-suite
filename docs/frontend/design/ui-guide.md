@@ -7,7 +7,7 @@ Admin UI uses primitives from `frontend/admin/src/design-system/` and token-base
 ## Tokens
 
 Source (admin): `frontend/admin/src/design-system/tokens/tokens.css`  
-Source (miniapp): `frontend/miniapp/src/shared-inline/theme/tokens.css`
+Source (miniapp): `frontend/miniapp/src/design-system/styles/tokens/base.css`, `theme/consumer.css`
 
 - **Colors**: `--color-text-primary`, `--color-text-secondary`, `--color-surface`, `--color-border`, etc.
 - **Spacing**: `--spacing-1` … `--spacing-64`, `--spacing-sm`, `--spacing-md`, `--spacing-lg`

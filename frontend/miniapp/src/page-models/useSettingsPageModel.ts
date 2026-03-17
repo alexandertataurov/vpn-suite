@@ -8,14 +8,13 @@ import {
   type WebAppReferralStatsResponse,
   type WebAppSubscriptionOffersResponse,
 } from "@vpn-suite/shared";
-import { useSession } from "@/hooks/useSession";
+import { useSession } from "@/hooks";
 import { useTelegramInitData } from "@/hooks/telegram/useTelegramInitData";
 import { useWebappToken, webappApi } from "@/api/client";
-import { useTelemetry } from "@/hooks/useTelemetry";
-import { useTrackScreen } from "@/hooks/useTrackScreen";
+import { useTelemetry, useTrackScreen } from "@/hooks";
 import { useToast } from "@/design-system";
-import { webappQueryKeys } from "@/lib/query-keys/webapp.query-keys";
-import { useI18n } from "@/hooks/useI18n";
+import { webappQueryKeys } from "@/lib";
+import { useI18n } from "@/hooks";
 import { setWebappToken } from "@/api/client";
 import { appVersion, buildId } from "@/config/env";
 import type { StandardPageHeader, StandardPageState } from "./types";
@@ -261,9 +260,9 @@ export function useSettingsPageModel() {
 
   const effectiveTelegramLocale = resolveTelegramLocale(tgLanguageCode);
 
-  const saveProfile = useCallback(() => {
+  const saveProfile = useCallback(async () => {
     const localeToSend = profileLocale === "auto" ? resolveTelegramLocale(tgLanguageCode) : profileLocale;
-    updateProfileMutation.mutate({
+    return updateProfileMutation.mutateAsync({
       display_name: profileDisplayName.trim() || undefined,
       email: profileEmail.trim() || undefined,
       phone: profilePhone.trim() || undefined,
@@ -289,7 +288,9 @@ export function useSettingsPageModel() {
         ? t("settings.renews_tomorrow")
         : t("settings.renews_in_days", { count: renewalDays })
     : t("settings.banner_no_plan_title");
-  const deviceCountLabel = t("settings.device_count_active", { count: activeDevices.length });
+  const deviceCountLabel = activeDevices.length === 1
+    ? t("settings.device_count_active_one", { count: activeDevices.length })
+    : t("settings.device_count_active_other", { count: activeDevices.length });
   const totalReferrals = referralStats?.total_referrals ?? 0;
   const activeReferrals = referralStats?.active_referrals ?? 0;
   const referralSummary =
@@ -378,6 +379,17 @@ export function useSettingsPageModel() {
       ? `${t("settings.language_auto")} → ${resolvedLocaleLabel}`
       : profileLocaleOptions.find((option) => option.id === languageActiveId)?.label ??
         resolvedLocaleLabel;
+  const accountStatusLabel = activeSub
+    ? `${t("settings.plan_active_label")} · ${deviceCountLabel}`
+    : t("settings.banner_no_plan_title");
+  const accountRenewalLabel = activeSub
+    ? renewalDate
+      ? t("settings.renewal_summary_date", { date: renewalDate })
+      : renewalCountdownLabel
+    : t("settings.summary_no_plan_hint");
+  const cancelPlanDescription = renewalDate
+    ? t("settings.cancel_plan_description_until", { date: renewalDate })
+    : t("settings.cancel_plan_description_generic");
 
   const closeCancelFlow = useCallback(() => {
     setCancelOpen(false);
@@ -402,12 +414,17 @@ export function useSettingsPageModel() {
     handleUpdateLocale,
     profileIncomplete,
     profileLocaleOptions,
+    languageActiveId,
     effectiveTelegramLocale,
     languageSummary,
+    accountStatusLabel,
+    accountRenewalLabel,
+    cancelPlanDescription,
     offers,
     offersLoading,
     offersError,
     planLabel,
+    activeSub,
     renewalDate,
     renewalCountdownLabel,
     hasPlan: Boolean(activeSub),

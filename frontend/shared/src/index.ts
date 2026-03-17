@@ -95,6 +95,8 @@ export type {
   WebAppServerItem,
   WebAppServersResponse,
   WebAppSubscriptionOffersResponse,
+  UserAccessResponse,
+  UserAccessStatus,
   WebAppUsagePoint,
   WebAppUsageResponse,
 } from "./types/webapp";

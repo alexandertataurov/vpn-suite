@@ -594,6 +594,19 @@ The page composes patterns and components without duplicating layout logic.
 
 ---
 
+# Legacy CSS Migration
+
+The miniapp uses a **hybrid architecture**: React components provide API consistency while many abstractions resolve into legacy class-driven shell/content CSS.
+
+**Canonical legacy classes** (still in use; components wrap these):
+
+- `styles/shell/frame.css`: `.btn`, `.btn-primary`, `.btn-secondary`, `.btn-row`, `.btn-row-auto`, `.modal-footer`, `.miniapp-shell` button variants
+- `styles/content/library.css`: `.page-hd`, `.page-title`, `.page-hd-badge`, `.stagger-*`, `.card`, `.module-card`, `.data-grid`, `.form-row`, `.state-alert`, `.inline-alert`
+
+**Migration direction:** Move from raw class semantics toward component-owned variants and recipe-owned structure. New work should prefer design-system primitives, components, and patterns. When touching legacy classes, document whether they are canonical (long-term) or transitional (candidates for migration).
+
+---
+
 # Summary
 
 A maintainable React design system requires strict layering.

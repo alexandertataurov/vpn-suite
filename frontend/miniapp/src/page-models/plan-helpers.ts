@@ -156,6 +156,12 @@ export function periodLabelForHero(durationDays: number): string {
   return "Monthly";
 }
 
+export function periodLabelForHeroLocalized(durationDays: number, locale: "en" | "ru" = "en"): string {
+  if (durationDays >= LIFETIME_DURATION_THRESHOLD) return translate(locale, "plan.period_lifetime");
+  if (durationDays > YEARLY_DURATION_THRESHOLD) return translate(locale, "plan.period_annual");
+  return translate(locale, "plan.period_monthly");
+}
+
 export function usageToneFromPercent(percent: number): UsageTone {
   if (percent >= 100) return "crit";
   if (percent >= 80) return "warn";
@@ -213,8 +219,6 @@ export interface NextStepCardConfig {
   primaryActionType?: "scrollToPlans";
   secondaryLabel?: string;
   secondaryTo?: string;
-  badgeTone: "blue" | "amber" | "green" | "neutral";
-  badgeLabel: string;
 }
 
 export function buildNextStepCard(params: {
@@ -229,43 +233,37 @@ export function buildNextStepCard(params: {
       description: "Choose a plan first, then continue setup.",
       alertTone: "info",
       alertTitle: "No active subscription",
-      alertMessage: "Your account is signed in, but access starts only after plan activation.",
+      alertMessage: "Choose a plan to activate access before you add a device.",
       primaryLabel: "Choose plan",
       primaryActionType: "scrollToPlans" as const,
       secondaryLabel: "Contact support",
       secondaryTo: "/support",
-      badgeTone: "blue",
-      badgeLabel: "Step 1",
     };
   }
   if (routeReason === "no_device") {
     return {
       title: "Next step",
-      description: "Issue your first device to continue setup.",
+      description: "Add your first device to continue setup.",
       alertTone: "warning",
-      alertTitle: "Setup is not complete",
-      alertMessage: "You still need a device config before you can connect.",
+      alertTitle: "Add your first device",
+      alertMessage: "Open Devices to create a config you can import in AmneziaVPN.",
       primaryLabel: "Add device",
       primaryTo: recommendedRoute,
       secondaryLabel: "Contact support",
       secondaryTo: "/support",
-      badgeTone: "amber",
-      badgeLabel: "Step 2",
     };
   }
   if (routeReason === "connection_not_confirmed") {
     return {
       title: "Next step",
-      description: "Finish setup confirmation for the issued device.",
+      description: "Finish setup for your latest config.",
       alertTone: "warning",
-      alertTitle: "Setup confirmation pending",
-      alertMessage: "Finish the setup check after opening the VPN app with the issued config.",
+      alertTitle: "Connect in AmneziaVPN",
+      alertMessage: "Import the issued config in AmneziaVPN, connect there, then return here if needed.",
       primaryLabel: "View setup",
       primaryTo: recommendedRoute,
       secondaryLabel: "Manage devices",
       secondaryTo: "/devices",
-      badgeTone: "amber",
-      badgeLabel: "Step 3",
     };
   }
   if (routeReason === "grace" || routeReason === "expired_with_grace") {
@@ -279,8 +277,6 @@ export function buildNextStepCard(params: {
       primaryTo: recommendedRoute,
       secondaryLabel: "Contact support",
       secondaryTo: "/support",
-      badgeTone: "amber",
-      badgeLabel: "Grace",
     };
   }
   if (routeReason === "paused_access") {
@@ -294,8 +290,6 @@ export function buildNextStepCard(params: {
       primaryTo: "/settings",
       secondaryLabel: "Contact support",
       secondaryTo: "/support",
-      badgeTone: "blue",
-      badgeLabel: "Paused",
     };
   }
   if (routeReason === "cancelled_at_period_end") {
@@ -309,8 +303,6 @@ export function buildNextStepCard(params: {
       primaryTo: "/settings",
       secondaryLabel: "Manage devices",
       secondaryTo: "/devices",
-      badgeTone: "blue",
-      badgeLabel: "Scheduled",
     };
   }
   return null;
@@ -327,16 +319,24 @@ export function tierFeatureToRow(feature: TierFeature) {
 export function toBillingHistoryView(
   items: WebAppBillingHistoryItem[],
   formatStarsFn: (v: number) => string,
+  locale: "en" | "ru" = "en",
 ): BillingHistoryViewItem[] {
   return items.map((item) => {
     const statusClass = historyStatusClass(item.status);
     const date = formatHistoryDate(item.created_at);
     const invoiceRef = compactInvoiceRef(item.invoice_ref ?? item.payment_id);
+    const planName = sanitizePlanDisplayName(item.plan_name ?? "", locale);
+    const title = item.status === "paid"
+      ? translate(locale, "plan.payment_history_item_renewal", { plan: planName })
+      : planName;
     return {
       id: item.payment_id,
       statusClass,
-      title: sanitizePlanDisplayName(item.plan_name ?? ""),
-      subtitle: `${date} · Invoice ${invoiceRef}`,
+      title,
+      subtitle: translate(locale, "plan.payment_history_item_subtitle", {
+        date,
+        invoice: invoiceRef,
+      }),
       amount: formatStarsFn(item.amount),
       statusLabel: historyStatusLabel(item.status),
       statusVariant: statusClass === "crit" ? "offline" : statusClass,

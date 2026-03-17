@@ -1,40 +1,11 @@
 """Background task: auto-sync server snapshots from AmneziaWG nodes (rate-limited, backoff)."""
 
 import asyncio
-import json
 import logging
 import time
 import uuid
 
 from sqlalchemy import select
-
-# #region agent log
-DEBUG_LOG_PATH = "/opt/vpn-suite/.cursor/debug.log"
-DEBUG_LOG_FALLBACK = "/tmp/vpn-suite-debug.log"
-
-
-def _agent_log(location: str, message: str, data: dict, hypothesis_id: str) -> None:
-    for path in (DEBUG_LOG_PATH, DEBUG_LOG_FALLBACK):
-        try:
-            with open(path, "a") as f:
-                f.write(
-                    json.dumps(
-                        {
-                            "location": location,
-                            "message": message,
-                            "data": data,
-                            "timestamp": int(time.time() * 1000),
-                            "hypothesisId": hypothesis_id,
-                        }
-                    )
-                    + "\n"
-                )
-            break
-        except Exception:
-            continue
-
-
-# #endregion
 
 from app.core.config import settings
 from app.core.database import async_session_factory
@@ -135,40 +106,16 @@ async def _run_one_sync(
                 await _record_failure(server_id)
                 server_sync_total.labels(mode="auto", status="failure").inc()
                 server_sync_latency_seconds.observe(elapsed)
-                # #region agent log
-                _agent_log(
-                    "server_sync_loop.py:_run_one_sync",
-                    "auto-sync failed",
-                    {"server_id": server_id, "error": err},
-                    "C",
-                )
-                # #endregion
                 _log.warning("Auto-sync failed server_id=%s: %s", server_id, err)
         except Exception as e:
             await _record_failure(server_id)
             server_sync_total.labels(mode="auto", status="failure").inc()
             server_sync_latency_seconds.observe(time.perf_counter() - started)
-            # #region agent log
-            _agent_log(
-                "server_sync_loop.py:_run_one_sync",
-                "auto-sync exception",
-                {"server_id": server_id, "error": str(type(e).__name__)},
-                "C",
-            )
-            # #endregion
             _log.warning("Auto-sync error server_id=%s: %s", server_id, e)
 
 
 async def run_server_sync_loop(get_adapter) -> None:
     """Periodically sync all active servers; jitter, concurrency limit, backoff on failure."""
-    # #region agent log
-    _agent_log(
-        "server_sync_loop.py:run_server_sync_loop",
-        "sync loop start",
-        {"INTERVAL": INTERVAL, "INTERVAL_le0": INTERVAL <= 0},
-        "B",
-    )
-    # #endregion
     if INTERVAL <= 0:
         _log.info("Server sync loop disabled (interval=%s)", INTERVAL)
         return
@@ -190,18 +137,6 @@ async def run_server_sync_loop(get_adapter) -> None:
                 r = await session.execute(stmt)
                 servers = list(r.scalars().unique().all())
             server_ids = _server_ids_due_for_sync(servers, now)
-            # #region agent log
-            _agent_log(
-                "server_sync_loop.py:run_server_sync_loop",
-                "servers due for sync",
-                {
-                    "servers_count": len(servers),
-                    "due_count": len(server_ids),
-                    "first_due_id": server_ids[0] if server_ids else None,
-                },
-                "D",
-            )
-            # #endregion
             if not server_ids:
                 continue
             await asyncio.gather(*[_run_one_sync(sid, adapter, semaphore) for sid in server_ids])

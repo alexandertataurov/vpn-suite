@@ -1,9 +1,5 @@
-import {
-  Button,
-  IconGlobe,
-  Popover,
-  SettingsActionRow,
-} from "@/design-system";
+import { IconGlobe } from "@/design-system/icons";
+import { Button, Popover, SettingsActionRow } from "@/design-system";
 
 export interface SettingsLanguageOption {
   id: "auto" | "en" | "ru";
@@ -17,7 +13,7 @@ export interface SettingsLanguageMenuRowProps {
   menuAriaLabel: string;
   title: string;
   description: string;
-  value: string;
+  value?: string;
   activeId: SettingsLanguageOption["id"];
   options: SettingsLanguageOption[];
   onTriggerClick: () => void;
@@ -44,6 +40,9 @@ export function SettingsLanguageMenuRow({
       id={menuId}
       panelClassName="miniapp-popover-panel--menu"
       panelAriaLabel={menuAriaLabel}
+      panelRole="menu"
+      triggerHasPopup="menu"
+      trapFocus
       renderTrigger={(triggerProps) => (
         <SettingsActionRow
           icon={<IconGlobe size={20} strokeWidth={1.6} />}
@@ -68,6 +67,7 @@ export function SettingsLanguageMenuRow({
               className={`miniapp-menu-item settings-context-item ${
                 activeId === option.id ? "settings-context-item--active" : ""
               }`}
+              data-pressable="true"
               onClick={() => onSelect(option.id)}
             >
               <span className="miniapp-menu-item-text">

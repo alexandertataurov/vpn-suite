@@ -1,2 +1,6 @@
+/* =========================================================
+   AmneziaVPN Mini App — Entrypoint Stylesheet
+   ========================================================= */
+
+@import "./app.css";
 @import "./routes.css";
-@import "./onboarding.css";

@@ -1,5 +1,5 @@
-import { ButtonRow, Input, MissionAlert, MissionPrimaryButton, MissionSecondaryButton, PageHeaderBadge, StickyBottomBar } from "@/design-system";
-import { useI18n } from "@/hooks/useI18n";
+import { Button, Input, InlineAlert, StickyBottomBar } from "@/design-system";
+import { useI18n } from "@/hooks";
 
 export interface CheckoutFlowCardProps {
   showConfirmation: boolean;
@@ -22,7 +22,6 @@ export interface CheckoutFlowCardProps {
   onPromoRemove: () => void;
   onPromoRecovery: () => void;
   onContinue: () => void;
-  onBack: () => void;
   onPay: () => void;
   onRetry: () => void;
 }
@@ -39,11 +38,11 @@ function PromoFeedback({
   const { t } = useI18n();
 
   return (
-    <div className="promo-feedback promo-feedback--valid">
-      <PageHeaderBadge tone="success" label={displayLabel} />
-      <MissionSecondaryButton type="button" onClick={onPromoRemove} disabled={isValidatingPromo}>
+    <div className="promo-feedback promo-feedback--valid" data-state="valid">
+      <span className="promo-feedback__label">{displayLabel}</span>
+      <Button variant="secondary" size="sm" type="button" onClick={onPromoRemove} disabled={isValidatingPromo}>
         {t("checkout.promo_remove")}
-      </MissionSecondaryButton>
+      </Button>
     </div>
   );
 }
@@ -69,7 +68,6 @@ export function CheckoutFlowCard({
   onPromoRemove,
   onPromoRecovery,
   onContinue,
-  onBack,
   onPay,
   onRetry,
 }: CheckoutFlowCardProps) {
@@ -87,16 +85,21 @@ export function CheckoutFlowCard({
             className="form-row"
           >
             <Input
+              label={t("checkout.promo_label")}
+              description={t("checkout.promo_optional")}
               placeholder={t("checkout.promo_input_placeholder")}
               value={promoCode}
+              success={promoStatus === "valid" && displayLabel ? displayLabel : undefined}
+              error={promoStatus === "invalid" && promoErrorKey ? t(promoErrorKey) : undefined}
               onChange={(event) => onPromoCodeChange(event.target.value)}
             />
-            <MissionSecondaryButton
+            <Button
+              variant="secondary"
               type="submit"
               disabled={!selectedPlanId || !promoCode.trim() || isValidatingPromo}
             >
               {isValidatingPromo ? t("checkout.promo_checking") : t("checkout.promo_apply")}
-            </MissionSecondaryButton>
+            </Button>
           </form>
 
           {promoStatus === "valid" && displayLabel ? (
@@ -107,30 +110,29 @@ export function CheckoutFlowCard({
             />
           ) : null}
           {promoStatus === "invalid" && promoErrorKey ? (
-            <>
-              <MissionAlert
-                tone="error"
+            <div className="u-mt-12 stack gap-2">
+              <InlineAlert
+                variant="error"
                 title={t("checkout.promo_issue_title")}
-                message={t(promoErrorKey)}
+                body={t(promoErrorKey)}
               />
-              <ButtonRow>
-                <MissionSecondaryButton type="button" onClick={onPromoRecovery} disabled={isValidatingPromo}>
-                  {promoErrorAction === "clear"
-                    ? t("checkout.promo_remove_code")
-                    : t("checkout.promo_try_again")}
-                </MissionSecondaryButton>
-              </ButtonRow>
-            </>
+              <Button variant="secondary" type="button" onClick={onPromoRecovery} disabled={isValidatingPromo} fullWidth>
+                {promoErrorAction === "clear"
+                  ? t("checkout.promo_remove_code")
+                  : t("checkout.promo_try_again")}
+              </Button>
+            </div>
           ) : null}
 
-          <ButtonRow>
-            <MissionPrimaryButton
+          <div className="u-mt-16">
+            <Button
               onClick={onContinue}
               disabled={!planId || !hasToken || !isOnline}
+              fullWidth
             >
               {t("checkout.continue_to_payment")}
-            </MissionPrimaryButton>
-          </ButtonRow>
+            </Button>
+          </div>
         </>
       ) : (
         <>
@@ -141,66 +143,62 @@ export function CheckoutFlowCard({
               onPromoRemove={onPromoRemove}
             />
           ) : null}
-          <MissionAlert
-            tone="info"
+          <InlineAlert
+            variant="info"
             title={t("checkout.after_payment_title")}
-            message={t("checkout.after_payment_message")}
+            body={t("checkout.after_payment_message")}
           />
           <StickyBottomBar>
-            <ButtonRow>
-              <MissionSecondaryButton onClick={onBack} type="button">
-                {t("checkout.back")}
-              </MissionSecondaryButton>
-              <MissionPrimaryButton
+            <div className="u-p-16">
+              <Button
                 onClick={onPay}
                 disabled={!planId || !hasToken || !isOnline || phase === "waiting" || phase === "creating_invoice"}
+                fullWidth
               >
                 {isCreatingInvoice
                   ? t("checkout.pay_preparing")
                   : isFreePlan
-                    ? t("checkout.pay_activate_plan")
-                    : t("checkout.pay_with_stars")}
-              </MissionPrimaryButton>
-            </ButtonRow>
+                  ? t("checkout.pay_activate_plan")
+                  : t("checkout.pay_in_telegram")}
+              </Button>
+            </div>
           </StickyBottomBar>
         </>
       )}
 
       {phase === "success" ? (
-        <MissionAlert
-          tone="success"
+        <InlineAlert
+          variant="success"
           title={t("checkout.payment_success_title")}
-          message={t("checkout.payment_success_message")}
+          body={t("checkout.payment_success_message")}
         />
       ) : null}
       {phase === "waiting" || isCreatingInvoice ? (
-        <MissionAlert
-          tone="info"
+        <InlineAlert
+          variant="info"
           title={t("checkout.payment_waiting_title")}
-          message={t("checkout.payment_waiting_message")}
+          body={t("checkout.payment_waiting_message")}
         />
       ) : null}
       {phase === "error" || phase === "timeout" ? (
-        <>
-          <MissionAlert
-            tone="error"
+        <div className="u-mt-12 stack gap-2">
+          <InlineAlert
+            variant="error"
             title={
               phase === "timeout"
                 ? t("checkout.payment_timeout_title")
                 : t("checkout.payment_failed_title")
             }
-            message={
+            body={
               phase === "timeout"
                 ? t("checkout.payment_timeout_message")
                 : errorMessage || t("checkout.payment_failed_message")
             }
           />
-          <ButtonRow>
-            <MissionSecondaryButton onClick={onRetry}>
-              {t("checkout.retry")}
-            </MissionSecondaryButton>
-          </ButtonRow>
-        </>
+          <Button variant="secondary" onClick={onRetry} fullWidth>
+            {t("checkout.retry")}
+          </Button>
+        </div>
       ) : null}
     </>
   );

@@ -1,6 +1,5 @@
 """Server sync: fetch snapshot from AmneziaWG node, store, update Server. Audit + request_id."""
 
-import json
 import logging
 import time
 import uuid
@@ -8,32 +7,6 @@ from datetime import datetime, timezone
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-
-# #region agent log
-_DEBUG_LOG_PATH = "/opt/.cursor/debug-a8eb6e.log"
-
-
-def _agent_log(location: str, message: str, data: dict, hypothesis_id: str) -> None:
-    try:
-        with open(_DEBUG_LOG_PATH, "a") as f:
-            f.write(
-                json.dumps(
-                    {
-                        "sessionId": "a8eb6e",
-                        "location": location,
-                        "message": message,
-                        "data": data,
-                        "timestamp": int(time.time() * 1000),
-                        "hypothesisId": hypothesis_id,
-                    }
-                )
-                + "\n"
-            )
-    except Exception:
-        pass
-
-
-# #endregion
 
 from app.core.logging_config import extra_for_event
 from app.models import IpPool, Server, ServerSnapshot, SyncJob
@@ -91,45 +64,13 @@ async def build_snapshot_from_node(
     Fetch node data and build canonical snapshot. Returns (snapshot, error).
     ip_pool_hint: optional { cidr, total_ips } from DB; used_ips from peers.
     """
-    # #region agent log
-    _agent_log(
-        "server_sync_service.py:build_snapshot_from_node:entry",
-        "sync started",
-        {
-            "server_id": server_id,
-            "adapter": type(adapter).__name__,
-            "server_api_endpoint": (server.api_endpoint or "")[:80],
-        },
-        "A",
-    )
-    # #endregion
     node = None
     get_node_fn = getattr(adapter, "get_node_for_sync", None)
     has_get_node = callable(get_node_fn)
     if get_node_fn is not None:
         node = await get_node_fn(server_id)
-    # #region agent log
-    _agent_log(
-        "server_sync_service.py:build_snapshot_from_node:after_get_node",
-        "get_node_for_sync result",
-        {"has_get_node_for_sync": has_get_node, "node_from_sync": node is not None},
-        "C",
-    )
-    # #endregion
     if node is None:
         nodes = await adapter.discover_nodes()
-        # #region agent log
-        _agent_log(
-            "server_sync_service.py:build_snapshot_from_node:after_discover",
-            "discover_nodes result",
-            {
-                "nodes_count": len(nodes),
-                "node_ids": [n.node_id for n in nodes],
-                "container_names": [getattr(n, "container_name", None) for n in nodes],
-            },
-            "B",
-        )
-        # #endregion
         node = next((n for n in nodes if n.node_id == server_id), None)
         if node is None:
             node = next((n for n in nodes if getattr(n, "container_name", None) == server_id), None)
@@ -150,18 +91,6 @@ async def build_snapshot_from_node(
                 None,
             )
     if not node:
-        # #region agent log
-        _agent_log(
-            "server_sync_service.py:build_snapshot_from_node",
-            "node not in discovery",
-            {
-                "server_id": server_id,
-                "discovered_ids": [n.node_id for n in nodes],
-                "discovered_container_names": [getattr(n, "container_name", None) for n in nodes],
-            },
-            "D",
-        )
-        # #endregion
         return None, "node not found in discovery"
 
     node_id_for_peers = node.node_id or getattr(node, "container_name", None) or server_id

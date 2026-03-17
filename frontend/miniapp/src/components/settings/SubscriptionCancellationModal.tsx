@@ -1,6 +1,6 @@
 import type { WebAppSubscriptionOffersResponse } from "@vpn-suite/shared";
-import { Button, Modal } from "@/design-system";
-import { useI18n } from "@/hooks/useI18n";
+import { Button, HelperNote, Modal, SettingsActionRow, SettingsCard } from "@/design-system";
+import { useI18n } from "@/hooks";
 import type { CancelReasonGroup, CancelReasonSelection } from "@/page-models";
 
 export interface SubscriptionCancellationModalProps {
@@ -48,14 +48,6 @@ export function SubscriptionCancellationModal({
               {t("settings.cancel_offer_price_title", { percent: offers?.discount_percent ?? 0 })}
             </div>
             <p className="cancel-retention-card__body">{t("settings.cancel_offer_price_body")}</p>
-            <button
-              type="button"
-              className="cancel-retention-card__cta"
-              onClick={onClose}
-              disabled={isCancelling}
-            >
-              {t("settings.cancel_modal_keep")}
-            </button>
           </div>
         ) : null;
       case "not_needed":
@@ -86,6 +78,23 @@ export function SubscriptionCancellationModal({
       title={t("settings.cancel_modal_title")}
       description={t("settings.cancel_modal_description")}
       className="subscription-cancellation-modal"
+      footer={(
+        <>
+          <Button type="button" variant="ghost" onClick={onClose} disabled={isCancelling}>
+            {t("common.cancel")}
+          </Button>
+          <Button
+            type="button"
+            variant="primary"
+            onClick={onClose}
+            disabled={isCancelling}
+            status={isCancelling ? "loading" : "idle"}
+            statusText={t("settings.cancel_modal_keep")}
+          >
+            {t("settings.cancel_modal_keep")}
+          </Button>
+        </>
+      )}
     >
       <div className="cancel-flow-body">
         <div className="field-group">
@@ -110,50 +119,42 @@ export function SubscriptionCancellationModal({
             ))}
           </div>
         </div>
+
         {retentionContent}
+
         {offers?.offer_downgrade && cancelReason === "price" ? (
-          <p className="modal-message type-body-sm cancel-flow-hint">{t("settings.cancel_downgrade_hint")}</p>
+          <HelperNote>{t("settings.cancel_downgrade_hint")}</HelperNote>
         ) : null}
-        <div className="cancel-flow-actions">
-          <Button
-            variant="primary"
-            fullWidth
-            className="cancel-flow-action cancel-flow-action--safe"
-            onClick={onClose}
-            disabled={isCancelling}
-          >
-            {t("settings.cancel_modal_keep")}
-          </Button>
+
+        <SettingsCard className="settings-list-card cancel-flow-actions-card">
           {canPauseInstead ? (
-            <Button
-              variant="outline"
-              fullWidth
-              className="cancel-flow-action"
+            <SettingsActionRow
+              icon="⏸"
+              title={t("settings.cancel_pause_instead")}
+              description={t("settings.cancel_offer_pause_body")}
+              actionIndicator="none"
               onClick={onPauseInstead}
-              disabled={isCancelling}
-            >
-              {isCancelling ? "…" : t("settings.cancel_pause_instead")}
-            </Button>
+              buttonProps={{ disabled: isCancelling || !hasSelectedReason }}
+            />
           ) : null}
-          <Button
-            variant="ghost"
-            fullWidth
-            className="cancel-flow-action cancel-flow-action--ghost"
+          <SettingsActionRow
+            icon="⏳"
+            title={t("settings.cancel_at_period_end")}
+            description={t("settings.cancel_plan_description_generic")}
+            actionIndicator="none"
             onClick={onCancelAtPeriodEnd}
-            disabled={isCancelling}
-          >
-            {isCancelling ? "…" : t("settings.cancel_at_period_end")}
-          </Button>
-          <Button
-            variant="link"
-            fullWidth
-            className="cancel-flow-action cancel-flow-action--danger-link"
+            buttonProps={{ disabled: isCancelling || !hasSelectedReason }}
+          />
+          <SettingsActionRow
+            icon="⚠"
+            title={t("settings.cancel_now")}
+            description={t("settings.danger_warning")}
+            tone="danger"
+            actionIndicator="none"
             onClick={onCancelNow}
-            disabled={isCancelling || !hasSelectedReason}
-          >
-            {isCancelling ? "…" : t("settings.cancel_now")}
-          </Button>
-        </div>
+            buttonProps={{ disabled: isCancelling || !hasSelectedReason }}
+          />
+        </SettingsCard>
       </div>
     </Modal>
   );

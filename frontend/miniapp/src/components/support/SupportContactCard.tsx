@@ -1,5 +1,6 @@
-import { InlineAlert, MissionPrimaryAnchor, PageCardSection } from "@/design-system";
-import { useI18n } from "@/hooks/useI18n";
+import { IconHelpCircle } from "@/design-system/icons";
+import { Button, StatusChip } from "@/design-system";
+import { useI18n } from "@/hooks";
 
 export interface SupportContactCardProps {
   title: string;
@@ -15,32 +16,36 @@ export function SupportContactCard({
   const { t } = useI18n();
 
   return (
-    <PageCardSection
-      title={title}
-      description={description}
-      cardTone={supportHref ? "green" : "amber"}
-      className="stagger-1"
-      cardClassName="module-card support-contact-card"
-    >
-      <div className="support-contact-stack">
-        <p className="op-desc type-body-sm">{t("support.contact_intro")}</p>
-        {supportHref ? (
-          <MissionPrimaryAnchor
-            aria-label={t("support.contact_button_label")}
-            href={supportHref}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {t("support.contact_button_label")}
-          </MissionPrimaryAnchor>
-        ) : (
-          <InlineAlert
-            variant="warning"
-            title={t("support.support_link_unavailable_title")}
-            message={t("support.support_link_unavailable_message")}
-          />
-        )}
+    <div className="modern-contact-card stagger-1">
+      <div className="modern-contact-card__header">
+        <div className="modern-contact-card__icon">
+          <IconHelpCircle size={22} strokeWidth={2} />
+        </div>
+        <div className="modern-contact-card__meta">
+          <div className="modern-header-label">{t("support.contact_card_title")}</div>
+          <div className="modern-contact-card__title">{title}</div>
+          <div className="modern-contact-card__desc">{description}</div>
+        </div>
       </div>
-    </PageCardSection>
+
+      <div className="modern-contact-card__status">
+        <StatusChip variant={supportHref ? "active" : "warning"}>
+          {supportHref ? t("common.status_online") : t("common.status_offline")}
+        </StatusChip>
+      </div>
+
+      {supportHref ? (
+        <Button asChild variant="primary" fullWidth size="lg" className="modern-contact-card__cta">
+          <a href={supportHref} target="_blank" rel="noopener noreferrer">
+            {t("support.contact_button_label")}
+          </a>
+        </Button>
+      ) : (
+        <div className="modern-contact-card__unavailable">
+          <strong>{t("support.support_link_unavailable_title")}</strong>
+          <p>{t("support.support_link_unavailable_message")}</p>
+        </div>
+      )}
+    </div>
   );
 }

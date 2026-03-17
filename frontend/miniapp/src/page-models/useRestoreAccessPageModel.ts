@@ -2,11 +2,9 @@ import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { webappApi } from "@/api/client";
-import { useTrackScreen } from "@/hooks/useTrackScreen";
-import { useTelemetry } from "@/hooks/useTelemetry";
-import { useSession } from "@/hooks/useSession";
-import { webappQueryKeys } from "@/lib/query-keys/webapp.query-keys";
-import { useI18n } from "@/hooks/useI18n";
+import { useTrackScreen, useTelemetry, useSession } from "@/hooks";
+import { webappQueryKeys } from "@/lib";
+import { useI18n } from "@/hooks";
 import { getPrimarySubscription } from "./helpers";
 
 export function useRestoreAccessPageModel() {
@@ -98,7 +96,7 @@ export function useRestoreAccessPageModel() {
   return {
     header: {
       title: t("restore.header_title"),
-      subtitle: t("support.hero_subtitle"),
+      subtitle: t("restore.header_subtitle"),
     },
     description: t("restore.info_message"),
     pageState,

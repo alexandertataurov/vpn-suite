@@ -168,6 +168,8 @@ const ITEMS: SidebarItem[] = [
   },
 ];
 
+export const SIDEBAR_NAV_ID = "dashboard-sidebar-nav";
+
 interface DashboardSidebarProps {
   isOverlayOpen?: boolean;
   onCloseOverlay?: () => void;
@@ -195,10 +197,15 @@ export function DashboardSidebar({
           type="button"
           className="sidebar-overlay-backdrop"
           onClick={onCloseOverlay}
-          aria-label="Back"
+          aria-label="Close navigation"
+          aria-controls={SIDEBAR_NAV_ID}
         />
       ) : null}
-      <SidebarNavRoot className={isOverlayOpen ? "sidebar--overlay" : undefined}>
+      <SidebarNavRoot
+        className={isOverlayOpen ? "sidebar--overlay" : undefined}
+        id={SIDEBAR_NAV_ID}
+        ariaLabel="Dashboard navigation"
+      >
       <SidebarNavSection>Monitor</SidebarNavSection>
       {ITEMS.filter((i) => i.section === "Monitor").map((item) => (
         <SidebarNavLink
@@ -235,5 +242,3 @@ export function DashboardSidebar({
     </>
   );
 }
-
-

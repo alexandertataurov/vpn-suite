@@ -1,6 +1,5 @@
-import type { KeyboardEventHandler, RefObject } from "react";
-import { ButtonRow, DataCell, DataGrid, EmptyStateBlock, LabeledControlRow, MissionCard, MissionModuleHead, MissionPrimaryButton, PageSection, SegmentedControl, SnapCarousel, StarsAmount, StatusChip } from "@/design-system";
-import { useI18n } from "@/hooks/useI18n";
+import { Button, EmptyStateBlock, PageSection, SegmentedControl, StarsAmount, StatusChip } from "@/design-system";
+import { useI18n } from "@/hooks";
 import { tierFeatureToRow, type BillingPeriod } from "@/page-models";
 import type { TierFeature } from "@/page-models/plan-helpers";
 
@@ -29,8 +28,6 @@ export interface PlanOptionsSectionProps {
   subscriptionState: "active" | "expiring" | "expired" | string;
   showRenewOrUpgradeCta: boolean;
   selectedTierKey: string;
-  carouselRef: RefObject<HTMLDivElement | null>;
-  onCarouselKeyDown: KeyboardEventHandler<HTMLDivElement>;
   onBillingPeriodChange: (period: BillingPeriod) => void;
   onTierFocus: (key: string) => void;
   onTierSelect: (args: {
@@ -51,8 +48,6 @@ export function PlanOptionsSection({
   subscriptionState,
   showRenewOrUpgradeCta,
   selectedTierKey,
-  carouselRef,
-  onCarouselKeyDown,
   onBillingPeriodChange,
   onTierFocus,
   onTierSelect,
@@ -66,12 +61,11 @@ export function PlanOptionsSection({
           ? t("plan.section_available_plans_title_subscribed")
           : t("plan.section_available_plans_title_new")
       }
-      className="plan-billing-page__plans-section stagger-4"
+      description={t("plan.section_available_plans_description")}
+      className="plan-billing-page__plans-section stagger-3"
     >
-      <LabeledControlRow
-        label={t("plan.billing_period_label")}
-        className="plan-billing-page__billing-period"
-      >
+      <div className="plan-billing-page__billing-period">
+        <span className="plan-billing-page__billing-period-label">{t("plan.billing_period_label")}</span>
         <SegmentedControl
           className="plan-billing-page__period-toggle"
           ariaLabel={t("plan.billing_period_label")}
@@ -87,7 +81,7 @@ export function PlanOptionsSection({
             },
           ]}
         />
-      </LabeledControlRow>
+      </div>
 
       {visibleTierPairs.length === 0 ? (
         <EmptyStateBlock
@@ -95,96 +89,83 @@ export function PlanOptionsSection({
           message={isSubscribed ? t("plan.no_plans_message_subscribed") : t("plan.no_plans_message_new")}
         />
       ) : (
-        <SnapCarousel
-          ref={carouselRef as RefObject<HTMLDivElement>}
-          className={`snap-carousel--cards plan-billing-page__carousel ${visibleTierPairs.length <= 1 ? "plan-billing-page__carousel--single" : ""}`.trim()}
-          id="availablePlans"
-          role="region"
-          aria-label="Plans carousel"
-          tabIndex={0}
-          onKeyDown={onCarouselKeyDown}
-        >
+        <div id="availablePlans" className="modern-plan-grid">
           {visibleTierPairs.map((tier, index) => {
             const displayed = billingPeriod === "annual" ? (tier.annual ?? tier.monthly) : (tier.monthly ?? tier.annual);
             const currentForPeriod = !!displayed && displayed.id === primaryPlanId;
             const isCurrentAndNeedsRenewal = currentForPeriod && (subscriptionState === "expiring" || subscriptionState === "expired");
             const showRenewCta = isCurrentAndNeedsRenewal && showRenewOrUpgradeCta;
-            const stars = displayed?.price_amount ?? 0;
-            const periodLabel = displayed ? t("plan.hero_period_for_days", { days: displayed.duration_days }) : "";
             const selectLabel = currentForPeriod
-              ? isCurrentAndNeedsRenewal
-                ? showRenewOrUpgradeCta
-                  ? t("plan.cta_renew_plan")
-                  : t("plan.current_plan_label")
+              ? showRenewCta
+                ? t("plan.cta_renew_plan")
                 : t("plan.current_plan_label")
               : isSubscribed
-                ? t("plan.cta_upgrade_plan")
-                : t("plan.cta_continue_to_checkout");
+                ? t("plan.cta_switch_plan")
+                : t("plan.cta_choose_plan");
 
             return (
-              <MissionCard
+              <article
                 key={tier.key}
-                tone={tier.isCurrent ? "green" : "blue"}
-                glowTone={tier.isCurrent ? "green" : null}
                 className={[
-                  "plan-tier-card",
-                  selectedTierKey === tier.key ? "plan-tier-card--selected" : "",
-                  index === 0 ? "stagger-3" : index === 1 ? "stagger-4" : "stagger-5",
+                  "modern-plan-card",
+                  selectedTierKey === tier.key ? "modern-plan-card--selected" : "",
+                  currentForPeriod ? "modern-plan-card--current" : "",
+                  index === 0 ? "stagger-4" : index === 1 ? "stagger-5" : "stagger-6",
                 ].filter(Boolean).join(" ")}
-                data-tier={tier.key}
                 onClick={() => onTierFocus(tier.key)}
               >
-                <MissionModuleHead
-                  label={tier.label}
-                  chip={tier.isCurrent ? <StatusChip variant="active">{t("plan.current_plan_label")}</StatusChip> : null}
-                />
-                {tier.description ? <p className="op-desc type-body-sm">{tier.description}</p> : null}
-                {displayed ? (
-                  <DataGrid columns={1} layout="1xcol">
-                    <DataCell
-                      label={t("plan.grid_price_label")}
-                      value={<StarsAmount value={stars} />}
-                      valueTone="teal"
-                    />
-                    <DataCell label={t("plan.grid_duration_label")} value={periodLabel} />
-                  </DataGrid>
-                ) : null}
-                <ul className="plan-tier-features list-unstyled">
+                <div className="modern-plan-header">
+                  <div className="modern-plan-title-group">
+                    <h3 className="modern-plan-title">
+                      {tier.label}
+                      {currentForPeriod ? <StatusChip variant="active">{t("plan.current_plan_label")}</StatusChip> : null}
+                    </h3>
+                    {tier.description ? <p className="modern-status-subtitle">{tier.description}</p> : null}
+                  </div>
+                  {displayed ? (
+                    <div className="modern-plan-price">
+                       <StarsAmount value={displayed.price_amount} />
+                    </div>
+                  ) : null}
+                </div>
+
+                <ul className="modern-plan-features">
                   {tier.features.map((feature) => {
                     const row = tierFeatureToRow(feature);
                     const text = t(row.text as string);
                     const value = row.value != null ? t(row.value as string) : undefined;
                     return (
-                      <li key={`${tier.key}-${String(row.text)}`} className="plan-tier-feature">
-                        <div className="feat-row">
-                          <span className="feat-text">{text}</span>
-                          {value ? <span className="feat-val">{value}</span> : null}
-                        </div>
+                      <li key={`${tier.key}-${String(row.text)}`} className="modern-plan-feature">
+                        <span className="modern-plan-feature-label">{text}</span>
+                        {value ? <span className="modern-plan-feature-value">{value}</span> : null}
                       </li>
                     );
                   })}
                 </ul>
-                <ButtonRow>
-                  <MissionPrimaryButton
-                    disabled={!displayed || (currentForPeriod && !showRenewCta)}
-                    onClick={() =>
-                      onTierSelect({
-                        tierKey: tier.key,
-                        planId: displayed?.id ?? null,
-                        currentForPeriod,
-                        isCurrentAndNeedsRenewal,
-                        showRenewCta,
-                      })
-                    }
-                    aria-label={`${selectLabel}, ${tier.label}`}
-                  >
-                    {selectLabel}
-                  </MissionPrimaryButton>
-                </ButtonRow>
-              </MissionCard>
+
+                <Button
+                  variant={currentForPeriod && !showRenewCta ? "secondary" : "primary"}
+                  fullWidth
+                  size="lg"
+                  disabled={!displayed || (currentForPeriod && !showRenewCta)}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onTierSelect({
+                      tierKey: tier.key,
+                      planId: displayed?.id ?? null,
+                      currentForPeriod,
+                      isCurrentAndNeedsRenewal,
+                      showRenewCta,
+                    });
+                  }}
+                  aria-label={`${selectLabel}, ${tier.label}`}
+                >
+                  {selectLabel}
+                </Button>
+              </article>
             );
           })}
-        </SnapCarousel>
+        </div>
       )}
     </PageSection>
   );

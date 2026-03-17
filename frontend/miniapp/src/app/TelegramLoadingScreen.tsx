@@ -3,7 +3,7 @@
  * Uses Telegram theme params (--tg-theme-*) when inside Telegram so the loader matches
  * the client. Per Telegram docs: call ready() once this (or equivalent) is visible.
  */
-import { IconShield } from "@/design-system";
+import { IconShield } from "@/design-system/icons";
 
 export function TelegramLoadingScreen() {
   return (

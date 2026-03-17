@@ -1,14 +1,17 @@
-import { MissionAlert, Button, IconDownload } from "@/design-system";
+import { useEffect, useState } from "react";
+import { IconDownload } from "@/design-system/icons";
+import { Button, CompactSummaryCard, MissionPrimaryButton } from "@/design-system";
+import { useI18n } from "@/hooks";
+import { VpnBoundaryNote } from "@/components/VpnBoundaryNote";
 
 export interface ConfigCardContentProps {
   configText: string;
   routeReason: string;
   peerCreated?: boolean;
-  onCopy: () => Promise<void>;
+  onCopy: () => Promise<boolean>;
   onDownload: () => void;
 }
 
-/** Reusable config block: alert(s) + copy/download actions + pre. */
 export function ConfigCardContent({
   configText,
   routeReason,
@@ -16,44 +19,62 @@ export function ConfigCardContent({
   onCopy,
   onDownload,
 }: ConfigCardContentProps) {
+  const { t } = useI18n();
+  const [copied, setCopied] = useState(false);
   const isPending = routeReason === "connection_not_confirmed";
+  const title = isPending
+    ? t("devices.config_pending_title")
+    : t("devices.config_ready_title");
   const message = isPending
-    ? "Copy or download, import in your VPN app, then confirm."
-    : "Config may not be visible after leaving. Copy or download now.";
+    ? t("devices.config_pending_message")
+    : t("devices.config_ready_message");
+
+  useEffect(() => {
+    if (!copied) return undefined;
+    const timeoutId = window.setTimeout(() => setCopied(false), 1800);
+    return () => window.clearTimeout(timeoutId);
+  }, [copied]);
+
+  const handleCopy = async () => {
+    setCopied(false);
+    const didCopy = await onCopy();
+    if (didCopy) {
+      setCopied(true);
+    }
+  };
 
   return (
-    <>
-      <MissionAlert
-        tone="info"
-        title="Shown only once"
-        message={message}
-        actions={(
-          <div className="miniapp-compact-actions">
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={() => void onCopy()}
-              aria-label="Copy config"
-              className="miniapp-compact-action"
-            >
-              Copy config
-            </Button>
-            <Button type="button" variant="link" size="sm" onClick={onDownload} className="miniapp-inline-link">
-              <IconDownload size={14} strokeWidth={1.8} />
-              <span>Download config</span>
-            </Button>
-          </div>
-        )}
-      />
+    <CompactSummaryCard
+      eyebrow={t("devices.section_config_title")}
+      title={title}
+      subtitle={message}
+      tone="amber"
+      actions={(
+        <>
+          <MissionPrimaryButton
+            status={copied ? "success" : "idle"}
+            statusText={t("devices.toast_copied")}
+            onClick={() => void handleCopy()}
+            className="miniapp-compact-action"
+          >
+            {t("devices.copy_config_action")}
+          </MissionPrimaryButton>
+          <Button type="button" variant="ghost" size="sm" onClick={onDownload}>
+            <IconDownload size={14} strokeWidth={1.8} />
+            <span>{t("devices.download_config_action")}</span>
+          </Button>
+        </>
+      )}
+    >
       {!peerCreated ? (
-        <MissionAlert
-          tone="warning"
-          title="Server sync pending"
-          message="The device is registered, but backend provisioning is still finishing. Retry later or contact support if setup does not complete."
-        />
-      ) : null}
-      <pre className="config-pre config-block">{configText}</pre>
-    </>
+        <VpnBoundaryNote tone="warning" messageKey="devices.config_preparing_message" />
+      ) : (
+        <VpnBoundaryNote messageKey="devices.config_boundary_note" />
+      )}
+      <details className="config-disclosure">
+        <summary>{t("devices.config_view_raw")}</summary>
+        <pre className="config-pre config-block">{configText}</pre>
+      </details>
+    </CompactSummaryCard>
   );
 }

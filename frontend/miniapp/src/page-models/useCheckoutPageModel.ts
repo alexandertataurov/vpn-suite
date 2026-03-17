@@ -8,17 +8,19 @@ import type {
 import { getMe, getPlans } from "@/api";
 import { useWebappToken, webappApi } from "@/api/client";
 import type { PlansResponse } from "@/api";
-import { useHideKeyboard } from "@/hooks/useHideKeyboard";
-import { useOnlineStatus } from "@/hooks/useOnlineStatus";
-import { usePayments } from "@/hooks/features/usePayments";
-import { useTelegramHaptics } from "@/hooks/useTelegramHaptics";
-import { useTelegramMainButton } from "@/hooks/useTelegramMainButton";
-import { useTelemetry } from "@/hooks/useTelemetry";
-import { useTrackScreen } from "@/hooks/useTrackScreen";
-import { useI18n } from "@/hooks/useI18n";
-import { webappQueryKeys } from "@/lib/query-keys/webapp.query-keys";
+import {
+  useHideKeyboard,
+  useOnlineStatus,
+  usePayments,
+  useTelegramHaptics,
+  useTelegramMainButton,
+  useTelemetry,
+  useTrackScreen,
+} from "@/hooks";
+import { useI18n } from "@/hooks";
+import { webappQueryKeys } from "@/lib";
 import type { PromoErrorCode } from "./promoTypes";
-import type { StandardPageHeader, StandardPageState, StandardSectionBadge } from "./types";
+import type { StandardPageHeader, StandardPageState } from "./types";
 
 const POLL_INTERVAL_MS = 2500;
 const POLL_TIMEOUT_MS = 5 * 60 * 1000;
@@ -91,7 +93,17 @@ export function useCheckoutPageModel() {
       queryKey: [...webappQueryKeys.me()],
       queryFn: getMe,
     });
-    navigate(session.routing?.recommended_route ?? "/plan", { replace: true });
+    const reason = session.routing?.reason;
+    const section =
+      reason === "no_subscription"
+        ? "plans"
+        : reason === "no_device"
+          ? "devices"
+          : reason === "connection_not_confirmed"
+            ? "setup"
+            : undefined;
+    const target = section ? `/?section=${section}` : "/";
+    navigate(target, { replace: true });
   }, [navigate, queryClient]);
 
   const { data: plansData, isLoading: plansLoading, error: plansError, refetch: refetchPlans } = useQuery<PlansResponse>({
@@ -297,23 +309,6 @@ export function useCheckoutPageModel() {
     createInvoice.mutate();
   };
 
-  const paymentPhaseTone = phase === "success"
-    ? "green"
-    : phase === "error" || phase === "timeout"
-      ? "red"
-      : phase === "waiting" || phase === "creating_invoice"
-        ? "amber"
-        : "neutral";
-  const paymentPhaseLabel = phase === "success"
-    ? t("checkout.payment_phase_success")
-    : phase === "error"
-      ? t("checkout.payment_phase_failed")
-      : phase === "timeout"
-        ? t("checkout.payment_phase_timeout")
-        : phase === "waiting" || phase === "creating_invoice"
-          ? t("checkout.payment_phase_pending")
-          : t("checkout.payment_phase_ready");
-
   // Native Telegram MainButton hidden on checkout; use in-page MissionPrimaryButton only
   useTelegramMainButton(null);
 
@@ -342,11 +337,6 @@ export function useCheckoutPageModel() {
             }
           : { status: "ready" };
 
-  const paymentBadge: StandardSectionBadge = {
-    tone: paymentPhaseTone,
-    label: paymentPhaseLabel,
-  };
-
   return {
     header,
     pageState,
@@ -369,7 +359,6 @@ export function useCheckoutPageModel() {
     displayLabel,
     phase,
     errorMessage,
-    paymentBadge,
     isCreatingInvoice: createInvoice.isPending,
     isValidatingPromo: validatePromo.isPending,
     setPromoCode: (value: string) => {

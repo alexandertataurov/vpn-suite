@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ApiError, type WebAppMeResponse } from "@vpn-suite/shared";
 import { webappApi } from "@/api/client";
-import { webappQueryKeys } from "@/lib/query-keys/webapp.query-keys";
+import { webappQueryKeys } from "@/lib";
 
 export interface UseUpdateSubscriptionOptions {
   /** Current subscription id for optimistic cache update. */

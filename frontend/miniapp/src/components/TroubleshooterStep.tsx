@@ -1,12 +1,6 @@
-import {
-  MissionCard,
-  MissionChip,
-  MissionModuleHead,
-  MissionPrimaryButton,
-  MissionSecondaryButton,
-  ButtonRow,
-} from "@/design-system";
-import { useI18n } from "@/hooks/useI18n";
+import { IconAlertTriangle } from "@/design-system/icons";
+import { Button, StatusChip } from "@/design-system";
+import { useI18n } from "@/hooks";
 
 export interface TroubleshooterStepProps {
   stepIndex: number;
@@ -36,35 +30,40 @@ export function TroubleshooterStep({
 }: TroubleshooterStepProps) {
   const { t } = useI18n();
   const showAlt = altLabel != null && onAlt != null;
+
   return (
-    <MissionCard tone="amber" className="module-card support-step">
-      <MissionModuleHead
-        label={t("support.troubleshooter_flow_label")}
-        chip={<MissionChip tone="neutral">{t("support.troubleshooter_step_chip", { index: stepIndex, total: totalSteps })}</MissionChip>}
-      />
-      <h3 className="op-name type-h3">{title}</h3>
-      <p className="op-desc type-body-sm">{body}</p>
-      <ButtonRow>
-        {onBack && backLabel && (
-          <MissionSecondaryButton onClick={onBack}>
+    <div className="troubleshooter-card stagger-3">
+      <div className="troubleshooter-card__head">
+        <div className="troubleshooter-card__icon">
+          <IconAlertTriangle size={20} strokeWidth={2.5} />
+        </div>
+        <div className="troubleshooter-card__meta">
+          <div className="modern-header-label">{t("support.troubleshooter_flow_label")}</div>
+          <div className="troubleshooter-card__title">{title}</div>
+          <div className="troubleshooter-card__body">{body}</div>
+        </div>
+        <div className="troubleshooter-card__chip">
+          <StatusChip variant="warning">
+            {t("support.troubleshooter_step_chip", { index: stepIndex, total: totalSteps })}
+          </StatusChip>
+        </div>
+      </div>
+
+      <div className="troubleshooter-card__actions">
+        {onBack && backLabel ? (
+          <Button variant="secondary" className="troubleshooter-card__action" onClick={onBack}>
             {backLabel}
-          </MissionSecondaryButton>
-        )}
+          </Button>
+        ) : null}
         {showAlt ? (
-          <>
-            <MissionSecondaryButton onClick={onAlt}>
-              {altLabel}
-            </MissionSecondaryButton>
-            <MissionPrimaryButton onClick={onNext}>
-              {nextLabel}
-            </MissionPrimaryButton>
-          </>
-        ) : (
-          <MissionPrimaryButton onClick={onNext}>
-            {nextLabel}
-          </MissionPrimaryButton>
-        )}
-      </ButtonRow>
-    </MissionCard>
+          <Button variant="secondary" className="troubleshooter-card__action" onClick={onAlt}>
+            {altLabel}
+          </Button>
+        ) : null}
+        <Button variant="primary" className="troubleshooter-card__action troubleshooter-card__action--primary" onClick={onNext}>
+          {nextLabel}
+        </Button>
+      </div>
+    </div>
   );
 }

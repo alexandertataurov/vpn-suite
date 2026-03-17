@@ -3,11 +3,9 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { WebAppBillingHistoryResponse } from "@vpn-suite/shared";
 import { getPlans } from "@/api";
 import { useWebappToken, webappApi } from "@/api/client";
-import { useSession } from "@/hooks/useSession";
-import { useTelemetry } from "@/hooks/useTelemetry";
-import { useTrackScreen } from "@/hooks/useTrackScreen";
-import { webappQueryKeys } from "@/lib/query-keys/webapp.query-keys";
-import { useI18n } from "@/hooks/useI18n";
+import { useSession, useTelemetry, useTrackScreen } from "@/hooks";
+import { webappQueryKeys } from "@/lib";
+import { useI18n } from "@/hooks";
 import type { PlanItem, PlansResponse } from "@/api";
 import type { StandardPageHeader, StandardPageState } from "./types";
 import {
@@ -23,7 +21,7 @@ import {
   buildNextStepCard,
   tierSortRank,
   formatStars,
-  periodLabelForHero,
+  periodLabelForHeroLocalized,
   sanitizePlanDisplayName,
   toBillingHistoryView,
   clamp,
@@ -49,7 +47,7 @@ export function usePlanPageModel() {
   const hasToken = !!useWebappToken();
   const queryClient = useQueryClient();
   const sessionQuery = useSession(hasToken);
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const plansQuery = useQuery({
     queryKey: [...webappQueryKeys.plans()],
     queryFn: getPlans,
@@ -132,8 +130,8 @@ export function usePlanPageModel() {
       : clamp((daysLeft / Math.max(heroDurationDays, 1)) * 100, 0, 100);
 
   const billingHistoryItems = useMemo(
-    () => toBillingHistoryView(historyQuery.data?.items ?? [], formatStars),
-    [historyQuery.data?.items],
+    () => toBillingHistoryView(historyQuery.data?.items ?? [], formatStars, locale),
+    [historyQuery.data?.items, locale],
   );
 
   const nextStepCard = useMemo(
@@ -155,8 +153,9 @@ export function usePlanPageModel() {
     () => ({
       heroPlanName: sanitizePlanDisplayName(
         heroPlan?.name?.trim() ?? primarySub?.plan_id ?? t("plan.no_active_plan_label"),
+        locale,
       ),
-      heroPlanPeriod: periodLabelForHero(heroPlan?.duration_days ?? 30),
+      heroPlanPeriod: periodLabelForHeroLocalized(heroPlan?.duration_days ?? 30, locale),
       heroStars: heroPlan?.price_amount ?? selectedTierPlan?.price_amount ?? 0,
       heroPeriodDetail: heroPlan
         ? t("plan.hero_period_for_days", { days: heroPlan.duration_days })
@@ -213,6 +212,7 @@ export function usePlanPageModel() {
       isSubscribed,
       routeReason,
       t,
+      locale,
     ],
   );
 
@@ -281,5 +281,6 @@ export function usePlanPageModel() {
     nextStepCard,
     heroView,
     formatStars,
+    locale,
   };
 }

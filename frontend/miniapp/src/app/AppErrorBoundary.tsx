@@ -27,9 +27,6 @@ export class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorB
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    if (typeof window !== "undefined" && "console" in window) {
-      console.error("[AppErrorBoundary]", error, errorInfo.componentStack);
-    }
     reportError(error, {
       route: typeof window !== "undefined" ? window.location.pathname : undefined,
       componentStack: errorInfo.componentStack,

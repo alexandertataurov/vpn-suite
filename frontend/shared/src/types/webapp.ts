@@ -76,6 +76,24 @@ export interface WebAppMeRouting {
   reason: string;
 }
 
+export interface WebAppLatestDeviceDelivery {
+  device_id: string;
+  device_name?: string | null;
+  issued_at: string;
+  download_url?: string | null;
+  amnezia_vpn_key?: string | null;
+}
+
+export interface WebAppLiveConnection {
+  status: "connected" | "disconnected" | "unknown";
+  source: "server_handshake";
+  device_id: string | null;
+  device_name?: string | null;
+  last_handshake_at?: string | null;
+  handshake_age_sec?: number | null;
+  telemetry_updated_at?: string | null;
+}
+
 export interface WebAppOnboardingState {
   completed: boolean;
   step: number | null;
@@ -88,6 +106,8 @@ export interface WebAppMeResponse {
   subscriptions: WebAppMeSubscription[];
   devices: WebAppMeDevice[];
   public_ip?: string | null;
+  latest_device_delivery?: WebAppLatestDeviceDelivery | null;
+  live_connection?: WebAppLiveConnection | null;
   onboarding: WebAppOnboardingState;
   routing?: WebAppMeRouting;
 }
@@ -100,6 +120,28 @@ export interface WebAppOnboardingStateRequest {
 
 export interface WebAppOnboardingStateResponse {
   onboarding: WebAppOnboardingState;
+}
+
+/** Flat access state for state-driven Home UI. GET /webapp/user/access */
+export type UserAccessStatus =
+  | "no_plan"
+  | "needs_device"
+  | "generating_config"
+  | "ready"
+  | "expired"
+  | "device_limit"
+  | "error"
+  | "loading";
+
+export interface UserAccessResponse {
+  status: UserAccessStatus;
+  has_plan: boolean;
+  devices_used: number;
+  device_limit: number | null;
+  config_ready: boolean;
+  config_id: string | null;
+  expires_at: string | null;
+  amnezia_vpn_key: string | null;
 }
 
 export interface WebAppReferralMyLinkResponse {
@@ -225,6 +267,7 @@ export interface WebAppIssueDeviceResponse {
   config_awg?: string | null;
   config_wg_obf?: string | null;
   config_wg?: string | null;
+  amnezia_vpn_key?: string | null;
   issued_at: string;
 
   // Why: backend has used both string and a narrow union across endpoints.

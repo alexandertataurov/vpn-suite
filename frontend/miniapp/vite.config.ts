@@ -30,6 +30,10 @@ export default defineConfig({
     alias: {
       "@": path.resolve(__dirname, "./src"),
       "@/lib": path.resolve(__dirname, "./src/lib"),
+      "@ds": path.resolve(__dirname, "./src/design-system/index.ts"),
+      "@ds/core": path.resolve(__dirname, "./src/design-system/core/index.ts"),
+      "@ds/components": path.resolve(__dirname, "./src/design-system/components/index.ts"),
+      "@ds/compositions": path.resolve(__dirname, "./src/design-system/compositions/index.ts"),
       // Why: keep workspace package as source (no prebuild) for Vite dev/build.
       "@shared": path.resolve(__dirname, "../shared/src"),
       "@vpn-suite/shared": path.resolve(__dirname, "../shared/src"),

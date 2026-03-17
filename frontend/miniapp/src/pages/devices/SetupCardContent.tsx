@@ -1,8 +1,9 @@
 import {
-  InlineAlert,
+  CompactSummaryCard,
   MissionPrimaryButton,
 } from "@/design-system";
-import { useI18n } from "@/hooks/useI18n";
+import { useI18n } from "@/hooks";
+import { VpnBoundaryNote } from "@/components/VpnBoundaryNote";
 
 export type SetupStep = "subscription" | "issue" | "pending";
 
@@ -14,7 +15,6 @@ export interface SetupCardContentProps {
   issueActionLabel?: string;
 }
 
-/** Reusable setup step content: alert + actions. */
 export function SetupCardContent({
   step,
   onIssueDevice,
@@ -26,38 +26,49 @@ export function SetupCardContent({
 
   if (step === "subscription") {
     return (
-      <InlineAlert
-        variant="info"
+      <CompactSummaryCard
+        eyebrow={t("devices.section_setup_title")}
         title={t("plan.next_step_no_subscription_alert_title")}
-        body={t("plan.next_step_no_subscription_alert_message")}
-      />
+        subtitle={t("plan.next_step_no_subscription_alert_message")}
+        tone="blue"
+      >
+        <VpnBoundaryNote messageKey="devices.setup_subscription_note" />
+      </CompactSummaryCard>
     );
   }
+
   if (step === "issue") {
     return (
-      <InlineAlert
-        variant="warning"
-        title={t("devices.summary_subtitle_no_devices")}
-        body={t("devices.summary_subtitle_connection_not_confirmed")}
+      <CompactSummaryCard
+        eyebrow={t("devices.section_setup_title")}
+        title={t("devices.setup_issue_title")}
+        subtitle={t("devices.setup_issue_body")}
+        tone="blue"
         actions={(
-          <div className="miniapp-compact-actions">
-            <MissionPrimaryButton
-              onClick={onIssueDevice}
-              disabled={!canAddDevice || isAddPending}
-              className="miniapp-compact-action"
-            >
-              {isAddPending ? t("devices.issue_primary_label_pending") : issueActionLabel}
-            </MissionPrimaryButton>
-          </div>
+          <MissionPrimaryButton
+            onClick={onIssueDevice}
+            disabled={!canAddDevice || isAddPending}
+            className="miniapp-compact-action"
+            status={isAddPending ? "loading" : "idle"}
+            statusText={t("devices.issue_primary_label_pending")}
+          >
+            {issueActionLabel}
+          </MissionPrimaryButton>
         )}
-      />
+      >
+        <VpnBoundaryNote messageKey="common.vpn_boundary_devices_note" />
+      </CompactSummaryCard>
     );
   }
+
   return (
-    <InlineAlert
-      variant="info"
-      title={t("home.header_default_subtitle")}
-      body={t("home.status_connecting_hint")}
-    />
+    <CompactSummaryCard
+      eyebrow={t("devices.section_setup_title")}
+      title={t("devices.setup_pending_title")}
+      subtitle={t("devices.setup_pending_body")}
+      tone="amber"
+    >
+      <VpnBoundaryNote messageKey="devices.setup_pending_note" />
+    </CompactSummaryCard>
   );
 }

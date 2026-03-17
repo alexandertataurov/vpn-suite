@@ -2,8 +2,8 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getPlans } from "@/api";
 import { useWebappToken } from "@/api/client";
-import { useSession } from "@/hooks/useSession";
-import { webappQueryKeys } from "@/lib/query-keys/webapp.query-keys";
+import { useSession } from "@/hooks";
+import { webappQueryKeys } from "@/lib";
 import type { HeaderAlertItem, HeaderAlertTone } from "@/design-system";
 import {
   daysUntil,
@@ -22,7 +22,7 @@ function toHeaderTone(tone: "info" | "warning" | "error" | "success"): HeaderAle
 
 /**
  * Returns account-level signals as HeaderAlertItem[] for the unified notifications popover.
- * Mirrors HomeDynamicBlock logic: health, trial/expiry, device capacity.
+ * Mirrors home page model logic: health, trial/expiry, device capacity.
  */
 export function useHeaderAlerts(): HeaderAlertItem[] {
   const hasToken = !!useWebappToken();

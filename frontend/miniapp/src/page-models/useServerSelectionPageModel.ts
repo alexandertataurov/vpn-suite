@@ -3,13 +3,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { WebAppServerItem, WebAppServersResponse } from "@vpn-suite/shared";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useWebappToken, webappApi } from "@/api/client";
-import { useOnlineStatus } from "@/hooks/useOnlineStatus";
-import { useSession } from "@/hooks/useSession";
-import { useTrackScreen } from "@/hooks/useTrackScreen";
-import { useTelemetry } from "@/hooks/useTelemetry";
+import { useOnlineStatus, useSession, useTrackScreen, useTelemetry } from "@/hooks";
 import { useToast } from "@/design-system";
-import { webappQueryKeys } from "@/lib/query-keys/webapp.query-keys";
-import type { StandardPageHeader, StandardPageState, StandardSectionBadge } from "./types";
+import { webappQueryKeys } from "@/lib";
+import type { StandardPageHeader, StandardPageState } from "./types";
 import { getActiveSubscription } from "./helpers";
 
 export function useServerSelectionPageModel() {
@@ -79,12 +76,6 @@ export function useServerSelectionPageModel() {
           ? { status: "loading" }
           : { status: "ready" };
 
-  const locationsBadge: StandardSectionBadge = {
-    tone: "neutral",
-    label: `${data?.items.length ?? 0} locations`,
-    emphasizeNumeric: true,
-  };
-
   return {
     header,
     pageState,
@@ -92,7 +83,6 @@ export function useServerSelectionPageModel() {
     isOnline,
     pendingServerId,
     isMutating: selectMutation.isPending,
-    locationsBadge,
     handleAutoSelect: () => {
       setPendingServerId("auto");
       selectMutation.mutate({ mode: "auto" });

@@ -1,0 +1,50 @@
+- generic [ref=e3]:
+  - banner "Navigation controls" [ref=e5]:
+    - heading "Navigation controls" [level=2] [ref=e6]
+    - button "Open navigation menu" [ref=e7] [cursor=pointer]:
+      - img [ref=e8]
+      - paragraph [ref=e57]: Contracts/Home/Access Ready
+    - generic [ref=e10]: Contracts/Home/Access Ready
+    - button "Open addon panel" [ref=e11] [cursor=pointer]:
+      - img [ref=e12]
+  - generic [ref=e16]:
+    - region "Toolbar" [ref=e17]:
+      - heading "Toolbar" [level=2] [ref=e18]
+      - toolbar [ref=e19]:
+        - generic [ref=e20]:
+          - button "Reload story" [ref=e21] [cursor=pointer]:
+            - img [ref=e22]
+          - switch "Grid visibility" [ref=e58] [cursor=pointer]:
+            - img [ref=e59]
+          - button "Preview background" [ref=e61] [cursor=pointer]:
+            - img [ref=e62]
+          - switch "Measure tool" [ref=e24] [cursor=pointer]:
+            - img [ref=e25]
+          - switch "Outline tool" [ref=e28] [cursor=pointer]:
+            - img [ref=e29]
+          - button "Viewport size" [ref=e31] [cursor=pointer]:
+            - img [ref=e32]
+          - button "Vision filter" [ref=e36] [cursor=pointer]:
+            - img [ref=e37]
+          - button "Consumer theme Consumer Dark" [ref=e66] [cursor=pointer]:
+            - img [ref=e67]
+            - text: Consumer Dark
+          - button "Page preview width sm 390" [ref=e69] [cursor=pointer]:
+            - img [ref=e70]
+            - text: sm 390
+          - button "Telegram platform environment iOS" [ref=e72] [cursor=pointer]:
+            - img [ref=e73]
+            - text: iOS
+          - button "Telegram fullscreen environment Windowed" [ref=e75] [cursor=pointer]:
+            - img [ref=e76]
+            - text: Windowed
+        - generic [ref=e41]:
+          - switch "Change zoom level" [ref=e42] [cursor=pointer]: 100%
+          - button "Share" [ref=e43] [cursor=pointer]:
+            - img [ref=e44]
+          - button "Open in editor" [ref=e78] [cursor=pointer]:
+            - img [ref=e79]
+    - main "Main preview area" [ref=e47]:
+      - heading "Main preview area" [level=2] [ref=e48]
+      - iframe [ref=e56]:
+        

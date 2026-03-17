@@ -132,10 +132,6 @@ export function useReferralAttach(): void {
       source: captured.source,
     });
 
-    if (process.env.NODE_ENV === "development") {
-      console.debug("[referral] attach_attempt", { source: captured.source, code: captured.code });
-    }
-
     const attach = (): void => {
       webappApi
         .post<{ status?: string; attached?: boolean; referrer_user_id?: number }>(
@@ -157,12 +153,6 @@ export function useReferralAttach(): void {
               source: captured.source,
               status: result,
             });
-            if (process.env.NODE_ENV === "development") {
-              console.debug("[referral] attach_result", {
-                ref_capture_source: captured.source,
-                attach_result: result,
-              });
-            }
           }
         })
         .catch((err: unknown) => {
@@ -180,12 +170,6 @@ export function useReferralAttach(): void {
             status: detailStatus,
             error_code: err instanceof ApiError ? err.code : undefined,
           });
-          if (process.env.NODE_ENV === "development") {
-            console.debug("[referral] attach_result", {
-              ref_capture_source: captured.source,
-              attach_result: detailStatus ?? "error",
-            });
-          }
           if (isRetryable(statusCode) && !retriedRef.current) {
             retriedRef.current = true;
             setTimeout(attach, RETRY_DELAY_MS);

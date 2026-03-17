@@ -1,5 +1,5 @@
 ---
-description: Frontend and TypeScript standards — no hex colors, no inline styles, shared-inline icons in miniapp, no circular imports, typed API client, a11y. CI enforces eslint, typecheck, vitest, playwright, storybook guardrails.
+description: Frontend and TypeScript standards — no hex colors, no inline styles, design-system icons in miniapp, no circular imports, typed API client, a11y. CI enforces eslint, typecheck, vitest, playwright, storybook guardrails.
 globs: ["frontend/**/*.ts", "frontend/**/*.tsx", "frontend/**/*.css"]
 alwaysApply: false
 ---
@@ -16,9 +16,9 @@ alwaysApply: false
   - Wrong: `<div style={{ marginTop: 8, color: 'red' }}>`
   - Right: `<div className="mt-2 text-error">` or a CSS module class
 
-- **Miniapp icons**: In `frontend/miniapp/src`, do not import directly from `lucide-react`. Import only from `@/shared-inline/icons`.
+- **Miniapp icons**: In `frontend/miniapp/src`, do not import directly from `lucide-react`. Import only from `@/lib/icons` or `@/design-system/icons`.
   - Wrong: `import { ChevronRight } from 'lucide-react'`
-  - Right: `import { IconChevronRight } from '@/shared-inline/icons'`
+  - Right: `import { IconChevronRight } from '@/lib/icons'`
 
 - **No circular imports**: If adding a new import would create a cycle, restructure (e.g. move shared types to a separate file) instead of adding the import.
 

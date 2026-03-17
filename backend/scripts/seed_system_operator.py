@@ -52,7 +52,7 @@ async def seed(session: AsyncSession) -> None:
             Subscription.status == "active",
         )
     )
-    if result.scalar_one_or_none():
+    if result.scalars().first() is not None:
         return
 
     now = datetime.now(timezone.utc)

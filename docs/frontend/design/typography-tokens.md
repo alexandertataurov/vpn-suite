@@ -3,7 +3,7 @@
 Typography tokens are defined in:
 
 - Admin: `frontend/admin/src/design-system/tokens/tokens.css` + `frontend/admin/src/design-system/typography.css`
-- Miniapp: `frontend/miniapp/src/shared-inline/theme/tokens.css`
+- Miniapp: `frontend/miniapp/src/design-system/styles/tokens/base.css`, `theme/consumer.css`
 
 ## Tailwind → token mapping
 

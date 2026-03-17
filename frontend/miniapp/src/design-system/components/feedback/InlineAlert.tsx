@@ -35,17 +35,24 @@ export function InlineAlert({
   "data-testid": dataTestId,
 }: InlineAlertProps) {
   const resolvedBody = body ?? message;
+  const hasBody = Boolean(resolvedBody);
+  const hasActions = Boolean(actions);
 
   return (
     <div
       role={variantRole[variant]}
       aria-live="polite"
       className={cn("inline-alert", variantClass[variant], className)}
+      data-variant={variant}
+      data-has-body={hasBody ? "true" : "false"}
+      data-has-actions={hasActions ? "true" : "false"}
       data-testid={dataTestId}
     >
-      <span className="alert-icon" aria-hidden>●</span>
-      <div className="alert-title inline-alert-title">{title}</div>
-      {resolvedBody ? <div className="alert-desc inline-alert-message">{resolvedBody}</div> : null}
+      <span className="alert-icon" aria-hidden />
+      <div className="inline-alert-content">
+        <div className="alert-title inline-alert-title">{title}</div>
+        {resolvedBody ? <div className="alert-desc inline-alert-message">{resolvedBody}</div> : null}
+      </div>
       {actions ? <div className="inline-alert-actions">{actions}</div> : null}
     </div>
   );

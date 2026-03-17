@@ -112,7 +112,7 @@ describe("page-model subscription helpers", () => {
     expect(primary?.id).toBe("sub-grace");
   });
 
-  it("returns active and confirmed devices only when not revoked and connected", () => {
+  it("returns active and connected devices, but does not treat status alone as confirmed setup", () => {
     const session = {
       user: {
         last_connection_confirmed_at: null,
@@ -126,7 +126,7 @@ describe("page-model subscription helpers", () => {
 
     expect(getActiveDevices(session as never)).toHaveLength(2);
     expect(getConfirmedDevices(session as never).map((device) => device.id)).toEqual(["dev-1"]);
-    expect(hasConfirmedConnection(session as never)).toBe(true);
+    expect(hasConfirmedConnection(session as never)).toBe(false);
     expect(getLatestActiveDevice(session as never)?.id).toBe("dev-1");
   });
 

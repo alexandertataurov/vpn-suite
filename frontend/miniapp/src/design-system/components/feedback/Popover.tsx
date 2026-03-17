@@ -8,6 +8,9 @@ import {
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
+import { useSheetSwipeDismiss } from "@/design-system/hooks";
+import { decrementBlockingOverlayCount, incrementBlockingOverlayCount } from "@/design-system/utils/overlayStack";
+import { useTelegramHaptics } from "@/hooks";
 
 export interface PopoverTriggerProps {
   "aria-expanded": boolean;
@@ -35,10 +38,11 @@ export interface PopoverProps {
   trapFocus?: boolean;
 }
 
-const MOBILE_SHEET_MAX_WIDTH = 430;
+const MOBILE_SHEET_MAX_WIDTH = 480;
 const PANEL_GAP = 10;
 const PANEL_GUTTER = 16;
 const SINGLE_OPEN_EVENT = "miniapp:popover-open";
+const POPOVER_EXIT_DURATION_MS = 180;
 
 /**
  * Minimal popover: trigger + panel in portal. Click outside and Escape close.
@@ -59,14 +63,17 @@ export function Popover({
   preferredPlacement = "bottom-start",
   trapFocus = false,
 }: PopoverProps) {
+  const { selectionChanged } = useTelegramHaptics();
   const generatedId = useId();
   const panelId = idProp ?? `popover-${generatedId.replace(/:/g, "")}`;
   const triggerRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const previouslyFocusedRef = useRef<HTMLElement | null>(null);
+  const wasOpenRef = useRef(open);
   const [isMobileSheet, setIsMobileSheet] = useState(() =>
     typeof window !== "undefined" ? window.innerWidth < MOBILE_SHEET_MAX_WIDTH : false,
   );
+  const [rendered, setRendered] = useState(open);
   const [layout, setLayout] = useState({
     top: 0,
     left: 0,
@@ -74,6 +81,24 @@ export function Popover({
     caretLeft: 24,
   });
   const [dismissCycle, setDismissCycle] = useState(0);
+  const close = useCallback(() => {
+    onOpenChange(false);
+  }, [onOpenChange]);
+  const swipeGesture = useSheetSwipeDismiss({
+    enabled: open && isMobileSheet,
+    onDismiss: close,
+    resolveStartContext: (target) => {
+      const startedInHandle = target?.closest(".miniapp-popover-sheet-handle") != null;
+      const startedInSheet = target?.closest(".miniapp-popover-panel--sheet") != null;
+      if (!startedInHandle && !startedInSheet) {
+        return { allowStart: false };
+      }
+      return {
+        allowStart: true,
+        scrollElement: startedInSheet ? panelRef.current : null,
+      };
+    },
+  });
 
   const triggerProps: PopoverTriggerProps = {
     "aria-expanded": open,
@@ -82,14 +107,22 @@ export function Popover({
     id: `${panelId}-trigger`,
   };
 
-  const close = useCallback(() => {
-    onOpenChange(false);
-  }, [onOpenChange]);
-
   const restartAutoDismiss = useCallback(() => {
     if (!open || !autoDismiss || !autoDismissOnInteraction) return;
     setDismissCycle((current) => current + 1);
   }, [autoDismiss, autoDismissOnInteraction, open]);
+
+  useEffect(() => {
+    if (open) {
+      setRendered(true);
+      return undefined;
+    }
+
+    const timeout = window.setTimeout(() => {
+      setRendered(false);
+    }, POPOVER_EXIT_DURATION_MS);
+    return () => window.clearTimeout(timeout);
+  }, [open]);
 
   useEffect(() => {
     if (typeof window === "undefined" || typeof window.matchMedia !== "function") return undefined;
@@ -148,6 +181,16 @@ export function Popover({
     panelRef.current.style.setProperty("--popover-caret-left", `${layout.caretLeft}px`);
   }, [isMobileSheet, layout.caretLeft, layout.left, layout.top, open]);
 
+  useLayoutEffect(() => {
+    if (!panelRef.current) return;
+    if (!open || !isMobileSheet || swipeGesture.offset <= 0) {
+      panelRef.current.style.removeProperty("transform");
+      return;
+    }
+
+    panelRef.current.style.transform = `translateY(${swipeGesture.offset}px)`;
+  }, [isMobileSheet, open, swipeGesture.offset]);
+
   useEffect(() => {
     if (!panelRef.current) return;
     if (open && autoDismiss && autoDismiss > 0) {
@@ -181,6 +224,13 @@ export function Popover({
   }, [open, close]);
 
   useEffect(() => {
+    if (open && !wasOpenRef.current) {
+      selectionChanged();
+    }
+    wasOpenRef.current = open;
+  }, [open, selectionChanged]);
+
+  useEffect(() => {
     if (!open) return;
     const handleOtherOpen = (event: Event) => {
       const nextId = (event as CustomEvent<string>).detail;
@@ -194,11 +244,13 @@ export function Popover({
   }, [onOpenChange, open, panelId]);
 
   useEffect(() => {
-    if (!open || !isMobileSheet) return undefined;
+    if (!open) return undefined;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    incrementBlockingOverlayCount();
     return () => {
       document.body.style.overflow = previousOverflow;
+      decrementBlockingOverlayCount();
     };
   }, [isMobileSheet, open]);
 
@@ -261,9 +313,16 @@ export function Popover({
     </div>
   );
 
-  const panel = open ? (
+  const panel = rendered ? (
     <>
-      {isMobileSheet ? <div className="miniapp-popover-overlay" aria-hidden onClick={close} /> : null}
+      <div
+        className={`miniapp-popover-overlay ${open ? "miniapp-popover-overlay-enter" : "miniapp-popover-overlay-exit"}`}
+        data-mode={isMobileSheet ? "sheet" : "floating"}
+        data-swipe-active={swipeGesture.isDragging ? "true" : "false"}
+        data-swipe-ready={swipeGesture.isReady ? "true" : "false"}
+        aria-hidden
+        onClick={open ? close : undefined}
+      />
       <div
         ref={panelRef}
         id={panelId}
@@ -272,8 +331,11 @@ export function Popover({
         tabIndex={-1}
         data-mode={isMobileSheet ? "sheet" : "floating"}
         data-placement={layout.placement}
+        data-swipe-state={swipeGesture.isDragging ? "dragging" : "idle"}
+        data-swipe-ready={swipeGesture.isReady ? "true" : "false"}
         className={[
           "miniapp-popover-panel",
+          open ? "miniapp-popover-panel-enter" : "miniapp-popover-panel-exit",
           isMobileSheet && "miniapp-popover-panel--sheet",
           panelClassName,
         ]
@@ -281,7 +343,9 @@ export function Popover({
           .join(" ")}
         onPointerDown={restartAutoDismiss}
         onPointerEnter={restartAutoDismiss}
+        {...(isMobileSheet ? swipeGesture.bind : {})}
       >
+        {isMobileSheet ? <div className="miniapp-popover-sheet-handle" aria-hidden /> : null}
         {!isMobileSheet ? <div className="miniapp-popover-caret" aria-hidden /> : null}
         {children}
         {autoDismiss ? (

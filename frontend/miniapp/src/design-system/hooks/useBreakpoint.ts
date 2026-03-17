@@ -2,7 +2,7 @@
  * Design-system hook: matches a breakpoint (min-width). Uses tokens/breakpoints.
  */
 import { useState, useEffect } from "react";
-import { BREAKPOINT_PX } from "../tokens/breakpoints";
+import { BREAKPOINT_PX } from "../core/tokens/breakpoints";
 
 export type BreakpointKey = keyof typeof BREAKPOINT_PX;
 

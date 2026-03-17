@@ -1,19 +1,11 @@
-import { DataCell, DataGrid, PageCardSection, PageHeaderBadge } from "@/design-system";
-import { useI18n } from "@/hooks/useI18n";
+import { CompactSummaryCard } from "@/design-system";
+import { useI18n } from "@/hooks";
 
 export interface ConnectStatusSummaryCardProps {
   title: string;
   subtitle: string;
-  eyebrow: string;
   edge: "e-r" | "e-a" | "e-g" | "e-b";
   latestDeviceName: string;
-}
-
-function badgeTone(edge: ConnectStatusSummaryCardProps["edge"]): "danger" | "warning" | "success" | "info" {
-  if (edge === "e-r") return "danger";
-  if (edge === "e-a") return "warning";
-  if (edge === "e-g") return "success";
-  return "info";
 }
 
 function cardTone(edge: ConnectStatusSummaryCardProps["edge"]): "red" | "amber" | "green" | "blue" {
@@ -26,22 +18,19 @@ function cardTone(edge: ConnectStatusSummaryCardProps["edge"]): "red" | "amber" 
 export function ConnectStatusSummaryCard({
   title,
   subtitle,
-  eyebrow,
   edge,
   latestDeviceName,
 }: ConnectStatusSummaryCardProps) {
   const { t } = useI18n();
 
   return (
-    <PageCardSection
+    <CompactSummaryCard
+      eyebrow={t("connect_status.header_title")}
       title={title}
-      description={subtitle}
-      action={<PageHeaderBadge tone={badgeTone(edge)} label={eyebrow} />}
-      cardTone={cardTone(edge)}
-    >
-      <DataGrid columns={1} layout="1xcol">
-        <DataCell label={t("connect_status.device_key")} value={latestDeviceName} />
-      </DataGrid>
-    </PageCardSection>
+      subtitle={subtitle}
+      tone={cardTone(edge)}
+      stats={[{ label: t("connect_status.device_key"), value: latestDeviceName }]}
+      className="connect-status-summary-card"
+    />
   );
 }

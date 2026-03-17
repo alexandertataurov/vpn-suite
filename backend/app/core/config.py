@@ -197,8 +197,6 @@ class Settings(BaseSettings):
     vpn_default_host: str = ""
     # Comma-separated container name prefixes for VPN discovery (e.g. amnezia-awg, amnezia-wg)
     docker_vpn_container_prefixes: str = "amnezia-awg,amnezia-wg"
-    # Outline VPN integration is unsupported; this flag is for docs/future-proofing only (default off).
-    feature_outline_legacy: bool = False
 
     @model_validator(mode="after")
     def fill_telegram_bot_username_from_vite(self) -> "Settings":

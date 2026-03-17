@@ -24,14 +24,15 @@ from app.models import (
     Subscription,
     User,
 )
+from app.services.entitlement_service import emit_entitlement_event
 from app.services.funnel_service import log_funnel_event
+from app.services.referral_notification import notify_referrer_reward_granted
+from app.services.referral_service import grant_referral_reward
 from app.services.subscription_lifecycle_events import (
     emit_payment_lifecycle,
     emit_referral_reward_accrued,
     emit_referral_reward_applied,
 )
-from app.services.referral_notification import notify_referrer_reward_granted
-from app.services.referral_service import grant_referral_reward
 from app.services.subscription_state import (
     apply_subscription_cycle,
     commercially_active_where,

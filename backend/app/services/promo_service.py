@@ -2,12 +2,13 @@
 
 from dataclasses import dataclass
 from enum import Enum
+
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.constants import MIN_PRICE_XTR
-from app.models import Plan, PromoCode, PromoRedemption
+from app.models import PromoCode, PromoRedemption
 
 
 class PromoErrorCode(str, Enum):

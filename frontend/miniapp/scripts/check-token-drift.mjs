@@ -13,7 +13,7 @@ const ROOT = join(__dirname, "..");
 
 const EXPECTED = {
   zIndex: ["dropdown", "overlay", "modal", "toast", "header", "nav", "scanline"],
-  motion: ["fast", "normal", "slow"],
+  motion: ["tap", "micro", "enter", "exit", "panel", "sheet"],
   radius: ["none", "sm", "md", "lg", "xl", "2xl", "full", "control", "surface", "button"],
   shadow: ["none", "sm", "md", "lg", "card", "focusRing"],
 };
@@ -31,7 +31,7 @@ for (const z of EXPECTED.zIndex) {
 const motionTs = readFileSync(join(ROOT, "src/design-system/tokens/motion.ts"), "utf-8");
 for (const d of EXPECTED.motion) {
   if (!motionTs.includes(d)) {
-    console.error(`[token-drift] duration.${d} not in tokens/motion.ts`);
+    console.error(`[token-drift] motion.${d} not in tokens/motion.ts`);
     hasDrift = true;
   }
 }

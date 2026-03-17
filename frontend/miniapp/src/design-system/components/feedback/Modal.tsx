@@ -1,8 +1,14 @@
+import { createPortal } from "react-dom";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { cn } from "@vpn-suite/shared";
-import { Button } from "../buttons/Button";
+import { Button } from "../Button";
 import { Input } from "../forms/Input";
 import { Textarea } from "../forms/Textarea";
+import { useSheetSwipeDismiss } from "@/design-system/hooks";
+import { usePrefersReducedMotion } from "@/design-system/hooks";
+import { getMotionDurationMs } from "@/design-system/core/tokens";
+import { decrementBlockingOverlayCount, incrementBlockingOverlayCount } from "@/design-system/utils/overlayStack";
+import { useTelegramHaptics } from "@/hooks";
 
 const FOCUSABLE =
   'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
@@ -52,14 +58,17 @@ export function Modal({
   inline = false,
   "data-testid": dataTestId,
 }: ModalProps) {
+  const { selectionChanged } = useTelegramHaptics();
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const exitDurationMs = getMotionDurationMs("enter", prefersReducedMotion);
   const ref = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
   const didFocusRef = useRef(false);
   const restoreFocusRef = useRef<HTMLElement | null>(null);
+  const wasOpenRef = useRef(open);
   const titleId = useId();
   const descriptionId = useId();
   const [mounted, setMounted] = useState(open);
-  const swipeStartYRef = useRef<number | null>(null);
-  const swipeStartTimeRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -68,9 +77,24 @@ export function Modal({
     }
     const timeout = window.setTimeout(() => {
       setMounted(false);
-    }, 220);
+    }, exitDurationMs);
     return () => window.clearTimeout(timeout);
-  }, [open]);
+  }, [exitDurationMs, open]);
+
+  useEffect(() => {
+    if (!mounted || inline) return;
+    incrementBlockingOverlayCount();
+    return () => {
+      decrementBlockingOverlayCount();
+    };
+  }, [inline, mounted]);
+
+  useEffect(() => {
+    if (!inline && open && !wasOpenRef.current) {
+      selectionChanged();
+    }
+    wasOpenRef.current = open;
+  }, [inline, open, selectionChanged]);
 
   useEffect(() => {
     if (!open || inline) {
@@ -137,10 +161,35 @@ export function Modal({
     };
   }, [open, onClose, closeOnEscape, disableDismiss, inline, variant]);
 
-  if (!mounted && !inline) return null;
-
   const allowBackdropDismiss = !disableDismiss && variant !== "danger" && closeOnBackdrop;
   const allowSwipeDismiss = !disableDismiss && variant !== "danger" && swipeToDismiss;
+  const swipeGesture = useSheetSwipeDismiss({
+    enabled: allowSwipeDismiss,
+    onDismiss: onClose,
+    resolveStartContext: (target) => {
+      const startedInHeader = target?.closest(".modal-header, .modal-handle") != null;
+      const startedInBody = target?.closest(".modal-body") != null;
+      if (!startedInHeader && !startedInBody) {
+        return { allowStart: false };
+      }
+      return {
+        allowStart: true,
+        scrollElement: startedInBody ? bodyRef.current : null,
+      };
+    },
+  });
+
+  useEffect(() => {
+    if (!ref.current) return;
+    if (swipeGesture.offset <= 0) {
+      ref.current.style.removeProperty("transform");
+      return;
+    }
+
+    ref.current.style.transform = `translateY(${swipeGesture.offset}px)`;
+  }, [swipeGesture.offset]);
+
+  if (!mounted && !inline) return null;
 
   const handleBackdropClick = (event: React.MouseEvent<HTMLDivElement>) => {
     if (
@@ -150,40 +199,6 @@ export function Modal({
       return;
     }
     onClose();
-  };
-
-  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (!allowSwipeDismiss || event.pointerType === "mouse") {
-      return;
-    }
-
-    if (
-      document.activeElement instanceof HTMLElement &&
-      document.activeElement.matches("input, textarea, select, [contenteditable='true']")
-    ) {
-      return;
-    }
-    swipeStartYRef.current = event.clientY;
-    swipeStartTimeRef.current = performance.now();
-  };
-
-  const handlePointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (
-      !allowSwipeDismiss ||
-      swipeStartYRef.current == null ||
-      swipeStartTimeRef.current == null
-    ) {
-      return;
-    }
-    const deltaY = event.clientY - swipeStartYRef.current;
-    const elapsed = performance.now() - swipeStartTimeRef.current;
-    swipeStartYRef.current = null;
-    swipeStartTimeRef.current = null;
-    if (deltaY <= 0) return;
-    const velocity = (deltaY / elapsed) * 1000;
-    if (deltaY >= 40 || velocity > 500) {
-      onClose();
-    }
   };
 
   const dialog = (
@@ -202,6 +217,8 @@ export function Modal({
         aria-labelledby={titleId}
         aria-describedby={description ? descriptionId : undefined}
         data-testid={dataTestId}
+        data-swipe-state={swipeGesture.isDragging ? "dragging" : "idle"}
+        data-swipe-ready={swipeGesture.isReady ? "true" : "false"}
       >
         {showHandle ? <div className="modal-handle" aria-hidden="true" /> : null}
         <div className="modal-header">
@@ -220,7 +237,7 @@ export function Modal({
             </button>
           ) : null}
         </div>
-        <div className="modal-body">{children}</div>
+        <div ref={bodyRef} className="modal-body">{children}</div>
         {footer !== undefined ? (
           <div className="modal-footer">{footer}</div>
         ) : null}
@@ -232,7 +249,7 @@ export function Modal({
     return dialog;
   }
 
-  return (
+  const overlay = (
     <div
       className={cn(
         "modal-overlay",
@@ -241,17 +258,25 @@ export function Modal({
       )}
       role="presentation"
       aria-hidden="true"
+      data-swipe-active={swipeGesture.isDragging ? "true" : "false"}
+      data-swipe-ready={swipeGesture.isReady ? "true" : "false"}
       onClick={handleBackdropClick}
-      onPointerDown={handlePointerDown}
-      onPointerUp={handlePointerUp}
+      {...swipeGesture.bind}
     >
       <div
+        className="modal-shell"
         onClick={(e) => e.stopPropagation()}
       >
         {dialog}
       </div>
     </div>
   );
+
+  if (typeof document === "undefined") {
+    return overlay;
+  }
+
+  return createPortal(overlay, document.body);
 }
 
 export interface ConfirmModalProps {
@@ -297,7 +322,8 @@ export function ConfirmModal({
         tone={variant === "primary" ? tone : undefined}
         className="modal-footer-btn"
         onClick={handleConfirm}
-        loading={loading}
+        status={loading ? "loading" : "idle"}
+        statusText={confirmLabel}
       >
         {confirmLabel}
       </Button>
@@ -404,7 +430,8 @@ export function ConfirmDanger({
         variant="danger"
         className={`modal-footer-btn modal-danger-confirm ${canConfirm && !loading ? "modal-danger-confirm--enabled" : "modal-danger-confirm--disabled"}`}
         onClick={handleConfirm}
-        loading={loading}
+        status={loading ? "loading" : "idle"}
+        statusText={confirmLabel}
         disabled={!canConfirm}
       >
         {confirmLabel}

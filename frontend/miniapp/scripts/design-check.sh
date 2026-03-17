@@ -49,8 +49,8 @@ EOF
 while IFS= read -r f; do
   [ -z "$f" ] && continue
   if grep -qE 'from\s+["'\'']@/design-system/(components|layouts|recipes|patterns|primitives)/' "$f" 2>/dev/null; then
-    if grep -qE 'from\s+["'\'']@/design-system/(patterns/FallbackScreen|patterns/PageStateScreen|layouts/PageFrame)["'\'']' "$f" 2>/dev/null; then
-      if grep -vE 'from\s+["'\'']@/design-system/(patterns/FallbackScreen|patterns/PageStateScreen|layouts/PageFrame)["'\'']' "$f" | grep -qE 'from\s+["'\'']@/design-system/(components|layouts|recipes|patterns|primitives)/' 2>/dev/null; then
+    if grep -qE 'from\s+["'\'']@/design-system/(patterns/FallbackScreen|patterns/PageStateScreen|layouts/PageScaffold)["'\'']' "$f" 2>/dev/null; then
+      if grep -vE 'from\s+["'\'']@/design-system/(patterns/FallbackScreen|patterns/PageStateScreen|layouts/PageScaffold)["'\'']' "$f" | grep -qE 'from\s+["'\'']@/design-system/(components|layouts|recipes|patterns|primitives)/' 2>/dev/null; then
         echo "design:check — pages/page-models must import reusable UI from '@/design-system'. File: $f"
         VIOLATIONS=$((VIOLATIONS + 1))
       fi

@@ -646,6 +646,101 @@ async def test_webapp_issue_device_enqueues_telegram_send_background_task(
 
 
 @pytest.mark.asyncio
+async def test_webapp_issue_device_uses_db_server_fallback_without_runtime_adapter(
+    client: AsyncClient, monkeypatch
+):
+    """POST /api/v1/webapp/devices/issue should still work in mock/DB-only mode without app.state adapter."""
+    from app.api.v1 import webapp as webapp_module
+
+    class _FakeResult:
+        def __init__(self, value):
+            self._value = value
+
+        def scalar_one_or_none(self):
+            return self._value
+
+    class _FakeDB:
+        def __init__(self):
+            self._execute_calls = 0
+            self.added = []
+
+        async def execute(self, stmt):  # noqa: ARG002
+            self._execute_calls += 1
+            if self._execute_calls == 1:
+                return _FakeResult(SimpleNamespace(id="sub-1"))
+            if self._execute_calls == 2:
+                return _FakeResult("srv-fallback")
+            raise AssertionError(f"Unexpected execute call #{self._execute_calls}")
+
+        def add(self, obj):
+            self.added.append(obj)
+
+        async def commit(self):
+            pass
+
+        async def refresh(self, obj):  # noqa: ARG002
+            pass
+
+        async def rollback(self):
+            pass
+
+    fake_db = _FakeDB()
+
+    async def fake_get_db():
+        yield fake_db
+
+    app.dependency_overrides[get_db] = fake_get_db
+
+    monkeypatch.setattr(settings, "issue_rate_limit_per_minute", 0)
+    monkeypatch.setattr(settings, "node_mode", "mock")
+    monkeypatch.setattr(webapp_module, "_get_tg_id_from_bearer", lambda request: 504048)
+
+    async def fake_get_or_create_user(db, tg_id):  # noqa: ARG001
+        return SimpleNamespace(id=78, meta={})
+
+    monkeypatch.setattr(webapp_module, "_get_or_create_webapp_user", fake_get_or_create_user)
+
+    issued_at = datetime.now(timezone.utc)
+    out = SimpleNamespace(
+        device=SimpleNamespace(id="dev-fallback-1", server_id="srv-fallback", issued_at=issued_at),
+        config_awg="[Interface]\nPrivateKey = TEST\nAddress = 10.0.0.2/32\n",
+        config_wg_obf="",
+        config_wg="",
+        peer_created=False,
+    )
+
+    captured: dict[str, object] = {}
+
+    async def fake_issue_device(*args, **kwargs):  # noqa: ARG001
+        captured.update(kwargs)
+        return out
+
+    monkeypatch.setattr(webapp_module, "issue_device", fake_issue_device)
+
+    async def _noop(*args, **kwargs):  # noqa: ARG001
+        return None
+
+    monkeypatch.setattr(webapp_module, "persist_issued_configs", _noop)
+    monkeypatch.setattr(webapp_module, "invalidate_devices_summary_cache", _noop)
+    monkeypatch.setattr(webapp_module, "invalidate_devices_list_cache", _noop)
+    monkeypatch.setattr(webapp_module, "_send_webapp_config_to_telegram", _noop)
+
+    old_adapter = getattr(app.state, "node_runtime_adapter", None)
+    if hasattr(app.state, "node_runtime_adapter"):
+        delattr(app.state, "node_runtime_adapter")
+    try:
+        r = await client.post("/api/v1/webapp/devices/issue", json={})
+        assert r.status_code == 200, r.text
+        assert captured["server_id"] == "srv-fallback"
+        assert captured["runtime_adapter"] is None
+        assert captured["get_topology"] is None
+    finally:
+        if old_adapter is not None:
+            app.state.node_runtime_adapter = old_adapter
+        app.dependency_overrides.clear()
+
+
+@pytest.mark.asyncio
 async def test_webapp_create_invoice_route_exists_not_404(client: AsyncClient):
     """Checkout contract: canonical path exists (auth may fail with 401, but not 404)."""
     r = await client.post(

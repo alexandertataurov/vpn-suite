@@ -1,57 +1,25 @@
 import {
-  createContext,
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useRef,
   type ReactNode,
 } from "react";
-import { IconShield } from "@/design-system";
+import { IconShield } from "@/design-system/icons";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button, InlineAlert, Skeleton, Display, Body } from "@/design-system";
 import { useTelegramWebApp } from "../hooks/useTelegramWebApp";
 import { track } from "@vpn-suite/shared";
-import { enrichContextAtAppReady } from "./analytics";
+import { enrichContextAtAppReady } from "./analyticsContext";
+import { BootstrapContextProvider, type BootstrapContextValue } from "./context";
 import { useTelegramBackButtonController } from "../hooks/useTelegramBackButtonController";
 import { ONBOARDING_ALLOWED_PATHS } from "./constants";
-import { useBootstrapMachine, type BootPhase } from "./useBootstrapMachine";
-
-export interface BootstrapContextValue {
-  phase: BootPhase;
-  onboardingStep: number;
-  onboardingVersion: number;
-  onboardingError: string | null;
-  isCompletingOnboarding: boolean;
-  setOnboardingStep: (step: number) => Promise<void>;
-  completeOnboarding: () => Promise<{ done: boolean; synced: boolean }>;
-}
-
-const BootstrapContext = createContext<BootstrapContextValue | null>(null);
-
-export function BootstrapContextProvider({
-  value,
-  children,
-}: {
-  value: BootstrapContextValue;
-  children: ReactNode;
-}) {
-  return <BootstrapContext.Provider value={value}>{children}</BootstrapContext.Provider>;
-}
+import { useBootstrapMachine } from "./useBootstrapMachine";
 
 function isOnboardingAllowedPath(pathname: string): boolean {
-  if (pathname === "/onboarding") return true;
   if (ONBOARDING_ALLOWED_PATHS.includes(pathname)) return true;
   if (pathname.startsWith("/plan/checkout/")) return true;
   return false;
-}
-
-export function useBootstrapContext(): BootstrapContextValue {
-  const context = useContext(BootstrapContext);
-  if (!context) {
-    throw new Error("useBootstrapContext must be used within BootstrapController");
-  }
-  return context;
 }
 
 function BootLoadingScreen({ slowNetwork, onRetry }: { slowNetwork: boolean; onRetry: () => void }) {
@@ -125,7 +93,6 @@ export function BootstrapController({ children }: { children: ReactNode }) {
   const location = useLocation();
   const { initData, isInsideTelegram } = useTelegramWebApp();
   const machine = useBootstrapMachine({ initData, isInsideTelegram });
-  const session = machine.session;
   const {
     phase,
     onboardingStep,
@@ -156,10 +123,9 @@ export function BootstrapController({ children }: { children: ReactNode }) {
       return;
     }
     if (phase === "app_ready" && location.pathname === "/onboarding") {
-      const route = session?.routing?.recommended_route ?? "/plan";
-      navigate(route, { replace: true });
+      navigate("/", { replace: true });
     }
-  }, [location.pathname, navigate, phase, session?.routing?.recommended_route]);
+  }, [location.pathname, navigate, phase]);
 
   const readyTracked = useRef(false);
   useEffect(() => {

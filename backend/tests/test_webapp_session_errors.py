@@ -55,3 +55,20 @@ async def test_webapp_logout_invalid_bearer_returns_401_unified_error() -> None:
     assert response.status_code == 401
     body = response.json()
     assert_error_response(body, code="UNAUTHORIZED", message_substring="Invalid session")
+
+
+@pytest.mark.asyncio
+async def test_webapp_user_access_invalid_bearer_returns_401_unified_error() -> None:
+    """Invalid Bearer token on /webapp/user/access should yield 401."""
+    async with AsyncClient(
+        transport=ASGITransport(app=app),
+        base_url="http://test",
+        timeout=5.0,
+    ) as client:
+        response = await client.get(
+            "/api/v1/webapp/user/access",
+            headers={"Authorization": "Bearer invalid-session"},
+        )
+    assert response.status_code == 401
+    body = response.json()
+    assert_error_response(body, code="UNAUTHORIZED", message_substring="Invalid session")

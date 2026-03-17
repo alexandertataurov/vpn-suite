@@ -70,19 +70,27 @@ function getPageLabel(pathname: string): string {
 
 interface DashboardTopbarProps {
   onOpenMenu?: () => void;
+  isMenuOpen?: boolean;
+  navId?: string;
 }
 
-export function DashboardTopbar({ onOpenMenu }: DashboardTopbarProps) {
+export function DashboardTopbar({ onOpenMenu, isMenuOpen, navId }: DashboardTopbarProps) {
   const { pathname } = useLocation();
   const time = useLiveClock();
   const pageLabel = getPageLabel(pathname);
   const isNarrow = useMediaQuery("(max-width: 768px)");
+  const menuExpanded = Boolean(isMenuOpen);
 
   return (
     <TopbarRoot>
       <TopbarBrand wordmark="VPN Suite" product="Admin" />
       {isNarrow && onOpenMenu ? (
-        <TopbarBtn aria-label="Open menu" onClick={onOpenMenu}>
+        <TopbarBtn
+          aria-label="Toggle dashboard navigation"
+          aria-expanded={menuExpanded}
+          aria-controls={navId}
+          onClick={onOpenMenu}
+        >
           <MenuIcon />
         </TopbarBtn>
       ) : null}

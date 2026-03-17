@@ -15,7 +15,7 @@ This backlog consolidates the actionable UI/design alignment work across **admin
 ## A. Foundations (tokens, theming, typography)
 
 - [ ] **Consumer theme mapping (miniapp)**: add consumer semantic mappings that keep **semantic token names identical** (`--color-bg`, `--color-text`, `--color-accent`, …) while changing the values for miniapp brand.
-  - **Touches**: `frontend/miniapp/src/shared-inline/theme/tokens.css`
+  - **Touches**: `frontend/miniapp/src/design-system/styles/tokens/base.css`
   - **Outcome**: miniapp can use `data-theme="consumer-light"` / `data-theme="consumer-dark"` without hardcoding colors.
 
 - [ ] **Dim theme correctness**: `ThemeProvider` supports `"dim"`, and `tokens/colors.json` defines it, but ensure token build outputs `html[data-theme="dim"] { … }`.
@@ -32,7 +32,7 @@ This backlog consolidates the actionable UI/design alignment work across **admin
 
 ### Missing primitives that drive divergence
 - [ ] **Radio / RadioGroup** (explicitly missing in inventories; common form need)
-  - **Target**: `frontend/admin/src/design-system/primitives/` (admin) and/or `frontend/miniapp/src/shared-inline/ui/` (miniapp)
+  - **Target**: `frontend/admin/src/design-system/primitives/` (admin) and/or `frontend/miniapp/src/design-system/` (miniapp)
   - **DoD**: token-only styling, keyboard accessible, Storybook stories.
 
 - [ ] **Tooltip** (only chart tooltips exist; add if any UI needs it outside charts)

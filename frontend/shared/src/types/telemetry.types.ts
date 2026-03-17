@@ -58,7 +58,8 @@ export type WebappTelemetryEventType =
   | "referral_attach_failed"
   | "device_limit_reached"
   | "support_opened"
-  | "web_vital";
+  | "web_vital"
+  | "home_metrics_load";
 
 export interface WebappTelemetryPayloadBase {
   screen_name?: string;
@@ -120,7 +121,7 @@ export interface WebappTelemetryEventMap {
     reason?: string;
     show?: boolean;
   };
-   restore_access_started: WebappTelemetryPayloadBase & {
+  restore_access_started: WebappTelemetryPayloadBase & {
     screen_name?: string;
     /** Where user started restore from (e.g. plan, support, expired_banner). */
     entry_point?: string;
@@ -165,6 +166,11 @@ export interface WebappTelemetryEventMap {
     entry_point?: string;
   };
   web_vital: WebVitalTelemetryPayload;
+  home_metrics_load: WebappTelemetryPayloadBase & {
+    active_streak?: string;
+    trust_score?: string;
+    usage?: string;
+  };
 }
 
 export type WebappTelemetryPayloadFor<E extends WebappTelemetryEventType> =

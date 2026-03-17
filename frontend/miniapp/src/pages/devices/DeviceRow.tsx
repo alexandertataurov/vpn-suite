@@ -1,6 +1,7 @@
-import { IconSmartphone, MissionOperationArticle, StatusChip } from "@/design-system";
-import { useI18n } from "@/hooks/useI18n";
-import { DeviceRowActions } from "../DeviceRowActions";
+import { IconSmartphone } from "@/design-system/icons";
+import { MissionOperationArticle, StatusChip } from "@/design-system";
+import { useI18n } from "@/hooks";
+import { DeviceRowActions } from "./DeviceRowActions";
 
 export interface DeviceRowProps {
   device: {
@@ -63,7 +64,7 @@ export function DeviceRow({
   isConfirmingId,
   isReplacingId,
 }: DeviceRowProps) {
-  const { t, locale } = useI18n();
+  const { locale, t } = useI18n();
   const status = normalizeDeviceStatus(device.status);
   const resolvedFormatLastSeen =
     formatLastSeen ?? ((value: string) => formatLastSeenDefault(value, locale, formatIssuedAt));
@@ -78,35 +79,41 @@ export function DeviceRow({
   const tone: "green" | "amber" | "red" = status === "idle" ? "amber" : status === "revoked" ? "red" : "green";
   const metaParts: string[] = [];
   if (device.last_seen_handshake_at) {
-    metaParts.push(`${t("devices.row_last_sync_prefix")} ${resolvedFormatLastSeen(device.last_seen_handshake_at)}`);
+    metaParts.push(`Last activity ${resolvedFormatLastSeen(device.last_seen_handshake_at)}`);
   }
-  metaParts.push(`${t("devices.row_issued_prefix")} ${formatIssuedAt(device.issued_at)}`);
+  metaParts.push(`Issued ${formatIssuedAt(device.issued_at)}`);
   const metaLine = metaParts.join(" · ");
+  const title = device.device_name || `Device #${device.id.slice(-6)}`;
+  const statusChip = (
+    <StatusChip
+      variant={
+        status === "connected"
+          ? "active"
+          : status === "idle"
+            ? "pending"
+            : status === "config_pending"
+              ? "info"
+              : "offline"
+      }
+    >
+      {statusLabel}
+    </StatusChip>
+  );
+  const defaultDescription = (
+    <span className="device-row-meta miniapp-tnum">
+      {statusChip}
+      <span className="device-row-meta-text">{metaLine}</span>
+    </span>
+  );
 
   return (
     <MissionOperationArticle
+      className="device-row-surface"
       tone={tone}
       iconTone={tone}
       icon={<IconSmartphone size={20} strokeWidth={1.6} />}
-      title={device.device_name || `Device #${device.id.slice(-6)}`}
-      description={(
-        <span className="device-row-meta miniapp-tnum">
-          <StatusChip
-            variant={
-              status === "connected"
-                ? "active"
-                : status === "idle"
-                  ? "pending"
-                  : status === "config_pending"
-                    ? "active"
-                    : "offline"
-            }
-          >
-            {statusLabel}
-          </StatusChip>
-          <span className="device-row-meta-text">{metaLine}</span>
-        </span>
-      )}
+      title={title}
+      description={defaultDescription}
       trailing={(
         <DeviceRowActions
           deviceId={device.id}

@@ -1,0 +1,24 @@
+
+/opt/vpn-suite/frontend/miniapp/src/components/onboarding/OnboardingStepCard.tsx
+  129:36  error  Prop "style" is forbidden on DOM Nodes  react/forbid-dom-props
+  130:20  error  Prop "style" is forbidden on DOM Nodes  react/forbid-dom-props
+  132:54  error  Prop "style" is forbidden on DOM Nodes  react/forbid-dom-props
+  135:56  error  Prop "style" is forbidden on DOM Nodes  react/forbid-dom-props
+  143:16  error  Prop "style" is forbidden on DOM Nodes  react/forbid-dom-props
+
+/opt/vpn-suite/frontend/miniapp/src/pages/Home.tsx
+  3:1  error  '@/design-system/layouts/PageScaffold' import is restricted from being used by a pattern. Import reusable UI from '@/design-system'. Only chunk-cycle-safe direct imports are allowed: PageFrame, FallbackScreen, and PageStateScreen    no-restricted-imports
+  4:1  error  '@/design-system/recipes/ModernHeader' import is restricted from being used by a pattern. Import reusable UI from '@/design-system'. Only chunk-cycle-safe direct imports are allowed: PageFrame, FallbackScreen, and PageStateScreen    no-restricted-imports
+  5:1  error  '@/design-system/recipes/ModernHeroCard' import is restricted from being used by a pattern. Import reusable UI from '@/design-system'. Only chunk-cycle-safe direct imports are allowed: PageFrame, FallbackScreen, and PageStateScreen  no-restricted-imports
+
+/opt/vpn-suite/frontend/miniapp/src/pages/Plan.tsx
+  110:14  error  Prop "style" is forbidden on DOM Nodes  react/forbid-dom-props
+
+/opt/vpn-suite/frontend/miniapp/src/pages/Support.tsx
+   4:1   error  '@/design-system/layouts/PageScaffold' import is restricted from being used by a pattern. Import reusable UI from '@/design-system'. Only chunk-cycle-safe direct imports are allowed: PageFrame, FallbackScreen, and PageStateScreen  no-restricted-imports
+  95:48  error  Prop "style" is forbidden on DOM Nodes                                                                                                                                                                                                 react/forbid-dom-props
+  96:45  error  Prop "style" is forbidden on DOM Nodes                                                                                                                                                                                                 react/forbid-dom-props
+  97:73  error  Prop "style" is forbidden on DOM Nodes                                                                                                                                                                                                 react/forbid-dom-props
+
+✖ 13 problems (13 errors, 0 warnings)
+

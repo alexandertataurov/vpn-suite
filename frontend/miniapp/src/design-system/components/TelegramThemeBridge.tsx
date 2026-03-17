@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import { useTheme } from "../theme";
-import { useTelegramTheme } from "@/hooks/telegram";
+import { useTheme } from "../core/theme";
+import { useTelegramTheme } from "@/hooks";
 import { telegramClient } from "@/telegram/telegramCoreClient";
 
 export function TelegramThemeBridge() {

@@ -1,7 +1,7 @@
 /**
  * Design-system hook: current theme mode (light vs dark). Wraps useTheme.
  */
-import { useTheme } from "../theme";
+import { useTheme } from "../core/theme";
 
 export type ThemeMode = "light" | "dark";
 

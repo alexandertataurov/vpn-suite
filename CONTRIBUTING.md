@@ -4,24 +4,24 @@
 
 These rules are enforced by CI. PRs that violate them will not merge.
 
-**Two apps:** **Miniapp** (Telegram Mini App) uses `frontend/miniapp` tokens and shared-inline UI. **Admin** uses its own design system at `frontend/admin/src/design-system/` (tokens in `tokens/tokens.css`, primitives, stories in `design-system/stories/` and `.storybook/data`). The following tokens/components/pages rules apply to the miniapp; for admin, use the admin design-system and the same no-hardcoded-values discipline.
+**Two apps:** **Miniapp** (Telegram Mini App) uses `frontend/miniapp` tokens and design-system UI. **Admin** uses its own design system at `frontend/admin/src/design-system/` (tokens in `tokens/tokens.css`, primitives, stories in `design-system/stories/` and `.storybook/data`). The following tokens/components/pages rules apply to the miniapp; for admin, use the admin design-system and the same no-hardcoded-values discipline.
 
 ### Tokens (miniapp)
 - All design values (color, spacing, type, motion, z-index) live in
-  `frontend/miniapp/src/shared-inline/theme/tokens.css` — the single source of truth
+  `frontend/miniapp/src/design-system/styles/tokens/base.css` and `theme/consumer.css` — the single source of truth
 - No value is defined anywhere else
 - To add a token: update tokens.css, follow the existing naming scheme, get reviewed
 
 ### Components (miniapp)
 - Need a UI pattern? Check design-system and components first
 - If it exists: use it — never rebuild inline
-- If it doesn't exist: build it in `frontend/miniapp/src/shared-inline/ui` or `frontend/miniapp/src/components`, not in a feature folder
+- If it doesn't exist: build it in `frontend/miniapp/src/design-system` or `frontend/miniapp/src/components`, not in a feature folder
 - Feature folders contain data-fetching and composition only — never style primitives
 
 ### Icons (miniapp)
-- Always: `import { IconName } from "@/shared-inline/icons"`
+- Always: `import { IconName } from "@/lib/icons"` or `@/design-system/icons`
 - Never: `import { LucideIcon } from "lucide-react"` in a component or page
-- To add an icon: add alias to `frontend/miniapp/src/shared-inline/icons.ts` first
+- To add an icon: add alias to `frontend/miniapp/src/lib/icons.ts` first
 
 ### Status colors (miniapp)
 - Always: `STATUS_TOKENS[variant].color`

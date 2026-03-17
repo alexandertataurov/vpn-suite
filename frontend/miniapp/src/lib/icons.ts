@@ -22,12 +22,16 @@ export {
   Home as IconHome,
   Smartphone as IconSmartphone,
   User as IconUser,
+  Settings as IconSettings,
   Pencil as IconPencil,
   ChevronLeft as IconChevronLeft,
   AlertTriangle as IconAlertTriangle,
   CircleX as IconCircleX,
   MoreVertical as IconMoreVertical,
   Download as IconDownload,
+  ArrowRight as IconArrowRight,
+  ExternalLink as IconExternalLink,
+  ChevronRight as IconChevronRight,
 } from "lucide-react";
 
 export type { LucideIcon as IconType } from "lucide-react";

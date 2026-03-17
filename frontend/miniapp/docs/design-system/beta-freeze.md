@@ -42,7 +42,7 @@ New screens must compose from these building blocks; no one-off page-specific sy
 - Structural primitives:
   - `Panel` (`design-system/primitives/Panel.tsx`) — generic card shell.
   - `ListCard` (`design-system/patterns/ListCard.tsx`) — list-style cards.
-  - `HomeHeroPanel`, `MissionCard` — specialized hero/state cards.
+  - `ModernHeroCard`, `MissionCard` — specialized hero/state cards.
 - Rule:
   - For generic cards, prefer `Panel`.
   - For list rows with card treatment, prefer `ListCard`.
@@ -50,7 +50,7 @@ New screens must compose from these building blocks; no one-off page-specific sy
 
 **Button**
 
-- Canonical button: `Button` (`design-system/components/buttons/Button.tsx`).
+- Canonical button: `Button` (`design-system/components/Button/`).
   - Variants: `primary`, `secondary`, `ghost`, `outline`, `danger`, `link`.
   - Sizes: `sm`, `md`, `lg`, `icon`.
   - Special `kind="connect"` for primary connection/setup CTAs.

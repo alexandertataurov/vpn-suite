@@ -1,7 +1,9 @@
-import { useEffect, useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { ButtonHTMLAttributes } from "react";
 import { cn } from "@vpn-suite/shared";
+import { useSheetSwipeDismiss } from "@/design-system/hooks";
+import { decrementBlockingOverlayCount, incrementBlockingOverlayCount } from "@/design-system/utils/overlayStack";
 import { Field } from "./Field";
 
 export interface SelectOption {
@@ -51,6 +53,8 @@ export function Select({
   const generatedId = useId();
   const id = idProp ?? (typeof label === "string" ? label.toLowerCase().replace(/\s/g, "-") : `select-${generatedId.replace(/:/g, "")}`);
   const [open, setOpen] = useState(false);
+  const optionsRef = useRef<HTMLDivElement>(null);
+  const sheetRef = useRef<HTMLDivElement>(null);
 
   const resolvedOptions: SelectOption[] = useMemo(() => {
     if (loading) return [{ value: "", label: loadingLabel, disabled: true }];
@@ -68,6 +72,7 @@ export function Select({
 
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    incrementBlockingOverlayCount();
 
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
@@ -78,9 +83,36 @@ export function Select({
     window.addEventListener("keydown", onKeyDown);
     return () => {
       document.body.style.overflow = previousOverflow;
+      decrementBlockingOverlayCount();
       window.removeEventListener("keydown", onKeyDown);
     };
   }, [open]);
+
+  const swipeGesture = useSheetSwipeDismiss({
+    enabled: open,
+    onDismiss: () => setOpen(false),
+    resolveStartContext: (target) => {
+      const startedInHandle = target?.closest(".select-sheet-handle, .select-sheet-header") != null;
+      const startedInSheet = target?.closest(".select-sheet") != null;
+      if (!startedInHandle && !startedInSheet) {
+        return { allowStart: false };
+      }
+      return {
+        allowStart: true,
+        scrollElement: startedInSheet ? optionsRef.current : null,
+      };
+    },
+  });
+
+  useEffect(() => {
+    if (!sheetRef.current) return;
+    if (!open || swipeGesture.offset <= 0) {
+      sheetRef.current.style.removeProperty("transform");
+      return;
+    }
+
+    sheetRef.current.style.transform = `translateY(${swipeGesture.offset}px)`;
+  }, [open, swipeGesture.offset]);
 
   const trigger = (
     <>
@@ -114,16 +146,22 @@ export function Select({
       {open ? createPortal(
         <div
           className="select-sheet-overlay"
+          data-swipe-active={swipeGesture.isDragging ? "true" : "false"}
+          data-swipe-ready={swipeGesture.isReady ? "true" : "false"}
           role="presentation"
           onClick={() => setOpen(false)}
         >
           <div
+            ref={sheetRef}
             id={`${id}-sheet`}
             role="dialog"
             aria-modal="true"
             aria-labelledby={`${id}-sheet-title`}
             className="select-sheet"
+            data-swipe-state={swipeGesture.isDragging ? "dragging" : "idle"}
+            data-swipe-ready={swipeGesture.isReady ? "true" : "false"}
             onClick={(event) => event.stopPropagation()}
+            {...swipeGesture.bind}
           >
             <div className="select-sheet-handle" aria-hidden />
             <div className="select-sheet-header">
@@ -142,7 +180,12 @@ export function Select({
                 ×
               </button>
             </div>
-            <div className="select-sheet-options" role="listbox" aria-label={typeof label === "string" ? label : "Select options"}>
+            <div
+              ref={optionsRef}
+              className="select-sheet-options"
+              role="listbox"
+              aria-label={typeof label === "string" ? label : "Select options"}
+            >
               {resolvedOptions.map((option) => {
                 const selected = option.value === value;
                 return (

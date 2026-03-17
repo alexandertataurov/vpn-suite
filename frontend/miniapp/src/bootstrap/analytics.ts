@@ -149,19 +149,3 @@ export async function initAnalytics(): Promise<void> {
     );
   }
 }
-
-/**
- * Enrich analytics context when bootstrap reaches app_ready.
- * Call once when phase === "app_ready" to update context with full platform/startParam
- * (init may have run before Telegram was ready).
- */
-export function enrichContextAtAppReady(): void {
-  const platform = telegramClient.getPlatform();
-  const startParam = telegramClient.getInitDataUnsafe()?.start_param ?? "";
-  const colorScheme = telegramClient.getColorScheme();
-  setContext({
-    telegram_platform: platform,
-    telegram_start_param: startParam ? startParam.slice(0, 200) : "",
-    telegram_color_scheme: colorScheme,
-  });
-}

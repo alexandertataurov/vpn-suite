@@ -9,6 +9,8 @@ import {
   type ReactNode,
 } from "react";
 import { cn } from "@vpn-suite/shared";
+import { usePrefersReducedMotion } from "@/design-system/hooks";
+import { getMotionDurationMs } from "@/design-system/core/tokens";
 
 export type ToastVariant = "success" | "error" | "info" | "persistent";
 
@@ -36,8 +38,6 @@ interface ToastContextValue {
 }
 
 const MAX_VISIBLE_TOASTS = 3;
-const EXIT_DURATION_MS = 180;
-
 const ToastContext = createContext<ToastContextValue | null>(null);
 
 const defaultDuration: Record<ToastVariant, number> = {
@@ -55,6 +55,8 @@ const defaultDismissible: Record<ToastVariant, boolean> = {
 };
 
 export function ToastContainer({ children }: { children: ReactNode }) {
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const exitDurationMs = getMotionDurationMs("exit", prefersReducedMotion);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const timeoutIdsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
@@ -76,11 +78,11 @@ export function ToastContainer({ children }: { children: ReactNode }) {
       const exitTimeoutId = setTimeout(() => {
         timeoutIdsRef.current.delete(id);
         setToasts((current) => current.filter((toast) => toast.id !== id));
-      }, EXIT_DURATION_MS);
+      }, exitDurationMs);
       timeoutIdsRef.current.set(id, exitTimeoutId);
     }, duration);
     timeoutIdsRef.current.set(id, timeoutId);
-  }, [clearToastTimeout]);
+  }, [clearToastTimeout, exitDurationMs]);
 
   useEffect(() => {
     const ref = timeoutIdsRef;
@@ -98,9 +100,9 @@ export function ToastContainer({ children }: { children: ReactNode }) {
     const timeoutId = setTimeout(() => {
       timeoutIdsRef.current.delete(id);
       setToasts((current) => current.filter((toast) => toast.id !== id));
-    }, EXIT_DURATION_MS);
+    }, exitDurationMs);
     timeoutIdsRef.current.set(id, timeoutId);
-  }, [clearToastTimeout]);
+  }, [clearToastTimeout, exitDurationMs]);
 
   const addToast = useCallback<ToastContextValue["addToast"]>((input, legacyVariant = "info", legacyDuration) => {
     const payload: ToastInput = typeof input === "string"
@@ -157,10 +159,12 @@ export function ToastViewport({
 
   return (
     <div className={cn("toast-container", className)} aria-live="polite" aria-atomic="false">
-      {toasts.map((toast) => (
+      {toasts.map((toast, index) => (
         <Toast
           key={toast.id}
           {...toast}
+          stackIndex={index}
+          stackCount={toasts.length}
           onDismiss={onDismiss ? () => onDismiss(toast.id) : undefined}
         />
       ))}
@@ -175,6 +179,8 @@ export function Toast({
   dismissible,
   exiting = false,
   onDismiss,
+  stackIndex = 0,
+  stackCount = 1,
   className = "",
 }: {
   message: string;
@@ -183,6 +189,8 @@ export function Toast({
   dismissible?: boolean;
   exiting?: boolean;
   onDismiss?: () => void;
+  stackIndex?: number;
+  stackCount?: number;
   className?: string;
 }) {
   const resolvedDuration = duration ?? defaultDuration[variant];
@@ -197,13 +205,13 @@ export function Toast({
         exiting ? "toast-exit" : "toast-enter",
         className,
       )}
+      data-stack-index={stackIndex}
+      data-stack-count={stackCount}
       role={variant === "error" ? "alert" : "status"}
       aria-live={variant === "error" ? "assertive" : "polite"}
     >
       <div className="toast-content">
-        <span className="toast-icon" aria-hidden>
-          {toastIcon[variant]}
-        </span>
+        <span className="toast-icon" aria-hidden />
         <span className="toast-message">{message}</span>
       </div>
       {resolvedDismissible ? (
@@ -216,17 +224,14 @@ export function Toast({
           ×
         </button>
       ) : null}
-      {resolvedDuration > 0 ? <span className="toast-progress" aria-hidden /> : null}
+      {resolvedDuration > 0 ? (
+        <span className="toast-progress" aria-hidden>
+          <span className="toast-progress-bar" />
+        </span>
+      ) : null}
     </div>
   );
 }
-
-const toastIcon: Record<ToastVariant, string> = {
-  success: "●",
-  error: "●",
-  info: "●",
-  persistent: "●",
-};
 
 export function useToast() {
   const ctx = useContext(ToastContext);

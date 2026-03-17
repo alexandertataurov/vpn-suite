@@ -1,0 +1,97 @@
+import type { HTMLAttributes, ReactNode } from "react";
+import { Stack } from "../../core/primitives/Stack";
+import { Body } from "../../components/typography";
+
+export interface SectionHeaderRowProps extends Omit<HTMLAttributes<HTMLDivElement>, "title"> {
+  title?: ReactNode;
+  description?: ReactNode;
+  action?: ReactNode;
+  noteClassName?: string;
+}
+
+/** Doc-only section header row when section has no title (description/action only). */
+export function SectionHeaderRow({
+  title,
+  description,
+  action,
+  noteClassName = "",
+  className = "",
+  ...props
+}: SectionHeaderRowProps) {
+  if (!title && !description && !action) return null;
+  const hasTitle = title != null && title !== "";
+  return (
+    <div className={`shead ${className}`.trim()} {...props}>
+      {hasTitle ? <span className="shead-lbl">{title}</span> : null}
+      {hasTitle ? <span className="shead-rule" aria-hidden /> : null}
+      {(action ?? description) ? (
+        <span className={["shead-note", noteClassName].filter(Boolean).join(" ")}>{action ?? description}</span>
+      ) : null}
+    </div>
+  );
+}
+
+export interface PageSectionProps extends Omit<HTMLAttributes<HTMLElement>, "title"> {
+  title?: ReactNode;
+  description?: ReactNode;
+  action?: ReactNode;
+  children: ReactNode;
+  headerClassName?: string;
+  descriptionClassName?: string;
+  contentClassName?: string;
+  noteClassName?: string;
+}
+
+/** Section with design-system shead (label + line + note). Built from Stack + typography. */
+export function PageSection({
+  title,
+  description,
+  action,
+  headerClassName = "",
+  descriptionClassName = "",
+  contentClassName = "",
+  noteClassName = "",
+  className = "",
+  children,
+  ...props
+}: PageSectionProps) {
+  const hasShead = title != null && title !== "";
+  const hasMeta = description || action;
+  return (
+    <section className={className.trim() || undefined} {...props}>
+      <Stack direction="vertical" gap="2" className={contentClassName || undefined}>
+        {hasShead ? (
+          <>
+            <div className={["shead", headerClassName].filter(Boolean).join(" ")}>
+              <span className="shead-lbl">{title}</span>
+              <span className="shead-rule" aria-hidden />
+              {action ? <span className={["shead-note", noteClassName].filter(Boolean).join(" ")}>{action}</span> : null}
+            </div>
+            {description ? (
+              <div className={["type-body-sm", descriptionClassName].filter(Boolean).join(" ")}>
+                {typeof description === "string" ? description : <Body as="span">{description}</Body>}
+              </div>
+            ) : null}
+          </>
+        ) : hasMeta ? (
+          <>
+            {action ? (
+              <SectionHeaderRow
+                title={null}
+                action={action}
+                className={headerClassName}
+                noteClassName={noteClassName}
+              />
+            ) : null}
+            {description ? (
+              <div className={["type-body-sm", descriptionClassName].filter(Boolean).join(" ")}>
+                {typeof description === "string" ? description : <Body as="span">{description}</Body>}
+              </div>
+            ) : null}
+          </>
+        ) : null}
+        {children}
+      </Stack>
+    </section>
+  );
+}

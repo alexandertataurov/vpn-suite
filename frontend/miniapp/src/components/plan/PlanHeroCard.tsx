@@ -1,81 +1,72 @@
-import type { ReactNode } from "react";
-import { ButtonRow, DataCell, DataGrid, MissionPrimaryButton, MissionProgressBar, MissionSecondaryLink, PageCardSection, PageHeaderBadge } from "@/design-system";
-import { useI18n } from "@/hooks/useI18n";
+import { Button, StatusChip } from "@/design-system";
+import { IconShield } from "@/design-system/icons";
+import { useI18n } from "@/hooks";
+
+interface PlanHeroMetaItem {
+  label: string;
+  value: string;
+}
 
 export interface PlanHeroCardProps {
-  planName: string;
-  planPeriod: string;
-  price: ReactNode;
-  expiryText: string;
-  devicesLabel: string;
-  expiryPercent: number;
-  expiryFillClass: "ok" | "warn" | "crit";
-  renewLabel: string;
-  manageLabel?: string | null;
-  onRenew: () => void;
-}
-
-function mapTone(fillClass: "ok" | "warn" | "crit"): "healthy" | "warning" | "danger" {
-  if (fillClass === "crit") return "danger";
-  if (fillClass === "warn") return "warning";
-  return "healthy";
-}
-
-function mapCardTone(fillClass: "ok" | "warn" | "crit"): "green" | "amber" | "red" {
-  if (fillClass === "crit") return "red";
-  if (fillClass === "warn") return "amber";
-  return "green";
-}
-
-function mapBadgeTone(fillClass: "ok" | "warn" | "crit"): "success" | "warning" | "danger" {
-  if (fillClass === "crit") return "danger";
-  if (fillClass === "warn") return "warning";
-  return "success";
+  title: string;
+  statusLine: string;
+  statusBadge: string;
+  statusBadgeTone: "active" | "pending" | "offline";
+  metaItems: PlanHeroMetaItem[];
+  primaryActionLabel: string;
+  secondaryActionLabel?: string | null;
+  onPrimaryAction: () => void;
+  onSecondaryAction?: (() => void) | null;
 }
 
 export function PlanHeroCard({
-  planName,
-  planPeriod,
-  price,
-  expiryText,
-  devicesLabel,
-  expiryPercent,
-  expiryFillClass,
-  renewLabel,
-  manageLabel,
-  onRenew,
+  title,
+  statusLine,
+  statusBadge,
+  statusBadgeTone,
+  metaItems,
+  primaryActionLabel,
+  secondaryActionLabel,
+  onPrimaryAction,
+  onSecondaryAction,
 }: PlanHeroCardProps) {
   const { t } = useI18n();
 
   return (
-    <PageCardSection
-      title={t("plan.current_plan_label")}
-      description={planName}
-      action={<PageHeaderBadge tone={mapBadgeTone(expiryFillClass)} label={planName} />}
-      cardTone={mapCardTone(expiryFillClass)}
-      cardClassName="module-card plan-hero-card stagger-1"
-    >
-      <DataGrid columns={2}>
-        <DataCell label={t("plan.hero_plan_label")} value={`${planName} — ${planPeriod}`} cellType="plan" />
-        <DataCell label={t("plan.hero_price_label")} value={price} valueTone="teal" />
-        <DataCell label={t("plan.hero_valid_until_label")} value={expiryText} />
-        <DataCell label={t("plan.hero_devices_label")} value={devicesLabel} />
-      </DataGrid>
-      <div className="plan-hero-expiry-bar">
-        <MissionProgressBar
-          percent={Math.round(expiryPercent)}
-          tone={mapTone(expiryFillClass)}
-          ariaLabel={t("plan.hero_expiry_progress_aria")}
-        />
+    <div className="modern-hero-card stagger-1">
+      <div className="modern-status-group">
+        <div className="modern-pulse-indicator">
+           <IconShield strokeWidth={2.5} size={22} />
+        </div>
+        <div className="modern-status-text">
+          <div className="modern-header-label">{t("plan.current_plan_title")}</div>
+          <div className="modern-status-title">{title}</div>
+          <div className="modern-status-subtitle">
+            <StatusChip variant={statusBadgeTone}>{statusBadge}</StatusChip>
+            <span className="plan-hero-status-line">{statusLine}</span>
+          </div>
+        </div>
       </div>
-      <ButtonRow>
-        <MissionPrimaryButton onClick={onRenew}>{renewLabel}</MissionPrimaryButton>
-        {manageLabel ? (
-          <MissionSecondaryLink to="/devices" className="plan-hero-manage-link">
-            {manageLabel}
-          </MissionSecondaryLink>
-        ) : null}
-      </ButtonRow>
-    </PageCardSection>
+
+      <div className="modern-metrics-row">
+        {metaItems.map((item, index) => (
+          <div key={item.label} className={`modern-metric-item ${index === 1 ? 'modern-metric-item--centered' : index === 2 ? 'modern-align-right' : ''}`}>
+             <span className="modern-metric-label">{item.label}</span>
+             <span className="modern-metric-value plan-hero-metric-value">{item.value}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="plan-hero-button-group">
+        <Button variant="primary" fullWidth size="lg" onClick={onPrimaryAction}>
+          {primaryActionLabel}
+        </Button>
+        {secondaryActionLabel && onSecondaryAction && (
+          <Button variant="secondary" className="plan-hero-secondary-button" onClick={onSecondaryAction}>
+            {secondaryActionLabel}
+          </Button>
+        )}
+      </div>
+    </div>
   );
 }

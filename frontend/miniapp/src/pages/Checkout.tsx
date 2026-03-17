@@ -1,16 +1,19 @@
+import { useNavigate } from "react-router-dom";
 import { CheckoutFlowCard, CheckoutSummaryCard, SessionMissing } from "@/components";
-import { PageFrame } from "@/design-system/layouts/PageFrame";
-import { FallbackScreen } from "@/design-system/patterns/FallbackScreen";
 import {
-  PageCardSection,
+  FallbackScreen,
+  HelperNote,
   Skeleton,
-  MissionAlert,
-  MissionChip,
+  InlineAlert,
+  PageScaffold,
+  ModernHeader,
+  PageSection,
 } from "@/design-system";
 import { useCheckoutPageModel } from "@/page-models";
-import { useI18n } from "@/hooks/useI18n";
+import { useI18n } from "@/hooks";
 
 export function CheckoutPage() {
+  const navigate = useNavigate();
   const model = useCheckoutPageModel();
   const { t } = useI18n();
 
@@ -21,18 +24,19 @@ export function CheckoutPage() {
   if (model.pageState.status === "error") {
     if (model.pageState.title === "Plan not found") {
       return (
-        <PageFrame title={model.header.title} className="checkout-page">
-          <PageCardSection>
-            <MissionAlert
-              tone="error"
+        <PageScaffold>
+          <ModernHeader title={model.header.title} showSettings={false} />
+          <PageSection>
+            <InlineAlert
+              variant="error"
               title={model.pageState.title}
-              message={
+              body={
                 model.pageState.message ??
                 t("checkout.plan_not_found_message", { planId: model.selectedPlanId ?? "" })
               }
             />
-          </PageCardSection>
-        </PageFrame>
+          </PageSection>
+        </PageScaffold>
       );
     }
 
@@ -47,37 +51,41 @@ export function CheckoutPage() {
 
   if (model.pageState.status === "loading") {
     return (
-      <PageFrame title={model.header.title} className="checkout-page">
-        <div className="module-card">
-          <Skeleton className="skeleton-h-md" />
-          <Skeleton className="skeleton-h-2xl" />
+      <PageScaffold>
+        <ModernHeader title={model.header.title ?? "Checkout"} showSettings={false} />
+        <div className="modern-content-pad stagger-1">
+          <Skeleton variant="card" height={140} />
+          <Skeleton variant="card" height={220} className="u-mt-16" />
         </div>
-      </PageFrame>
+      </PageScaffold>
     );
   }
 
   const showConfirmation = model.confirmationStep;
 
   return (
-    <PageFrame title={model.header.title} subtitle={model.header.subtitle} className="checkout-page">
-      <PageCardSection
-        title={
-          showConfirmation ? t("checkout.section_title_confirm") : t("checkout.section_title_review")
-        }
-        description={
-          showConfirmation ? t("checkout.section_desc_confirm") : t("checkout.section_desc_review")
-        }
-        action={<MissionChip tone={model.paymentBadge.tone} className="section-meta-chip">{model.paymentBadge.label}</MissionChip>}
+    <PageScaffold>
+      <ModernHeader
+        title={model.header.title}
+        subtitle={model.header.subtitle}
+        showSettings={false}
+        onBack={() => {
+          if (model.confirmationStep) {
+            model.handleBack();
+          } else {
+            navigate(-1);
+          }
+        }}
+      />
+      <PageSection
+        title="Review and pay"
+        description={showConfirmation ? "Pay in Telegram to activate access." : "Check the plan details before payment."}
       >
         <CheckoutSummaryCard
           planDisplayName={model.planDisplayName}
-          planPriceStars={model.planPriceStars}
-          promoStatus={model.promoStatus}
-          discountedPriceXtr={model.discountedPriceXtr}
           showConfirmation={showConfirmation}
           planDurationDays={model.planDurationDays}
           planDeviceLimit={model.planDeviceLimit}
-          isFreePlan={model.isFreePlan}
         />
 
         <CheckoutFlowCard
@@ -101,11 +109,15 @@ export function CheckoutPage() {
           onPromoRemove={model.handlePromoRemove}
           onPromoRecovery={model.handlePromoRecovery}
           onContinue={model.handleContinue}
-          onBack={model.handleBack}
           onPay={model.handlePay}
           onRetry={model.handleRetry}
         />
-      </PageCardSection>
-    </PageFrame>
+        <div className="checkout-footer-note">
+          <HelperNote>
+            Payments and renewals are handled in Telegram. Open Devices after payment to get your config.
+          </HelperNote>
+        </div>
+      </PageSection>
+    </PageScaffold>
   );
 }

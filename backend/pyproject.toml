@@ -52,17 +52,10 @@ module = [
   "app.services.snapshot_cache",
   "app.services.server_live_key_service",
   "app.services.device_telemetry_cache",
-  "app.core.error_log_rate_limiter",
-  "app.api.v1.server_utils",
   "app.services.admin_issue_service",
   "app.services.issue_service",
-  "app.api.v1.live_metrics",
-  "app.api.v1.admin_abuse",
   "app.api.v1.devices",
-  "app.api.v1.app_settings",
-  "app.api.v1.webapp",
   "app.live_metrics.aggregator_worker",
-  "app.main",
 ]
 disable_error_code = ["assignment", "arg-type", "no-any-return", "union-attr", "attr-defined", "index", "misc", "truthy-function", "operator", "unused-ignore", "var-annotated"]
 

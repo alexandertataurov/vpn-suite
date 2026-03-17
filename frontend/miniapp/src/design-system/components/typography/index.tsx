@@ -1,7 +1,7 @@
 import type { HTMLAttributes, ReactNode } from "react";
 import { cn } from "@vpn-suite/shared";
-import { Heading as PrimitiveHeading } from "../../primitives/typography/Heading";
-import { Text as PrimitiveText } from "../../primitives/typography/Text";
+import { Heading as PrimitiveHeading } from "../../core/primitives/typography/Heading";
+import { Text as PrimitiveText } from "../../core/primitives/typography/Text";
 
 type TextTag = "h1" | "h2" | "h3" | "p" | "span" | "div" | "code";
 type CaptionUrgency = "default" | "elevated" | "warning" | "critical";

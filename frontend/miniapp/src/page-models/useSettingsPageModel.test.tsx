@@ -186,7 +186,10 @@ describe("useSettingsPageModel", () => {
 
     await waitFor(() => {
       expect(result.current.renewalDate).toBe("Mar 24, 2026");
-      expect(result.current.languageSummary).toBe("Auto (Telegram) → English");
+      expect(result.current.languageSummary).toBe("Telegram default → English");
+      expect(result.current.accountStatusLabel).toBe("Active plan · 1 device active");
+      expect(result.current.accountRenewalLabel).toBe("Renews Mar 24, 2026");
+      expect(result.current.cancelPlanDescription).toBe("Access stays active until Mar 24, 2026.");
       expect(result.current.referralSummary).toBe("3 invites sent · 1 active");
     });
   });
@@ -238,5 +241,29 @@ describe("useSettingsPageModel", () => {
 
     expect(result.current.cancelReason).toBe("technical");
     expect(mockTrack).toHaveBeenCalledWith("cancel_reason_selected", { reason_group: "technical" });
+  });
+
+  it("saves the edited profile through the webapp me endpoint", async () => {
+    const { result } = renderHook(() => useSettingsPageModel(), { wrapper });
+
+    act(() => {
+      result.current.setProfileDisplayName("Taylor");
+      result.current.setProfileEmail("taylor@example.com");
+      result.current.setProfilePhone("+1 555 0111");
+    });
+
+    await act(async () => {
+      await result.current.saveProfile();
+    });
+
+    await waitFor(() => {
+      expect(mockWebappPatch).toHaveBeenCalledWith("/webapp/me", {
+        display_name: "Taylor",
+        email: "taylor@example.com",
+        phone: "+1 555 0111",
+        locale: "en",
+      });
+      expect(mockTrack).toHaveBeenCalledWith("profile_updated", { screen_name: "settings" });
+    });
   });
 });

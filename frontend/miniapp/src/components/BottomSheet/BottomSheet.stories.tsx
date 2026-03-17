@@ -5,7 +5,7 @@ import { BottomSheet } from "./BottomSheet";
 import styles from "./BottomSheet.module.css";
 
 const meta = {
-  title: "Pages/BottomSheet",
+  title: "Components/BottomSheet",
   component: BottomSheet,
   tags: ["autodocs"],
   args: {
@@ -93,25 +93,29 @@ export const LongContext: Story = {
 
 export const Interactive: Story = {
   render: (args) => {
-    const [open, setOpen] = useState(false);
+    const InteractiveStory = () => {
+      const [open, setOpen] = useState(false);
 
-    return (
-      <>
-        <div className={styles.storyTriggerWrap}>
-          <Button variant="primary" onClick={() => setOpen(true)}>
-            Open sheet
-          </Button>
-        </div>
-        <BottomSheet
-          {...args}
-          icon={<StoryIcon />}
-          open={open}
-          onPrimary={() => setOpen(false)}
-          onSecondary={() => setOpen(false)}
-          onClose={() => setOpen(false)}
-        />
-      </>
-    );
+      return (
+        <>
+          <div className={styles.storyTriggerWrap}>
+            <Button variant="primary" onClick={() => setOpen(true)}>
+              Open sheet
+            </Button>
+          </div>
+          <BottomSheet
+            {...args}
+            icon={<StoryIcon />}
+            open={open}
+            onPrimary={() => setOpen(false)}
+            onSecondary={() => setOpen(false)}
+            onClose={() => setOpen(false)}
+          />
+        </>
+      );
+    };
+
+    return <InteractiveStory />;
   },
   args: {
     open: false,

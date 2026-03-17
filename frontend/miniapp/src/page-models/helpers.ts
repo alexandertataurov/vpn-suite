@@ -73,22 +73,35 @@ export function getConfirmedDevices(session?: WebAppMeResponse | null) {
 export function hasConfirmedConnection(session?: WebAppMeResponse | null) {
   if (!session) return false;
 
-  // Persistent confirmation from backend: once a connection is confirmed (by handshake
+  // Persistent confirmation from backend: once setup is confirmed (by handshake
   // or explicit user action), we should treat VPN setup as done even if the device is
   // currently idle. This uses durable fields that the server updates:
   // - user.last_connection_confirmed_at (per-user milestone)
   // - device.last_connection_confirmed_at (per-device milestone)
+  // We do not infer live connection state from transient device.status because the
+  // mini app has no native or backend tunnel telemetry from AmneziaVPN.
   if (session.user?.last_connection_confirmed_at) return true;
   if (getActiveDevices(session).some((device) => device.last_connection_confirmed_at)) {
     return true;
   }
 
-  // Fallback: live status-based confirmation (connected device in current session).
-  return getConfirmedDevices(session).length > 0;
+  return false;
 }
 
 export function getLatestActiveDevice(session?: WebAppMeResponse | null) {
   return getActiveDevices(session)[0] ?? null;
+}
+
+export function getLiveConnection(session?: WebAppMeResponse | null) {
+  return session?.live_connection ?? null;
+}
+
+export function hasLiveConnection(session?: WebAppMeResponse | null) {
+  return getLiveConnection(session)?.status === "connected";
+}
+
+export function hasKnownDisconnectedLiveState(session?: WebAppMeResponse | null) {
+  return getLiveConnection(session)?.status === "disconnected";
 }
 
 export function daysUntil(iso?: string | null): number {

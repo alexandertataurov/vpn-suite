@@ -9,5 +9,5 @@ export {
   type ApiClient,
   type ApiClientOptions,
 } from "@/lib/api-client";
-export { getMe, getPlans, postAuth } from "./endpoints";
+export { getMe, getUserAccess, getPlans, postAuth } from "./endpoints";
 export type { PlanItem, PlansResponse } from "./endpoints";

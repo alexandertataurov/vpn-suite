@@ -28,6 +28,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### Changed
 
+- VPS/Remote: stop.sh runs typecheck+lint only (no vitest/playwright); miniapp `test` runs unit project only; `test:all` for full suite. Rule: avoid full:check on resource-constrained VPS.
 - Design system: single `:root` token source; admin/miniapp parity; design-system checks in CI.
 - issue/rotate: persistent_keepalive from request_params; defaults for restrictive networks (MTU 1200, keepalive 15, DNS 8.8.8.8 and 8.8.4.4).
 - Repository automation docs: canonicalized `AGENTS.md` filename and merged Codex instructions so case-sensitive environments pick up the correct agent guidance.

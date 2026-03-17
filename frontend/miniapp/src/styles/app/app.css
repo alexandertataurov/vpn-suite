@@ -1,0 +1,47 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
+
+/**
+ * AmneziaVPN Mini App — App-level styles.
+ * Design-system patterns (modern-*, troubleshooter-card) live in design-system/styles/content/modern.css.
+ */
+
+/* ---- Global ---------------------------------------- */
+body {
+  background-color: var(--color-bg);
+  font-family: var(--font-sans);
+  color: var(--color-text);
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---- Page Scaffold (app override of zones.css) ------ */
+.miniapp-page-scaffold {
+  background-color: var(--color-bg);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  color: var(--color-text);
+  font-family: var(--font-sans);
+}
+
+/* ---- Footer Help ----------------------------------- */
+.modern-footer-help {
+  padding: var(--spacing-4) var(--spacing-6) var(--spacing-12);
+  text-align: center;
+}
+
+.modern-help-note {
+  font-size: var(--text-caption, 13px);
+  color: var(--color-text-tertiary);
+  font-weight: 500;
+}
+
+.modern-help-link {
+  color: var(--color-accent);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.modern-help-link:hover {
+  text-decoration: underline;
+}

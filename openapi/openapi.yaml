@@ -3689,6 +3689,35 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/servers/{server_id}/peers-live:
+    get:
+      tags:
+      - servers
+      summary: Get Server Peers Live
+      description: Fetch live peers from node.
+      operationId: get_server_peers_live_api_v1_servers__server_id__peers_live_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: server_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Server Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerPeersOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/v1/servers/{server_id}/peers:
     post:
       tags:
@@ -6633,6 +6662,22 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - webapp
+      summary: Webapp Delete Account
+      description: Permanently delete the current session user and all associated data.
+        Requires Bearer session token and confirmation.
+      operationId: webapp_delete_me_api_v1_webapp_me_delete
+      responses:
+        '204':
+          description: No Content
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/v1/webapp/onboarding/state:
     post:
       tags:
@@ -6658,6 +6703,19 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/webapp/logout:
+    post:
+      tags:
+      - webapp
+      summary: Webapp Logout
+      description: Invalidate session token. Bearer session token required.
+      operationId: webapp_logout_api_v1_webapp_logout_post
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
   /api/v1/webapp/telemetry:
     post:
       tags:
@@ -6684,6 +6742,19 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/webapp/user/access:
+    get:
+      tags:
+      - webapp
+      summary: Webapp User Access
+      description: Flat access state for state-driven Home UI.
+      operationId: webapp_user_access_api_v1_webapp_user_access_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
   /api/v1/webapp/usage:
     get:
       tags:
@@ -6761,6 +6832,37 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/WebAppIssueDeviceResponse'
+  /api/v1/webapp/devices/{device_id}:
+    patch:
+      tags:
+      - webapp
+      summary: Webapp Update Device
+      description: Update device (e.g. device_name). User can set device_name only.
+      operationId: webapp_patch_device_api_v1_webapp_devices__device_id__patch
+      parameters:
+      - name: device_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Device Id
+      requestBody:
+        content:
+          application/json:
+            schema: {}
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/v1/webapp/devices/{device_id}/confirm-connected:
     post:
       tags:

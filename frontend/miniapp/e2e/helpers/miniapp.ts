@@ -136,6 +136,7 @@ export function createSession(overrides: Partial<WebAppMeResponse> = {}): WebApp
     ],
     devices: [],
     public_ip: "203.0.113.10",
+    latest_device_delivery: null,
     onboarding: {
       completed: true,
       step: 3,
@@ -244,6 +245,7 @@ function defaultIssueDeviceResponse(nextId = "device-1"): WebAppIssueDeviceRespo
     device_id: nextId,
     config: "[Interface]\nPrivateKey = test\nAddress = 10.0.0.2/32",
     config_awg: "[Interface]\nPrivateKey = test\nAddress = 10.0.0.2/32",
+    amnezia_vpn_key: "vpn://test-amnezia-key",
     issued_at: iso("2026-03-09T10:00:00Z"),
     node_mode: "awg",
     peer_created: true,

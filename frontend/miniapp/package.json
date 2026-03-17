@@ -2,6 +2,7 @@
   "name": "miniapp",
   "private": true,
   "type": "module",
+  "sideEffects": false,
   "version": "0.0.1",
   "scripts": {
     "dev": "vite",
@@ -29,9 +30,10 @@
     "test-storybook:official": "node scripts/run-storybook-test-runner.mjs",
     "storybook:ci": "npm run storybook:taxonomy && npm run storybook:contract && npm run build-storybook && npm run test-storybook",
     "chromatic": "chromatic",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage",
+    "test": "vitest run --project unit",
+    "test:all": "vitest run",
+    "test:watch": "vitest --project unit",
+    "test:coverage": "vitest run --project unit --coverage",
     "ci": "npm run typecheck && npm run lint && npm run design:check && npm run test && npm run build:ci",
     "test:e2e:docker": "docker run --rm -t -e CI=1 -e PLAYWRIGHT_WEB_SERVER_MODE=preview -v \"$(pwd)/..\":/work -w /work -v miniapp_node_modules:/work/frontend/miniapp/node_modules -v shared_node_modules:/work/frontend/shared/node_modules -v frontend_node_modules:/work/frontend/node_modules mcr.microsoft.com/playwright:v1.58.2-noble bash -lc \"cd frontend && npm ci && npm run build -w miniapp && cd miniapp && npm exec playwright test\""
   },

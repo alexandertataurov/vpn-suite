@@ -1,14 +1,11 @@
 /**
  * Miniapp design system — single entry for all UI.
- * Import from @/design-system only for layout, patterns, components, primitives, tokens, theme, icons, hooks, utils.
+ * Import from @/design-system or @ds.
+ * Layers: core (tokens/primitives/theme), components, compositions (patterns/recipes/layouts).
  */
-export * from "./tokens";
-export * from "./primitives";
+export * from "./core";
 export * from "./components";
-export * from "./patterns";
-export * from "./layouts";
-export * from "./recipes";
-export * from "./theme";
+export * from "./compositions";
 export * from "./icons";
 export * from "./hooks";
 export * from "./utils";

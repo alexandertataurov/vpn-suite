@@ -1,6 +1,6 @@
 """Bot-facing API: create-or-get subscription, create-invoice (Stars stub), revoke own device, funnel events."""
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
 from sqlalchemy import select

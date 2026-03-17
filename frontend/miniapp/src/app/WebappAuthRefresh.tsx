@@ -1,4 +1,4 @@
-import { useTelegramWebApp } from "@/hooks/useTelegramWebApp";
+import { useTelegramWebApp } from "@/hooks";
 import { useReferralAttach } from "@/hooks/features/referral";
 import { useWebappTokenRefresh } from "@/hooks/useWebappTokenRefresh";
 

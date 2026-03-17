@@ -81,7 +81,7 @@ const activeSession = {
       plan_id: "pro-monthly",
       status: "active",
       subscription_status: "active",
-      access_status: "active",
+      access_status: "enabled",
       valid_until: "2026-03-24T12:00:00Z",
       trial_ends_at: "2026-03-24T12:00:00Z",
       is_trial: false,
@@ -110,9 +110,15 @@ const activeSession = {
     },
   ],
   public_ip: "185.199.110.42",
+  latest_device_delivery: {
+    device_id: "dev-mac-active",
+    device_name: "MacBook Pro",
+    issued_at: "2026-02-10T08:12:00Z",
+    amnezia_vpn_key: "vpn://storybook-amnezia-key",
+  },
   routing: {
-    recommended_route: "/devices",
-    reason: "connection_not_confirmed",
+    recommended_route: "/",
+    reason: "connected_user",
   },
   onboarding: {
     completed: true,
@@ -130,6 +136,7 @@ const trialEndingSession = {
       id: "sub-trial",
       is_trial: true,
       auto_renew: false,
+      access_status: "enabled",
       valid_until: "2026-03-13T12:00:00Z",
       trial_ends_at: "2026-03-13T12:00:00Z",
       device_limit: 2,
@@ -447,6 +454,18 @@ export function PageSandbox({
 }) {
   const initialEntry = initialEntries[0] ?? "/";
   const usesStackFlowLayout = isStackFlowStoryRoute(initialEntry);
+  const bootstrapValue = useMemo(
+    () => ({
+      phase: "app_ready" as const,
+      onboardingStep: 0,
+      onboardingVersion: 2,
+      onboardingError: null,
+      isCompletingOnboarding: false,
+      setOnboardingStep: async () => undefined,
+      completeOnboarding: async () => ({ done: true, synced: true }),
+    }),
+    [],
+  );
   const client = useMemo(
     () =>
       new QueryClient({
@@ -487,9 +506,11 @@ export function PageSandbox({
 
   return (
     <QueryClientProvider client={client}>
-      <ViewportShellRoutes initialEntries={initialEntries} variant={usesStackFlowLayout ? "stack" : "tabbed"}>
-        {children}
-      </ViewportShellRoutes>
+      <BootstrapContextProvider value={bootstrapValue}>
+        <ViewportShellRoutes initialEntries={initialEntries} variant={usesStackFlowLayout ? "stack" : "tabbed"}>
+          {children}
+        </ViewportShellRoutes>
+      </BootstrapContextProvider>
     </QueryClientProvider>
   );
 }

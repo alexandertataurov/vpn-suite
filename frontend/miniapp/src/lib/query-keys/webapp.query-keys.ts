@@ -1,5 +1,6 @@
 export const webappQueryKeys = {
   all: ["webapp"] as const,
+  access: () => [...webappQueryKeys.all, "user", "access"] as const,
   me: () => [...webappQueryKeys.all, "me"] as const,
   healthReady: () => [...webappQueryKeys.all, "health", "ready"] as const,
   servers: () => [...webappQueryKeys.all, "servers"] as const,

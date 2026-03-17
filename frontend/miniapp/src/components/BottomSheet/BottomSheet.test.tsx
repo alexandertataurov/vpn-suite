@@ -90,8 +90,10 @@ describe("BottomSheet", () => {
     );
 
     const dialog = screen.getByRole("dialog");
+    const handle = dialog.querySelector("[data-bottom-sheet-drag-handle='true']");
+    expect(handle).not.toBeNull();
 
-    fireEvent.touchStart(dialog, {
+    fireEvent.touchStart(handle!, {
       touches: [{ clientY: 100 }],
     });
     fireEvent.touchMove(dialog, {

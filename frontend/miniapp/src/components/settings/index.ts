@@ -6,5 +6,3 @@ export { SettingsAccountOverviewCard } from "./SettingsAccountOverviewCard";
 export type { SettingsAccountOverviewCardProps } from "./SettingsAccountOverviewCard";
 export { SettingsLanguageMenuRow } from "./SettingsLanguageMenuRow";
 export type { SettingsLanguageMenuRowProps, SettingsLanguageOption } from "./SettingsLanguageMenuRow";
-export { SettingsReconnectCard } from "./SettingsReconnectCard";
-export type { SettingsReconnectCardProps } from "./SettingsReconnectCard";
