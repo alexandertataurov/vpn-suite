@@ -3084,8 +3084,6 @@ async def webapp_subscription_restore(
             status_code=400,
             detail={"code": "NO_SUBSCRIPTION", "message": "No subscription to restore"},
         )
-    access_status = subscription_access_status(sub)
-    sub_status = subscription_commercial_status(sub)
     if not is_restorable(sub):
         raise HTTPException(
             status_code=400,

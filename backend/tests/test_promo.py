@@ -7,7 +7,7 @@ from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 
 import pytest
-from sqlalchemy import select, delete
+from sqlalchemy import delete, select
 
 from app.core.constants import MIN_PRICE_XTR, PROMO_1FREESTAR_DISCOUNT_XTR
 from app.core.database import check_db
