@@ -1,6 +1,6 @@
 # Core (Sprint 1)
 fastapi>=0.109.0,<0.136
-uvicorn[standard]>=0.27.0,<0.32
+uvicorn[standard]>=0.27.0,<0.43
 pydantic-settings>=2.1.0,<3
 # DB
 sqlalchemy[asyncio]>=2.0.25,<3
