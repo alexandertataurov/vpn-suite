@@ -53,6 +53,7 @@ Full audit tables: see plan at `.cursor/plans/documentation_consolidation_overha
 | docs/observability/FOLDER_STRUCTURE.md | Merged into docs/observability/README.md |
 | docs/design-system/ORBITAL_GRADE.md | Merged into docs/frontend/design/design-system.md |
 | STORYBOOK_AUDIT.md | One-off audit; findings in storybook docs |
+| docs/telemetry_audit.md | Moved to docs/audits/telemetry-audit.md (kebab-case) |
 
 ---
 

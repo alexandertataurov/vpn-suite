@@ -47,6 +47,15 @@ Index of observability documentation for vpn-suite. For up-to-date external refe
 
 Key paths: `config/monitoring/prometheus.yml`, `alert_rules.yml`, `discovery/` (targets.json), `loki-config.yml`, `promtail-config.yml`, `tempo/`, `otel-collector/config.yaml`, `grafana/provisioning/` and `grafana/dashboards/`. Application metrics: `backend/app/core/metrics.py`, `bot/metrics.py`, `monitoring/wg-exporter/wg_exporter.py`. Discovery: `ops/discovery/`. See [current-state.md](current-state.md) for full inventory.
 
+## Live observability (SSE, real-time)
+
+| Doc | Description |
+|-----|-------------|
+| [live-architecture.md](live-architecture.md) | SSE metrics, Redis hot-state, Admin UI integration. |
+| [live-api.md](live-api.md) | `GET /api/v1/live/metrics` SSE endpoint, event types, payloads. |
+| [live-storage.md](live-storage.md) | Redis keys, TTLs, aggregator. |
+| [live-load-and-rollout.md](live-load-and-rollout.md) | Load testing, rollout plan. |
+
 ## Other
 
 | Doc | Description |

@@ -31,7 +31,7 @@ def _norm_path(path: str) -> str:
 def _spec_paths() -> set[tuple[str, str]]:
     path = _openapi_spec_path()
     if not path:
-        pytest.skip("docs/api/openapi.yaml not found (run from repo root or set backend/docs)")
+        pytest.skip("openapi/openapi.yaml not found (run ./manage.sh openapi from repo root)")
     spec = yaml.safe_load(path.read_text())
     out: set[tuple[str, str]] = set()
     for path, ops in (spec.get("paths") or {}).items():
