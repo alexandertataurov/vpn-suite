@@ -1,14 +1,20 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { NoDeviceCallout } from "./NoDeviceCallout";
 
-const meta = {
+const meta: Meta<typeof NoDeviceCallout> = {
   title: "Patterns/NoDeviceCallout",
   tags: ["autodocs"],
   component: NoDeviceCallout,
   parameters: {
-    docs: { description: { component: "No-device callout per amnezia spec §4.9. Inline prompt when user has paid but no device added." } },
+    layout: "padded",
+    docs: {
+      description: {
+        component:
+          "No-device callout per amnezia spec §4.9. Inline prompt when user has paid but no device added. Uses design tokens.",
+      },
+    },
   },
-} satisfies Meta<typeof NoDeviceCallout>;
+};
 
 export default meta;
 

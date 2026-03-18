@@ -31,7 +31,7 @@ export function PlanBillingHistorySection({
   return (
     <PageSection
       title={t("plan.payment_history_title")}
-      className="plan-billing-page__secondary-section stagger-5"
+      className="plan-billing-page__secondary-section"
     >
       <SettingsCard className="module-card settings-list-card billing-history-list-card">
         {loading ? (

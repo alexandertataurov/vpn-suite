@@ -29,20 +29,18 @@
 ```text
 --container-max, --container-pad
 --app-height, --safe-top, --safe-bottom
---height-header, --height-bottom-nav, --height-button
+--height-header, --height-button
 --space-1..12 (8px grid: 4,8,12,16,20,24,32,48)
 --bp-sm: 600px, --bp-md: 900px, --bp-lg: 1200px
 ```
 
 ### 4. App shells
 
-- **TabbedShellLayout** (header + main scroll + bottom nav): routes `/`, `/devices`, `/plan`, `/support`, `/settings`. Uses `HeaderZone`, `ScrollZone`, `ActionZone`.
-- **StackFlowLayout** (full-page scroll, no tab bar): routes `/onboarding`, `/plan/checkout/:planId`, `/devices/issue`, `/connect-status`, `/restore-access`, `/servers`, `/referral`. Single scroll container with `height: var(--app-height)`, `overflow-y: auto`.
+- **StackFlowLayout** (full-page scroll): all routes use a single scroll container with `height: var(--app-height)`, `overflow-y: auto`. Uses `HeaderZone`, `ScrollZone`.
 
 ### 5. Single scroll container
 
-- Tabbed routes: main content scrolls inside `ScrollZone` (`miniapp-main`).
-- Stack routes: full-page scroll via stack layout.
+- Main content scrolls inside `ScrollZone` (`miniapp-main`).
 - No nested scroll unless justified.
 
 ### 6. Responsive

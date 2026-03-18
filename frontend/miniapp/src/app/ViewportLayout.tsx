@@ -1,142 +1,12 @@
 import { useCallback, useEffect, useRef } from "react";
-import { Outlet, NavLink, useLocation } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  IconCreditCard,
-  IconHelpCircle,
-  IconHome,
-  IconSmartphone,
-  IconUser,
-} from "@/design-system/icons";
-import type { IconType } from "@/design-system/icons";
 import { LayoutProvider } from "@/context/LayoutContext";
 import { useMainButtonReserve } from "@/context/MainButtonReserveContext";
 import { useTelegramHaptics, useOnlineStatus } from "@/hooks";
 import { useTelegramApp } from "@/hooks/telegram/useTelegramApp";
-import { OfflineBanner, ScrollZone, ActionZone, ShellContextBlock } from "@/design-system";
+import { OfflineBanner, ScrollZone, ShellContextBlock } from "@/design-system";
 import { HeaderZone } from "@/design-system/compositions/layouts/HeaderZone";
-
-interface TabItem {
-  to: string;
-  label: string;
-  end: boolean;
-  icon: IconType;
-}
-
-const tabs: TabItem[] = [
-  {
-    to: "/",
-    label: "Home",
-    end: true,
-    icon: IconHome,
-  },
-  {
-    to: "/devices",
-    label: "Devices",
-    end: false,
-    icon: IconSmartphone,
-  },
-  {
-    to: "/plan",
-    label: "Plan",
-    end: false,
-    icon: IconCreditCard,
-  },
-  {
-    to: "/support",
-    label: "Support",
-    end: false,
-    icon: IconHelpCircle,
-  },
-  {
-    to: "/settings",
-    label: "Account",
-    end: false,
-    icon: IconUser,
-  },
-];
-
-export function TabbedShellLayout() {
-  const { impact, selectionChanged, notify } = useTelegramHaptics();
-  const queryClient = useQueryClient();
-  const location = useLocation();
-  const isOnline = useOnlineStatus();
-  const { isDesktop } = useTelegramApp();
-  const handlePullRefresh = useCallback(async () => {
-    if (!isOnline) {
-      notify("warning");
-      return;
-    }
-    impact("light");
-    const predicate = (query: { queryKey: readonly unknown[] }) => query.queryKey[0] === "webapp";
-    await queryClient.invalidateQueries({ predicate });
-    await queryClient.refetchQueries({ predicate, type: "active" });
-    notify("success");
-  }, [impact, isOnline, notify, queryClient]);
-
-  const isTabActive = (to: string, end: boolean): boolean => {
-    if (end) return location.pathname === to;
-    return location.pathname === to || location.pathname.startsWith(`${to}/`);
-  };
-
-  useEffect(() => {
-    document.documentElement.dataset.shellNav = "tabbed";
-    return () => {
-      if (document.documentElement.dataset.shellNav === "tabbed") {
-        delete document.documentElement.dataset.shellNav;
-      }
-    };
-  }, []);
-
-  return (
-    <div className="miniapp-shell miniapp-shell--tabbed">
-      <OfflineBanner />
-      {!isDesktop && <HeaderZone />}
-      <ScrollZone className="miniapp-main miniapp-main--tabbed" onRefresh={handlePullRefresh}>
-        <LayoutProvider stackFlow={false}>
-          <ShellContextBlock />
-          <div key={location.pathname} className="tab-content miniapp-shell-screen">
-            <Outlet />
-          </div>
-        </LayoutProvider>
-      </ScrollZone>
-      <ActionZone>
-        <nav
-          className="bottom-nav miniapp-bottom-nav"
-          role="navigation"
-          aria-label="Main navigation"
-        >
-          {tabs.map(({ to, label, end, icon: Icon }) => {
-            const active = isTabActive(to, end);
-            return (
-              <NavLink
-                key={to}
-                to={to}
-                end={end}
-                aria-label={label}
-                aria-current={active ? "page" : undefined}
-                onClick={() => {
-                  impact("light");
-                  selectionChanged();
-                }}
-                className={[
-                  "nav-item",
-                  "miniapp-tab",
-                  active ? "on miniapp-tab--active" : "",
-                ].filter(Boolean).join(" ")}
-              >
-                <span className="miniapp-tab-icon-shell" aria-hidden>
-                  <Icon size={22} strokeWidth={active ? 2 : 1.9} />
-                </span>
-                <span className="miniapp-tab-label">{label}</span>
-              </NavLink>
-            );
-          })}
-        </nav>
-      </ActionZone>
-    </div>
-  );
-}
 
 export function StackFlowLayout() {
   const queryClient = useQueryClient();
@@ -190,13 +60,11 @@ export function StackFlowLayout() {
   );
 }
 
-export type ViewportLayoutVariant = "tabbed" | "stack";
-
 /**
- * Main UI frame (HeaderZone + ScrollZone + ActionZone). Matches layout-system.md "ViewportLayout".
+ * Main UI frame (HeaderZone + ScrollZone). Stack flow only; no bottom nav.
  */
-export function ViewportLayout({ variant }: { variant: ViewportLayoutVariant }) {
-  return variant === "tabbed" ? <TabbedShellLayout /> : <StackFlowLayout />;
+export function ViewportLayout() {
+  return <StackFlowLayout />;
 }
 
-export const MiniappLayout = TabbedShellLayout;
+export const MiniappLayout = StackFlowLayout;

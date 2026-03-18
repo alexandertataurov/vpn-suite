@@ -6,7 +6,7 @@ export interface SettingsActionRowProps {
   title: string;
   description?: ReactNode;
   value?: string;
-  tone?: "default" | "warning" | "danger" | "blue" | "green" | "amber" | "red" | "neutral" | "modern-blue" | "modern-green" | "modern-amber" | "modern-red" | "modern-neutral";
+  tone?: "default" | "warning" | "danger" | "blue" | "green" | "amber" | "red" | "neutral";
   danger?: boolean;
   actionIndicator?: "chevron" | "external" | "none";
   onClick?: () => void;
@@ -16,11 +16,11 @@ export interface SettingsActionRowProps {
 
 function resolveModernTone(tone: string, danger: boolean): string {
   if (danger || tone === "danger") return "modern-icon-tone--red";
-  if (tone === "warning" || tone === "amber" || tone === "modern-amber") return "modern-icon-tone--amber";
-  if (tone === "blue" || tone === "modern-blue") return "modern-icon-tone--blue";
-  if (tone === "green" || tone === "modern-green") return "modern-icon-tone--green";
-  if (tone === "red" || tone === "modern-red") return "modern-icon-tone--red";
-  if (tone === "neutral" || tone === "modern-neutral" || tone === "default") return "modern-icon-tone--neutral";
+  if (tone === "warning" || tone === "amber") return "modern-icon-tone--amber";
+  if (tone === "blue") return "modern-icon-tone--blue";
+  if (tone === "green") return "modern-icon-tone--green";
+  if (tone === "red") return "modern-icon-tone--red";
+  if (tone === "neutral" || tone === "default") return "modern-icon-tone--neutral";
   return tone;
 }
 

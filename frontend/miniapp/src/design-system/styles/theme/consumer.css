@@ -50,6 +50,8 @@ html[data-theme="consumer-light"] {
   --red: var(--color-error);
   --red-d: var(--color-error-soft);
   --red-b: color-mix(in oklch, var(--color-error) 18%, transparent);
+  --teal: #0e7490;
+  --green-glow: color-mix(in oklch, var(--color-success) 45%, transparent);
   --danger-dim: var(--color-error-soft);
   --surface-border: var(--color-border-subtle);
   --surface-border-emphasis: var(--color-border-subtle);
@@ -103,6 +105,20 @@ html[data-theme="consumer-light"] {
   --shadow-lg: 0 2px 8px rgba(0,0,0,0.08);
   --shadow-dialog: 0 4px 24px -4px rgba(0,0,0,0.12);
   --shadow-btn-primary: 0 2px 6px color-mix(in oklch, var(--color-accent) 15%, transparent);
+
+  /* Control states (Button, inputs, segmented control) */
+  --control-ghost-hover-bg: color-mix(in oklch, var(--color-text) 6%, transparent);
+  --control-outline-hover-bg: color-mix(in oklch, var(--color-accent) 8%, transparent);
+  --control-outline-hover-border: color-mix(in oklch, var(--color-accent) 25%, var(--color-border));
+  --control-disabled-bg: var(--color-disabled);
+  --control-disabled-fg: var(--color-text-muted);
+  --control-disabled-placeholder: var(--color-text-tertiary);
+  --control-pressed-bg: color-mix(in oklch, var(--color-text) 10%, transparent);
+  --control-segment-bg: color-mix(in oklch, var(--color-surface-2) 94%, var(--color-surface) 6%);
+  --control-segment-indicator-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --control-placeholder: var(--color-text-tertiary);
+  --control-muted-border: var(--color-border-subtle);
+  --control-muted-fg: var(--color-text-muted);
 
   /* Layout (4px scale) */
   --space-gutter: var(--spacing-5);
@@ -159,6 +175,8 @@ html[data-theme="consumer-dark"] {
   --red: var(--color-error);
   --red-d: var(--color-error-soft);
   --red-b: color-mix(in oklch, var(--color-error) 18%, transparent);
+  --teal: #2dd4bf;
+  --green-glow: color-mix(in oklch, var(--color-success) 50%, transparent);
   --danger-dim: var(--color-error-soft);
   --surface-border: var(--color-border-subtle);
   --surface-border-emphasis: var(--color-border);
@@ -212,6 +230,20 @@ html[data-theme="consumer-dark"] {
   --shadow-lg: 0 2px 8px rgba(0,0,0,0.25);
   --shadow-dialog: 0 -4px 40px color-mix(in oklch, black 40%, transparent);
   --shadow-btn-primary: 0 2px 6px color-mix(in oklch, var(--color-accent) 15%, transparent);
+
+  /* Control states (Button, inputs, segmented control) */
+  --control-ghost-hover-bg: color-mix(in oklch, var(--color-text) 8%, transparent);
+  --control-outline-hover-bg: color-mix(in oklch, var(--color-accent) 12%, transparent);
+  --control-outline-hover-border: color-mix(in oklch, var(--color-accent) 30%, var(--color-border));
+  --control-disabled-bg: var(--color-disabled);
+  --control-disabled-fg: var(--color-text-tertiary);
+  --control-disabled-placeholder: var(--color-text-tertiary);
+  --control-pressed-bg: color-mix(in oklch, var(--color-text) 12%, transparent);
+  --control-segment-bg: color-mix(in oklch, var(--color-surface-2) 92%, var(--color-surface) 8%);
+  --control-segment-indicator-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  --control-placeholder: var(--color-text-tertiary);
+  --control-muted-border: var(--color-border-subtle);
+  --control-muted-fg: var(--color-text-muted);
 
   /* Layout (4px scale) */
   --space-gutter: var(--spacing-5);

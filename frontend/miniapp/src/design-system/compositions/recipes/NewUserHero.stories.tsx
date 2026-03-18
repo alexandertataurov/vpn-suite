@@ -2,14 +2,20 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { NewUserHero } from "./NewUserHero";
 import { Button } from "@/design-system";
 
-const meta = {
+const meta: Meta<typeof NewUserHero> = {
   title: "Patterns/NewUserHero",
   tags: ["autodocs"],
   component: NewUserHero,
   parameters: {
-    docs: { description: { component: "New-user hero per amnezia spec §4.10. Centered card when no plan purchased." } },
+    layout: "padded",
+    docs: {
+      description: {
+        component:
+          "New-user hero per amnezia spec §4.10. Centered card when no plan purchased. Uses design tokens.",
+      },
+    },
   },
-} satisfies Meta<typeof NewUserHero>;
+};
 
 export default meta;
 

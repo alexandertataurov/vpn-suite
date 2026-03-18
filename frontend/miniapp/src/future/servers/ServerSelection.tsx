@@ -12,6 +12,7 @@ import {
   PageScaffold,
   ModernHeader,
 } from "@/design-system";
+import { Stack } from "@/design-system/core/primitives";
 import { useServerSelectionPageModel } from "@/page-models";
 import { useI18n } from "@/hooks";
 
@@ -42,13 +43,11 @@ export function ServerSelectionPage() {
           showSettings={false}
           onBack={() => navigate(-1)}
         />
-        <div className="modern-content-pad stagger-1">
+        <Stack gap="4">
           <Skeleton variant="card" height={160} />
-          <div className="u-mt-24 u-mb-8">
-            <Skeleton variant="line" width="40%" />
-          </div>
+          <Skeleton variant="line" width="40%" />
           <SkeletonList lines={6} />
-        </div>
+        </Stack>
       </PageScaffold>
     );
   }
@@ -61,16 +60,15 @@ export function ServerSelectionPage() {
         showSettings={false}
         onBack={() => navigate(-1)}
       />
-      <div className="modern-content-pad">
+      <Stack gap="4">
         <ActionCard
           title={t("servers.routing_mode_title")}
           description={t("servers.routing_mode_description")}
-          className="modern-m-0"
         >
-          <p className="type-body-sm muted u-mt-12">
-            {t("servers.routing_latency_note")}
-          </p>
-          <div className="u-mt-16">
+          <Stack gap="4">
+            <p className="type-body-sm muted">
+              {t("servers.routing_latency_note")}
+            </p>
             <Button
               variant={model.data.auto_select ? "secondary" : "primary"}
               onClick={model.handleAutoSelect}
@@ -81,9 +79,9 @@ export function ServerSelectionPage() {
             >
               {t("servers.use_best_location")}
             </Button>
-          </div>
+          </Stack>
         </ActionCard>
-      </div>
+      </Stack>
 
       <PageSection
         title={t("servers.locations_title")}

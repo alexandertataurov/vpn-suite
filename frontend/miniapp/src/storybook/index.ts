@@ -6,5 +6,5 @@ export { MockWebappApi } from "./webappMocks";
 export { MobileFrame } from "./layout-frame";
 export { applyTelegramEnvironment, withTelegramEnvironment } from "./telegramEnvironment";
 export { withMiniAppShell } from "./decorators/withMiniAppShell";
-export { ViewportShellProviders, ViewportShellRoutes, withViewportShell, isStackFlowStoryRoute } from "./withViewportShell";
+export { ViewportShellProviders, ViewportShellRoutes, withViewportShell } from "./withViewportShell";
 export { StorybookMiniappShell } from "./StorybookMiniappShell";

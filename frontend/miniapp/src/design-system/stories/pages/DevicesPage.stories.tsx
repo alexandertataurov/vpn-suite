@@ -3,13 +3,17 @@ import { Route } from "react-router-dom";
 import { DevicesPage } from "@/pages/Devices";
 import { limitReachedScenario, PageSandbox, readyScenario } from "@/storybook/page-contracts";
 
-const meta = {
+const meta: Meta = {
   title: "Pages/Contracts/Devices",
   tags: ["autodocs"],
   parameters: {
-    docs: { description: { component: "Device management." } },
+    docs: {
+      description: {
+        component: "Device management. Contract tests.",
+      },
+    },
   },
-} satisfies Meta;
+};
 
 export default meta;
 

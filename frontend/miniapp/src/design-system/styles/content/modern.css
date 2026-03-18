@@ -222,6 +222,13 @@
 }
 
 /* ---- Hero Status Card ------------------------------ */
+.modern-status-subtitle {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+}
+
 .modern-hero-card {
   background: var(--color-surface);
   border: 1px solid var(--color-border-subtle);
@@ -307,7 +314,33 @@
 .renewal-banner { animation: up 0.3s 0.08s ease both; }
 .card-row { animation: up 0.3s 0s ease both; }
 .help,
-.modern-footer-help { animation: up 0.3s 0.2s ease both; }
+.footer-help { animation: up 0.3s 0.2s ease both; }
+
+/* ---- FooterHelp (design-system recipe) ----------------- */
+.footer-help {
+  padding: var(--spacing-4) var(--spacing-6) var(--spacing-6);
+  text-align: center;
+}
+
+.footer-help__note {
+  margin: 0;
+  font-size: var(--amnezia-help-text, 12px);
+  color: var(--text3, var(--color-text-tertiary));
+  font-weight: 400;
+}
+
+.footer-help__link {
+  color: var(--text2, var(--color-text-muted));
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: var(--border-med, var(--color-border));
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.footer-help__link:hover {
+  color: var(--text, var(--color-text));
+}
 
 /* ---- Plan Hero Card (amnezia spec §4.3) ------------- */
 .plan-hero-card {
@@ -315,7 +348,7 @@
   border: 1px solid var(--border, var(--color-border-subtle));
   border-radius: var(--r, var(--radius-lg));
   overflow: hidden;
-  margin: 0 var(--amnezia-page-pad-h, var(--spacing-4)) var(--amnezia-card-gap, var(--spacing-4));
+  margin: 0 0 var(--amnezia-card-gap, var(--spacing-2));
   box-shadow: none;
 }
 
@@ -460,7 +493,7 @@
   align-items: center;
   gap: 12px;
   width: 100%;
-  margin: 0 var(--amnezia-page-pad-h, var(--spacing-4)) var(--amnezia-card-gap, var(--spacing-2));
+  margin: 0 0 var(--amnezia-card-gap, var(--spacing-2));
   padding: 13px 15px;
   border-radius: var(--r, var(--radius-lg));
   border: 1px solid transparent;
@@ -547,7 +580,7 @@
   border: 1px solid var(--border, var(--color-border));
   border-radius: var(--r, var(--radius-lg));
   padding: 16px 18px;
-  margin: 0 var(--amnezia-page-pad-h, var(--spacing-4)) var(--amnezia-card-gap, var(--spacing-2));
+  margin: 0 0 var(--amnezia-card-gap, var(--spacing-2));
 }
 
 .no-device-callout-icon {
@@ -606,9 +639,12 @@
 
 /* ---- New-user hero (amnezia spec §4.10) ------------ */
 .new-user-hero {
+  background: var(--white, var(--color-surface));
+  border: 1px solid var(--border, var(--color-border));
+  border-radius: var(--r, var(--radius-lg));
   padding: 40px 24px 28px;
   text-align: center;
-  margin: 0 var(--amnezia-page-pad-h, var(--spacing-4)) var(--amnezia-card-gap, var(--spacing-4));
+  margin: 0 0 var(--amnezia-card-gap, var(--spacing-2));
 }
 
 .new-user-hero-icon {
@@ -639,14 +675,6 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-}
-
-/* ---- Action Grid ----------------------------------- */
-.modern-action-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--spacing-4);
-  padding: 0 var(--spacing-4) var(--spacing-4);
 }
 
 .modern-action-card {
@@ -733,13 +761,59 @@
 .modern-list {
   display: flex;
   flex-direction: column;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-lg);
+  background: var(--white, var(--color-surface));
+  border: 1px solid var(--border, var(--color-border-subtle));
+  border-radius: var(--r, var(--radius-lg));
   overflow: hidden;
   margin: var(--spacing-4);
   padding: 0;
   list-style: none;
+}
+
+/* Canonical home page nav cards — match screenshot layout */
+.home-card-row.modern-list {
+  margin: 0 0 var(--amnezia-card-gap, var(--spacing-2));
+}
+
+.home-card-row .modern-list-item {
+  padding: var(--amnezia-row-pad-v, 13px) var(--amnezia-row-pad-h, 16px);
+  gap: 13px;
+}
+
+.home-card-row .modern-list-item-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-sm, var(--radius-sm));
+  background: var(--bg, var(--color-surface-2));
+  border: 1px solid var(--border, var(--color-border));
+  color: var(--text3, var(--color-text-tertiary));
+}
+
+.home-card-row .modern-list-item-right {
+  gap: 8px;
+  align-items: center;
+}
+
+.home-row-badge {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.1px;
+  padding: 2.5px 8px;
+  border-radius: 100px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.home-row-badge--amber {
+  color: var(--amber, var(--color-warning));
+  background: var(--amber-bg, var(--color-warning-soft));
+  border-color: var(--amber-border, var(--surface-border-warning));
+}
+
+.home-row-badge--red {
+  color: var(--red, var(--color-error));
+  background: var(--red-bg, var(--color-error-soft));
+  border-color: var(--red-border, var(--surface-border-error));
 }
 
 .modern-list--rounded {
@@ -756,6 +830,8 @@
   width: 100%;
   border: none;
   text-align: left;
+  font: inherit;
+  font-family: inherit;
   border-bottom: 1px solid var(--color-border-subtle, var(--color-border));
   transition: background 0.2s ease;
   cursor: pointer;
@@ -931,13 +1007,6 @@
 .modern-progress-bar-fill--danger { background: var(--color-error); }
 
 /* ---- Utilities ------------------------------------- */
-.modern-content-pad {
-  padding: 0 var(--miniapp-content-gutter);
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-3);
-}
-
 .modern-clickable {
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
@@ -973,6 +1042,18 @@
 
 .modern-store-badge {
   height: var(--spacing-8);
+  width: auto;
+}
+
+.store-badge-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-3);
+}
+
+.store-badge-img {
+  height: var(--spacing-6);
   width: auto;
 }
 

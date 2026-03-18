@@ -256,14 +256,7 @@ State-driven. All visual elements must update together when state changes — se
         <div class="plan-hero-period">/ month</div>
       </div>
     </div>
-    <!-- Expiry bar -->
-    <div class="expiry-row">
-      <div class="expiry-meta">
-        <div class="expiry-lbl">Valid until</div>
-        <div class="expiry-val" id="expiryVal">4 Feb 2126</div>
-      </div>
-      <div class="bar-track"><div class="bar-fill" id="expiryFill"></div></div>
-    </div>
+    <!-- Expiry: use ProgressBar component or .progress-bar-fill -->
     <!-- Data cells -->
     <div class="data-grid three" style="margin-top:12px;">
       <div class="data-cell"><div class="dc-key">Plan ID</div><div class="dc-val teal" style="font-size:10px;cursor:pointer;" onclick="copyText(this,'32da14cc···')">32da14cc···</div></div>
@@ -620,55 +613,9 @@ Three-up KPI display. Used in heroes and standalone cards.
 
 ## 8 · Progress Bar
 
-Named bar track with animated fill. Used in hero cards and usage sections.
+**Prefer:** `ProgressBar` component from `@/design-system` or `.progress-bar-fill` (frame.css) for progress indicators. Legacy: `.h-track`, `.h-fill` in shell/frame.css.
 
-```html
-<div class="expiry-row">
-  <div class="expiry-meta">
-    <div class="expiry-lbl">Valid until</div>
-    <div class="expiry-val">4 Feb 2126</div>
-  </div>
-  <div class="bar-track">
-    <div class="bar-fill ok" id="someFill"></div>
-  </div>
-</div>
-```
-
-```css
-.expiry-row  { display: flex; flex-direction: column; gap: 0; margin-bottom: 14px; }
-.expiry-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-.expiry-lbl  { font: 600 9px var(--mono); letter-spacing: .10em; text-transform: uppercase; color: var(--tx-mut); }
-.expiry-val  { font: 500 11px var(--mono); color: var(--green); }
-
-.bar-track { height: 4px; background: var(--s4); border-radius: 3px; overflow: hidden; }
-.bar-fill  {
-  height: 100%; border-radius: 3px;
-  transition: width 1.4s cubic-bezier(.22,1,.36,1); width: 0;
-}
-.bar-fill.ok   { background: var(--green); }
-.bar-fill.warn { background: var(--amber); }
-.bar-fill.crit { background: var(--red);   }
-.bar-fill.info { background: var(--blue);  }
-```
-
-**Color rules:**
-
-| Fill % | Class | Meaning |
-|---|---|---|
-| 0–79% | `ok` | healthy |
-| 80–99% | `warn` | approaching limit |
-| 100% | `crit` | at limit or overdue |
-| any | `info` | informational (e.g. progress on setup) |
-
-**Always animate on load with delay:**
-
-```js
-window.addEventListener('load', () => {
-  setTimeout(() => {
-    document.getElementById('someFill').style.width = '72%';
-  }, 380);
-});
-```
+For inline usage bars (e.g. in hero cards), use `ProgressBar` with `layout="inline"` or `layout="stacked"`. DevicesSummaryCard uses `.modern-progress-bar-fill` with tone variants (healthy, warning, danger, neutral).
 
 ---
 

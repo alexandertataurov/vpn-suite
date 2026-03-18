@@ -1,9 +1,18 @@
 import { useNavigate } from "react-router-dom";
-import { IconArrowRight, IconShield, IconAlertTriangle } from "@/design-system/icons";
 import {
-  ActionCard,
+  IconArrowRight,
+  IconBox,
+  IconChevronRight,
+  IconMonitor,
+  IconPlus,
+  IconUsers,
+} from "@/design-system/icons";
+import {
   Button,
   FallbackScreen,
+  FooterHelp,
+  ListCard,
+  ListRow,
   NewUserHero,
   NoDeviceCallout,
   PillChip,
@@ -12,12 +21,27 @@ import {
   Skeleton,
   PageScaffold,
   ModernHeader,
-  ModernHeroCard,
 } from "@/design-system";
 import { SessionMissing } from "@/components";
 import { useWebappToken } from "@/api/client";
 import { useSession } from "@/hooks";
 import { useAccessHomePageModel } from "@/page-models";
+
+function InviteFriendsCard() {
+  const navigate = useNavigate();
+  return (
+    <ListCard className="home-card-row">
+      <ListRow
+        icon={<IconUsers size={15} strokeWidth={2} />}
+        iconTone="neutral"
+        title="Invite Friends"
+        subtitle="Get free extensions"
+        right={<IconChevronRight size={13} strokeWidth={2.5} />}
+        onClick={() => navigate("/support")}
+      />
+    </ListCard>
+  );
+}
 
 export function HomePage() {
   const model = useAccessHomePageModel();
@@ -35,15 +59,15 @@ export function HomePage() {
   if (model.pageState.status === "loading") {
     return (
       <PageScaffold>
-        <ModernHeader title="Amnezia" showSettings={false} />
-        <div className="modern-content-pad stagger-1">
-          <Skeleton variant="card" height={260} />
-          <div className="modern-action-grid u-mt-16">
-            <Skeleton variant="card" height={80} />
-            <Skeleton variant="card" height={80} />
-          </div>
-          <Skeleton variant="card" height={72} className="u-mt-16" />
-        </div>
+        <ModernHeader title="Amnezia" showSettings />
+        <Skeleton variant="card" height={260} />
+        <Skeleton variant="card" height={72} />
+        <Skeleton variant="card" height={72} />
+        <FooterHelp
+          note="Having trouble?"
+          linkLabel="View setup guide"
+          onLinkClick={() => navigate("/support")}
+        />
       </PageScaffold>
     );
   }
@@ -59,11 +83,8 @@ export function HomePage() {
     );
   }
 
-  const uiConfig = model.uiConfig;
   const status = model.status;
   const isGenerating = status === "generating_config";
-  const heroStatus =
-    status === "expired" ? "danger" : status === "ready" ? "active" : "default";
 
   return (
     <PageScaffold>
@@ -76,25 +97,48 @@ export function HomePage() {
             <PillChip variant={model.pillChip.variant}>{model.pillChip.label}</PillChip>
           ) : undefined
         }
-        showSettings={false}
+        showSettings
       />
 
       {model.showNewUserHero ? (
-        <NewUserHero
-          title="Setup Required"
-          description="Choose a plan to get VPN access. Manage devices and subscription here."
-          primaryAction={
-            <Button
-              variant="primary"
-              fullWidth
-              size="lg"
-              onClick={() => navigate("/plan")}
-              endIcon={<IconArrowRight />}
-            >
-              Choose a Plan →
-            </Button>
-          }
-        />
+        <>
+          <NewUserHero
+            title="Setup Required"
+            description="Choose a plan and add a device to get your secure configuration."
+            primaryAction={
+              <Button
+                variant="primary"
+                fullWidth
+                size="lg"
+                onClick={() => navigate("/plan")}
+                endIcon={<IconArrowRight />}
+              >
+                Choose a Plan →
+              </Button>
+            }
+            secondaryAction={
+              <Button
+                variant="secondary"
+                fullWidth
+                size="lg"
+                onClick={() => navigate("/support")}
+              >
+                View setup guide
+              </Button>
+            }
+          />
+          <ListCard className="home-card-row">
+            <ListRow
+              icon={<IconMonitor size={15} strokeWidth={2} />}
+              iconTone="neutral"
+              title="Devices"
+              subtitle="None added yet"
+              right={<IconChevronRight size={13} strokeWidth={2.5} />}
+              onClick={() => navigate("/devices")}
+            />
+          </ListCard>
+          <InviteFriendsCard />
+        </>
       ) : model.showPlanHero && model.planHeroData ? (
         <>
           <PlanHeroCard
@@ -107,91 +151,83 @@ export function HomePage() {
           {model.showRenewalBanner && (
             <RenewalBanner
               variant={model.planHeroData.status === "expired" ? "expired" : "expiring"}
-              title={status === "expired" ? "Renew your plan" : "Plan expiring soon"}
+              title={
+                status === "expired"
+                  ? "Subscription expired"
+                  : `Renew before ${model.expiryDateShort || "expiry"}`
+              }
               subtitle={
                 status === "expired"
-                  ? "Renew to keep VPN access"
-                  : `Renews ${model.expiryValue}. Renew now to avoid interruption.`
+                  ? "Renew now to restore access on all devices."
+                  : "Your devices will lose access when it expires."
               }
               onClick={() => navigate(status === "expired" ? "/restore-access" : "/plan")}
             />
           )}
           {model.showNoDeviceCallout && (
             <NoDeviceCallout
-              title="Add your first device"
-              subtitle="Generate a config to import in AmneziaVPN"
+              title="No devices added"
+              subtitle="Add a device to generate your configuration."
               ctaLabel="Add Device"
+              ctaIcon={<IconPlus size={13} strokeWidth={2.5} />}
               onCtaClick={() => navigate("/devices")}
             />
           )}
-          {!model.showNoDeviceCallout &&
-            !isGenerating &&
-            uiConfig &&
-            !uiConfig.ctaDisabled && (
-              <div className="modern-hero-actions modern-content-pad">
-                <Button
-                  variant="primary"
-                  fullWidth
-                  size="lg"
-                  onClick={uiConfig.ctaAction}
-                  endIcon={<IconArrowRight />}
-                >
-                  {uiConfig.ctaLabel}
-                </Button>
-              </div>
-            )}
+          {!isGenerating && (
+            <>
+              {(model.showDevices || model.showExpiry || model.showNoDeviceCallout) && (
+                <ListCard className="home-card-row">
+                  {model.showDevices && !model.showNoDeviceCallout && (
+                    <ListRow
+                      icon={<IconMonitor size={15} strokeWidth={2} />}
+                      iconTone="neutral"
+                      title="Manage Devices"
+                      subtitle={model.devicesSubtitle}
+                      right={<IconChevronRight size={13} strokeWidth={2.5} />}
+                      onClick={() => navigate("/devices")}
+                    />
+                  )}
+                  {(model.showExpiry || model.showNoDeviceCallout) && (
+                    <ListRow
+                      icon={<IconBox size={15} strokeWidth={2} />}
+                      iconTone="neutral"
+                      title={model.subscriptionLabel}
+                      subtitle={model.subscriptionSubtitle}
+                      right={
+                        <>
+                          {model.daysLeft != null &&
+                            model.daysLeft > 0 &&
+                            model.daysLeft <= 14 && (
+                              <span className="home-row-badge home-row-badge--amber">
+                                {model.daysLeft}d left
+                              </span>
+                            )}
+                          {status === "expired" && (
+                            <span className="home-row-badge home-row-badge--red">
+                              Renew
+                            </span>
+                          )}
+                          <IconChevronRight size={13} strokeWidth={2.5} />
+                        </>
+                      }
+                      onClick={() =>
+                        navigate(status === "expired" ? "/restore-access" : "/plan")
+                      }
+                    />
+                  )}
+                </ListCard>
+              )}
+              <InviteFriendsCard />
+            </>
+          )}
         </>
-      ) : (
-        <ModernHeroCard
-          status={heroStatus}
-          icon={
-            status === "expired" ? (
-              <IconAlertTriangle size={36} />
-            ) : (
-              <IconShield size={36} strokeWidth={status === "ready" ? 3 : 2} />
-            )
-          }
-          title={uiConfig?.title ?? ""}
-          description={uiConfig?.description ?? ""}
-          actions={
-            !isGenerating && uiConfig && !uiConfig.ctaDisabled ? (
-              <Button
-                variant="primary"
-                fullWidth
-                size="lg"
-                onClick={uiConfig.ctaAction}
-                endIcon={<IconArrowRight />}
-              >
-                {uiConfig.ctaLabel}
-              </Button>
-            ) : null
-          }
-        />
-      )}
+      ) : null}
 
-      {(model.showDevices || model.showExpiry) && (
-        <div className="modern-action-grid">
-          {model.showDevices && model.devicesValue ? (
-            <ActionCard label="Devices" value={model.devicesValue} onClick={() => navigate("/devices")} />
-          ) : null}
-          {model.showExpiry && model.expiryValue ? (
-            <ActionCard
-              label={model.expiryLabel}
-              value={model.expiryValue}
-              onClick={() => (status === "expired" ? navigate("/restore-access") : navigate("/plan"))}
-            />
-          ) : null}
-        </div>
-      )}
-
-      <div className="modern-footer-help">
-        <p className="modern-help-note">
-          Having trouble?{" "}
-          <span className="modern-help-link" onClick={() => navigate("/support")}>
-            View setup guide
-          </span>
-        </p>
-      </div>
+      <FooterHelp
+        note="Having trouble?"
+        linkLabel="View setup guide"
+        onLinkClick={() => navigate("/support")}
+      />
     </PageScaffold>
   );
 }

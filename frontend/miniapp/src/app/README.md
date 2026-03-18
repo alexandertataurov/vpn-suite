@@ -45,7 +45,7 @@ main.tsx
 | `routes.tsx` | Route tree (AppRoutes) |
 | `AppRoot.tsx` | Telegram runtime init |
 | `AppErrorBoundary.tsx` | React error containment; fallback UI on render/lifecycle errors |
-| `ViewportLayout.tsx` | TabbedShellLayout, StackFlowLayout |
+| `ViewportLayout.tsx` | StackFlowLayout |
 | `SafeAreaLayer.tsx` | Safe-area container (values from TelegramProvider) |
 | `OverlayLayer.tsx` | Toast layer |
 | `TelegramLoadingScreen.tsx` | Suspense fallback |

@@ -3,13 +3,17 @@ import { Route } from "react-router-dom";
 import { OnboardingPage } from "@/pages/Onboarding";
 import { OnboardingSandbox, readyScenario } from "@/storybook/page-contracts";
 
-const meta = {
+const meta: Meta = {
   title: "Pages/Contracts/Onboarding",
   tags: ["autodocs"],
   parameters: {
-    docs: { description: { component: "Onboarding flow." } },
+    docs: {
+      description: {
+        component: "Onboarding flow. Contract tests.",
+      },
+    },
   },
-} satisfies Meta;
+};
 
 export default meta;
 

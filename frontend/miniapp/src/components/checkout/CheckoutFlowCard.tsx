@@ -1,4 +1,5 @@
 import { Button, Input, InlineAlert, StickyBottomBar } from "@/design-system";
+import { Stack } from "@/design-system/core/primitives";
 import { useI18n } from "@/hooks";
 
 export interface CheckoutFlowCardProps {
@@ -74,7 +75,7 @@ export function CheckoutFlowCard({
   const { t } = useI18n();
 
   return (
-    <>
+    <Stack gap="4">
       {!showConfirmation ? (
         <>
           <form
@@ -110,7 +111,7 @@ export function CheckoutFlowCard({
             />
           ) : null}
           {promoStatus === "invalid" && promoErrorKey ? (
-            <div className="u-mt-12 stack gap-2">
+            <Stack gap="2">
               <InlineAlert
                 variant="error"
                 title={t("checkout.promo_issue_title")}
@@ -121,18 +122,16 @@ export function CheckoutFlowCard({
                   ? t("checkout.promo_remove_code")
                   : t("checkout.promo_try_again")}
               </Button>
-            </div>
+            </Stack>
           ) : null}
 
-          <div className="u-mt-16">
-            <Button
-              onClick={onContinue}
-              disabled={!planId || !hasToken || !isOnline}
-              fullWidth
-            >
-              {t("checkout.continue_to_payment")}
-            </Button>
-          </div>
+          <Button
+            onClick={onContinue}
+            disabled={!planId || !hasToken || !isOnline}
+            fullWidth
+          >
+            {t("checkout.continue_to_payment")}
+          </Button>
         </>
       ) : (
         <>
@@ -149,8 +148,7 @@ export function CheckoutFlowCard({
             body={t("checkout.after_payment_message")}
           />
           <StickyBottomBar>
-            <div className="u-p-16">
-              <Button
+            <Button
                 onClick={onPay}
                 disabled={!planId || !hasToken || !isOnline || phase === "waiting" || phase === "creating_invoice"}
                 fullWidth
@@ -161,7 +159,6 @@ export function CheckoutFlowCard({
                   ? t("checkout.pay_activate_plan")
                   : t("checkout.pay_in_telegram")}
               </Button>
-            </div>
           </StickyBottomBar>
         </>
       )}
@@ -181,7 +178,7 @@ export function CheckoutFlowCard({
         />
       ) : null}
       {phase === "error" || phase === "timeout" ? (
-        <div className="u-mt-12 stack gap-2">
+        <Stack gap="2">
           <InlineAlert
             variant="error"
             title={
@@ -198,8 +195,8 @@ export function CheckoutFlowCard({
           <Button variant="secondary" onClick={onRetry} fullWidth>
             {t("checkout.retry")}
           </Button>
-        </div>
+        </Stack>
       ) : null}
-    </>
+    </Stack>
   );
 }

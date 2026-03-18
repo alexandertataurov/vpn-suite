@@ -56,7 +56,7 @@ function createBaseModel(overrides: Record<string, unknown> = {}) {
     planHeroData: {
       eyebrow: "YOUR PLAN",
       planName: "Pro",
-      subtitle: "5 devices · ann",
+      subtitle: "5 devices · annual",
       status: "active" as const,
       stats: [
         { label: "DEVICES", value: "2", dim: " / 5", tone: "default" as const },
@@ -66,6 +66,11 @@ function createBaseModel(overrides: Record<string, unknown> = {}) {
     },
     showRenewalBanner: false,
     showNoDeviceCallout: false,
+    subscriptionSubtitle: "Pro annual · renews May 1",
+    subscriptionLabel: "Subscription",
+    devicesSubtitle: "2 of 5 active",
+    daysLeft: null,
+    expiryDateShort: "May 1",
     onRetry: vi.fn(),
     ...overrides,
   };
@@ -77,14 +82,15 @@ describe("HomePage", () => {
     mockModel = createBaseModel();
   });
 
-  it("renders ready state with hero and CTA", () => {
+  it("renders ready state with hero and nav rows", () => {
     renderWithProviders(<HomePage />);
 
     expect(screen.getByText("YOUR PLAN")).toBeInTheDocument();
     expect(screen.getByText("Pro")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Manage Devices/i })).toBeInTheDocument();
-    expect(screen.getByText("2 / 5")).toBeInTheDocument();
-    expect(screen.getByText("May 1, 2030")).toBeInTheDocument();
+    expect(screen.getByText("Manage Devices")).toBeInTheDocument();
+    expect(screen.getByText("Subscription")).toBeInTheDocument();
+    expect(screen.getByText("Invite Friends")).toBeInTheDocument();
+    expect(screen.getByText("2 of 5 active")).toBeInTheDocument();
   });
 
   it("renders needs_device state", () => {
@@ -116,10 +122,13 @@ describe("HomePage", () => {
       pillChip: { variant: "active" as const, label: "PRO" },
       showPlanHero: true,
       showNoDeviceCallout: true,
+      subscriptionSubtitle: "Pro annual",
+      subscriptionLabel: "Subscription",
+      devicesSubtitle: "None added yet",
       planHeroData: {
         eyebrow: "YOUR PLAN",
         planName: "Pro",
-        subtitle: "5 devices · ann",
+        subtitle: "5 devices · annual",
         status: "active" as const,
         stats: [
           { label: "DEVICES", value: "0", dim: " / 5", tone: "default" as const },
@@ -131,10 +140,11 @@ describe("HomePage", () => {
 
     renderWithProviders(<HomePage />);
 
-    expect(screen.getByText("Add your first device")).toBeInTheDocument();
-    expect(screen.getByText("Generate a config to import in AmneziaVPN")).toBeInTheDocument();
+    expect(screen.getByText("No devices added")).toBeInTheDocument();
+    expect(screen.getByText("Add a device to generate your configuration.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Add Device/i })).toBeInTheDocument();
-    expect(screen.getByText("0 / 5")).toBeInTheDocument();
+    expect(screen.getByText("YOUR PLAN")).toBeInTheDocument();
+    expect(screen.getByText("Pro")).toBeInTheDocument();
   });
 
   it("renders no_plan state", () => {
@@ -172,7 +182,7 @@ describe("HomePage", () => {
     renderWithProviders(<HomePage />);
 
     expect(screen.getByText("Setup Required")).toBeInTheDocument();
-    expect(screen.getByText(/Choose a plan to get VPN access/)).toBeInTheDocument();
+    expect(screen.getByText(/Choose a plan and add a device to get your secure configuration/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Choose a Plan/i })).toBeInTheDocument();
   });
 
@@ -210,7 +220,7 @@ describe("HomePage", () => {
       planHeroData: {
         eyebrow: "YOUR PLAN",
         planName: "Pro",
-        subtitle: "5 devices · ann",
+        subtitle: "5 devices · annual",
         status: "expired" as const,
         stats: [
           { label: "DEVICES", value: "2", dim: " / 5", tone: "default" as const },
@@ -218,14 +228,19 @@ describe("HomePage", () => {
           { label: "TRAFFIC", value: "∞", tone: "default" as const },
         ],
       },
+      subscriptionLabel: "Renew Subscription",
+      subscriptionSubtitle: "Pro annual",
+      devicesSubtitle: "2 devices · access paused",
+      daysLeft: null,
+      expiryDateShort: "Mar 10",
     });
 
     renderWithProviders(<HomePage />);
 
-    expect(screen.getByText("Renew your plan")).toBeInTheDocument();
-    expect(screen.getByText("Renew to keep VPN access")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Renew Access/i })).toBeInTheDocument();
-    expect(screen.getAllByText("Mar 10, 2030").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("Subscription expired")).toBeInTheDocument();
+    expect(screen.getByText("Renew now to restore access on all devices.")).toBeInTheDocument();
+    expect(screen.getByText("Renew Subscription")).toBeInTheDocument();
+    expect(screen.getByText("Renew")).toBeInTheDocument();
   });
 
   it("renders support link in footer", () => {

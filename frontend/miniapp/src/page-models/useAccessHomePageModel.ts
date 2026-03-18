@@ -189,16 +189,38 @@ export function useAccessHomePageModel() {
       ? formatExpiry(data.expires_at)
       : data?.expires_at
         ? (() => {
+            const days = daysUntil(data.expires_at);
+            if (days > 0 && days <= 14) return `${days}d`;
             const d = new Date(data.expires_at);
             return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
           })()
         : "—";
 
+  const expiryDateShort =
+    data?.expires_at
+      ? new Date(data.expires_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })
+      : "";
+
+  const subscriptionSubtitle =
+    status === "expired"
+      ? "Pro annual"
+      : planHeroStatus === "expiring"
+        ? (expiryDateShort ? `Expires ${expiryDateShort} · Pro annual` : "Pro annual")
+        : `Pro annual · renews ${renewsValue}`;
+
+  const subscriptionLabel = status === "expired" ? "Renew Subscription" : "Subscription";
+  const devicesSubtitle =
+    status === "expired"
+      ? `${data?.devices_used ?? 0} devices · access paused`
+      : data?.devices_used != null && data?.device_limit != null
+        ? `${data.devices_used} of ${data.device_limit} active`
+        : "None added yet";
+
   const planHeroData = showPlanHero && data
     ? {
         eyebrow: "YOUR PLAN",
         planName: "Pro",
-        subtitle: `${data.device_limit ?? 0} devices · ann`,
+        subtitle: `${data.device_limit ?? 0} devices · annual`,
         status: planHeroStatus,
         stats: [
           {
@@ -225,6 +247,8 @@ export function useAccessHomePageModel() {
   const showRenewalBanner = hasPlan && (planHeroStatus === "expiring" || planHeroStatus === "expired");
   const showNoDeviceCallout = status === "needs_device";
 
+  const daysLeft = data?.expires_at ? daysUntil(data.expires_at) : null;
+
   return {
     pageState,
     status,
@@ -241,6 +265,11 @@ export function useAccessHomePageModel() {
     planHeroData,
     showRenewalBanner,
     showNoDeviceCallout,
+    subscriptionSubtitle,
+    subscriptionLabel,
+    devicesSubtitle,
+    daysLeft,
+    expiryDateShort,
     onRetry: () => void queryClient.invalidateQueries({ queryKey: [...webappQueryKeys.access()] }),
   };
 }

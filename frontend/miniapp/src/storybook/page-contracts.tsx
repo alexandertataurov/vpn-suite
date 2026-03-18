@@ -2,12 +2,13 @@ import { useEffect, useMemo, useState, type ReactElement, type ReactNode } from 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { setWebappToken } from "@/api/client";
 import { BootstrapContextProvider } from "@/bootstrap";
-import { ViewportShellRoutes, isStackFlowStoryRoute } from "./withViewportShell";
+import { ViewportShellRoutes } from "./withViewportShell";
 import { OnboardingPage } from "@/pages/Onboarding";
 import { PlanPage } from "@/pages/Plan";
 
 export type MockEndpoint =
   | "me"
+  | "access"
   | "logout"
   | "plans"
   | "servers"
@@ -214,17 +215,6 @@ const limitReachedSession = {
   ],
 };
 
-const connectedStatusSession = {
-  ...activeSession,
-  devices: [
-    {
-      ...activeSession.devices[0],
-      status: "connected",
-      confirmed_connected_at: "2026-03-10T10:11:00Z",
-    },
-  ],
-};
-
 const activeServers = {
   auto_select: false,
   total: 3,
@@ -233,15 +223,6 @@ const activeServers = {
     { id: "srv-frankfurt", name: "Frankfurt", region: "DE", avg_ping_ms: 76, load_percent: 44, is_recommended: false, is_current: false },
     { id: "srv-paris", name: "Paris", region: "FR", avg_ping_ms: 132, load_percent: 62, is_recommended: false, is_current: false },
   ],
-};
-
-const manualServers = {
-  ...activeServers,
-  auto_select: true,
-  items: activeServers.items.map((server) => ({
-    ...server,
-    is_current: server.id === "srv-frankfurt",
-  })),
 };
 
 const activeUsage = {
@@ -296,16 +277,6 @@ const referralStatsActive = {
   invite_remaining: 2,
 };
 
-const referralStatsEmpty = {
-  earned_days: 0,
-  total_referrals: 0,
-  pending_rewards: 0,
-  active_referrals: 0,
-  invite_goal: 5,
-  invite_progress: 0,
-  invite_remaining: 5,
-};
-
 const subscriptionOffers = {
   subscription_id: "sub-active",
   status: "active",
@@ -338,10 +309,57 @@ const paymentStatus = {
   status: "pending",
 };
 
+const accessReady: Record<string, unknown> = {
+  status: "ready",
+  has_plan: true,
+  devices_used: 2,
+  device_limit: 3,
+  config_ready: true,
+  config_id: "dev-mac-active",
+  expires_at: "2026-03-24T12:00:00Z",
+  amnezia_vpn_key: "vpn://storybook-amnezia-key",
+};
+
+const accessNoDevices: Record<string, unknown> = {
+  ...accessReady,
+  devices_used: 0,
+  status: "needs_device",
+};
+
+const accessNoPlan: Record<string, unknown> = {
+  status: "no_plan",
+  has_plan: false,
+  devices_used: 0,
+  device_limit: null,
+  config_ready: false,
+  config_id: null,
+  expires_at: null,
+  amnezia_vpn_key: null,
+};
+
+const accessExpired: Record<string, unknown> = {
+  status: "expired",
+  has_plan: true,
+  devices_used: 3,
+  device_limit: 5,
+  config_ready: false,
+  config_id: null,
+  expires_at: "2026-03-05T12:00:00Z",
+  amnezia_vpn_key: null,
+};
+
+const accessTrialEnding: Record<string, unknown> = {
+  ...accessReady,
+  devices_used: 0,
+  device_limit: 2,
+  expires_at: "2026-03-13T12:00:00Z",
+};
+
 export const readyScenario: MockScenario = {
   token: "storybook-token",
   responses: {
     me: activeSession,
+    access: accessReady,
     plans: activePlans,
     servers: activeServers,
     usage: activeUsage,
@@ -360,6 +378,7 @@ export const trialScenario: MockScenario = {
   responses: {
     ...readyScenario.responses,
     me: trialEndingSession,
+    access: accessTrialEnding,
   },
 };
 
@@ -368,6 +387,7 @@ export const expiredScenario: MockScenario = {
   responses: {
     ...readyScenario.responses,
     me: expiredHomeSession,
+    access: accessExpired,
   },
 };
 
@@ -376,6 +396,7 @@ export const noPlanScenario: MockScenario = {
   responses: {
     ...readyScenario.responses,
     me: noPlanSession,
+    access: accessNoPlan,
   },
 };
 
@@ -384,6 +405,7 @@ export const emptyDevicesScenario: MockScenario = {
   responses: {
     ...readyScenario.responses,
     me: emptyDevicesSession,
+    access: accessNoDevices,
   },
 };
 
@@ -395,30 +417,6 @@ export const limitReachedScenario: MockScenario = {
   },
 };
 
-export const connectedScenario: MockScenario = {
-  ...readyScenario,
-  responses: {
-    ...readyScenario.responses,
-    me: connectedStatusSession,
-  },
-};
-
-export const noReferralsScenario: MockScenario = {
-  ...readyScenario,
-  responses: {
-    ...readyScenario.responses,
-    referralStats: referralStatsEmpty,
-  },
-};
-
-export const manualServerScenario: MockScenario = {
-  ...readyScenario,
-  responses: {
-    ...readyScenario.responses,
-    servers: manualServers,
-  },
-};
-
 export const loadingCheckoutScenario: MockScenario = {
   ...readyScenario,
   loading: ["plans"],
@@ -426,7 +424,7 @@ export const loadingCheckoutScenario: MockScenario = {
 
 export const loadingSessionScenario: MockScenario = {
   ...readyScenario,
-  loading: ["me"],
+  loading: ["me", "access"],
 };
 
 export const loggedOutScenario: MockScenario = {
@@ -452,8 +450,6 @@ export function PageSandbox({
   scenario: MockScenario;
   initialEntries: string[];
 }) {
-  const initialEntry = initialEntries[0] ?? "/";
-  const usesStackFlowLayout = isStackFlowStoryRoute(initialEntry);
   const bootstrapValue = useMemo(
     () => ({
       phase: "app_ready" as const,
@@ -507,7 +503,7 @@ export function PageSandbox({
   return (
     <QueryClientProvider client={client}>
       <BootstrapContextProvider value={bootstrapValue}>
-        <ViewportShellRoutes initialEntries={initialEntries} variant={usesStackFlowLayout ? "stack" : "tabbed"}>
+        <ViewportShellRoutes initialEntries={initialEntries} variant="stack">
           {children}
         </ViewportShellRoutes>
       </BootstrapContextProvider>
@@ -625,6 +621,7 @@ export function PlanStoryHarness() {
 
 function resolveEndpoint(url: string, method: string): MockEndpoint | null {
   if (method === "GET" && url.includes("/webapp/me")) return "me";
+  if (method === "GET" && url.includes("/webapp/user/access")) return "access";
   if (method === "POST" && url.includes("/webapp/logout")) return "logout";
   if (method === "GET" && url.includes("/webapp/plans")) return "plans";
   if (method === "GET" && url.includes("/webapp/servers")) return "servers";
@@ -651,6 +648,8 @@ function defaultResponse(endpoint: MockEndpoint): unknown {
   switch (endpoint) {
     case "me":
       return activeSession;
+    case "access":
+      return accessReady;
     case "logout":
       return { status: "ok" };
     case "plans":

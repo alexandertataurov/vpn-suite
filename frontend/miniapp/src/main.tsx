@@ -76,7 +76,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <QueryClientProvider client={queryClient}>
       <ThemeProvider
         themes={["consumer-dark", "consumer-light"]}
-        defaultTheme="consumer-dark"
+        defaultTheme="consumer-light"
         storageKey="vpn-suite-miniapp-theme"
       >
         <BrowserRouter basename="/webapp">

@@ -1,4 +1,5 @@
 import { Button, StatusChip } from "@/design-system";
+import { Stack } from "@/design-system/core/primitives";
 import { useNavigate } from "react-router-dom";
 import { VpnBoundaryNote } from "@/components/VpnBoundaryNote";
 
@@ -30,7 +31,8 @@ export function SettingsAccountOverviewCard({
   const navigate = useNavigate();
 
   return (
-    <div className="modern-hero-card stagger-1">
+    <div className="modern-hero-card">
+      <Stack gap="4">
       <div className="modern-status-group">
         <div className="modern-avatar settings-account-avatar">
           {photoUrl ? (
@@ -44,7 +46,7 @@ export function SettingsAccountOverviewCard({
           <div className="modern-status-title settings-account-title">{name}</div>
           <div className="modern-status-subtitle">
             {planBadgeLabel && (
-              <StatusChip variant={hasPlan ? "active" : "info"} className="u-mr-8">
+              <StatusChip variant={hasPlan ? "active" : "info"}>
                 {planBadgeLabel}
               </StatusChip>
             )}
@@ -66,10 +68,9 @@ export function SettingsAccountOverviewCard({
           </div>
         )}
       </div>
-      
-      <div className="u-mt-4">
-        <VpnBoundaryNote />
-      </div>
+
+      <VpnBoundaryNote />
+      </Stack>
     </div>
   );
 }

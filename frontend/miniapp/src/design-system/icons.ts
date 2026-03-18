@@ -32,6 +32,7 @@ export {
   IconArrowRight,
   IconExternalLink,
   IconChevronRight,
+  IconBox,
 } from "@/lib/icons";
 export { IconTelegramStar } from "./icons/IconTelegramStar";
 

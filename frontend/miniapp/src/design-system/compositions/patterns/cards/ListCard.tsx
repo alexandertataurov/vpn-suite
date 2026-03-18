@@ -26,7 +26,7 @@ export function ListCard({ title, children, className = "", ...props }: ListCard
   );
 }
 
-export type ListRowIconTone = "g" | "b" | "a" | "r" | "n" | "blue" | "green" | "amber" | "red" | "neutral" | "modern-blue" | "modern-green" | "modern-amber" | "modern-red" | "modern-neutral";
+export type ListRowIconTone = "g" | "b" | "a" | "r" | "n" | "blue" | "green" | "amber" | "red" | "neutral";
 export type ListRowDeviceType = "macos" | "ios" | "android" | "windows" | "linux" | "router" | "unknown";
 export type DeviceStatus = "active" | "pending" | "offline" | "blocked" | "needs_refresh" | "info";
 
@@ -82,9 +82,7 @@ function resolveModernTone(tone: ListRowIconTone): string {
     case "neutral":
       return "modern-icon-tone--neutral";
     default:
-      return tone.startsWith("modern-")
-        ? `modern-icon-tone--${tone.split("-")[1]}`
-        : tone;
+      return "modern-icon-tone--neutral";
   }
 }
 
@@ -131,9 +129,12 @@ export function ListRow({
   const resolvedIcon = icon ?? (deviceType ? defaultDeviceIcon(deviceType) : null);
   const resolvedSubtitle = subtitle ?? subtitleFromStatus(status, lastActiveAt);
   const modernToneClass = resolveModernTone(iconTone);
+  const a11y = "onClick" in props && typeof props.onClick === "function"
+    ? { role: "button" as const, tabIndex: 0 }
+    : {};
 
   return (
-    <div className={`modern-list-item ${className}`.trim()} {...props}>
+    <div className={`modern-list-item ${className}`.trim()} {...a11y} {...props}>
       {resolvedIcon != null ? (
         <div className={`modern-list-item-icon ${modernToneClass}`}>{resolvedIcon}</div>
       ) : (

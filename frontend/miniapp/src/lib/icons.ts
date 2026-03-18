@@ -32,6 +32,7 @@ export {
   ArrowRight as IconArrowRight,
   ExternalLink as IconExternalLink,
   ChevronRight as IconChevronRight,
+  Box as IconBox,
 } from "lucide-react";
 
 export type { LucideIcon as IconType } from "lucide-react";

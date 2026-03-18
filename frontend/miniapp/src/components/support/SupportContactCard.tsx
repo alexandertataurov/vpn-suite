@@ -16,7 +16,7 @@ export function SupportContactCard({
   const { t } = useI18n();
 
   return (
-    <div className="modern-contact-card stagger-1">
+    <div className="modern-contact-card">
       <div className="modern-contact-card__header">
         <div className="modern-contact-card__icon">
           <IconHelpCircle size={22} strokeWidth={2} />

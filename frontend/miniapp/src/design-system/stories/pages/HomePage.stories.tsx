@@ -2,7 +2,6 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { Route } from "react-router-dom";
 import { HomePage } from "@/pages/Home";
 import {
-  connectedScenario,
   emptyDevicesScenario,
   expiredScenario,
   loadingSessionScenario,
@@ -12,19 +11,23 @@ import {
   trialScenario,
 } from "@/storybook/page-contracts";
 
-const meta = {
+const meta: Meta = {
   title: "Pages/Contracts/Home",
   tags: ["autodocs"],
   parameters: {
-    docs: { description: { component: "Home route. Production-faithful scenarios." } },
+    docs: {
+      description: {
+        component: "Home route. Contract tests with production-faithful scenarios.",
+      },
+    },
   },
-} satisfies Meta;
+};
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const ActiveSubscription: Story = {
+export const Default: Story = {
   render: () => (
     <PageSandbox scenario={readyScenario} initialEntries={["/"]}>
       <Route path="/" element={<HomePage />} />
@@ -32,15 +35,7 @@ export const ActiveSubscription: Story = {
   ),
 };
 
-export const AccessReady: Story = {
-  render: () => (
-    <PageSandbox scenario={connectedScenario} initialEntries={["/"]}>
-      <Route path="/" element={<HomePage />} />
-    </PageSandbox>
-  ),
-};
-
-export const NoDevicesYet: Story = {
+export const NoDevices: Story = {
   render: () => (
     <PageSandbox scenario={emptyDevicesScenario} initialEntries={["/"]}>
       <Route path="/" element={<HomePage />} />
@@ -48,7 +43,7 @@ export const NoDevicesYet: Story = {
   ),
 };
 
-export const NoActivePlan: Story = {
+export const NoPlan: Story = {
   render: () => (
     <PageSandbox scenario={noPlanScenario} initialEntries={["/"]}>
       <Route path="/" element={<HomePage />} />
@@ -64,7 +59,7 @@ export const TrialEnding: Story = {
   ),
 };
 
-export const ExpiredPlan: Story = {
+export const Expired: Story = {
   render: () => (
     <PageSandbox scenario={expiredScenario} initialEntries={["/"]}>
       <Route path="/" element={<HomePage />} />

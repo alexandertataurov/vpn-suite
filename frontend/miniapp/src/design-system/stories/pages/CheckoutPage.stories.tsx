@@ -3,13 +3,17 @@ import { Route } from "react-router-dom";
 import { CheckoutPage } from "@/pages/Checkout";
 import { PageSandbox, readyScenario } from "@/storybook/page-contracts";
 
-const meta = {
+const meta: Meta = {
   title: "Pages/Contracts/Checkout",
   tags: ["autodocs"],
   parameters: {
-    docs: { description: { component: "Checkout flow." } },
+    docs: {
+      description: {
+        component: "Checkout flow. Contract tests.",
+      },
+    },
   },
-} satisfies Meta;
+};
 
 export default meta;
 

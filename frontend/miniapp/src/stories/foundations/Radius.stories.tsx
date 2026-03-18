@@ -6,7 +6,6 @@ import {
   GroupLabel,
   TokenGrid,
   TokenSlot,
-  FOUNDATION,
 } from "./foundationShared";
 
 const meta: Meta = {

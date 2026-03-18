@@ -27,7 +27,7 @@ The design system follows a **layered model**. Each layer has strict responsibil
 - Page composition (Page Header → Hero → Section Divider → Content Cards)
 - Class names (e.g. `.page-hd`, `.shead`, `.shead-lbl`, `.shead-rule`, `.op`, `.data-grid`, `.btn-primary`). CSS keeps `.shead-label`/`.shead-line` as aliases for `.shead-lbl`/`.shead-rule`.
 - Plan hero patterns: `.plan-hero` (library.css) is the legacy content-library hero block. `.plan-hero-card` (modern.css) is the Amnezia-spec implementation used by `PlanHeroCard` recipe. Prefer `PlanHeroCard` and `.plan-hero-card` for new code.
-- Progress: Content Library §8 uses `.bar-track`/`.bar-fill` (`.ok`/`.warn`/`.crit`/`.info`) in content/library.css. Legacy: `.h-track`, `.h-fill`, `.h-fill.pct-*` (0–100) in shell/frame.css. Prefer ProgressBar component or `.bar-track`/`.bar-fill` for new code.
+- Progress: Prefer `ProgressBar` component or `.progress-bar-fill` (frame.css). Legacy: `.h-track`, `.h-fill`, `.h-fill.pct-*` (0–100) in shell/frame.css.
 - Error vs danger: Semantic token is `--color-error`; `.btn-danger` uses "danger" as legacy name for the same semantic (see tokens/colors.ts).
 - Buttons: Prefer the `Button` component and `getButtonClassName()` from `@/design-system` for consistency and theming. Raw `.btn`, `.btn-primary`, etc. in shell/frame.css are legacy; migrate over time. See **Mission\* vs Button** below.
 - Token usage (`--ui`, `--mono`, `--s1`–`--s4`, `--bd-def`, `--tx-pri`, etc.)
@@ -67,8 +67,8 @@ Layers: **tokens** → **theme** → **primitives** → **components** → **pat
 
 - **Field** (components/forms): label + slot + description + error; uses Label, HelperText; semantic structure. Prefer for new forms.
 - **FormField** (patterns/content/ContentForms): content-library class-based (`.field-group`, `.field-label`); different API (label, input, action). Use for content-library layouts.
-- **layouts/** — PageScaffold, PageSection, SectionDivider, ScrollZone, ActionZone, HeaderZone, ShellContextBlock, StickyBottomBar; layout CSS in styles/layout/zones.css
-- **recipes/** — PageHeaderBadge, PageCardSection, LabeledControlRow, FaqDisclosureItem, SettingsActionRow, SnapCarousel
+- **layouts/** — PageScaffold, PageSection, SectionDivider, ScrollZone, HeaderZone, ShellContextBlock, StickyBottomBar; layout CSS in styles/layout/zones.css
+- **recipes/** — PageHeaderBadge, PageCardSection, LabeledControlRow, FaqDisclosureItem, SettingsActionRow
 - **hooks/** — useThemeMode, useBreakpoint
 - **utils/** — getAriaLabelProps (accessibility). Class merge: use `cn` from `@vpn-suite/shared`.
 - **styles/** — CSS entry and token/component styles

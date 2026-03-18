@@ -6,6 +6,7 @@ import {
   InlineAlert,
   type IconType,
 } from "@/design-system";
+import { Stack } from "@/design-system/core/primitives";
 import {
   IconDownload,
   IconShield,
@@ -137,22 +138,18 @@ export function OnboardingStepCard({
               <div className="stack">
                 {!appAlreadyInstalled ? (
                   <>
-                    <div className="modern-action-grid modern-p-0">
-                       <button className="modern-banner modern-m-0" onClick={onOpenIos} aria-label={t("onboarding.download_ios")}>
-                          <div className="modern-banner-content">
-                            <img src={appStoreBadgeUrl} alt="" className="modern-h-24" />
-                          </div>
-                       </button>
-                       <button className="modern-banner modern-m-0" onClick={onOpenAndroid} aria-label={t("onboarding.download_android")}>
-                          <div className="modern-banner-content">
-                            <img src={googlePlayBadgeUrl} alt="" className="modern-h-24" />
-                          </div>
-                       </button>
+                    <div className="ds-action-grid">
+                      <Button variant="secondary" onClick={onOpenIos} aria-label={t("onboarding.download_ios")} className="store-badge-btn">
+                        <img src={appStoreBadgeUrl} alt="" className="store-badge-img" />
+                      </Button>
+                      <Button variant="secondary" onClick={onOpenAndroid} aria-label={t("onboarding.download_android")} className="store-badge-btn">
+                        <img src={googlePlayBadgeUrl} alt="" className="store-badge-img" />
+                      </Button>
                     </div>
                     <Button variant="ghost" onClick={onMarkInstalled}>
                       {t("onboarding.already_installed")}
                     </Button>
-                    <Button variant="primary" fullWidth size="lg" className="modern-mt-3" onClick={onPrimaryAction} disabled={isBusy} endIcon={<IconArrowRight size={20} />}>
+                    <Button variant="primary" fullWidth size="lg" onClick={onPrimaryAction} disabled={isBusy} endIcon={<IconArrowRight size={20} />}>
                        {primaryLabel}
                     </Button>
                   </>
@@ -226,10 +223,10 @@ export function OnboardingStepCard({
   };
 
   return (
-    <div className="stack modern-mt-4">
+    <Stack gap="4">
       {renderStepContent()}
-      
-      <div className="modern-px-6">
+
+      <div>
         <VpnBoundaryNote 
           titleKey={step.id === "get_config" && hasActivePlan ? "onboarding.add_device_note_title" : "onboarding.connection_boundary_title"}
           messageKey={step.id === "get_config" && hasActivePlan ? "onboarding.issue_note" : "onboarding.connection_boundary_message"} 
@@ -237,10 +234,8 @@ export function OnboardingStepCard({
       </div>
 
       {onboardingError && (
-        <div className="modern-px-4">
-          <InlineAlert variant="error" title={t("onboarding.could_not_continue_title")} body={onboardingError} />
-        </div>
+        <InlineAlert variant="error" title={t("onboarding.could_not_continue_title")} body={onboardingError} />
       )}
-    </div>
+    </Stack>
   );
 }

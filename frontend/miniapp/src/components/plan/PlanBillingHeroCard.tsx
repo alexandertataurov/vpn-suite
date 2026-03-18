@@ -2,24 +2,24 @@ import { Button, StatusChip } from "@/design-system";
 import { IconShield } from "@/design-system/icons";
 import { useI18n } from "@/hooks";
 
-interface PlanHeroMetaItem {
+interface PlanBillingHeroMetaItem {
   label: string;
   value: string;
 }
 
-export interface PlanHeroCardProps {
+export interface PlanBillingHeroCardProps {
   title: string;
   statusLine: string;
   statusBadge: string;
   statusBadgeTone: "active" | "pending" | "offline";
-  metaItems: PlanHeroMetaItem[];
+  metaItems: PlanBillingHeroMetaItem[];
   primaryActionLabel: string;
   secondaryActionLabel?: string | null;
   onPrimaryAction: () => void;
   onSecondaryAction?: (() => void) | null;
 }
 
-export function PlanHeroCard({
+export function PlanBillingHeroCard({
   title,
   statusLine,
   statusBadge,
@@ -29,14 +29,14 @@ export function PlanHeroCard({
   secondaryActionLabel,
   onPrimaryAction,
   onSecondaryAction,
-}: PlanHeroCardProps) {
+}: PlanBillingHeroCardProps) {
   const { t } = useI18n();
 
   return (
-    <div className="modern-hero-card stagger-1">
+    <div className="modern-hero-card">
       <div className="modern-status-group">
         <div className="modern-pulse-indicator">
-           <IconShield strokeWidth={2.5} size={22} />
+          <IconShield strokeWidth={2.5} size={22} />
         </div>
         <div className="modern-status-text">
           <div className="modern-header-label">{t("plan.current_plan_title")}</div>
@@ -50,9 +50,12 @@ export function PlanHeroCard({
 
       <div className="modern-metrics-row">
         {metaItems.map((item, index) => (
-          <div key={item.label} className={`modern-metric-item ${index === 1 ? 'modern-metric-item--centered' : index === 2 ? 'modern-align-right' : ''}`}>
-             <span className="modern-metric-label">{item.label}</span>
-             <span className="modern-metric-value plan-hero-metric-value">{item.value}</span>
+          <div
+            key={item.label}
+            className={`modern-metric-item ${index === 1 ? "modern-metric-item--centered" : index === 2 ? "modern-align-right" : ""}`}
+          >
+            <span className="modern-metric-label">{item.label}</span>
+            <span className="modern-metric-value plan-hero-metric-value">{item.value}</span>
           </div>
         ))}
       </div>

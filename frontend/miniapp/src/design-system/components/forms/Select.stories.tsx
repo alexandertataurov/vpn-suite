@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
 import { Select } from "./Select";
-import { Stack } from "@/design-system/core/primitives";
 
 const meta = {
   title: "Components/Select",

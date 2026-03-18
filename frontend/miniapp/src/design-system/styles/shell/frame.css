@@ -860,102 +860,6 @@ html:not([data-theme="consumer-light"]) .miniapp-popover-panel {
   color: var(--color-text-muted);
 }
 
-.miniapp-tab-icon svg {
-  display: inline-flex;
-  width: var(--spacing-6);
-  height: var(--spacing-6);
-}
-
-.miniapp-tab-short {
-  display: none;
-}
-
-.miniapp-tab-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.miniapp-tab-icon-shell {
-  width: 22px;
-  height: 22px;
-  border-radius: 999px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: inherit;
-  background: transparent;
-  border: none;
-  box-shadow: none;
-}
-
-.bottom-nav.miniapp-bottom-nav {
-  border: 1px solid color-mix(in oklch, var(--color-border-subtle) 90%, var(--color-text) 10%);
-  background: color-mix(in oklch, var(--color-surface) 88%, transparent);
-  backdrop-filter: blur(12px) saturate(1.02);
-  -webkit-backdrop-filter: blur(12px) saturate(1.02);
-  box-shadow: 0 8px 20px color-mix(in oklch, var(--color-bg) 90%, transparent);
-}
-
-.miniapp-tab-label {
-  display: block;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  line-height: 1.1;
-  text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-}
-
-.miniapp-tab:hover {
-  color: color-mix(in oklch, var(--color-text) 80%, var(--color-text-muted) 20%);
-}
-
-.miniapp-tab,
-.nav-item {
-  color: color-mix(in oklch, var(--color-text) 40%, transparent);
-}
-
-.miniapp-tab--active {
-  color: var(--color-text);
-}
-
-.miniapp-tab--active .miniapp-tab-icon-shell,
-.nav-item.on .miniapp-tab-icon-shell {
-  background: transparent;
-  border-color: transparent;
-  box-shadow: none;
-}
-
-.miniapp-tab::after,
-.nav-item::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: 0;
-  width: 20px;
-  height: 2px;
-  border-radius: 1px;
-  background: var(--color-accent);
-  transform: translateX(-50%);
-  opacity: 0;
-  transition: opacity 0.12s ease, width 0.12s ease;
-}
-
-.miniapp-tab--active::after,
-.nav-item.on::after {
-  opacity: 1;
-}
-
-.miniapp-tab--active .miniapp-tab-short {
-  color: var(--color-text);
-}
-
 .section-meta-chip {
   min-width: 86px;
   min-height: var(--miniapp-chip-min-height);
@@ -3724,52 +3628,7 @@ html[data-theme="consumer-dark"] .subscription-cancellation-modal {
   }
 }
 
-/* Bottom nav: allow label wrap on small viewports */
-@media (max-width: 480px) {
-  .miniapp-tab-label {
-    font-size: 9px;
-    letter-spacing: 0.02em;
-    white-space: normal;
-    line-height: 1.1;
-    text-align: center;
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    -webkit-box-orient: vertical;
-    word-break: normal;
-    overflow-wrap: anywhere;
-  }
-}
-
-/* Bottom nav: icon-only on very narrow viewports only */
-@media (max-width: 359px) {
-  .miniapp-tab-label {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
-  }
-
-  .nav-item.miniapp-tab {
-    justify-content: center;
-  }
-}
-
 @media (max-width: 420px) {
-  .miniapp-bottom-nav {
-    gap: 0;
-  }
-
-  .miniapp-tab-short {
-    display: none;
-  }
-
   .quick-action-grid,
   .grid-2 {
     grid-template-columns: minmax(0, 1fr);
@@ -3794,7 +3653,6 @@ html[data-theme="consumer-dark"] .subscription-cancellation-modal {
 
 @media (prefers-reduced-motion: reduce) {
 
-  .miniapp-tab,
   .btn,
   .btn-state,
   .card,
@@ -3969,13 +3827,6 @@ html {
   width: 22px;
   height: 22px;
   stroke-width: 1.7;
-}
-
-.nav-item span {
-  font: 600 9px var(--font-mono);
-  letter-spacing: 0.13em;
-  text-transform: uppercase;
-  line-height: 1.2;
 }
 
 /* .card-glow, .data-grid, .data-cell, .dc-key, .dc-val: canonical in content/library.css */
@@ -5155,46 +5006,6 @@ html:not([data-theme="consumer-dark"]):not([data-theme="consumer-light"]) {
   gap: 8px;
 }
 
-.settings-top-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 8px;
-}
-
-.settings-ops {
-  gap: 8px;
-}
-
-.settings-ops .op {
-  align-items: flex-start;
-  min-height: 72px;
-  padding: 12px 13px 12px 14px;
-  border-radius: 14px;
-}
-
-.settings-ops .op-ico {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-}
-
-.settings-ops .op-chev {
-  align-self: center;
-}
-
-.settings-profile-card .op {
-  padding-left: 4px;
-  padding-right: 4px;
-}
-
-.settings-subscription-actions {
-  gap: 8px;
-}
-
-.settings-preferences-card .segmented-control {
-  margin-top: 4px;
-}
-
 .grid-2,
 .faq-grid {
   display: grid;
@@ -5360,14 +5171,6 @@ html:not([data-theme="consumer-dark"]):not([data-theme="consumer-light"]) {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .nav-item span,
-  .miniapp-tab-label {
-    font-size: 8px;
-    letter-spacing: 0.02em;
-    white-space: normal;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-  }
 }
 
 .button-story-preview-wide {

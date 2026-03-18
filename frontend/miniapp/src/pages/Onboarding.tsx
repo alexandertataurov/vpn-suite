@@ -7,7 +7,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { ONBOARDING_STEPS, OnboardingStepCard } from "@/components";
-import { PageScaffold, ModernHeader, useToast } from "@/design-system";
+import { FooterHelp, PageScaffold, ModernHeader, useToast } from "@/design-system";
 import { useBootstrapContext } from "@/bootstrap/context";
 import { webappApi } from "@/api/client";
 import { useOpenLink, useSession, useTelemetry, useTelegramWebApp } from "@/hooks";
@@ -241,13 +241,11 @@ export function OnboardingPage() {
       />
 
       {(isLastStep || !hasActivePlan) && (
-        <div className="modern-footer-help">
-          <p className="modern-help-note">
-            <span className="modern-help-link" onClick={() => void handleSkipForNow()}>
-              {t("onboarding.skip_for_now")}
-            </span>
-          </p>
-        </div>
+        <FooterHelp
+          note=""
+          linkLabel={t("onboarding.skip_for_now")}
+          onLinkClick={() => void handleSkipForNow()}
+        />
       )}
     </PageScaffold>
   );

@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { IconPlus } from "@/design-system/icons";
 import {
   FallbackScreen,
+  FooterHelp,
   Skeleton,
   SkeletonList,
   Button,
@@ -18,6 +19,7 @@ import {
   Input,
   usePrefersReducedMotion,
 } from "@/design-system";
+import { Stack } from "@/design-system/core/primitives";
 import { getMotionDurationMs } from "@/design-system/core/tokens";
 import { useTelegramMainButton } from "@/hooks";
 import { useDevicesPageModel } from "@/page-models";
@@ -148,13 +150,11 @@ export function DevicesPage() {
     return (
       <PageScaffold>
         <ModernHeader title={model.header.title} showSettings={false} />
-        <div className="modern-content-pad stagger-1">
+        <Stack gap="4">
           <Skeleton variant="card" height={160} />
-          <div className="u-mt-24 u-mb-8">
-            <Skeleton variant="line" width="40%" />
-          </div>
+          <Skeleton variant="line" width="40%" />
           <SkeletonList lines={3} />
-        </div>
+        </Stack>
       </PageScaffold>
     );
   }
@@ -172,7 +172,7 @@ export function DevicesPage() {
           variant="warning"
           title={model.planRequiredAlert.title}
           body={model.planRequiredAlert.body}
-          className="devices-plan-required-alert stagger-1"
+          className="devices-plan-required-alert"
           actions={(
             <Link className="inline-alert-action-link devices-plan-required-link" to={model.planRequiredAlert.to}>
               {model.planRequiredAlert.ctaLabel}
@@ -184,7 +184,7 @@ export function DevicesPage() {
       <DevicesSummaryCard
         title={model.hasSubscription ? summaryTitle : undefined}
         description={model.hasSubscription ? model.summaryHero.subtitle : undefined}
-        className={model.planRequiredAlert ? "stagger-2 devices-summary-section" : "stagger-1 devices-summary-section"}
+        className="devices-summary-section"
         metrics={model.summaryHero.metrics}
         action={
           model.canAddDevice ? (
@@ -207,7 +207,7 @@ export function DevicesPage() {
 
       <HelperNote>{t("common.vpn_boundary_devices_note")}</HelperNote>
 
-      <PageSection id="devices-section" className="stagger-3" title={t("devices.section_devices_title")}>
+      <PageSection id="devices-section" title={t("devices.section_devices_title")}>
         {(model.isDeviceLimitError || model.showUpgradeCta) ? (
           <InlineAlert
             variant="warning"
@@ -255,7 +255,7 @@ export function DevicesPage() {
       </PageSection>
 
       {model.showSetupCard ? (
-        <PageSection id="setup-section" className="stagger-4">
+        <PageSection id="setup-section">
           <SetupCardContent
             step={model.setupStep}
             onIssueDevice={openAddWizard}
@@ -268,7 +268,7 @@ export function DevicesPage() {
 
       {model.issuedConfig ? (
         <div ref={model.configSectionRef}>
-          <PageSection id="config-section" className="stagger-5">
+          <PageSection id="config-section">
             <ConfigCardContent
               configText={model.configText}
               routeReason={model.routeReason}
@@ -400,6 +400,12 @@ export function DevicesPage() {
           aria-label={t("devices.rename_modal_placeholder")}
         />
       </Modal>
+
+      <FooterHelp
+        note="Having trouble?"
+        linkLabel="View setup guide"
+        onLinkClick={() => navigate("/support")}
+      />
     </PageScaffold>
   );
 }

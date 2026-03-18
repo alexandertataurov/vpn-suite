@@ -40,7 +40,7 @@ export function PlanNextStepCard({
       eyebrow={t("plan.next_step_eyebrow")}
       title={title}
       subtitle={alertTitle}
-      className="plan-billing-page__next-step-card stagger-6"
+      className="plan-billing-page__next-step-card"
     >
       <HelperNote tone={alertTone === "error" ? "danger" : alertTone === "warning" ? "warning" : "info"}>
         {alertMessage}

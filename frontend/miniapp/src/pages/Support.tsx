@@ -10,8 +10,10 @@ import {
   SkeletonList,
   PageScaffold,
   ModernHeader,
+  PageSection,
   SettingsActionRow,
 } from "@/design-system";
+import { Stack } from "@/design-system/core/primitives";
 import { useSupportPageModel } from "@/page-models";
 import { useI18n } from "@/hooks";
 import { getSupportBotHref } from "@/config/env";
@@ -85,41 +87,38 @@ export function SupportPage() {
     return (
       <PageScaffold>
         <ModernHeader title={model.header.title} showSettings={false} />
-        <div className="modern-content-pad stagger-1">
+        <Stack gap="4">
           <Skeleton variant="card" height={180} />
-          <div className="u-mt-24 u-mb-8">
-            <Skeleton variant="line" width="40%" />
-          </div>
+          <Skeleton variant="line" width="40%" />
           <SkeletonList lines={4} />
-          <div className="u-mt-24 u-mb-8">
-            <Skeleton variant="line" width="50%" />
-          </div>
+          <Skeleton variant="line" width="50%" />
           <Skeleton variant="card" height={120} />
-        </div>
+        </Stack>
       </PageScaffold>
     );
   }
 
   return (
-    <PageScaffold className="page-shell--sectioned">
+    <PageScaffold>
       <ModernHeader
         title={model.header.title}
         subtitle={model.header.subtitle}
         showSettings={false}
         onBack={() => navigate(-1)}
       />
-      <SupportContactCard
-        title={model.hero.title}
-        description={model.hero.subtitle ?? t("support.contact_card_description")}
-        supportHref={supportHref}
-      />
-      
-      <div className="modern-section stagger-2">
-        <div className="modern-section-title">{t("support.quick_paths_title")}</div>
-        <div className="modern-section-subtitle">{t("support.quick_paths_description")}</div>
-        
-        <ul className="modern-list">
-          <SettingsActionRow
+      <Stack gap="4">
+        <SupportContactCard
+          title={model.hero.title}
+          description={model.hero.subtitle ?? t("support.contact_card_description")}
+          supportHref={supportHref}
+        />
+
+        <PageSection
+          title={t("support.quick_paths_title")}
+          description={t("support.quick_paths_description")}
+        >
+          <ul className="modern-list">
+            <SettingsActionRow
             icon={<IconRotateCw size={18} strokeWidth={2} />}
             title={t("onboarding.restore_access")}
             description={t("support.quick_paths_restore_description")}
@@ -153,14 +152,14 @@ export function SupportPage() {
             }}
             buttonProps={{ disabled: !supportHref }}
           />
-        </ul>
-      </div>
+          </ul>
+        </PageSection>
 
-      <div className="modern-section stagger-3">
-        <div className="modern-section-title">{t("support.troubleshooter_title")}</div>
-        <div className="modern-section-subtitle">{t("support.troubleshooter_description_short")}</div>
-        
-        <TroubleshooterStep
+        <PageSection
+          title={t("support.troubleshooter_title")}
+          description={t("support.troubleshooter_description_short")}
+        >
+          <TroubleshooterStep
           key={model.step}
           stepIndex={model.step + 1}
           totalSteps={model.totalSteps}
@@ -171,14 +170,14 @@ export function SupportPage() {
           altLabel={model.currentStepAltLabel ?? undefined}
           onAlt={model.currentStepAltLabel ? () => navigate("/plan", { state: { fromSupport: true } }) : undefined}
         />
-      </div>
+        </PageSection>
 
-      <div className="modern-section stagger-4">
-        <div className="modern-section-title">{t("support.faq_title")}</div>
-        <div className="modern-section-subtitle">{t("support.faq_description")}</div>
-        
-        <ul className="modern-list stagger-5">
-          {faqItems.map((item, index) => (
+        <PageSection
+          title={t("support.faq_title")}
+          description={t("support.faq_description")}
+        >
+          <ul className="modern-list">
+            {faqItems.map((item, index) => (
             <FaqDisclosureItem
               key={item.title}
               title={item.title}
@@ -186,9 +185,10 @@ export function SupportPage() {
               isOpen={openFaq === index}
               onToggle={() => setOpenFaq((current) => (current === index ? null : index))}
             />
-          ))}
-        </ul>
-      </div>
+            ))}
+          </ul>
+        </PageSection>
+      </Stack>
     </PageScaffold>
   );
 }

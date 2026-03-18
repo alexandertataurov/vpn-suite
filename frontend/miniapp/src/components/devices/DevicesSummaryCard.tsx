@@ -43,7 +43,7 @@ export function DevicesSummaryCard({
   metrics,
 }: DevicesSummaryCardProps) {
   return (
-    <div className={`modern-hero-card stagger-1 ${className}`}>
+    <div className={`modern-hero-card ${className}`}>
       <div className={action ? "modern-status-group devices-summary-header--has-action" : "modern-status-group devices-summary-header"}>
         <div className="modern-pulse-indicator">
            <IconMonitor strokeWidth={2.5} size={22} />

@@ -117,7 +117,7 @@ Miniapp rule:
 - keep `48px` as the preferred shared target in our web UI
 - add padding around compact icon buttons before shrinking visuals
 
-**Touch target audit (design system):** `.page-hd-btn`, `.btn-primary`, `.btn-secondary`, `.icon-btn`, `.op-ico`, `.tier-select-btn`, bottom nav items use `var(--size-touch-target)` or `min-height: 44px`/`48px`. Non-interactive elements (`.bar-track`, `.feat-ico`, `.lr-ico`) may be smaller; ensure adjacent tappable controls meet 48px.
+**Touch target audit (design system):** `.page-hd-btn`, `.btn-primary`, `.btn-secondary`, `.icon-btn`, `.op-ico`, plan card buttons (`.modern-plan-card` + `Button`), bottom nav items use `var(--size-touch-target)` or `min-height: 44px`/`48px`. Non-interactive elements (`.bar-track`, `.feat-ico`, `.lr-ico`) may be smaller; ensure adjacent tappable controls meet 48px.
 
 ## 2. Minimum Readable Text
 

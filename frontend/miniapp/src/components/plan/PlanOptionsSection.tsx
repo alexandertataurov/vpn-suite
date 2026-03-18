@@ -62,7 +62,7 @@ export function PlanOptionsSection({
           : t("plan.section_available_plans_title_new")
       }
       description={t("plan.section_available_plans_description")}
-      className="plan-billing-page__plans-section stagger-3"
+      className="plan-billing-page__plans-section"
     >
       <div className="plan-billing-page__billing-period">
         <span className="plan-billing-page__billing-period-label">{t("plan.billing_period_label")}</span>
@@ -90,7 +90,7 @@ export function PlanOptionsSection({
         />
       ) : (
         <div id="availablePlans" className="modern-plan-grid">
-          {visibleTierPairs.map((tier, index) => {
+          {visibleTierPairs.map((tier) => {
             const displayed = billingPeriod === "annual" ? (tier.annual ?? tier.monthly) : (tier.monthly ?? tier.annual);
             const currentForPeriod = !!displayed && displayed.id === primaryPlanId;
             const isCurrentAndNeedsRenewal = currentForPeriod && (subscriptionState === "expiring" || subscriptionState === "expired");
@@ -110,7 +110,6 @@ export function PlanOptionsSection({
                   "modern-plan-card",
                   selectedTierKey === tier.key ? "modern-plan-card--selected" : "",
                   currentForPeriod ? "modern-plan-card--current" : "",
-                  index === 0 ? "stagger-4" : index === 1 ? "stagger-5" : "stagger-6",
                 ].filter(Boolean).join(" ")}
                 onClick={() => onTierFocus(tier.key)}
               >

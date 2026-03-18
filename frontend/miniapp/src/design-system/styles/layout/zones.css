@@ -19,7 +19,6 @@ html {
   --miniapp-header-content-height: 58px;
   --miniapp-header-slot-width: 48px;
   --miniapp-content-top-gap: 2px;
-  --miniapp-bottom-nav-height: max(var(--miniapp-nav-height, 64px), 78px);
   --miniapp-bottom-safe-gap: 20px;
   --miniapp-shell-margin: 0;
   --miniapp-content-gutter: 16px;
@@ -41,10 +40,6 @@ html {
   --miniapp-page-subtitle-line-height: 1.35;
   --miniapp-shell-frame-max: calc(var(--miniapp-shell-max) + (var(--miniapp-content-gutter) * 2));
   --miniapp-overlay-bottom-offset: max(16px, var(--safe-bottom));
-}
-
-html[data-shell-nav="tabbed"] {
-  --miniapp-overlay-bottom-offset: calc(var(--miniapp-bottom-nav-height, 64px) + max(16px, var(--safe-bottom)) + 8px);
 }
 
 @media (min-width: 430px) {
@@ -144,15 +139,10 @@ body,
 }
 
 .tg-app-root[data-overlay-active="true"] .miniapp-header,
-.tg-app-root[data-overlay-active="true"] .miniapp-main,
-.tg-app-root[data-overlay-active="true"] .miniapp-bottom-nav-wrap {
+.tg-app-root[data-overlay-active="true"] .miniapp-main {
   pointer-events: none;
   user-select: none;
   -webkit-user-select: none;
-}
-
-.miniapp-shell--tabbed {
-  padding-bottom: 0;
 }
 
 .miniapp-shell-screen {
@@ -174,8 +164,7 @@ body,
 }
 
 .tg-app-root[data-overlay-active="true"] .miniapp-main,
-.tg-app-root[data-overlay-active="true"] .miniapp-header-inner,
-.tg-app-root[data-overlay-active="true"] .miniapp-bottom-nav {
+.tg-app-root[data-overlay-active="true"] .miniapp-header-inner {
   opacity: 0.42;
   filter: saturate(0.78) blur(1.2px);
   transform: translateY(4px) scale(0.988);
@@ -190,8 +179,7 @@ body,
 }
 
 .tg-app-root[data-overlay-active="false"] .miniapp-main,
-.tg-app-root[data-overlay-active="false"] .miniapp-header-inner,
-.tg-app-root[data-overlay-active="false"] .miniapp-bottom-nav {
+.tg-app-root[data-overlay-active="false"] .miniapp-header-inner {
   transform-origin: 50% 0%;
   animation: miniappShellOverlayFocusIn 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
   transition: opacity 0.18s ease, filter 0.18s ease, transform 0.18s ease;
@@ -223,17 +211,6 @@ body,
     filter: saturate(1) blur(0);
     transform: translateY(0) scale(1);
   }
-}
-
-.miniapp-main--tabbed {
-  padding-top: 0;
-  padding-bottom: calc(var(--miniapp-bottom-nav-height, 56px) + var(--safe-bottom) + var(--miniapp-bottom-safe-gap));
-}
-
-.miniapp-main--tabbed>.tab-content,
-.miniapp-main--tabbed>.miniapp-scroll-content>.tab-content {
-  padding-top: 0;
-  margin-top: 0;
 }
 
 .miniapp-main--stack {
@@ -365,84 +342,6 @@ html {
   width: min(100%, var(--miniapp-shell-max));
 }
 
-/* ---------- ActionZone (bottom nav) ---------- */
-.miniapp-bottom-nav-wrap {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: var(--z-nav);
-  padding-inline: max(12px, calc(var(--miniapp-content-gutter) - 4px));
-  padding-bottom: max(12px, var(--safe-bottom));
-  background: transparent;
-  box-sizing: border-box;
-  display: flex;
-  justify-content: center;
-  min-height: calc(var(--miniapp-bottom-nav-height) + max(12px, var(--safe-bottom)));
-  transition: transform 0.2s ease, opacity 0.2s ease;
-}
-
-.miniapp-bottom-nav {
-  width: min(100%, 348px, calc(100vw - 24px), var(--miniapp-shell-max));
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 0;
-  align-items: stretch;
-}
-
-.miniapp-tab {
-  position: relative;
-  min-height: var(--miniapp-bottom-nav-height, 64px);
-  height: var(--miniapp-bottom-nav-height, 64px);
-  border: none;
-  border-radius: 14px;
-  text-decoration: none;
-  color: var(--color-text-tertiary);
-  background: transparent;
-  transition: color 0.12s ease, opacity 0.12s ease, transform 0.12s ease;
-}
-
-.miniapp-tab--active {
-  color: var(--color-text);
-}
-
-/* Inner nav (inside .miniapp-bottom-nav-wrap); wrap provides horizontal padding */
-.bottom-nav.miniapp-bottom-nav {
-  width: 100%;
-  max-width: none;
-  margin: 0;
-  gap: 0;
-  padding: 2px;
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  border-radius: 24px;
-}
-
-.nav-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  height: max(56px, var(--miniapp-bottom-nav-height, 64px));
-  min-height: max(56px, var(--miniapp-bottom-nav-height, 64px));
-  min-width: 60px;
-  overflow: hidden;
-  cursor: pointer;
-  color: var(--color-text-tertiary);
-  transition: color 0.12s ease, background-color 0.12s ease, border-color 0.12s ease, transform 0.12s ease;
-  position: relative;
-  user-select: none;
-  text-decoration: none;
-}
-
-.nav-item.on {
-  color: var(--color-text);
-  background: transparent;
-  border: none;
-  border-radius: 14px;
-}
-
 /* ---------- Page & PageScaffold ---------- */
 .miniapp-page-scaffold {
   display: grid;
@@ -554,6 +453,13 @@ html {
 .ds-stack[data-justify="between"] { justify-content: space-between; }
 .ds-stack[data-wrap="true"] { flex-wrap: wrap; }
 
+/* ---------- Action grid (2-col) ---------- */
+.ds-action-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-4);
+}
+
 /* ---------- Box ---------- */
 .ds-box {
   display: block;
@@ -644,8 +550,7 @@ html {
   padding-inline: 0;
 }
 
-.miniapp-header-inner,
-.bottom-nav.miniapp-bottom-nav {
+.miniapp-header-inner {
   width: min(100%, var(--miniapp-shell-max));
 }
 
@@ -664,11 +569,6 @@ html {
   min-width: 0;
 }
 
-.miniapp-main.miniapp-main--tabbed {
-  padding-top: var(--miniapp-content-top-gap);
-  padding-bottom: calc(var(--miniapp-bottom-nav-height) + var(--safe-bottom) + var(--miniapp-bottom-safe-gap));
-}
-
 .miniapp-main.miniapp-main--stack {
   padding-top: var(--miniapp-content-top-gap);
   touch-action: pan-y;
@@ -678,15 +578,6 @@ html {
 .miniapp-header-inner {
   padding-left: 0;
   padding-right: 0;
-}
-
-.bottom-nav.miniapp-bottom-nav {
-  gap: 0;
-}
-
-.nav-item.miniapp-tab {
-  min-width: 0;
-  padding: 8px 4px 10px;
 }
 
 .miniapp-shell-screen,
@@ -762,10 +653,8 @@ html {
 
   .tg-app-root[data-overlay-active="true"] .miniapp-main,
   .tg-app-root[data-overlay-active="true"] .miniapp-header-inner,
-  .tg-app-root[data-overlay-active="true"] .miniapp-bottom-nav,
   .tg-app-root[data-overlay-active="false"] .miniapp-main,
-  .tg-app-root[data-overlay-active="false"] .miniapp-header-inner,
-  .tg-app-root[data-overlay-active="false"] .miniapp-bottom-nav {
+  .tg-app-root[data-overlay-active="false"] .miniapp-header-inner {
     animation: none;
     transition: none;
   }
@@ -774,7 +663,7 @@ html {
 .sticky-bottom-bar {
   background: color-mix(in oklch, var(--color-surface) 88%, transparent);
   backdrop-filter: saturate(140%) blur(10px);
-  box-shadow: 0 -10px 28px -24px color-mix(in oklch, black 70%, transparent);
+  box-shadow: var(--sticky-bar-shadow, 0 -10px 28px -24px color-mix(in oklch, black 70%, transparent));
 }
 
 .sticky-bottom-bar::before {

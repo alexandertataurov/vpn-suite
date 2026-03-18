@@ -12,7 +12,6 @@ export type { HeaderZoneProps } from "./HeaderZone";
 export { ShellContextBlock } from "./ShellContextBlock";
 export type { ShellContextBlockProps } from "./ShellContextBlock";
 export { ScrollZone } from "./ScrollZone";
-export { ActionZone } from "./ActionZone";
 export { StickyBottomBar } from "./StickyBottomBar";
 export type { StickyBottomBarProps } from "./StickyBottomBar";
 export type { HeaderAlertItem, HeaderAlertTone } from "./HeaderAlertsContent";

@@ -32,7 +32,7 @@ export function TroubleshooterStep({
   const showAlt = altLabel != null && onAlt != null;
 
   return (
-    <div className="troubleshooter-card stagger-3">
+    <div className="troubleshooter-card">
       <div className="troubleshooter-card__head">
         <div className="troubleshooter-card__icon">
           <IconAlertTriangle size={20} strokeWidth={2.5} />

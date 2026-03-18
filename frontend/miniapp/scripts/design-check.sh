@@ -8,7 +8,7 @@ VIOLATIONS=0
 
 # 1. Only token/shell files may define :root
 ROOT_FILES=$(grep -rl "^:root\s*{" "$SRC" --include="*.css" 2>/dev/null || true)
-ALLOWED_ROOT="$SRC/design-system/styles/tokens/base.css $SRC/design-system/styles/theme/consumer.css $SRC/design-system/styles/shell/frame.css"
+ALLOWED_ROOT="$SRC/design-system/styles/tokens/base.css $SRC/design-system/styles/tokens/_breakpoints.css $SRC/design-system/styles/theme/consumer.css $SRC/design-system/styles/shell/frame.css"
 if [ -n "$ROOT_FILES" ]; then
   for f in $ROOT_FILES; do
     allowed=
@@ -22,8 +22,8 @@ if [ -n "$ROOT_FILES" ]; then
   done
 fi
 
-# 2. No inline style={ in miniapp-owned TSX (exclude *.stories.tsx and story-helpers — token demos use inline var())
-APP_TSX=$(find "$SRC" -name "*.tsx" 2>/dev/null | grep -vE '(\.stories\.tsx$|story-helpers\.tsx)' || true)
+# 2. No inline style={ in miniapp-owned TSX (exclude *.stories.tsx, story-helpers, foundation story components)
+APP_TSX=$(find "$SRC" -name "*.tsx" 2>/dev/null | grep -vE '(\.stories\.tsx$|story-helpers\.tsx|foundations/(foundationShared|components/))' || true)
 for f in $APP_TSX; do
   if grep -q 'style=\s*{{' "$f" 2>/dev/null; then
     echo "design:check — no inline styles; use CSS classes. File: $f"
@@ -99,7 +99,7 @@ EOF
 fi
 
 # 7. No raw hex/rgba in design-system CSS except in token source files (base, consumer, telegram, amnezia, frame).
-ALLOWED_CSS="$STYLES_DIR/tokens/base.css $STYLES_DIR/theme/consumer.css $STYLES_DIR/theme/telegram.css $STYLES_DIR/theme/amnezia.css $STYLES_DIR/shell/frame.css"
+ALLOWED_CSS="$STYLES_DIR/tokens/base.css $STYLES_DIR/theme/consumer.css $STYLES_DIR/theme/telegram.css $STYLES_DIR/theme/amnezia.css $STYLES_DIR/theme/storybook.css $STYLES_DIR/shell/frame.css"
 while IFS= read -r f; do
   [ -z "$f" ] && continue
   allowed=

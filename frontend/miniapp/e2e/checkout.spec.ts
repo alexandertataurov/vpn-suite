@@ -35,7 +35,7 @@ test.describe("Miniapp Checkout Flow", () => {
     await gotoMiniapp(page, "/plan");
 
     await expect(page.getByRole("heading", { name: /Plan|Choose plan/i })).toBeVisible({ timeout: 10000 });
-    await page.locator(".tier-select-btn").first().click();
+    await page.getByRole("button", { name: /Select|Choose|Switch/i }).first().click();
 
     await expect(page).toHaveURL(/\/plan\/checkout\/test-plan-1$/);
     await expect(page.getByRole("heading", { name: /Checkout/i })).toBeVisible();

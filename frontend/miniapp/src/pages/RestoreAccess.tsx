@@ -2,6 +2,7 @@
 import { useNavigate, Link } from "react-router-dom";
 import { SessionMissing, VpnBoundaryNote } from "@/components";
 import { ActionCard, Button, InlineAlert, PageScaffold, ModernHeader, StickyBottomBar } from "@/design-system";
+import { Stack } from "@/design-system/core/primitives";
 import { useRestoreAccessPageModel } from "@/page-models";
 import { useI18n } from "@/hooks";
 
@@ -22,33 +23,30 @@ export function RestoreAccessPage() {
             showSettings={false}
             onBack={() => navigate(-1)}
           />
-          <div className="modern-content-pad">
+          <Stack gap="4">
             <ActionCard
               title={t("restore.inline_no_expired_title")}
               description={model.description}
-              className="modern-m-0"
             >
-              <div className="u-mt-16">
+              <Stack gap="4">
                 <InlineAlert
                   variant="info"
                   title={model.pageState.title ?? t("restore.inline_no_expired_title")}
                   body={model.pageState.message ?? t("restore.inline_no_expired_message")}
                 />
-              </div>
-              <div className="u-mt-16">
                 <VpnBoundaryNote messageKey="common.vpn_boundary_billing_note" />
-              </div>
+              </Stack>
             </ActionCard>
 
-            <div className="u-mt-24 stack gap-3">
+            <Stack gap="3">
               <Button asChild fullWidth>
                 <Link to="/support">{t("common.contact_support")}</Link>
               </Button>
               <Button variant="secondary" asChild fullWidth>
                 <Link to="/devices">{t("restore.manage_devices_action")}</Link>
               </Button>
-            </div>
-          </div>
+            </Stack>
+          </Stack>
         </PageScaffold>
       );
     }
@@ -64,13 +62,12 @@ export function RestoreAccessPage() {
           showSettings={false}
           onBack={() => navigate(-1)}
         />
-        <div className="modern-content-pad">
+        <Stack gap="4">
           <ActionCard
             title={t("restore.info_title")}
             description={t("restore.loading_status_message")}
-            className="modern-m-0"
           />
-        </div>
+        </Stack>
       </PageScaffold>
     );
   }
@@ -84,14 +81,14 @@ export function RestoreAccessPage() {
           showSettings={false}
           onBack={() => navigate(-1)}
         />
-        <div className="modern-content-pad">
+        <Stack gap="4">
           <InlineAlert
             variant="warning"
             title={model.pageState.title ?? model.header.title}
             body={model.pageState.message ?? model.description}
           />
-          
-          <div className="u-mt-24">
+
+          <div>
             <Button
               onClick={() => model.restoreAccess()}
               disabled={model.isRestoring}
@@ -102,7 +99,7 @@ export function RestoreAccessPage() {
               {t("restore.primary_button_label")}
             </Button>
           </div>
-        </div>
+        </Stack>
       </PageScaffold>
     );
   }
@@ -115,20 +112,16 @@ export function RestoreAccessPage() {
         showSettings={false}
         onBack={() => navigate(-1)}
       />
-      <div className="modern-content-pad">
+      <Stack gap="4">
         <ActionCard
           title={t("restore.info_title")}
           description={model.description}
-          className="modern-m-0"
         >
-          <div className="u-mt-16">
-            <VpnBoundaryNote messageKey="common.vpn_boundary_billing_note" />
-          </div>
+          <VpnBoundaryNote messageKey="common.vpn_boundary_billing_note" />
         </ActionCard>
-      </div>
+      </Stack>
       <StickyBottomBar>
-        <div className="u-p-16">
-          <Button
+        <Button
             onClick={() => model.restoreAccess()}
             disabled={model.isRestoring}
             status={model.isRestoring ? "loading" : "idle"}
@@ -137,7 +130,6 @@ export function RestoreAccessPage() {
           >
             {t("restore.primary_button_label")}
           </Button>
-        </div>
       </StickyBottomBar>
     </PageScaffold>
   );

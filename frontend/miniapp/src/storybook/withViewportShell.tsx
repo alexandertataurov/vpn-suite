@@ -2,9 +2,9 @@ import { useMemo, type ReactNode } from "react";
 import type { Decorator } from "@storybook/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
-import { StackFlowLayout, TabbedShellLayout } from "@/app/ViewportLayout";
+import { StackFlowLayout } from "@/app/ViewportLayout";
 
-export type ViewportShellVariant = "tabbed" | "stack";
+export type ViewportShellVariant = "stack";
 
 export function ViewportShellProviders({ children }: { children: ReactNode }) {
   const client = useMemo(
@@ -34,12 +34,11 @@ export function ViewportShellRoutes({
   initialEntries?: string[];
   variant: ViewportShellVariant;
 }) {
-  const Layout = variant === "stack" ? StackFlowLayout : TabbedShellLayout;
-
+  void variant; // reserved for future layout switching
   return (
     <MemoryRouter initialEntries={initialEntries}>
       <Routes>
-        <Route element={<Layout />}>{children}</Route>
+        <Route element={<StackFlowLayout />}>{children}</Route>
       </Routes>
     </MemoryRouter>
   );
@@ -61,16 +60,4 @@ export function withViewportShell(
   );
 
   return ViewportShellDecorator;
-}
-
-export function isStackFlowStoryRoute(pathname: string) {
-  return (
-    pathname === "/onboarding" ||
-    pathname === "/connect-status" ||
-    pathname === "/restore-access" ||
-    pathname === "/servers" ||
-    pathname === "/referral" ||
-    pathname.startsWith("/plan/checkout/") ||
-    pathname === "/devices/issue"
-  );
 }

@@ -122,7 +122,22 @@ const preview: Preview = {
           ],
           "Patterns",
           "Layouts",
-          "Pages",
+          [
+            "Pages",
+            [
+              "Contracts",
+              [
+                "Home",
+                "Plan",
+                "Devices",
+                "Onboarding",
+                "Checkout",
+                "Settings",
+                "Support",
+                "RestoreAccess",
+              ],
+            ],
+          ],
           "States",
           "*",
         ],

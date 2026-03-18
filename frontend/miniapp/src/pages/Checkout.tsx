@@ -9,6 +9,7 @@ import {
   ModernHeader,
   PageSection,
 } from "@/design-system";
+import { Stack } from "@/design-system/core/primitives";
 import { useCheckoutPageModel } from "@/page-models";
 import { useI18n } from "@/hooks";
 
@@ -53,10 +54,10 @@ export function CheckoutPage() {
     return (
       <PageScaffold>
         <ModernHeader title={model.header.title ?? "Checkout"} showSettings={false} />
-        <div className="modern-content-pad stagger-1">
+        <Stack gap="4">
           <Skeleton variant="card" height={140} />
-          <Skeleton variant="card" height={220} className="u-mt-16" />
-        </div>
+          <Skeleton variant="card" height={220} />
+        </Stack>
       </PageScaffold>
     );
   }

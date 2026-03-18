@@ -172,8 +172,7 @@ async function waitForShellReady(page: Page) {
   await page.waitForFunction(() => {
     return !document.querySelector(".splash-screen") &&
       !!document.querySelector(".miniapp-main") &&
-      !!document.querySelector(".miniapp-header") &&
-      !!document.querySelector(".miniapp-bottom-nav");
+      !!document.querySelector(".miniapp-header");
   }, { timeout: 10000 });
 }
 
@@ -204,25 +203,7 @@ async function assertNoTextClipping(page: Page) {
   expect(clippedCount).toBe(0);
 }
 
-async function assertBottomTabsTapTarget(page: Page) {
-  const tabBoxes = await page.evaluate(() => {
-    return [...document.querySelectorAll(".miniapp-bottom-nav .miniapp-tab")]
-      .map((node) => {
-        const el = node as HTMLElement;
-        const rect = el.getBoundingClientRect();
-        if (rect.width <= 0 || rect.height <= 0) return null;
-        return { width: rect.width, height: rect.height };
-      })
-      .filter((value): value is { width: number; height: number } => value != null);
-  });
-  if (tabBoxes.length === 0) return;
-  for (const box of tabBoxes) {
-    expect(box.height).toBeGreaterThanOrEqual(48);
-    expect(box.width).toBeGreaterThanOrEqual(48);
-  }
-}
-
-async function assertHeaderAndActionSafe(page: Page) {
+async function assertHeaderSafe(page: Page) {
   const headerProbe = await page.waitForFunction(() => {
     const header = document.querySelector(".miniapp-header") as HTMLElement | null;
     if (!header) return null;
@@ -232,22 +213,8 @@ async function assertHeaderAndActionSafe(page: Page) {
   }, { timeout: 10000 });
   const headerMetrics = await headerProbe.jsonValue() as { top: number; height: number } | null;
   expect(headerMetrics).not.toBeNull();
-  expect(headerMetrics.top).toBeGreaterThanOrEqual(-1);
-  expect(headerMetrics.height).toBeGreaterThanOrEqual(48);
-
-  const actionProbe = await page.waitForFunction(() => {
-    const actionZone = document.querySelector(".miniapp-bottom-nav-wrap") as HTMLElement | null;
-    if (!actionZone) return null;
-    const rect = actionZone.getBoundingClientRect();
-    if (rect.height <= 0) return null;
-    return { bottom: rect.bottom, height: rect.height, viewportHeight: window.innerHeight };
-  }, { timeout: 10000 }).catch(() => null);
-  const actionMetrics = actionProbe
-    ? await actionProbe.jsonValue() as { bottom: number; height: number; viewportHeight: number } | null
-    : null;
-  if (!actionMetrics) return;
-  expect(actionMetrics.bottom).toBeLessThanOrEqual(actionMetrics.viewportHeight + 1);
-  expect(actionMetrics.height).toBeGreaterThanOrEqual(72);
+  expect(headerMetrics!.top).toBeGreaterThanOrEqual(-1);
+  expect(headerMetrics!.height).toBeGreaterThanOrEqual(48);
 }
 
 async function assertPrimaryCtaVisible(page: Page, ctaLabel: RegExp) {
@@ -296,8 +263,7 @@ test.describe("Miniapp Responsive Layout", () => {
         await goToPath(page, pageConfig.path);
         await waitForShellReady(page);
         await assertPrimaryCtaVisible(page, pageConfig.ctaLabel);
-        await assertBottomTabsTapTarget(page);
-        await assertHeaderAndActionSafe(page);
+        await assertHeaderSafe(page);
         await assertNoHorizontalOverflow(page);
         await assertNoTextClipping(page);
       }

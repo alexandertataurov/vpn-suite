@@ -23,6 +23,7 @@ import {
 import {
   Button,
   FallbackScreen,
+  FooterHelp,
   HelperNote,
   Input,
   Modal,
@@ -35,6 +36,7 @@ import {
   ToggleRow,
   useToast,
 } from "@/design-system";
+import { Stack } from "@/design-system/core/primitives";
 import { useOpenLink, useI18n, useTelegramWebApp, useUpdateSubscription } from "@/hooks";
 import { useSettingsPageModel } from "@/page-models";
 
@@ -101,10 +103,10 @@ export function SettingsPage() {
     return (
       <PageScaffold>
         <ModernHeader title={t("settings.header_title")} subtitle={t("settings.header_subtitle")} showSettings={false} />
-        <div className="modern-content-pad">
+        <Stack gap="4">
           <Skeleton width="60%" height={18} />
           <Skeleton width="100%" height={72} />
-        </div>
+        </Stack>
       </PageScaffold>
     );
   }
@@ -118,7 +120,7 @@ export function SettingsPage() {
         onBack={() => navigate("/")}
       />
 
-      <PageSection className="page-section--compact stagger-1">
+      <PageSection className="page-section--compact">
         <SettingsAccountOverviewCard
           initial={model.accountSummary.initial}
           name={model.accountSummary.name}
@@ -136,7 +138,7 @@ export function SettingsPage() {
       <PageSection
         id="profile"
         title={t("settings.section_profile")}
-        className="page-section--compact stagger-2"
+        className="page-section--compact"
       >
         <SettingsCard className="module-card settings-list-card">
           <SettingsActionRow
@@ -166,7 +168,7 @@ export function SettingsPage() {
       <PageSection
         id="plan-management"
         title={t("settings.section_plan_billing")}
-        className="page-section--compact stagger-3"
+        className="page-section--compact"
       >
         <SettingsCard className="module-card settings-list-card">
           <SettingsActionRow
@@ -208,7 +210,7 @@ export function SettingsPage() {
       <PageSection
         id="support"
         title={t("settings.section_help")}
-        className="page-section--compact stagger-4"
+        className="page-section--compact"
       >
         <SettingsCard className="module-card settings-list-card">
           <SettingsActionRow
@@ -242,7 +244,7 @@ export function SettingsPage() {
       <PageSection
         id="destructive"
         title={t("settings.danger_section_title")}
-        className="page-section--compact settings-danger-section stagger-5"
+        className="page-section--compact settings-danger-section"
       >
         <HelperNote tone="warning">{t("settings.danger_warning")}</HelperNote>
         <SettingsCard className="module-card settings-list-card">
@@ -364,6 +366,12 @@ export function SettingsPage() {
           />
         </div>
       </Modal>
+
+      <FooterHelp
+        note="Having trouble?"
+        linkLabel="View setup guide"
+        onLinkClick={() => navigate("/support")}
+      />
     </PageScaffold>
   );
 }

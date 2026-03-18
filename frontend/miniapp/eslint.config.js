@@ -25,7 +25,7 @@ const local = {
           JSXOpeningElement(node) {
             const name = getJsxName(node.name);
             if (!name) return;
-            if (name === "HeaderZone" || name === "ScrollZone" || name === "ActionZone") {
+            if (name === "HeaderZone" || name === "ScrollZone") {
               context.report({
                 node,
                 message:
@@ -98,6 +98,7 @@ export default tseslint.config(
                 "IconArrowRight",
                 "IconExternalLink",
                 "IconChevronRight",
+                "IconBox",
                 "IconTelegramStar",
               ],
               message:

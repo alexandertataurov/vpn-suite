@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 /**
  * AmneziaVPN Mini App — App-level styles.
@@ -24,24 +24,4 @@ body {
   font-family: var(--font-sans);
 }
 
-/* ---- Footer Help ----------------------------------- */
-.modern-footer-help {
-  padding: var(--spacing-4) var(--spacing-6) var(--spacing-12);
-  text-align: center;
-}
-
-.modern-help-note {
-  font-size: var(--text-caption, 13px);
-  color: var(--color-text-tertiary);
-  font-weight: 500;
-}
-
-.modern-help-link {
-  color: var(--color-accent);
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.modern-help-link:hover {
-  text-decoration: underline;
-}
+/* Footer help: use FooterHelp recipe from design-system */

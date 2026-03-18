@@ -3,13 +3,17 @@ import { Route } from "react-router-dom";
 import { RestoreAccessPage } from "@/pages/RestoreAccess";
 import { PageSandbox, restoreScenario } from "@/storybook/page-contracts";
 
-const meta = {
+const meta: Meta = {
   title: "Pages/Contracts/RestoreAccess",
   tags: ["autodocs"],
   parameters: {
-    docs: { description: { component: "Restore access flow." } },
+    docs: {
+      description: {
+        component: "Restore access flow. Contract tests.",
+      },
+    },
   },
-} satisfies Meta;
+};
 
 export default meta;
 

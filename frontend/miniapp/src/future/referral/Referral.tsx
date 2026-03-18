@@ -7,6 +7,7 @@ import {
   PageScaffold,
   ModernHeader,
 } from "@/design-system";
+import { Stack } from "@/design-system/core/primitives";
 import { useReferralPageModel } from "@/page-models";
 import { useI18n } from "@/hooks";
 
@@ -33,9 +34,9 @@ export function ReferralPage() {
     return (
       <PageScaffold>
         <ModernHeader title={model.header.title} showSettings={false} />
-        <div className="modern-content-pad">
+        <Stack gap="4">
           <Skeleton className="skeleton-h-3xl" />
-        </div>
+        </Stack>
       </PageScaffold>
     );
   }
@@ -49,13 +50,13 @@ export function ReferralPage() {
         onBack={() => navigate(-1)}
       />
       {model.showUpsellReferral ? (
-        <div className="modern-content-pad">
+        <Stack gap="4">
           <InlineAlert
             variant="info"
             title={t("plan.cta_upgrade_plan")}
             body={t("referral.upsell_description")}
           />
-        </div>
+        </Stack>
       ) : null}
       <ReferralShareCard
         botUsername={model.botUsername}

@@ -1,7 +1,7 @@
 export { PlanBillingHistorySection } from "./PlanBillingHistorySection";
 export type { PlanBillingHistoryItem, PlanBillingHistorySectionProps } from "./PlanBillingHistorySection";
-export { PlanHeroCard } from "./PlanHeroCard";
-export type { PlanHeroCardProps } from "./PlanHeroCard";
+export { PlanBillingHeroCard } from "./PlanBillingHeroCard";
+export type { PlanBillingHeroCardProps } from "./PlanBillingHeroCard";
 export { PlanNextStepCard } from "./PlanNextStepCard";
 export type { PlanNextStepCardProps } from "./PlanNextStepCard";
 export { PlanOptionsSection } from "./PlanOptionsSection";

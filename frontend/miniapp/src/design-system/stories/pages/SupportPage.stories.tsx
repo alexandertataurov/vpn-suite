@@ -3,13 +3,17 @@ import { Route } from "react-router-dom";
 import { SupportPage } from "@/pages/Support";
 import { PageSandbox, readyScenario } from "@/storybook/page-contracts";
 
-const meta = {
+const meta: Meta = {
   title: "Pages/Contracts/Support",
   tags: ["autodocs"],
   parameters: {
-    docs: { description: { component: "Support and help." } },
+    docs: {
+      description: {
+        component: "Support and help. Contract tests.",
+      },
+    },
   },
-} satisfies Meta;
+};
 
 export default meta;
 

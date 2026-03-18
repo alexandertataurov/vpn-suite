@@ -2,13 +2,14 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   PlanBillingHistorySection,
-  PlanHeroCard,
+  PlanBillingHeroCard,
   PlanOptionsSection,
   PlanNextStepCard,
   SessionMissing,
   VpnBoundaryNote,
 } from "@/components";
-import { FallbackScreen, ModernHeader, PageScaffold, PageSection, Skeleton } from "@/design-system";
+import { FallbackScreen, FooterHelp, ModernHeader, PageScaffold, PageSection, Skeleton } from "@/design-system";
+import { Stack } from "@/design-system/core/primitives";
 
 import { useI18n } from "@/hooks";
 import { usePlanPageModel, type BillingPeriod } from "@/page-models";
@@ -98,13 +99,11 @@ export function PlanPage() {
     return (
       <PageScaffold>
         <ModernHeader title={model.header.title} subtitle={model.header.subtitle} showSettings={false} />
-        <div className="modern-content-pad stagger-1">
+        <Stack gap="4">
           <Skeleton variant="card" height={220} />
-          <div className="u-mt-24 u-mb-8">
-            <Skeleton variant="line" width="40%" />
-          </div>
+          <Skeleton variant="line" width="40%" />
           <Skeleton variant="card" height={360} />
-        </div>
+        </Stack>
       </PageScaffold>
     );
   }
@@ -149,7 +148,7 @@ export function PlanPage() {
       : t("plan.badge_expired");
 
   return (
-    <PageScaffold>
+    <PageScaffold className="plan-billing-page">
       <ModernHeader 
         title={model.header.title}
         subtitle={model.header.subtitle}
@@ -157,7 +156,7 @@ export function PlanPage() {
       />
 
       {isSubscribed ? (
-        <PlanHeroCard
+        <PlanBillingHeroCard
           title={`${heroView.heroPlanName} — ${heroView.heroPlanPeriod}`}
           statusLine={`${planStateLabel} · ${primarySub?.auto_renew
             ? t("plan.renews_short", { date: heroView.expiryText })
@@ -181,10 +180,8 @@ export function PlanPage() {
           onSecondaryAction={handleRenewAction}
         />
       ) : (
-        <PageSection 
+        <PageSection
           title={t("plan.no_subscription_note_title")}
-          className="stagger-1"
-          contentClassName="modern-section-content"
         >
           <VpnBoundaryNote tone="info" messageKey="plan.no_subscription_note_body" />
         </PageSection>
@@ -243,6 +240,12 @@ export function PlanPage() {
           onPrimaryScrollAction={scrollToPlans}
         />
       ) : null}
+
+      <FooterHelp
+        note="Having trouble?"
+        linkLabel="View setup guide"
+        onLinkClick={() => navigate("/support")}
+      />
     </PageScaffold>
   );
 }

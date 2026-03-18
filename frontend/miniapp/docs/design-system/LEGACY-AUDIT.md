@@ -55,7 +55,7 @@
 | routes.css | 4 | `#F2F3F6`, `#6B7280`, `#D1D5DB`, `#374151` |
 | consumer.css | 34 | Full theme palettes (hex) |
 | base.css | 33 | Primitives (oklch) — keep |
-| layout-story.css | 1 | `color: #000` |
+| layout-story.css | 0 | (verified; none) |
 
 ---
 
@@ -104,7 +104,8 @@ Defined in `design-system/styles/tokens/base.css`. Use these or token-based alte
 | `--md-*` | app.css :root, modern-* classes | Use `--color-*`, `--radius-*` directly |
 | `--op-*`, `--tx-*`, `--bd-*`, `--s0`–`--s4` | library.css, frame.css | Semantic tokens |
 | `--space-gutter` | app.css | `--miniapp-content-gutter` |
-| `--tx-ter` | routes.css | `--color-text-tertiary` |
+| `--tx-ter` | library.css | Replaced with `--color-text-tertiary` |
+| `--tx-dim` | frame.css, library.css | Replaced with `--color-text-tertiary` |
 
 ---
 
@@ -112,12 +113,135 @@ Defined in `design-system/styles/tokens/base.css`. Use these or token-based alte
 
 1. **app.css** — Remove `.modern-*` after migration; move `:root` aliases to base.css or remove
 2. **frame.css** — Remove page-specific blocks; keep shell + btn-* for Button
-3. **library.css** — Remove duplicate btn-*, stagger-*; consolidate
+3. **library.css** — Remove duplicate btn-*, stagger-*; consolidate. **Removed:** `.plan-hero`, `.conn-card`, `.summary-hero`, `.acct-hero`, `.connect-status-page` (dead blocks)
 4. **routes.css** — Tokenize colors; reduce page-specific overrides
-5. **layout-story.css** — Remove `color: #000`
+5. **layout-story.css** — Remove `color: #000` — **Done:** verified no `#000` in layout-story.css
 
 ---
 
 ## 10. Support Page Tone Props
 
 Support.tsx uses `tone="modern-blue"`, `tone="modern-green"`, `tone="modern-amber"` on ListCard. Replace with design-system tone tokens: `blue`, `green`, `amber` (or `default`, `success`, `warning`).
+
+---
+
+## 11. Further Audit (2025-03-18) — Dead CSS & Orphaned Tokens
+
+### 11.1 Dead CSS blocks (no TSX usage)
+
+| Block | Location | Notes |
+|-------|----------|-------|
+| `.hero-visual-grid`, `.hero-visual-tile`, `.hero-visual-topline`, `.hero-visual-key`, `.hero-visual-value`, `.hero-visual-progress` | library.css ~233–273 | Legacy conn-card content; conn-card removed |
+| `.conn-context-rail`, `.conn-telemetry-block`, `.conn-context-chip`, `.conn-context-key`, `.conn-context-value`, `.conn-context-value--link`, `.conn-context-value--ip` | library.css ~275–317 | Legacy conn-card; no TSX usage |
+| `.conn-status-data-grid`, `.conn-server-link` | library.css ~343–359 | No TSX usage |
+| `.conn-status-btn-row` | library.css ~1177 | No TSX usage |
+| `.plan-hero-actions`, `.plan-hero-manage-link`, `.plan-hero-planid` | library.css ~1190–1215 | Orphaned after .plan-hero removal; plan-hero-meta kept (PlanHeroCard uses it) |
+| `.feat-row`, `.feat-ico`, `.feat-text`, `.feat-val`, `.feat-val.yes`, `.feat-val.no` | library.css | Only in content-library.md; no app usage |
+| `.m-tile` | library.css | Only in content-library.md; no app usage |
+
+### 11.2 Unused keyframes
+
+| Keyframe | Location | Notes |
+|----------|----------|-------|
+| `hero-card-glow-drift` | library.css ~2154 | Never referenced in `animation:` |
+| `hero-visual-rise` | library.css ~2168 | Never referenced |
+| `hero-sheen` | library.css ~2180 | Never referenced |
+
+### 11.3 Undefined / missing tokens
+
+| Token | Used In | Issue |
+|-------|---------|-------|
+| `--teal` | library.css (dc-val.teal, conn-context-value--link, .m-tile, etc.) | Not defined in miniapp theme; admin has it. Add to consumer.css or replace with `--color-accent` |
+| `--surface-1`, `--surface-2` | library.css (hero-visual-tile, conn-context-chip) | Undefined; likely meant `--color-surface`, `--color-surface-2` |
+
+### 11.4 Legacy plan-billing-page selectors (unused by current app)
+
+Plan page uses `PlanBillingHeroCard` (modern-hero-card) and `PlanOptionsSection` (modern-plan-card). These BEM blocks are dead:
+
+- `.plan-billing-page .plan-summary-card` and all `__*` descendants
+- `.plan-billing-page .plan-tier-card` and all `__*` descendants
+- `.plan-billing-page .plan-tier-features`, `.plan-tier-feature`
+- `.plan-billing-page .feat-row`, `.feat-text`, `.feat-val`
+
+**Keep:** `.plan-billing-page__*` (plans-section, billing-period, secondary-section, history-actions, next-step-card) — these are used.
+
+### 11.5 Media query orphans
+
+After removing conn-card, acct-hero, summary-hero:
+
+- `@media (max-width: 420px) .hero-visual-grid { grid-template-columns: 1fr }` — hero-visual-grid has no TSX usage
+- `@media (max-width: 420px) .conn-context-chip { ... }` — conn-context-chip dead
+
+### 11.6 Recommended next steps
+
+1. **Remove dead blocks:** hero-visual-*, conn-context-*, conn-status-*, conn-server-link, conn-status-btn-row
+2. **Remove orphaned plan-hero-*:** plan-hero-actions, plan-hero-manage-link, plan-hero-planid (keep plan-hero-meta)
+3. **Remove unused keyframes:** hero-card-glow-drift, hero-visual-rise, hero-sheen
+4. **Fix tokens:** Add `--teal` to consumer.css (e.g. `--teal: var(--color-accent)` or semantic alias), or replace with `--color-accent`; fix `--surface-1`/`--surface-2` → `--color-surface`/`--color-surface-2` in hero-visual-tile and conn-context-chip (or remove those blocks)
+5. **Trim plan-billing-page CSS:** Remove `.plan-summary-card` and `.plan-tier-card` rules; keep only `plan-billing-page__*` and shared layout rules
+6. **Remove media query orphans:** .hero-visual-grid, .conn-context-chip from @media (max-width: 420px)
+7. **feat-row, feat-ico, m-tile:** Remove if no design-system recipe uses them; else keep for content-library docs only
+
+**Done (2025-03-18):** All 7 steps implemented. Added `--teal` to consumer.css (light: #0e7490, dark: #2dd4bf).
+
+---
+
+## 12. Further Audit Round 2 (2025-03-18)
+
+### 12.1 Additional dead CSS removed
+
+| Block | Notes |
+|-------|-------|
+| `.m-tile`, `.m-key`, `.m-val`, `.m-unit`, `.m-sub`, `.metrics` | No TSX usage; DevicesSummaryCard uses modern-device-metric |
+| `.usage-summary-*`, `.usage-fill*` | No TSX usage |
+| `.plan-renew-list`, `.plan-renew-strip` | No TSX usage |
+| `.tier-card`, `.tier-select-btn`, `.tier-*` (all) | Plan page uses modern-plan-card; e2e updated to use button role |
+| `.snap-carousel--cards .tier-card`, `.tier-card--empty` | Legacy carousel tier layout |
+| `.plan-billing-page .plan-hero-name span`, `.plan-billing-page .usage-summary-label` | Orphaned after plan-hero/usage-summary removal |
+| `.plan-billing-page .tier-desc` | Removed from max-width rule |
+
+### 12.2 E2E fix
+
+- `checkout.spec.ts`: `.tier-select-btn` → `getByRole("button", { name: /Select|Choose|Switch/i })` (plan cards use Button, not tier-select-btn)
+
+---
+
+## 13. Further Audit Round 3 (2025-03-18) — Undefined Tokens
+
+### 13.1 Tokens fixed
+
+| Token | Issue | Fix |
+|-------|-------|-----|
+| `--green-glow` | Used in library.css status-dot.online, undefined | Added to consumer.css (light + dark) |
+| `--control-ghost-hover-bg`, `--control-outline-hover-bg`, `--control-outline-hover-border` | Used in library.css, frame.css; undefined | Added to consumer.css |
+| `--control-disabled-bg`, `--control-disabled-fg`, `--control-disabled-placeholder` | Used in library.css field-input:disabled | Added to consumer.css |
+| `--control-pressed-bg`, `--control-segment-bg`, `--control-segment-indicator-shadow` | Used in library.css | Added to consumer.css |
+| `--control-placeholder`, `--control-muted-border`, `--control-muted-fg` | Used in frame.css | Added to consumer.css |
+
+---
+
+## 14. Deep Audit Round 4 (2025-03-18)
+
+### 14.1 Dead CSS removed from library.css
+
+| Block | Notes |
+|-------|-------|
+| `.expiry-row`, `.expiry-meta`, `.expiry-lbl`, `.expiry-val` | No TSX usage; app uses ProgressBar / modern-progress-bar-fill |
+| `.plan-billing-page__usage .shead-lbl` | Orphaned selector; no TSX uses plan-billing-page__usage |
+| `.bar-track`, `.bar-fill`, `.bar-fill--animated`, `.bar-fill.ok/warn/crit/info` | No TSX usage; app uses progress-bar-fill (frame.css) and modern-progress-bar-fill (modern.css) |
+
+### 14.2 SnapCarousel removed
+
+- Deleted `SnapCarousel.tsx`; removed export from recipes/index.ts
+- Removed `.snap-carousel` and `.snap-carousel:focus-visible` from library.css
+- Removed `@media (prefers-reduced-motion: reduce) .snap-carousel` rule
+
+### 14.3 Tone props: modern-* removed
+
+- **SettingsActionRow**: Removed `modern-blue`, `modern-green`, `modern-amber`, `modern-red`, `modern-neutral` from tone union; simplified `resolveModernTone`
+- **ListCard**: Removed `modern-*` from `ListRowIconTone`; simplified `resolveModernTone` default to `modern-icon-tone--neutral`
+
+### 14.4 layout-story.css
+
+- Verified: no `color: #000` in layout-story.css (audit §9 item 5 done)
+- storybook.css `--color-bg: #000000` for Storybook dark theme is acceptable

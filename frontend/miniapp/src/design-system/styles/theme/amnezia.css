@@ -66,15 +66,19 @@ html[data-theme="consumer-light"] {
 
   /* Radius — spec */
   --r: 14px;
+  --r-xs: 6px;
   --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 14px;
   --radius-sm: 10px;
   --radius-md: 14px;
   --radius-lg: 14px;
   --radius-xl: 14px;
 
-  /* No drop shadows */
+  /* No drop shadows — spec §2.4, §8 */
   --shadow-sm: none;
   --shadow-card: none;
+  --sticky-bar-shadow: none;
   --shadow-elevated: none;
   --shadow-md: none;
   --shadow-lg: none;

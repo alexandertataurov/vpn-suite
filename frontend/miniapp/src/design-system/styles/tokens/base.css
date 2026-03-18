@@ -292,6 +292,7 @@ html {
   --radius-0: 0;
   --radius-2: 2px;
   --radius-4: 4px;
+  --r-xs: 6px;
   /* Extended radius aliases — consumer theme overrides with 8/12/14/16 */
   --radius-none: 0;
   --radius-sm: 8px;
@@ -346,7 +347,6 @@ html {
   --height-btn-sm: 28px;
   --height-btn-md: 36px;
   --height-btn-lg: 44px;
-  --height-bottom-nav: 64px;
   /* Table layout contract (row heights are single source of truth for data tables) */
   --table-row-height-md: 48px;
   --table-row-height-compact: 40px;
