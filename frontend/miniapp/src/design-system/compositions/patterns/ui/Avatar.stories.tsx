@@ -67,7 +67,7 @@ export const InContext: Story = {
       <StoryShowcase>
         <Inline gap="2" align="center">
           <Avatar initials="JD" size="md" />
-          <span className="story-section__title story-text-reset">John Doe</span>
+          <span className="story-card-title">John Doe</span>
         </Inline>
       </StoryShowcase>
     </StorySection>

@@ -51,15 +51,15 @@ export const States: Story = {
         <div className="story-stack">
           <Inline gap="2" wrap align="center">
             <Switch checked={false} onCheckedChange={() => {}} aria-label="Off" />
-            <span className="story-section__desc">Off</span>
+            <span className="story-label">Off</span>
           </Inline>
           <Inline gap="2" wrap align="center">
             <Switch checked onCheckedChange={() => {}} aria-label="On" />
-            <span className="story-section__desc">On</span>
+            <span className="story-label">On</span>
           </Inline>
           <Inline gap="2" wrap align="center">
             <Switch checked={false} onCheckedChange={() => {}} disabled aria-label="Disabled" />
-            <span className="story-section__desc">Disabled</span>
+            <span className="story-label">Disabled</span>
           </Inline>
         </div>
       </StoryShowcase>

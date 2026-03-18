@@ -135,23 +135,23 @@ export const States: Story = {
       <StoryShowcase>
         <StoryStack>
           <div className="story-stack story-stack--tight">
-            <span className="story-section__desc">Loading</span>
+            <span className="story-label">Loading</span>
             <Button loading loadingText="Saving…">
               Save changes
             </Button>
           </div>
           <div className="story-stack story-stack--tight">
-            <span className="story-section__desc">Disabled</span>
+            <span className="story-label">Disabled</span>
             <Button disabled>Disabled</Button>
           </div>
           <div className="story-stack story-stack--tight">
-            <span className="story-section__desc">Success</span>
+            <span className="story-label">Success</span>
             <Button status="success" successText="Saved">
               Save changes
             </Button>
           </div>
           <div className="story-stack story-stack--tight">
-            <span className="story-section__desc">Error</span>
+            <span className="story-label">Error</span>
             <Button status="error" errorText="Failed">
               Save changes
             </Button>
@@ -197,7 +197,7 @@ export const InContext: Story = {
     <StorySection title="In context" description="Footer actions in a card.">
       <StoryPreviewCard>
         <div className="story-stack">
-          <p className="story-section__desc" style={{ margin: 0 }}>
+          <p className="story-section__desc story-text-reset">
             Card content goes here.
           </p>
           <Inline gap="2" wrap>

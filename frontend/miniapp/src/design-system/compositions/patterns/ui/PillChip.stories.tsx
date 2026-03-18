@@ -71,7 +71,7 @@ export const InContext: Story = {
         <Inline gap="2" wrap align="center">
           <Avatar initials="JD" size="md" />
           <div className="story-stack story-stack--tight">
-            <span className="story-section__title story-text-reset">John Doe</span>
+            <span className="story-card-title">John Doe</span>
             <PillChip variant="active">PRO</PillChip>
           </div>
           <SettingsButton onClick={() => {}} />

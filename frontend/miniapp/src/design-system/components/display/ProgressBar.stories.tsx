@@ -112,7 +112,7 @@ export const InContext: Story = {
       <StoryShowcase>
         <div className="story-preview-card">
           <div className="story-stack">
-            <span className="story-section__title story-text-reset">
+            <span className="story-card-title">
               Data usage
             </span>
             <ProgressBar

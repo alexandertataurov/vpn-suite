@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
 import { Modal } from "./Modal";
 import { Button, Text } from "@/design-system";
-import { StorySection, StoryShowcase } from "@/design-system";
+import { StorySection, StoryShowcase, StoryGrid } from "@/design-system";
 
 const meta = {
   title: "Components/Modal",
@@ -66,14 +66,8 @@ export const Variants: Story = {
   render: () => (
     <StorySection title="Variants" description="plain, confirm, danger.">
       <StoryShowcase>
-        <div className="story-stack">
-          <Modal
-            open
-            onClose={() => {}}
-            title="Plain modal"
-            variant="plain"
-            inline
-          >
+        <StoryGrid>
+          <Modal open onClose={() => {}} title="Plain modal" variant="plain" inline>
             <Text variant="body-sm">Content for plain modal.</Text>
           </Modal>
           <Modal
@@ -96,7 +90,7 @@ export const Variants: Story = {
           >
             <Text variant="body-sm">Danger flow content.</Text>
           </Modal>
-        </div>
+        </StoryGrid>
       </StoryShowcase>
     </StorySection>
   ),

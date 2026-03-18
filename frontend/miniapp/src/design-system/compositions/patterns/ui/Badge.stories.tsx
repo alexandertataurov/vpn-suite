@@ -55,7 +55,7 @@ export const InContext: Story = {
     <StorySection title="In context" description="List row with badge and chevron.">
       <StoryShowcase>
         <Inline gap="2" wrap align="center">
-          <span className="story-section__desc">Manage Devices</span>
+          <span className="story-label">Manage Devices</span>
           <Badge label="Full" variant="muted" />
           <IconChevronRight size={13} strokeWidth={2.5} aria-hidden />
         </Inline>

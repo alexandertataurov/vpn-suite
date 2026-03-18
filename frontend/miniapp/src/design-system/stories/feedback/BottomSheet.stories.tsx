@@ -76,3 +76,32 @@ function BottomSheetConfirmDemo() {
     </StoryShowcase>
   );
 }
+
+function BottomSheetDestructiveDemo() {
+  const [open, setOpen] = useState(false);
+  return (
+    <StoryShowcase>
+      <Button variant="danger" onClick={() => setOpen(true)}>
+        Delete account
+      </Button>
+      <BottomSheet
+        open={open}
+        onClose={() => setOpen(false)}
+        title="Delete account?"
+        bodyText="This will permanently remove your account and all data. This action cannot be undone."
+        primaryLabel="Delete"
+        secondaryLabel="Cancel"
+        onPrimary={() => setOpen(false)}
+        onSecondary={() => setOpen(false)}
+      />
+    </StoryShowcase>
+  );
+}
+
+export const Destructive: Story = {
+  render: () => (
+    <StorySection title="Destructive" description="Danger variant for irreversible actions.">
+      <BottomSheetDestructiveDemo />
+    </StorySection>
+  ),
+};

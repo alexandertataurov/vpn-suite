@@ -76,13 +76,13 @@ export const InContext: Story = {
         <div className="story-stack">
           <div className="story-preview-card">
             <div className="story-stack story-stack--tight">
-              <span className="story-section__title story-text-reset">Current plan</span>
+              <span className="story-card-title">Current plan</span>
               <StatusChip variant="active">Active</StatusChip>
             </div>
           </div>
           <div className="story-preview-card">
             <div className="story-stack story-stack--tight">
-              <span className="story-section__title story-text-reset">Device</span>
+              <span className="story-card-title">Device</span>
               <StatusChip variant="info">iPhone</StatusChip>
             </div>
           </div>
