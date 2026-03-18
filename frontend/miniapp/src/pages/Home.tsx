@@ -29,13 +29,13 @@ import { useAccessHomePageModel } from "@/page-models";
 function InviteFriendsCard() {
   const navigate = useNavigate();
   return (
-    <ListCard className="home-card-row">
+    <ListCard className="home-card-row home-invite-card">
       <ListRow
         icon={<IconUsers size={15} strokeWidth={2} />}
         iconTone="neutral"
         title="Invite Friends"
-        subtitle="Get free extensions"
-        right={<IconChevronRight size={13} strokeWidth={2.5} />}
+        subtitle="Invite a friend, get +30 days free"
+        right={<IconChevronRight size={13} strokeWidth={2} />}
         onClick={() => navigate("/support")}
       />
     </ListCard>
@@ -132,7 +132,7 @@ export function HomePage() {
               iconTone="neutral"
               title="Devices"
               subtitle="None added yet"
-              right={<IconChevronRight size={13} strokeWidth={2.5} />}
+              right={<IconChevronRight size={13} strokeWidth={2} />}
               onClick={() => navigate("/devices")}
             />
           </ListCard>
@@ -147,23 +147,32 @@ export function HomePage() {
             status={model.planHeroData.status}
             stats={[...model.planHeroData.stats]}
           />
+          {model.showNoDeviceCalloutAboveBanner && (
+            <NoDeviceCallout
+              title="No devices added"
+              subtitle="Add a device to generate your configuration."
+              ctaLabel="Add Device"
+              ctaIcon={<IconPlus size={13} strokeWidth={2.5} />}
+              onCtaClick={() => navigate("/devices")}
+            />
+          )}
           {model.showRenewalBanner && (
             <RenewalBanner
               variant={model.planHeroData.status === "expired" ? "expired" : "expiring"}
               title={
                 status === "expired"
                   ? "Subscription expired"
-                  : `Renew before ${model.expiryDateShort || "expiry"}`
+                  : "Subscription expiring soon"
               }
               subtitle={
                 status === "expired"
                   ? "Renew now to restore access on all devices."
-                  : "Your devices will lose access when it expires."
+                  : "Renew before it expires to keep access on all devices."
               }
               onClick={() => navigate(status === "expired" ? "/restore-access" : "/plan")}
             />
           )}
-          {model.showNoDeviceCallout && (
+          {model.showNoDeviceCallout && !model.showNoDeviceCalloutAboveBanner && (
             <NoDeviceCallout
               title="No devices added"
               subtitle="Add a device to generate your configuration."
@@ -182,7 +191,16 @@ export function HomePage() {
                       iconTone="neutral"
                       title="Manage Devices"
                       subtitle={model.devicesSubtitle}
-                      right={<IconChevronRight size={13} strokeWidth={2.5} />}
+                      right={
+                        <div className="home-row-right-group">
+                          {model.devicesFull && (
+                            <span className="home-row-badge home-row-badge--full">
+                              Full
+                            </span>
+                          )}
+                          <IconChevronRight size={13} strokeWidth={2} />
+                        </div>
+                      }
                       onClick={() => navigate("/devices")}
                     />
                   )}
@@ -193,7 +211,7 @@ export function HomePage() {
                       title={model.subscriptionLabel}
                       subtitle={model.subscriptionSubtitle}
                       right={
-                        <>
+                        <div className="home-row-right-group">
                           {model.daysLeft != null &&
                             model.daysLeft > 0 &&
                             model.daysLeft <= 14 && (
@@ -206,8 +224,8 @@ export function HomePage() {
                               Renew
                             </span>
                           )}
-                          <IconChevronRight size={13} strokeWidth={2.5} />
-                        </>
+                          <IconChevronRight size={13} strokeWidth={2} />
+                        </div>
                       }
                       onClick={() =>
                         navigate(status === "expired" ? "/restore-access" : "/plan")

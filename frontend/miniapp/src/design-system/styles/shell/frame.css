@@ -2291,9 +2291,9 @@ html:not([data-theme="consumer-light"]) .miniapp-popover-panel {
   border-radius: var(--radius-md);
   background: linear-gradient(
     90deg,
-    var(--color-surface) 0%,
-    var(--color-surface-2) 50%,
-    var(--color-surface) 100%
+    var(--color-surface-2) 0%,
+    var(--color-surface) 50%,
+    var(--color-surface-2) 100%
   );
   background-size: 200% 100%;
   animation: shimmer 1.6s ease-in-out infinite;
@@ -3387,22 +3387,52 @@ html[data-theme="consumer-dark"] .subscription-cancellation-modal {
   transform: none;
 }
 
-.miniapp-shell :is(.btn-primary, a.btn.btn-primary) {
+.miniapp-shell :is(.btn, a.btn) {
+  font-family: Inter, var(--font-sans), system-ui, sans-serif;
+  text-transform: none;
+  letter-spacing: -0.2px;
+}
+
+.miniapp-shell :is(.btn-primary, a.btn.btn-primary):not(.btn-accent) {
+  background: var(--color-text);
+  color: white;
+  border: none;
+  font-family: Inter, var(--font-sans), system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: -0.2px;
+  text-transform: none;
+  border-radius: var(--r-sm, var(--radius-sm));
+  padding: 14px;
+  width: 100%;
+  box-shadow: none;
+}
+
+.miniapp-shell :is(.btn-primary, a.btn.btn-primary):not(.btn-accent):hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+
+.miniapp-shell :is(.btn-accent, a.btn.btn-accent) {
   color: var(--color-on-accent);
   background: linear-gradient(180deg, color-mix(in oklch, var(--color-accent) 95%, white), var(--color-accent));
   border: none;
   box-shadow: var(--shadow-btn-primary, 0 2px 6px color-mix(in oklch, var(--color-accent) 15%, transparent));
 }
 
-.miniapp-shell :is(.btn-primary, a.btn.btn-primary):hover:not(:disabled) {
+.miniapp-shell :is(.btn-accent, a.btn.btn-accent):hover:not(:disabled) {
   filter: brightness(1.02);
   background: var(--color-accent-hover);
 }
 
 .miniapp-shell :is(.btn-secondary, a.btn.btn-secondary) {
-  background: var(--color-hover, var(--color-surface-2));
-  border: none;
-  color: var(--color-text);
+  background: transparent;
+  border: 1px solid var(--color-border-strong, var(--color-border));
+  color: var(--color-text-muted);
+  font-family: Inter, var(--font-sans), system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: -0.2px;
+  text-transform: none;
 }
 
 .miniapp-shell :is(.btn-danger, a.btn.btn-danger) {
@@ -3453,7 +3483,10 @@ html[data-theme="consumer-dark"] .subscription-cancellation-modal {
   text-decoration: underline;
 }
 
-.miniapp-shell :is(.btn-primary, a.btn.btn-primary):hover:not(:disabled),
+.miniapp-shell :is(.btn-primary, a.btn.btn-primary):not(.btn-accent):hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+
 .miniapp-shell :is(.btn-danger, a.btn.btn-danger):hover:not(:disabled) {
   filter: brightness(1.02);
 }

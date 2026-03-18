@@ -15,12 +15,14 @@ export function PillChip({
   className = "",
   ...props
 }: PillChipProps) {
+  const showDot = variant === "active" || variant === "expiring" || variant === "expired";
   return (
     <span
       className={`pill-chip pill-chip--${variant} ${className}`.trim()}
       data-layer="PillChip"
       {...props}
     >
+      {showDot ? <span className="pill-chip-dot" aria-hidden /> : null}
       {children}
     </span>
   );

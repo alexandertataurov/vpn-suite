@@ -46,7 +46,7 @@ export function PlanHeroCard({
         <div className="plan-hero-head">
           <div className="plan-hero-meta">
             <span className="plan-hero-eyebrow">{eyebrow}</span>
-            <span className="plan-hero-name">{planName}</span>
+            <span className="plan-hero-name plan-name">{planName}</span>
             <span className="plan-hero-subtitle">{subtitle}</span>
           </div>
           <span className={badgeClass} aria-label={`Plan status: ${badgeLabel}`}>
@@ -68,7 +68,7 @@ export function PlanHeroCard({
                     : "plan-hero-stat-value"
               }
             >
-              {stat.value}
+              <span>{stat.value}</span>
               {stat.dim ? <span className="plan-hero-stat-dim">{stat.dim}</span> : null}
             </span>
           </div>

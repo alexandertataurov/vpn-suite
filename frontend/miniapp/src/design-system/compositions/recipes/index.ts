@@ -1,3 +1,5 @@
+export { PageHeader } from "./PageHeader";
+export type { PageHeaderProps } from "./PageHeader";
 export { PageHeaderBadge } from "./PageHeaderBadge";
 export type { PageHeaderBadgeProps, PageHeaderBadgeTone } from "./PageHeaderBadge";
 export { PageCardSection } from "./PageCardSection";

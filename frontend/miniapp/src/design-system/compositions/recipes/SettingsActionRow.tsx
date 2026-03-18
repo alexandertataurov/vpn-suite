@@ -62,7 +62,7 @@ export function SettingsActionRow({
     </>
   );
 
-  const classes = `modern-list-item ${className}`.trim();
+  const classes = `modern-list-item row-item ${className}`.trim();
 
   if (onClick) {
     return (

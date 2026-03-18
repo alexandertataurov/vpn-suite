@@ -439,6 +439,28 @@ export const failureScenario: MockScenario = {
   },
 };
 
+const accessExpiring: Record<string, unknown> = {
+  ...accessReady,
+  devices_used: 0,
+  device_limit: 5,
+  expires_at: "2026-03-25T12:00:00Z",
+};
+
+export const expiringNoDevicesScenario: MockScenario = {
+  ...readyScenario,
+  responses: {
+    ...readyScenario.responses,
+    access: accessExpiring,
+  },
+};
+
+export const accessErrorScenario: MockScenario = {
+  ...readyScenario,
+  statuses: {
+    access: 500,
+  },
+};
+
 export const restoreScenario: MockScenario = expiredScenario;
 
 export function PageSandbox({

@@ -204,7 +204,7 @@ export function useAccessHomePageModel() {
         ? (expiryDateShort ? `Expires ${expiryDateShort} · Pro annual` : "Pro annual")
         : `Pro annual · renews ${renewsValue}`;
 
-  const subscriptionLabel = status === "expired" ? "Renew Subscription" : "Subscription";
+  const subscriptionLabel = "Subscription";
   const devicesSubtitle =
     status === "expired"
       ? `${data?.devices_used ?? 0} devices · access paused`
@@ -242,8 +242,14 @@ export function useAccessHomePageModel() {
 
   const showRenewalBanner = hasPlan && (planHeroStatus === "expiring" || planHeroStatus === "expired");
   const showNoDeviceCallout = status === "needs_device";
+  const showNoDeviceCalloutAboveBanner =
+    planHeroStatus === "expiring" && (data?.devices_used ?? 0) === 0;
 
   const daysLeft = data?.expires_at ? daysUntil(data.expires_at) : null;
+  const devicesFull =
+    data != null &&
+    data.device_limit != null &&
+    data.devices_used === data.device_limit;
 
   return {
     pageState,
@@ -261,10 +267,12 @@ export function useAccessHomePageModel() {
     planHeroData,
     showRenewalBanner,
     showNoDeviceCallout,
+    showNoDeviceCalloutAboveBanner,
     subscriptionSubtitle,
     subscriptionLabel,
     devicesSubtitle,
     daysLeft,
+    devicesFull,
     expiryDateShort,
     onRetry: () => void queryClient.invalidateQueries({ queryKey: [...webappQueryKeys.access()] }),
   };

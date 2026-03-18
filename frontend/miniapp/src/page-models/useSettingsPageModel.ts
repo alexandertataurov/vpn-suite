@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ApiError,
+  formatDateDisplay,
   type WebAppMeProfileUpdate,
   type WebAppMeProfileUpdateResponse,
   type WebAppLogoutResponse,
@@ -382,10 +383,11 @@ export function useSettingsPageModel() {
   const accountStatusLabel = activeSub
     ? `${t("settings.plan_active_label")} · ${deviceCountLabel}`
     : t("settings.banner_no_plan_title");
+  const accountRenewalValue = activeSub?.valid_until
+    ? formatDateDisplay(activeSub.valid_until)
+    : null;
   const accountRenewalLabel = activeSub
-    ? renewalDate
-      ? t("settings.renewal_summary_date", { date: renewalDate })
-      : renewalCountdownLabel
+    ? accountRenewalValue ?? renewalCountdownLabel
     : t("settings.summary_no_plan_hint");
   const cancelPlanDescription = renewalDate
     ? t("settings.cancel_plan_description_until", { date: renewalDate })
@@ -419,6 +421,7 @@ export function useSettingsPageModel() {
     languageSummary,
     accountStatusLabel,
     accountRenewalLabel,
+    accountRenewalValue,
     cancelPlanDescription,
     offers,
     offersLoading,

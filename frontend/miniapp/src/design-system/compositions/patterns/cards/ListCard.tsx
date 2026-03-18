@@ -135,7 +135,7 @@ export function ListRow({
     : {};
 
   return (
-    <div className={`modern-list-item ${className}`.trim()} {...a11y} {...props}>
+    <div className={`modern-list-item row-item ${className}`.trim()} {...a11y} {...props}>
       {resolvedIcon != null ? (
         <div className={`modern-list-item-icon ${modernToneClass}`}>{resolvedIcon}</div>
       ) : (

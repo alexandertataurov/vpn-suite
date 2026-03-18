@@ -6,10 +6,11 @@ import { IconCreditCard, IconHelpCircle, IconRotateCw, IconServer } from "@/desi
 import {
   FaqDisclosureItem,
   FallbackScreen,
+  FooterHelp,
   Skeleton,
   SkeletonList,
   PageScaffold,
-  ModernHeader,
+  PageHeader,
   PageSection,
   SettingsActionRow,
 } from "@/design-system";
@@ -86,7 +87,11 @@ export function SupportPage() {
   if (model.pageState.status === "loading") {
     return (
       <PageScaffold>
-        <ModernHeader title={model.header.title} showSettings={false} />
+        <PageHeader
+          title={model.header.title}
+          subtitle={model.header.subtitle}
+          onBack={() => navigate(-1)}
+        />
         <Stack gap="4">
           <Skeleton variant="card" height={180} />
           <Skeleton variant="line" width="40%" />
@@ -100,10 +105,9 @@ export function SupportPage() {
 
   return (
     <PageScaffold>
-      <ModernHeader
+      <PageHeader
         title={model.header.title}
         subtitle={model.header.subtitle}
-        showSettings={false}
         onBack={() => navigate(-1)}
       />
       <Stack gap="4">
@@ -189,6 +193,11 @@ export function SupportPage() {
           </ul>
         </PageSection>
       </Stack>
+      <FooterHelp
+        note="Having trouble?"
+        linkLabel="View setup guide"
+        onLinkClick={() => navigate("/devices")}
+      />
     </PageScaffold>
   );
 }

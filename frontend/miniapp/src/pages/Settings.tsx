@@ -27,7 +27,7 @@ import {
   HelperNote,
   Input,
   Modal,
-  ModernHeader,
+  PageHeader,
   PageScaffold,
   PageSection,
   SettingsActionRow,
@@ -102,7 +102,11 @@ export function SettingsPage() {
   if (model.pageState.status === "loading") {
     return (
       <PageScaffold>
-        <ModernHeader title={t("settings.header_title")} subtitle={t("settings.header_subtitle")} showSettings={false} />
+        <PageHeader
+          title={t("settings.header_title")}
+          subtitle={t("settings.header_subtitle")}
+          onBack={() => navigate("/")}
+        />
         <Stack gap="4">
           <Skeleton width="60%" height={18} />
           <Skeleton width="100%" height={72} />
@@ -113,10 +117,9 @@ export function SettingsPage() {
 
   return (
     <PageScaffold>
-      <ModernHeader
+      <PageHeader
         title={t("settings.header_title")}
         subtitle={t("settings.header_subtitle")}
-        showSettings={false}
         onBack={() => navigate("/")}
       />
 
@@ -128,6 +131,7 @@ export function SettingsPage() {
           eyebrowLabel={t("settings.account_section_title")}
           statusLabel={model.accountStatusLabel}
           renewalLabel={model.accountRenewalLabel}
+          renewalValue={model.accountRenewalValue}
           planBadgeLabel={model.hasPlan ? model.planLabel : null}
           planActionTo={model.planActionTo}
           hasPlan={model.hasPlan}

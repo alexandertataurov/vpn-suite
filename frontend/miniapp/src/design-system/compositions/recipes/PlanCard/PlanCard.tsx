@@ -40,7 +40,7 @@ export function PlanCard({
       <div className={styles.body}>
         <div className={styles.head}>
           <div className={styles.meta}>
-            <span className={styles.planName}>{plan}</span>
+            <span className={`${styles.planName} plan-name`}>{plan}</span>
             <span className={styles.planSub}>{planSub}</span>
           </div>
           <span

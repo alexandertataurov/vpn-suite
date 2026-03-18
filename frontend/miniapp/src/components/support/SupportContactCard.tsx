@@ -35,7 +35,7 @@ export function SupportContactCard({
       </div>
 
       {supportHref ? (
-        <Button asChild variant="primary" fullWidth size="lg" className="modern-contact-card__cta">
+        <Button asChild variant="primary" fullWidth size="lg" className="modern-contact-card__cta btn-accent">
           <a href={supportHref} target="_blank" rel="noopener noreferrer">
             {t("support.contact_button_label")}
           </a>

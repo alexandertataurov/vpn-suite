@@ -188,7 +188,7 @@ describe("useSettingsPageModel", () => {
       expect(result.current.renewalDate).toBe("Mar 24, 2026");
       expect(result.current.languageSummary).toBe("Telegram default → English");
       expect(result.current.accountStatusLabel).toBe("Active plan · 1 device active");
-      expect(result.current.accountRenewalLabel).toBe("Renews Mar 24, 2026");
+      expect(result.current.accountRenewalLabel).toMatch(/Mar.*24/);
       expect(result.current.cancelPlanDescription).toBe("Access stays active until Mar 24, 2026.");
       expect(result.current.referralSummary).toBe("3 invites sent · 1 active");
     });

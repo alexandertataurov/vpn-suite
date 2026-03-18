@@ -1,7 +1,7 @@
 
 import { useNavigate, Link } from "react-router-dom";
 import { SessionMissing, VpnBoundaryNote } from "@/components";
-import { ActionCard, Button, InlineAlert, PageScaffold, ModernHeader, StickyBottomBar } from "@/design-system";
+import { ActionCard, Button, FooterHelp, InlineAlert, PageScaffold, PageHeader, StickyBottomBar } from "@/design-system";
 import { Stack } from "@/design-system/core/primitives";
 import { useRestoreAccessPageModel } from "@/page-models";
 import { useI18n } from "@/hooks";
@@ -17,10 +17,9 @@ export function RestoreAccessPage() {
     if (!model.hasGraceOrExpired) {
       return (
         <PageScaffold>
-          <ModernHeader
+          <PageHeader
             title={model.header.title}
             subtitle={model.header.subtitle}
-            showSettings={false}
             onBack={() => navigate(-1)}
           />
           <Stack gap="4">
@@ -47,6 +46,11 @@ export function RestoreAccessPage() {
               </Button>
             </Stack>
           </Stack>
+          <FooterHelp
+            note="Having trouble?"
+            linkLabel="View setup guide"
+            onLinkClick={() => navigate("/support")}
+          />
         </PageScaffold>
       );
     }
@@ -56,10 +60,9 @@ export function RestoreAccessPage() {
   if (model.pageState.status === "loading") {
     return (
       <PageScaffold>
-        <ModernHeader
+        <PageHeader
           title={model.header.title}
           subtitle={model.header.subtitle}
-          showSettings={false}
           onBack={() => navigate(-1)}
         />
         <Stack gap="4">
@@ -75,10 +78,9 @@ export function RestoreAccessPage() {
   if (model.pageState.status === "error") {
     return (
       <PageScaffold>
-        <ModernHeader
+        <PageHeader
           title={model.header.title}
           subtitle={model.header.subtitle}
-          showSettings={false}
           onBack={() => navigate(-1)}
         />
         <Stack gap="4">
@@ -106,10 +108,9 @@ export function RestoreAccessPage() {
 
   return (
     <PageScaffold>
-      <ModernHeader
+      <PageHeader
         title={model.header.title}
         subtitle={model.header.subtitle}
-        showSettings={false}
         onBack={() => navigate(-1)}
       />
       <Stack gap="4">
@@ -131,6 +132,11 @@ export function RestoreAccessPage() {
             {t("restore.primary_button_label")}
           </Button>
       </StickyBottomBar>
+      <FooterHelp
+        note="Having trouble?"
+        linkLabel="View setup guide"
+        onLinkClick={() => navigate("/support")}
+      />
     </PageScaffold>
   );
 }

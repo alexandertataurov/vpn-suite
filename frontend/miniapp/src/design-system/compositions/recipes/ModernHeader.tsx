@@ -87,8 +87,8 @@ export function ModernHeader({
       </div>
       
       {showSettings ? (
-        <button 
-          className="modern-icon-button"
+        <button
+          className="modern-icon-button settings-pill"
           onClick={handleSettings}
           aria-label="Settings"
         >

@@ -8,7 +8,7 @@ import {
   SessionMissing,
   VpnBoundaryNote,
 } from "@/components";
-import { FallbackScreen, FooterHelp, ModernHeader, PageScaffold, PageSection, Skeleton } from "@/design-system";
+import { FallbackScreen, FooterHelp, PageHeader, PageScaffold, PageSection, Skeleton } from "@/design-system";
 import { Stack } from "@/design-system/core/primitives";
 
 import { useI18n } from "@/hooks";
@@ -98,7 +98,11 @@ export function PlanPage() {
   if (model.pageState.status === "loading") {
     return (
       <PageScaffold>
-        <ModernHeader title={model.header.title} subtitle={model.header.subtitle} showSettings={false} />
+        <PageHeader
+          title={model.header.title}
+          subtitle={model.header.subtitle}
+          onBack={() => navigate(fromOnboarding ? "/onboarding" : "/")}
+        />
         <Stack gap="4">
           <Skeleton variant="card" height={220} />
           <Skeleton variant="line" width="40%" />
@@ -149,7 +153,7 @@ export function PlanPage() {
 
   return (
     <PageScaffold className="plan-billing-page">
-      <ModernHeader 
+      <PageHeader
         title={model.header.title}
         subtitle={model.header.subtitle}
         onBack={() => navigate(fromOnboarding ? "/onboarding" : "/")}

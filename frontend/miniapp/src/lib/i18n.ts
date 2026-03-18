@@ -624,6 +624,8 @@ const messages: MessageTable = {
     "support.support_link_unavailable_message":
       "Support chat is not configured in this build.",
     "support.troubleshooter_title": "Troubleshooter",
+    "support.troubleshooter_description_short":
+      "Follow the steps below to diagnose your connection.",
     "support.troubleshooter_description":
       "Use these checks to confirm plan state, device setup, and restore flow before contacting support.",
     "support.recovery_paths_title": "Recovery paths",

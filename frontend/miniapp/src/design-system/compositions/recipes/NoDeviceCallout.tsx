@@ -29,7 +29,7 @@ export function NoDeviceCallout({
       </div>
       <button
         type="button"
-        className="no-device-callout-cta"
+        className="no-device-callout-cta nd-cta"
         onClick={onCtaClick}
         aria-label={ctaLabel}
       >

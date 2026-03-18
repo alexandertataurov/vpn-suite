@@ -14,8 +14,8 @@ export interface RenewalBannerProps {
 }
 
 const DEFAULT_ICONS: Record<RenewalBannerVariant, ReactNode> = {
-  expiring: <IconAlertTriangle size={16} strokeWidth={2} />,
-  expired: <IconRotateCw size={16} strokeWidth={2} />,
+  expiring: <IconAlertTriangle size={18} strokeWidth={2} />,
+  expired: <IconRotateCw size={18} strokeWidth={2} />,
 };
 
 export function RenewalBanner({
