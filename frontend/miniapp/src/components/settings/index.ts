@@ -3,7 +3,10 @@ export type { AccountCancellationModalProps } from "./AccountCancellationModal";
 export { SubscriptionCancellationModal } from "./SubscriptionCancellationModal";
 export type { SubscriptionCancellationModalProps } from "./SubscriptionCancellationModal";
 export { SettingsAccountOverviewCard } from "./SettingsAccountOverviewCard";
-export type { SettingsAccountOverviewCardProps } from "./SettingsAccountOverviewCard";
+export type {
+  SettingsAccountOverviewCardProps,
+  PlanStatus,
+} from "./SettingsAccountOverviewCard";
 export { SettingsDangerSection } from "./SettingsDangerSection";
 export type { SettingsDangerSectionProps } from "./SettingsDangerSection";
 export { SettingsLanguageMenuRow } from "./SettingsLanguageMenuRow";

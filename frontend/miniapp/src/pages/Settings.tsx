@@ -123,18 +123,31 @@ export function SettingsPage() {
 
       <PageSection compact>
         <SettingsAccountOverviewCard
-          initial={model.accountSummary.initial}
           name={model.accountSummary.name}
-          photoUrl={model.accountSummary.photoUrl}
-          eyebrowLabel={t("settings.account_section_title")}
-          statusLabel={model.accountStatusLabel}
-          renewalEyebrowLabel={t("settings.renewal_label")}
-          renewalLabel={model.accountRenewalLabel}
-          renewalValue={model.accountRenewalValue}
-          planBadgeLabel={model.hasPlan ? model.planLabel : null}
-          planActionTo={model.planActionTo}
-          hasPlan={model.hasPlan}
-          planCtaLabel={t("plan.cta_choose_plan")}
+          initials={
+            model.accountSummary.name
+              .trim()
+              .split(/\s+/)
+              .slice(0, 2)
+              .map((w) => w[0])
+              .join("")
+              .toUpperCase() ||
+            model.accountSummary.initial.toUpperCase().padEnd(2, model.accountSummary.initial)
+          }
+          planName={model.planLabel}
+          planStatus={
+            model.hasPlan
+              ? (model.renewalDays ?? 0) > 7
+                ? "active"
+                : (model.renewalDays ?? 0) <= 0
+                  ? "expired"
+                  : "expiring"
+              : "expired"
+          }
+          renewalDate={model.accountRenewalValue ?? model.accountRenewalLabel ?? "—"}
+          devicesUsed={model.activeDevices.length}
+          devicesTotal={model.activeSub?.device_limit ?? 5}
+          onEdit={() => navigate(model.planActionTo)}
         />
       </PageSection>
 

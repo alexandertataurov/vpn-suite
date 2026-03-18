@@ -1,0 +1,39 @@
+/* SettingsAccountCard theme tokens. [data-theme] on containers (ThemePane);
+   :root for app default, [data-theme] for scoped theming. */
+
+[data-theme="light"],
+[data-theme="consumer-light"],
+html[data-theme="consumer-light"] {
+  --ac-bg: #ffffff;
+  --ac-border: rgba(0, 0, 0, 0.08);
+  --ac-divider: rgba(0, 0, 0, 0.07);
+  --ac-eyebrow: #a8a7a3;
+  --ac-name: #111110;
+  --ac-stat-label: #a8a7a3;
+  --ac-stat-value: #111110;
+  --ac-stat-dim: #a8a7a3;
+  --ac-stat-sep: rgba(0, 0, 0, 0.07);
+  --ac-edit-hint: #c4c3bf;
+  --ac-stat-active: #166534;
+  --ac-stat-expiring: #92400e;
+  --ac-stat-expired: #991b1b;
+}
+
+[data-theme="dark"],
+[data-theme="consumer-dark"],
+html[data-theme="consumer-dark"],
+html:not([data-theme]) {
+  --ac-bg: #1a1d27;
+  --ac-border: rgba(255, 255, 255, 0.10);
+  --ac-divider: rgba(255, 255, 255, 0.07);
+  --ac-eyebrow: #5a5f73;
+  --ac-name: #f0f2f8;
+  --ac-stat-label: #5a5f73;
+  --ac-stat-value: #f0f2f8;
+  --ac-stat-dim: #3a3f52;
+  --ac-stat-sep: rgba(255, 255, 255, 0.07);
+  --ac-edit-hint: #3a3f52;
+  --ac-stat-active: #4ade80;
+  --ac-stat-expiring: #fbbf24;
+  --ac-stat-expired: #f87171;
+}

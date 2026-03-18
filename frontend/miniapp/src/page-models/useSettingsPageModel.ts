@@ -429,6 +429,7 @@ export function useSettingsPageModel() {
     planLabel,
     activeSub,
     renewalDate,
+    renewalDays,
     renewalCountdownLabel,
     hasPlan: Boolean(activeSub),
     activeDevices,

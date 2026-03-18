@@ -26,6 +26,10 @@ function resolveModernTone(tone: string, danger: boolean): string {
   return tone;
 }
 
+/**
+ * Settings-style action row. For settings pages, prefer ListRow (patterns/cards).
+ * @deprecated Prefer ListRow. Kept for Storybook/legacy.
+ */
 export function SettingsActionRow({
   icon,
   title,
@@ -39,7 +43,7 @@ export function SettingsActionRow({
   className = "",
 }: SettingsActionRowProps) {
   const modernToneClass = resolveModernTone(tone, danger);
-  
+
   const content = (
     <>
       <div className={`modern-list-item-icon ${modernToneClass}`} aria-hidden>
@@ -55,9 +59,9 @@ export function SettingsActionRow({
       {actionIndicator !== "none" ? (
         <div className="modern-list-item-right" aria-hidden>
           {actionIndicator === "external" ? (
-             <span className="settings-action-external-icon">↗</span>
+            <span className="settings-action-external-icon">↗</span>
           ) : (
-             <IconChevronRight size={13} strokeWidth={2.5} className="settings-action-chevron" />
+            <IconChevronRight size={13} strokeWidth={2.5} className="settings-action-chevron" />
           )}
         </div>
       ) : null}
@@ -82,9 +86,5 @@ export function SettingsActionRow({
     );
   }
 
-  return (
-    <div className={classes}>
-      {content}
-    </div>
-  );
+  return <div className={classes}>{content}</div>;
 }

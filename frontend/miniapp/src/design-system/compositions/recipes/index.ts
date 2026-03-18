@@ -21,7 +21,7 @@ export type { ModernHeaderProps } from "./ModernHeader";
 export { ProfileRow } from "./ProfileRow";
 export type { ProfileRowProps, ProfileRowStatus } from "./ProfileRow";
 export { ModernHeroCard } from "./ModernHeroCard";
-export type { ModernHeroCardProps } from "./ModernHeroCard";
+export type { ModernHeroCardProps, ModernHeroCardVariant } from "./ModernHeroCard";
 export { PlanCard } from "./PlanCard";
 export type { PlanCardProps, PlanCardStat, PlanCardStatus } from "./PlanCard";
 export { RenewalBanner } from "./RenewalBanner";

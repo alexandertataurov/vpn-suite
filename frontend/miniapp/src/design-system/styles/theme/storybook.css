@@ -35,6 +35,11 @@
   gap: 16px;
 }
 
+.story-theme-pane--account-card {
+  width: 358px;
+  flex: 0 0 358px;
+}
+
 /* Storybook dark preview theme — used by typography/label story frames. */
 
 .typography-story-dark-frame,

@@ -2,14 +2,15 @@ import type { HTMLAttributes } from "react";
 
 export interface AvatarProps extends Omit<HTMLAttributes<HTMLDivElement>, "children"> {
   initials: string;
-  size?: "sm" | "md";
+  size?: "sm" | "md" | "lg";
   /** Optional image URL; when set, shows image instead of initials */
   src?: string | null;
 }
 
 /** Profile avatar with gradient background and initials, or image. */
 export function Avatar({ initials, size = "md", src, className = "", ...props }: AvatarProps) {
-  const sizeClass = size === "sm" ? "avatar--sm" : "avatar--md";
+  const sizeClass =
+    size === "sm" ? "avatar--sm" : size === "lg" ? "avatar--lg" : "avatar--md";
   return (
     <div
       className={`avatar ${sizeClass} ${className}`.trim()}

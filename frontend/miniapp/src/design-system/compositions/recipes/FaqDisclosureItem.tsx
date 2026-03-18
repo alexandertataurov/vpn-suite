@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from "react";
+import { IconPlus } from "@/design-system/icons";
 import "./FaqDisclosureItem.css";
 
 export interface FaqDisclosureItemProps {
@@ -42,18 +43,7 @@ export function FaqDisclosureItem(props: FaqDisclosureItemProps) {
       >
         <span className="faq-question">{question}</span>
         <span className="faq-icon" aria-hidden="true">
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 14 14"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.75"
-            strokeLinecap="round"
-          >
-            <line x1="7" y1="1" x2="7" y2="13" />
-            <line x1="1" y1="7" x2="13" y2="7" />
-          </svg>
+          <IconPlus size={14} strokeWidth={1.75} />
         </span>
       </button>
       <div

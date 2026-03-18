@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Button } from "../../components/Button";
 import { IconShield } from "../../icons";
+import { ModernHeroCard } from "./ModernHeroCard";
 
 export interface NewUserHeroProps {
   title: string;
@@ -31,25 +32,31 @@ export function NewUserHero({
   viewGuideLabel = "View guide",
   className,
 }: NewUserHeroProps) {
-  return (
-    <div className={["new-user-hero", "hero-card", className].filter(Boolean).join(" ")} data-layer="NewUserHero">
-      <div className="new-user-hero-icon" aria-hidden>
-        <IconShield size={44} strokeWidth={1.25} />
-      </div>
-      <h2 className="new-user-hero-title">{title}</h2>
-      <p className="new-user-hero-desc">{description}</p>
-      <div className="new-user-hero-actions">
-        {primaryAction ?? (onChoosePlan != null ? (
+  const actions = (
+    <>
+      {primaryAction ??
+        (onChoosePlan != null ? (
           <Button variant="primary" fullWidth className="new-user-hero-cta" onClick={onChoosePlan}>
             {choosePlanLabel}
           </Button>
         ) : null)}
-        {secondaryAction ?? (onViewGuide != null ? (
+      {secondaryAction ??
+        (onViewGuide != null ? (
           <Button variant="secondary" fullWidth className="new-user-hero-cta" onClick={onViewGuide}>
             {viewGuideLabel}
           </Button>
         ) : null)}
-      </div>
-    </div>
+    </>
+  );
+
+  return (
+    <ModernHeroCard
+      icon={<IconShield size={44} strokeWidth={1.25} />}
+      title={title}
+      description={description}
+      actions={actions}
+      variant="newUser"
+      className={className}
+    />
   );
 }

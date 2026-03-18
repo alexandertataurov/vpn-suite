@@ -1,67 +1,111 @@
-import { Avatar, Button, PillChip } from "@/design-system";
-import { useNavigate } from "react-router-dom";
+import { Avatar, PillChip } from "@/design-system";
+import "./SettingsAccountCard.css";
+
+export type PlanStatus = "active" | "expiring" | "expired";
 
 export interface SettingsAccountOverviewCardProps {
-  initial: string;
   name: string;
-  photoUrl?: string;
-  eyebrowLabel: string;
-  statusLabel: string;
-  /** Uppercase eyebrow for renewal section. Default "RENEWAL". */
-  renewalEyebrowLabel?: string;
-  renewalLabel: string;
-  renewalValue?: string | null;
-  planBadgeLabel?: string | null;
-  planActionTo: string;
-  hasPlan: boolean;
-  planCtaLabel: string;
+  initials: string;
+  planName: string;
+  planStatus: PlanStatus;
+  renewalDate: string;
+  devicesUsed: number;
+  devicesTotal: number;
+  onEdit?: () => void;
+}
+
+function getStatusLabel(planStatus: PlanStatus): string {
+  switch (planStatus) {
+    case "active":
+      return "Active";
+    case "expiring":
+      return "Expiring";
+    case "expired":
+      return "Expired";
+  }
 }
 
 export function SettingsAccountOverviewCard({
-  initial,
   name,
-  photoUrl,
-  eyebrowLabel,
-  statusLabel,
-  renewalEyebrowLabel = "RENEWAL",
-  renewalLabel,
-  renewalValue,
-  planBadgeLabel,
-  planActionTo,
-  hasPlan,
-  planCtaLabel,
+  initials,
+  planName,
+  planStatus,
+  renewalDate,
+  devicesUsed,
+  devicesTotal,
+  onEdit,
 }: SettingsAccountOverviewCardProps) {
-  const navigate = useNavigate();
-  const pillVariant = hasPlan ? "active" : "beta";
+  const handleClick = onEdit ? () => onEdit() : undefined;
 
   return (
-    <div className="settings-account-card">
-      <div className="settings-account-card__group">
-        <Avatar initials={initial} size="md" src={photoUrl} className="settings-account-avatar settings-account-avatar--circle" />
-        <div className="settings-account-card__meta">
-          <span className="settings-account-eyebrow">{eyebrowLabel}</span>
-          <span className="settings-account-name">{name}</span>
-          {planBadgeLabel && (
-            <span className="settings-account-chip">
-              <PillChip variant={pillVariant}>{planBadgeLabel}</PillChip>
-            </span>
-          )}
-          <span className="settings-account-status">{statusLabel}</span>
+    <div
+      className={`account-card${onEdit ? "" : " account-card--readonly"}`}
+      onClick={handleClick}
+      role={onEdit ? "button" : undefined}
+      tabIndex={onEdit ? 0 : undefined}
+      onKeyDown={
+        onEdit
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onEdit();
+              }
+            }
+          : undefined
+      }
+    >
+      <div className="ac-identity">
+        <Avatar initials={initials} size="lg" />
+        <div className="ac-identity-text">
+          <span className="ac-eyebrow">Account</span>
+          <span className="ac-name">{name}</span>
+          <PillChip variant={planStatus} status={planStatus} showDot>
+            {planName}
+          </PillChip>
         </div>
       </div>
 
-      <div className="settings-account-card__renewal">
-        <span className="settings-account-eyebrow">{renewalEyebrowLabel}</span>
-        <span className="settings-account-renewal-value">
-          {renewalValue ?? renewalLabel}
-        </span>
+      <div className="ac-divider" />
+
+      <div className="ac-stats">
+        <div className="ac-stat">
+          <span className="ac-stat-label">Renewal</span>
+          <span className="ac-stat-value">{renewalDate}</span>
+        </div>
+        <div className="ac-stat-sep" />
+        <div className="ac-stat">
+          <span className="ac-stat-label">Devices</span>
+          <span className="ac-stat-value">
+            {devicesUsed}
+            <span className="ac-stat-dim"> / {devicesTotal}</span>
+          </span>
+        </div>
+        <div className="ac-stat-sep" />
+        <div className="ac-stat">
+          <span className="ac-stat-label">Status</span>
+          <span className={`ac-stat-value ac-stat-value--${planStatus}`}>
+            {getStatusLabel(planStatus)}
+          </span>
+        </div>
       </div>
 
-      {!hasPlan && (
-        <Button variant="primary" className="settings-account-cta" onClick={() => navigate(planActionTo)}>
-          {planCtaLabel}
-        </Button>
+      {onEdit && (
+        <div className="ac-edit-hint" aria-hidden>
+          <svg
+            width="13"
+            height="13"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M9 18l6-6-6-6" />
+          </svg>
+        </div>
       )}
     </div>
   );
 }
+

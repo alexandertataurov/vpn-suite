@@ -1,99 +1,137 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { MemoryRouter } from "react-router-dom";
 import { SettingsAccountOverviewCard } from "./SettingsAccountOverviewCard";
-import { StorySection, StoryShowcase, StoryStack } from "@/design-system";
+
+function ThemePane({
+  theme,
+  children,
+}: {
+  theme: "dark" | "light";
+  children: React.ReactNode;
+}) {
+  return (
+    <div data-theme={theme} className="story-theme-pane story-theme-pane--account-card">
+      <p className="story-theme-pane-label">{theme}</p>
+      {children}
+    </div>
+  );
+}
+
+function WithThemes({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="story-themes-row">
+      <ThemePane theme="dark">{children}</ThemePane>
+      <ThemePane theme="light">{children}</ThemePane>
+    </div>
+  );
+}
 
 const meta: Meta<typeof SettingsAccountOverviewCard> = {
-  title: "Recipes/SettingsAccountOverviewCard",
+  title: "Patterns/SettingsAccountCard",
   tags: ["autodocs"],
   component: SettingsAccountOverviewCard,
   parameters: {
     layout: "padded",
+    status: { type: "stable" },
     docs: {
       description: {
         component:
-          "Account overview card with avatar, name, status, renewal info, and plan CTA.",
+          "Account overview card with two-zone layout: identity (avatar, name, plan chip) and stats (renewal, devices, status). Tokenized for light/dark themes.",
       },
     },
   },
-  decorators: [
-    (Story) => (
-      <MemoryRouter>
-        <Story />
-      </MemoryRouter>
-    ),
-  ],
 };
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const baseArgs = {
-  initial: "AM",
+const activeArgs = {
   name: "Alex Morgan",
-  eyebrowLabel: "Account",
-  statusLabel: "Active",
-  renewalEyebrowLabel: "RENEWAL",
-  renewalLabel: "—",
-  planActionTo: "/plan",
-  planCtaLabel: "Choose plan",
+  initials: "AM",
+  planName: "Pro Monthly",
+  planStatus: "active" as const,
+  renewalDate: "Apr 15, 2026",
+  devicesUsed: 2,
+  devicesTotal: 5,
+  onEdit: () => {},
 };
 
-export const WithPlan: Story = {
-  args: {
-    ...baseArgs,
-    hasPlan: true,
-    planBadgeLabel: "Pro Monthly",
-    renewalValue: "Apr 15, 2026",
-  },
+export const Active: Story = {
+  name: "Active plan",
+  args: activeArgs,
   render: (args) => (
-    <StoryShowcase>
+    <WithThemes>
       <SettingsAccountOverviewCard {...args} />
-    </StoryShowcase>
+    </WithThemes>
   ),
 };
 
-export const WithoutPlan: Story = {
+export const Expiring: Story = {
+  name: "Expiring plan",
   args: {
-    ...baseArgs,
-    hasPlan: false,
-    planBadgeLabel: null,
-    renewalValue: null,
+    ...activeArgs,
+    planStatus: "expiring",
+    renewalDate: "Mar 24, 2026",
+    devicesUsed: 3,
+    devicesTotal: 5,
   },
   render: (args) => (
-    <StoryShowcase>
+    <WithThemes>
       <SettingsAccountOverviewCard {...args} />
-    </StoryShowcase>
+    </WithThemes>
   ),
 };
 
-export const Variants: Story = {
-  render: () => (
-    <StorySection title="Variants" description="With plan, without plan, with photo.">
-      <StoryStack>
-        <SettingsAccountOverviewCard
-          {...baseArgs}
-          hasPlan={true}
-          planBadgeLabel="Pro Annual"
-          renewalValue="Dec 1, 2026"
-        />
-        <SettingsAccountOverviewCard
-          {...baseArgs}
-          hasPlan={false}
-          planBadgeLabel={null}
-          renewalValue={null}
-        />
-        <SettingsAccountOverviewCard
-          {...baseArgs}
-          initial="JD"
-          name="Jane Doe"
-          photoUrl="https://i.pravatar.cc/128?u=jd"
-          hasPlan={true}
-          planBadgeLabel="Beta"
-          renewalValue={null}
-        />
-      </StoryStack>
-    </StorySection>
+export const Expired: Story = {
+  name: "Expired plan",
+  args: {
+    ...activeArgs,
+    planStatus: "expired",
+    renewalDate: "Mar 10, 2026",
+    devicesUsed: 0,
+    devicesTotal: 2,
+  },
+  render: (args) => (
+    <WithThemes>
+      <SettingsAccountOverviewCard {...args} />
+    </WithThemes>
+  ),
+};
+
+export const LongName: Story = {
+  name: "Long name truncation",
+  args: {
+    ...activeArgs,
+    name: "Alexandros Papadopoulos-Konstantinidis",
+    initials: "AP",
+    planStatus: "active",
+    renewalDate: "Apr 15, 2026",
+    devicesUsed: 1,
+    devicesTotal: 3,
+  },
+  render: (args) => (
+    <WithThemes>
+      <SettingsAccountOverviewCard {...args} />
+    </WithThemes>
+  ),
+};
+
+export const Readonly: Story = {
+  name: "Without edit action",
+  parameters: {
+    docs: {
+      description: {
+        story: "No chevron, no hover state — display only.",
+      },
+    },
+  },
+  args: {
+    ...activeArgs,
+    onEdit: undefined,
+  },
+  render: (args) => (
+    <WithThemes>
+      <SettingsAccountOverviewCard {...args} />
+    </WithThemes>
   ),
 };
