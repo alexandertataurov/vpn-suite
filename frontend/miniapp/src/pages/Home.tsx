@@ -35,7 +35,11 @@ function InviteFriendsCard() {
         iconTone="neutral"
         title="Invite Friends"
         subtitle="Invite a friend, get +30 days free"
-        right={<IconChevronRight size={13} strokeWidth={2} />}
+        right={
+          <div className="home-row-right-group">
+            <IconChevronRight size={13} strokeWidth={2} />
+          </div>
+        }
         onClick={() => navigate("/support")}
       />
     </ListCard>
@@ -132,7 +136,11 @@ export function HomePage() {
               iconTone="neutral"
               title="Devices"
               subtitle="None added yet"
-              right={<IconChevronRight size={13} strokeWidth={2} />}
+              right={
+                <div className="home-row-right-group">
+                  <IconChevronRight size={13} strokeWidth={2} />
+                </div>
+              }
               onClick={() => navigate("/devices")}
             />
           </ListCard>
@@ -152,7 +160,7 @@ export function HomePage() {
               title="No devices added"
               subtitle="Add a device to generate your configuration."
               ctaLabel="Add Device"
-              ctaIcon={<IconPlus size={13} strokeWidth={2.5} />}
+              ctaIcon={<IconPlus size={13} strokeWidth={2} />}
               onCtaClick={() => navigate("/devices")}
             />
           )}
@@ -177,7 +185,7 @@ export function HomePage() {
               title="No devices added"
               subtitle="Add a device to generate your configuration."
               ctaLabel="Add Device"
-              ctaIcon={<IconPlus size={13} strokeWidth={2.5} />}
+              ctaIcon={<IconPlus size={13} strokeWidth={2} />}
               onCtaClick={() => navigate("/devices")}
             />
           )}

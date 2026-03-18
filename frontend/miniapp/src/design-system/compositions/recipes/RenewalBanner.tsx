@@ -45,7 +45,7 @@ export function RenewalBanner({
         <span className="renewal-banner-title">{title}</span>
         <span className="renewal-banner-subtitle">{subtitle}</span>
       </div>
-      <IconChevronRight size={13} strokeWidth={2.5} className="renewal-banner-chevron" />
+      <IconChevronRight size={13} strokeWidth={2} className="renewal-banner-chevron" />
     </button>
   );
 }

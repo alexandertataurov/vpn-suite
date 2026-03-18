@@ -15,7 +15,7 @@ export interface SettingsActionRowProps {
 }
 
 function resolveModernTone(tone: string, danger: boolean): string {
-  if (danger || tone === "danger") return "modern-icon-tone--red";
+  if (danger || tone === "danger") return "modern-icon-tone--danger";
   if (tone === "warning" || tone === "amber") return "modern-icon-tone--amber";
   if (tone === "blue") return "modern-icon-tone--blue";
   if (tone === "green") return "modern-icon-tone--green";
@@ -55,7 +55,7 @@ export function SettingsActionRow({
           {actionIndicator === "external" ? (
              <span className="settings-action-external-icon">↗</span>
           ) : (
-             <IconChevronRight size={18} strokeWidth={2} className="settings-action-chevron" />
+             <IconChevronRight size={13} strokeWidth={2.5} className="settings-action-chevron" />
           )}
         </div>
       ) : null}

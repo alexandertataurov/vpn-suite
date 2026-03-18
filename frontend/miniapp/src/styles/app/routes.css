@@ -257,8 +257,8 @@
 
 .settings-toggle-row.toggle-setting {
   min-height: 54px;
-  padding: var(--spacing-2) var(--spacing-3);
-  gap: var(--spacing-3);
+  padding: 13px 16px;
+  gap: 13px;
   background: transparent;
   border: 0;
   border-radius: var(--radius-lg);
@@ -288,14 +288,20 @@
 .settings-toggle-row .ts-track {
   width: 40px;
   height: 24px;
+  background: var(--color-border-strong);
   transition:
     background-color var(--motion-duration-micro) var(--motion-ease-standard),
     border-color var(--motion-duration-micro) var(--motion-ease-standard);
 }
 
+.settings-toggle-row .ts-toggle.on .ts-track {
+  background: var(--color-success);
+}
+
 .settings-toggle-row .ts-knob {
   width: 16px;
   height: 16px;
+  background: var(--color-surface);
   transition:
     transform var(--motion-duration-micro) var(--motion-ease-release),
     background-color var(--motion-duration-micro) var(--motion-ease-standard);
@@ -303,6 +309,7 @@
 
 .settings-toggle-row .ts-toggle.on .ts-knob {
   transform: translateX(16px);
+  background: var(--color-surface);
 }
 
 .settings-danger-section {

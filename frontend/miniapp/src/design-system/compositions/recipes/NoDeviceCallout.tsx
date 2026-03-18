@@ -21,7 +21,7 @@ export function NoDeviceCallout({
   return (
     <div className={["no-device-callout", className].filter(Boolean).join(" ")} data-layer="NoDeviceCallout">
       <div className="no-device-callout-icon">
-        <IconMonitor size={20} strokeWidth={1.75} />
+        <IconMonitor size={20} strokeWidth={2} />
       </div>
       <div className="no-device-callout-body">
         <span className="no-device-callout-title">{title}</span>
