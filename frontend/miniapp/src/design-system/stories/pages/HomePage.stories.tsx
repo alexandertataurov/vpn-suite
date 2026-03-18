@@ -13,7 +13,7 @@ import {
 } from "@/storybook/page-contracts";
 
 const meta = {
-  title: "Pages/Home",
+  title: "Pages/Contracts/Home",
   tags: ["autodocs"],
   parameters: {
     docs: { description: { component: "Home route. Production-faithful scenarios." } },

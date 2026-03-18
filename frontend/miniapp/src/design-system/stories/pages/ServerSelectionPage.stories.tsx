@@ -4,7 +4,7 @@ import { ServerSelectionPage } from "@/future/servers/ServerSelection";
 import { manualServerScenario, PageSandbox, readyScenario } from "@/storybook/page-contracts";
 
 const meta = {
-  title: "Pages/ServerSelection",
+  title: "Pages/Contracts/ServerSelection",
   tags: ["autodocs"],
   parameters: {
     docs: { description: { component: "Server selection." } },

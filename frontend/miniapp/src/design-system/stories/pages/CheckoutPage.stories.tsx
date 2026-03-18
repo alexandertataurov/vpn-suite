@@ -4,7 +4,7 @@ import { CheckoutPage } from "@/pages/Checkout";
 import { PageSandbox, readyScenario } from "@/storybook/page-contracts";
 
 const meta = {
-  title: "Pages/Checkout",
+  title: "Pages/Contracts/Checkout",
   tags: ["autodocs"],
   parameters: {
     docs: { description: { component: "Checkout flow." } },

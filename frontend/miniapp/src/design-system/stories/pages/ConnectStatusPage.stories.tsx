@@ -4,7 +4,7 @@ import { ConnectStatusPage } from "@/future/connect-status/ConnectStatus";
 import { PageSandbox, connectedScenario } from "@/storybook/page-contracts";
 
 const meta = {
-  title: "Pages/ConnectStatus",
+  title: "Pages/Contracts/ConnectStatus",
   tags: ["autodocs"],
   parameters: {
     docs: { description: { component: "Connection status." } },

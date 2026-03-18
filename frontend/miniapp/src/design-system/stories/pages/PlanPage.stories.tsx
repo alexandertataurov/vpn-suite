@@ -4,7 +4,7 @@ import { PlanPage } from "@/pages/Plan";
 import { loadingCheckoutScenario, PageSandbox, readyScenario } from "@/storybook/page-contracts";
 
 const meta = {
-  title: "Pages/Plan",
+  title: "Pages/Contracts/Plan",
   tags: ["autodocs"],
   parameters: {
     docs: { description: { component: "Plan selection and checkout." } },

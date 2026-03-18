@@ -4,7 +4,7 @@ import { SettingsPage } from "@/pages/Settings";
 import { PageSandbox, readyScenario } from "@/storybook/page-contracts";
 
 const meta = {
-  title: "Pages/Settings",
+  title: "Pages/Contracts/Settings",
   tags: ["autodocs"],
   parameters: {
     docs: { description: { component: "Account and settings." } },

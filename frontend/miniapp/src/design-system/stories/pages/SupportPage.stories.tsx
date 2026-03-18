@@ -4,7 +4,7 @@ import { SupportPage } from "@/pages/Support";
 import { PageSandbox, readyScenario } from "@/storybook/page-contracts";
 
 const meta = {
-  title: "Pages/Support",
+  title: "Pages/Contracts/Support",
   tags: ["autodocs"],
   parameters: {
     docs: { description: { component: "Support and help." } },

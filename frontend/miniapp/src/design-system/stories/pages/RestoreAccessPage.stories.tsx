@@ -4,7 +4,7 @@ import { RestoreAccessPage } from "@/pages/RestoreAccess";
 import { PageSandbox, restoreScenario } from "@/storybook/page-contracts";
 
 const meta = {
-  title: "Pages/RestoreAccess",
+  title: "Pages/Contracts/RestoreAccess",
   tags: ["autodocs"],
   parameters: {
     docs: { description: { component: "Restore access flow." } },

@@ -4,7 +4,7 @@ import { OnboardingPage } from "@/pages/Onboarding";
 import { OnboardingSandbox, readyScenario } from "@/storybook/page-contracts";
 
 const meta = {
-  title: "Pages/Onboarding",
+  title: "Pages/Contracts/Onboarding",
   tags: ["autodocs"],
   parameters: {
     docs: { description: { component: "Onboarding flow." } },

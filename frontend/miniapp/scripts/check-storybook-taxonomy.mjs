@@ -1,10 +1,9 @@
 /* global console, process */
-import { readFileSync } from "node:fs";
+import { readFileSync, globSync } from "node:fs";
 import { join } from "node:path";
-import { globSync } from "glob";
 
 const root = process.cwd();
-const storyFiles = globSync("src/**/*.stories.@(ts|tsx|js|jsx|mjs)", { cwd: root, nodir: true });
+const storyFiles = globSync("src/**/*.stories.@(ts|tsx|js|jsx|mjs)", { cwd: root });
 
 const allowedRoots = new Set(["Foundations", "Primitives", "Components", "Patterns", "Layouts", "Pages", "States"]);
 const pageModes = new Set(["Contracts", "Sandbox"]);

@@ -19,7 +19,7 @@
 - [ ] Storybook stories added or updated
 - [ ] Storybook contract inventory still passes for required miniapp executable stories
 - [ ] Interaction or `play` coverage updated where needed
-- [ ] Required Storybook contract gate (`npm run test-storybook -w miniapp`) passed
+- [ ] Required Storybook contract gate (`pnpm run test-storybook:miniapp`) passed
 - [ ] Visual review passed
 - [ ] Mobile layout checked
 - [ ] Long-content and edge state checked

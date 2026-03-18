@@ -4,7 +4,7 @@ import { ReferralPage } from "@/future/referral/Referral";
 import { noReferralsScenario, PageSandbox, readyScenario } from "@/storybook/page-contracts";
 
 const meta = {
-  title: "Pages/Referral",
+  title: "Pages/Contracts/Referral",
   tags: ["autodocs"],
   parameters: {
     docs: { description: { component: "Referral program." } },
