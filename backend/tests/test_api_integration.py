@@ -469,6 +469,8 @@ async def test_webapp_debug_test_telegram_config_sends_to_expected_chat(monkeypa
     from app.api.v1 import webapp as webapp_module
     from app.core import config
 
+    # Endpoint returns 404 when not in development.
+    monkeypatch.setattr(config.settings, "environment", "development")
     # Ensure bot token is set so endpoint does not 503.
     monkeypatch.setattr(config.settings, "telegram_bot_token", "TEST_TOKEN")
 

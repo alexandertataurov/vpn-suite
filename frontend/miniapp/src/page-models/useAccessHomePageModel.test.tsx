@@ -109,7 +109,7 @@ describe("useAccessHomePageModel", () => {
 
     expect(result.current.status).toBe("ready");
     expect(result.current.uiConfig?.title).toBe("Your VPN is ready");
-    expect(result.current.uiConfig?.ctaLabel).toBe("Open in AmneziaVPN");
+    expect(result.current.uiConfig?.ctaLabel).toBe("Manage Devices");
     expect(result.current.showDevices).toBe(true);
     expect(result.current.showExpiry).toBe(true);
     expect(result.current.devicesValue).toBe("2 / 5");

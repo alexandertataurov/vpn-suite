@@ -12,7 +12,11 @@ def anyio_backend():
 
 
 @pytest.mark.asyncio
-async def test_health_returns_200():
+async def test_health_returns_200(monkeypatch):
+    """Health returns 200. referral_configured depends on telegram_bot_username; we assert stable value."""
+    from app.core import config
+
+    monkeypatch.setattr(config.settings, "telegram_bot_username", "")
     async with AsyncClient(
         transport=ASGITransport(app=app),
         base_url="http://test",

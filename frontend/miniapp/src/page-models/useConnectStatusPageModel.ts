@@ -23,7 +23,6 @@ export function useConnectStatusPageModel() {
   const activeSubId = activeSub?.plan_id ?? null;
   const connectionConfirmed = hasConfirmedConnection(session);
   const liveConnected = getLiveConnection(session)?.status === "connected";
-  const amneziaVpnKey = session?.latest_device_delivery?.amnezia_vpn_key ?? null;
   useTrackScreen("connect-status", activeSubId ?? null);
   const { track } = useTelemetry(activeSubId ?? null);
 
@@ -98,15 +97,7 @@ export function useConnectStatusPageModel() {
     ? { kind: "route" as const, label: t("home.primary_choose_plan"), to: "/plan" }
     : activeDevices.length === 0
       ? { kind: "route" as const, label: t("onboarding.go_to_devices"), to: "/devices" }
-      : liveConnected
-        ? amneziaVpnKey
-          ? { kind: "open_app" as const, label: t("onboarding.open_amneziavpn"), payload: amneziaVpnKey }
-          : { kind: "route" as const, label: t("onboarding.go_to_devices"), to: "/devices" }
-      : connectionConfirmed
-        ? amneziaVpnKey
-          ? { kind: "open_app" as const, label: t("onboarding.open_amneziavpn"), payload: amneziaVpnKey }
-          : { kind: "route" as const, label: t("onboarding.go_to_devices"), to: "/devices" }
-        : null;
+      : { kind: "route" as const, label: t("onboarding.go_to_devices"), to: "/devices" };
 
   return {
     header: {

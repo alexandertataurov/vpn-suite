@@ -8,6 +8,8 @@ alwaysApply: false
 
 **Project context**: Token files — admin: `frontend/admin/src/design-system/tokens/tokens.css`; miniapp: `frontend/miniapp/src/design-system/styles/tokens/base.css`. Tailwind must use configured token aliases, not raw colors.
 
+**Miniapp design spec**: `docs/frontend/design/amnezia-miniapp-design-guidelines.md` — single source of truth for AmneziaVPN Mini App UI (tokens, components, screen states, animations).
+
 For miniapp UI architecture, reusable layout/pattern/page wrappers belong under `frontend/miniapp/src/design-system/` (`layouts/`, `patterns/`, `page-recipes/`). App pages should compose those wrappers and page-model hooks; do not add new page-local structural abstractions or any CSS files under `frontend/miniapp/src/pages/` when they can be promoted into the design system.
 
 Status and header hierarchy must stay singular. Pick one owner for a given semantic state within a page zone: page-header badge, hero status/badge, or section chip. Do not stack multiple badges or headers that all say the same thing. Likewise, do not place a second header row inside `PageSection` or `PageCardSection` unless it represents a real subsection rather than the same block title repeated.

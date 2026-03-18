@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { IconArrowRight, IconExternalLink, IconShield, IconAlertTriangle } from "@/design-system/icons";
+import { IconArrowRight, IconShield, IconAlertTriangle } from "@/design-system/icons";
 import {
   ActionCard,
   Button,
@@ -90,17 +90,10 @@ export function HomePage() {
           !isGenerating && uiConfig && !uiConfig.ctaDisabled ? (
             <Button
               variant="primary"
-              tone={status === "ready" ? "success" : "default"}
               fullWidth
               size="lg"
               onClick={uiConfig.ctaAction}
-              endIcon={
-                status === "ready" ? (
-                  <IconExternalLink />
-                ) : (
-                  <IconArrowRight />
-                )
-              }
+              endIcon={<IconArrowRight />}
             >
               {uiConfig.ctaLabel}
             </Button>

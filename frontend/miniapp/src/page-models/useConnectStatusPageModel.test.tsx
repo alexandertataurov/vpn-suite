@@ -91,7 +91,7 @@ describe("useConnectStatusPageModel", () => {
     const { result } = renderHook(() => useConnectStatusPageModel(), { wrapper });
 
     expect(result.current.summary.title).toBe("Access ready");
-    expect(result.current.primaryAction).toEqual({ kind: "open_app", label: "Open AmneziaVPN", payload: "vpn://payload" });
+    expect(result.current.primaryAction).toEqual({ kind: "route", label: "Go to Devices", to: "/devices" });
     expect(result.current.showConfirmAction).toBe(false);
   });
 
@@ -117,7 +117,7 @@ describe("useConnectStatusPageModel", () => {
     const { result } = renderHook(() => useConnectStatusPageModel(), { wrapper });
 
     expect(result.current.summary.title).toBe("Connected now");
-    expect(result.current.primaryAction).toEqual({ kind: "open_app", label: "Open AmneziaVPN", payload: "vpn://payload" });
+    expect(result.current.primaryAction).toEqual({ kind: "route", label: "Go to Devices", to: "/devices" });
     expect(result.current.showConfirmAction).toBe(true);
   });
 });

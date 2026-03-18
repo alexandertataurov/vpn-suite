@@ -287,6 +287,360 @@
   width: 100%;
 }
 
+@keyframes up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* Amnezia stagger — apply to top-level sections per spec §6 */
+.profile-row,
+.modern-profile-row { animation: up 0.3s 0s ease both; }
+.hero-card,
+.modern-hero-card,
+.plan-hero-card,
+.new-user-hero { animation: up 0.3s 0.04s ease both; }
+.renewal-banner { animation: up 0.3s 0.08s ease both; }
+.card-row { animation: up 0.3s 0s ease both; }
+.help,
+.modern-footer-help { animation: up 0.3s 0.2s ease both; }
+
+/* ---- Plan Hero Card (amnezia spec §4.3) ------------- */
+.plan-hero-card {
+  background: var(--white, var(--color-surface));
+  border: 1px solid var(--border, var(--color-border-subtle));
+  border-radius: var(--r, var(--radius-lg));
+  overflow: hidden;
+  margin: 0 var(--amnezia-page-pad-h, var(--spacing-4)) var(--amnezia-card-gap, var(--spacing-4));
+  box-shadow: none;
+}
+
+.plan-hero-body {
+  padding: var(--amnezia-card-padding, 18px);
+}
+
+.plan-hero-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-2);
+}
+
+.plan-hero-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.plan-hero-eyebrow {
+  font-size: var(--amnezia-plan-eyebrow, 10px);
+  font-weight: 500;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--text3, var(--color-text-tertiary));
+}
+
+.plan-hero-name {
+  font-size: var(--amnezia-plan-name, 28px);
+  font-weight: 700;
+  letter-spacing: -0.8px;
+  color: var(--text, var(--color-text));
+}
+
+.plan-hero-subtitle {
+  font-size: var(--amnezia-plan-subtitle, 12.5px);
+  font-weight: 400;
+  letter-spacing: -0.1px;
+  color: var(--text3, var(--color-text-tertiary));
+}
+
+.plan-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1px;
+  padding: 4px 10px;
+  border-radius: 100px;
+  white-space: nowrap;
+}
+
+.plan-hero-badge-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.plan-hero-badge--active {
+  color: var(--green, var(--color-success));
+  background: var(--green-bg, var(--color-success-soft));
+  border: 1px solid var(--green-border, var(--surface-border-success));
+}
+
+.plan-hero-badge--active .plan-hero-badge-dot {
+  animation: blink 2.5s ease-in-out infinite;
+}
+
+.plan-hero-badge--expiring {
+  color: var(--amber, var(--color-warning));
+  background: var(--amber-bg, var(--color-warning-soft));
+  border: 1px solid var(--amber-border, var(--surface-border-warning));
+}
+
+.plan-hero-badge--expiring .plan-hero-badge-dot {
+  animation: blink 2s ease-in-out infinite;
+}
+
+.plan-hero-badge--expired {
+  color: var(--red, var(--color-error));
+  background: var(--red-bg, var(--color-error-soft));
+  border: 1px solid var(--red-border, var(--surface-border-error));
+}
+
+.plan-hero-badge--expired .plan-hero-badge-dot {
+  opacity: 0.5;
+}
+
+.plan-hero-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  border-top: 1px solid var(--border, var(--color-border-subtle));
+}
+
+.plan-hero-stat {
+  padding: 14px 0 14px 18px;
+  border-left: 1px solid var(--border, var(--color-border-subtle));
+}
+
+.plan-hero-stat:first-child {
+  border-left: none;
+}
+
+.plan-hero-stat-label {
+  display: block;
+  font-size: var(--amnezia-stat-label, 9px);
+  font-weight: 600;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  color: var(--text3, var(--color-text-tertiary));
+  margin-bottom: 2px;
+}
+
+.plan-hero-stat-value {
+  font-size: var(--amnezia-stat-value, 19px);
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: var(--text, var(--color-text));
+}
+
+.plan-hero-stat-value--expiring {
+  color: var(--amber, var(--color-warning));
+}
+
+.plan-hero-stat-value--expired {
+  color: var(--red, var(--color-error));
+}
+
+.plan-hero-stat-dim {
+  font-size: var(--amnezia-stat-dim, 13px);
+  font-weight: 400;
+  color: var(--text3, var(--color-text-tertiary));
+}
+
+/* ---- Renewal Banner (amnezia spec §4.4) ------------- */
+.renewal-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin: 0 var(--amnezia-page-pad-h, var(--spacing-4)) var(--amnezia-card-gap, var(--spacing-2));
+  padding: 13px 15px;
+  border-radius: var(--r, var(--radius-lg));
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: filter 0.15s;
+  background: transparent;
+  text-align: left;
+  font: inherit;
+}
+
+.renewal-banner:hover {
+  filter: brightness(0.97);
+}
+
+.renewal-banner-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--r-sm, var(--radius-sm));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.renewal-banner--expiring {
+  background: var(--amber-bg, var(--color-warning-soft));
+  border-color: var(--amber-border, var(--surface-border-warning));
+}
+
+.renewal-banner--expiring .renewal-banner-icon {
+  background: rgba(146, 64, 14, 0.09);
+  color: var(--amber, var(--color-warning));
+}
+
+.renewal-banner--expired {
+  background: var(--red-bg, var(--color-error-soft));
+  border-color: var(--red-border, var(--surface-border-error));
+}
+
+.renewal-banner--expired .renewal-banner-icon {
+  background: rgba(153, 27, 27, 0.09);
+  color: var(--red, var(--color-error));
+}
+
+.renewal-banner-body {
+  flex: 1;
+  flex-direction: column;
+  display: flex;
+  gap: 2px;
+}
+
+.renewal-banner-title {
+  font-size: var(--amnezia-banner-title, 13px);
+  font-weight: 600;
+  letter-spacing: -0.2px;
+}
+
+.renewal-banner--expiring .renewal-banner-title {
+  color: var(--amber, var(--color-warning));
+}
+
+.renewal-banner--expired .renewal-banner-title {
+  color: var(--red, var(--color-error));
+}
+
+.renewal-banner-subtitle {
+  font-size: var(--amnezia-banner-sub, 11.5px);
+  font-weight: 400;
+  color: var(--text3, var(--color-text-tertiary));
+  line-height: 1.45;
+}
+
+.renewal-banner-chevron {
+  color: var(--text3, var(--color-text-tertiary));
+  flex-shrink: 0;
+}
+
+/* ---- No-device callout (amnezia spec §4.9) ---------- */
+.no-device-callout {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--white, var(--color-surface));
+  border: 1px solid var(--border, var(--color-border));
+  border-radius: var(--r, var(--radius-lg));
+  padding: 16px 18px;
+  margin: 0 var(--amnezia-page-pad-h, var(--spacing-4)) var(--amnezia-card-gap, var(--spacing-2));
+}
+
+.no-device-callout-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-sm, var(--radius-sm));
+  background: var(--bg, var(--color-surface-2));
+  border: 1px solid var(--border, var(--color-border));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text3, var(--color-text-tertiary));
+  flex-shrink: 0;
+}
+
+.no-device-callout-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.no-device-callout-title {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  color: var(--text, var(--color-text));
+}
+
+.no-device-callout-subtitle {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text3, var(--color-text-tertiary));
+}
+
+.no-device-callout-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--amnezia-cta-pill, 12px);
+  font-weight: 600;
+  color: var(--text, var(--color-text));
+  background: var(--bg, var(--color-surface-2));
+  border: 1px solid var(--border-med, var(--color-border-strong));
+  border-radius: 100px;
+  padding: 6px 12px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: filter 0.15s;
+}
+
+.no-device-callout-cta:hover {
+  filter: brightness(0.95);
+}
+
+/* ---- New-user hero (amnezia spec §4.10) ------------ */
+.new-user-hero {
+  padding: 40px 24px 28px;
+  text-align: center;
+  margin: 0 var(--amnezia-page-pad-h, var(--spacing-4)) var(--amnezia-card-gap, var(--spacing-4));
+}
+
+.new-user-hero-icon {
+  color: var(--text3, var(--color-text-tertiary));
+  margin-bottom: 18px;
+  display: flex;
+  justify-content: center;
+}
+
+.new-user-hero-title {
+  font-size: var(--amnezia-hero-title, 20px);
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: var(--text, var(--color-text));
+  margin: 0 0 7px;
+}
+
+.new-user-hero-desc {
+  font-size: var(--amnezia-hero-desc, 13px);
+  font-weight: 400;
+  color: var(--text2, var(--color-text-muted));
+  line-height: 1.6;
+  max-width: 210px;
+  margin: 0 auto 24px;
+}
+
+.new-user-hero-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 /* ---- Action Grid ----------------------------------- */
 .modern-action-grid {
   display: grid;

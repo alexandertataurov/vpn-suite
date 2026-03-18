@@ -107,3 +107,15 @@ html[data-theme="consumer-light"] {
   --amnezia-help-text: 12px;
   --amnezia-avatar-initials: 11.5px;
 }
+
+/* Primary button: always var(--text) per spec §4.7, §8 */
+html[data-theme="consumer-light"] .btn-primary,
+html[data-theme="consumer-light"] .btn-primary.success {
+  background: var(--text) !important;
+  color: white !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="consumer-light"] .btn-primary:hover:not(:disabled) {
+  opacity: 0.82;
+}

@@ -37,8 +37,8 @@ function createBaseModel(overrides: Record<string, unknown> = {}) {
     },
     uiConfig: {
       title: "Your VPN is ready",
-      description: "Open your configuration in AmneziaVPN",
-      ctaLabel: "Open in AmneziaVPN",
+      description: "Manage your devices and subscription here. Connect in AmneziaVPN.",
+      ctaLabel: "Manage Devices",
       ctaDisabled: false,
       ctaAction: vi.fn(),
       showDevices: true,
@@ -50,6 +50,7 @@ function createBaseModel(overrides: Record<string, unknown> = {}) {
     devicesValue: "2 / 5",
     expiryValue: "May 1, 2030",
     expiryLabel: "Valid until",
+    pillChip: { variant: "active" as const, label: "PRO" },
     onRetry: vi.fn(),
     ...overrides,
   };
@@ -65,8 +66,8 @@ describe("HomePage", () => {
     renderWithProviders(<HomePage />);
 
     expect(screen.getByText("Your VPN is ready")).toBeInTheDocument();
-    expect(screen.getByText("Open your configuration in AmneziaVPN")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Open in AmneziaVPN/i })).toBeInTheDocument();
+    expect(screen.getByText("Manage your devices and subscription here. Connect in AmneziaVPN.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Manage Devices/i })).toBeInTheDocument();
     expect(screen.getByText("2 / 5")).toBeInTheDocument();
     expect(screen.getByText("May 1, 2030")).toBeInTheDocument();
   });
@@ -97,6 +98,7 @@ describe("HomePage", () => {
       showExpiry: false,
       devicesValue: "0 / 5",
       expiryValue: "",
+      pillChip: { variant: "active" as const, label: "PRO" },
     });
 
     renderWithProviders(<HomePage />);
@@ -133,6 +135,7 @@ describe("HomePage", () => {
       showExpiry: false,
       devicesValue: "",
       expiryValue: "",
+      pillChip: { variant: "beta" as const, label: "Beta" },
     });
 
     renderWithProviders(<HomePage />);
@@ -170,6 +173,7 @@ describe("HomePage", () => {
       devicesValue: "",
       expiryValue: "Mar 10, 2030",
       expiryLabel: "Expired on",
+      pillChip: { variant: "expired" as const, label: "Expired" },
     });
 
     renderWithProviders(<HomePage />);

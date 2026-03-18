@@ -51,9 +51,10 @@ const ACCESS_UI_MAP: Record<
   },
   ready: {
     title: "Your VPN is ready",
-    description: "Open your configuration in AmneziaVPN",
-    ctaLabel: "Open in AmneziaVPN",
+    description: "Manage your devices and subscription here. Connect in AmneziaVPN.",
+    ctaLabel: "Manage Devices",
     ctaDisabled: false,
+    ctaRoute: "/devices",
     showDevices: true,
     showExpiry: true,
     expiryLabel: "Valid until",
@@ -143,10 +144,6 @@ export function useAccessHomePageModel() {
     ? {
         ...baseConfig,
         ctaAction: () => {
-          if (status === "ready" && data?.amnezia_vpn_key) {
-            window.open(data.amnezia_vpn_key);
-            return;
-          }
           const route = baseConfig.ctaRoute;
           if (route) navigate(route);
         },
