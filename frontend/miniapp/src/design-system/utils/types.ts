@@ -11,7 +11,8 @@ export type Intent =
   | "ghost"
   | "outline"
   | "danger"
-  | "link";
+  | "link"
+  | "external";
 
 export type Breakpoint = "sm" | "md" | "lg";
 

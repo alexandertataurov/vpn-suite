@@ -109,6 +109,23 @@ html {
   --surface-border-success: oklch(from var(--color-success) l c h / 0.25);
   --surface-border-warning: oklch(from var(--color-warning) l c h / 0.25);
   --surface-border-error: oklch(from var(--color-error) l c h / 0.25);
+  /* Border radius — Amnezia spec */
+  --r: 14px;
+  --r-sm: 10px;
+  /* Dark-theme divider */
+  --divider: rgba(255, 255, 255, 0.08);
+  /* Semantic state backgrounds — badges and banners */
+  --color-success-bg: rgba(22, 101, 52, 0.12);
+  --color-success-border: rgba(22, 101, 52, 0.22);
+  --color-warning-bg: rgba(146, 64, 14, 0.12);
+  --color-warning-border: rgba(146, 64, 14, 0.22);
+  --color-error-bg: rgba(153, 27, 27, 0.12);
+  --color-error-border: rgba(153, 27, 27, 0.22);
+  --color-info-bg: rgba(59, 130, 246, 0.12);
+  --color-info-border: rgba(59, 130, 246, 0.22);
+  /* Icon danger/warning tints — Settings danger zone rows */
+  --color-icon-danger-bg: rgba(153, 27, 27, 0.12);
+  --color-icon-warning-bg: rgba(146, 64, 14, 0.12);
 }
 
 /* Font overrides for dark — consumer.css sets Inter for consumer themes */

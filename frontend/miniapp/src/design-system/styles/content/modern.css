@@ -37,6 +37,106 @@
 .inline-alert--modern.inline-alert-error .alert-icon { color: var(--color-error); }
 .inline-alert--modern.inline-alert-success .alert-icon { color: var(--color-success); }
 
+/* ---- Avatar (profile row) ---- */
+.avatar {
+  border-radius: 50%;
+  background: linear-gradient(140deg, #bbf7d0 0%, #99f6e4 100%);
+  color: #065f46;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar--md {
+  width: 38px;
+  height: 38px;
+  font-size: 11.5px;
+}
+
+.avatar--sm {
+  width: 28px;
+  height: 28px;
+  font-size: 9px;
+}
+
+/* ---- Badge (inline status) ---- */
+.badge {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.1px;
+  padding: 2.5px 8px;
+  border-radius: 100px;
+  line-height: 1.2;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.badge--warning {
+  color: var(--color-warning);
+  background: var(--color-warning-bg);
+  border-color: var(--color-warning-border);
+}
+
+.badge--error {
+  color: var(--color-error);
+  background: var(--color-error-bg);
+  border-color: var(--color-error-border);
+}
+
+.badge--success {
+  color: var(--color-success);
+  background: var(--color-success-bg);
+  border-color: var(--color-success-border);
+}
+
+.badge--muted {
+  color: var(--color-text-muted);
+  background: var(--color-surface-2);
+  border-color: var(--color-border);
+}
+
+/* ---- SectionLabel (eyebrow) ---- */
+.section-label {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+  margin-bottom: 8px;
+  margin-top: 24px;
+  padding: 0 4px;
+}
+
+/* ---- SettingsButton (profile row) ---- */
+.settings-button {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  transition: background 0.15s, color 0.15s;
+}
+
+.settings-button:hover {
+  color: var(--color-text-muted);
+}
+
+.settings-button:active {
+  background: var(--color-surface-2);
+}
+
 /* ---- PageHeader (secondary pages with back button) - */
 .page-header {
   display: flex;

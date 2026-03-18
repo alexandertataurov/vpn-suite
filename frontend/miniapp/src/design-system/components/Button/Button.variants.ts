@@ -7,6 +7,7 @@ const variantClass: Record<ButtonVariant, string> = {
   outline: "btn-outline",
   danger: "btn-danger",
   link: "btn-link",
+  external: "btn-external",
 };
 
 const sizeClass: Record<ButtonSize, string> = {

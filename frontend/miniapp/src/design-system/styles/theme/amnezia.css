@@ -64,10 +64,23 @@ html[data-theme="consumer-light"] {
   --color-accent-hover: #2d2d2b;
   --color-on-accent: #ffffff;
 
-  /* Radius — spec */
+  /* Radius — spec (base.css also defines --r, --r-sm) */
   --r: 14px;
   --r-xs: 6px;
   --r-sm: 10px;
+  /* Light theme divider */
+  --divider: rgba(0, 0, 0, 0.07);
+  /* Semantic state backgrounds — Amnezia spec */
+  --color-success-bg: rgba(22, 101, 52, 0.12);
+  --color-success-border: rgba(22, 101, 52, 0.22);
+  --color-warning-bg: rgba(146, 64, 14, 0.12);
+  --color-warning-border: rgba(146, 64, 14, 0.22);
+  --color-error-bg: rgba(153, 27, 27, 0.12);
+  --color-error-border: rgba(153, 27, 27, 0.22);
+  --color-info-bg: rgba(59, 130, 246, 0.12);
+  --color-info-border: rgba(59, 130, 246, 0.22);
+  --color-icon-danger-bg: rgba(153, 27, 27, 0.12);
+  --color-icon-warning-bg: rgba(146, 64, 14, 0.12);
   --r-md: 14px;
   --r-lg: 14px;
   --radius-sm: 10px;

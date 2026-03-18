@@ -74,6 +74,14 @@ export { StatusChip } from "./ui/StatusChip";
 export type { StatusChipProps, StatusChipVariant } from "./ui/StatusChip";
 export { PillChip } from "./ui/PillChip";
 export type { PillChipProps, PillChipVariant } from "./ui/PillChip";
+export { Avatar } from "./ui/Avatar";
+export type { AvatarProps } from "./ui/Avatar";
+export { Badge } from "./ui/Badge";
+export type { BadgeProps, BadgeVariant } from "./ui/Badge";
+export { SectionLabel } from "./ui/SectionLabel";
+export type { SectionLabelProps } from "./ui/SectionLabel";
+export { SettingsButton } from "./ui/SettingsButton";
+export type { SettingsButtonProps } from "./ui/SettingsButton";
 export { StarsAmount } from "./ui/StarsAmount";
 export type { StarsAmountProps } from "./ui/StarsAmount";
 
