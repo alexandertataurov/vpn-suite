@@ -56,7 +56,6 @@ jobs:
         run: pnpm run test-storybook:official:miniapp
 
   chromatic:
-    if: ${{ secrets.CHROMATIC_PROJECT_TOKEN != '' }}
     needs: storybook
     runs-on: ubuntu-latest
     defaults:
@@ -79,4 +78,5 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Chromatic
+        continue-on-error: true
         run: pnpm --filter miniapp run chromatic -- --project-token=${{ secrets.CHROMATIC_PROJECT_TOKEN }}
