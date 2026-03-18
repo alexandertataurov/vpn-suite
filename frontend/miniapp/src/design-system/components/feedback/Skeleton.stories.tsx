@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { Skeleton, SkeletonLine, SkeletonCard, SkeletonList } from "./Skeleton";
-import { Stack } from "@/design-system/core/primitives";
+import { Skeleton, SkeletonCard, SkeletonList } from "./Skeleton";
+import { StorySection, StoryShowcase, StoryStack } from "@/design-system";
 
 const meta = {
   title: "Components/Skeleton",
@@ -26,30 +26,45 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: { width: "120px", height: "24px" },
-};
-
-export const Line: Story = {
-  render: () => <SkeletonLine />,
-};
-
-export const Card: Story = {
-  render: () => <SkeletonCard />,
-};
-
-export const List: Story = {
-  render: () => (
-    <Stack gap="2">
-      <SkeletonList lines={3} />
-    </Stack>
+  render: (args) => (
+    <StoryShowcase>
+      <Skeleton {...args} />
+    </StoryShowcase>
   ),
 };
 
 export const Variants: Story = {
   render: () => (
-    <Stack gap="4">
-      <Skeleton variant="line" />
-      <Skeleton variant="card" width="100%" height="80px" />
-      <Skeleton variant="shimmer" width="120px" height="24px" />
-    </Stack>
+    <StorySection title="Variants" description="line, card, list, shimmer.">
+      <StoryShowcase>
+        <StoryStack>
+          <Skeleton variant="line" />
+          <Skeleton variant="card" width="100%" height="80px" />
+          <Skeleton variant="shimmer" width="120px" height="24px" />
+        </StoryStack>
+      </StoryShowcase>
+    </StorySection>
+  ),
+};
+
+export const InContext: Story = {
+  render: () => (
+    <StorySection title="In context" description="Card loading state.">
+      <StoryShowcase>
+        <div className="story-preview-card">
+          <SkeletonCard />
+        </div>
+      </StoryShowcase>
+    </StorySection>
+  ),
+};
+
+export const ListLoading: Story = {
+  render: () => (
+    <StorySection title="List loading" description="SkeletonList with 3 lines.">
+      <StoryShowcase>
+        <SkeletonList lines={3} />
+      </StoryShowcase>
+    </StorySection>
   ),
 };

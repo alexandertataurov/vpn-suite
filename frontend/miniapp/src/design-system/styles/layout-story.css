@@ -273,6 +273,14 @@
   gap: var(--spacing-4);
 }
 
+.story-stack--center {
+  align-items: center;
+}
+
+.story-stack--tight {
+  gap: var(--spacing-2);
+}
+
 .story-comparison {
   display: grid;
   grid-template-columns: 1fr 1fr;

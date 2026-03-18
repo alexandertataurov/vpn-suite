@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Textarea } from "./Textarea";
-import { Stack } from "@/design-system/core/primitives";
+import { StorySection, StoryShowcase, StoryStack } from "@/design-system";
 
-const meta: Meta<typeof Textarea> = {
+const meta = {
   title: "Components/Textarea",
   tags: ["autodocs"],
   component: Textarea,
@@ -15,44 +15,54 @@ const meta: Meta<typeof Textarea> = {
       },
     },
   },
-};
+  argTypes: {
+    label: { control: "text" },
+    placeholder: { control: "text" },
+    error: { control: "text" },
+    success: { control: "text" },
+    disabled: { control: "boolean" },
+  },
+} satisfies Meta<typeof Textarea>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: { placeholder: "Enter text..." },
-};
-
-export const WithLabel: Story = {
   args: {
-    label: "Notes",
-    placeholder: "Optional notes",
-    description: "Add any details.",
+    label: "Support message",
+    placeholder: "Describe your issue…",
   },
+  render: (args) => (
+    <StoryShowcase>
+      <Textarea {...args} />
+    </StoryShowcase>
+  ),
 };
 
-export const WithError: Story = {
-  args: {
-    label: "Feedback",
-    error: "Required field",
-  },
-};
-
-export const Disabled: Story = {
-  args: {
-    label: "Read-only",
-    value: "Pre-filled content",
-    disabled: true,
-  },
-};
-
-export const Stacked: Story = {
+export const ValidationStates: Story = {
   render: () => (
-    <Stack gap="4">
-      <Textarea label="First" placeholder="First field" />
-      <Textarea label="Second" placeholder="Second field" />
-    </Stack>
+    <StorySection title="Validation states" description="Error and success feedback.">
+      <StoryShowcase>
+        <StoryStack>
+          <Textarea label="Feedback" placeholder="Your feedback" error="This field is required" />
+          <Textarea label="Notes" value="Saved successfully" success="Saved" />
+        </StoryStack>
+      </StoryShowcase>
+    </StorySection>
+  ),
+};
+
+export const ContentStress: Story = {
+  render: () => (
+    <StorySection title="Content stress" description="Long text and placeholder.">
+      <StoryShowcase>
+        <Textarea
+          label="Description"
+          placeholder="Enter a very long placeholder to test how the textarea handles overflow and wrapping behavior"
+          value="Pre-filled content that extends across multiple lines to demonstrate how the textarea displays longer text."
+        />
+      </StoryShowcase>
+    </StorySection>
   ),
 };

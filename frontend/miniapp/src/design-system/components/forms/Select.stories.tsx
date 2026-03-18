@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
 import { Select } from "./Select";
+import { Input, StorySection, StoryShowcase, StoryStack } from "@/design-system";
 
 const meta = {
   title: "Components/Select",
@@ -15,23 +16,30 @@ const meta = {
       },
     },
   },
+  argTypes: {
+    label: { control: "text" },
+    placeholder: { control: "text" },
+    loading: { control: "boolean" },
+    disabled: { control: "boolean" },
+  },
 } satisfies Meta<typeof Select>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const OPTIONS = [
+const SERVER_OPTIONS = [
   { value: "amsterdam", label: "Amsterdam" },
   { value: "frankfurt", label: "Frankfurt" },
   { value: "paris", label: "Paris" },
+  { value: "london", label: "London" },
 ];
 
 function SelectDemo() {
   const [value, setValue] = useState("amsterdam");
   return (
     <Select
-      options={OPTIONS}
+      options={SERVER_OPTIONS}
       value={value}
       onChange={setValue}
       label="Server"
@@ -41,66 +49,70 @@ function SelectDemo() {
 }
 
 export const Default: Story = {
-  render: () => <SelectDemo />,
-};
-
-export const WithLabel: Story = {
   render: () => (
-    <Select
-      options={OPTIONS}
-      value=""
-      onChange={() => {}}
-      label="Region"
-      placeholder="Select region"
-    />
+    <StorySection title="Interactive" description="Select a server.">
+      <StoryShowcase>
+        <SelectDemo />
+      </StoryShowcase>
+    </StorySection>
   ),
 };
 
-export const WithError: Story = {
+export const States: Story = {
   render: () => (
-    <Select
-      options={OPTIONS}
-      value=""
-      onChange={() => {}}
-      label="Server"
-      error="Required"
-    />
+    <StorySection title="States" description="Error, loading, empty, disabled.">
+      <StoryShowcase>
+        <StoryStack>
+          <Select
+            options={SERVER_OPTIONS}
+            value=""
+            onChange={() => {}}
+            label="Server"
+            error="Please select a server"
+          />
+          <Select
+            options={[]}
+            value=""
+            onChange={() => {}}
+            label="Server"
+            loading
+            loadingLabel="Loading servers…"
+          />
+          <Select
+            options={[]}
+            value=""
+            onChange={() => {}}
+            label="Region"
+            emptyLabel="No regions available"
+          />
+          <Select
+            options={SERVER_OPTIONS}
+            value="amsterdam"
+            onChange={() => {}}
+            label="Server"
+            disabled
+          />
+        </StoryStack>
+      </StoryShowcase>
+    </StorySection>
   ),
 };
 
-export const Disabled: Story = {
+export const FormContext: Story = {
   render: () => (
-    <Select
-      options={OPTIONS}
-      value="amsterdam"
-      onChange={() => {}}
-      label="Server"
-      disabled
-    />
-  ),
-};
-
-export const Loading: Story = {
-  render: () => (
-    <Select
-      options={[]}
-      value=""
-      onChange={() => {}}
-      label="Server"
-      loading
-      loadingLabel="Loading servers…"
-    />
-  ),
-};
-
-export const Empty: Story = {
-  render: () => (
-    <Select
-      options={[]}
-      value=""
-      onChange={() => {}}
-      label="Region"
-      emptyLabel="No regions available"
-    />
+    <StorySection title="In form context" description="With other fields.">
+      <StoryShowcase>
+        <StoryStack>
+          <Input label="Email" placeholder="you@example.com" type="email" />
+          <Select
+            options={SERVER_OPTIONS}
+            value="amsterdam"
+            onChange={() => {}}
+            label="Server"
+            placeholder="Choose server"
+          />
+        </StoryStack>
+      </StoryShowcase>
+    </StorySection>
   ),
 };
