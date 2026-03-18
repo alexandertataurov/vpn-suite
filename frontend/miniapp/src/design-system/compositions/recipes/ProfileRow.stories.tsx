@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { ProfileRow } from "./ProfileRow";
-import { PillChip } from "../patterns";
-import { StorySection, StoryShowcase, StoryStack } from "@/design-system";
+import { StoryShowcase } from "@/design-system";
 
 const meta: Meta<typeof ProfileRow> = {
   title: "Recipes/ProfileRow",
@@ -11,7 +10,8 @@ const meta: Meta<typeof ProfileRow> = {
     layout: "padded",
     docs: {
       description: {
-        component: "Profile row: Avatar + name + PillChip + SettingsButton.",
+        component:
+          "Home screen header. Single horizontal row — avatar, name, plan chip, settings button.",
       },
     },
   },
@@ -23,42 +23,10 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    name: "Alex",
-    status: <PillChip variant="active">PRO</PillChip>,
-    onSettings: () => {},
-  },
-  render: (args) => (
-    <StoryShowcase>
-      <ProfileRow {...args} />
-    </StoryShowcase>
-  ),
-};
-
-export const Variants: Story = {
-  render: () => (
-    <StorySection title="Variants" description="Active and expiring status.">
-      <StoryShowcase>
-        <StoryStack>
-          <ProfileRow
-            name="Alex"
-            status={<PillChip variant="active">PRO</PillChip>}
-            onSettings={() => {}}
-          />
-          <ProfileRow
-            name="Alex"
-            status={<PillChip variant="expiring">Expiring · 14d</PillChip>}
-            onSettings={() => {}}
-          />
-        </StoryStack>
-      </StoryShowcase>
-    </StorySection>
-  ),
-};
-
-export const Expiring: Story = {
-  args: {
-    name: "Alex",
-    status: <PillChip variant="expiring">Expiring · 14d</PillChip>,
+    name: "Alex T.",
+    initials: "AT",
+    status: "active",
+    planName: "PRO",
     onSettings: () => {},
   },
   render: (args) => (

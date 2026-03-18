@@ -2,356 +2,269 @@ import {
   useCallback,
   useEffect,
   useId,
-  useMemo,
   useRef,
   useState,
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/design-system";
-import { usePrefersReducedMotion } from "@/design-system";
-import { getMotionDurationMs } from "@/design-system/core/tokens";
+import { IconX } from "@/design-system/icons";
 import { useSheetSwipeDismiss } from "@/design-system/hooks";
-import { decrementBlockingOverlayCount, incrementBlockingOverlayCount } from "@/design-system/utils/overlayStack";
-import { cn } from "@vpn-suite/shared";
-import styles from "./BottomSheet.module.css";
+import {
+  decrementBlockingOverlayCount,
+  incrementBlockingOverlayCount,
+} from "@/design-system/utils/overlayStack";
+import "./BottomSheet.css";
 
 const FOCUSABLE =
   'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
+export interface BottomSheetActions {
+  primary: {
+    label: string;
+    onClick: () => void;
+    loading?: boolean;
+    tone?: "danger" | "default" | "warning" | "success";
+  };
+  secondary?: { label: string; onClick: () => void };
+}
+
 export interface BottomSheetProps {
+  /** @deprecated Use isOpen */
+  open?: boolean;
+  isOpen?: boolean;
+  onClose: () => void;
   title: string;
   subtitle?: string;
-  icon?: ReactNode;
-  bodyText?: string;
-  scrollContent?: ReactNode;
-  statusText?: string;
-  primaryLabel: string;
-  primaryIcon?: ReactNode;
-  secondaryLabel: string;
-  onPrimary: () => void;
-  onSecondary: () => void;
-  onClose: () => void;
-  open: boolean;
-}
-
-function DefaultCheckIcon() {
-  return (
-    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <path
-        d="M5 10.5L8.25 13.75L15 7"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function CloseIcon() {
-  return (
-    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <path
-        d="M6 6L14 14M14 6L6 14"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
+  children: ReactNode;
+  actions?: BottomSheetActions;
+  showSwipeHint?: boolean;
 }
 
 export function BottomSheet({
+  open: openLegacy,
+  isOpen: isOpenProp,
+  onClose,
   title,
   subtitle,
-  icon,
-  bodyText,
-  scrollContent,
-  statusText,
-  primaryLabel,
-  primaryIcon,
-  secondaryLabel,
-  onPrimary,
-  onSecondary,
-  onClose,
-  open,
+  children,
+  actions,
+  showSwipeHint = true,
 }: BottomSheetProps) {
-  const prefersReducedMotion = usePrefersReducedMotion();
-  const dismissMs = getMotionDurationMs("sheet", prefersReducedMotion);
+  const isOpen = isOpenProp ?? openLegacy ?? false;
+  const theme =
+    (typeof document !== "undefined" &&
+      document.documentElement.dataset.theme) ??
+    "dark";
   const titleId = useId();
   const bodyId = useId();
   const sheetRef = useRef<HTMLDivElement | null>(null);
-  const scrollAreaRef = useRef<HTMLDivElement | null>(null);
+  const contentRef = useRef<HTMLDivElement | null>(null);
   const restoreFocusRef = useRef<HTMLElement | null>(null);
-  const dismissTimerRef = useRef<number | null>(null);
-  const [mounted, setMounted] = useState(open);
+  const [mounted, setMounted] = useState(isOpen);
   const [phase, setPhase] = useState<"entering" | "open" | "closing">("entering");
 
-  const resolvedPrimaryIcon = useMemo(() => primaryIcon ?? <DefaultCheckIcon />, [primaryIcon]);
-
   useEffect(() => {
-    if (!open) {
+    if (!isOpen) {
       setMounted(false);
       setPhase("entering");
-      if (dismissTimerRef.current != null) {
-        window.clearTimeout(dismissTimerRef.current);
-        dismissTimerRef.current = null;
-      }
       return;
     }
-
     restoreFocusRef.current =
       document.activeElement instanceof HTMLElement ? document.activeElement : null;
     setMounted(true);
     setPhase("entering");
-
-    const frame = window.requestAnimationFrame(() => {
-      setPhase("open");
-    });
-
+    const frame = window.requestAnimationFrame(() => setPhase("open"));
     return () => window.cancelAnimationFrame(frame);
-  }, [open]);
+  }, [isOpen]);
 
   useEffect(() => {
-    if (!mounted) {
-      return;
-    }
-
-    const previousOverflow = document.body.style.overflow;
+    if (!mounted) return;
+    const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     incrementBlockingOverlayCount();
-
     return () => {
-      document.body.style.overflow = previousOverflow;
+      document.body.style.overflow = prev;
       decrementBlockingOverlayCount();
     };
   }, [mounted]);
 
+  const finishClose = useCallback(() => {
+    restoreFocusRef.current?.focus();
+    restoreFocusRef.current = null;
+    onClose();
+  }, [onClose]);
+
+  const closeTimerRef = useRef<number | null>(null);
+
+  const requestClose = useCallback(() => {
+    if (phase === "closing") return;
+    setPhase("closing");
+    if (closeTimerRef.current != null) window.clearTimeout(closeTimerRef.current);
+    closeTimerRef.current = window.setTimeout(finishClose, 260);
+  }, [phase, finishClose]);
+
   useEffect(() => {
     return () => {
-      if (dismissTimerRef.current != null) {
-        window.clearTimeout(dismissTimerRef.current);
+      if (closeTimerRef.current != null) {
+        window.clearTimeout(closeTimerRef.current);
+        closeTimerRef.current = null;
       }
     };
   }, []);
 
-  const finishClose = useCallback(() => {
-    restoreFocusRef.current?.focus();
-    restoreFocusRef.current = null;
-    dismissTimerRef.current = null;
-    onClose();
-  }, [onClose]);
-
-  const requestClose = useCallback(() => {
-    if (phase === "closing") {
-      return;
-    }
-
-    setPhase("closing");
-    dismissTimerRef.current = window.setTimeout(finishClose, dismissMs);
-  }, [dismissMs, finishClose, phase]);
-
   useEffect(() => {
-    if (!mounted || phase === "closing") {
-      return;
-    }
-
+    if (!mounted || phase === "closing") return;
     const dialog = sheetRef.current;
-    if (!dialog) {
-      return;
-    }
+    if (!dialog) return;
 
     const focusable = dialog.querySelectorAll<HTMLElement>(FOCUSABLE);
     const first = focusable[0];
-    window.requestAnimationFrame(() => {
-      (first ?? dialog).focus();
-    });
+    window.requestAnimationFrame(() => (first ?? dialog).focus());
 
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
         requestClose();
         return;
       }
-
-      if (event.key !== "Tab") {
-        return;
-      }
-
+      if (e.key !== "Tab") return;
       const nodes = dialog.querySelectorAll<HTMLElement>(FOCUSABLE);
       if (nodes.length === 0) {
-        event.preventDefault();
+        e.preventDefault();
         dialog.focus();
         return;
       }
-
       const firstNode = nodes[0];
       const lastNode = nodes[nodes.length - 1];
-      if (firstNode == null || lastNode == null) {
-        return;
-      }
-      const activeElement = document.activeElement;
-
-      if (!dialog.contains(activeElement)) {
-        event.preventDefault();
+      if (!firstNode || !lastNode) return;
+      const active = document.activeElement;
+      if (!dialog.contains(active)) {
+        e.preventDefault();
         firstNode.focus();
         return;
       }
-
-      if (event.shiftKey && activeElement === firstNode) {
-        event.preventDefault();
+      if (e.shiftKey && active === firstNode) {
+        e.preventDefault();
         lastNode.focus();
-      }
-
-      if (!event.shiftKey && activeElement === lastNode) {
-        event.preventDefault();
+      } else if (!e.shiftKey && active === lastNode) {
+        e.preventDefault();
         firstNode.focus();
       }
     };
 
     dialog.addEventListener("keydown", handleKeyDown);
-    return () => {
-      dialog.removeEventListener("keydown", handleKeyDown);
-    };
+    return () => dialog.removeEventListener("keydown", handleKeyDown);
   }, [mounted, phase, requestClose]);
 
   const swipeGesture = useSheetSwipeDismiss({
     enabled: mounted && phase !== "closing",
     onDismiss: requestClose,
+    dismissDistance: 80,
     resolveStartContext: (target) => {
-      const startedInHandle = target?.closest("[data-bottom-sheet-drag-handle='true'], .header") != null;
-      const startedInScrollArea = target?.closest("[data-bottom-sheet-scroll-area='true']") != null;
-      if (!startedInHandle && !startedInScrollArea) {
-        return { allowStart: false };
-      }
+      const inHandle = target?.closest("[data-bs-handle]") != null;
+      const inContent = target?.closest(".bs-content") != null;
+      if (!inHandle && !inContent) return { allowStart: false };
       return {
         allowStart: true,
-        scrollElement: startedInScrollArea ? scrollAreaRef.current : null,
+        scrollElement: inContent ? contentRef.current : null,
       };
     },
   });
 
   useEffect(() => {
-    if (!sheetRef.current) return;
-    if (phase !== "open" || swipeGesture.offset <= 0) {
-      sheetRef.current.style.removeProperty("transform");
+    const el = sheetRef.current;
+    if (!el || phase !== "open" || swipeGesture.offset <= 0) {
+      el?.style.removeProperty("transform");
       return;
     }
-
-    sheetRef.current.style.transform = `translateY(${swipeGesture.offset}px)`;
+    el.style.transform = `translateY(${swipeGesture.offset}px)`;
   }, [phase, swipeGesture.offset]);
 
-  if (!mounted) {
-    return null;
-  }
+  const handleOverlayClick = useCallback(
+    (e: React.MouseEvent) => {
+      if (e.target === e.currentTarget) requestClose();
+    },
+    [requestClose]
+  );
+
+  if (!mounted) return null;
 
   return createPortal(
     <div
-      className={styles.overlay}
-      data-state={phase}
-      data-swipe-active={swipeGesture.isDragging ? "true" : "false"}
-      data-swipe-ready={swipeGesture.isReady ? "true" : "false"}
+      className="bs-overlay"
       role="presentation"
+      onClick={handleOverlayClick}
+      data-state={phase}
     >
       <div
         ref={sheetRef}
-        className={cn(styles.sheet, phase === "closing" && styles.sheetClosing)}
-        data-state={phase}
+        className="bs"
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        aria-describedby={bodyText ? bodyId : undefined}
+        aria-describedby={subtitle ? bodyId : undefined}
         tabIndex={-1}
-        data-swipe-state={swipeGesture.isDragging ? "dragging" : "idle"}
-        data-swipe-ready={swipeGesture.isReady ? "true" : "false"}
+        data-theme={theme}
+        data-swipe-dragging={swipeGesture.isDragging ? "true" : undefined}
         {...swipeGesture.bind}
       >
-        <div className={styles.dragHandleWrap} data-bottom-sheet-drag-handle="true" aria-hidden="true">
-          <div className={styles.dragHandle} />
+        <div className="bs-handle-wrap" data-bs-handle aria-hidden>
+          <div className="bs-handle" />
+          {showSwipeHint && (
+            <span className="bs-hint">Swipe down to dismiss</span>
+          )}
         </div>
 
-        <div className={styles.header}>
-          <div className={styles.headerIdentity}>
-            <div className={styles.iconWrap} aria-hidden="true">
-              {icon}
-            </div>
-            <div className={styles.titleBlock}>
-              <h2 id={titleId} className={styles.title}>
-                {title}
-              </h2>
-              {subtitle ? <p className={styles.subtitle}>{subtitle}</p> : null}
-            </div>
+        <div className="bs-header">
+          <div className="bs-header-text">
+            <h2 id={titleId} className="bs-title">
+              {title}
+            </h2>
+            {subtitle ? (
+              <p id={bodyId} className="bs-subtitle">
+                {subtitle}
+              </p>
+            ) : null}
           </div>
-
           <button
             type="button"
-            className={styles.closeButton}
+            className="bs-close"
             onClick={requestClose}
-            aria-label="Close sheet"
+            aria-label="Close"
           >
-            <span className={styles.closeButtonIcon}>
-              <CloseIcon />
-            </span>
+            <IconX />
           </button>
         </div>
 
-        <div className={styles.divider} aria-hidden="true" />
-
-        <div className={styles.body}>
-          {bodyText ? (
-            <p id={bodyId} className={styles.bodyText}>
-              {bodyText}
-            </p>
-          ) : null}
-
-          {scrollContent ? (
-            <div className={styles.scrollBlock}>
-              <div className={styles.contextLabel}>CONTEXTUAL</div>
-              <div
-                ref={scrollAreaRef}
-                className={styles.scrollArea}
-                data-bottom-sheet-scroll-area="true"
-              >
-                <div className={styles.scrollContent}>{scrollContent}</div>
-              </div>
-            </div>
-          ) : null}
-
-          {statusText ? (
-            <div className={styles.statusPill}>
-              <span className={styles.statusDot} aria-hidden="true" />
-              <span>{statusText}</span>
-            </div>
-          ) : null}
+        <div ref={contentRef} className="bs-content">
+          {children}
         </div>
 
-        <div className={styles.divider} aria-hidden="true" />
-
-        <div className={styles.footer}>
-          <div className={styles.swipeHint}>↓ swipe to dismiss</div>
-          <div className={styles.buttonStack}>
+        {actions ? (
+          <div className="bs-footer">
             <Button
               variant="primary"
               fullWidth
-              className={cn(styles.actionButton, styles.primaryButton)}
-              onClick={onPrimary}
-              startIcon={resolvedPrimaryIcon}
+              tone={actions.primary.tone}
+              loading={actions.primary.loading}
+              onClick={actions.primary.onClick}
             >
-              {primaryLabel}
+              {actions.primary.label}
             </Button>
-            <Button
-              variant="secondary"
-              fullWidth
-              className={cn(styles.actionButton, styles.secondaryButton)}
-              onClick={onSecondary}
-            >
-              {secondaryLabel}
-            </Button>
+            {actions.secondary ? (
+              <Button
+                variant="secondary"
+                fullWidth
+                onClick={actions.secondary.onClick}
+              >
+                {actions.secondary.label}
+              </Button>
+            ) : null}
           </div>
-        </div>
+        ) : null}
       </div>
     </div>,
-    document.body,
+    document.body
   );
 }

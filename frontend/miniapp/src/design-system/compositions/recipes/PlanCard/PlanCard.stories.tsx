@@ -122,3 +122,24 @@ export const Expired: Story = {
     </StoryShowcase>
   ),
 };
+
+const HERO_STATS = [
+  { label: "Devices", value: "2", dim: " / 5", tone: "default" as const },
+  { label: "Renews", value: "Apr 1", tone: "default" as const },
+  { label: "Traffic", value: "∞", tone: "default" as const },
+];
+
+export const HeroVariant: Story = {
+  args: {
+    eyebrow: "YOUR PLAN",
+    plan: "Pro",
+    planSub: "5 devices · annual",
+    status: "active",
+    stats: HERO_STATS,
+  },
+  render: (args) => (
+    <StoryShowcase>
+      <PlanCard {...args} />
+    </StoryShowcase>
+  ),
+};

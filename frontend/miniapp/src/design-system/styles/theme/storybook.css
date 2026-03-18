@@ -1,5 +1,41 @@
-/* Storybook dark preview theme — used by typography/label story frames.
+/* Storybook theme panes — side-by-side dark/light for component stories.
    Single source for story-specific hex; frame.css references these vars. */
+
+.story-theme-pane {
+  padding: 24px;
+  border-radius: 16px;
+  flex: 1;
+  min-width: 200px;
+}
+
+.story-theme-pane[data-theme="dark"] {
+  --story-pane-bg: #0f1117;
+  --story-pane-label: rgba(255, 255, 255, 0.35);
+  background: var(--story-pane-bg);
+}
+
+.story-theme-pane[data-theme="light"] {
+  --story-pane-bg: #f2f2ef;
+  --story-pane-label: rgba(0, 0, 0, 0.35);
+  background: var(--story-pane-bg);
+}
+
+.story-theme-pane-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--story-pane-label);
+  margin-bottom: 16px;
+  font-family: Inter, sans-serif;
+}
+
+.story-themes-row {
+  display: flex;
+  gap: 16px;
+}
+
+/* Storybook dark preview theme — used by typography/label story frames. */
 
 .typography-story-dark-frame,
 .label-story-dark-frame {

@@ -12,15 +12,16 @@ import {
   Modal,
   ModernHeader,
   PageScaffold,
+  PageLayout,
   PageSection,
   ListCard,
   EmptyStateBlock,
   HelperNote,
   Input,
   usePrefersReducedMotion,
+  Stack,
+  getMotionDurationMs,
 } from "@/design-system";
-import { Stack } from "@/design-system/core/primitives";
-import { getMotionDurationMs } from "@/design-system/core/tokens";
 import { useTelegramMainButton } from "@/hooks";
 import { useDevicesPageModel } from "@/page-models";
 import { useI18n } from "@/hooks";
@@ -149,18 +150,21 @@ export function DevicesPage() {
   if (model.pageState.status === "loading") {
     return (
       <PageScaffold>
-        <ModernHeader title={model.header.title} showSettings={false} />
-        <Stack gap="4">
-          <Skeleton variant="card" height={160} />
-          <Skeleton variant="line" width="40%" />
-          <SkeletonList lines={3} />
-        </Stack>
+        <PageLayout scrollable={false}>
+          <ModernHeader title={model.header.title} showSettings={false} />
+          <Stack gap="4">
+            <Skeleton variant="card" height={160} />
+            <Skeleton variant="line" width="40%" />
+            <SkeletonList lines={3} />
+          </Stack>
+        </PageLayout>
       </PageScaffold>
     );
   }
 
   return (
     <PageScaffold>
+      <PageLayout scrollable={false}>
       <ModernHeader
         title={model.header.title}
         subtitle={model.header.subtitle}
@@ -406,6 +410,7 @@ export function DevicesPage() {
         linkLabel="View setup guide"
         onLinkClick={() => navigate("/support")}
       />
+      </PageLayout>
     </PageScaffold>
   );
 }

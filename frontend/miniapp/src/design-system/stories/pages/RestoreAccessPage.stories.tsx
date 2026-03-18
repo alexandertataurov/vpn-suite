@@ -7,6 +7,7 @@ const meta: Meta = {
   title: "Pages/Contracts/RestoreAccess",
   tags: ["autodocs"],
   parameters: {
+    viewport: { defaultViewport: "iphone14" },
     docs: {
       description: {
         component: "Restore access flow. Contract tests.",

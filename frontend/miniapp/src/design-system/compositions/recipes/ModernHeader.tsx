@@ -61,7 +61,9 @@ export function ModernHeader({
         {displayName && pillChip ? (
           <ProfileRow
             name={displayName}
-            status={pillChip}
+            initials={avatarInitial ?? displayName.slice(0, 2).toUpperCase()}
+            status="active"
+            chip={pillChip}
             onSettings={handleSettings}
           />
         ) : displayName ? (

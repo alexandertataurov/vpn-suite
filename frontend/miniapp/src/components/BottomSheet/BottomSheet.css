@@ -1,0 +1,211 @@
+/* BottomSheet — tokenized design. Reuses modal-tokens.css. */
+
+.bs-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--modal-overlay);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: bs-overlay-in 0.15s ease both;
+}
+
+@keyframes bs-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.bs {
+  background: var(--modal-bg);
+  border: 1px solid var(--modal-border);
+  border-bottom: none;
+  border-radius: var(--radius-xl, var(--r)) var(--radius-xl, var(--r)) 0 0;
+  box-shadow: var(--modal-shadow);
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-sizing: border-box;
+  animation: bs-in 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes bs-in {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.bs-overlay[data-state="closing"] {
+  animation: bs-overlay-out 0.15s ease forwards;
+}
+
+@keyframes bs-overlay-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.bs[data-state="closing"] {
+  animation: bs-out 0.25s ease forwards;
+}
+
+@keyframes bs-out {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .bs {
+    max-width: 100%;
+  }
+}
+
+.bs[data-swipe-dragging="true"] {
+  transition: none;
+}
+
+.bs-handle-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--spacing-2) 0 0;
+  gap: var(--spacing-1);
+  flex-shrink: 0;
+}
+
+.bs-handle {
+  width: 40px;
+  height: 4px;
+  border-radius: 100px;
+  background: oklch(1 0 0 / 0.2);
+  flex-shrink: 0;
+}
+
+[data-theme="light"] .bs-handle {
+  background: oklch(0 0 0 / 0.15);
+}
+
+.bs-hint {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-normal);
+  color: var(--modal-subtitle-color);
+  letter-spacing: 0.1px;
+  line-height: 1;
+}
+
+.bs-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+  padding: var(--spacing-3) var(--miniapp-hero-padding) var(--miniapp-data-cell-padding);
+  border-bottom: 1px solid var(--modal-header-border);
+  flex-shrink: 0;
+}
+
+.bs-title {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--modal-title-color);
+  letter-spacing: -0.3px;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.bs-subtitle {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-normal);
+  color: var(--modal-subtitle-color);
+  margin: var(--spacing-0-5) 0 0;
+  line-height: 1.45;
+}
+
+.bs-close {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--modal-close-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-top: -2px;
+  margin-right: -4px;
+  transition: background 0.15s, color 0.15s;
+  padding: 0;
+}
+
+.bs-close:hover {
+  background: var(--modal-close-hover-bg);
+}
+
+.bs-close:active {
+  opacity: 0.7;
+}
+
+.bs-close svg {
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+}
+
+.bs-content {
+  padding: var(--spacing-4) var(--miniapp-hero-padding);
+  flex: 1;
+  overflow-y: auto;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-normal);
+  color: var(--modal-content-color);
+  line-height: 1.6;
+  scrollbar-width: thin;
+  scrollbar-color: var(--modal-border) transparent;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+.bs-content p + p {
+  margin-top: var(--spacing-3);
+}
+
+.bs-footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  padding: var(--spacing-3) var(--miniapp-hero-padding) max(var(--miniapp-hero-padding), env(safe-area-inset-bottom));
+  border-top: 1px solid var(--modal-footer-border);
+  flex-shrink: 0;
+}
+
+.bs-footer .btn {
+  width: 100%;
+}

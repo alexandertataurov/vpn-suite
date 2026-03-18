@@ -7,6 +7,7 @@ const meta: Meta = {
   title: "Pages/Contracts/Onboarding",
   tags: ["autodocs"],
   parameters: {
+    viewport: { defaultViewport: "iphone14" },
     docs: {
       description: {
         component: "Onboarding flow. Contract tests.",

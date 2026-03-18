@@ -36,6 +36,8 @@ export interface PageSectionProps extends Omit<HTMLAttributes<HTMLElement>, "tit
   description?: ReactNode;
   action?: ReactNode;
   children: ReactNode;
+  /** Reduced gap between header and content (8px). */
+  compact?: boolean;
   headerClassName?: string;
   descriptionClassName?: string;
   contentClassName?: string;
@@ -47,6 +49,7 @@ export function PageSection({
   title,
   description,
   action,
+  compact = false,
   headerClassName = "",
   descriptionClassName = "",
   contentClassName = "",
@@ -58,7 +61,10 @@ export function PageSection({
   const hasShead = title != null && title !== "";
   const hasMeta = description || action;
   return (
-    <section className={className.trim() || undefined} {...props}>
+    <section
+      className={[className.trim(), compact ? "page-section--compact" : ""].filter(Boolean).join(" ") || undefined}
+      {...props}
+    >
       <Stack direction="vertical" gap="2" className={contentClassName || undefined}>
         {hasShead ? (
           <>

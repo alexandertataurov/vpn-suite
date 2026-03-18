@@ -12,14 +12,14 @@ vi.mock("@/hooks/useTelegramHaptics", () => ({
 }));
 
 describe("modal variants", () => {
-  it("keeps the drag handle for plain modals", () => {
+  it("does not show drag handle (removed from Modal, belongs in BottomSheet)", () => {
     render(
       <Modal open onClose={() => undefined} title="Session details">
         <p className="modal-message">Body</p>
       </Modal>,
     );
 
-    expect(document.querySelector(".modal-handle")).not.toBeNull();
+    expect(document.querySelector(".modal-handle")).toBeNull();
   });
 
   it("prevents backdrop dismiss for confirm modals but allows Escape", () => {
@@ -34,8 +34,6 @@ describe("modal variants", () => {
         confirmLabel="Disconnect now"
       />,
     );
-
-    expect(document.querySelector(".modal-handle")).toBeNull();
 
     const overlay = document.querySelector(".modal-overlay");
     expect(overlay).not.toBeNull();
@@ -69,7 +67,6 @@ describe("modal variants", () => {
     expect(confirmButton).not.toBeNull();
     expect(confirmButton?.hasAttribute("disabled")).toBe(true);
     expect(document.querySelector(".danger-warning")).not.toBeNull();
-    expect(document.querySelector(".modal-handle")).toBeNull();
   });
 
   it("shows the confirm label as the loading label in confirm modals", () => {
@@ -85,7 +82,9 @@ describe("modal variants", () => {
       />,
     );
 
-    const confirmButton = document.querySelector(".modal-footer .btn-primary");
+    const dialog = document.querySelector('[role="dialog"]');
+    expect(dialog).not.toBeNull();
+    const confirmButton = dialog!.querySelector('.modal-footer .btn--primary, .modal-footer .btn-primary, .modal-footer [data-status="loading"]');
     expect(confirmButton).not.toBeNull();
     expect(confirmButton).toHaveAttribute("aria-busy", "true");
     expect(confirmButton).toHaveAttribute("data-status", "loading");
@@ -110,66 +109,6 @@ describe("modal variants", () => {
     const input = screen.getByLabelText("Type DELETE to confirm") as HTMLInputElement;
     fireEvent.change(input, { target: { value: "delete" } });
     expect(input.value).toBe("DELETE");
-  });
-
-  it("dismisses plain modals on downward swipe", () => {
-    const onClose = vi.fn();
-    render(
-      <Modal open onClose={onClose} title="Session details">
-        <p className="modal-message">Body</p>
-      </Modal>,
-    );
-
-    const handle = document.querySelector(".modal-handle");
-    expect(handle).not.toBeNull();
-
-    fireEvent.touchStart(handle!, {
-      touches: [{ clientX: 120, clientY: 80 }],
-    });
-    fireEvent.touchMove(handle!, {
-      touches: [{ clientX: 122, clientY: 160 }],
-    });
-    fireEvent.touchEnd(handle!, {
-      changedTouches: [{ clientX: 122, clientY: 160 }],
-    });
-
-    expect(onClose).toHaveBeenCalledTimes(1);
-  });
-
-  it("does not dismiss when the gesture starts inside scrolled modal content", () => {
-    const onClose = vi.fn();
-    render(
-      <Modal open onClose={onClose} title="Session details">
-        <>
-          {Array.from({ length: 20 }, (_, index) => (
-            <p key={index} data-testid={index === 0 ? "modal-scroll-target" : undefined}>
-              Scrollable body row {index + 1}
-            </p>
-          ))}
-        </>
-      </Modal>,
-    );
-
-    const overlay = document.querySelector(".modal-overlay");
-    const body = document.querySelector(".modal-body") as HTMLDivElement | null;
-    const target = screen.getByTestId("modal-scroll-target");
-    expect(overlay).not.toBeNull();
-    expect(body).not.toBeNull();
-    if (body) {
-      body.scrollTop = 64;
-    }
-
-    fireEvent.touchStart(target, {
-      touches: [{ clientX: 120, clientY: 120 }],
-    });
-    fireEvent.touchMove(overlay!, {
-      touches: [{ clientX: 121, clientY: 220 }],
-    });
-    fireEvent.touchEnd(overlay!, {
-      changedTouches: [{ clientX: 121, clientY: 220 }],
-    });
-
-    expect(onClose).not.toHaveBeenCalled();
   });
 
   it("uses status text for retry actions in fallback screens", () => {

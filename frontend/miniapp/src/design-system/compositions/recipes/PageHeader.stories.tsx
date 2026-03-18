@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
+import { MemoryRouter } from "react-router-dom";
 import { PageHeader } from "./PageHeader";
-import { StorySection, StoryShowcase, StoryStack } from "@/design-system";
+import { StoryShowcase } from "@/design-system";
 
 const meta: Meta<typeof PageHeader> = {
   title: "Recipes/PageHeader",
@@ -11,10 +12,17 @@ const meta: Meta<typeof PageHeader> = {
     docs: {
       description: {
         component:
-          "Page header for secondary pages (Settings, Plan, Restore Access, Support). Back button + title block + optional action.",
+          "Inner page header with back button, title, subtitle, and optional right action.",
       },
     },
   },
+  decorators: [
+    (Story) => (
+      <MemoryRouter>
+        <Story />
+      </MemoryRouter>
+    ),
+  ],
 };
 
 export default meta;
@@ -22,43 +30,9 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: {
-    title: "Settings",
-    subtitle: "Manage your account and preferences",
-    onBack: () => {},
-  },
-  render: (args) => (
-    <StoryShowcase>
-      <PageHeader {...args} />
-    </StoryShowcase>
-  ),
-};
-
-export const Variants: Story = {
   render: () => (
-    <StorySection title="Variants" description="With subtitle and title only.">
-      <StoryShowcase>
-        <StoryStack>
-          <PageHeader
-            title="Settings"
-            subtitle="Manage your account and preferences"
-            onBack={() => {}}
-          />
-          <PageHeader title="Plan" onBack={() => {}} />
-        </StoryStack>
-      </StoryShowcase>
-    </StorySection>
-  ),
-};
-
-export const TitleOnly: Story = {
-  args: {
-    title: "Plan",
-    onBack: () => {},
-  },
-  render: (args) => (
     <StoryShowcase>
-      <PageHeader {...args} />
+      <PageHeader title="Settings" onBack={() => {}} />
     </StoryShowcase>
   ),
 };

@@ -1,0 +1,39 @@
+/* Fluid typography — breakpoint overrides for small screens (max-width: 360px) */
+
+@media (max-width: 360px) {
+  /* Plan card */
+  .plan-name {
+    font-size: var(--amnezia-plan-name-sm, 24px);
+    letter-spacing: -0.4px;
+  }
+
+  /* Hero */
+  .hero-title,
+  .modern-hero-title,
+  .new-user-hero-title {
+    font-size: var(--amnezia-hero-title-sm, 18px);
+  }
+
+  /* Page header */
+  .page-header-title {
+    font-size: var(--amnezia-page-header-title-sm, 16px);
+  }
+
+  /* Profile */
+  .profile-name,
+  .modern-profile-info--row .modern-header-title,
+  .profile-row .profile-row-name {
+    font-size: var(--amnezia-profile-name-sm, 14px);
+  }
+
+  /* General */
+  .row-item {
+    padding: 12px 14px;
+  }
+  .ri-label {
+    font-size: var(--amnezia-row-label, var(--font-size-sm));
+  }
+  .ri-sub {
+    font-size: var(--amnezia-row-sub-sm, var(--amnezia-row-sub, 11px));
+  }
+}

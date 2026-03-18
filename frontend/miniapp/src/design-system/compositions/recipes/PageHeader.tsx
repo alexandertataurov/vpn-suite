@@ -1,12 +1,12 @@
 import type { ReactNode } from "react";
-import { Button } from "../../components/Button";
 import { IconChevronLeft } from "../../icons";
+import "./PageHeader.css";
 
 export interface PageHeaderProps {
   title: string;
   subtitle?: string;
   onBack: () => void;
-  /** Right-aligned slot (e.g. settings icon) */
+  /** Right-aligned slot (e.g. settings gear) */
   action?: ReactNode;
 }
 
@@ -17,17 +17,15 @@ export interface PageHeaderProps {
 export function PageHeader({ title, subtitle, onBack, action }: PageHeaderProps) {
   return (
     <header className="page-header" data-layer="PageHeader">
-      <Button
+      <button
         type="button"
-        variant="ghost"
-        size="icon"
         className="page-header-back"
         onClick={onBack}
         aria-label="Back"
       >
         <IconChevronLeft size={14} strokeWidth={2.5} />
-      </Button>
-      <div className="page-header-title-block">
+      </button>
+      <div className="page-header-text">
         <h1 className="page-header-title">{title}</h1>
         {subtitle ? <p className="page-header-subtitle">{subtitle}</p> : null}
       </div>

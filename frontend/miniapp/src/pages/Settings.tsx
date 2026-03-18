@@ -32,12 +32,13 @@ import {
   Modal,
   PageHeader,
   PageScaffold,
+  PageLayout,
   PageSection,
   Skeleton,
+  Stack,
   ToggleRow,
   useToast,
 } from "@/design-system";
-import { Stack } from "@/design-system/core/primitives";
 import { useOpenLink, useI18n, useTelegramWebApp, useUpdateSubscription } from "@/hooks";
 import { useSettingsPageModel } from "@/page-models";
 
@@ -103,28 +104,31 @@ export function SettingsPage() {
   if (model.pageState.status === "loading") {
     return (
       <PageScaffold>
-        <PageHeader
-          title={t("settings.header_title")}
-          subtitle={t("settings.header_subtitle")}
-          onBack={() => navigate("/")}
-        />
-        <Stack gap="4">
-          <Skeleton width="60%" height={18} />
-          <Skeleton width="100%" height={72} />
-        </Stack>
+        <PageLayout scrollable={false}>
+          <PageHeader
+            title={t("settings.header_title")}
+            subtitle={t("settings.header_subtitle")}
+            onBack={() => navigate("/")}
+          />
+          <Stack gap="4">
+            <Skeleton width="60%" height={18} />
+            <Skeleton width="100%" height={72} />
+          </Stack>
+        </PageLayout>
       </PageScaffold>
     );
   }
 
   return (
     <PageScaffold>
+      <PageLayout scrollable={false}>
       <PageHeader
         title={t("settings.header_title")}
         subtitle={t("settings.header_subtitle")}
         onBack={() => navigate("/")}
       />
 
-      <PageSection className="page-section--compact">
+      <PageSection compact>
         <SettingsAccountOverviewCard
           initial={model.accountSummary.initial}
           name={model.accountSummary.name}
@@ -143,7 +147,7 @@ export function SettingsPage() {
       <PageSection
         id="profile"
         title={t("settings.section_profile")}
-        className="page-section--compact"
+        compact
       >
         <ListCard className="home-card-row module-card settings-list-card">
           <ListRow
@@ -175,7 +179,7 @@ export function SettingsPage() {
       <PageSection
         id="plan-management"
         title={t("settings.section_plan_billing")}
-        className="page-section--compact"
+        compact
       >
         <ListCard className="home-card-row module-card settings-list-card">
           <ListRow
@@ -222,7 +226,7 @@ export function SettingsPage() {
       <PageSection
         id="support"
         title={t("settings.section_help")}
-        className="page-section--compact"
+        compact
       >
         <ListCard className="home-card-row module-card settings-list-card">
           <ListRow
@@ -261,7 +265,8 @@ export function SettingsPage() {
       <PageSection
         id="destructive"
         title={t("settings.danger_section_title")}
-        className="page-section--compact settings-danger-section"
+        compact
+        className="settings-danger-section"
       >
         <HelperNote tone="warning">{t("settings.danger_warning")}</HelperNote>
         <ListCard className="home-card-row module-card settings-list-card">
@@ -392,6 +397,7 @@ export function SettingsPage() {
         linkLabel="View setup guide"
         onLinkClick={() => navigate("/support")}
       />
+      </PageLayout>
     </PageScaffold>
   );
 }

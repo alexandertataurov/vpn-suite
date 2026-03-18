@@ -49,6 +49,8 @@ export type { DataGridProps, DataCellProps, DataCellValueTone, DataCellType, Dat
 
 export { ListCard, ListRow } from "./cards/ListCard";
 export type { ListCardProps, ListRowProps, ListRowIconTone, ListRowDeviceType, DeviceStatus } from "./cards/ListCard";
+export { RowItem, CardRow, RowItemSkeleton } from "./RowItem";
+export type { RowItemProps, RowItemIconVariant, CardRowProps, RowItemSkeletonProps } from "./RowItem";
 
 export {
   FormField,

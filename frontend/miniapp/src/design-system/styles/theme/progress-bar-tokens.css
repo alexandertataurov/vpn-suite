@@ -1,0 +1,99 @@
+/* ProgressBar theme tokens. [data-theme] on containers (ThemePane);
+   :root and html[data-theme] for app runtime. */
+
+:root,
+[data-theme="light"] {
+  /* Track */
+  --pb-track-bg: rgba(0, 0, 0, 0.10);
+
+  /* Fill colors per threshold */
+  --pb-fill-empty: rgba(0, 0, 0, 0.12);
+  --pb-fill-healthy: #16a34a;
+  --pb-fill-high: #d97706;
+  --pb-fill-full: #dc2626;
+  --pb-fill-default: #2563eb;
+
+  /* Value label */
+  --pb-value-color: #111110;
+  --pb-unit-color: #a8a7a3;
+  --pb-label-color: #a8a7a3;
+
+  /* Annotations */
+  --pb-annotation-warning: #92400e;
+  --pb-annotation-error: #991b1b;
+  --pb-annotation-success: #166534;
+  --pb-annotation-muted: #a8a7a3;
+
+  /* Indeterminate shimmer */
+  --pb-shimmer-color: rgba(0, 0, 0, 0.06);
+
+  /* Segmented bar */
+  --pb-segment-empty: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="dark"] {
+  /* Track */
+  --pb-track-bg: rgba(255, 255, 255, 0.10);
+
+  /* Fill colors per threshold */
+  --pb-fill-empty: rgba(255, 255, 255, 0.10);
+  --pb-fill-healthy: #22c55e;
+  --pb-fill-high: #f59e0b;
+  --pb-fill-full: #ef4444;
+  --pb-fill-default: #3b7ef8;
+
+  /* Value label */
+  --pb-value-color: #f0f2f8;
+  --pb-unit-color: #5a5f73;
+  --pb-label-color: #5a5f73;
+
+  /* Annotations */
+  --pb-annotation-warning: #fbbf24;
+  --pb-annotation-error: #f87171;
+  --pb-annotation-success: #4ade80;
+  --pb-annotation-muted: #5a5f73;
+
+  /* Indeterminate shimmer */
+  --pb-shimmer-color: rgba(255, 255, 255, 0.06);
+
+  /* Segmented bar */
+  --pb-segment-empty: rgba(255, 255, 255, 0.08);
+}
+
+/* App runtime: consumer themes */
+html[data-theme="consumer-light"] {
+  --pb-track-bg: rgba(0, 0, 0, 0.10);
+  --pb-fill-empty: rgba(0, 0, 0, 0.12);
+  --pb-fill-healthy: #16a34a;
+  --pb-fill-high: #d97706;
+  --pb-fill-full: #dc2626;
+  --pb-fill-default: #2563eb;
+  --pb-value-color: #111110;
+  --pb-unit-color: #a8a7a3;
+  --pb-label-color: #a8a7a3;
+  --pb-annotation-warning: #92400e;
+  --pb-annotation-error: #991b1b;
+  --pb-annotation-success: #166534;
+  --pb-annotation-muted: #a8a7a3;
+  --pb-shimmer-color: rgba(0, 0, 0, 0.06);
+  --pb-segment-empty: rgba(0, 0, 0, 0.08);
+}
+
+html[data-theme="consumer-dark"],
+html:not([data-theme]) {
+  --pb-track-bg: rgba(255, 255, 255, 0.10);
+  --pb-fill-empty: rgba(255, 255, 255, 0.10);
+  --pb-fill-healthy: #22c55e;
+  --pb-fill-high: #f59e0b;
+  --pb-fill-full: #ef4444;
+  --pb-fill-default: #3b7ef8;
+  --pb-value-color: #f0f2f8;
+  --pb-unit-color: #5a5f73;
+  --pb-label-color: #5a5f73;
+  --pb-annotation-warning: #fbbf24;
+  --pb-annotation-error: #f87171;
+  --pb-annotation-success: #4ade80;
+  --pb-annotation-muted: #5a5f73;
+  --pb-shimmer-color: rgba(255, 255, 255, 0.06);
+  --pb-segment-empty: rgba(255, 255, 255, 0.08);
+}

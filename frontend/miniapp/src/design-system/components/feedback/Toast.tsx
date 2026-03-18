@@ -8,6 +8,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { createPortal } from "react-dom";
 import { cn } from "@vpn-suite/shared";
 import { usePrefersReducedMotion } from "@/design-system/hooks";
 import { getMotionDurationMs } from "@/design-system/core/tokens";
@@ -54,7 +55,13 @@ const defaultDismissible: Record<ToastVariant, boolean> = {
   persistent: true,
 };
 
-export function ToastContainer({ children }: { children: ReactNode }) {
+export interface ToastContainerProps {
+  children: ReactNode;
+  /** For Storybook: use static viewport so toasts appear in flow. */
+  viewportClassName?: string;
+}
+
+export function ToastContainer({ children, viewportClassName }: ToastContainerProps) {
   const prefersReducedMotion = usePrefersReducedMotion();
   const exitDurationMs = getMotionDurationMs("exit", prefersReducedMotion);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
@@ -138,10 +145,20 @@ export function ToastContainer({ children }: { children: ReactNode }) {
     [toasts, addToast, removeToast],
   );
 
+  const viewport = toasts.length > 0 ? (
+    <ToastViewport
+      toasts={toasts}
+      onDismiss={removeToast}
+      className={viewportClassName}
+    />
+  ) : null;
+
+  const usePortal = !viewportClassName && typeof document !== "undefined";
+
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <ToastViewport toasts={toasts} onDismiss={removeToast} />
+      {viewport && (usePortal ? createPortal(viewport, document.body) : viewport)}
     </ToastContext.Provider>
   );
 }

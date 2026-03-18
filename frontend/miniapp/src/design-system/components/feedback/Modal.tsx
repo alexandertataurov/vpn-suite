@@ -1,68 +1,86 @@
+import "./Modal.css";
 import { createPortal } from "react-dom";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { cn } from "@vpn-suite/shared";
 import { Button } from "../Button";
 import { Input } from "../forms/Input";
 import { Textarea } from "../forms/Textarea";
-import { useSheetSwipeDismiss } from "@/design-system/hooks";
 import { usePrefersReducedMotion } from "@/design-system/hooks";
 import { getMotionDurationMs } from "@/design-system/core/tokens";
 import { decrementBlockingOverlayCount, incrementBlockingOverlayCount } from "@/design-system/utils/overlayStack";
 import { useTelegramHaptics } from "@/hooks";
+import { IconX } from "@/design-system/icons";
 
 const FOCUSABLE =
   'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
+export interface ModalActions {
+  primary: {
+    label: string;
+    onClick: () => void;
+    loading?: boolean;
+    tone?: "danger" | "default" | "warning" | "success";
+    disabled?: boolean;
+  };
+  secondary?: { label: string; onClick: () => void };
+}
+
 export interface ModalProps {
-  open: boolean;
+  /** @deprecated Use isOpen */
+  open?: boolean;
+  isOpen?: boolean;
   onClose: () => void;
   title: string;
+  /** @deprecated Use subtitle */
   description?: string;
-  children: ReactNode;
-  footer?: ReactNode;
+  subtitle?: string;
   variant?: "plain" | "confirm" | "danger";
+  children: ReactNode;
+  /** Structured action buttons. When provided, renders footer. */
+  actions?: ModalActions;
+  /** @deprecated Use actions. Custom footer slot for backward compat. */
+  footer?: ReactNode;
+  size?: "sm" | "md";
   className?: string;
-  /** When true, clicking the backdrop closes the modal (non-danger, non-loading). Default true. */
   closeOnBackdrop?: boolean;
-  /** When true, Escape closes the modal. Default true. */
   closeOnEscape?: boolean;
-  /** When true, user can swipe down to dismiss on touch devices. Default true. */
+  /** @deprecated No longer used. Drag handle removed from Modal. */
   swipeToDismiss?: boolean;
-  /** When true, modal cannot be dismissed via backdrop, Escape, or swipe (e.g. loading state). */
   disableDismiss?: boolean;
-  /** Hide the close (×) icon. Used for confirm/danger flows that require explicit choice. */
   showCloseButton?: boolean;
-  /** Hide the drag handle. Confirm and danger flows use explicit dismissal instead. */
+  /** @deprecated No longer used. Drag handle removed from Modal. */
   showHandle?: boolean;
-  /** Render modal content without full-screen backdrop, for static Storybook mockups only. */
   inline?: boolean;
-  /** Optional for tests */
   "data-testid"?: string;
 }
 
 export function Modal({
-  open,
+  open: openLegacy,
+  isOpen: isOpenProp,
   onClose,
   title,
   description,
+  subtitle,
   children,
+  actions,
   footer,
   variant = "plain",
+  size = "md",
   className = "",
   closeOnBackdrop = true,
   closeOnEscape = true,
-  swipeToDismiss = true,
   disableDismiss = false,
   showCloseButton = true,
-  showHandle = true,
   inline = false,
   "data-testid": dataTestId,
 }: ModalProps) {
+  const open = isOpenProp ?? openLegacy ?? false;
+  const sub = subtitle ?? description;
+
   const { selectionChanged } = useTelegramHaptics();
   const prefersReducedMotion = usePrefersReducedMotion();
   const exitDurationMs = getMotionDurationMs("enter", prefersReducedMotion);
   const ref = useRef<HTMLDivElement>(null);
-  const bodyRef = useRef<HTMLDivElement>(null);
   const didFocusRef = useRef(false);
   const restoreFocusRef = useRef<HTMLElement | null>(null);
   const wasOpenRef = useRef(open);
@@ -75,24 +93,18 @@ export function Modal({
       setMounted(true);
       return;
     }
-    const timeout = window.setTimeout(() => {
-      setMounted(false);
-    }, exitDurationMs);
+    const timeout = window.setTimeout(() => setMounted(false), exitDurationMs);
     return () => window.clearTimeout(timeout);
   }, [exitDurationMs, open]);
 
   useEffect(() => {
     if (!mounted || inline) return;
     incrementBlockingOverlayCount();
-    return () => {
-      decrementBlockingOverlayCount();
-    };
+    return () => decrementBlockingOverlayCount();
   }, [inline, mounted]);
 
   useEffect(() => {
-    if (!inline && open && !wasOpenRef.current) {
-      selectionChanged();
-    }
+    if (!inline && open && !wasOpenRef.current) selectionChanged();
     wasOpenRef.current = open;
   }, [inline, open, selectionChanged]);
 
@@ -105,24 +117,19 @@ export function Modal({
     if (!el) return;
     const modal = el;
     restoreFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const { overflow } = document.body.style;
     document.body.style.overflow = "hidden";
 
     if (!didFocusRef.current) {
       didFocusRef.current = true;
       const focusable = modal.querySelectorAll<HTMLElement>(FOCUSABLE);
       const first = focusable[0];
-      if (first) {
-        requestAnimationFrame(() => first.focus());
-      } else {
-        modal.focus();
-      }
+      requestAnimationFrame(() => (first ? first.focus() : modal.focus()));
     }
 
-    const allowEscapeDismiss = !disableDismiss && variant !== "danger" && closeOnEscape;
+    const allowEscape = !disableDismiss && variant !== "danger" && closeOnEscape;
 
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape" && allowEscapeDismiss) {
+      if (e.key === "Escape" && allowEscape) {
         onClose();
         return;
       }
@@ -140,108 +147,106 @@ export function Modal({
         first?.focus();
         return;
       }
-      if (e.shiftKey) {
-        if (document.activeElement === first) {
-          e.preventDefault();
-          last?.focus();
-        }
-      } else {
-        if (document.activeElement === last) {
-          e.preventDefault();
-          first?.focus();
-        }
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last?.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first?.focus();
       }
     }
     modal.addEventListener("keydown", onKeyDown);
     return () => {
       modal.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = overflow;
+      document.body.style.overflow = "";
       restoreFocusRef.current?.focus();
       restoreFocusRef.current = null;
     };
   }, [open, onClose, closeOnEscape, disableDismiss, inline, variant]);
 
   const allowBackdropDismiss = !disableDismiss && variant !== "danger" && closeOnBackdrop;
-  const allowSwipeDismiss = !disableDismiss && variant !== "danger" && swipeToDismiss;
-  const swipeGesture = useSheetSwipeDismiss({
-    enabled: allowSwipeDismiss,
-    onDismiss: onClose,
-    resolveStartContext: (target) => {
-      const startedInHeader = target?.closest(".modal-header, .modal-handle") != null;
-      const startedInBody = target?.closest(".modal-body") != null;
-      if (!startedInHeader && !startedInBody) {
-        return { allowStart: false };
-      }
-      return {
-        allowStart: true,
-        scrollElement: startedInBody ? bodyRef.current : null,
-      };
-    },
-  });
-
-  useEffect(() => {
-    if (!ref.current) return;
-    if (swipeGesture.offset <= 0) {
-      ref.current.style.removeProperty("transform");
-      return;
-    }
-
-    ref.current.style.transform = `translateY(${swipeGesture.offset}px)`;
-  }, [swipeGesture.offset]);
 
   if (!mounted && !inline) return null;
 
-  const handleBackdropClick = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (
-      !allowBackdropDismiss ||
-      event.target !== event.currentTarget
-    ) {
-      return;
-    }
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!allowBackdropDismiss || e.target !== e.currentTarget) return;
     onClose();
   };
 
+  const hasFooter = actions != null || footer != null;
+  const theme = (typeof document !== "undefined" && document.documentElement.dataset.theme) ?? "dark";
+
   const dialog = (
-      <div
-        ref={ref}
-        className={cn(
-          "modal",
-          `modal-variant-${variant}`,
-          className,
-          open && "modal-sheet-enter",
-          !open && "modal-sheet-exit"
-        )}
-        tabIndex={-1}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-        aria-describedby={description ? descriptionId : undefined}
-        data-testid={dataTestId}
-        data-swipe-state={swipeGesture.isDragging ? "dragging" : "idle"}
-        data-swipe-ready={swipeGesture.isReady ? "true" : "false"}
-      >
-        {showHandle ? <div className="modal-handle" aria-hidden="true" /> : null}
-        <div className="modal-header">
-          <div className="modal-header-copy">
-            <h2 id={titleId}>{title}</h2>
-            {description ? <p id={descriptionId} className="modal-description">{description}</p> : null}
-          </div>
-          {showCloseButton ? (
-            <button
-              type="button"
-              className="modal-close"
-              onClick={onClose}
-              aria-label="Back"
-            >
-              ×
-            </button>
+    <div
+      ref={ref}
+      className={cn(
+        "modal",
+        size === "sm" && "modal--sm",
+        className,
+        open && "modal-sheet-enter",
+        !open && "modal-sheet-exit"
+      )}
+      data-theme={theme}
+      tabIndex={-1}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={titleId}
+      aria-describedby={sub ? descriptionId : undefined}
+      data-testid={dataTestId}
+    >
+      <div className={cn("modal-header", variant === "danger" && "modal-header--danger")}>
+        <div className="modal-header-text">
+          <h2 id={titleId} className="modal-title">
+            {title}
+          </h2>
+          {sub ? (
+            <p id={descriptionId} className="modal-subtitle">
+              {sub}
+            </p>
           ) : null}
         </div>
-        <div ref={bodyRef} className="modal-body">{children}</div>
-        {footer !== undefined ? (
-          <div className="modal-footer">{footer}</div>
+        {showCloseButton ? (
+          <button
+            type="button"
+            className="modal-close"
+            onClick={onClose}
+            aria-label="Close"
+          >
+            <IconX />
+          </button>
         ) : null}
       </div>
+      <div className="modal-content">{children}</div>
+      {hasFooter ? (
+        <div className="modal-footer">
+          {actions ? (
+            <>
+              {actions.secondary ? (
+                <Button variant="secondary" onClick={actions.secondary.onClick}>
+                  {actions.secondary.label}
+                </Button>
+              ) : null}
+              <Button
+                variant={
+                  variant === "danger" || actions.primary.tone === "danger"
+                    ? "danger"
+                    : "primary"
+                }
+                tone={actions.primary.tone === "danger" ? undefined : actions.primary.tone}
+                onClick={actions.primary.onClick}
+                loading={actions.primary.loading}
+                loadingText={actions.primary.label}
+                disabled={actions.primary.disabled}
+              >
+                {actions.primary.label}
+              </Button>
+            </>
+          ) : (
+            footer
+          )}
+        </div>
+      ) : null}
+    </div>
   );
 
   if (inline) {
@@ -258,24 +263,13 @@ export function Modal({
       )}
       role="presentation"
       aria-hidden="true"
-      data-swipe-active={swipeGesture.isDragging ? "true" : "false"}
-      data-swipe-ready={swipeGesture.isReady ? "true" : "false"}
       onClick={handleBackdropClick}
-      {...swipeGesture.bind}
     >
-      <div
-        className="modal-shell"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {dialog}
-      </div>
+      <div onClick={(e) => e.stopPropagation()}>{dialog}</div>
     </div>
   );
 
-  if (typeof document === "undefined") {
-    return overlay;
-  }
-
+  if (typeof document === "undefined") return overlay;
   return createPortal(overlay, document.body);
 }
 
@@ -289,7 +283,6 @@ export interface ConfirmModalProps {
   cancelLabel?: string;
   variant?: "danger" | "primary";
   loading?: boolean;
-  /** Optional visual tone for primary button (e.g. warning vs neutral). */
   tone?: "default" | "warning" | "danger";
   closeOnEscape?: boolean;
 }
@@ -312,37 +305,25 @@ export function ConfirmModal({
     onClose();
   }
 
-  const footer = (
-    <>
-      <Button variant="ghost" className="modal-cancel-btn" onClick={onClose} disabled={loading}>
-        {cancelLabel}
-      </Button>
-      <Button
-        variant={variant === "danger" ? "danger" : "primary"}
-        tone={variant === "primary" ? tone : undefined}
-        className="modal-footer-btn"
-        onClick={handleConfirm}
-        status={loading ? "loading" : "idle"}
-        statusText={confirmLabel}
-      >
-        {confirmLabel}
-      </Button>
-    </>
-  );
-
   return (
     <Modal
       open={open}
       onClose={onClose}
       title={title}
-      footer={footer}
       variant="confirm"
       closeOnBackdrop={false}
       closeOnEscape={!loading && closeOnEscape}
-      swipeToDismiss={false}
       disableDismiss={loading}
       showCloseButton={false}
-      showHandle={false}
+      actions={{
+        primary: {
+          label: confirmLabel,
+          onClick: handleConfirm,
+          loading,
+          tone: variant === "danger" ? "danger" : tone,
+        },
+        secondary: { label: cancelLabel, onClick: onClose },
+      }}
     >
       <p className="modal-message">{message}</p>
     </Modal>
@@ -359,14 +340,11 @@ export interface ConfirmDangerProps {
   onClose: () => void;
   title: string;
   message: string;
-  /** Require reason (textarea) for audit. Default true for restart/revoke. */
   reasonRequired?: boolean;
   reasonLabel?: string;
   reasonPlaceholder?: string;
-  /** Require confirm token/code input (e.g. from env). */
   confirmTokenRequired?: boolean;
   confirmTokenLabel?: string;
-  /** When set, confirm button is disabled until input matches this value exactly (case-sensitive). */
   expectedConfirmValue?: string;
   onConfirm: (payload: ConfirmDangerPayload) => void | Promise<void>;
   confirmLabel?: string;
@@ -421,37 +399,26 @@ export function ConfirmDanger({
     reset();
   }
 
-  const footer = (
-    <>
-      <Button variant="ghost" className="modal-cancel-btn" onClick={onClose} disabled={loading}>
-        {cancelLabel}
-      </Button>
-      <Button
-        variant="danger"
-        className={`modal-footer-btn modal-danger-confirm ${canConfirm && !loading ? "modal-danger-confirm--enabled" : "modal-danger-confirm--disabled"}`}
-        onClick={handleConfirm}
-        status={loading ? "loading" : "idle"}
-        statusText={confirmLabel}
-        disabled={!canConfirm}
-      >
-        {confirmLabel}
-      </Button>
-    </>
-  );
-
   return (
     <Modal
       open={open}
       onClose={onClose}
       title={title}
-      footer={footer}
       variant="danger"
       closeOnBackdrop={false}
       closeOnEscape={false}
-      swipeToDismiss={false}
       disableDismiss={loading}
       showCloseButton={false}
-      showHandle={false}
+      actions={{
+        primary: {
+          label: confirmLabel,
+          onClick: handleConfirm,
+          loading,
+          tone: "danger",
+          disabled: !canConfirm,
+        },
+        secondary: { label: cancelLabel, onClick: onClose },
+      }}
     >
       <div className="danger-warning">
         <p className="modal-message">{message}</p>
@@ -482,7 +449,7 @@ export function ConfirmDanger({
             value={confirmToken}
             onChange={(e) => {
               setConfirmToken(
-                expectedConfirmValue != null ? e.target.value.toUpperCase() : e.target.value,
+                expectedConfirmValue != null ? e.target.value.toUpperCase() : e.target.value
               );
             }}
             aria-label={confirmTokenLabel}

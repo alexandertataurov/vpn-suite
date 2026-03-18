@@ -1,27 +1,57 @@
-import { forwardRef } from "react";
+import { forwardRef, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { cn } from "@vpn-suite/shared";
 import { ButtonPrimitive } from "./ButtonPrimitive";
-import type { ButtonProps, ButtonStatus } from "./Button.types";
-import { getButtonVariantClass, getButtonSizeClass } from "./Button.variants";
+import type { ButtonProps, TransientState } from "./Button.types";
+import {
+  getButtonVariantClass,
+  getButtonSizeClass,
+  getButtonToneClass,
+} from "./Button.variants";
 
-const MIN_CH_BUCKETS = [4, 8, 12, 16, 20, 24] as const;
+const SUCCESS_REVERT_MS = 1500;
+const ERROR_REVERT_MS = 2000;
+
+function Spinner() {
+  return (
+    <span className="btn-spinner" aria-hidden>
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 16 16"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <circle
+          cx="8"
+          cy="8"
+          r="6"
+          stroke="var(--color-text-muted)"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeDasharray="24 12"
+        />
+      </svg>
+    </span>
+  );
+}
 
 function renderContent(
-  resolvedStatus: ButtonStatus,
+  state: TransientState,
   loadingLabel: string,
   successLabel: string,
   errorLabel: string,
   children: ReactNode,
-  startIcon?: ReactNode,
-  endIcon?: ReactNode
+  iconLeft?: ReactNode,
+  iconRight?: ReactNode,
+  iconOnly?: boolean
 ) {
-  if (resolvedStatus === "loading") {
+  if (state === "loading") {
     return (
-      <span className="btn-state-stack" data-status={resolvedStatus}>
+      <span className="btn-state-stack" data-status="loading">
         <span className="btn-state" data-active="true">
           <span className="btn-content">
-            <span className="btn-spinner" aria-hidden />
+            <Spinner />
             <span className="btn-label" aria-live="polite">
               {loadingLabel}
             </span>
@@ -30,9 +60,9 @@ function renderContent(
       </span>
     );
   }
-  if (resolvedStatus === "success") {
+  if (state === "success") {
     return (
-      <span className="btn-state-stack" data-status={resolvedStatus}>
+      <span className="btn-state-stack" data-status="success">
         <span className="btn-state" data-active="true">
           <span className="btn-content">
             <span className="btn-status-icon" aria-hidden>
@@ -44,9 +74,9 @@ function renderContent(
       </span>
     );
   }
-  if (resolvedStatus === "error") {
+  if (state === "error") {
     return (
-      <span className="btn-state-stack" data-status={resolvedStatus}>
+      <span className="btn-state-stack" data-status="error">
         <span className="btn-state" data-active="true">
           <span className="btn-content">
             <span className="btn-status-icon" aria-hidden>
@@ -59,18 +89,18 @@ function renderContent(
     );
   }
   return (
-    <span className="btn-state-stack" data-status={resolvedStatus}>
+    <span className="btn-state-stack" data-status="idle">
       <span className="btn-state" data-active="true">
         <span className="btn-content">
-          {startIcon ? (
-            <span className="btn-icon-slot" aria-hidden>
-              {startIcon}
+          {iconLeft ? (
+            <span className="btn-icon-slot btn-icon-slot--left" aria-hidden>
+              {iconLeft}
             </span>
           ) : null}
-          <span className="btn-label">{children}</span>
-          {endIcon ? (
-            <span className="btn-icon-slot" aria-hidden>
-              {endIcon}
+          {!iconOnly ? <span className="btn-label">{children}</span> : null}
+          {iconRight ? (
+            <span className="btn-icon-slot btn-icon-slot--right" aria-hidden>
+              {iconRight}
             </span>
           ) : null}
         </span>
@@ -84,17 +114,19 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     variant = "primary",
     size = "md",
     tone,
-    kind = "default",
     loading = false,
     loadingText,
-    fullWidth = false,
-    startIcon,
-    endIcon,
-    iconOnly = false,
-    status,
     statusText,
     successText,
     errorText,
+    fullWidth = false,
+    iconLeft: iconLeftProp,
+    iconRight: iconRightProp,
+    startIcon,
+    endIcon,
+    iconOnly = false,
+    transientState: controlledState,
+    status: statusCompat,
     asChild = false,
     disabled,
     className = "",
@@ -104,61 +136,103 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
   },
   ref
 ) {
-  const effectiveSize = kind === "connect" ? "lg" : size;
-  const sizeCls =
-    effectiveSize === "icon" ? "btn-md btn-icon" : getButtonSizeClass(effectiveSize);
-  const connectClass = kind === "connect" ? "connect-button" : "";
-  const toneClass = variant === "primary" && tone && tone !== "default" ? tone : "";
-  const resolvedStatus: ButtonStatus = status ?? (loading ? "loading" : "idle");
+  const [internalState, setInternalState] = useState<TransientState>("idle");
+  const [revertOver, setRevertOver] = useState(false);
+
+  const iconLeft = iconLeftProp ?? startIcon;
+  const iconRight = iconRightProp ?? endIcon;
+
+  const isControlled = controlledState !== undefined || statusCompat !== undefined;
+  const effectiveState: TransientState = isControlled
+    ? (controlledState ?? statusCompat ?? "idle")
+    : loading
+      ? "loading"
+      : internalState;
+
+  const displayState: TransientState =
+    revertOver && (effectiveState === "success" || effectiveState === "error")
+      ? "idle"
+      : effectiveState;
+
+  useEffect(() => {
+    if (loading) {
+      setInternalState("loading");
+      setRevertOver(false);
+    } else if (!isControlled && effectiveState === "loading") {
+      setInternalState("idle");
+    }
+  }, [isControlled, loading, effectiveState]);
+
+  useEffect(() => {
+    if (effectiveState === "success") {
+      setRevertOver(false);
+      const t = setTimeout(() => {
+        setRevertOver(true);
+        if (!isControlled) setInternalState("idle");
+      }, SUCCESS_REVERT_MS);
+      return () => clearTimeout(t);
+    }
+    if (effectiveState === "error") {
+      setRevertOver(false);
+      const t = setTimeout(() => {
+        setRevertOver(true);
+        if (!isControlled) setInternalState("idle");
+      }, ERROR_REVERT_MS);
+      return () => clearTimeout(t);
+    }
+    setRevertOver(false);
+    return undefined;
+  }, [effectiveState, isControlled]);
+
+  const sizeCls = getButtonSizeClass(size);
+  const toneCls =
+    variant === "primary" && tone && tone !== "default"
+      ? getButtonToneClass(tone)
+      : "";
 
   const defaultLabel = typeof children === "string" ? children : "";
-  const loadingLabel = statusText ?? loadingText ?? defaultLabel;
-  const successLabel = successText ?? statusText ?? loadingLabel;
-  const errorLabel = errorText ?? statusText ?? loadingLabel;
+  const loadingLabel = loadingText ?? statusText ?? defaultLabel;
+  const successLabel = successText ?? "Saved";
+  const errorLabel = errorText ?? "Failed";
+
   const resolvedAriaLabel =
     ariaLabel ??
-    (resolvedStatus === "loading"
+    (displayState === "loading"
       ? loadingLabel
-      : resolvedStatus === "success"
+      : displayState === "success"
         ? successLabel
-        : resolvedStatus === "error"
+        : displayState === "error"
           ? errorLabel
           : defaultLabel);
-
-  const widthCandidates = [
-    defaultLabel,
-    loadingLabel,
-    successLabel,
-    errorLabel,
-  ];
-  const buttonMinCharacters = Math.max(
-    ...widthCandidates.map((c) => c.length),
-    0
-  );
-  const minChClass =
-    buttonMinCharacters > 0
-      ? `btn-min-ch-${MIN_CH_BUCKETS.find((b) => b >= buttonMinCharacters) ?? 24}`
-      : "";
 
   const mergedClassName = cn(
     "btn",
     getButtonVariantClass(variant),
     sizeCls,
-    connectClass,
-    toneClass,
-    minChClass,
+    toneCls,
     iconOnly && "btn-icon-only",
-    resolvedStatus !== "idle" && "btn-has-status",
-    resolvedStatus === "loading" && "btn-loading",
-    fullWidth && "btn-full-width",
+    displayState !== "idle" && "btn-has-status",
+    displayState === "loading" && "btn-loading",
+    displayState === "success" && "btn-transient-success",
+    displayState === "error" && "btn-transient-error",
+    fullWidth && "btn-full-width btn--full",
     className
   );
+
+  const primitiveStatus =
+    displayState === "loading"
+      ? "loading"
+      : displayState === "success"
+        ? "success"
+        : displayState === "error"
+          ? "error"
+          : "idle";
 
   if (asChild) {
     return (
       <ButtonPrimitive
         ref={ref}
-        status={resolvedStatus}
+        status={primitiveStatus}
         asChild
         className={mergedClassName}
         aria-label={resolvedAriaLabel}
@@ -170,19 +244,20 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
   }
 
   const content = renderContent(
-    resolvedStatus,
+    displayState,
     loadingLabel,
     successLabel,
     errorLabel,
     children,
-    startIcon,
-    endIcon
+    iconLeft,
+    iconRight,
+    iconOnly
   );
 
   return (
     <ButtonPrimitive
       ref={ref}
-      status={resolvedStatus}
+      status={primitiveStatus}
       disabled={disabled}
       className={mergedClassName}
       aria-label={resolvedAriaLabel}

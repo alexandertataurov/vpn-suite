@@ -27,6 +27,8 @@ export {
   ChevronLeft as IconChevronLeft,
   AlertTriangle as IconAlertTriangle,
   CircleX as IconCircleX,
+  Info as IconInfo,
+  CheckCircle as IconCheckCircle,
   MoreVertical as IconMoreVertical,
   Download as IconDownload,
   ArrowRight as IconArrowRight,

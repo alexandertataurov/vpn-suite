@@ -93,6 +93,8 @@ export default tseslint.config(
                 "IconChevronLeft",
                 "IconAlertTriangle",
                 "IconCircleX",
+                "IconInfo",
+                "IconCheckCircle",
                 "IconMoreVertical",
                 "IconDownload",
                 "IconArrowRight",

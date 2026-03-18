@@ -1,0 +1,247 @@
+/* ProgressBar component — uses --pb-* tokens from progress-bar-tokens.css */
+
+.pb-wrap {
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .pb-wrap {
+    max-width: 480px;
+  }
+}
+
+.pb-track-wrap {
+  margin: var(--spacing-1) 0;
+}
+
+.pb-track {
+  background: var(--pb-track-bg);
+  border-radius: 100px;
+  overflow: hidden;
+  position: relative;
+}
+
+.pb-track--primary {
+  height: 8px;
+}
+
+.pb-track--secondary {
+  height: 5px;
+}
+
+.pb-track--connection {
+  height: 3px;
+}
+
+.pb-track--indeterminate::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--pb-shimmer-color) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: pb-shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes pb-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.pb-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  height: 100%;
+  border-radius: 100px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pb-fill--empty {
+  background: var(--pb-fill-empty);
+  min-width: 3px;
+}
+
+.pb-fill--healthy {
+  background: linear-gradient(
+    90deg,
+    var(--pb-fill-healthy) 0%,
+    color-mix(in srgb, var(--pb-fill-healthy) 85%, white) 100%
+  );
+}
+
+.pb-fill--high {
+  background: linear-gradient(
+    90deg,
+    var(--pb-fill-high) 0%,
+    color-mix(in srgb, var(--pb-fill-high) 85%, white) 100%
+  );
+}
+
+.pb-fill--full {
+  background: linear-gradient(
+    90deg,
+    var(--pb-fill-full) 0%,
+    color-mix(in srgb, var(--pb-fill-full) 85%, white) 100%
+  );
+}
+
+.pb-fill--default {
+  background: var(--pb-fill-default);
+}
+
+.pb-fill--indeterminate {
+  width: 40%;
+  background: var(--pb-fill-default);
+  animation: pb-indeterminate 1.4s ease-in-out infinite;
+}
+
+@keyframes pb-indeterminate {
+  0% {
+    transform: translateX(-150%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
+}
+
+.pb-label-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.pb-label {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--pb-label-color);
+}
+
+.pb-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.pb-row .pb-track {
+  flex: 1;
+}
+
+.pb-value-slot {
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.pb-wrap--split .pb-value-slot {
+  min-width: 48px;
+}
+
+.pb-wrap--inline .pb-label,
+.pb-wrap--split .pb-label {
+  flex-shrink: 0;
+}
+
+.pb-wrap--split .pb-label {
+  min-width: 80px;
+}
+
+.pb-value-block {
+  display: inline-flex;
+  align-items: baseline;
+}
+
+.pb-value {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--pb-value-color);
+  line-height: 1;
+}
+
+.pb-unit {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-normal);
+  color: var(--pb-unit-color);
+  margin-left: var(--spacing-0-5);
+}
+
+.pb-annotation {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  margin-left: var(--spacing-1);
+}
+
+.pb-annotation::before {
+  content: "· ";
+}
+
+.pb-annotation--warning {
+  color: var(--pb-annotation-warning);
+}
+
+.pb-annotation--error {
+  color: var(--pb-annotation-error);
+}
+
+.pb-annotation--success {
+  color: var(--pb-annotation-success);
+}
+
+.pb-annotation--muted {
+  color: var(--pb-annotation-muted);
+}
+
+.pb-value-row {
+  margin-top: 0;
+}
+
+@media (max-width: 359px) {
+  .pb-wrap--inline .pb-row,
+  .pb-wrap--split .pb-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-1);
+  }
+
+  .pb-wrap--inline .pb-track,
+  .pb-wrap--split .pb-track {
+    width: 100%;
+  }
+}
+
+/* Segmented bar */
+.pb-segmented {
+  display: flex;
+  gap: var(--spacing-0-5);
+  margin-top: var(--spacing-1);
+}
+
+.pb-segmented + .pb-value-row {
+  margin-top: var(--spacing-1);
+}
+
+.pb-segment {
+  flex: 1;
+  height: 8px;
+  border-radius: 3px;
+  transition: background 0.2s ease;
+}
+
+.pb-segment--filled {
+  background: var(--pb-fill-healthy);
+}
+
+.pb-segment--filled.pb-segment--full {
+  background: var(--pb-fill-full);
+}
+
+.pb-segment--empty {
+  background: var(--pb-segment-empty);
+}

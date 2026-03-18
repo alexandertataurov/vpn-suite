@@ -6,10 +6,11 @@ import {
   Skeleton,
   InlineAlert,
   PageScaffold,
+  PageLayout,
   ModernHeader,
   PageSection,
+  Stack,
 } from "@/design-system";
-import { Stack } from "@/design-system/core/primitives";
 import { useCheckoutPageModel } from "@/page-models";
 import { useI18n } from "@/hooks";
 
@@ -26,6 +27,7 @@ export function CheckoutPage() {
     if (model.pageState.title === "Plan not found") {
       return (
         <PageScaffold>
+          <PageLayout scrollable={false}>
           <ModernHeader title={model.header.title} showSettings={false} />
           <PageSection>
             <InlineAlert
@@ -37,6 +39,7 @@ export function CheckoutPage() {
               }
             />
           </PageSection>
+          </PageLayout>
         </PageScaffold>
       );
     }
@@ -53,11 +56,13 @@ export function CheckoutPage() {
   if (model.pageState.status === "loading") {
     return (
       <PageScaffold>
-        <ModernHeader title={model.header.title ?? "Checkout"} showSettings={false} />
-        <Stack gap="4">
-          <Skeleton variant="card" height={140} />
-          <Skeleton variant="card" height={220} />
-        </Stack>
+        <PageLayout scrollable={false}>
+          <ModernHeader title={model.header.title ?? "Checkout"} showSettings={false} />
+          <Stack gap="4">
+            <Skeleton variant="card" height={140} />
+            <Skeleton variant="card" height={220} />
+          </Stack>
+        </PageLayout>
       </PageScaffold>
     );
   }
@@ -66,6 +71,7 @@ export function CheckoutPage() {
 
   return (
     <PageScaffold>
+      <PageLayout scrollable={false}>
       <ModernHeader
         title={model.header.title}
         subtitle={model.header.subtitle}
@@ -119,6 +125,7 @@ export function CheckoutPage() {
           </HelperNote>
         </div>
       </PageSection>
+      </PageLayout>
     </PageScaffold>
   );
 }

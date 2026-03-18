@@ -1,0 +1,38 @@
+/* Modal theme tokens. [data-theme] on containers (ThemePane);
+   :root and html[data-theme] for app runtime. */
+
+:root,
+[data-theme="light"] {
+  --modal-bg: #ffffff;
+  --modal-border: rgba(0, 0, 0, 0.08);
+  --modal-header-border: rgba(0, 0, 0, 0.07);
+  --modal-footer-border: rgba(0, 0, 0, 0.07);
+  --modal-overlay: rgba(0, 0, 0, 0.45);
+  --modal-shadow: 0 20px 60px rgba(0, 0, 0, 0.18), 0 4px 16px rgba(0, 0, 0, 0.08);
+  --modal-title-color: #111110;
+  --modal-subtitle-color: #a8a7a3;
+  --modal-content-color: #63625f;
+  --modal-close-color: #a8a7a3;
+  --modal-close-hover-bg: rgba(0, 0, 0, 0.06);
+  --modal-danger-header-bg: rgba(153, 27, 27, 0.05);
+  --modal-danger-header-border: rgba(153, 27, 27, 0.15);
+  --modal-danger-title: #991b1b;
+}
+
+[data-theme="dark"] {
+  --modal-bg: #1e2130;
+  --modal-border: rgba(255, 255, 255, 0.09);
+  --modal-header-border: rgba(255, 255, 255, 0.07);
+  --modal-footer-border: rgba(255, 255, 255, 0.07);
+  --modal-overlay: rgba(0, 0, 0, 0.65);
+  --modal-shadow: 0 24px 80px rgba(0, 0, 0, 0.55), 0 4px 20px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
+  --modal-title-color: #f0f2f8;
+  --modal-subtitle-color: #5a5f73;
+  --modal-content-color: #8b90a4;
+  --modal-close-color: #5a5f73;
+  --modal-close-hover-bg: rgba(255, 255, 255, 0.07);
+  --modal-danger-header-bg: rgba(248, 113, 113, 0.07);
+  --modal-danger-header-border: rgba(248, 113, 113, 0.18);
+  --modal-danger-title: #f87171;
+}

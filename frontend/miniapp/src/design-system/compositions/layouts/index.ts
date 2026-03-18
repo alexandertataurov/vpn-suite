@@ -7,6 +7,8 @@ export { SectionDivider } from "./SectionDivider";
 export type { SectionDividerProps } from "./SectionDivider";
 export { PageScaffold } from "./PageScaffold";
 export type { PageScaffoldProps } from "./PageScaffold";
+export { PageLayout } from "./PageLayout";
+export type { PageLayoutProps } from "./PageLayout";
 export { HeaderZone } from "./HeaderZone";
 export type { HeaderZoneProps } from "./HeaderZone";
 export { ShellContextBlock } from "./ShellContextBlock";

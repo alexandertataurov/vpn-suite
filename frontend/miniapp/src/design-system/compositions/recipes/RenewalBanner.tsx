@@ -1,54 +1,72 @@
-import type { ReactNode } from "react";
-import { Button } from "../../components/Button";
 import { IconAlertTriangle, IconChevronRight, IconRotateCw } from "../../icons";
+import "./RenewalBanner.css";
 
-/** Renewal banner variant per amnezia spec §4.4 */
-export type RenewalBannerVariant = "expiring" | "expired";
+/** Renewal banner variant. warning/expiring = days left; danger/expired = access lost. */
+export type RenewalBannerVariant = "warning" | "danger" | "expiring" | "expired";
 
 export interface RenewalBannerProps {
   variant: RenewalBannerVariant;
   title: string;
   subtitle: string;
+  badge?: string;
   onClick: () => void;
-  icon?: ReactNode;
   className?: string;
 }
 
-const DEFAULT_ICONS: Record<RenewalBannerVariant, ReactNode> = {
-  expiring: <IconAlertTriangle size={18} strokeWidth={2} />,
-  expired: <IconRotateCw size={18} strokeWidth={2} />,
+const VARIANT_TO_CSS: Record<RenewalBannerVariant, "warning" | "danger"> = {
+  warning: "warning",
+  danger: "danger",
+  expiring: "warning",
+  expired: "danger",
+};
+
+const ICONS = {
+  warning: IconAlertTriangle,
+  danger: IconRotateCw,
 };
 
 export function RenewalBanner({
   variant,
   title,
   subtitle,
+  badge,
   onClick,
-  icon,
   className,
 }: RenewalBannerProps) {
+  const cssVariant = VARIANT_TO_CSS[variant];
+  const Icon = ICONS[cssVariant];
   const cardClass = [
     "renewal-banner",
-    `renewal-banner--${variant}`,
+    `renewal-banner--${cssVariant}`,
     className,
-  ].filter(Boolean).join(" ");
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
-    <Button
-      type="button"
-      variant="ghost"
-      fullWidth
+    <div
       className={cardClass}
+      role="button"
+      tabIndex={0}
       onClick={onClick}
+      onKeyDown={(e) => e.key === "Enter" && onClick()}
       aria-label={title}
       data-layer="RenewalBanner"
-      startIcon={<div className="renewal-banner-icon">{icon ?? DEFAULT_ICONS[variant]}</div>}
-      endIcon={<IconChevronRight size={13} strokeWidth={2} className="renewal-banner-chevron" />}
     >
-      <div className="renewal-banner-body">
-        <span className="renewal-banner-title">{title}</span>
-        <span className="renewal-banner-subtitle">{subtitle}</span>
+      <span className="rb-accent" aria-hidden />
+      <div className="rb-icon-wrap">
+        <Icon size={18} strokeWidth={2} />
       </div>
-    </Button>
+      <div className="rb-body">
+        <div className="rb-title-row">
+          <span className="rb-title">{title}</span>
+          {badge && <span className="rb-badge">{badge}</span>}
+        </div>
+        <p className="rb-sub">{subtitle}</p>
+      </div>
+      <div className="rb-chev">
+        <IconChevronRight size={13} strokeWidth={2} />
+      </div>
+    </div>
   );
 }

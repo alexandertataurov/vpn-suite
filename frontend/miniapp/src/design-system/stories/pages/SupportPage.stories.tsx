@@ -7,6 +7,7 @@ const meta: Meta = {
   title: "Pages/Contracts/Support",
   tags: ["autodocs"],
   parameters: {
+    viewport: { defaultViewport: "iphone14" },
     docs: {
       description: {
         component: "Support and help. Contract tests.",

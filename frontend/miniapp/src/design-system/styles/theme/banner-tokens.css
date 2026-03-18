@@ -1,0 +1,84 @@
+/* RenewalBanner theme tokens. [data-theme] on containers (ThemePane);
+   :root for app default, [data-theme] for scoped theming. */
+
+:root,
+[data-theme="light"],
+[data-theme="dark"],
+html[data-theme="consumer-light"],
+html[data-theme="consumer-dark"],
+html:not([data-theme]) {
+  --banner-subtitle-size: 11px;
+}
+
+:root,
+[data-theme="light"] {
+  --banner-warn-bg: rgba(146, 64, 14, 0.09);
+  --banner-warn-border: rgba(146, 64, 14, 0.22);
+  --banner-warn-accent: rgba(146, 64, 14, 0.55);
+  --banner-warn-title: #92400e;
+  --banner-warn-sub: #78350f;
+  --banner-warn-icon-bg: rgba(146, 64, 14, 0.10);
+  --banner-warn-icon: #d97706;
+
+  --banner-err-bg: rgba(153, 27, 27, 0.09);
+  --banner-err-border: rgba(153, 27, 27, 0.22);
+  --banner-err-accent: rgba(153, 27, 27, 0.55);
+  --banner-err-title: #991b1b;
+  --banner-err-sub: #7f1d1d;
+  --banner-err-icon-bg: rgba(153, 27, 27, 0.10);
+  --banner-err-icon: #ef4444;
+}
+
+[data-theme="dark"] {
+  --banner-warn-bg: rgba(251, 191, 36, 0.09);
+  --banner-warn-border: rgba(251, 191, 36, 0.20);
+  --banner-warn-accent: rgba(251, 191, 36, 0.60);
+  --banner-warn-title: #fbbf24;
+  --banner-warn-sub: #a8a7a3;
+  --banner-warn-icon-bg: rgba(251, 191, 36, 0.10);
+  --banner-warn-icon: #f59e0b;
+
+  --banner-err-bg: rgba(248, 113, 113, 0.09);
+  --banner-err-border: rgba(248, 113, 113, 0.20);
+  --banner-err-accent: rgba(248, 113, 113, 0.60);
+  --banner-err-title: #f87171;
+  --banner-err-sub: #a8a7a3;
+  --banner-err-icon-bg: rgba(248, 113, 113, 0.10);
+  --banner-err-icon: #f87171;
+}
+
+/* App runtime: consumer themes */
+html[data-theme="consumer-light"] {
+  --banner-warn-bg: rgba(146, 64, 14, 0.09);
+  --banner-warn-border: rgba(146, 64, 14, 0.22);
+  --banner-warn-accent: rgba(146, 64, 14, 0.55);
+  --banner-warn-title: #92400e;
+  --banner-warn-sub: #78350f;
+  --banner-warn-icon-bg: rgba(146, 64, 14, 0.10);
+  --banner-warn-icon: #d97706;
+  --banner-err-bg: rgba(153, 27, 27, 0.09);
+  --banner-err-border: rgba(153, 27, 27, 0.22);
+  --banner-err-accent: rgba(153, 27, 27, 0.55);
+  --banner-err-title: #991b1b;
+  --banner-err-sub: #7f1d1d;
+  --banner-err-icon-bg: rgba(153, 27, 27, 0.10);
+  --banner-err-icon: #ef4444;
+}
+
+html[data-theme="consumer-dark"],
+html:not([data-theme]) {
+  --banner-warn-bg: rgba(251, 191, 36, 0.09);
+  --banner-warn-border: rgba(251, 191, 36, 0.20);
+  --banner-warn-accent: rgba(251, 191, 36, 0.60);
+  --banner-warn-title: #fbbf24;
+  --banner-warn-sub: #a8a7a3;
+  --banner-warn-icon-bg: rgba(251, 191, 36, 0.10);
+  --banner-warn-icon: #f59e0b;
+  --banner-err-bg: rgba(248, 113, 113, 0.09);
+  --banner-err-border: rgba(248, 113, 113, 0.20);
+  --banner-err-accent: rgba(248, 113, 113, 0.60);
+  --banner-err-title: #f87171;
+  --banner-err-sub: #a8a7a3;
+  --banner-err-icon-bg: rgba(248, 113, 113, 0.10);
+  --banner-err-icon: #f87171;
+}

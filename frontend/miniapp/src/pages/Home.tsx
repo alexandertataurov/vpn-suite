@@ -15,10 +15,11 @@ import {
   NewUserHero,
   NoDeviceCallout,
   PillChip,
-  PlanHeroCard,
+  PlanCard,
   RenewalBanner,
   Skeleton,
   PageScaffold,
+  PageLayout,
   ModernHeader,
 } from "@/design-system";
 import { SessionMissing } from "@/components";
@@ -62,15 +63,17 @@ export function HomePage() {
   if (model.pageState.status === "loading") {
     return (
       <PageScaffold>
-        <ModernHeader title="Amnezia" />
-        <Skeleton variant="card" height={180} />
-        <Skeleton variant="card" height={120} />
-        <Skeleton variant="card" height={72} />
-        <FooterHelp
-          note="Having trouble?"
-          linkLabel="View setup guide"
-          onLinkClick={() => navigate("/support")}
-        />
+        <PageLayout scrollable={false}>
+          <ModernHeader title="Amnezia" />
+          <Skeleton variant="card" height={180} />
+          <Skeleton variant="card" height={120} />
+          <Skeleton variant="card" height={72} />
+          <FooterHelp
+            note="Having trouble?"
+            linkLabel="View setup guide"
+            onLinkClick={() => navigate("/support")}
+          />
+        </PageLayout>
       </PageScaffold>
     );
   }
@@ -91,6 +94,7 @@ export function HomePage() {
 
   return (
     <PageScaffold>
+      <PageLayout scrollable={false}>
       <ModernHeader
         displayName={profileName}
         avatarUrl={profilePhotoUrl}
@@ -131,10 +135,10 @@ export function HomePage() {
         </>
       ) : model.showPlanHero && model.planHeroData ? (
         <>
-          <PlanHeroCard
+          <PlanCard
+            plan={model.planHeroData.planName}
+            planSub={model.planHeroData.subtitle}
             eyebrow={model.planHeroData.eyebrow}
-            planName={model.planHeroData.planName}
-            subtitle={model.planHeroData.subtitle}
             status={model.planHeroData.status}
             stats={[...model.planHeroData.stats]}
           />
@@ -230,6 +234,7 @@ export function HomePage() {
         linkLabel="View setup guide"
         onLinkClick={() => navigate("/support")}
       />
+      </PageLayout>
     </PageScaffold>
   );
 }

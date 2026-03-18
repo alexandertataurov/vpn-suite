@@ -12,7 +12,7 @@ import {
   readyScenario,
   trialScenario,
 } from "@/storybook/page-contracts";
-import { PageScaffold, ModernHeader, Skeleton, FooterHelp } from "@/design-system";
+import { PageScaffold, PageLayout, ModernHeader, Skeleton, FooterHelp } from "@/design-system";
 import styles from "./HomePage.stories.module.css";
 
 const scenarios = {
@@ -33,18 +33,20 @@ const expiringNoDevicesScenarios = {
 function HomeErrorState() {
   return (
     <PageScaffold>
-      <ModernHeader title="Amnezia" />
-      <div className={styles.homeErrorStack}>
-        <Skeleton variant="card" height={180} />
-        <p className={styles.homeErrorLabel}>Couldn&apos;t load · Tap to retry</p>
-        <Skeleton variant="card" height={120} />
-        <Skeleton variant="card" height={72} />
-      </div>
-      <FooterHelp
-        note="Having trouble?"
-        linkLabel="View setup guide"
-        onLinkClick={() => {}}
-      />
+      <PageLayout scrollable={false}>
+        <ModernHeader title="Amnezia" />
+        <div className={styles.homeErrorStack}>
+          <Skeleton variant="card" height={180} />
+          <p className={styles.homeErrorLabel}>Couldn&apos;t load · Tap to retry</p>
+          <Skeleton variant="card" height={120} />
+          <Skeleton variant="card" height={72} />
+        </div>
+        <FooterHelp
+          note="Having trouble?"
+          linkLabel="View setup guide"
+          onLinkClick={() => {}}
+        />
+      </PageLayout>
     </PageScaffold>
   );
 }
@@ -53,7 +55,7 @@ const meta: Meta<{
   state: keyof typeof scenarios;
   expiringNoDevices: boolean;
 }> = {
-  title: "Pages/Home",
+  title: "Pages/Contracts/Home",
   tags: ["autodocs"],
   argTypes: {
     state: {
@@ -72,6 +74,7 @@ const meta: Meta<{
   },
   parameters: {
     layout: "fullscreen",
+    viewport: { defaultViewport: "iphone14" },
     status: { type: "stable" },
     docs: {
       description: {

@@ -77,6 +77,33 @@ const preview: Preview = {
   ],
   parameters: {
     layout: "fullscreen",
+    /* viewport: iframe size. viewportWidth global (below) controls shell data-viewport-width.
+       Keep initialGlobals.viewportWidth aligned with defaultViewport for consistent Mini App context. */
+    viewport: {
+      viewports: {
+        iphoneSE: {
+          name: "iPhone SE (320px)",
+          styles: { width: "320px", height: "568px" },
+          type: "mobile",
+        },
+        iphone14: {
+          name: "iPhone 14 (390px)",
+          styles: { width: "390px", height: "844px" },
+          type: "mobile",
+        },
+        iphone14Plus: {
+          name: "iPhone 14 Plus (430px)",
+          styles: { width: "430px", height: "932px" },
+          type: "mobile",
+        },
+        adminDesktop: {
+          name: "Admin Desktop (1280px)",
+          styles: { width: "1280px", height: "800px" },
+          type: "desktop",
+        },
+      },
+      defaultViewport: "iphone14",
+    },
     controls: { matchers: { color: /(background|color)$/i, date: /Date$/i } },
     docs: {
       container: ThemedDocsContainer,
@@ -138,6 +165,7 @@ const preview: Preview = {
           [
             "Pages",
             [
+              "Home", // legacy alias pages-home--home
               "Contracts",
               [
                 "Home",

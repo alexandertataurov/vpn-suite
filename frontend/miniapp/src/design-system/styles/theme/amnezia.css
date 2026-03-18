@@ -102,7 +102,7 @@ html[data-theme="consumer-light"] {
   --amnezia-page-pad-h: 16px;
   --amnezia-page-pad-top: 24px;
   --amnezia-page-pad-bottom: 110px;
-  --amnezia-card-gap: 8px;
+  --amnezia-card-gap: var(--miniapp-row-gap, var(--spacing-2));
   --amnezia-card-padding: 18px;
   --amnezia-row-pad-v: 13px;
   --amnezia-row-pad-h: 16px;
@@ -110,18 +110,25 @@ html[data-theme="consumer-light"] {
 
   /* Typography — spec roles */
   --amnezia-profile-name: 15px;
+  --amnezia-profile-name-sm: 14px;
   --amnezia-plan-name: 28px;
+  --amnezia-plan-name-sm: 24px;
   --amnezia-plan-eyebrow: 10px;
   --amnezia-plan-subtitle: 12.5px;
   --amnezia-stat-value: 19px;
   --amnezia-stat-label: 9px;
   --amnezia-stat-dim: 13px;
   --amnezia-hero-title: 20px;
+  --amnezia-hero-title-sm: 18px;
   --amnezia-hero-desc: 13px;
   --amnezia-badge-text: 11px;
   --amnezia-badge-padding-h: 10px;
   --amnezia-row-label: 13.5px;
   --amnezia-row-sub: 11.5px;
+  --amnezia-row-sub-sm: 11px;
+  --amnezia-devices-count: 22px;
+  --amnezia-devices-count-sm: 20px;
+  --amnezia-data-cell-lg: 17px;
   --amnezia-banner-title: 13px;
   --amnezia-banner-sub: 11.5px;
   --amnezia-btn-primary: 14px;

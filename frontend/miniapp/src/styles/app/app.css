@@ -6,6 +6,12 @@
  */
 
 /* ---- Global ---------------------------------------- */
+html,
+body {
+  overscroll-behavior: none;
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   background-color: var(--color-bg);
   font-family: var(--font-sans);

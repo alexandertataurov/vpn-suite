@@ -1,0 +1,151 @@
+/* InlineAlert theme tokens. [data-theme] on containers (ThemePane);
+   :root for app default, [data-theme] for scoped theming. */
+
+:root,
+[data-theme="light"] {
+  --alert-info-bg: rgba(59, 130, 246, 0.08);
+  --alert-info-border: rgba(59, 130, 246, 0.20);
+  --alert-info-accent: rgba(59, 130, 246, 0.60);
+  --alert-info-label: #1d4ed8;
+  --alert-info-text: #374151;
+  --alert-info-dot: #3b82f6;
+  --alert-info-action-bg: rgba(59, 130, 246, 0.08);
+  --alert-info-action-border: rgba(59, 130, 246, 0.20);
+
+  --alert-warning-bg: rgba(146, 64, 14, 0.08);
+  --alert-warning-border: rgba(146, 64, 14, 0.20);
+  --alert-warning-accent: rgba(146, 64, 14, 0.55);
+  --alert-warning-label: #92400e;
+  --alert-warning-text: #374151;
+  --alert-warning-dot: #d97706;
+  --alert-warning-action-bg: rgba(146, 64, 14, 0.08);
+  --alert-warning-action-border: rgba(146, 64, 14, 0.20);
+
+  --alert-error-bg: rgba(153, 27, 27, 0.08);
+  --alert-error-border: rgba(153, 27, 27, 0.20);
+  --alert-error-accent: rgba(153, 27, 27, 0.55);
+  --alert-error-label: #991b1b;
+  --alert-error-text: #374151;
+  --alert-error-dot: #ef4444;
+  --alert-error-action-bg: rgba(153, 27, 27, 0.08);
+  --alert-error-action-border: rgba(153, 27, 27, 0.20);
+
+  --alert-success-bg: rgba(22, 101, 52, 0.08);
+  --alert-success-border: rgba(22, 101, 52, 0.20);
+  --alert-success-accent: rgba(22, 101, 52, 0.55);
+  --alert-success-label: #166534;
+  --alert-success-text: #374151;
+  --alert-success-dot: #22c55e;
+  --alert-success-action-bg: rgba(22, 101, 52, 0.08);
+  --alert-success-action-border: rgba(22, 101, 52, 0.20);
+}
+
+[data-theme="dark"] {
+  --alert-info-bg: rgba(59, 130, 246, 0.10);
+  --alert-info-border: rgba(59, 130, 246, 0.22);
+  --alert-info-accent: rgba(59, 130, 246, 0.70);
+  --alert-info-label: #93c5fd;
+  --alert-info-text: #a8a7a3;
+  --alert-info-dot: #60a5fa;
+  --alert-info-action-bg: rgba(59, 130, 246, 0.12);
+  --alert-info-action-border: rgba(59, 130, 246, 0.25);
+
+  --alert-warning-bg: rgba(251, 191, 36, 0.09);
+  --alert-warning-border: rgba(251, 191, 36, 0.22);
+  --alert-warning-accent: rgba(251, 191, 36, 0.65);
+  --alert-warning-label: #fbbf24;
+  --alert-warning-text: #a8a7a3;
+  --alert-warning-dot: #f59e0b;
+  --alert-warning-action-bg: rgba(251, 191, 36, 0.10);
+  --alert-warning-action-border: rgba(251, 191, 36, 0.24);
+
+  --alert-error-bg: rgba(248, 113, 113, 0.09);
+  --alert-error-border: rgba(248, 113, 113, 0.22);
+  --alert-error-accent: rgba(248, 113, 113, 0.65);
+  --alert-error-label: #f87171;
+  --alert-error-text: #a8a7a3;
+  --alert-error-dot: #f87171;
+  --alert-error-action-bg: rgba(248, 113, 113, 0.10);
+  --alert-error-action-border: rgba(248, 113, 113, 0.24);
+
+  --alert-success-bg: rgba(34, 197, 94, 0.09);
+  --alert-success-border: rgba(34, 197, 94, 0.22);
+  --alert-success-accent: rgba(34, 197, 94, 0.65);
+  --alert-success-label: #4ade80;
+  --alert-success-text: #a8a7a3;
+  --alert-success-dot: #22c55e;
+  --alert-success-action-bg: rgba(34, 197, 94, 0.10);
+  --alert-success-action-border: rgba(34, 197, 94, 0.24);
+}
+
+/* App runtime: consumer themes */
+html[data-theme="consumer-light"] {
+  --alert-info-bg: rgba(59, 130, 246, 0.08);
+  --alert-info-border: rgba(59, 130, 246, 0.20);
+  --alert-info-accent: rgba(59, 130, 246, 0.60);
+  --alert-info-label: #1d4ed8;
+  --alert-info-text: #374151;
+  --alert-info-dot: #3b82f6;
+  --alert-info-action-bg: rgba(59, 130, 246, 0.08);
+  --alert-info-action-border: rgba(59, 130, 246, 0.20);
+  --alert-warning-bg: rgba(146, 64, 14, 0.08);
+  --alert-warning-border: rgba(146, 64, 14, 0.20);
+  --alert-warning-accent: rgba(146, 64, 14, 0.55);
+  --alert-warning-label: #92400e;
+  --alert-warning-text: #374151;
+  --alert-warning-dot: #d97706;
+  --alert-warning-action-bg: rgba(146, 64, 14, 0.08);
+  --alert-warning-action-border: rgba(146, 64, 14, 0.20);
+  --alert-error-bg: rgba(153, 27, 27, 0.08);
+  --alert-error-border: rgba(153, 27, 27, 0.20);
+  --alert-error-accent: rgba(153, 27, 27, 0.55);
+  --alert-error-label: #991b1b;
+  --alert-error-text: #374151;
+  --alert-error-dot: #ef4444;
+  --alert-error-action-bg: rgba(153, 27, 27, 0.08);
+  --alert-error-action-border: rgba(153, 27, 27, 0.20);
+  --alert-success-bg: rgba(22, 101, 52, 0.08);
+  --alert-success-border: rgba(22, 101, 52, 0.20);
+  --alert-success-accent: rgba(22, 101, 52, 0.55);
+  --alert-success-label: #166534;
+  --alert-success-text: #374151;
+  --alert-success-dot: #22c55e;
+  --alert-success-action-bg: rgba(22, 101, 52, 0.08);
+  --alert-success-action-border: rgba(22, 101, 52, 0.20);
+}
+
+html[data-theme="consumer-dark"],
+html:not([data-theme]) {
+  --alert-info-bg: rgba(59, 130, 246, 0.10);
+  --alert-info-border: rgba(59, 130, 246, 0.22);
+  --alert-info-accent: rgba(59, 130, 246, 0.70);
+  --alert-info-label: #93c5fd;
+  --alert-info-text: #a8a7a3;
+  --alert-info-dot: #60a5fa;
+  --alert-info-action-bg: rgba(59, 130, 246, 0.12);
+  --alert-info-action-border: rgba(59, 130, 246, 0.25);
+  --alert-warning-bg: rgba(251, 191, 36, 0.09);
+  --alert-warning-border: rgba(251, 191, 36, 0.22);
+  --alert-warning-accent: rgba(251, 191, 36, 0.65);
+  --alert-warning-label: #fbbf24;
+  --alert-warning-text: #a8a7a3;
+  --alert-warning-dot: #f59e0b;
+  --alert-warning-action-bg: rgba(251, 191, 36, 0.10);
+  --alert-warning-action-border: rgba(251, 191, 36, 0.24);
+  --alert-error-bg: rgba(248, 113, 113, 0.09);
+  --alert-error-border: rgba(248, 113, 113, 0.22);
+  --alert-error-accent: rgba(248, 113, 113, 0.65);
+  --alert-error-label: #f87171;
+  --alert-error-text: #a8a7a3;
+  --alert-error-dot: #f87171;
+  --alert-error-action-bg: rgba(248, 113, 113, 0.10);
+  --alert-error-action-border: rgba(248, 113, 113, 0.24);
+  --alert-success-bg: rgba(34, 197, 94, 0.09);
+  --alert-success-border: rgba(34, 197, 94, 0.22);
+  --alert-success-accent: rgba(34, 197, 94, 0.65);
+  --alert-success-label: #4ade80;
+  --alert-success-text: #a8a7a3;
+  --alert-success-dot: #22c55e;
+  --alert-success-action-bg: rgba(34, 197, 94, 0.10);
+  --alert-success-action-border: rgba(34, 197, 94, 0.24);
+}

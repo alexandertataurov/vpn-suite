@@ -60,9 +60,8 @@ describe("SubscriptionCancellationModal", () => {
       />,
     );
 
-    const cancelNow = screen.getByText("Cancel now").closest("button");
-    expect(cancelNow).not.toBeNull();
-    expect(cancelNow).toHaveAttribute("disabled");
+    const cancelNow = screen.getByRole("button", { name: /Cancel now/ });
+    expect(cancelNow).toHaveAttribute("aria-disabled", "true");
   });
 
   it("shows the price retention card only for the price reason", () => {

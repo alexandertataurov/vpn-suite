@@ -1,12 +1,21 @@
-import { useEffect, useState, type HTMLAttributes, type ReactNode } from "react";
+import {
+  cloneElement,
+  isValidElement,
+  useEffect,
+  useState,
+  type HTMLAttributes,
+  type ReactNode,
+} from "react";
 import { formatDateDisplay } from "@vpn-suite/shared";
 import {
+  IconChevronRight,
   IconMonitor,
   IconServer,
   IconShield,
   IconSmartphone,
   IconTerminal,
 } from "../../../icons";
+import { RowItem, type RowItemIconVariant } from "../RowItem";
 
 export interface ListCardProps extends Omit<HTMLAttributes<HTMLDivElement>, "title"> {
   title?: ReactNode;
@@ -46,20 +55,21 @@ function formatRelativeLastActive(date: Date | null): string | null {
 }
 
 function defaultDeviceIcon(deviceType: ListRowDeviceType) {
+  const iconProps = { size: 15 as const, strokeWidth: 2 as const, "aria-hidden": true as const };
   switch (deviceType) {
     case "macos":
     case "windows":
-      return <IconMonitor size={18} strokeWidth={2} aria-hidden />;
+      return <IconMonitor {...iconProps} />;
     case "ios":
     case "android":
-      return <IconSmartphone size={18} strokeWidth={2} aria-hidden />;
+      return <IconSmartphone {...iconProps} />;
     case "linux":
-      return <IconTerminal size={18} strokeWidth={2} aria-hidden />;
+      return <IconTerminal {...iconProps} />;
     case "router":
-      return <IconServer size={18} strokeWidth={2} aria-hidden />;
+      return <IconServer {...iconProps} />;
     case "unknown":
     default:
-      return <IconShield size={18} strokeWidth={2} aria-hidden />;
+      return <IconShield {...iconProps} />;
   }
 }
 
@@ -68,28 +78,51 @@ function subtitleFromStatus(status: DeviceStatus | undefined, lastActiveAt: Date
   return formatRelativeLastActive(lastActiveAt);
 }
 
-function resolveModernTone(tone: ListRowIconTone, iconVariant?: ListRowIconVariant): string {
-  if (iconVariant === "danger") return "modern-icon-tone--red";
-  if (iconVariant === "warning") return "modern-icon-tone--amber";
+function resolveRowIconVariant(
+  tone: ListRowIconTone,
+  iconVariant?: ListRowIconVariant
+): RowItemIconVariant {
+  if (iconVariant === "danger") return "danger";
+  if (iconVariant === "warning") return "warning";
   switch (tone) {
     case "g":
     case "green":
-      return "modern-icon-tone--green";
+      return "green";
     case "b":
     case "blue":
-      return "modern-icon-tone--blue";
+      return "blue";
     case "a":
     case "amber":
-      return "modern-icon-tone--amber";
+      return "amber";
     case "r":
     case "red":
-      return "modern-icon-tone--red";
+      return "red";
     case "n":
     case "neutral":
-      return "modern-icon-tone--neutral";
     default:
-      return "modern-icon-tone--neutral";
+      return "neutral";
   }
+}
+
+function stripChevronFromRight(node: ReactNode): ReactNode {
+  if (node == null) return undefined;
+  if (isValidElement(node) && node.type === IconChevronRight) return undefined;
+  if (Array.isArray(node)) {
+    const filtered = node.filter(
+      (c) => !(isValidElement(c) && c.type === IconChevronRight)
+    );
+    if (filtered.length === 0) return undefined;
+    return filtered.length === 1 ? filtered[0] : filtered;
+  }
+  if (isValidElement(node)) {
+    const children = (node.props as { children?: ReactNode }).children;
+    if (children == null) return node;
+    const stripped = stripChevronFromRight(children);
+    if (stripped == null || (Array.isArray(stripped) && stripped.length === 0))
+      return undefined;
+    return cloneElement(node, {}, stripped);
+  }
+  return node;
 }
 
 export interface ListRowProps extends Omit<HTMLAttributes<HTMLDivElement>, "children" | "title"> {
@@ -107,7 +140,7 @@ export interface ListRowProps extends Omit<HTMLAttributes<HTMLDivElement>, "chil
   lastActiveAt?: Date | null;
 }
 
-/** Modern List Row. */
+/** Modern List Row. Uses RowItem for consistent settings row layout. */
 export function ListRow({
   icon,
   iconTone = "n",
@@ -131,38 +164,24 @@ export function ListRow({
     return () => window.clearInterval(timer);
   }, [lastActiveAt]);
 
-  // Use tick to force re-render for relative time
   void tick;
   void rightColumn;
 
-  const resolvedIcon = icon ?? (deviceType ? defaultDeviceIcon(deviceType) : null);
+  const resolvedIcon = icon ?? (deviceType ? defaultDeviceIcon(deviceType) : <IconShield size={15} strokeWidth={2} aria-hidden />);
   const resolvedSubtitle = subtitle ?? subtitleFromStatus(status, lastActiveAt);
-  const modernToneClass = resolveModernTone(iconTone, iconVariant);
-  const a11y = "onClick" in props && typeof props.onClick === "function"
-    ? { role: "button" as const, tabIndex: 0 }
-    : {};
+  const rowIconVariant = resolveRowIconVariant(iconTone, iconVariant);
+  const rowRight = stripChevronFromRight(right);
 
   return (
-    <div className={`modern-list-item row-item ${className}`.trim()} {...a11y} {...props}>
-      {resolvedIcon != null ? (
-        <div className={`modern-list-item-icon ${modernToneClass}`}>{resolvedIcon}</div>
-      ) : (
-        <div className={`modern-list-item-icon ${modernToneClass}`} aria-hidden />
-      )}
-      <div className="modern-list-item-content">
-        <div className="modern-list-item-title">{title}</div>
-        {resolvedSubtitle != null ? (
-          <div
-            className={`modern-list-item-subtitle ${subtitleMono ? "lr-mono" : ""}`.trim()}
-            data-status={status}
-          >
-            {resolvedSubtitle}
-          </div>
-        ) : null}
-      </div>
-      {right != null ? (
-        <div className="modern-list-item-right">{right}</div>
-      ) : null}
-    </div>
+    <RowItem
+      icon={resolvedIcon}
+      iconVariant={rowIconVariant}
+      label={title}
+      subtitle={resolvedSubtitle ?? undefined}
+      subtitleClassName={subtitleMono ? "lr-mono" : undefined}
+      right={rowRight}
+      className={className}
+      {...props}
+    />
   );
 }

@@ -89,6 +89,7 @@ html {
   /* Focus */
   --focus-ring: 0 0 0 3px oklch(from var(--color-accent) l c h / 0.3);
   --border-glass: oklch(1 0 0 / 0.08);
+  --avatar-ring: oklch(1 0 0 / 0.1);
   /* Tone triplets (fallback — consumer.css overrides) */
   --blue: var(--color-accent);
   --blue-d: var(--color-primary-subtle);
@@ -96,6 +97,9 @@ html {
   --green: var(--color-success);
   --green-d: oklch(from var(--color-success) l c h / 0.15);
   --green-b: oklch(from var(--color-success) l c h / 0.18);
+  --green-avatar-gradient-start: #bbf7d0;
+  --green-avatar-gradient-end: #99f6e4;
+  --green-avatar-text: #065f46;
   --amber: var(--color-warning);
   --amber-d: oklch(from var(--color-warning) l c h / 0.15);
   --amber-b: oklch(from var(--color-warning) l c h / 0.18);
@@ -112,6 +116,37 @@ html {
   /* Border radius — Amnezia spec */
   --r: 14px;
   --r-sm: 10px;
+  /* Amnezia typography — fallbacks when consumer-light not active (Storybook, etc.) */
+  --amnezia-hero-title: 20px;
+  --amnezia-hero-title-sm: 18px;
+  --amnezia-hero-desc: 13px;
+  --amnezia-banner-title: 13px;
+  --amnezia-banner-sub: 11.5px;
+  --amnezia-profile-name: 15px;
+  --amnezia-profile-name-sm: 14px;
+  --amnezia-plan-name: 28px;
+  --amnezia-plan-name-sm: 24px;
+  --amnezia-plan-eyebrow: 10px;
+  --amnezia-plan-subtitle: 12.5px;
+  --amnezia-stat-value: 19px;
+  --amnezia-stat-label: 9px;
+  --amnezia-stat-dim: 13px;
+  --amnezia-badge-text: 11px;
+  --amnezia-badge-tiny: 7px;
+  --amnezia-badge-padding-h: 10px;
+  --amnezia-cta-pill: 12px;
+  --amnezia-help-text: 12px;
+  --amnezia-avatar-initials: 11.5px;
+  --amnezia-row-label: 13.5px;
+  --amnezia-row-sub: 11.5px;
+  --amnezia-row-sub-sm: 11px;
+  --amnezia-callout-title: 14px;
+  --amnezia-callout-sub: 12px;
+  --amnezia-page-header-title: 16px;
+  --amnezia-page-header-title-sm: 16px;
+  --amnezia-devices-count: 22px;
+  --amnezia-devices-count-sm: 20px;
+  --amnezia-data-cell-lg: 17px;
   /* Dark-theme divider */
   --divider: rgba(255, 255, 255, 0.08);
   /* Semantic state backgrounds — badges and banners */
@@ -167,10 +202,16 @@ html {
   --tg-viewport-stable-height: 100dvh;
   --app-height: var(--tg-viewport-height, 100dvh);
   --app-height-stable: var(--tg-viewport-stable-height, 100dvh);
-  --safe-top: 0px;
-  --safe-bottom: 0px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left: 0px;
   --safe-right: 0px;
+  /* Page layout tokens */
+  --page-padding-x: 16px;
+  --page-padding-top: 24px;
+  --page-max-width: 480px;
+  --page-max-width-wide: 520px;
+  --content-bottom: max(110px, calc(env(safe-area-inset-bottom) + 80px));
 }
 
 /* data-theme="primitives" removed — miniapp uses consumer-dark/consumer-light only (see REFACTOR_ROADMAP) */
@@ -743,5 +784,6 @@ html[data-theme="starlink"] {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

@@ -1,30 +1,39 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
-import type { Intent, Size } from "../../utils/types";
+import type { Intent } from "../../utils/types";
 
 export type ButtonVariant = Intent;
 
-export type ButtonSize = Extract<Size, "sm" | "md" | "lg" | "icon">;
+export type ButtonSize = "sm" | "md" | "lg" | "icon";
 
-export type ButtonTone = "default" | "warning" | "danger" | "success";
+export type ButtonTone = "default" | "success" | "warning" | "danger";
 
-export type ButtonStatus = "idle" | "loading" | "success" | "error";
+export type TransientState = "idle" | "loading" | "success" | "error";
+
+/** Internal status for ButtonPrimitive (maps from TransientState). */
+export type ButtonStatus = TransientState;
 
 export interface ButtonProps
   extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children"> {
   variant?: ButtonVariant;
   size?: ButtonSize;
   tone?: ButtonTone;
-  kind?: "default" | "connect";
+  fullWidth?: boolean;
   loading?: boolean;
   loadingText?: string;
-  fullWidth?: boolean;
-  startIcon?: ReactNode;
-  endIcon?: ReactNode;
-  iconOnly?: boolean;
-  status?: ButtonStatus;
+  transientState?: TransientState;
+  /** @deprecated Use transientState */
+  status?: TransientState;
+  /** @deprecated Use loadingText */
   statusText?: string;
   successText?: string;
   errorText?: string;
+  iconLeft?: ReactNode;
+  iconRight?: ReactNode;
+  /** @deprecated Use iconLeft */
+  startIcon?: ReactNode;
+  /** @deprecated Use iconRight */
+  endIcon?: ReactNode;
+  iconOnly?: boolean;
   asChild?: boolean;
   children?: ReactNode;
 }

@@ -12,10 +12,11 @@ import {
   Skeleton,
   SkeletonList,
   PageScaffold,
+  PageLayout,
   PageHeader,
   PageSection,
+  Stack,
 } from "@/design-system";
-import { Stack } from "@/design-system/core/primitives";
 import { useSupportPageModel } from "@/page-models";
 import { useI18n } from "@/hooks";
 import { getSupportBotHref } from "@/config/env";
@@ -88,24 +89,27 @@ export function SupportPage() {
   if (model.pageState.status === "loading") {
     return (
       <PageScaffold>
-        <PageHeader
-          title={model.header.title}
-          subtitle={model.header.subtitle}
-          onBack={() => navigate(-1)}
-        />
-        <Stack gap="4">
-          <Skeleton variant="card" height={180} />
-          <Skeleton variant="line" width="40%" />
-          <SkeletonList lines={4} />
-          <Skeleton variant="line" width="50%" />
-          <Skeleton variant="card" height={120} />
-        </Stack>
+        <PageLayout scrollable={false}>
+          <PageHeader
+            title={model.header.title}
+            subtitle={model.header.subtitle}
+            onBack={() => navigate(-1)}
+          />
+          <Stack gap="4">
+            <Skeleton variant="card" height={180} />
+            <Skeleton variant="line" width="40%" />
+            <SkeletonList lines={4} />
+            <Skeleton variant="line" width="50%" />
+            <Skeleton variant="card" height={120} />
+          </Stack>
+        </PageLayout>
       </PageScaffold>
     );
   }
 
   return (
     <PageScaffold>
+      <PageLayout scrollable={false}>
       <PageHeader
         title={model.header.title}
         subtitle={model.header.subtitle}
@@ -198,6 +202,7 @@ export function SupportPage() {
         linkLabel="View setup guide"
         onLinkClick={() => navigate("/devices")}
       />
+      </PageLayout>
     </PageScaffold>
   );
 }

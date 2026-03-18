@@ -7,7 +7,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { ONBOARDING_STEPS, OnboardingStepCard } from "@/components";
-import { FooterHelp, PageScaffold, ModernHeader, useToast } from "@/design-system";
+import { FooterHelp, PageScaffold, PageLayout, ModernHeader, useToast } from "@/design-system";
 import { useBootstrapContext } from "@/bootstrap/context";
 import { webappApi } from "@/api/client";
 import { useOpenLink, useSession, useTelemetry, useTelegramWebApp } from "@/hooks";
@@ -39,6 +39,7 @@ export function OnboardingPage() {
   );
   const step = ONBOARDING_STEPS[stepIndex]!;
 
+  // Fire once on mount when session exists; session/track omitted intentionally (one-shot analytics)
   useEffect(() => {
     if (session == null) return;
     track("onboarding_started", {});
@@ -219,6 +220,7 @@ export function OnboardingPage() {
 
   return (
     <PageScaffold>
+      <PageLayout scrollable={false}>
       <ModernHeader
         title={pageTitle}
         subtitle={pageSubtitle}
@@ -247,6 +249,7 @@ export function OnboardingPage() {
           onLinkClick={() => void handleSkipForNow()}
         />
       )}
+      </PageLayout>
     </PageScaffold>
   );
 }

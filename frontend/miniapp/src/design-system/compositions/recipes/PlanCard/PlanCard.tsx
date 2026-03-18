@@ -1,6 +1,7 @@
 /**
  * Plan card per amnezia-miniapp-design-guidelines.md §4.3.
  * Borders only, no shadows. StatusChip badge + 3-column stats strip.
+ * Merged PlanCard + PlanHeroCard: supports optional eyebrow and flexible stats.
  */
 import type { HTMLAttributes } from "react";
 import { StatusChip } from "../../patterns";
@@ -8,14 +9,27 @@ import styles from "./PlanCard.module.css";
 
 export type PlanCardStatus = "active" | "expiring" | "expired";
 
+export interface PlanCardStat {
+  label: string;
+  value: string;
+  /** Dim fraction e.g. " / 5" — uses --text3 */
+  dim?: string;
+  /** When true, value uses --amber (expiring) or --red (expired) */
+  tone?: "default" | "expiring" | "expired";
+}
+
 export interface PlanCardProps extends HTMLAttributes<HTMLDivElement> {
-  /** Plan name; planName is alias */
+  /** Plan name */
   plan: string;
   planSub: string;
+  /** Optional eyebrow above plan name (hero variant) */
+  eyebrow?: string;
   status: PlanCardStatus;
-  devices: number;
-  deviceLimit: number;
-  renewsLabel: string;
+  /** Stats array; when omitted, derived from devices/deviceLimit/renewsLabel/traffic */
+  stats?: [PlanCardStat, PlanCardStat, PlanCardStat];
+  devices?: number;
+  deviceLimit?: number;
+  renewsLabel?: string;
   /** Traffic display; default "∞" */
   traffic?: string;
 }
@@ -26,25 +40,59 @@ const BADGE_LABEL: Record<PlanCardStatus, string> = {
   expired: "Expired",
 };
 
+function buildStatsFromProps(props: {
+  status: PlanCardStatus;
+  devices: number;
+  deviceLimit: number;
+  renewsLabel: string;
+  traffic: string;
+}): [PlanCardStat, PlanCardStat, PlanCardStat] {
+  const { status, devices, deviceLimit, renewsLabel, traffic } = props;
+  const renewsStatLabel = status === "expired" ? "Expired" : "Renews";
+  const renewsTone: PlanCardStat["tone"] =
+    status === "expired" ? "expired" : status === "expiring" ? "expiring" : "default";
+  return [
+    {
+      label: "Devices",
+      value: String(devices),
+      dim: ` / ${deviceLimit}`,
+      tone: "default",
+    },
+    { label: renewsStatLabel, value: renewsLabel, tone: renewsTone },
+    { label: "Traffic", value: traffic, tone: "default" },
+  ];
+}
+
 export function PlanCard({
   plan,
   planSub,
+  eyebrow,
   status,
-  devices,
-  deviceLimit,
-  renewsLabel,
+  stats: statsProp,
+  devices = 0,
+  deviceLimit = 0,
+  renewsLabel = "",
   traffic = "∞",
   className = "",
   ...props
 }: PlanCardProps) {
-  const renewsStatLabel = status === "expired" ? "Expired" : "Renews";
-  const renewsValueTone = status === "expired" ? "expired" : status === "expiring" ? "expiring" : "default";
+  const stats =
+    statsProp ??
+    buildStatsFromProps({ status, devices, deviceLimit, renewsLabel, traffic });
+  const heroClass = eyebrow ? "hero-card" : "";
 
   return (
-    <div className={`${styles.root} ${className}`.trim()} data-layer="PlanCard" {...props}>
+    <div
+      className={`${styles.root} ${heroClass} ${className}`.trim()}
+      data-layer="PlanCard"
+      {...props}
+    >
       <div className={styles.body}>
         <div className={styles.head}>
           <div className={styles.meta}>
+            {eyebrow ? (
+              <span className={styles.eyebrow}>{eyebrow}</span>
+            ) : null}
             <span className={`${styles.planName} plan-name`}>{plan}</span>
             <span className={styles.planSub}>{planSub}</span>
           </div>
@@ -52,31 +100,25 @@ export function PlanCard({
         </div>
       </div>
       <div className={styles.stats}>
-        <div className={styles.stat}>
-          <span className={styles.statLabel}>Devices</span>
-          <span className={styles.statValue}>
-            {devices}
-            <span className={styles.statDim}> / {deviceLimit}</span>
-          </span>
-        </div>
-        <div className={styles.stat}>
-          <span className={styles.statLabel}>{renewsStatLabel}</span>
-          <span
-            className={
-              renewsValueTone === "expired"
-                ? `${styles.statValue} ${styles.statValueExpired}`
-                : renewsValueTone === "expiring"
+        {stats.map((stat) => (
+          <div key={stat.label} className={styles.stat}>
+            <span className={styles.statLabel}>{stat.label}</span>
+            <span
+              className={
+                stat.tone === "expiring"
                   ? `${styles.statValue} ${styles.statValueExpiring}`
-                  : styles.statValue
-            }
-          >
-            {renewsLabel}
-          </span>
-        </div>
-        <div className={styles.stat}>
-          <span className={styles.statLabel}>Traffic</span>
-          <span className={styles.statValue}>{traffic}</span>
-        </div>
+                  : stat.tone === "expired"
+                    ? `${styles.statValue} ${styles.statValueExpired}`
+                    : styles.statValue
+              }
+            >
+              {stat.value}
+              {stat.dim ? (
+                <span className={styles.statDim}>{stat.dim}</span>
+              ) : null}
+            </span>
+          </div>
+        ))}
       </div>
     </div>
   );

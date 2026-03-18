@@ -7,8 +7,7 @@ import {
   SessionMissing,
   VpnBoundaryNote,
 } from "@/components";
-import { Button, FallbackScreen, FooterHelp, PageHeader, PageScaffold, PageSection, PlanCard, Skeleton } from "@/design-system";
-import { Stack } from "@/design-system/core/primitives";
+import { Button, FallbackScreen, FooterHelp, PageHeader, PageScaffold, PageLayout, PageSection, PlanCard, Skeleton, Stack } from "@/design-system";
 
 import { useI18n } from "@/hooks";
 import { usePlanPageModel, type BillingPeriod } from "@/page-models";
@@ -98,16 +97,18 @@ export function PlanPage() {
   if (model.pageState.status === "loading") {
     return (
       <PageScaffold>
-        <PageHeader
-          title={model.header.title}
-          subtitle={model.header.subtitle}
-          onBack={() => navigate(fromOnboarding ? "/onboarding" : "/")}
-        />
-        <Stack gap="4">
-          <Skeleton variant="card" height={220} />
-          <Skeleton variant="line" width="40%" />
-          <Skeleton variant="card" height={360} />
-        </Stack>
+        <PageLayout scrollable={false}>
+          <PageHeader
+            title={model.header.title}
+            subtitle={model.header.subtitle}
+            onBack={() => navigate(fromOnboarding ? "/onboarding" : "/")}
+          />
+          <Stack gap="4">
+            <Skeleton variant="card" height={220} />
+            <Skeleton variant="line" width="40%" />
+            <Skeleton variant="card" height={360} />
+          </Stack>
+        </PageLayout>
       </PageScaffold>
     );
   }
@@ -147,6 +148,7 @@ export function PlanPage() {
 
   return (
     <PageScaffold className="plan-billing-page">
+      <PageLayout scrollable={false}>
       <PageHeader
         title={model.header.title}
         subtitle={model.header.subtitle}
@@ -241,6 +243,7 @@ export function PlanPage() {
         linkLabel="View setup guide"
         onLinkClick={() => navigate("/support")}
       />
+      </PageLayout>
     </PageScaffold>
   );
 }

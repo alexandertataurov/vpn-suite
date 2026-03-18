@@ -27,6 +27,8 @@ export {
   IconChevronLeft,
   IconAlertTriangle,
   IconCircleX,
+  IconInfo,
+  IconCheckCircle,
   IconMoreVertical,
   IconDownload,
   IconArrowRight,

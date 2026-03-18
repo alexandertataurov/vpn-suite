@@ -1,14 +1,12 @@
 import { forwardRef } from "react";
 import type { ButtonHTMLAttributes } from "react";
 import { Slot } from "@radix-ui/react-slot";
-import type { ButtonStatus } from "./Button.types";
+import type { TransientState } from "./Button.types";
 
 export interface ButtonPrimitiveProps
   extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children"> {
-  /** Renders as child element (e.g. <a>) instead of <button> */
   asChild?: boolean;
-  /** Drives aria-busy, data-loading, disabled when loading */
-  status?: ButtonStatus;
+  status?: TransientState;
   className?: string;
   children?: React.ReactNode;
 }

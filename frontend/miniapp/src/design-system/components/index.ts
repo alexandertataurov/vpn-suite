@@ -8,7 +8,7 @@
 export { Display, H1, H2, H3, Body, Caption } from "./typography";
 
 // —— Buttons ——
-export { Button, ButtonPrimitive, getButtonClassName } from "./Button";
+export { Button, ButtonGroup, ButtonPrimitive, getButtonClassName } from "./Button";
 export type {
   ButtonVariant,
   ButtonSize,
@@ -39,7 +39,14 @@ export { Popover, type PopoverProps, type PopoverTriggerProps } from "./feedback
 export { Toast, ToastContainer, ToastViewport, useToast } from "./feedback/Toast";
 
 // —— Display ——
-export { ProgressBar, type ProgressBarProps } from "./display/ProgressBar";
+export {
+  ProgressBar,
+  type ProgressBarProps,
+  type ProgressBarThreshold,
+  type ProgressBarAnnotationVariant,
+  type ProgressBarSize,
+  type ProgressBarLayout,
+} from "./display/ProgressBar";
 
 // —— Utility ——
 export { TelegramThemeBridge } from "./TelegramThemeBridge";

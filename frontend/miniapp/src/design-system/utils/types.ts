@@ -8,11 +8,11 @@ export type Size = "xs" | "sm" | "md" | "lg" | "xl" | "icon";
 export type Intent =
   | "primary"
   | "secondary"
+  | "danger"
+  | "external"
   | "ghost"
   | "outline"
-  | "danger"
-  | "link"
-  | "external";
+  | "link";
 
 export type Breakpoint = "sm" | "md" | "lg";
 

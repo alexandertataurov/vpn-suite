@@ -1,109 +1,163 @@
-import { useEffect, useRef, useLayoutEffect } from "react";
-import type { HTMLAttributes, ReactNode } from "react";
+import "./ProgressBar.css";
+import { useEffect, useRef, useState } from "react";
+import type { HTMLAttributes } from "react";
 import { cn } from "@vpn-suite/shared";
 
+export type ProgressBarThreshold = "healthy" | "high" | "full" | "empty";
+export type ProgressBarAnnotationVariant = "warning" | "error" | "success" | "muted";
+export type ProgressBarSize = "primary" | "secondary" | "connection";
+export type ProgressBarLayout = "stacked" | "inline" | "split";
+
 export interface ProgressBarProps extends Omit<HTMLAttributes<HTMLDivElement>, "children"> {
-  value?: number;
+  value: number;
   max?: number;
+  unit?: string;
   label?: string;
-  valueLabel?: ReactNode;
-  valueSuffix?: ReactNode;
-  layout?: "stacked" | "inline" | "split";
-  size?: "primary" | "secondary" | "connection";
-  loading?: boolean;
-  showThresholdSuffix?: boolean;
+  annotation?: string;
+  annotationVariant?: ProgressBarAnnotationVariant;
+  size?: ProgressBarSize;
+  layout?: ProgressBarLayout;
+  threshold?: ProgressBarThreshold;
+  indeterminate?: boolean;
+  animate?: boolean;
+  showValue?: boolean;
   "data-testid"?: string;
 }
 
+function deriveThreshold(value: number, max: number): ProgressBarThreshold {
+  if (value === 0) return "empty";
+  const pct = max > 0 ? (value / max) * 100 : 0;
+  if (pct >= 90) return "full";
+  if (pct >= 70) return "high";
+  return "healthy";
+}
+
 export function ProgressBar({
-  value = 0,
+  value,
   max = 100,
+  unit = "%",
   label,
-  valueLabel,
-  valueSuffix,
-  layout = "stacked",
+  annotation,
+  annotationVariant,
   size = "primary",
-  loading = false,
-  showThresholdSuffix = true,
+  layout = "stacked",
+  threshold: thresholdProp,
+  indeterminate = false,
+  animate = true,
+  showValue = true,
   className,
   "data-testid": dataTestId,
   ...props
 }: ProgressBarProps) {
-  const ref = useRef<HTMLDivElement>(null);
-  const hasHydratedRef = useRef(false);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [hasMounted, setHasMounted] = useState(false);
   const clampedMax = Math.max(1, max);
-  const pct = Math.min(clampedMax, Math.max(0, value));
-  const percentage = (pct / clampedMax) * 100;
-  const valueStr = `${percentage}%`;
+  const clampedValue = Math.min(clampedMax, Math.max(0, value));
+  const percentage = (clampedValue / clampedMax) * 100;
 
-  let threshold: "healthy" | "high" | "critical" | "limit" | "loading" = "healthy";
-  if (loading) threshold = "loading";
-  else if (percentage >= 100) threshold = "limit";
-  else if (percentage >= 90) threshold = "critical";
-  else if (percentage >= 75) threshold = "high";
-
-  const thresholdSuffix =
-    !showThresholdSuffix || loading
-      ? null
-      : threshold === "limit"
-        ? "Limit reached"
-        : threshold === "critical"
-          ? "Critical"
-          : threshold === "high"
-            ? "High usage"
-            : null;
-
-  useLayoutEffect(() => {
-    ref.current?.style.setProperty("--progress", valueStr);
-  }, [valueStr]);
+  const threshold =
+    thresholdProp ?? (indeterminate ? undefined : deriveThreshold(clampedValue, clampedMax));
+  const fillVariant =
+    indeterminate ? "default" : threshold ?? "default";
 
   useEffect(() => {
-    hasHydratedRef.current = true;
+    const id = requestAnimationFrame(() => setHasMounted(true));
+    return () => cancelAnimationFrame(id);
   }, []);
+
+  const displayValue = indeterminate ? null : clampedValue;
+
+  const valueBlock =
+    showValue && displayValue != null ? (
+      <span className="pb-value-block">
+        <span className="pb-value">{displayValue}</span>
+        {unit ? <span className="pb-unit">{unit}</span> : null}
+        {annotation ? (
+          <span
+            className={cn(
+              "pb-annotation",
+              annotationVariant && `pb-annotation--${annotationVariant}`
+            )}
+          >
+            {annotation}
+          </span>
+        ) : null}
+      </span>
+    ) : null;
+
+  const trackEl = (
+    <div
+      ref={trackRef}
+      className={cn(
+        "pb-track",
+        `pb-track--${size}`,
+        indeterminate && "pb-track--indeterminate"
+      )}
+      role="progressbar"
+      aria-valuenow={indeterminate ? undefined : clampedValue}
+      aria-valuemin={0}
+      aria-valuemax={clampedMax}
+      aria-label={label}
+      aria-busy={indeterminate}
+    >
+      <div
+        className={cn(
+          "pb-fill",
+          `pb-fill--${fillVariant}`,
+          indeterminate && "pb-fill--indeterminate"
+        )}
+        style={
+          !indeterminate && !hasMounted
+            ? { width: animate ? "0%" : `${percentage}%` }
+            : indeterminate
+              ? undefined
+              : { width: `${percentage}%` }
+        }
+      />
+    </div>
+  );
+
+  if (layout === "stacked") {
+    return (
+      <div
+        className={cn(
+          "pb-wrap",
+          "pb-wrap--stacked",
+          `pb-wrap--${size}`,
+          animate && hasMounted && !indeterminate && "pb-wrap--animated",
+          className
+        )}
+        data-testid={dataTestId}
+        {...props}
+      >
+        {label ? (
+          <div className="pb-label-row">
+            <span className="pb-label">{label}</span>
+          </div>
+        ) : null}
+        <div className="pb-track-wrap">{trackEl}</div>
+        {valueBlock ? <div className="pb-value-row">{valueBlock}</div> : null}
+      </div>
+    );
+  }
 
   return (
     <div
-      className={cn("progress-group", `progress-group-${layout}`, className)}
+      className={cn(
+        "pb-wrap",
+        `pb-wrap--${layout}`,
+        `pb-wrap--${size}`,
+        animate && hasMounted && !indeterminate && "pb-wrap--animated",
+        className
+      )}
       data-testid={dataTestId}
       {...props}
     >
-      {(label || valueLabel || valueSuffix || thresholdSuffix) ? (
-        <div className="progress-meta">
-          {label ? <div className="progress-label">{label}</div> : <span />}
-          {(layout === "inline" || layout === "split") && (valueLabel || valueSuffix || thresholdSuffix) ? (
-            <div className="progress-value">
-              {valueLabel ? <span className="progress-value-number">{valueLabel}</span> : null}
-              {valueSuffix ? <span className="progress-value-label"> {valueSuffix}</span> : null}
-              {thresholdSuffix ? <span className={`progress-threshold progress-threshold-${threshold}`}> · {thresholdSuffix}</span> : null}
-            </div>
-          ) : null}
-        </div>
-      ) : null}
-      <div
-        ref={ref}
-        role="progressbar"
-        aria-valuenow={loading ? undefined : value}
-        aria-valuemin={0}
-        aria-valuemax={clampedMax}
-        aria-label={label}
-        aria-busy={loading}
-        className={cn(
-          "progress-bar",
-          `progress-bar-${size}`,
-          `progress-bar-${threshold}`,
-          hasHydratedRef.current && "progress-bar-animated",
-          loading && "progress-bar-indeterminate"
-        )}
-      >
-        <div className="progress-bar-fill" />
+      <div className="pb-row">
+        {label ? <span className="pb-label">{label}</span> : null}
+        {trackEl}
+        {valueBlock ? <div className="pb-value-slot">{valueBlock}</div> : null}
       </div>
-      {layout === "stacked" && (valueLabel || valueSuffix || thresholdSuffix) ? (
-        <div className="progress-value">
-          {valueLabel ? <span className="progress-value-number">{valueLabel}</span> : null}
-          {valueSuffix ? <span className="progress-value-label"> {valueSuffix}</span> : null}
-          {thresholdSuffix ? <span className={`progress-threshold progress-threshold-${threshold}`}> · {thresholdSuffix}</span> : null}
-        </div>
-      ) : null}
     </div>
   );
 }

@@ -1,8 +1,7 @@
 
 import { useNavigate, Link } from "react-router-dom";
 import { SessionMissing, VpnBoundaryNote } from "@/components";
-import { ActionCard, Button, FooterHelp, InlineAlert, PageScaffold, PageHeader, StickyBottomBar } from "@/design-system";
-import { Stack } from "@/design-system/core/primitives";
+import { ActionCard, Button, FooterHelp, InlineAlert, PageScaffold, PageLayout, PageHeader, Stack, StickyBottomBar } from "@/design-system";
 import { useRestoreAccessPageModel } from "@/page-models";
 import { useI18n } from "@/hooks";
 
@@ -17,6 +16,7 @@ export function RestoreAccessPage() {
     if (!model.hasGraceOrExpired) {
       return (
         <PageScaffold className="restore-access-page">
+          <PageLayout scrollable={false}>
           <PageHeader
             title={model.header.title}
             subtitle={model.header.subtitle}
@@ -30,9 +30,9 @@ export function RestoreAccessPage() {
               <Stack gap="4">
                 <InlineAlert
                   variant="info"
-                  title={model.pageState.title ?? t("restore.inline_no_expired_title")}
-                  body={model.pageState.message ?? t("restore.inline_no_expired_message")}
-                  className="inline-alert--modern"
+                  label={model.pageState.title ?? t("restore.inline_no_expired_title")}
+                  message={model.pageState.message ?? t("restore.inline_no_expired_message")}
+                  compact
                 />
                 <VpnBoundaryNote messageKey="common.vpn_boundary_billing_note" />
               </Stack>
@@ -52,6 +52,7 @@ export function RestoreAccessPage() {
             linkLabel="View setup guide"
             onLinkClick={() => navigate("/support")}
           />
+          </PageLayout>
         </PageScaffold>
       );
     }
@@ -61,6 +62,7 @@ export function RestoreAccessPage() {
   if (model.pageState.status === "loading") {
     return (
       <PageScaffold className="restore-access-page">
+        <PageLayout scrollable={false}>
         <PageHeader
           title={model.header.title}
           subtitle={model.header.subtitle}
@@ -72,6 +74,7 @@ export function RestoreAccessPage() {
             description={t("restore.loading_status_message")}
           />
         </Stack>
+        </PageLayout>
       </PageScaffold>
     );
   }
@@ -79,6 +82,7 @@ export function RestoreAccessPage() {
   if (model.pageState.status === "error") {
     return (
       <PageScaffold className="restore-access-page">
+        <PageLayout scrollable={false}>
         <PageHeader
           title={model.header.title}
           subtitle={model.header.subtitle}
@@ -87,9 +91,9 @@ export function RestoreAccessPage() {
         <Stack gap="4">
           <InlineAlert
             variant="warning"
-            title={model.pageState.title ?? model.header.title}
-            body={model.pageState.message ?? model.description}
-            className="inline-alert--modern"
+            label={model.pageState.title ?? model.header.title}
+            message={model.pageState.message ?? model.description}
+            compact
           />
 
           <div>
@@ -104,12 +108,14 @@ export function RestoreAccessPage() {
             </Button>
           </div>
         </Stack>
+        </PageLayout>
       </PageScaffold>
     );
   }
 
   return (
     <PageScaffold className="restore-access-page">
+      <PageLayout scrollable={false}>
       <PageHeader
         title={model.header.title}
         subtitle={model.header.subtitle}
@@ -139,6 +145,7 @@ export function RestoreAccessPage() {
         linkLabel="View setup guide"
         onLinkClick={() => navigate("/support")}
       />
+      </PageLayout>
     </PageScaffold>
   );
 }

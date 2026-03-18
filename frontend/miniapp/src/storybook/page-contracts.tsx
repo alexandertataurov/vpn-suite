@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactElement, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useMemo, useState, type ReactElement, type ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { setWebappToken } from "@/api/client";
 import { BootstrapContextProvider } from "@/bootstrap";
@@ -472,6 +472,7 @@ export function PageSandbox({
   scenario: MockScenario;
   initialEntries: string[];
 }) {
+  const [tokenReady, setTokenReady] = useState(false);
   const bootstrapValue = useMemo(
     () => ({
       phase: "app_ready" as const,
@@ -495,8 +496,9 @@ export function PageSandbox({
     [],
   );
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     setWebappToken(scenario.token ?? null);
+    setTokenReady(true);
     const originalFetch = window.fetch.bind(window);
 
     window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -521,6 +523,8 @@ export function PageSandbox({
       client.clear();
     };
   }, [client, scenario]);
+
+  if (!tokenReady) return null;
 
   return (
     <QueryClientProvider client={client}>

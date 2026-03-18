@@ -51,6 +51,8 @@ html {
 @media (min-width: 768px) {
   html {
     --miniapp-content-gutter: max(24px, 5vw);
+    --miniapp-shell-max: var(--page-max-width-wide);
+    --page-max-width: var(--page-max-width-wide);
   }
 }
 
@@ -74,6 +76,8 @@ html[data-tg-fullscreen="true"][data-tg-platform="other"] {
 html[data-tg-desktop="true"] {
   --miniapp-header-content-height: 42px;
   --topbar-h: 46px;
+  --miniapp-shell-max: var(--page-max-width-wide);
+  --page-max-width: var(--page-max-width-wide);
 }
 
 /* Runtime/shell tokens (--safe-* may be set by theme or JS) */
@@ -163,6 +167,12 @@ body,
   padding-inline: var(--miniapp-content-gutter);
 }
 
+/* When PageLayout is used, it controls padding; avoid double padding */
+.miniapp-main:has(.page-layout) {
+  padding-inline: 0;
+  padding-block: 0;
+}
+
 .tg-app-root[data-overlay-active="true"] .miniapp-main,
 .tg-app-root[data-overlay-active="true"] .miniapp-header-inner {
   opacity: 0.42;
@@ -223,10 +233,6 @@ body,
   padding-bottom: 0;
 }
 
-.content {
-  padding: 24px 16px max(110px, env(safe-area-inset-bottom) + 80px);
-}
-
 /* ---------- HeaderZone ---------- */
 .miniapp-header {
   position: sticky;
@@ -254,7 +260,7 @@ body,
   padding: max(4px, var(--miniapp-header-safe-top)) 0 8px;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 8px;
+  gap: var(--spacing-2);
 }
 
 .miniapp-header-bar {
@@ -373,21 +379,21 @@ html {
 .shead {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 8px;
+  gap: var(--miniapp-grid-gap);
+  margin-bottom: var(--spacing-2);
   min-width: 0;
 }
 
 .shead-lbl,
 .shead-label {
-  font-size: 10px;
-  font-weight: 500;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
   letter-spacing: 0.6px;
   text-transform: uppercase;
   color: var(--color-text-tertiary);
   white-space: nowrap;
-  margin-bottom: 8px;
-  margin-top: 24px;
+  margin-bottom: var(--spacing-2);
+  margin-top: var(--spacing-6);
 }
 
 .shead:first-child .shead-lbl,
@@ -403,8 +409,8 @@ html {
 }
 
 .shead-count {
-  font: 600 11px/1.2 var(--font-sans);
-  padding: 2px 8px;
+  font: var(--font-weight-semibold) var(--font-size-xs)/1.2 var(--font-sans);
+  padding: var(--spacing-0-5) var(--spacing-2);
   border-radius: 10px;
   background: var(--color-surface-2);
   color: var(--color-text-muted);
@@ -412,7 +418,7 @@ html {
 }
 
 .shead-note {
-  font: 500 11px/1.2 var(--font-sans);
+  font: var(--font-weight-medium) var(--font-size-xs)/1.2 var(--font-sans);
   color: var(--color-text-muted);
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -532,8 +538,8 @@ html {
 /* ---------- Mobile-first overrides ---------- */
 @media (max-width: 480px) {
   .shead {
-    gap: 8px;
-    margin-bottom: 6px;
+    gap: var(--spacing-2);
+    margin-bottom: var(--spacing-1);
     align-items: center;
     flex-wrap: wrap;
   }
@@ -626,7 +632,7 @@ html {
   margin: 0;
   color: var(--color-error);
   font-size: var(--miniapp-page-title-size);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .danger-zone-card {

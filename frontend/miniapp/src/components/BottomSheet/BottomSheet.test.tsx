@@ -15,14 +15,16 @@ describe("BottomSheet", () => {
   it("renders nothing when closed", () => {
     const { queryByRole } = render(
       <BottomSheet
-        open={false}
+        isOpen={false}
         title="Session details"
-        primaryLabel="Confirm"
-        secondaryLabel="Cancel"
-        onPrimary={() => undefined}
-        onSecondary={() => undefined}
         onClose={() => undefined}
-      />,
+        actions={{
+          primary: { label: "Confirm", onClick: () => undefined },
+          secondary: { label: "Cancel", onClick: () => undefined },
+        }}
+      >
+        Content
+      </BottomSheet>
     );
 
     expect(queryByRole("dialog")).toBeNull();
@@ -35,15 +37,17 @@ describe("BottomSheet", () => {
       <>
         <button type="button">Open trigger</button>
         <BottomSheet
-          open={false}
+          isOpen={false}
           title="Session details"
-          primaryLabel="Confirm"
-          secondaryLabel="Cancel"
-          onPrimary={() => undefined}
-          onSecondary={() => undefined}
           onClose={onClose}
-        />
-      </>,
+          actions={{
+            primary: { label: "Confirm", onClick: () => undefined },
+            secondary: { label: "Cancel", onClick: () => undefined },
+          }}
+        >
+          Content
+        </BottomSheet>
+      </>
     );
 
     const trigger = screen.getByRole("button", { name: "Open trigger" });
@@ -53,21 +57,23 @@ describe("BottomSheet", () => {
       <>
         <button type="button">Open trigger</button>
         <BottomSheet
-          open={true}
+          isOpen={true}
           title="Session details"
-          primaryLabel="Confirm"
-          secondaryLabel="Cancel"
-          onPrimary={() => undefined}
-          onSecondary={() => undefined}
           onClose={onClose}
-        />
-      </>,
+          actions={{
+            primary: { label: "Confirm", onClick: () => undefined },
+            secondary: { label: "Cancel", onClick: () => undefined },
+          }}
+        >
+          Content
+        </BottomSheet>
+      </>
     );
 
     const dialog = screen.getByRole("dialog");
     fireEvent.keyDown(dialog, { key: "Escape" });
     act(() => {
-      vi.advanceTimersByTime(400);
+      vi.advanceTimersByTime(300);
     });
 
     expect(onClose).toHaveBeenCalledTimes(1);
@@ -79,18 +85,20 @@ describe("BottomSheet", () => {
 
     render(
       <BottomSheet
-        open={true}
+        isOpen={true}
         title="Session details"
-        primaryLabel="Confirm"
-        secondaryLabel="Cancel"
-        onPrimary={() => undefined}
-        onSecondary={() => undefined}
         onClose={onClose}
-      />,
+        actions={{
+          primary: { label: "Confirm", onClick: () => undefined },
+          secondary: { label: "Cancel", onClick: () => undefined },
+        }}
+      >
+        Content
+      </BottomSheet>
     );
 
     const dialog = screen.getByRole("dialog");
-    const handle = dialog.querySelector("[data-bottom-sheet-drag-handle='true']");
+    const handle = dialog.querySelector("[data-bs-handle]");
     expect(handle).not.toBeNull();
 
     fireEvent.touchStart(handle!, {

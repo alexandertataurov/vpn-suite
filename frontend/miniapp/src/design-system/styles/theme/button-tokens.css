@@ -1,0 +1,81 @@
+/* Button-specific theme tokens. [data-theme] on containers (ThemePane);
+   :root and html[data-theme] for app runtime. */
+
+:root,
+[data-theme="light"],
+html[data-theme="consumer-light"],
+[data-theme="consumer-light"] {
+  --btn-primary-bg: #111110;
+  --btn-primary-text: #ffffff;
+  --btn-primary-hover-bg: #2a2a28;
+
+  --btn-secondary-bg: transparent;
+  --btn-secondary-text: #63625f;
+  --btn-secondary-border: rgba(0, 0, 0, 0.15);
+  --btn-secondary-hover-border: rgba(0, 0, 0, 0.28);
+  --btn-secondary-hover-text: #111110;
+
+  --btn-success-bg: rgba(22, 101, 52, 0.13);
+  --btn-success-border: rgba(22, 101, 52, 0.26);
+  --btn-success-text: #166534;
+
+  --btn-warning-bg: rgba(146, 64, 14, 0.13);
+  --btn-warning-border: rgba(146, 64, 14, 0.26);
+  --btn-warning-text: #92400e;
+
+  --btn-danger-bg: rgba(153, 27, 27, 0.13);
+  --btn-danger-border: rgba(153, 27, 27, 0.26);
+  --btn-danger-text: #991b1b;
+
+  --btn-external-bg: #2563eb;
+  --btn-external-text: #ffffff;
+
+  --btn-disabled-bg: rgba(0, 0, 0, 0.06);
+  --btn-disabled-text: rgba(0, 0, 0, 0.28);
+
+  --btn-loading-bg: rgba(0, 0, 0, 0.06);
+  --btn-loading-text: rgba(0, 0, 0, 0.35);
+
+  --r-sm: 10px;
+  --r: 14px;
+}
+
+[data-theme="dark"],
+html[data-theme="consumer-dark"],
+[data-theme="consumer-dark"],
+html:not([data-theme]) {
+  --btn-primary-bg: #f0f2f8;
+  --btn-primary-text: #111110;
+  --btn-primary-hover-bg: #ffffff;
+
+  --btn-secondary-bg: transparent;
+  --btn-secondary-text: rgba(255, 255, 255, 0.55);
+  --btn-secondary-border: rgba(255, 255, 255, 0.14);
+  --btn-secondary-hover-border: rgba(255, 255, 255, 0.28);
+  --btn-secondary-hover-text: rgba(255, 255, 255, 0.9);
+
+  /* Use lighter base colors at higher opacity for dark bg visibility */
+  --btn-success-bg: rgba(34, 197, 94, 0.16);
+  --btn-success-border: rgba(34, 197, 94, 0.30);
+  --btn-success-text: #4ade80;
+
+  --btn-warning-bg: rgba(251, 191, 36, 0.14);
+  --btn-warning-border: rgba(251, 191, 36, 0.28);
+  --btn-warning-text: #fbbf24;
+
+  --btn-danger-bg: rgba(248, 113, 113, 0.14);
+  --btn-danger-border: rgba(248, 113, 113, 0.28);
+  --btn-danger-text: #f87171;
+
+  --btn-external-bg: #3b7ef8;
+  --btn-external-text: #ffffff;
+
+  --btn-disabled-bg: rgba(255, 255, 255, 0.07);
+  --btn-disabled-text: rgba(255, 255, 255, 0.22);
+
+  --btn-loading-bg: rgba(255, 255, 255, 0.07);
+  --btn-loading-text: rgba(255, 255, 255, 0.3);
+
+  --r-sm: 10px;
+  --r: 14px;
+}

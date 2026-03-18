@@ -58,12 +58,14 @@ export function ServerCard({
   const actionLabel = isCurrent ? "Change server" : "Select server";
   const actionHandler = isCurrent ? (onDeselect ?? onSelect) : onSelect;
   const latencyTone = avgPingMs == null ? "mut" : avgPingMs > 220 ? "amber" : "green";
-  const loadLabel =
-    load == null
-      ? "Unavailable"
-      : suffix
-        ? `${load}% ${suffix}`
-        : `${load}%`;
+  const annotationVariant =
+    load != null && suffix
+      ? load >= 81
+        ? ("error" as const)
+        : load >= 61
+          ? ("warning" as const)
+          : undefined
+      : undefined;
 
   return (
     <SelectionCard
@@ -101,8 +103,9 @@ export function ServerCard({
               value={hasLoad && load != null ? load : 0}
               max={100}
               label="Load"
-              valueLabel={loadLabel}
-              showThresholdSuffix={false}
+              unit="%"
+              annotation={suffix || undefined}
+              annotationVariant={annotationVariant}
               layout="split"
             />
         </>

@@ -19,17 +19,11 @@ export type { CompactStepperProps, CompactStepperItem } from "./CompactStepper";
 export { ModernHeader } from "./ModernHeader";
 export type { ModernHeaderProps } from "./ModernHeader";
 export { ProfileRow } from "./ProfileRow";
-export type { ProfileRowProps } from "./ProfileRow";
+export type { ProfileRowProps, ProfileRowStatus } from "./ProfileRow";
 export { ModernHeroCard } from "./ModernHeroCard";
 export type { ModernHeroCardProps } from "./ModernHeroCard";
-export { PlanHeroCard } from "./PlanHeroCard";
-export type {
-  PlanHeroCardProps,
-  PlanHeroStat,
-  PlanHeroStatus,
-} from "./PlanHeroCard";
 export { PlanCard } from "./PlanCard";
-export type { PlanCardProps, PlanCardStatus } from "./PlanCard";
+export type { PlanCardProps, PlanCardStat, PlanCardStatus } from "./PlanCard";
 export { RenewalBanner } from "./RenewalBanner";
 export type { RenewalBannerProps, RenewalBannerVariant } from "./RenewalBanner";
 export { NoDeviceCallout } from "./NoDeviceCallout";

@@ -254,6 +254,11 @@
   margin: 0;
 }
 
+.story-section__desc--compact {
+  margin-top: 4px;
+  font-size: var(--font-size-xs);
+}
+
 .story-showcase {
   padding: var(--spacing-6);
   background: var(--color-surface);
@@ -279,6 +284,10 @@
 
 .story-stack--tight {
   gap: var(--spacing-2);
+}
+
+.story-stack--gap-20 {
+  gap: 20px;
 }
 
 .story-comparison {
@@ -336,4 +345,14 @@
   font: 600 var(--typo-h4-size) / 1.25 var(--font-sans);
   color: var(--color-text);
   margin: 0;
+}
+
+/* Header responsive story — animation from 390px to 280px on mount */
+@keyframes header-responsive-shrink {
+  0% {
+    width: 390px;
+  }
+  100% {
+    width: 280px;
+  }
 }

@@ -15,15 +15,22 @@ const ALLOWED_ROOT = [
   join(STYLES_DIR, "tokens", "base.css"),
   join(STYLES_DIR, "tokens", "_breakpoints.css"),
   join(STYLES_DIR, "theme", "consumer.css"),
+  join(STYLES_DIR, "theme", "modal-tokens.css"),
   join(STYLES_DIR, "shell", "frame.css"),
 ];
 
 const ALLOWED_HEX_CSS = [
   join(STYLES_DIR, "tokens", "base.css"),
+  join(STYLES_DIR, "content", "modern.css"), // avatar gradient fallbacks for themes without --green-avatar-*
   join(STYLES_DIR, "theme", "consumer.css"),
   join(STYLES_DIR, "theme", "telegram.css"),
   join(STYLES_DIR, "theme", "amnezia.css"),
   join(STYLES_DIR, "theme", "storybook.css"),
+  join(STYLES_DIR, "theme", "modal-tokens.css"),
+  join(STYLES_DIR, "theme", "alert-tokens.css"),
+  join(STYLES_DIR, "theme", "button-tokens.css"),
+  join(STYLES_DIR, "theme", "progress-bar-tokens.css"),
+  join(STYLES_DIR, "theme", "banner-tokens.css"),
   join(STYLES_DIR, "shell", "frame.css"),
 ];
 
@@ -168,6 +175,7 @@ describe("Design consistency", () => {
         "patterns/FallbackScreen",
         "patterns/PageStateScreen",
         "layouts/PageScaffold",
+        "layouts/PageLayout",
       ];
       const violations: string[] = [];
       for (const sub of ["pages", "page-models"]) {
@@ -247,12 +255,12 @@ describe("Design consistency", () => {
   });
 
   describe("10. Design-system exports Amnezia recipe components", () => {
-    it("recipes index exports PlanHeroCard, RenewalBanner, NoDeviceCallout, NewUserHero", () => {
+    it("recipes index exports PlanCard, RenewalBanner, NoDeviceCallout, NewUserHero", () => {
       const recipesIndex = readFileSync(
         join(SRC, "design-system", "compositions", "recipes", "index.ts"),
         "utf8"
       );
-      const required = ["PlanHeroCard", "RenewalBanner", "NoDeviceCallout", "NewUserHero"];
+      const required = ["PlanCard", "RenewalBanner", "NoDeviceCallout", "NewUserHero"];
       const missing = required.filter((name) => !recipesIndex.includes(name));
       expect(missing).toEqual([]);
     });

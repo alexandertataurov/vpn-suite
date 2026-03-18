@@ -9,35 +9,35 @@
   background: var(--color-surface-2);
   border: 1px solid var(--color-border);
   border-radius: var(--r-sm, var(--radius-sm));
-  padding: 12px 14px;
+  padding: var(--spacing-3) var(--miniapp-card-padding-tight);
   grid-template-columns: 6px minmax(0, 1fr);
-  column-gap: 10px;
+  column-gap: var(--spacing-2);
 }
 
 .inline-alert--modern .alert-icon {
   width: 6px;
   height: 6px;
-  margin-top: 5px;
+  margin-top: var(--spacing-1);
 }
 
 .inline-alert--modern .inline-alert-title {
-  font-size: 12px;
-  font-weight: 500;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
 }
 
 .inline-alert--modern .inline-alert-message {
-  font-size: 12px;
-  font-weight: 400;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-normal);
   color: var(--color-text-muted);
   line-height: 1.5;
 }
 
 .inline-alert--modern .inline-alert-submessage {
-  font-size: 12px;
-  font-weight: 400;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-normal);
   color: var(--color-text-muted);
   line-height: 1.5;
-  margin-top: 4px;
+  margin-top: var(--spacing-1);
 }
 
 .inline-alert--modern.inline-alert-info .alert-icon { color: var(--color-info, var(--color-accent)); }
@@ -48,11 +48,11 @@
 /* ---- Avatar (profile row) ---- */
 .avatar {
   border-radius: 50%;
-  background: linear-gradient(140deg, var(--green-avatar-gradient-start, #bbf7d0) 0%, var(--green-avatar-gradient-end, #99f6e4) 100%);
-  color: var(--green-avatar-text, #065f46);
-  font-weight: 700;
+  background: linear-gradient(140deg, var(--green-avatar-gradient-start) 0%, var(--green-avatar-gradient-end) 100%);
+  color: var(--green-avatar-text);
+  font-weight: var(--font-weight-bold);
   letter-spacing: 0.2px;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 0 1px var(--avatar-ring, var(--border-glass));
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -62,13 +62,13 @@
 .avatar--md {
   width: 38px;
   height: 38px;
-  font-size: 11.5px;
+  font-size: var(--font-size-xs);
 }
 
 .avatar--sm {
   width: 28px;
   height: 28px;
-  font-size: 9px;
+  font-size: var(--font-size-xs);
 }
 
 .avatar img {
@@ -80,10 +80,10 @@
 
 /* ---- Badge (inline status) ---- */
 .badge {
-  font-size: 10.5px;
-  font-weight: 600;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
   letter-spacing: 0.1px;
-  padding: 2.5px 8px;
+  padding: var(--spacing-0-5) var(--spacing-2);
   border-radius: 100px;
   line-height: 1.2;
   border: 1px solid transparent;
@@ -116,14 +116,14 @@
 
 /* ---- SectionLabel (eyebrow) ---- */
 .section-label {
-  font-size: 10px;
-  font-weight: 500;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
   letter-spacing: 0.6px;
   text-transform: uppercase;
   color: var(--color-text-tertiary);
-  margin-bottom: 8px;
-  margin-top: 24px;
-  padding: 0 4px;
+  margin-bottom: var(--spacing-2);
+  margin-top: var(--spacing-6);
+  padding: 0 var(--spacing-1);
 }
 
 /* ---- SettingsButton (profile row) ---- */
@@ -152,60 +152,6 @@
   background: var(--color-surface-2);
 }
 
-/* ---- PageHeader (secondary pages with back button) - */
-.page-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 24px 16px 16px;
-}
-
-.page-header-back {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  color: var(--color-text-muted);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  cursor: pointer;
-  padding: 0;
-  margin: 0;
-  transition: background 0.15s;
-}
-
-.page-header-back:active {
-  background: var(--color-surface-2);
-}
-
-.page-header-title-block {
-  flex: 1;
-  min-width: 0;
-  text-align: left;
-}
-
-.page-header-title {
-  font-size: 17px;
-  font-weight: 700;
-  color: var(--color-text);
-  letter-spacing: -0.3px;
-  margin: 0;
-}
-
-.page-header-subtitle {
-  font-size: 12.5px;
-  color: var(--color-text-tertiary);
-  margin: 2px 0 0;
-}
-
-.page-header-action {
-  flex-shrink: 0;
-  margin-left: auto;
-}
-
 /* ---- Toggle (amnezia spec) ------------------------- */
 .miniapp-shell .ts-toggle {
   width: 38px;
@@ -228,9 +174,9 @@
   height: 18px;
   border-radius: 50%;
   background: var(--color-surface);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-  top: 2px;
-  left: 2px;
+  box-shadow: var(--shadow-card);
+  top: var(--spacing-0-5);
+  left: var(--spacing-0-5);
 }
 
 .miniapp-shell .ts-toggle.on .ts-knob {
@@ -243,12 +189,15 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .modern-header-left {
   display: flex;
   align-items: center;
   gap: var(--spacing-4);
+  flex: 1;
   min-width: 0;
 }
 
@@ -278,7 +227,7 @@
 .modern-profile-block {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--spacing-2);
 }
 
 .modern-avatar {
@@ -290,7 +239,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   color: var(--color-text);
   overflow: hidden;
 }
@@ -308,15 +257,15 @@
 }
 
 .modern-header-title {
-  font-size: var(--text-body, 16px);
-  font-weight: 700;
+  font-size: var(--text-body, var(--font-size-lg));
+  font-weight: var(--font-weight-bold);
   letter-spacing: -0.02em;
   color: var(--color-text);
 }
 
 .modern-header-label {
-  font-size: var(--text-label, 12px);
-  font-weight: 600;
+  font-size: var(--text-label, var(--font-size-xs));
+  font-weight: var(--font-weight-semibold);
   color: var(--color-text-tertiary);
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -330,17 +279,17 @@
 
 .modern-header-page-title {
   font-size: var(--text-title-lg, 28px);
-  font-weight: 800;
+  font-weight: var(--font-weight-extrabold);
   letter-spacing: -0.04em;
   margin: 0;
   color: var(--color-text);
 }
 
 .modern-header-page-subtitle {
-  font-size: var(--text-body, 14px);
+  font-size: var(--text-body, var(--font-size-md));
   color: var(--color-text-muted);
   margin: 0;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .modern-icon-button {
@@ -377,12 +326,12 @@
 .pill-chip {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: var(--spacing-1);
   height: 26px;
-  padding: 4px 10px;
+  padding: var(--spacing-1) var(--spacing-3);
   border-radius: 100px;
-  font-size: var(--amnezia-badge-text, 11px);
-  font-weight: 600;
+  font-size: var(--amnezia-badge-text, var(--font-size-xs));
+  font-weight: var(--font-weight-semibold);
   letter-spacing: 0.2px;
   white-space: nowrap;
   line-height: 1;
@@ -422,11 +371,11 @@
 }
 
 .pill-chip-label-bold {
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
 }
 
 .pill-chip-label-dim {
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   opacity: 0.8;
 }
 
@@ -442,9 +391,9 @@
 /* ---- Profile row (amnezia spec §4.1) ---------------- */
 .profile-row,
 .modern-profile-row {
-  padding-left: 16px;
-  gap: 10px;
-  margin-bottom: var(--amnezia-profile-margin-bottom, 20px);
+  padding-left: var(--spacing-4);
+  gap: var(--spacing-2);
+  margin-bottom: var(--amnezia-profile-margin-bottom, var(--spacing-5));
 }
 
 .modern-profile-row .modern-avatar--profile {
@@ -455,14 +404,14 @@
   background: linear-gradient(140deg, var(--green-avatar-gradient-start) 0%, var(--green-avatar-gradient-end) 100%);
   border: none;
   box-shadow: 0 0 0 1px var(--color-border);
-  font-size: var(--amnezia-avatar-initials, 11.5px);
-  font-weight: 700;
+  font-size: var(--amnezia-avatar-initials, var(--font-size-xs));
+  font-weight: var(--font-weight-bold);
   letter-spacing: 0.2px;
   color: var(--green-avatar-text);
 }
 
 html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 0 1px var(--avatar-ring, var(--border-glass));
 }
 
 .modern-profile-row .modern-avatar--profile img {
@@ -473,15 +422,15 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
   flex: 1;
   flex-direction: row;
   align-items: center;
-  gap: 10px;
+  gap: var(--spacing-2);
   min-width: 0;
 }
 
 .modern-profile-info--row .modern-header-title {
   flex: 1;
   min-width: 0;
-  font-size: var(--amnezia-profile-name, 15px);
-  font-weight: 600;
+  font-size: var(--amnezia-profile-name, var(--font-size-md));
+  font-weight: var(--font-weight-semibold);
   letter-spacing: -0.3px;
 }
 
@@ -512,19 +461,19 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
   background: var(--color-surface);
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-lg);
-  padding: 18px;
-  margin: 0 0 var(--amnezia-card-gap, var(--spacing-2));
+  padding: var(--miniapp-hero-padding);
+  margin: 0 0 var(--amnezia-card-gap, var(--miniapp-row-gap));
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   text-align: left;
-  gap: 16px;
+  gap: var(--spacing-4);
 }
 
 .settings-account-card__group {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
+  gap: var(--spacing-3);
   width: 100%;
 }
 
@@ -537,7 +486,7 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--color-text);
   overflow: hidden;
   flex-shrink: 0;
@@ -556,43 +505,43 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
 .settings-account-card__meta {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--spacing-0-5);
   min-width: 0;
 }
 
 .settings-account-eyebrow {
-  font-size: 10px;
-  font-weight: 500;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
   letter-spacing: 0.6px;
   text-transform: uppercase;
   color: var(--color-text-tertiary);
 }
 
 .settings-account-name {
-  font-size: 15px;
-  font-weight: 600;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
   color: var(--color-text);
 }
 
 .settings-account-chip {
-  margin-top: 2px;
+  margin-top: var(--spacing-0-5);
 }
 
 .settings-account-status {
-  font-size: 12.5px;
-  font-weight: 400;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-normal);
   color: var(--color-text-tertiary);
 }
 
 .settings-account-card__renewal {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--spacing-0-5);
 }
 
 .settings-account-renewal-value {
-  font-size: 13px;
-  font-weight: 500;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
   color: var(--color-text);
 }
 
@@ -648,14 +597,14 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
 }
 
 .modern-hero-title {
-  font-size: var(--text-title-md, 24px);
-  font-weight: 800;
+  font-size: var(--amnezia-hero-title, var(--text-title-md, 24px));
+  font-weight: var(--font-weight-extrabold);
   letter-spacing: -0.02em;
   color: var(--color-text);
 }
 
 .modern-hero-desc {
-  font-size: var(--text-body, 15px);
+  font-size: var(--amnezia-hero-desc, var(--text-body, 15px));
   color: var(--color-text-muted);
   line-height: 1.5;
   max-width: 300px;
@@ -682,7 +631,6 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
 .modern-hero-card,
 .plan-hero-card,
 .new-user-hero { animation: up 0.3s 0.04s ease both; }
-.renewal-banner { animation: up 0.3s 0.08s ease both; }
 .card-row { animation: up 0.3s 0s ease both; }
 .help,
 .footer-help { animation: up 0.3s 0.2s ease both; }
@@ -690,20 +638,20 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
 /* ---- FooterHelp (design-system recipe) ----------------- */
 .footer-help {
   padding: var(--spacing-4) var(--spacing-6) var(--spacing-6);
-  margin-top: 20px;
+  margin-top: 0;
   text-align: center;
 }
 
 .footer-help__note {
   margin: 0;
-  font-size: var(--amnezia-help-text, 12px);
+  font-size: var(--amnezia-help-text, var(--font-size-xs));
   color: var(--text3, var(--color-text-tertiary));
-  font-weight: 400;
+  font-weight: var(--font-weight-normal);
 }
 
 .footer-help__link {
   color: var(--color-accent);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   text-decoration: underline;
   text-underline-offset: 2px;
   text-decoration-thickness: 1px;
@@ -721,12 +669,12 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
   border: 1px solid var(--border, var(--color-border-subtle));
   border-radius: var(--r, var(--radius-lg));
   overflow: hidden;
-  margin: 0 0 var(--amnezia-card-gap, var(--spacing-2));
+  margin: 0 0 var(--amnezia-card-gap, var(--miniapp-row-gap));
   box-shadow: none;
 }
 
 .plan-hero-body {
-  padding: 18px 18px 0 18px;
+  padding: var(--miniapp-hero-padding) var(--miniapp-hero-padding) 0 var(--miniapp-hero-padding);
 }
 
 .plan-hero-head {
@@ -740,12 +688,12 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
 .plan-hero-meta {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--spacing-0-5);
 }
 
 .plan-hero-eyebrow {
-  font-size: 10px;
-  font-weight: 500;
+  font-size: var(--amnezia-plan-eyebrow, var(--font-size-xs));
+  font-weight: var(--font-weight-medium);
   letter-spacing: 0.6px;
   text-transform: uppercase;
   color: var(--text3, var(--color-text-tertiary));
@@ -753,15 +701,15 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
 
 .plan-hero-name,
 .plan-name {
-  font-size: 28px;
-  font-weight: 700;
+  font-size: var(--amnezia-plan-name, var(--text-h1, 28px));
+  font-weight: var(--font-weight-bold);
   letter-spacing: -0.8px;
   color: var(--text, var(--color-text));
 }
 
 .plan-hero-subtitle {
-  font-size: var(--amnezia-plan-subtitle, 12.5px);
-  font-weight: 400;
+  font-size: var(--amnezia-plan-subtitle, var(--font-size-sm));
+  font-weight: var(--font-weight-normal);
   letter-spacing: -0.1px;
   color: var(--text3, var(--color-text-tertiary));
 }
@@ -769,11 +717,11 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
 .plan-hero-badge {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  font-size: var(--amnezia-badge-text, 11px);
-  font-weight: 600;
+  gap: var(--spacing-1);
+  font-size: var(--amnezia-badge-text, var(--font-size-xs));
+  font-weight: var(--font-weight-semibold);
   letter-spacing: 0.1px;
-  padding: var(--spacing-1) var(--amnezia-badge-padding-h, 10px);
+  padding: var(--spacing-1) var(--amnezia-badge-padding-h, var(--spacing-3));
   border-radius: 100px;
   white-space: nowrap;
 }
@@ -797,8 +745,8 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
 
 .plan-hero-badge--expiring {
   color: var(--color-warning);
-  background: rgba(146, 64, 14, 0.12);
-  border: 1px solid rgba(146, 64, 14, 0.22);
+  background: var(--color-warning-bg);
+  border: 1px solid var(--color-warning-border);
 }
 
 .plan-hero-badge--expiring .plan-hero-badge-dot {
@@ -822,11 +770,11 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
 }
 
 html[data-theme="consumer-dark"] .plan-hero-stats {
-  border-top-color: rgba(255, 255, 255, 0.08);
+  border-top-color: var(--divider);
 }
 
 .plan-hero-stat {
-  padding: 14px 0 14px 18px;
+  padding: var(--miniapp-data-cell-padding) 0 var(--miniapp-data-cell-padding) var(--miniapp-hero-padding);
   border-left: 1px solid var(--border, var(--color-border-subtle));
 }
 
@@ -836,23 +784,23 @@ html[data-theme="consumer-dark"] .plan-hero-stats {
 
 .plan-hero-stat-label {
   display: block;
-  font-size: var(--amnezia-stat-label, 9px);
-  font-weight: 600;
+  font-size: var(--amnezia-stat-label, var(--font-size-xs));
+  font-weight: var(--font-weight-semibold);
   letter-spacing: 0.7px;
   text-transform: uppercase;
   color: var(--text3, var(--color-text-tertiary));
-  margin-bottom: 2px;
+  margin-bottom: var(--spacing-0-5);
 }
 
 .plan-hero-stat-value {
-  font-size: var(--amnezia-stat-value, 19px);
-  font-weight: 700;
+  font-size: var(--amnezia-stat-value, var(--font-size-lg));
+  font-weight: var(--font-weight-bold);
   letter-spacing: -0.5px;
   color: var(--text, var(--color-text));
 }
 
 .plan-hero-stat-value .plan-hero-stat-dim {
-  font-weight: 400;
+  font-weight: var(--font-weight-normal);
 }
 
 .plan-hero-stat-value--expiring {
@@ -864,138 +812,21 @@ html[data-theme="consumer-dark"] .plan-hero-stats {
 }
 
 .plan-hero-stat-dim {
-  font-size: var(--amnezia-stat-dim, 13px);
-  font-weight: 400;
+  font-size: var(--amnezia-stat-dim, var(--font-size-sm));
+  font-weight: var(--font-weight-normal);
   color: var(--text3, var(--color-text-tertiary));
-}
-
-/* ---- Renewal Banner (amnezia spec §4.4) ------------- */
-.renewal-banner {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  margin: 0 0 var(--amnezia-card-gap, var(--spacing-2));
-  padding: 14px 16px 0;
-  border-radius: var(--r, var(--radius-lg));
-  border: 1px solid transparent;
-  cursor: pointer;
-  transition: background 0.12s ease, filter 0.12s ease;
-  background: transparent;
-  text-align: left;
-  font: inherit;
-}
-
-.renewal-banner:hover {
-  filter: brightness(0.97);
-}
-
-.renewal-banner:active {
-  filter: brightness(1.1);
-}
-
-.renewal-banner-icon {
-  width: 34px;
-  height: 34px;
-  border-radius: var(--r-sm, var(--radius-sm));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.renewal-banner--expiring {
-  background: var(--color-warning-bg, rgba(146, 64, 14, 0.12));
-  border: 1px solid var(--color-warning-border, rgba(146, 64, 14, 0.22));
-}
-
-.renewal-banner--expiring .renewal-banner-icon {
-  background: var(--color-icon-warning-bg, var(--amber-icon-bg));
-  color: var(--amber, var(--color-warning));
-}
-
-.renewal-banner--expired {
-  background: var(--color-error-bg, var(--red-bg, var(--color-error-soft)));
-  border-color: var(--color-error-border, var(--red-border, var(--surface-border-error)));
-}
-
-.renewal-banner--expired .renewal-banner-icon {
-  background: var(--color-icon-danger-bg, var(--red-icon-bg));
-  color: var(--red, var(--color-error));
-}
-
-.renewal-banner-body {
-  flex: 1;
-  min-width: 0;
-  flex-direction: column;
-  display: flex;
-  gap: 2px;
-}
-
-.renewal-banner-title {
-  font-size: var(--amnezia-banner-title, 13px);
-  font-weight: 600;
-  letter-spacing: -0.2px;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-}
-
-.renewal-banner--expiring .renewal-banner-title {
-  color: var(--amber, var(--color-warning));
-}
-
-.renewal-banner--expired .renewal-banner-title {
-  color: var(--red, var(--color-error));
-}
-
-.renewal-banner-subtitle {
-  font-size: var(--amnezia-banner-sub, 11.5px);
-  font-weight: 400;
-  color: var(--text3, var(--color-text-tertiary));
-  line-height: 1.45;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-}
-
-.renewal-banner-chevron {
-  color: var(--text3, var(--color-text-tertiary));
-  flex-shrink: 0;
-}
-
-/* RenewalBanner uses Button: override btn-content layout for card-like structure */
-.renewal-banner .btn-content {
-  width: 100%;
-  justify-content: flex-start;
-  gap: 12px;
-}
-.renewal-banner .btn-content .btn-icon-slot:first-child {
-  width: auto;
-  height: auto;
-  flex: 0 0 auto;
-}
-.renewal-banner .btn-content .btn-label {
-  flex: 1;
-  min-width: 0;
-  white-space: normal;
-  overflow: visible;
-  text-overflow: unset;
-}
-.renewal-banner .btn-content .btn-icon-slot:last-child {
-  width: auto;
-  height: auto;
-  flex: 0 0 auto;
 }
 
 /* ---- No-device callout (amnezia spec §4.9) ---------- */
 .no-device-callout {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: var(--spacing-3);
   background: var(--white, var(--color-surface));
   border: 1px solid var(--border, var(--color-border));
   border-radius: var(--r, var(--radius-lg));
-  padding: 16px 18px;
-  margin: 0 0 var(--amnezia-card-gap, var(--spacing-2));
+  padding: var(--miniapp-card-padding) var(--miniapp-hero-padding);
+  margin: 0 0 var(--amnezia-card-gap, var(--miniapp-row-gap));
 }
 
 .no-device-callout-icon {
@@ -1015,19 +846,19 @@ html[data-theme="consumer-dark"] .plan-hero-stats {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--spacing-0-5);
 }
 
 .no-device-callout-title {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: var(--amnezia-callout-title, var(--font-size-md));
+  font-weight: var(--font-weight-semibold);
   letter-spacing: -0.2px;
   color: var(--text, var(--color-text));
 }
 
 .no-device-callout-subtitle {
-  font-size: 12px;
-  font-weight: 400;
+  font-size: var(--amnezia-callout-sub, var(--font-size-xs));
+  font-weight: var(--font-weight-normal);
   color: var(--text3, var(--color-text-tertiary));
 }
 
@@ -1036,15 +867,15 @@ html[data-theme="consumer-dark"] .plan-hero-stats {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-  gap: 5px;
-  font-size: var(--amnezia-cta-pill, 12px);
-  font-weight: 600;
+  gap: var(--spacing-1);
+  font-size: var(--amnezia-cta-pill, var(--font-size-xs));
+  font-weight: var(--font-weight-semibold);
   color: var(--text, var(--color-text));
   transition: background 0.12s ease, filter 0.12s ease;
   background: var(--bg, var(--color-surface-2));
   border: 1px solid var(--border-med, var(--color-border-strong));
   border-radius: 100px;
-  padding: 6px 12px;
+  padding: var(--spacing-1) var(--spacing-3);
   flex-shrink: 0;
   white-space: nowrap;
   cursor: pointer;
@@ -1060,45 +891,45 @@ html[data-theme="consumer-dark"] .plan-hero-stats {
   background: var(--white, var(--color-surface));
   border: 1px solid var(--border, var(--color-border));
   border-radius: var(--r, var(--radius-lg));
-  padding: 40px 24px 28px;
+  padding: var(--spacing-10) var(--spacing-6) var(--spacing-6);
   text-align: center;
-  margin: 0 0 var(--amnezia-card-gap, var(--spacing-2));
+  margin: 0 0 var(--amnezia-card-gap, var(--miniapp-row-gap));
 }
 
 .new-user-hero-icon {
   color: var(--text3, var(--color-text-tertiary));
-  margin-bottom: 18px;
+  margin-bottom: var(--spacing-4);
   display: flex;
   justify-content: center;
 }
 
 .new-user-hero-title {
   font-size: var(--amnezia-hero-title, 20px);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   letter-spacing: -0.5px;
   color: var(--text, var(--color-text));
-  margin: 0 0 7px;
+  margin: 0 0 var(--spacing-2);
 }
 
 .new-user-hero-desc {
-  font-size: var(--amnezia-hero-desc, 13px);
-  font-weight: 400;
+  font-size: var(--amnezia-hero-desc, var(--font-size-sm));
+  font-weight: var(--font-weight-normal);
   color: var(--text2, var(--color-text-muted));
   line-height: 1.6;
   max-width: 210px;
-  margin: 0 auto 24px;
+  margin: 0 auto var(--spacing-6);
 }
 
 .new-user-hero-actions {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--spacing-2);
 }
 
 .new-user-hero-cta {
-  font-family: Inter, var(--font-sans), system-ui, sans-serif;
-  font-weight: 600;
-  font-size: 14px;
+  font-family: var(--font-sans);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-md);
   letter-spacing: -0.2px;
   text-transform: none;
   font-variant: normal;
@@ -1117,16 +948,16 @@ html[data-theme="consumer-dark"] .plan-hero-stats {
 }
 
 .modern-action-label {
-  font-size: 11px;
-  font-weight: 600;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
   color: var(--color-text-tertiary);
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
 
 .modern-action-value {
-  font-size: var(--text-body, 15px);
-  font-weight: 700;
+  font-size: var(--text-body, var(--font-size-md));
+  font-weight: var(--font-weight-bold);
   color: var(--color-text);
   line-height: 1.3;
 }
@@ -1175,12 +1006,12 @@ html[data-theme="consumer-dark"] .plan-hero-stats {
 
 .modern-banner-title {
   font-size: var(--text-body, 15px);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   color: var(--color-text-muted);
 }
 
 .modern-banner-desc {
-  font-size: var(--text-caption, 13px);
+  font-size: var(--text-caption, var(--font-size-sm));
   color: var(--color-text-tertiary);
 }
 
@@ -1204,18 +1035,18 @@ html[data-theme="consumer-dark"] .plan-hero-stats {
   border: 1px solid var(--color-border);
   border-radius: var(--r, var(--radius-lg));
   overflow: hidden;
-  margin-bottom: 8px;
+  margin-bottom: var(--spacing-2);
 }
 
 /* Canonical home page nav cards — match screenshot layout */
 .home-card-row.modern-list {
-  margin: 0 0 var(--amnezia-card-gap, var(--spacing-2));
+  margin: 0 0 var(--amnezia-card-gap, var(--miniapp-row-gap));
   padding-bottom: 0;
 }
 
 .home-card-row .modern-list-item {
-  padding: var(--amnezia-row-pad-v, 13px) var(--amnezia-row-pad-h, 16px);
-  gap: 13px;
+  padding: var(--amnezia-row-pad-v, var(--miniapp-data-cell-padding)) var(--amnezia-row-pad-h, var(--miniapp-card-padding));
+  gap: var(--spacing-3);
 }
 
 .home-card-row .modern-list-item-icon {
@@ -1232,18 +1063,18 @@ html[data-theme="consumer-dark"] .plan-hero-stats {
 }
 
 .home-card-row .modern-list-item-right {
-  gap: 8px;
+  gap: var(--spacing-2);
   align-items: center;
 }
 
 .home-row-right-group {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-2);
 }
 
 .home-invite-card .modern-list-item-subtitle {
-  font-size: 11.5px;
+  font-size: var(--font-size-sm);
 }
 
 .home-invite-card .modern-list-item {
@@ -1252,10 +1083,10 @@ html[data-theme="consumer-dark"] .plan-hero-stats {
 
 .home-row-badge,
 .badge {
-  font-size: 10.5px;
-  font-weight: 600;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
   letter-spacing: 0.1px;
-  padding: 2.5px 8px;
+  padding: var(--spacing-0-5) var(--spacing-2);
   border-radius: 100px;
   border: 1px solid transparent;
   white-space: nowrap;
@@ -1288,8 +1119,8 @@ html[data-theme="consumer-dark"] .plan-hero-stats {
 .row-item {
   display: flex;
   align-items: center;
-  padding: 13px 16px;
-  gap: 13px;
+  padding: var(--miniapp-data-cell-padding) var(--miniapp-card-padding);
+  gap: var(--spacing-3);
   min-height: 44px;
   background: transparent;
   width: 100%;
@@ -1305,7 +1136,7 @@ html[data-theme="consumer-dark"] .plan-hero-stats {
 
 html[data-theme="consumer-dark"] .modern-list-item,
 html[data-theme="consumer-dark"] .row-item {
-  border-bottom-color: rgba(255, 255, 255, 0.08);
+  border-bottom-color: var(--divider);
 }
 
 .modern-list-item:last-child,
@@ -1337,8 +1168,8 @@ html[data-theme="consumer-dark"] .row-item {
 }
 
 .modern-list-item-title {
-  font-size: 13.5px;
-  font-weight: 500;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
   letter-spacing: -0.2px;
   color: var(--color-text);
   white-space: nowrap;
@@ -1347,8 +1178,8 @@ html[data-theme="consumer-dark"] .row-item {
 }
 
 .modern-list-item-subtitle {
-  font-size: 11.5px;
-  font-weight: 400;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-normal);
   color: var(--color-text-tertiary);
   margin-top: var(--spacing-px);
   line-height: 1.4;
@@ -1364,9 +1195,9 @@ html[data-theme="consumer-dark"] .row-item {
 .modern-icon-tone--blue { background: color-mix(in oklch, var(--color-accent) 6%, var(--color-surface-2)); color: var(--color-accent); }
 .modern-icon-tone--green { background: color-mix(in oklch, var(--color-success) 6%, var(--color-surface-2)); color: var(--color-success); }
 .modern-icon-tone--amber,
-.modern-icon-tone--warning { background: var(--color-icon-warning-bg, rgba(146, 64, 14, 0.12)); color: var(--color-warning); }
+.modern-icon-tone--warning { background: var(--color-icon-warning-bg); color: var(--color-warning); }
 .modern-icon-tone--red,
-.modern-icon-tone--danger { background: var(--color-icon-danger-bg, rgba(153, 27, 27, 0.12)); color: var(--color-error); }
+.modern-icon-tone--danger { background: var(--color-icon-danger-bg); color: var(--color-error); }
 .modern-icon-tone--neutral { background: var(--color-surface-2); border-color: var(--color-border); color: var(--color-text-muted); }
 
 /* ---- Plan Options ---------------------------------- */
@@ -1414,7 +1245,7 @@ html[data-theme="consumer-dark"] .row-item {
 
 .modern-plan-title {
   font-size: var(--text-title-md, 20px);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   color: var(--color-text);
   display: flex;
   align-items: center;
@@ -1423,7 +1254,7 @@ html[data-theme="consumer-dark"] .row-item {
 
 .modern-plan-price {
   font-size: var(--text-title-md, 20px);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   color: var(--color-accent);
 }
 
@@ -1440,7 +1271,7 @@ html[data-theme="consumer-dark"] .row-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: var(--text-body, 14px);
+  font-size: var(--text-body, var(--font-size-md));
 }
 
 .modern-plan-feature-label {
@@ -1449,7 +1280,7 @@ html[data-theme="consumer-dark"] .row-item {
 
 .modern-plan-feature-value {
   color: var(--color-text);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 /* ---- Device Metrics --------------------------------- */
@@ -1575,13 +1406,13 @@ html[data-theme="consumer-dark"] .row-item {
 
 .modern-contact-card__title {
   font-size: var(--text-body, 18px);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   color: var(--color-text);
   letter-spacing: -0.02em;
 }
 
 .modern-contact-card__desc {
-  font-size: var(--text-body, 14px);
+  font-size: var(--text-body, var(--font-size-md));
   color: var(--color-text-muted);
   line-height: 1.5;
 }
@@ -1600,7 +1431,7 @@ html[data-theme="consumer-dark"] .row-item {
   border: 1px solid color-mix(in srgb, var(--color-warning) 20%, transparent);
   border-radius: var(--radius-sm);
   padding: var(--spacing-3) var(--spacing-4);
-  font-size: var(--text-caption, 13px);
+  font-size: var(--text-caption, var(--font-size-sm));
   color: var(--color-text-muted);
 }
 
@@ -1608,7 +1439,7 @@ html[data-theme="consumer-dark"] .row-item {
   display: block;
   color: var(--color-text);
   margin-bottom: var(--spacing-1);
-  font-size: var(--text-body, 14px);
+  font-size: var(--text-body, var(--font-size-md));
 }
 
 .modern-contact-card__unavailable p {
@@ -1655,13 +1486,13 @@ html[data-theme="consumer-dark"] .row-item {
 
 .troubleshooter-card__title {
   font-size: var(--text-body, 17px);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   color: var(--color-text);
   letter-spacing: -0.01em;
 }
 
 .troubleshooter-card__body {
-  font-size: var(--text-body, 14px);
+  font-size: var(--text-body, var(--font-size-md));
   color: var(--color-text-muted);
   line-height: 1.5;
 }
