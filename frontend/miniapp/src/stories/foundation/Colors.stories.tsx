@@ -5,6 +5,7 @@ const meta: Meta = {
   title: "Foundation/Colors",
   parameters: {
     layout: "padded",
+    status: { type: "stable" },
     docs: {
       description: {
         component:
@@ -22,7 +23,7 @@ function resolveToken(token: string): string {
     .trim();
 }
 
-function Swatch({ token }: { token: string }) {
+function Swatch({ token, usage }: { token: string; usage?: string }) {
   const value = resolveToken(token);
   const isLight = token.includes("on-accent") || token.includes("overlay");
 
@@ -54,11 +55,18 @@ function Swatch({ token }: { token: string }) {
       <code style={{ fontSize: 9, color: "var(--color-text-tertiary, #aaa)", lineHeight: 1.4 }}>
         {value || "—"}
       </code>
+      {usage && (
+        <code style={{ fontSize: 9, color: "var(--color-text-tertiary, #aaa)", lineHeight: 1.4 }}>
+          {usage}
+        </code>
+      )}
     </div>
   );
 }
 
-function SwatchGroup({ name, tokens }: { name: string; tokens: string[] }) {
+type ColorItem = { token: string; usage: string };
+
+function SwatchGroup({ name, items }: { name: string; items: ColorItem[] }) {
   return (
     <div>
       <p
@@ -74,28 +82,50 @@ function SwatchGroup({ name, tokens }: { name: string; tokens: string[] }) {
         {name}
       </p>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
-        {tokens.map((token) => (
-          <Swatch key={token} token={token} />
+        {items.map(({ token, usage }) => (
+          <Swatch key={token} token={token} usage={usage} />
         ))}
       </div>
     </div>
   );
 }
 
-const COLOR_GROUPS: Record<string, string[]> = {
-  Surfaces: ["--color-bg", "--color-surface", "--color-surface-2", "--color-overlay"],
-  Text: ["--color-text", "--color-text-muted", "--color-text-tertiary"],
-  Borders: ["--color-border", "--color-border-subtle", "--color-border-strong"],
-  Accent: ["--color-accent", "--color-accent-hover", "--color-on-accent"],
-  Semantic: ["--color-success", "--color-warning", "--color-error", "--color-info"],
+const COLOR_GROUPS: Record<string, ColorItem[]> = {
+  Surfaces: [
+    { token: "--color-bg", usage: "Page background" },
+    { token: "--color-surface", usage: "Card, modal, panel" },
+    { token: "--color-surface-2", usage: "Nested card, input bg" },
+    { token: "--color-overlay", usage: "Scrim behind modals" },
+  ],
+  Text: [
+    { token: "--color-text", usage: "Primary text" },
+    { token: "--color-text-muted", usage: "Secondary, labels" },
+    { token: "--color-text-tertiary", usage: "Placeholder, disabled" },
+  ],
+  Borders: [
+    { token: "--color-border", usage: "Default border" },
+    { token: "--color-border-subtle", usage: "Subtle divider" },
+    { token: "--color-border-strong", usage: "Emphasis border" },
+  ],
+  Accent: [
+    { token: "--color-accent", usage: "Primary action" },
+    { token: "--color-accent-hover", usage: "Hover state" },
+    { token: "--color-on-accent", usage: "Text on accent" },
+  ],
+  Semantic: [
+    { token: "--color-success", usage: "Success, connected" },
+    { token: "--color-warning", usage: "Warning state" },
+    { token: "--color-error", usage: "Error, danger" },
+    { token: "--color-info", usage: "Info, neutral" },
+  ],
 };
 
 export const All: StoryObj = {
   name: "All tokens",
   render: () => (
     <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
-      {Object.entries(COLOR_GROUPS).map(([name, tokens]) => (
-        <SwatchGroup key={name} name={name} tokens={tokens} />
+      {Object.entries(COLOR_GROUPS).map(([name, items]) => (
+        <SwatchGroup key={name} name={name} items={items} />
       ))}
     </div>
   ),

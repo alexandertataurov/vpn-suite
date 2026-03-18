@@ -73,9 +73,28 @@ const preview: Preview = {
   parameters: {
     layout: "fullscreen",
     controls: { matchers: { color: /(background|color)$/i, date: /Date$/i } },
+    status: {
+      statuses: {
+        stable: {
+          background: "#f0fdf4",
+          color: "#166534",
+          description: "Production ready",
+        },
+        beta: {
+          background: "#fffbeb",
+          color: "#92400e",
+          description: "In progress",
+        },
+        deprecated: {
+          background: "#fef2f2",
+          color: "#991b1b",
+          description: "Do not use",
+        },
+      },
+    },
     options: {
       storySort: {
-        order: ["Foundations", "Primitives", "Patterns", "Layouts", "Pages", "States", "*"],
+        order: ["Foundation", "Foundations", "Primitives", "Patterns", "Layouts", "Pages", "States", "*"],
       },
     },
   },
