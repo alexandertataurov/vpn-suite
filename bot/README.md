@@ -22,4 +22,4 @@ From the bot/ directory:
 - With coverage: `pytest --cov=. --cov-report=html`
 - One file: `pytest tests/test_handlers.py -v`
 
-Requirements: pytest, pytest-asyncio, pytest-cov, pytest-mock (see requirements.txt).
+Requirements: `pip install -r requirements-dev.txt` (includes pytest, pytest-asyncio, pytest-cov, pytest-mock).
