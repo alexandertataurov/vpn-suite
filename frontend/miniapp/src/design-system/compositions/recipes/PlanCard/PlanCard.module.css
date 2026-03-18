@@ -1,0 +1,149 @@
+/* PlanCard — amnezia spec §4.3. Borders only, no shadows. */
+
+.root {
+  font-family: "Inter", var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  background: var(--white, var(--color-surface));
+  border: 1px solid var(--border, var(--color-border-subtle));
+  border-radius: var(--r, var(--radius-lg));
+  overflow: hidden;
+}
+
+.body {
+  padding: var(--amnezia-card-padding, 18px);
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-2, 8px);
+}
+
+.meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.planName {
+  font-size: var(--amnezia-plan-name, 28px);
+  font-weight: 700;
+  letter-spacing: -0.8px;
+  color: var(--text, var(--color-text));
+}
+
+.planSub {
+  font-size: var(--amnezia-plan-subtitle, 12.5px);
+  font-weight: 400;
+  letter-spacing: -0.1px;
+  color: var(--text3, var(--color-text-tertiary));
+}
+
+/* Status badge — s-badge + semantic variant */
+.sBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--amnezia-badge-text, 11px);
+  font-weight: 600;
+  letter-spacing: 0.1px;
+  padding: 4px 10px;
+  border-radius: 100px;
+  white-space: nowrap;
+}
+
+.badgeDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.sBadge--active {
+  color: var(--green, var(--color-success));
+  background: var(--green-bg, var(--color-success-soft));
+  border: 1px solid var(--green-border, var(--green-b));
+}
+
+.sBadge--active .badgeDot {
+  animation: planCardBlink 2.5s ease-in-out infinite;
+}
+
+.sBadge--expiring {
+  color: var(--amber, var(--color-warning));
+  background: var(--amber-bg, var(--color-warning-soft));
+  border: 1px solid var(--amber-border, var(--amber-b));
+}
+
+.sBadge--expiring .badgeDot {
+  animation: planCardBlink 2s ease-in-out infinite;
+}
+
+.sBadge--expired {
+  color: var(--red, var(--color-error));
+  background: var(--red-bg, var(--color-error-soft));
+  border: 1px solid var(--red-border, var(--red-b));
+}
+
+.sBadge--expired .badgeDot {
+  opacity: 0.5;
+}
+
+@keyframes planCardBlink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+/* Stats strip — 3-column grid, border-left dividers */
+.stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  border-top: 1px solid var(--border, var(--color-border-subtle));
+}
+
+.stat {
+  padding: 14px 0 14px 18px;
+  border-left: 1px solid var(--border, var(--color-border-subtle));
+}
+
+.stat:first-child {
+  border-left: none;
+}
+
+.statLabel {
+  display: block;
+  font-size: var(--amnezia-stat-label, 9px);
+  font-weight: 600;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  color: var(--text3, var(--color-text-tertiary));
+  margin-bottom: 2px;
+}
+
+.statValue {
+  font-size: var(--amnezia-stat-value, 19px);
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: var(--text, var(--color-text));
+}
+
+.statDim {
+  font-size: var(--amnezia-stat-dim, 13px);
+  font-weight: 400;
+  color: var(--text3, var(--color-text-tertiary));
+}
+
+.statValueExpiring {
+  color: var(--amber, var(--color-warning));
+}
+
+.statValueExpired {
+  color: var(--red, var(--color-error));
+}

@@ -26,6 +26,8 @@ export type {
   PlanHeroStat,
   PlanHeroStatus,
 } from "./PlanHeroCard";
+export { PlanCard } from "./PlanCard";
+export type { PlanCardProps, PlanCardStatus } from "./PlanCard";
 export { RenewalBanner } from "./RenewalBanner";
 export type { RenewalBannerProps, RenewalBannerVariant } from "./RenewalBanner";
 export { NoDeviceCallout } from "./NoDeviceCallout";
