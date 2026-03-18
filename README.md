@@ -167,6 +167,6 @@ For agents and automation: [AGENTS.MD](AGENTS.MD).
 
 ### Storybook contract commands
 
-- `npm run storybook:contract -w miniapp` verifies the required executable Storybook contract stories and tags.
-- `npm run test-storybook -w miniapp` runs the required reduced Storybook contract suite.
-- `npm run test-storybook:official -w miniapp` probes the standalone official Storybook runner. This is non-blocking until the current Storybook 10 metadata issue is resolved.
+- `pnpm run storybook:contract:miniapp` verifies the required executable Storybook contract stories and tags.
+- `pnpm run test-storybook:miniapp` runs the required reduced Storybook contract suite.
+- `pnpm run test-storybook:official:miniapp` probes the standalone official Storybook runner. This is non-blocking until the current Storybook 10 metadata issue is resolved.

@@ -136,9 +136,6 @@ html {
   /* Shadow fallbacks (consumer theme overrides) */
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
   --shadow-elevated: 0 2px 8px rgba(0, 0, 0, 0.08);
-  /* Breakpoints — single source: tokens/breakpoints.ts */
-  --bp-sm: 390px;
-  --bp-md: 600px;
 }
 
 /* Miniapp runtime + SpaceX palette (migrated from src/styles/tokens.css) */

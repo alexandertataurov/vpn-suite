@@ -71,7 +71,7 @@ Inline styles are forbidden in app and design-system production code.
 ## Enforcement
 
 - **design:check** — `npm --prefix frontend run design:check -w miniapp` (single :root, no inline styles in app code, no direct lucide imports, page imports from `@/design-system`, no page-local CSS, token drift, token-parity test).
-- **guardrails** — From frontend root: `npm run guardrails` runs miniapp design:check and related checks.
+- **guardrails** — From frontend root: `pnpm run guardrails` runs miniapp design:check and related checks.
 - **ESLint** — Forbids inline `style` props outside Storybook-only folders.
 - **New patterns** — Add both CSS (under `styles/content`) and a Storybook story that documents the pattern before wiring it into a page.
 

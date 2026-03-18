@@ -61,8 +61,8 @@ Files: `analytics.py`, `overview.py`, `servers_peers.py`, `servers_telemetry.py`
 
 ### Frontend
 
-- **npm ci:** Succeeds
-- **npm run build:** Blocked by typecheck failures
+- **pnpm install --frozen-lockfile:** Succeeds
+- **pnpm run build:** Blocked by typecheck failures
 - **Production build warnings:** N/A (build fails)
 
 ### Docker

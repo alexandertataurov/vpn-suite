@@ -75,13 +75,13 @@ Inline styles are forbidden in app and design-system production code.
 - **storybook foundations** — documents environment parity, motion usage, color semantics, and production examples
 - **ESLint** — forbids inline `style` props outside Storybook-only folders
 - **`design:check`** — runs token drift plus runtime parity checks
-- **guardrails** — `npm run guardrails` (from frontend root): runs miniapp `design:check` (single :root, no inline styles in app code, no direct lucide imports, page imports from `@/design-system`, no page-local CSS, token drift, token-parity test)
+- **guardrails** — `pnpm run guardrails` (from frontend root): runs miniapp `design:check` (single :root, no inline styles in app code, no direct lucide imports, page imports from `@/design-system`, no page-local CSS, token drift, token-parity test)
 
 ## PR / review checklist (UI)
 
 Before merging changes that touch UI or design:
 
-- [ ] No new hex/rgb/hsl in components or pages; no inline styles outside stories (run `npm run guardrails` from frontend root).
+- [ ] No new hex/rgb/hsl in components or pages; no inline styles outside stories (run `pnpm run guardrails` from frontend root).
 - [ ] New or changed components use semantic tokens only; Tailwind/classes use `var(--*)` where applicable.
 - [ ] New or changed shared components: token usage documented in `tokens-map.ts` → `COMPONENT_TOKENS` (see miniapp design-system).
 - [ ] Typography uses `--typo-*` / `--ds-font-*` tokens or shared text primitives.

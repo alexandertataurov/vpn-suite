@@ -11,7 +11,7 @@
     {
       "label": "frontend:check",
       "type": "shell",
-      "command": "npm run lint && npm run typecheck && npm test -- --run",
+      "command": "pnpm run lint && pnpm run typecheck && pnpm test -- --run",
       "options": { "cwd": "${workspaceFolder}/frontend" },
       "group": { "kind": "test", "isDefault": false }
     },
@@ -39,7 +39,7 @@
     {
       "label": "full:check",
       "type": "shell",
-      "command": "cd backend && (ruff check . && ruff format --check . && mypy . && vulture . --min-confidence 80 && pytest tests/ --cov=app --cov-report=term-missing -v) && cd ../frontend && (npm run lint && npm run typecheck && npm test -- --run) && cd .. && (set -euo pipefail; grep -rE '#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?' frontend --include='*.ts' --include='*.tsx' --include='*.css' && { echo 'design:check failed: hex'; exit 1; } || true; grep -rE 'style=\\{\\{' frontend --include='*.tsx' && { echo 'design:check failed: inline styles'; exit 1; } || true; [ -n \"$(grep -rEl \"from ['\\\"]lucide-react['\\\"]\" frontend/miniapp/src --include='*.ts' --include='*.tsx' | grep -vE 'lib/icons\.ts|design-system/icons')\" ] && { echo 'design:check failed: lucide'; exit 1; } || true; F=$(grep -rl ':root' frontend --include='*.css' 2>/dev/null | grep -v -E 'tokens/tokens\\.css|miniapp-tokens\\.css' | head -1); if [ -n \"$F\" ]; then echo \"design:check failed: :root in $F\"; exit 1; fi) && (cd backend && python3 scripts/export_openapi.py) && git diff --exit-code openapi/openapi.json && cd backend && (python -m alembic upgrade head && python -m alembic check)",
+      "command": "cd backend && (ruff check . && ruff format --check . && mypy . && vulture . --min-confidence 80 && pytest tests/ --cov=app --cov-report=term-missing -v) && cd ../frontend && (pnpm run lint && pnpm run typecheck && pnpm test -- --run) && cd .. && (set -euo pipefail; grep -rE '#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?' frontend --include='*.ts' --include='*.tsx' --include='*.css' && { echo 'design:check failed: hex'; exit 1; } || true; grep -rE 'style=\\{\\{' frontend --include='*.tsx' && { echo 'design:check failed: inline styles'; exit 1; } || true; [ -n \"$(grep -rEl \"from ['\\\"]lucide-react['\\\"]\" frontend/miniapp/src --include='*.ts' --include='*.tsx' | grep -vE 'lib/icons\.ts|design-system/icons')\" ] && { echo 'design:check failed: lucide'; exit 1; } || true; F=$(grep -rl ':root' frontend --include='*.css' 2>/dev/null | grep -v -E 'tokens/tokens\\.css|miniapp-tokens\\.css' | head -1); if [ -n \"$F\" ]; then echo \"design:check failed: :root in $F\"; exit 1; fi) && (cd backend && python3 scripts/export_openapi.py) && git diff --exit-code openapi/openapi.json && cd backend && (python -m alembic upgrade head && python -m alembic check)",
       "options": { "cwd": "${workspaceFolder}" },
       "group": { "kind": "test", "isDefault": false }
     }

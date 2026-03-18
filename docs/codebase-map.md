@@ -312,7 +312,7 @@ Pydantic schemas for API: `auth`, `user`, `server`, `server_ip`, `device`, `plan
 
 ## 10. CI / GitHub
 
-`.github/workflows/ci.yml` — Backend: ruff, pytest, alembic; frontend: npm ci, audit, lint, typecheck, test, build; docker build; gitleaks; frontend E2E (postgres, redis, uvicorn, seed_admin, dev:admin, test:e2e).
+`.github/workflows/ci.yml` — Backend: ruff, pytest, alembic; frontend: pnpm install --frozen-lockfile, audit, lint, typecheck, test, build; docker build; gitleaks; frontend E2E (postgres, redis, uvicorn, seed_admin, dev:admin, test:e2e).
 
 ---
 

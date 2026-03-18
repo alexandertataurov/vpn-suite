@@ -21,4 +21,4 @@ Miniapp-specific rules:
 - Use `frontend/miniapp/src/storybook/fixtures/**` and `frontend/miniapp/src/storybook/factories/**` for story data.
 - Use `frontend/miniapp/src/storybook/decorators/withMiniAppShell.tsx` for Telegram-safe viewport framing instead of ad hoc wrappers.
 - Treat Storybook stories as the contract before touching `frontend/miniapp/src/pages/**`.
-- Use `npm run test-storybook -w miniapp` as the required Storybook contract gate. Use `npm run test-storybook:official -w miniapp` only as a compatibility probe until the standalone runner issue is resolved.
+- Use `pnpm run test-storybook:miniapp` as the required Storybook contract gate. Use `pnpm run test-storybook:official:miniapp` only as a compatibility probe until the standalone runner issue is resolved.

@@ -11,11 +11,11 @@ React app for VPN subscription and device management. Base path `/webapp/`.
 **Run:** From repo root, `./manage.sh up-core` (or frontend dev server on port 5175).
 
 **Storybook scripts:**
-- `npm run storybook -w miniapp`
-- `npm run build-storybook -w miniapp`
-- `npm run test-storybook -w miniapp` - stable reduced contract suite
-- `npm run test-storybook:official -w miniapp` - attempts the official Storybook test-runner first
-- `npm run storybook:ci -w miniapp`
-- `npm run chromatic -w miniapp -- --project-token=...`
+- `pnpm run storybook:miniapp` (from frontend root)
+- `pnpm run build-storybook:miniapp`
+- `pnpm run test-storybook:miniapp` - stable reduced contract suite
+- `pnpm run test-storybook:official:miniapp` - attempts the official Storybook test-runner first
+- `pnpm run storybook:ci:miniapp`
+- `pnpm --filter miniapp run chromatic -- --project-token=...`
 
 CI currently treats `test-storybook` as the required gate. `test-storybook:official` is also run as a non-blocking compatibility probe.

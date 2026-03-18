@@ -1,5 +1,4 @@
-import { screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { fireEvent, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { SupportPage } from "./Support";
 import { LayoutProvider } from "@/context/LayoutContext";
@@ -38,9 +37,7 @@ vi.mock("@/config/env", () => ({
 }));
 
 describe("SupportPage", () => {
-  it("renders a compact support layout with collapsed faq items", async () => {
-    const user = userEvent.setup();
-
+  it("renders a compact support layout with collapsed faq items", () => {
     renderWithProviders(
       <LayoutProvider stackFlow={false}>
         <ToastContainer>
@@ -62,7 +59,7 @@ describe("SupportPage", () => {
     const faqTrigger = screen.getByRole("button", { name: "VPN not connecting" });
     expect(faqTrigger).toHaveAttribute("aria-expanded", "false");
 
-    await user.click(faqTrigger);
+    fireEvent.click(faqTrigger);
 
     expect(faqTrigger).toHaveAttribute("aria-expanded", "true");
     expect(

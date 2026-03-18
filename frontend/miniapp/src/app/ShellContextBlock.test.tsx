@@ -17,6 +17,7 @@ vi.mock("@/hooks/useTelegramHaptics", () => ({
 vi.mock("@/telegram/telegramCoreClient", () => ({
   telegramClient: {
     getPlatform: () => mockGetPlatform(),
+    getInitDataUnsafe: () => null,
   },
 }));
 

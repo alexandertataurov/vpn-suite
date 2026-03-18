@@ -8,7 +8,7 @@ These are the non-negotiable commands for merge and release.
 ./manage.sh verify
 ```
 
-Runs (in order): backend ruff check + format, alembic upgrade/downgrade/check, backend pytest, bot pytest, frontend npm ci + lint + typecheck + unit tests + build, `./manage.sh config-validate`. Requires local Postgres and Redis (or CI). Use `VERIFY_SKIP_DB=1` to skip backend migrate/pytest and bot pytest (lint + frontend + config only). For full API smoke + E2E use `./manage.sh smoke-staging` with core stack up and ADMIN_EMAIL/ADMIN_PASSWORD set.
+Runs (in order): backend ruff check + format, alembic upgrade/downgrade/check, backend pytest, bot pytest, frontend pnpm install --frozen-lockfile + lint + typecheck + unit tests + build, `./manage.sh config-validate`. Requires local Postgres and Redis (or CI). Use `VERIFY_SKIP_DB=1` to skip backend migrate/pytest and bot pytest (lint + frontend + config only). For full API smoke + E2E use `./manage.sh smoke-staging` with core stack up and ADMIN_EMAIL/ADMIN_PASSWORD set.
 
 ## Merge Gates (every PR)
 
@@ -27,11 +27,11 @@ python -m alembic check
 Frontend:
 ```bash
 cd frontend
-npm ci
-npm run lint
+pnpm install --frozen-lockfile
+pnpm run lint
 npm test -- --run
-npm run build
-npm run test:e2e
+pnpm run build
+pnpm run test:e2e
 ```
 
 Compose sanity:

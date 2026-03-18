@@ -37,7 +37,7 @@ Follow the workflow in **PROMPT.md**. Summary:
 ### Remote / resource-constrained VPS (Cursor Remote, Antigravity)
 
 - **Do not run** `full:check`, `frontend:check`, or `npm test` / `pnpm test` on resource-constrained VPS. These spawn vitest+storybook+chromium and can exhaust RAM.
-- **Use instead**: `npm run typecheck`, `npm run lint`, `npm run design:check` (miniapp). Unit tests: `pnpm --filter miniapp test` (unit only). Full tests: run in CI or on a dedicated machine.
+- **Use instead**: `pnpm run typecheck`, `pnpm run lint`, `pnpm run guardrails`. Unit tests: `pnpm --filter miniapp test` (unit only). Full tests: run in CI or on a dedicated machine.
 - **stop.sh** runs typecheck+lint only; heavy tests are excluded by design.
 
 ---

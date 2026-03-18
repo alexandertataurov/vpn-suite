@@ -159,7 +159,7 @@ docs/
 | Control-plane 500 in some envs | Run migrations; check admin role `cluster:read`; review logs |
 | Docker telemetry 404 via Caddy | BASE_URL=127.0.0.1:8000 for API smoke; Caddy proxies /api/* |
 | Caddy healthcheck 308 | Verify Caddy config for localhost |
-| Frontend typecheck env | Ensure npm ci + TS libs before typecheck |
+| Frontend typecheck env | Ensure pnpm install + TS libs before typecheck |
 
 ### 3.6 Deferred
 - Supervised model pipeline for anomaly detection

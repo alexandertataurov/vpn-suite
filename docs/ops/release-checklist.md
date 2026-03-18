@@ -74,7 +74,7 @@
 
 ## 7. Фронтенд (Admin + Miniapp)
 
-- [ ] `cd frontend && npm run build` — admin и miniapp собираются без ошибок
+- [ ] `cd frontend && pnpm run build` — admin и miniapp собираются без ошибок
 - [ ] Админка: Overview (Dashboard) загружает данные с `GET /api/v1/overview` (Bearer)
 - [ ] Админка: User detail — вкладка Devices, кнопка «Issue device»
 - [ ] Miniapp: нижние табы Status | Devices | Profile | Help

@@ -18,5 +18,5 @@ Additional repo conventions:
 - Miniapp Storybook stories are colocated with components under `frontend/miniapp/src/**` and must use canonical titles such as `Foundations/*`, `Primitives/*`, `Patterns/*`, `Layouts/*`, `Pages/*`, and `States/*`.
 - Storybook is the UI contract layer for engineers, designers, QA, and AI agents. If stories and production UI disagree, fix the design-system layer and update the stories.
 - Storybook fixtures must use realistic Telegram miniapp copy, typed data, and mobile-safe layout constraints.
-- The current required Storybook gate for the miniapp is the reduced contract suite exposed by `npm run test-storybook -w miniapp`. The standalone official runner remains exploratory until the upstream Storybook 10 metadata issue is resolved.
-- The reduced contract suite is also guarded by `npm run storybook:contract -w miniapp`, which verifies the required executable Storybook stories and tags.
+- The current required Storybook gate for the miniapp is the reduced contract suite exposed by `pnpm run test-storybook:miniapp`. The standalone official runner remains exploratory until the upstream Storybook 10 metadata issue is resolved.
+- The reduced contract suite is also guarded by `pnpm run storybook:contract:miniapp`, which verifies the required executable Storybook stories and tags.

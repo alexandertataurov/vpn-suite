@@ -25,7 +25,7 @@
 | Frontend lint | PASS |
 | Frontend typecheck | PASS |
 | Frontend unit tests | Run via `npm test` |
-| Frontend build | Run via `npm run build` |
+| Frontend build | Run via `pnpm run build` |
 | Backend pytest | Requires DB+Redis |
 | Bot pytest | Requires DB+Redis |
 

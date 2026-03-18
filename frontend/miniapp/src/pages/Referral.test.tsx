@@ -1,6 +1,6 @@
 import { screen } from "@testing-library/react";
 import { vi } from "vitest";
-import { ReferralPage } from "./Referral";
+import { ReferralPage } from "@/future/referral/Referral";
 import { LayoutProvider } from "@/context/LayoutContext";
 import { ToastContainer } from "@/design-system";
 import { renderWithProviders } from "@/test/utils/render";
