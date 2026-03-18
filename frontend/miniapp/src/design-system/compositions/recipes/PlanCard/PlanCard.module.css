@@ -28,7 +28,7 @@
 }
 
 .planName {
-  font-size: var(--amnezia-plan-name, 28px);
+  font-size: 28px;
   font-weight: 700;
   letter-spacing: -0.8px;
   color: var(--text, var(--color-text));
@@ -115,6 +115,7 @@
 
 .stat:first-child {
   border-left: none;
+  padding-left: 18px;
 }
 
 .statLabel {

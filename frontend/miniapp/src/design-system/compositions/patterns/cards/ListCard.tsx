@@ -1,4 +1,5 @@
 import { useEffect, useState, type HTMLAttributes, type ReactNode } from "react";
+import { formatDateDisplay } from "@vpn-suite/shared";
 import {
   IconMonitor,
   IconServer,
@@ -38,7 +39,7 @@ function formatRelativeLastActive(date: Date | null): string | null {
   if (minutes < 60) return `${minutes} min ago`;
   const hours = Math.floor(minutes / 60);
   if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
-  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  return formatDateDisplay(date);
 }
 
 function defaultDeviceIcon(deviceType: ListRowDeviceType) {

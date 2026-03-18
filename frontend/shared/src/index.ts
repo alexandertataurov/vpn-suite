@@ -6,6 +6,7 @@ export { cn } from "./utils/cn";
 export { getErrorMessage } from "./utils/error";
 export {
   formatDate,
+  formatDateDisplay,
   formatDateLong,
   formatDateTime,
   formatRelative,

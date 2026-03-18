@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import type { WebAppBillingHistoryResponse } from "@vpn-suite/shared";
+import { formatDateDisplay, type WebAppBillingHistoryResponse } from "@vpn-suite/shared";
 import { getPlans } from "@/api";
 import { useWebappToken, webappApi } from "@/api/client";
 import { useSession, useTelemetry, useTrackScreen } from "@/hooks";
@@ -163,11 +163,7 @@ export function usePlanPageModel() {
           ? t("plan.hero_period_for_days", { days: selectedTierPlan.duration_days })
           : "",
       expiryText: primarySub?.valid_until
-        ? new Date(primarySub.valid_until).toLocaleDateString(undefined, {
-            day: "numeric",
-            month: "short",
-            year: "numeric",
-          })
+        ? formatDateDisplay(primarySub.valid_until)
         : t("plan.no_active_subscription"),
       expiryPercent,
       expiryFillClass: (subscriptionState === "expired"

@@ -27,6 +27,18 @@ export function formatDate(value: string | Date, options?: FormatDateTimeOptions
   });
 }
 
+/** Miniapp display format: "Mar 13" or "Mar 5, 2026" (en-US). Includes year when different from current. */
+export function formatDateDisplay(value: string | Date): string {
+  const date = toDate(value);
+  if (!date) return "—";
+  const includeYear = date.getFullYear() !== new Date().getFullYear();
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    ...(includeYear && { year: "numeric" }),
+  });
+}
+
 export function formatDateLong(value: string | Date, options?: FormatDateTimeOptions): string {
   const date = toDate(value);
   if (!date) return fallbackString(value);

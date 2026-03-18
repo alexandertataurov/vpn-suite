@@ -2277,6 +2277,11 @@ html:not([data-theme="consumer-light"]) .miniapp-popover-panel {
   50% { opacity: 0.6; }
 }
 
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
 .skeleton-line {
   height: 12px;
 }
@@ -2284,6 +2289,14 @@ html:not([data-theme="consumer-light"]) .miniapp-popover-panel {
 .skeleton-card {
   min-height: 120px;
   border-radius: var(--radius-md);
+  background: linear-gradient(
+    90deg,
+    var(--color-surface) 0%,
+    var(--color-surface-2) 50%,
+    var(--color-surface) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
 }
 
 .skeleton-list {

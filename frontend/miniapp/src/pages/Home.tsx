@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router-dom";
 import {
-  IconArrowRight,
   IconBox,
   IconChevronRight,
   IconMonitor,
@@ -59,9 +58,9 @@ export function HomePage() {
   if (model.pageState.status === "loading") {
     return (
       <PageScaffold>
-        <ModernHeader title="Amnezia" showSettings />
-        <Skeleton variant="card" height={260} />
-        <Skeleton variant="card" height={72} />
+        <ModernHeader title="Amnezia" />
+        <Skeleton variant="card" height={180} />
+        <Skeleton variant="card" height={120} />
         <Skeleton variant="card" height={72} />
         <FooterHelp
           note="Having trouble?"
@@ -110,8 +109,8 @@ export function HomePage() {
                 variant="primary"
                 fullWidth
                 size="lg"
+                className="new-user-hero-cta"
                 onClick={() => navigate("/plan")}
-                endIcon={<IconArrowRight />}
               >
                 Choose a Plan →
               </Button>

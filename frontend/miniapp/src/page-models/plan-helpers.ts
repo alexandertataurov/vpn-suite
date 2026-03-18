@@ -3,7 +3,7 @@
  * Used by usePlanPageModel; no React/UI dependencies.
  * Re-exports for Plan page composition.
  */
-import type { WebAppBillingHistoryItem, WebAppBillingHistoryStatus } from "@vpn-suite/shared";
+import { formatDateDisplay, type WebAppBillingHistoryItem, type WebAppBillingHistoryStatus } from "@vpn-suite/shared";
 import type { PlanItem } from "@/api";
 import { translate } from "@/lib/i18n";
 
@@ -187,13 +187,9 @@ export function compactInvoiceRef(ref: string): string {
 }
 
 export function formatHistoryDate(iso: string): string {
-  const value = new Date(iso);
-  if (Number.isNaN(value.getTime())) return "—";
-  return value.toLocaleDateString(undefined, {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "—";
+  return formatDateDisplay(date);
 }
 
 /** statusVariant matches StatusChipVariant: "active" | "paid" | "info" | "pend" | "offline". */

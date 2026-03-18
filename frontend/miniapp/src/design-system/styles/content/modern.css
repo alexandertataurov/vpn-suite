@@ -135,11 +135,12 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  height: 26px;
+  padding: 4px 11px;
   border-radius: 100px;
   font-size: var(--amnezia-badge-text, 11px);
   font-weight: 600;
   letter-spacing: 0.2px;
-  padding: 4px 11px;
   white-space: nowrap;
   line-height: 1;
 }
@@ -371,15 +372,15 @@
 }
 
 .plan-hero-eyebrow {
-  font-size: var(--amnezia-plan-eyebrow, 10px);
+  font-size: 10px;
   font-weight: 500;
   letter-spacing: 0.6px;
   text-transform: uppercase;
-  color: var(--text3, var(--color-text-tertiary));
+  color: var(--color-text-tertiary);
 }
 
 .plan-hero-name {
-  font-size: var(--amnezia-plan-name, 28px);
+  font-size: 28px;
   font-weight: 700;
   letter-spacing: -0.8px;
   color: var(--text, var(--color-text));
@@ -454,6 +455,7 @@
 
 .plan-hero-stat:first-child {
   border-left: none;
+  padding-left: 18px;
 }
 
 .plan-hero-stat-label {
@@ -519,8 +521,8 @@
 }
 
 .renewal-banner--expiring {
-  background: var(--amber-bg, var(--color-warning-soft));
-  border-color: var(--amber-border, var(--surface-border-warning));
+  background: rgba(146, 64, 14, 0.15);
+  border-color: rgba(146, 64, 14, 0.25);
 }
 
 .renewal-banner--expiring .renewal-banner-icon {
@@ -540,6 +542,7 @@
 
 .renewal-banner-body {
   flex: 1;
+  min-width: 0;
   flex-direction: column;
   display: flex;
   gap: 2px;
@@ -549,6 +552,8 @@
   font-size: var(--amnezia-banner-title, 13px);
   font-weight: 600;
   letter-spacing: -0.2px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .renewal-banner--expiring .renewal-banner-title {
@@ -564,6 +569,8 @@
   font-weight: 400;
   color: var(--text3, var(--color-text-tertiary));
   line-height: 1.45;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .renewal-banner-chevron {
@@ -675,6 +682,15 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.new-user-hero-cta {
+  font-family: Inter, var(--font-sans), system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: -0.2px;
+  text-transform: none;
+  font-variant: normal;
 }
 
 .modern-action-card {
@@ -865,7 +881,7 @@
 
 .modern-list-item-title {
   font-size: var(--text-body, 16px);
-  font-weight: 600;
+  font-weight: 500;
   color: var(--color-text);
   white-space: nowrap;
   overflow: hidden;
@@ -876,6 +892,7 @@
   font-size: var(--text-caption, 13px);
   color: var(--color-text-muted);
   margin-top: var(--spacing-px);
+  line-height: 1.4;
 }
 
 .modern-list-item-right {
