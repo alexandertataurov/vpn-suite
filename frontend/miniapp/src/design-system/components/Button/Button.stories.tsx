@@ -12,7 +12,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "Primary action control. Variants: primary, secondary, ghost, outline, danger, link. Use design tokens for styling.",
+          "Primary action control. Variants: primary, secondary, ghost, outline, danger, link, external. Tones (primary only): default, success, warning, danger. Kind: default, connect. Use design tokens for styling.",
       },
     },
   },
@@ -24,8 +24,10 @@ const meta = {
     ),
   ],
   argTypes: {
-    variant: { control: "select", options: ["primary", "secondary", "ghost", "outline", "danger", "link"] },
+    variant: { control: "select", options: ["primary", "secondary", "ghost", "outline", "danger", "link", "external"] },
     size: { control: "select", options: ["sm", "md", "lg", "icon"] },
+    tone: { control: "select", options: ["default", "warning", "danger", "success"] },
+    kind: { control: "select", options: ["default", "connect"] },
   },
 } satisfies Meta<typeof Button>;
 
@@ -46,7 +48,33 @@ export const Variants: Story = {
       <Button variant="outline">Outline</Button>
       <Button variant="danger">Danger</Button>
       <Button variant="link">Link</Button>
+      <Button variant="external">External</Button>
     </Inline>
+  ),
+};
+
+export const PrimaryTones: Story = {
+  render: () => (
+    <Inline gap="2" wrap>
+      <Button variant="primary" tone="default">
+        Default
+      </Button>
+      <Button variant="primary" tone="success">
+        Success
+      </Button>
+      <Button variant="primary" tone="warning">
+        Warning
+      </Button>
+      <Button variant="primary" tone="danger">
+        Danger
+      </Button>
+    </Inline>
+  ),
+};
+
+export const ConnectKind: Story = {
+  render: () => (
+    <Button kind="connect">Connect</Button>
   ),
 };
 
