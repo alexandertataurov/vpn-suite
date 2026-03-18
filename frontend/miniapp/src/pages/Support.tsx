@@ -2,17 +2,18 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SessionMissing, SupportContactCard, TroubleshooterStep } from "@/components";
 import { useOpenLink } from "@/hooks";
-import { IconCreditCard, IconHelpCircle, IconRotateCw, IconServer } from "@/design-system/icons";
+import { IconChevronRight, IconCreditCard, IconHelpCircle, IconRotateCw, IconServer } from "@/design-system/icons";
 import {
   FaqDisclosureItem,
   FallbackScreen,
   FooterHelp,
+  ListCard,
+  ListRow,
   Skeleton,
   SkeletonList,
   PageScaffold,
   PageHeader,
   PageSection,
-  SettingsActionRow,
 } from "@/design-system";
 import { Stack } from "@/design-system/core/primitives";
 import { useSupportPageModel } from "@/page-models";
@@ -121,42 +122,41 @@ export function SupportPage() {
           title={t("support.quick_paths_title")}
           description={t("support.quick_paths_description")}
         >
-          <ul className="modern-list">
-            <SettingsActionRow
-            icon={<IconRotateCw size={18} strokeWidth={2} />}
-            title={t("onboarding.restore_access")}
-            description={t("support.quick_paths_restore_description")}
-            tone="blue"
-            onClick={() => navigate("/restore-access")}
-          />
-          <SettingsActionRow
-            icon={<IconServer size={18} strokeWidth={2} />}
-            title={t("devices.header_title")}
-            description={t("support.quick_paths_devices_description")}
-            tone="green"
-            onClick={() => navigate("/devices")}
-          />
-          <SettingsActionRow
-            icon={<IconCreditCard size={18} strokeWidth={2} />}
-            title={t("plan.header_title")}
-            description={t("support.quick_paths_plan_description")}
-            tone="amber"
-            onClick={() => navigate("/plan")}
-          />
-          <SettingsActionRow
-            icon={<IconHelpCircle size={18} strokeWidth={2} />}
-            title={t("settings.contact_support_title")}
-            description={t("support.quick_paths_support_description")}
-            tone="blue"
-            actionIndicator="external"
-            onClick={() => {
-              if (supportHref) {
-                openLink(supportHref);
-              }
-            }}
-            buttonProps={{ disabled: !supportHref }}
-          />
-          </ul>
+          <ListCard className="home-card-row">
+            <ListRow
+              icon={<IconRotateCw size={15} strokeWidth={2} />}
+              iconTone="blue"
+              title={t("onboarding.restore_access")}
+              subtitle={t("support.quick_paths_restore_description")}
+              right={<IconChevronRight size={13} strokeWidth={2.5} />}
+              onClick={() => navigate("/restore-access")}
+            />
+            <ListRow
+              icon={<IconServer size={15} strokeWidth={2} />}
+              iconTone="green"
+              title={t("devices.header_title")}
+              subtitle={t("support.quick_paths_devices_description")}
+              right={<IconChevronRight size={13} strokeWidth={2.5} />}
+              onClick={() => navigate("/devices")}
+            />
+            <ListRow
+              icon={<IconCreditCard size={15} strokeWidth={2} />}
+              iconTone="amber"
+              title={t("plan.header_title")}
+              subtitle={t("support.quick_paths_plan_description")}
+              right={<IconChevronRight size={13} strokeWidth={2.5} />}
+              onClick={() => navigate("/plan")}
+            />
+            <ListRow
+              icon={<IconHelpCircle size={15} strokeWidth={2} />}
+              iconTone="blue"
+              title={t("settings.contact_support_title")}
+              subtitle={t("support.quick_paths_support_description")}
+              right={<IconChevronRight size={13} strokeWidth={2.5} />}
+              onClick={() => supportHref && openLink(supportHref)}
+              aria-disabled={!supportHref}
+            />
+          </ListCard>
         </PageSection>
 
         <PageSection
@@ -180,7 +180,7 @@ export function SupportPage() {
           title={t("support.faq_title")}
           description={t("support.faq_description")}
         >
-          <ul className="modern-list">
+          <ListCard className="home-card-row">
             {faqItems.map((item, index) => (
             <FaqDisclosureItem
               key={item.title}
@@ -190,7 +190,7 @@ export function SupportPage() {
               onToggle={() => setOpenFaq((current) => (current === index ? null : index))}
             />
             ))}
-          </ul>
+          </ListCard>
         </PageSection>
       </Stack>
       <FooterHelp

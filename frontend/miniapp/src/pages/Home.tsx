@@ -7,7 +7,7 @@ import {
   IconUsers,
 } from "@/design-system/icons";
 import {
-  Button,
+  Badge,
   FallbackScreen,
   FooterHelp,
   ListCard,
@@ -37,7 +37,7 @@ function InviteFriendsCard() {
         subtitle="Invite a friend, get +30 days free"
         right={
           <div className="home-row-right-group">
-            <IconChevronRight size={13} strokeWidth={2} />
+            <IconChevronRight size={13} strokeWidth={2.5} />
           </div>
         }
         onClick={() => navigate("/support")}
@@ -108,27 +108,10 @@ export function HomePage() {
           <NewUserHero
             title="Setup Required"
             description="Choose a plan and add a device to get your secure configuration."
-            primaryAction={
-              <Button
-                variant="primary"
-                fullWidth
-                size="lg"
-                className="new-user-hero-cta"
-                onClick={() => navigate("/plan")}
-              >
-                Choose a Plan →
-              </Button>
-            }
-            secondaryAction={
-              <Button
-                variant="secondary"
-                fullWidth
-                size="lg"
-                onClick={() => navigate("/support")}
-              >
-                View setup guide
-              </Button>
-            }
+            onChoosePlan={() => navigate("/plan")}
+            onViewGuide={() => navigate("/support")}
+            choosePlanLabel="Choose a Plan →"
+            viewGuideLabel="View setup guide"
           />
           <ListCard className="home-card-row">
             <ListRow
@@ -138,7 +121,7 @@ export function HomePage() {
               subtitle="None added yet"
               right={
                 <div className="home-row-right-group">
-                  <IconChevronRight size={13} strokeWidth={2} />
+                  <IconChevronRight size={13} strokeWidth={2.5} />
                 </div>
               }
               onClick={() => navigate("/devices")}
@@ -161,7 +144,7 @@ export function HomePage() {
               subtitle="Add a device to generate your configuration."
               ctaLabel="Add Device"
               ctaIcon={<IconPlus size={13} strokeWidth={2} />}
-              onCtaClick={() => navigate("/devices")}
+              onAddDevice={() => navigate("/devices")}
             />
           )}
           {model.showRenewalBanner && (
@@ -186,7 +169,7 @@ export function HomePage() {
               subtitle="Add a device to generate your configuration."
               ctaLabel="Add Device"
               ctaIcon={<IconPlus size={13} strokeWidth={2} />}
-              onCtaClick={() => navigate("/devices")}
+              onAddDevice={() => navigate("/devices")}
             />
           )}
           {!isGenerating && (
@@ -202,11 +185,9 @@ export function HomePage() {
                       right={
                         <div className="home-row-right-group">
                           {model.devicesFull && (
-                            <span className="home-row-badge home-row-badge--full">
-                              Full
-                            </span>
+                            <Badge label="Full" variant="muted" />
                           )}
-                          <IconChevronRight size={13} strokeWidth={2} />
+                          <IconChevronRight size={13} strokeWidth={2.5} />
                         </div>
                       }
                       onClick={() => navigate("/devices")}
@@ -223,16 +204,12 @@ export function HomePage() {
                           {model.daysLeft != null &&
                             model.daysLeft > 0 &&
                             model.daysLeft <= 14 && (
-                              <span className="home-row-badge home-row-badge--amber">
-                                {model.daysLeft}d left
-                              </span>
+                              <Badge label={`${model.daysLeft}d left`} variant="warning" />
                             )}
                           {status === "expired" && (
-                            <span className="home-row-badge home-row-badge--red">
-                              Renew
-                            </span>
+                            <Badge label="Renew" variant="error" />
                           )}
-                          <IconChevronRight size={13} strokeWidth={2} />
+                          <IconChevronRight size={13} strokeWidth={2.5} />
                         </div>
                       }
                       onClick={() =>

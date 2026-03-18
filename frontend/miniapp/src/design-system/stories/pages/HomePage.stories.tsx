@@ -72,6 +72,7 @@ const meta: Meta<{
   },
   parameters: {
     layout: "fullscreen",
+    status: { type: "stable" },
     docs: {
       description: {
         component:
@@ -94,6 +95,7 @@ function getScenario(
 }
 
 export const Home: Story = {
+  args: { state: "active" },
   render: ({ state, expiringNoDevices }) => {
     if (state === "error") {
       return (
@@ -110,3 +112,11 @@ export const Home: Story = {
     );
   },
 };
+
+export const New: Story = { args: { state: "new" } };
+export const NoDevice: Story = { args: { state: "nodevice" } };
+export const Active: Story = { args: { state: "active" } };
+export const Expiring: Story = { args: { state: "expiring" } };
+export const Expired: Story = { args: { state: "expired" } };
+export const Loading: Story = { args: { state: "loading" } };
+export const Error: Story = { args: { state: "error" } };

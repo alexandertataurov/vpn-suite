@@ -1,5 +1,6 @@
 import type { WebAppSubscriptionOffersResponse } from "@vpn-suite/shared";
-import { Button, HelperNote, Modal, SettingsActionRow, SettingsCard } from "@/design-system";
+import { IconAlertTriangle, IconClock, IconPause } from "@/design-system/icons";
+import { Button, HelperNote, ListCard, ListRow, Modal } from "@/design-system";
 import { useI18n } from "@/hooks";
 import type { CancelReasonGroup, CancelReasonSelection } from "@/page-models";
 
@@ -126,35 +127,34 @@ export function SubscriptionCancellationModal({
           <HelperNote>{t("settings.cancel_downgrade_hint")}</HelperNote>
         ) : null}
 
-        <SettingsCard className="settings-list-card cancel-flow-actions-card">
+        <ListCard className="settings-list-card cancel-flow-actions-card">
           {canPauseInstead ? (
-            <SettingsActionRow
-              icon="⏸"
+            <ListRow
+              icon={<IconPause size={15} strokeWidth={2} />}
+              iconTone="neutral"
               title={t("settings.cancel_pause_instead")}
-              description={t("settings.cancel_offer_pause_body")}
-              actionIndicator="none"
-              onClick={onPauseInstead}
-              buttonProps={{ disabled: isCancelling || !hasSelectedReason }}
+              subtitle={t("settings.cancel_offer_pause_body")}
+              onClick={() => !(isCancelling || !hasSelectedReason) && onPauseInstead()}
+              aria-disabled={isCancelling || !hasSelectedReason}
             />
           ) : null}
-          <SettingsActionRow
-            icon="⏳"
+          <ListRow
+            icon={<IconClock size={15} strokeWidth={2} />}
+            iconTone="neutral"
             title={t("settings.cancel_at_period_end")}
-            description={t("settings.cancel_plan_description_generic")}
-            actionIndicator="none"
-            onClick={onCancelAtPeriodEnd}
-            buttonProps={{ disabled: isCancelling || !hasSelectedReason }}
+            subtitle={t("settings.cancel_plan_description_generic")}
+            onClick={() => !(isCancelling || !hasSelectedReason) && onCancelAtPeriodEnd()}
+            aria-disabled={isCancelling || !hasSelectedReason}
           />
-          <SettingsActionRow
-            icon="⚠"
+          <ListRow
+            icon={<IconAlertTriangle size={15} strokeWidth={2} />}
+            iconVariant="danger"
             title={t("settings.cancel_now")}
-            description={t("settings.danger_warning")}
-            tone="danger"
-            actionIndicator="none"
-            onClick={onCancelNow}
-            buttonProps={{ disabled: isCancelling || !hasSelectedReason }}
+            subtitle={t("settings.danger_warning")}
+            onClick={() => !(isCancelling || !hasSelectedReason) && onCancelNow()}
+            aria-disabled={isCancelling || !hasSelectedReason}
           />
-        </SettingsCard>
+        </ListCard>
       </div>
     </Modal>
   );

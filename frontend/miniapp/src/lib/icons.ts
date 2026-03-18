@@ -33,6 +33,8 @@ export {
   ExternalLink as IconExternalLink,
   ChevronRight as IconChevronRight,
   Box as IconBox,
+  Pause as IconPause,
+  Clock as IconClock,
 } from "lucide-react";
 
 export type { LucideIcon as IconType } from "lucide-react";

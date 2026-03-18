@@ -1,5 +1,5 @@
-import { IconFileText } from "@/design-system/icons";
-import { MissionSecondaryLink, PageSection, SettingsActionRow, SettingsCard } from "@/design-system";
+import { IconFileText, IconTelegramStar } from "@/design-system/icons";
+import { ListCard, ListRow, MissionSecondaryLink, PageSection } from "@/design-system";
 import { useI18n } from "@/hooks";
 
 export interface PlanBillingHistoryItem {
@@ -33,46 +33,51 @@ export function PlanBillingHistorySection({
       title={t("plan.payment_history_title")}
       className="plan-billing-page__secondary-section"
     >
-      <SettingsCard className="module-card settings-list-card billing-history-list-card">
+      <ListCard className="home-card-row module-card settings-list-card billing-history-list-card">
         {loading ? (
           <>
-            <SettingsActionRow
-              icon={<IconFileText size={18} strokeWidth={1.7} />}
+            <ListRow
+              icon={<IconFileText size={15} strokeWidth={2} />}
+              iconTone="neutral"
               title={t("plan.payment_history_loading")}
-              actionIndicator="none"
             />
-            <SettingsActionRow
-              icon={<IconFileText size={18} strokeWidth={1.7} />}
+            <ListRow
+              icon={<IconFileText size={15} strokeWidth={2} />}
+              iconTone="neutral"
               title={t("plan.payment_history_loading")}
-              actionIndicator="none"
             />
           </>
         ) : error ? (
-          <SettingsActionRow
-            icon={<IconFileText size={18} strokeWidth={1.7} />}
+          <ListRow
+            icon={<IconFileText size={15} strokeWidth={2} />}
+            iconTone="neutral"
             title={t("plan.payment_history_error")}
-            actionIndicator="none"
           />
         ) : items.length === 0 ? (
-          <SettingsActionRow
-            icon={<IconFileText size={18} strokeWidth={1.7} />}
+          <ListRow
+            icon={<IconFileText size={15} strokeWidth={2} />}
+            iconTone="neutral"
             title={t("plan.payment_history_empty")}
-            description={t("plan.payment_history_empty_message")}
-            actionIndicator="none"
+            subtitle={t("plan.payment_history_empty_message")}
           />
         ) : (
           items.map((item) => (
-            <SettingsActionRow
+            <ListRow
               key={item.id}
-              icon={<IconFileText size={18} strokeWidth={1.7} />}
+              icon={<IconFileText size={15} strokeWidth={2} />}
+              iconTone="neutral"
               title={item.title}
-              description={item.subtitle}
-              value={item.amount}
-              actionIndicator="none"
+              subtitle={item.subtitle}
+              right={
+                <div className="home-row-right-group">
+                  <span className="settings-action-value">{item.amount}</span>
+                  <IconTelegramStar width={14} height={14} className="billing-history-star" aria-hidden />
+                </div>
+              }
             />
           ))
         )}
-      </SettingsCard>
+      </ListCard>
       {canExpand ? (
         <div className="plan-billing-page__history-actions">
           <MissionSecondaryLink

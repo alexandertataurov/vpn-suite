@@ -1705,6 +1705,11 @@
   font-size: var(--typo-body-sm-size);
 }
 
+.plan-billing-page .billing-history-star {
+  color: var(--amber, var(--color-warning));
+  flex-shrink: 0;
+}
+
 .plan-billing-page .plan-billing-page__next-step-card {
   gap: 10px;
   padding: 14px 16px;

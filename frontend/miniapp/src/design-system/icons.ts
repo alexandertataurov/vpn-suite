@@ -33,6 +33,8 @@ export {
   IconExternalLink,
   IconChevronRight,
   IconBox,
+  IconPause,
+  IconClock,
 } from "@/lib/icons";
 export { IconTelegramStar } from "./icons/IconTelegramStar";
 

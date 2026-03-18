@@ -10,6 +10,7 @@ import {
 } from "@/components";
 import { getSupportBotHref } from "@/config/env";
 import {
+  IconChevronRight,
   IconCircleX,
   IconCreditCard,
   IconHelpCircle,
@@ -26,12 +27,12 @@ import {
   FooterHelp,
   HelperNote,
   Input,
+  ListCard,
+  ListRow,
   Modal,
   PageHeader,
   PageScaffold,
   PageSection,
-  SettingsActionRow,
-  SettingsCard,
   Skeleton,
   ToggleRow,
   useToast,
@@ -144,11 +145,13 @@ export function SettingsPage() {
         title={t("settings.section_profile")}
         className="page-section--compact"
       >
-        <SettingsCard className="module-card settings-list-card">
-          <SettingsActionRow
-            icon={<IconPencil size={20} strokeWidth={1.6} />}
+        <ListCard className="home-card-row module-card settings-list-card">
+          <ListRow
+            icon={<IconPencil size={15} strokeWidth={2} />}
+            iconTone="neutral"
             title={t("settings.edit_profile_title")}
-            description={t("settings.edit_profile_description")}
+            subtitle={t("settings.edit_profile_description")}
+            right={<IconChevronRight size={13} strokeWidth={2.5} />}
             onClick={openProfileModal}
           />
           <SettingsLanguageMenuRow
@@ -166,7 +169,7 @@ export function SettingsPage() {
               model.handleUpdateLocale(id);
             }}
           />
-        </SettingsCard>
+        </ListCard>
       </PageSection>
 
       <PageSection
@@ -174,25 +177,30 @@ export function SettingsPage() {
         title={t("settings.section_plan_billing")}
         className="page-section--compact"
       >
-        <SettingsCard className="module-card settings-list-card">
-          <SettingsActionRow
-            icon={<IconCreditCard size={20} strokeWidth={1.6} />}
+        <ListCard className="home-card-row module-card settings-list-card">
+          <ListRow
+            icon={<IconCreditCard size={15} strokeWidth={2} />}
+            iconTone="neutral"
             title={model.hasPlan ? t("settings.change_plan_title") : t("plan.cta_choose_plan")}
-            description={model.hasPlan ? t("settings.change_plan_description") : t("checkout.header_subtitle")}
+            subtitle={model.hasPlan ? t("settings.change_plan_description") : t("checkout.header_subtitle")}
+            right={<IconChevronRight size={13} strokeWidth={2.5} />}
             onClick={() => navigate(model.planActionTo)}
           />
-          <SettingsActionRow
-            icon={<IconSmartphone size={20} strokeWidth={1.6} />}
+          <ListRow
+            icon={<IconSmartphone size={15} strokeWidth={2} />}
+            iconTone="neutral"
             title={t("devices.header_title")}
-            description={model.activeDevices.length > 0 ? `${model.deviceCountLabel}. Get the latest config there.` : "Add your first device and get its config."}
+            subtitle={model.activeDevices.length > 0 ? `${model.deviceCountLabel}. Get the latest config there.` : "Add your first device and get its config."}
+            right={<IconChevronRight size={13} strokeWidth={2.5} />}
             onClick={() => navigate(model.devicesActionTo)}
           />
           {model.hasPlan ? (
-            <SettingsActionRow
-              icon={<IconRotateCw size={20} strokeWidth={1.6} />}
+            <ListRow
+              icon={<IconRotateCw size={15} strokeWidth={2} />}
+              iconTone="amber"
               title={t("settings.cancel_plan_title")}
-              description={model.cancelPlanDescription}
-              tone="warning"
+              subtitle={model.cancelPlanDescription}
+              right={<IconChevronRight size={13} strokeWidth={2.5} />}
               onClick={model.openCancelFlow}
             />
           ) : null}
@@ -208,7 +216,7 @@ export function SettingsPage() {
               updateAutoRenew(next);
             }}
           />
-        </SettingsCard>
+        </ListCard>
       </PageSection>
 
       <PageSection
@@ -216,24 +224,29 @@ export function SettingsPage() {
         title={t("settings.section_help")}
         className="page-section--compact"
       >
-        <SettingsCard className="module-card settings-list-card">
-          <SettingsActionRow
-            icon={<IconShield size={20} strokeWidth={1.6} />}
+        <ListCard className="home-card-row module-card settings-list-card">
+          <ListRow
+            icon={<IconShield size={15} strokeWidth={2} />}
+            iconTone="neutral"
             title="Setup guide"
-            description="Manage devices and review connection instructions."
+            subtitle="Manage devices and review connection instructions."
+            right={<IconChevronRight size={13} strokeWidth={2.5} />}
             onClick={() => navigate("/devices")}
           />
-          <SettingsActionRow
-            icon={<IconHelpCircle size={20} strokeWidth={1.6} />}
+          <ListRow
+            icon={<IconHelpCircle size={15} strokeWidth={2} />}
+            iconTone="neutral"
             title={t("settings.faq_title")}
-            description={t("settings.faq_description")}
+            subtitle={t("settings.faq_description")}
+            right={<IconChevronRight size={13} strokeWidth={2.5} />}
             onClick={() => navigate(model.supportActionTo)}
           />
-          <SettingsActionRow
-            icon={<IconMessageCircle size={20} strokeWidth={1.6} />}
+          <ListRow
+            icon={<IconMessageCircle size={15} strokeWidth={2} />}
+            iconTone="blue"
             title={t("settings.contact_support_title")}
-            description={t("settings.contact_support_description")}
-            actionIndicator="external"
+            subtitle={t("settings.contact_support_description")}
+            right={<IconChevronRight size={13} strokeWidth={2.5} />}
             onClick={() => {
               if (supportHref) {
                 openLink(supportHref);
@@ -242,7 +255,7 @@ export function SettingsPage() {
               }
             }}
           />
-        </SettingsCard>
+        </ListCard>
       </PageSection>
 
       <PageSection
@@ -251,33 +264,36 @@ export function SettingsPage() {
         className="page-section--compact settings-danger-section"
       >
         <HelperNote tone="warning">{t("settings.danger_warning")}</HelperNote>
-        <SettingsCard className="module-card settings-list-card">
+        <ListCard className="home-card-row module-card settings-list-card">
           {model.activeDevices.length > 0 ? (
-            <SettingsActionRow
-              icon={<IconRotateCw size={20} strokeWidth={1.6} />}
+            <ListRow
+              icon={<IconRotateCw size={15} strokeWidth={2} />}
+              iconVariant="danger"
               title={t("settings.reset_configs_title")}
-              description={t("settings.reset_configs_description")}
-              tone="warning"
-              onClick={model.handleRevokeAll}
-              buttonProps={{ disabled: model.isRevoking }}
+              subtitle={t("settings.reset_configs_description")}
+              right={<IconChevronRight size={13} strokeWidth={2.5} />}
+              onClick={() => !model.isRevoking && model.handleRevokeAll()}
+              aria-disabled={model.isRevoking}
             />
           ) : null}
-          <SettingsActionRow
-            icon={<IconCircleX size={20} strokeWidth={1.6} />}
+          <ListRow
+            icon={<IconCircleX size={15} strokeWidth={2} />}
+            iconVariant="danger"
             title={t("settings.logout_title")}
-            description={t("settings.logout_description")}
-            tone="warning"
-            onClick={model.handleLogout}
-            buttonProps={{ disabled: model.isLoggingOut }}
+            subtitle={t("settings.logout_description")}
+            right={<IconChevronRight size={13} strokeWidth={2.5} />}
+            onClick={() => !model.isLoggingOut && model.handleLogout()}
+            aria-disabled={model.isLoggingOut}
           />
-          <SettingsActionRow
-            icon={<IconTrash2 size={20} strokeWidth={1.6} />}
+          <ListRow
+            icon={<IconTrash2 size={15} strokeWidth={2} />}
+            iconVariant="danger"
             title={t("settings.delete_account_title")}
-            description={t("settings.delete_account_description")}
-            tone="danger"
+            subtitle={t("settings.delete_account_description")}
+            right={<IconChevronRight size={13} strokeWidth={2.5} />}
             onClick={() => setDeleteAccountOpen(true)}
           />
-        </SettingsCard>
+        </ListCard>
       </PageSection>
 
       <SubscriptionCancellationModal

@@ -16,7 +16,7 @@ export function RestoreAccessPage() {
   if (model.pageState.status === "empty") {
     if (!model.hasGraceOrExpired) {
       return (
-        <PageScaffold>
+        <PageScaffold className="restore-access-page">
           <PageHeader
             title={model.header.title}
             subtitle={model.header.subtitle}
@@ -60,7 +60,7 @@ export function RestoreAccessPage() {
 
   if (model.pageState.status === "loading") {
     return (
-      <PageScaffold>
+      <PageScaffold className="restore-access-page">
         <PageHeader
           title={model.header.title}
           subtitle={model.header.subtitle}
@@ -78,7 +78,7 @@ export function RestoreAccessPage() {
 
   if (model.pageState.status === "error") {
     return (
-      <PageScaffold>
+      <PageScaffold className="restore-access-page">
         <PageHeader
           title={model.header.title}
           subtitle={model.header.subtitle}
@@ -109,7 +109,7 @@ export function RestoreAccessPage() {
   }
 
   return (
-    <PageScaffold>
+    <PageScaffold className="restore-access-page">
       <PageHeader
         title={model.header.title}
         subtitle={model.header.subtitle}

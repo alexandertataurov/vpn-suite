@@ -1,5 +1,5 @@
-import { IconGlobe } from "@/design-system/icons";
-import { Button, Popover, SettingsActionRow } from "@/design-system";
+import { IconGlobe, IconChevronRight } from "@/design-system/icons";
+import { Button, ListRow, Popover } from "@/design-system";
 
 export interface SettingsLanguageOption {
   id: "auto" | "en" | "ru";
@@ -44,14 +44,20 @@ export function SettingsLanguageMenuRow({
       triggerHasPopup="menu"
       trapFocus
       renderTrigger={(triggerProps) => (
-        <SettingsActionRow
-          icon={<IconGlobe size={20} strokeWidth={1.6} />}
+        <ListRow
+          icon={<IconGlobe size={15} strokeWidth={2} />}
+          iconTone="neutral"
           title={title}
-          description={description}
-          value={value}
+          subtitle={description}
+          right={
+            <div className="home-row-right-group">
+              {value ? <span className="settings-action-value">{value}</span> : null}
+              <IconChevronRight size={13} strokeWidth={2.5} />
+            </div>
+          }
           className="settings-list-row--single-line-description"
           onClick={onTriggerClick}
-          buttonProps={triggerProps}
+          {...triggerProps}
         />
       )}
     >
