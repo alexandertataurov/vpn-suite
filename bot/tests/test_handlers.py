@@ -12,6 +12,7 @@ def mock_message():
     msg = MagicMock()
     msg.from_user = MagicMock()
     msg.from_user.id = 12345
+    msg.from_user.language_code = "en"  # Force English for deterministic assertions
     msg.chat = MagicMock()
     msg.chat.id = 99999
     msg.bot = MagicMock()
