@@ -216,7 +216,7 @@ body,
 .miniapp-main--stack {
   min-height: 0;
   padding-top: 0;
-  padding-bottom: max(var(--miniapp-bottom-safe-gap), var(--safe-bottom));
+  padding-bottom: max(110px, env(safe-area-inset-bottom) + 80px);
 }
 
 .miniapp-main--stack-with-main-button {
