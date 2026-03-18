@@ -91,6 +91,7 @@ export function SupportPage() {
       <PageScaffold>
         <PageLayout scrollable={false}>
           <PageHeader
+            backAriaLabel={t("common.back_aria")}
             title={model.header.title}
             subtitle={model.header.subtitle}
             onBack={() => navigate(-1)}
@@ -114,6 +115,7 @@ export function SupportPage() {
         title={model.header.title}
         subtitle={model.header.subtitle}
         onBack={() => navigate(-1)}
+        backAriaLabel={t("common.back_aria")}
       />
       <Stack gap="4">
         <SupportContactCard
@@ -198,8 +200,8 @@ export function SupportPage() {
         </PageSection>
       </Stack>
       <FooterHelp
-        note="Having trouble?"
-        linkLabel="View setup guide"
+        note={t("footer.having_trouble")}
+        linkLabel={t("footer.view_setup_guide")}
         onLinkClick={() => navigate("/devices")}
       />
       </PageLayout>

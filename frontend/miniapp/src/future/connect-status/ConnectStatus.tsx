@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { ConnectStatusSummaryCard, ConnectStatusVerifyCard, SessionMissing } from "@/components";
-import { HelperNote, PageScaffold, ModernHeader } from "@/design-system";
+import { HelperNote, PageScaffold, PageHeader } from "@/design-system";
 import { useOpenLink } from "@/hooks";
 import { useConnectStatusPageModel } from "@/page-models";
 import { useI18n } from "@/hooks";
@@ -17,11 +17,11 @@ export function ConnectStatusPage() {
 
   return (
     <PageScaffold>
-      <ModernHeader
+      <PageHeader
         title={model.header.title}
         subtitle={model.header.subtitle}
-        showSettings={false}
         onBack={() => navigate(-1)}
+        backAriaLabel={t("common.back_aria")}
       />
       <ConnectStatusSummaryCard
         title={model.summary.title}

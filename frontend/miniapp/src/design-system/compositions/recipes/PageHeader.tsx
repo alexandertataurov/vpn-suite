@@ -5,26 +5,31 @@ import "./PageHeader.css";
 export interface PageHeaderProps {
   title: string;
   subtitle?: string;
-  onBack: () => void;
+  /** When undefined, back button is hidden (e.g. onboarding step 0). */
+  onBack?: () => void;
   /** Right-aligned slot (e.g. settings gear) */
   action?: ReactNode;
+  /** Aria-label for back button. Default "Back". Use t("common.back_aria") for i18n. */
+  backAriaLabel?: string;
 }
 
 /**
- * Page header for secondary pages (Settings, Plan, Restore Access, Support).
- * Layout: back button + title block + optional action. Left-aligned.
+ * Canonical page header for secondary pages (Settings, Plan, Devices, Checkout, Support, Restore Access, Onboarding).
+ * Layout: optional back button + title block + optional action. Left-aligned.
  */
-export function PageHeader({ title, subtitle, onBack, action }: PageHeaderProps) {
+export function PageHeader({ title, subtitle, onBack, action, backAriaLabel = "Back" }: PageHeaderProps) {
   return (
     <header className="page-header" data-layer="PageHeader">
-      <button
-        type="button"
-        className="page-header-back"
-        onClick={onBack}
-        aria-label="Back"
-      >
-        <IconChevronLeft size={14} strokeWidth={2.5} />
-      </button>
+      {onBack ? (
+        <button
+          type="button"
+          className="page-header-back"
+          onClick={onBack}
+          aria-label={backAriaLabel}
+        >
+          <IconChevronLeft size={14} strokeWidth={2.5} />
+        </button>
+      ) : null}
       <div className="page-header-text">
         <h1 className="page-header-title">{title}</h1>
         {subtitle ? <p className="page-header-subtitle">{subtitle}</p> : null}

@@ -68,7 +68,7 @@ Layers: **tokens** → **theme** → **primitives** → **components** → **pat
 - **Field** (components/forms): label + slot + description + error; uses Label, HelperText; semantic structure. Prefer for new forms.
 - **FormField** (patterns/content/ContentForms): content-library class-based (`.field-group`, `.field-label`); different API (label, input, action). Use for content-library layouts.
 - **layouts/** — PageScaffold, PageSection, SectionDivider, ScrollZone, HeaderZone, ShellContextBlock, StickyBottomBar; layout CSS in styles/layout/zones.css
-- **recipes/** — PageHeaderBadge, PageCardSection, LabeledControlRow, FaqDisclosureItem, SettingsActionRow
+- **recipes/** — PageHeaderBadge, PageCardSection, LabeledControlRow, FaqDisclosureItem, SettingsActionRow. For settings-style action rows, prefer **ListRow** (patterns/cards); `SettingsActionRow` is legacy.
 - **hooks/** — useThemeMode, useBreakpoint
 - **utils/** — getAriaLabelProps (accessibility). Class merge: use `cn` from `@vpn-suite/shared`.
 - **styles/** — CSS entry and token/component styles

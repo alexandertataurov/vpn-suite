@@ -1,53 +1,70 @@
-import { useId } from "react";
-import { Button } from "../../components/Button";
+import { useState, type ReactNode } from "react";
+import "./FaqDisclosureItem.css";
 
 export interface FaqDisclosureItemProps {
-  title: string;
-  body: string;
-  isOpen: boolean;
-  onToggle: () => void;
-  className?: string;
+  question?: string;
+  answer?: string | ReactNode;
+  defaultOpen?: boolean;
+  /** @deprecated Use question */
+  title?: string;
+  /** @deprecated Use answer */
+  body?: string;
+  /** @deprecated Use defaultOpen for uncontrolled */
+  isOpen?: boolean;
+  /** @deprecated Use internal state for uncontrolled */
+  onToggle?: () => void;
 }
 
-export function FaqDisclosureItem({
-  title,
-  body,
-  isOpen,
-  onToggle,
-  className = "",
-}: FaqDisclosureItemProps) {
-  const panelId = useId();
-  const triggerId = `${panelId}-trigger`;
+export function FaqDisclosureItem(props: FaqDisclosureItemProps) {
+  const {
+    question: questionProp,
+    answer: answerProp,
+    defaultOpen = false,
+    title,
+    body,
+    isOpen: isOpenProp,
+    onToggle,
+  } = props;
+  const question = questionProp ?? title ?? "";
+  const answer = answerProp ?? body ?? "";
+  const isControlled = isOpenProp !== undefined && onToggle !== undefined;
+  const [internalOpen, setInternalOpen] = useState(defaultOpen);
+  const isOpen = isControlled ? isOpenProp! : internalOpen;
+  const handleToggle = isControlled ? onToggle! : () => setInternalOpen((v) => !v);
 
   return (
-    <li className={["support-faq-item", className].filter(Boolean).join(" ")}>
-      <Button
-        id={triggerId}
+    <div className="faq-item" data-open={isOpen}>
+      <button
         type="button"
-        variant="ghost"
-        fullWidth
-        className="support-faq-trigger"
+        className="faq-trigger"
+        onClick={handleToggle}
         aria-expanded={isOpen}
-        aria-controls={panelId}
-        onClick={onToggle}
       >
-        <span className="op-name type-h3">{title}</span>
-        <span className="support-faq-symbol" aria-hidden>
-          {isOpen ? "−" : "+"}
+        <span className="faq-question">{question}</span>
+        <span className="faq-icon" aria-hidden="true">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 14 14"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinecap="round"
+          >
+            <line x1="7" y1="1" x2="7" y2="13" />
+            <line x1="1" y1="7" x2="13" y2="7" />
+          </svg>
         </span>
-      </Button>
+      </button>
       <div
-        id={panelId}
+        className="faq-answer"
         role="region"
-        aria-labelledby={triggerId}
-        className="support-faq-panel"
-        data-state={isOpen ? "open" : "closed"}
-        aria-hidden={!isOpen}
+        hidden={!isOpen}
       >
-        <div className="support-faq-panel__inner">
-          <p className="op-desc type-body-sm">{body}</p>
+        <div className="faq-answer-inner">
+          {answer}
         </div>
       </div>
-    </li>
+    </div>
   );
 }

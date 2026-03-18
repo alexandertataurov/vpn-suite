@@ -5139,11 +5139,11 @@ html:not([data-theme="consumer-dark"]):not([data-theme="consumer-light"]) {
 }
 
 .page-shell--dense {
-  gap: 10px;
+  gap: var(--spacing-3);
 }
 
 .page-section--compact {
-  gap: 8px;
+  gap: var(--spacing-2);
 }
 
 .grid-2,

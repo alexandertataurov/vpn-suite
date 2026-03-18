@@ -30,4 +30,17 @@ body {
   font-family: var(--font-sans);
 }
 
+/* App error boundary — dev-only error details */
+.app-error-fallback__details {
+  font-size: var(--font-size-xs);
+  text-align: left;
+  overflow: auto;
+  max-height: 120px;
+  margin: var(--spacing-2) 0;
+  padding: var(--spacing-2);
+  background: var(--color-surface-2);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+}
+
 /* Footer help: use FooterHelp recipe from design-system */

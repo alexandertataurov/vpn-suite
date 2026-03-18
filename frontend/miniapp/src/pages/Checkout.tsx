@@ -7,7 +7,7 @@ import {
   InlineAlert,
   PageScaffold,
   PageLayout,
-  ModernHeader,
+  PageHeader,
   PageSection,
   Stack,
 } from "@/design-system";
@@ -28,7 +28,12 @@ export function CheckoutPage() {
       return (
         <PageScaffold>
           <PageLayout scrollable={false}>
-          <ModernHeader title={model.header.title} showSettings={false} />
+          <PageHeader
+            title={model.header.title}
+            subtitle={model.header.subtitle}
+            onBack={() => navigate(-1)}
+            backAriaLabel={t("common.back_aria")}
+          />
           <PageSection>
             <InlineAlert
               variant="error"
@@ -57,7 +62,12 @@ export function CheckoutPage() {
     return (
       <PageScaffold>
         <PageLayout scrollable={false}>
-          <ModernHeader title={model.header.title ?? "Checkout"} showSettings={false} />
+          <PageHeader
+            title={model.header.title ?? t("checkout.loading_title")}
+            subtitle={model.header.subtitle}
+            onBack={() => navigate(-1)}
+            backAriaLabel={t("common.back_aria")}
+          />
           <Stack gap="4">
             <Skeleton variant="card" height={140} />
             <Skeleton variant="card" height={220} />
@@ -72,10 +82,10 @@ export function CheckoutPage() {
   return (
     <PageScaffold>
       <PageLayout scrollable={false}>
-      <ModernHeader
+      <PageHeader
         title={model.header.title}
         subtitle={model.header.subtitle}
-        showSettings={false}
+        backAriaLabel={t("common.back_aria")}
         onBack={() => {
           if (model.confirmationStep) {
             model.handleBack();
@@ -85,8 +95,12 @@ export function CheckoutPage() {
         }}
       />
       <PageSection
-        title="Review and pay"
-        description={showConfirmation ? "Pay in Telegram to activate access." : "Check the plan details before payment."}
+        title={t("checkout.section_title_review_pay")}
+        description={
+          showConfirmation
+            ? t("checkout.section_desc_pay_telegram")
+            : t("checkout.section_desc_before_payment")
+        }
       >
         <CheckoutSummaryCard
           planDisplayName={model.planDisplayName}
@@ -120,9 +134,7 @@ export function CheckoutPage() {
           onRetry={model.handleRetry}
         />
         <div className="checkout-footer-note">
-          <HelperNote>
-            Payments and renewals are handled in Telegram. Open Devices after payment to get your config.
-          </HelperNote>
+          <HelperNote>{t("checkout.footer_note")}</HelperNote>
         </div>
       </PageSection>
       </PageLayout>

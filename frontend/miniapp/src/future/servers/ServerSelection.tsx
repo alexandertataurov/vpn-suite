@@ -10,7 +10,7 @@ import {
   ServerCard,
   EmptyStateBlock,
   PageScaffold,
-  ModernHeader,
+  PageHeader,
 } from "@/design-system";
 import { Stack } from "@/design-system/core/primitives";
 import { useServerSelectionPageModel } from "@/page-models";
@@ -38,10 +38,11 @@ export function ServerSelectionPage() {
   if (model.pageState.status === "loading" || !model.data) {
     return (
       <PageScaffold>
-        <ModernHeader
+        <PageHeader
           title={model.header.title || t("servers.header_title")}
-          showSettings={false}
+          subtitle={model.header.subtitle}
           onBack={() => navigate(-1)}
+          backAriaLabel={t("common.back_aria")}
         />
         <Stack gap="4">
           <Skeleton variant="card" height={160} />
@@ -54,11 +55,11 @@ export function ServerSelectionPage() {
 
   return (
     <PageScaffold>
-      <ModernHeader
+      <PageHeader
         title={model.header.title}
         subtitle={model.header.subtitle}
-        showSettings={false}
         onBack={() => navigate(-1)}
+        backAriaLabel={t("common.back_aria")}
       />
       <Stack gap="4">
         <ActionCard

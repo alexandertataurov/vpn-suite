@@ -10,7 +10,7 @@ import {
   ConfirmModal,
   InlineAlert,
   Modal,
-  ModernHeader,
+  PageHeader,
   PageScaffold,
   PageLayout,
   PageSection,
@@ -151,7 +151,12 @@ export function DevicesPage() {
     return (
       <PageScaffold>
         <PageLayout scrollable={false}>
-          <ModernHeader title={model.header.title} showSettings={false} />
+          <PageHeader
+            title={model.header.title}
+            subtitle={model.header.subtitle}
+            onBack={() => navigate(-1)}
+            backAriaLabel={t("common.back_aria")}
+          />
           <Stack gap="4">
             <Skeleton variant="card" height={160} />
             <Skeleton variant="line" width="40%" />
@@ -165,11 +170,11 @@ export function DevicesPage() {
   return (
     <PageScaffold>
       <PageLayout scrollable={false}>
-      <ModernHeader
+      <PageHeader
         title={model.header.title}
         subtitle={model.header.subtitle}
-        showSettings={false}
         onBack={() => navigate(-1)}
+        backAriaLabel={t("common.back_aria")}
       />
       {model.planRequiredAlert ? (
         <InlineAlert
@@ -406,8 +411,8 @@ export function DevicesPage() {
       </Modal>
 
       <FooterHelp
-        note="Having trouble?"
-        linkLabel="View setup guide"
+        note={t("footer.having_trouble")}
+        linkLabel={t("footer.view_setup_guide")}
         onLinkClick={() => navigate("/support")}
       />
       </PageLayout>

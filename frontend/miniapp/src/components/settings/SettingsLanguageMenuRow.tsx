@@ -55,7 +55,6 @@ export function SettingsLanguageMenuRow({
               <IconChevronRight size={13} strokeWidth={2.5} />
             </div>
           }
-          className="settings-list-row--single-line-description"
           onClick={onTriggerClick}
           {...triggerProps}
         />

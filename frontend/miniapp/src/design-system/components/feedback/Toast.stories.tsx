@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 import type { Meta, StoryObj } from "@storybook/react";
-import { Toast, ToastContainer, useToast } from "./Toast";
+import { Toast, ToastContainer } from "./Toast";
+import { useToast } from "./useToast";
 import { Button } from "@/design-system";
 import { StorySection, StoryShowcase, StoryStack } from "@/design-system";
 

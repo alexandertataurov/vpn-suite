@@ -33,7 +33,7 @@ export function PlanBillingHistorySection({
       title={t("plan.payment_history_title")}
       className="plan-billing-page__secondary-section"
     >
-      <ListCard className="home-card-row module-card settings-list-card billing-history-list-card">
+      <ListCard className="settings-list-card billing-history-list-card">
         {loading ? (
           <>
             <ListRow

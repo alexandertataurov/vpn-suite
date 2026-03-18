@@ -27,6 +27,9 @@ export class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorB
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
+    if (import.meta.env.DEV) {
+      console.error("[AppErrorBoundary]", error.message, error.stack, errorInfo.componentStack);
+    }
     reportError(error, {
       route: typeof window !== "undefined" ? window.location.pathname : undefined,
       componentStack: errorInfo.componentStack,
@@ -39,10 +42,15 @@ export class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorB
 
   render(): ReactNode {
     if (this.state.error) {
+      const { error } = this.state;
+      const showDetails = import.meta.env.DEV && error?.message;
       return (
         <div className="splash-screen app-error-fallback" role="alert" aria-live="assertive">
           <div className="splash-screen-content">
             <Body className="splash-screen-tagline">Something went wrong.</Body>
+            {showDetails ? (
+              <pre className="app-error-fallback__details">{error.message}</pre>
+            ) : null}
             <Button
               variant="primary"
               size="lg"

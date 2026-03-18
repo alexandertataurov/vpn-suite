@@ -1,7 +1,6 @@
 import {
   createContext,
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useRef,
@@ -32,14 +31,14 @@ export interface ToastInput {
   dismissible?: boolean;
 }
 
-interface ToastContextValue {
+export interface ToastContextValue {
   toasts: ToastItem[];
   addToast: (input: string | ToastInput, variant?: Exclude<ToastVariant, "persistent">, duration?: number) => void;
   removeToast: (id: string) => void;
 }
 
 const MAX_VISIBLE_TOASTS = 3;
-const ToastContext = createContext<ToastContextValue | null>(null);
+export const ToastContext = createContext<ToastContextValue | null>(null);
 
 const defaultDuration: Record<ToastVariant, number> = {
   success: 4000,
@@ -248,10 +247,4 @@ export function Toast({
       ) : null}
     </div>
   );
-}
-
-export function useToast() {
-  const ctx = useContext(ToastContext);
-  if (!ctx) throw new Error("useToast must be used within ToastContainer");
-  return ctx;
 }

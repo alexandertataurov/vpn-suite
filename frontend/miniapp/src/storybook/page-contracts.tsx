@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useState, type ReactElement, type 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { setWebappToken } from "@/api/client";
 import { BootstrapContextProvider } from "@/bootstrap";
+import { ToastContainer } from "@/design-system";
 import { ViewportShellRoutes } from "./withViewportShell";
 import { OnboardingPage } from "@/pages/Onboarding";
 import { PlanPage } from "@/pages/Plan";
@@ -528,11 +529,13 @@ export function PageSandbox({
 
   return (
     <QueryClientProvider client={client}>
-      <BootstrapContextProvider value={bootstrapValue}>
-        <ViewportShellRoutes initialEntries={initialEntries} variant="stack">
-          {children}
-        </ViewportShellRoutes>
-      </BootstrapContextProvider>
+      <ToastContainer>
+        <BootstrapContextProvider value={bootstrapValue}>
+          <ViewportShellRoutes initialEntries={initialEntries} variant="stack">
+            {children}
+          </ViewportShellRoutes>
+        </BootstrapContextProvider>
+      </ToastContainer>
     </QueryClientProvider>
   );
 }
@@ -586,9 +589,11 @@ export function OnboardingSandbox({
 
   return (
     <QueryClientProvider client={client}>
-      <ViewportShellRoutes initialEntries={initialEntries} variant="stack">
-        {children}
-      </ViewportShellRoutes>
+      <ToastContainer>
+        <ViewportShellRoutes initialEntries={initialEntries} variant="stack">
+          {children}
+        </ViewportShellRoutes>
+      </ToastContainer>
     </QueryClientProvider>
   );
 }
@@ -618,9 +623,11 @@ export function OnboardingStoryHarness({ step = 0 }: { step?: number }) {
   );
 
   return (
-    <BootstrapContextProvider value={value}>
-      <OnboardingPage />
-    </BootstrapContextProvider>
+    <ToastContainer>
+      <BootstrapContextProvider value={value}>
+        <OnboardingPage />
+      </BootstrapContextProvider>
+    </ToastContainer>
   );
 }
 
@@ -639,9 +646,11 @@ export function PlanStoryHarness() {
   );
 
   return (
-    <BootstrapContextProvider value={value}>
-      <PlanPage />
-    </BootstrapContextProvider>
+    <ToastContainer>
+      <BootstrapContextProvider value={value}>
+        <PlanPage />
+      </BootstrapContextProvider>
+    </ToastContainer>
   );
 }
 

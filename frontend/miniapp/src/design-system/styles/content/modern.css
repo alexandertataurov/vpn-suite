@@ -458,8 +458,6 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
 
 /* ---- Settings Account Card (left-aligned, circle avatar) - */
 .settings-account-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-lg);
   padding: var(--miniapp-hero-padding);
   margin: 0 0 var(--amnezia-card-gap, var(--miniapp-row-gap));
@@ -467,7 +465,12 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
   flex-direction: column;
   align-items: flex-start;
   text-align: left;
-  gap: var(--spacing-4);
+  gap: var(--spacing-3);
+  border: 1px solid color-mix(in oklch, var(--color-accent) 12%, transparent);
+  background:
+    radial-gradient(circle at top right, color-mix(in oklch, var(--color-accent) 12%, transparent), transparent 32%),
+    linear-gradient(180deg, color-mix(in oklch, var(--color-surface) 98%, var(--color-surface-2)), var(--color-surface));
+  box-shadow: var(--shadow-elevated);
 }
 
 .settings-account-card__group {
@@ -911,13 +914,15 @@ html[data-theme="consumer-dark"] .plan-hero-stats {
   margin: 0 0 var(--spacing-2);
 }
 
-.new-user-hero-desc {
+/* Scoped so text-align wins over .miniapp-shell :where(p) cascade */
+.new-user-hero .new-user-hero-desc {
   font-size: var(--amnezia-hero-desc, var(--font-size-sm));
   font-weight: var(--font-weight-normal);
   color: var(--text2, var(--color-text-muted));
   line-height: 1.6;
   max-width: 210px;
   margin: 0 auto var(--spacing-6);
+  text-align: center;
 }
 
 .new-user-hero-actions {

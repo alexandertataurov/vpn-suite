@@ -102,6 +102,7 @@ export function PlanPage() {
             title={model.header.title}
             subtitle={model.header.subtitle}
             onBack={() => navigate(fromOnboarding ? "/onboarding" : "/")}
+            backAriaLabel={t("common.back_aria")}
           />
           <Stack gap="4">
             <Skeleton variant="card" height={220} />
@@ -153,6 +154,7 @@ export function PlanPage() {
         title={model.header.title}
         subtitle={model.header.subtitle}
         onBack={() => navigate(fromOnboarding ? "/onboarding" : "/")}
+        backAriaLabel={t("common.back_aria")}
       />
 
       {isSubscribed ? (
@@ -239,8 +241,8 @@ export function PlanPage() {
       ) : null}
 
       <FooterHelp
-        note="Having trouble?"
-        linkLabel="View setup guide"
+        note={t("footer.having_trouble")}
+        linkLabel={t("footer.view_setup_guide")}
         onLinkClick={() => navigate("/support")}
       />
       </PageLayout>

@@ -7,7 +7,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { ONBOARDING_STEPS, OnboardingStepCard } from "@/components";
-import { FooterHelp, PageScaffold, PageLayout, ModernHeader, useToast } from "@/design-system";
+import { FooterHelp, PageHeader, PageScaffold, PageLayout, useToast } from "@/design-system";
 import { useBootstrapContext } from "@/bootstrap/context";
 import { webappApi } from "@/api/client";
 import { useOpenLink, useSession, useTelemetry, useTelegramWebApp } from "@/hooks";
@@ -221,11 +221,11 @@ export function OnboardingPage() {
   return (
     <PageScaffold>
       <PageLayout scrollable={false}>
-      <ModernHeader
+      <PageHeader
         title={pageTitle}
         subtitle={pageSubtitle}
-        showSettings={false}
         onBack={stepIndex > 0 ? () => void handleBack() : undefined}
+        backAriaLabel={t("common.back_aria")}
       />
       <OnboardingStepCard
         step={step}

@@ -5,7 +5,7 @@ import {
   Skeleton,
   InlineAlert,
   PageScaffold,
-  ModernHeader,
+  PageHeader,
 } from "@/design-system";
 import { Stack } from "@/design-system/core/primitives";
 import { useReferralPageModel } from "@/page-models";
@@ -33,7 +33,12 @@ export function ReferralPage() {
   if (model.pageState.status === "loading") {
     return (
       <PageScaffold>
-        <ModernHeader title={model.header.title} showSettings={false} />
+        <PageHeader
+          title={model.header.title}
+          subtitle={model.header.subtitle}
+          onBack={() => navigate(-1)}
+          backAriaLabel={t("common.back_aria")}
+        />
         <Stack gap="4">
           <Skeleton className="skeleton-h-3xl" />
         </Stack>
@@ -43,11 +48,11 @@ export function ReferralPage() {
 
   return (
     <PageScaffold>
-      <ModernHeader
+      <PageHeader
         title={model.header.title}
         subtitle={model.header.subtitle}
-        showSettings={false}
         onBack={() => navigate(-1)}
+        backAriaLabel={t("common.back_aria")}
       />
       {model.showUpsellReferral ? (
         <Stack gap="4">

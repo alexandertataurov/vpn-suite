@@ -21,6 +21,7 @@ export function RestoreAccessPage() {
             title={model.header.title}
             subtitle={model.header.subtitle}
             onBack={() => navigate(-1)}
+            backAriaLabel={t("common.back_aria")}
           />
           <Stack gap="4">
             <ActionCard
@@ -48,8 +49,8 @@ export function RestoreAccessPage() {
             </Stack>
           </Stack>
           <FooterHelp
-            note="Having trouble?"
-            linkLabel="View setup guide"
+            note={t("footer.having_trouble")}
+            linkLabel={t("footer.view_setup_guide")}
             onLinkClick={() => navigate("/support")}
           />
           </PageLayout>
@@ -67,6 +68,7 @@ export function RestoreAccessPage() {
           title={model.header.title}
           subtitle={model.header.subtitle}
           onBack={() => navigate(-1)}
+          backAriaLabel={t("common.back_aria")}
         />
         <Stack gap="4">
           <ActionCard
@@ -87,6 +89,7 @@ export function RestoreAccessPage() {
           title={model.header.title}
           subtitle={model.header.subtitle}
           onBack={() => navigate(-1)}
+          backAriaLabel={t("common.back_aria")}
         />
         <Stack gap="4">
           <InlineAlert
@@ -120,6 +123,7 @@ export function RestoreAccessPage() {
         title={model.header.title}
         subtitle={model.header.subtitle}
         onBack={() => navigate(-1)}
+        backAriaLabel={t("common.back_aria")}
       />
       <Stack gap="4">
         <ActionCard
@@ -141,8 +145,8 @@ export function RestoreAccessPage() {
           </Button>
       </StickyBottomBar>
       <FooterHelp
-        note="Having trouble?"
-        linkLabel="View setup guide"
+        note={t("footer.having_trouble")}
+        linkLabel={t("footer.view_setup_guide")}
         onLinkClick={() => navigate("/support")}
       />
       </PageLayout>

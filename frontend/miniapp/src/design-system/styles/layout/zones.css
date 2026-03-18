@@ -26,7 +26,8 @@ html {
   --miniapp-page-gap: clamp(22px, 4.8vw, 28px);
   --miniapp-section-gap: 24px;
   --miniapp-row-gap: 8px;
-  --miniapp-grid-gap: 12px;
+  --miniapp-grid-gap: var(--spacing-3);
+  --size-page-header-back: 34px;
   --miniapp-card-padding: clamp(16px, 3.4vw, 18px);
   --miniapp-card-padding-tight: 12px;
   --miniapp-hero-padding: clamp(20px, 4vw, 24px);

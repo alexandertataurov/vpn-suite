@@ -25,17 +25,18 @@ import {
 import { SessionMissing } from "@/components";
 import { useWebappToken } from "@/api/client";
 import { useSession } from "@/hooks";
+import { useI18n } from "@/hooks";
 import { useAccessHomePageModel } from "@/page-models";
 
-function InviteFriendsCard() {
+function InviteFriendsCard({ t }: { t: (k: string) => string }) {
   const navigate = useNavigate();
   return (
     <ListCard className="home-card-row home-invite-card">
       <ListRow
         icon={<IconUsers size={15} strokeWidth={2} />}
         iconTone="neutral"
-        title="Invite Friends"
-        subtitle="Invite a friend, get +30 days free"
+        title={t("home.invite_friends_title")}
+        subtitle={t("home.invite_friends_subtitle")}
         right={
           <div className="home-row-right-group">
             <IconChevronRight size={13} strokeWidth={2.5} />
@@ -48,6 +49,7 @@ function InviteFriendsCard() {
 }
 
 export function HomePage() {
+  const { t } = useI18n();
   const model = useAccessHomePageModel();
   const navigate = useNavigate();
   const hasToken = !!useWebappToken();
@@ -64,13 +66,13 @@ export function HomePage() {
     return (
       <PageScaffold>
         <PageLayout scrollable={false}>
-          <ModernHeader title="Amnezia" />
+          <ModernHeader title={t("home.app_title")} />
           <Skeleton variant="card" height={180} />
           <Skeleton variant="card" height={120} />
           <Skeleton variant="card" height={72} />
           <FooterHelp
-            note="Having trouble?"
-            linkLabel="View setup guide"
+            note={t("footer.having_trouble")}
+            linkLabel={t("footer.view_setup_guide")}
             onLinkClick={() => navigate("/support")}
           />
         </PageLayout>
@@ -84,7 +86,7 @@ export function HomePage() {
         title={model.pageState.title}
         message={model.pageState.message}
         onRetry={model.onRetry}
-        retryLabel="Retry"
+        retryLabel={t("common.retry")}
       />
     );
   }
@@ -110,19 +112,19 @@ export function HomePage() {
       {model.showNewUserHero ? (
         <>
           <NewUserHero
-            title="Setup Required"
-            description="Choose a plan and add a device to get your secure configuration."
+            title={t("home.setup_required_title")}
+            description={t("home.setup_required_description")}
             onChoosePlan={() => navigate("/plan")}
             onViewGuide={() => navigate("/support")}
-            choosePlanLabel="Choose a Plan →"
-            viewGuideLabel="View setup guide"
+            choosePlanLabel={t("home.choose_plan_cta")}
+            viewGuideLabel={t("home.view_guide_label")}
           />
           <ListCard className="home-card-row">
             <ListRow
               icon={<IconMonitor size={15} strokeWidth={2} />}
               iconTone="neutral"
-              title="Devices"
-              subtitle="None added yet"
+              title={t("home.primary_manage_devices")}
+              subtitle={t("home.devices_none_added")}
               right={
                 <div className="home-row-right-group">
                   <IconChevronRight size={13} strokeWidth={2.5} />
@@ -131,7 +133,7 @@ export function HomePage() {
               onClick={() => navigate("/devices")}
             />
           </ListCard>
-          <InviteFriendsCard />
+          <InviteFriendsCard t={t} />
         </>
       ) : model.showPlanHero && model.planHeroData ? (
         <>
@@ -144,9 +146,9 @@ export function HomePage() {
           />
           {model.showNoDeviceCalloutAboveBanner && (
             <NoDeviceCallout
-              title="No devices added"
-              subtitle="Add a device to generate your configuration."
-              ctaLabel="Add Device"
+              title={t("home.no_devices_title")}
+              subtitle={t("home.no_devices_subtitle")}
+              ctaLabel={t("home.add_device_cta")}
               ctaIcon={<IconPlus size={13} strokeWidth={2} />}
               onAddDevice={() => navigate("/devices")}
             />
@@ -156,22 +158,22 @@ export function HomePage() {
               variant={model.planHeroData.status === "expired" ? "expired" : "expiring"}
               title={
                 status === "expired"
-                  ? "Subscription expired"
-                  : "Subscription expiring soon"
+                  ? t("home.renewal_expired_title")
+                  : t("home.renewal_expiring_title")
               }
               subtitle={
                 status === "expired"
-                  ? "Renew now to restore access on all devices."
-                  : "Renew before it expires to keep access on all devices."
+                  ? t("home.renewal_expired_subtitle")
+                  : t("home.renewal_expiring_subtitle")
               }
               onClick={() => navigate(status === "expired" ? "/restore-access" : "/plan")}
             />
           )}
           {model.showNoDeviceCallout && !model.showNoDeviceCalloutAboveBanner && (
             <NoDeviceCallout
-              title="No devices added"
-              subtitle="Add a device to generate your configuration."
-              ctaLabel="Add Device"
+              title={t("home.no_devices_title")}
+              subtitle={t("home.no_devices_subtitle")}
+              ctaLabel={t("home.add_device_cta")}
               ctaIcon={<IconPlus size={13} strokeWidth={2} />}
               onAddDevice={() => navigate("/devices")}
             />
@@ -184,7 +186,7 @@ export function HomePage() {
                     <ListRow
                       icon={<IconMonitor size={15} strokeWidth={2} />}
                       iconTone="neutral"
-                      title="Manage Devices"
+                      title={t("home.manage_devices")}
                       subtitle={model.devicesSubtitle}
                       right={
                         <div className="home-row-right-group">
@@ -223,15 +225,15 @@ export function HomePage() {
                   )}
                 </ListCard>
               )}
-              <InviteFriendsCard />
+              <InviteFriendsCard t={t} />
             </>
           )}
         </>
       ) : null}
 
       <FooterHelp
-        note="Having trouble?"
-        linkLabel="View setup guide"
+        note={t("footer.having_trouble")}
+        linkLabel={t("footer.view_setup_guide")}
         onLinkClick={() => navigate("/support")}
       />
       </PageLayout>

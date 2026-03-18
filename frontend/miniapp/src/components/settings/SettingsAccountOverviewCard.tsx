@@ -7,6 +7,8 @@ export interface SettingsAccountOverviewCardProps {
   photoUrl?: string;
   eyebrowLabel: string;
   statusLabel: string;
+  /** Uppercase eyebrow for renewal section. Default "RENEWAL". */
+  renewalEyebrowLabel?: string;
   renewalLabel: string;
   renewalValue?: string | null;
   planBadgeLabel?: string | null;
@@ -21,6 +23,7 @@ export function SettingsAccountOverviewCard({
   photoUrl,
   eyebrowLabel,
   statusLabel,
+  renewalEyebrowLabel = "RENEWAL",
   renewalLabel,
   renewalValue,
   planBadgeLabel,
@@ -48,7 +51,7 @@ export function SettingsAccountOverviewCard({
       </div>
 
       <div className="settings-account-card__renewal">
-        <span className="settings-account-eyebrow">RENEWAL</span>
+        <span className="settings-account-eyebrow">{renewalEyebrowLabel}</span>
         <span className="settings-account-renewal-value">
           {renewalValue ?? renewalLabel}
         </span>

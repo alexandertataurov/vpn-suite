@@ -8,9 +8,9 @@
 }
 
 .page-header-back {
-  width: 34px;
-  height: 34px;
-  min-width: 34px;
+  width: var(--size-page-header-back);
+  height: var(--size-page-header-back);
+  min-width: var(--size-page-header-back);
   border-radius: 50%;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
