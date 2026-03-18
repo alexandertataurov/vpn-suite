@@ -149,8 +149,6 @@ pydantic-core==2.41.5
     # via pydantic
 pydantic-settings==2.13.0
     # via -r requirements.in
-pyjwt==2.11.0
-    # via redis
 pyotp==2.9.0
     # via -r requirements.in
 pypng==0.20220715.0
@@ -165,7 +163,7 @@ pyyaml==6.0.3
     # via uvicorn
 qrcode[pil]==7.4.2
     # via -r requirements.in
-redis==5.3.1
+redis==7.3.0
     # via -r requirements.in
 requests==2.32.5
     # via
