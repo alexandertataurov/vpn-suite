@@ -73,7 +73,7 @@ export type { ButtonRowProps, ButtonRowAutoProps, CardFooterLinkProps } from "./
 export { StatusChip } from "./ui/StatusChip";
 export type { StatusChipProps, StatusChipVariant } from "./ui/StatusChip";
 export { PillChip } from "./ui/PillChip";
-export type { PillChipProps, PillChipVariant } from "./ui/PillChip";
+export type { PillChipProps, PillChipStatus, PillChipVariant } from "./ui/PillChip";
 export { Avatar } from "./ui/Avatar";
 export type { AvatarProps } from "./ui/Avatar";
 export { Badge } from "./ui/Badge";

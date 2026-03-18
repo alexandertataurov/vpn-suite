@@ -32,6 +32,14 @@
   line-height: 1.5;
 }
 
+.inline-alert--modern .inline-alert-submessage {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+  margin-top: 4px;
+}
+
 .inline-alert--modern.inline-alert-info .alert-icon { color: var(--color-info, var(--color-accent)); }
 .inline-alert--modern.inline-alert-warning .alert-icon { color: var(--color-warning); }
 .inline-alert--modern.inline-alert-error .alert-icon { color: var(--color-error); }
@@ -40,8 +48,8 @@
 /* ---- Avatar (profile row) ---- */
 .avatar {
   border-radius: 50%;
-  background: linear-gradient(140deg, #bbf7d0 0%, #99f6e4 100%);
-  color: #065f46;
+  background: linear-gradient(140deg, var(--green-avatar-gradient-start, #bbf7d0) 0%, var(--green-avatar-gradient-end, #99f6e4) 100%);
+  color: var(--green-avatar-text, #065f46);
   font-weight: 700;
   letter-spacing: 0.2px;
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
@@ -61,6 +69,13 @@
   width: 28px;
   height: 28px;
   font-size: 9px;
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
 }
 
 /* ---- Badge (inline status) ---- */
@@ -184,6 +199,42 @@
   font-size: 12.5px;
   color: var(--color-text-tertiary);
   margin: 2px 0 0;
+}
+
+.page-header-action {
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* ---- Toggle (amnezia spec) ------------------------- */
+.miniapp-shell .ts-toggle {
+  width: 38px;
+  height: 22px;
+}
+
+.miniapp-shell .ts-track {
+  width: 38px;
+  height: 22px;
+  border-radius: 100px;
+  background: var(--color-surface-2);
+}
+
+.miniapp-shell .ts-toggle.on .ts-track {
+  background: var(--color-success-bg, var(--color-success-soft));
+}
+
+.miniapp-shell .ts-knob {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  top: 2px;
+  left: 2px;
+}
+
+.miniapp-shell .ts-toggle.on .ts-knob {
+  transform: translateX(16px);
 }
 
 /* ---- Page Scaffold & Headers ----------------------- */
@@ -346,20 +397,20 @@
 
 .pill-chip--active {
   color: var(--green, var(--color-success));
-  background: var(--green-bg, var(--color-success-soft));
-  border: 1px solid var(--green-border, var(--surface-border-success));
+  background: var(--color-success-bg, var(--green-bg, var(--color-success-soft)));
+  border: 1px solid var(--color-success-border, var(--green-border, var(--surface-border-success)));
 }
 
 .pill-chip--expiring {
   color: var(--amber, var(--color-warning));
-  background: var(--amber-bg, var(--color-warning-soft));
-  border: 1px solid var(--amber-border, var(--surface-border-warning));
+  background: var(--color-warning-bg, var(--amber-bg, var(--color-warning-soft)));
+  border: 1px solid var(--color-warning-border, var(--amber-border, var(--surface-border-warning)));
 }
 
 .pill-chip--expired {
   color: var(--red, var(--color-error));
-  background: var(--red-bg, var(--color-error-soft));
-  border: 1px solid var(--red-border, var(--surface-border-error));
+  background: var(--color-error-bg, var(--red-bg, var(--color-error-soft)));
+  border: 1px solid var(--color-error-border, var(--red-border, var(--surface-border-error)));
 }
 
 .pill-chip-dot {
@@ -697,7 +748,7 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
   font-weight: 500;
   letter-spacing: 0.6px;
   text-transform: uppercase;
-  color: #5a5f73;
+  color: var(--text3, var(--color-text-tertiary));
 }
 
 .plan-hero-name,
@@ -854,22 +905,22 @@ html[data-theme="consumer-dark"] .plan-hero-stats {
 }
 
 .renewal-banner--expiring {
-  background: rgba(146, 64, 14, 0.12);
-  border: 1px solid rgba(146, 64, 14, 0.22);
+  background: var(--color-warning-bg, rgba(146, 64, 14, 0.12));
+  border: 1px solid var(--color-warning-border, rgba(146, 64, 14, 0.22));
 }
 
 .renewal-banner--expiring .renewal-banner-icon {
-  background: var(--amber-icon-bg);
+  background: var(--color-icon-warning-bg, var(--amber-icon-bg));
   color: var(--amber, var(--color-warning));
 }
 
 .renewal-banner--expired {
-  background: var(--red-bg, var(--color-error-soft));
-  border-color: var(--red-border, var(--surface-border-error));
+  background: var(--color-error-bg, var(--red-bg, var(--color-error-soft)));
+  border-color: var(--color-error-border, var(--red-border, var(--surface-border-error)));
 }
 
 .renewal-banner--expired .renewal-banner-icon {
-  background: var(--red-icon-bg);
+  background: var(--color-icon-danger-bg, var(--red-icon-bg));
   color: var(--red, var(--color-error));
 }
 
@@ -1122,10 +1173,19 @@ html[data-theme="consumer-dark"] .plan-hero-stats {
   list-style: none;
 }
 
+/* CardRow / ListCard — amnezia spec */
+.modern-list.card-row,
+.home-card-row.modern-list {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--r, var(--radius-lg));
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
 /* Canonical home page nav cards — match screenshot layout */
 .home-card-row.modern-list {
   margin: 0 0 var(--amnezia-card-gap, var(--spacing-2));
-  overflow: hidden;
   padding-bottom: 0;
 }
 
@@ -1213,7 +1273,7 @@ html[data-theme="consumer-dark"] .plan-hero-stats {
   text-align: left;
   font: inherit;
   font-family: inherit;
-  border-bottom: 1px solid var(--color-border-subtle, var(--color-border));
+  border-bottom: 1px solid var(--divider, var(--color-border-subtle, var(--color-border)));
   transition: background 0.12s ease, filter 0.12s ease;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
@@ -1280,9 +1340,9 @@ html[data-theme="consumer-dark"] .row-item {
 .modern-icon-tone--blue { background: color-mix(in oklch, var(--color-accent) 6%, var(--color-surface-2)); color: var(--color-accent); }
 .modern-icon-tone--green { background: color-mix(in oklch, var(--color-success) 6%, var(--color-surface-2)); color: var(--color-success); }
 .modern-icon-tone--amber,
-.modern-icon-tone--warning { background: rgba(146, 64, 14, 0.12); color: var(--color-warning); }
+.modern-icon-tone--warning { background: var(--color-icon-warning-bg, rgba(146, 64, 14, 0.12)); color: var(--color-warning); }
 .modern-icon-tone--red,
-.modern-icon-tone--danger { background: rgba(153, 27, 27, 0.12); color: var(--color-error); }
+.modern-icon-tone--danger { background: var(--color-icon-danger-bg, rgba(153, 27, 27, 0.12)); color: var(--color-error); }
 .modern-icon-tone--neutral { background: var(--color-surface-2); border-color: var(--color-border); color: var(--color-text-muted); }
 
 /* ---- Plan Options ---------------------------------- */

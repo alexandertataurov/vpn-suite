@@ -696,6 +696,16 @@
   color: var(--color-warning);
 }
 
+.status-chip.expiring {
+  background: var(--color-warning-bg, var(--color-warning-soft, color-mix(in oklch, var(--color-warning) 12%, transparent)));
+  color: var(--color-warning);
+}
+
+.status-chip.expired {
+  background: var(--color-error-bg, color-mix(in oklch, var(--color-error) 12%, transparent));
+  color: var(--color-error);
+}
+
 .status-chip.offline {
   color: color-mix(in oklch, var(--color-error) 66%, var(--color-text) 34%);
   background: color-mix(in oklch, var(--color-surface) 95%, var(--color-error) 5%);

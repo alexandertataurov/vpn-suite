@@ -10,7 +10,7 @@ import {
 } from "./foundationShared";
 
 const meta: Meta = {
-  title: "Foundations/Color",
+  title: "Foundation/Color",
   parameters: {
     layout: "padded",
     status: { type: "stable" },
@@ -86,6 +86,16 @@ const COLOR_GROUPS: Record<string, ColorItem[]> = {
     { token: "--color-warning", usage: "Warning state" },
     { token: "--color-error", usage: "Error, danger" },
     { token: "--color-info", usage: "Info, neutral" },
+  ],
+  "Semantic Backgrounds": [
+    { token: "--color-success-bg", usage: "Success background" },
+    { token: "--color-success-border", usage: "Success border" },
+    { token: "--color-warning-bg", usage: "Warning background" },
+    { token: "--color-warning-border", usage: "Warning border" },
+    { token: "--color-error-bg", usage: "Error background" },
+    { token: "--color-error-border", usage: "Error border" },
+    { token: "--color-info-bg", usage: "Info background" },
+    { token: "--color-info-border", usage: "Info border" },
   ],
 };
 

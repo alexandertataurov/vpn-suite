@@ -2269,9 +2269,26 @@ html:not([data-theme="consumer-light"]) .miniapp-popover-panel {
 .skeleton {
   width: var(--skeleton-width, 100%);
   height: var(--skeleton-height, 16px);
-  border-radius: 8px;
+  border-radius: var(--r, var(--radius-md));
   background: var(--color-border-subtle);
   animation: skeleton-pulse 1.2s infinite ease-in-out;
+  position: relative;
+  overflow: hidden;
+}
+
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in oklch, var(--color-surface) 40%, transparent) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+  pointer-events: none;
 }
 
 @keyframes skeleton-pulse {
@@ -2366,6 +2383,14 @@ html:not([data-theme="consumer-light"]) .miniapp-popover-panel {
   font-size: 12.5px;
   line-height: 1.4;
   color: color-mix(in oklch, var(--color-text) 82%, var(--color-text-tertiary) 18%);
+}
+
+.inline-alert-submessage {
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--color-text-muted);
+  line-height: 1.5;
 }
 
 .inline-alert-actions {
@@ -3439,8 +3464,28 @@ html[data-theme="consumer-dark"] .subscription-cancellation-modal {
 
 .miniapp-shell :is(.btn-danger, a.btn.btn-danger) {
   color: var(--color-error);
-  background: var(--danger-dim);
-  border-color: color-mix(in oklch, var(--color-error) 22%, transparent);
+  background: var(--color-error-bg, var(--danger-dim));
+  border: 1px solid var(--color-error-border, color-mix(in oklch, var(--color-error) 22%, transparent));
+}
+
+.miniapp-shell :is(.btn-danger, a.btn.btn-danger):hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.miniapp-shell :is(.btn-external, a.btn.btn-external) {
+  background: var(--color-accent);
+  color: white;
+  border: none;
+  font-family: Inter, var(--font-sans), system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: -0.2px;
+  text-transform: none;
+  border-radius: var(--r-sm, var(--radius-sm));
+}
+
+.miniapp-shell :is(.btn-external, a.btn.btn-external):hover:not(:disabled) {
+  opacity: 0.88;
 }
 
 .miniapp-shell .connect-button {

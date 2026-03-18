@@ -1,19 +1,23 @@
 /**
  * Plan card per amnezia-miniapp-design-guidelines.md §4.3.
- * Borders only, no shadows. Status badge + 3-column stats strip.
+ * Borders only, no shadows. StatusChip badge + 3-column stats strip.
  */
 import type { HTMLAttributes } from "react";
+import { StatusChip } from "../../patterns";
 import styles from "./PlanCard.module.css";
 
 export type PlanCardStatus = "active" | "expiring" | "expired";
 
 export interface PlanCardProps extends HTMLAttributes<HTMLDivElement> {
+  /** Plan name; planName is alias */
   plan: string;
   planSub: string;
   status: PlanCardStatus;
   devices: number;
   deviceLimit: number;
   renewsLabel: string;
+  /** Traffic display; default "∞" */
+  traffic?: string;
 }
 
 const BADGE_LABEL: Record<PlanCardStatus, string> = {
@@ -29,6 +33,7 @@ export function PlanCard({
   devices,
   deviceLimit,
   renewsLabel,
+  traffic = "∞",
   className = "",
   ...props
 }: PlanCardProps) {
@@ -43,13 +48,7 @@ export function PlanCard({
             <span className={`${styles.planName} plan-name`}>{plan}</span>
             <span className={styles.planSub}>{planSub}</span>
           </div>
-          <span
-            className={`${styles.sBadge} ${styles[`sBadge--${status}`]}`}
-            aria-label={`Plan status: ${BADGE_LABEL[status]}`}
-          >
-            <span className={styles.badgeDot} aria-hidden />
-            {BADGE_LABEL[status]}
-          </span>
+          <StatusChip variant={status} label={BADGE_LABEL[status]} />
         </div>
       </div>
       <div className={styles.stats}>
@@ -76,7 +75,7 @@ export function PlanCard({
         </div>
         <div className={styles.stat}>
           <span className={styles.statLabel}>Traffic</span>
-          <span className={styles.statValue}>∞</span>
+          <span className={styles.statValue}>{traffic}</span>
         </div>
       </div>
     </div>

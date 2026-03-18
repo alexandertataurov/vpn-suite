@@ -53,7 +53,7 @@ const meta: Meta<{
   state: keyof typeof scenarios;
   expiringNoDevices: boolean;
 }> = {
-  title: "Pages/Contracts/Home",
+  title: "Pages/Home",
   tags: ["autodocs"],
   argTypes: {
     state: {
@@ -71,6 +71,7 @@ const meta: Meta<{
     expiringNoDevices: false,
   },
   parameters: {
+    layout: "fullscreen",
     docs: {
       description: {
         component:

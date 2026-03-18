@@ -4,8 +4,12 @@ import { IconMonitor } from "../../icons";
 export interface NoDeviceCalloutProps {
   title: string;
   subtitle: string;
-  ctaLabel: string;
-  onCtaClick: () => void;
+  /** Legacy: use with onCtaClick */
+  ctaLabel?: string;
+  /** Legacy */
+  onCtaClick?: () => void;
+  /** Preferred: single callback for add device */
+  onAddDevice?: () => void;
   ctaIcon?: ReactNode;
   className?: string;
 }
@@ -13,8 +17,9 @@ export interface NoDeviceCalloutProps {
 export function NoDeviceCallout({
   title,
   subtitle,
-  ctaLabel,
+  ctaLabel = "Add device",
   onCtaClick,
+  onAddDevice,
   ctaIcon,
   className,
 }: NoDeviceCalloutProps) {
@@ -30,7 +35,7 @@ export function NoDeviceCallout({
       <button
         type="button"
         className="no-device-callout-cta nd-cta"
-        onClick={onCtaClick}
+        onClick={onAddDevice ?? onCtaClick ?? (() => {})}
         aria-label={ctaLabel}
       >
         {ctaIcon}

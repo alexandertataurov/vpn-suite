@@ -6,6 +6,8 @@ export interface InlineAlertProps {
   title: string;
   body?: ReactNode;
   message?: string;
+  /** Additional text below main message */
+  submessage?: ReactNode;
   actions?: ReactNode;
   className?: string;
   "data-testid"?: string;
@@ -30,12 +32,14 @@ export function InlineAlert({
   title,
   body,
   message,
+  submessage,
   actions,
   className,
   "data-testid": dataTestId,
 }: InlineAlertProps) {
   const resolvedBody = body ?? message;
   const hasBody = Boolean(resolvedBody);
+  const hasSubmessage = Boolean(submessage);
   const hasActions = Boolean(actions);
 
   return (
@@ -44,7 +48,7 @@ export function InlineAlert({
       aria-live="polite"
       className={cn("inline-alert", variantClass[variant], className)}
       data-variant={variant}
-      data-has-body={hasBody ? "true" : "false"}
+      data-has-body={hasBody || hasSubmessage ? "true" : "false"}
       data-has-actions={hasActions ? "true" : "false"}
       data-testid={dataTestId}
     >
@@ -52,6 +56,7 @@ export function InlineAlert({
       <div className="inline-alert-content">
         <div className="alert-title inline-alert-title">{title}</div>
         {resolvedBody ? <div className="alert-desc inline-alert-message">{resolvedBody}</div> : null}
+        {submessage ? <div className="inline-alert-submessage">{submessage}</div> : null}
       </div>
       {actions ? <div className="inline-alert-actions">{actions}</div> : null}
     </div>

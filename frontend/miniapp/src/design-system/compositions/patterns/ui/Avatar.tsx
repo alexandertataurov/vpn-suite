@@ -3,10 +3,12 @@ import type { HTMLAttributes } from "react";
 export interface AvatarProps extends Omit<HTMLAttributes<HTMLDivElement>, "children"> {
   initials: string;
   size?: "sm" | "md";
+  /** Optional image URL; when set, shows image instead of initials */
+  src?: string | null;
 }
 
-/** Profile avatar with gradient background and initials. */
-export function Avatar({ initials, size = "md", className = "", ...props }: AvatarProps) {
+/** Profile avatar with gradient background and initials, or image. */
+export function Avatar({ initials, size = "md", src, className = "", ...props }: AvatarProps) {
   const sizeClass = size === "sm" ? "avatar--sm" : "avatar--md";
   return (
     <div
@@ -14,7 +16,7 @@ export function Avatar({ initials, size = "md", className = "", ...props }: Avat
       aria-hidden
       {...props}
     >
-      {initials}
+      {src ? <img src={src} alt="" /> : initials}
     </div>
   );
 }

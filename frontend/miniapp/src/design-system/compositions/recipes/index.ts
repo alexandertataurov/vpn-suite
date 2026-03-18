@@ -18,6 +18,8 @@ export { CompactStepper } from "./CompactStepper";
 export type { CompactStepperProps, CompactStepperItem } from "./CompactStepper";
 export { ModernHeader } from "./ModernHeader";
 export type { ModernHeaderProps } from "./ModernHeader";
+export { ProfileRow } from "./ProfileRow";
+export type { ProfileRowProps } from "./ProfileRow";
 export { ModernHeroCard } from "./ModernHeroCard";
 export type { ModernHeroCardProps } from "./ModernHeroCard";
 export { PlanHeroCard } from "./PlanHeroCard";

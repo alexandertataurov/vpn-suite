@@ -1,4 +1,4 @@
-import { Button, PillChip } from "@/design-system";
+import { Avatar, Button, PillChip } from "@/design-system";
 import { useNavigate } from "react-router-dom";
 
 export interface SettingsAccountOverviewCardProps {
@@ -34,13 +34,7 @@ export function SettingsAccountOverviewCard({
   return (
     <div className="settings-account-card">
       <div className="settings-account-card__group">
-        <div className="settings-account-avatar settings-account-avatar--circle">
-          {photoUrl ? (
-            <img src={photoUrl} alt="" />
-          ) : (
-            <span>{initial}</span>
-          )}
-        </div>
+        <Avatar initials={initial} size="md" src={photoUrl} className="settings-account-avatar settings-account-avatar--circle" />
         <div className="settings-account-card__meta">
           <span className="settings-account-eyebrow">{eyebrowLabel}</span>
           <span className="settings-account-name">{name}</span>

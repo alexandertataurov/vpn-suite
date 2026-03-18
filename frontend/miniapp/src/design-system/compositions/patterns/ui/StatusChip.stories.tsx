@@ -3,11 +3,12 @@ import { StatusChip } from "./StatusChip";
 import { Inline } from "@/design-system/core/primitives";
 
 const meta: Meta<typeof StatusChip> = {
-  title: "Patterns/StatusChip",
+  title: "Components/StatusChip",
   tags: ["autodocs"],
   component: StatusChip,
   parameters: {
     layout: "padded",
+    status: { type: "stable" },
     docs: {
       description: {
         component:
@@ -18,7 +19,7 @@ const meta: Meta<typeof StatusChip> = {
   argTypes: {
     variant: {
       control: "select",
-      options: ["active", "paid", "info", "pending", "pend", "offline", "blocked", "warning", "danger"],
+      options: ["active", "expiring", "expired", "paid", "info", "pending", "pend", "offline", "blocked", "warning", "danger"],
     },
   },
 };

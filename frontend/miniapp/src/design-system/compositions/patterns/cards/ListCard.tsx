@@ -28,6 +28,9 @@ export function ListCard({ title, children, className = "", ...props }: ListCard
 }
 
 export type ListRowIconTone = "g" | "b" | "a" | "r" | "n" | "blue" | "green" | "amber" | "red" | "neutral";
+
+/** Spec alias: default | danger | warning */
+export type ListRowIconVariant = "default" | "danger" | "warning";
 export type ListRowDeviceType = "macos" | "ios" | "android" | "windows" | "linux" | "router" | "unknown";
 export type DeviceStatus = "active" | "pending" | "offline" | "blocked" | "needs_refresh" | "info";
 
@@ -65,7 +68,9 @@ function subtitleFromStatus(status: DeviceStatus | undefined, lastActiveAt: Date
   return formatRelativeLastActive(lastActiveAt);
 }
 
-function resolveModernTone(tone: ListRowIconTone): string {
+function resolveModernTone(tone: ListRowIconTone, iconVariant?: ListRowIconVariant): string {
+  if (iconVariant === "danger") return "modern-icon-tone--red";
+  if (iconVariant === "warning") return "modern-icon-tone--amber";
   switch (tone) {
     case "g":
     case "green":
@@ -90,6 +95,8 @@ function resolveModernTone(tone: ListRowIconTone): string {
 export interface ListRowProps extends Omit<HTMLAttributes<HTMLDivElement>, "children" | "title"> {
   icon?: ReactNode;
   iconTone?: ListRowIconTone;
+  /** Spec: default | danger | warning; maps to iconTone */
+  iconVariant?: ListRowIconVariant;
   title: ReactNode;
   subtitle?: ReactNode;
   subtitleMono?: boolean;
@@ -104,6 +111,7 @@ export interface ListRowProps extends Omit<HTMLAttributes<HTMLDivElement>, "chil
 export function ListRow({
   icon,
   iconTone = "n",
+  iconVariant,
   title,
   subtitle,
   subtitleMono,
@@ -129,7 +137,7 @@ export function ListRow({
 
   const resolvedIcon = icon ?? (deviceType ? defaultDeviceIcon(deviceType) : null);
   const resolvedSubtitle = subtitle ?? subtitleFromStatus(status, lastActiveAt);
-  const modernToneClass = resolveModernTone(iconTone);
+  const modernToneClass = resolveModernTone(iconTone, iconVariant);
   const a11y = "onClick" in props && typeof props.onClick === "function"
     ? { role: "button" as const, tabIndex: 0 }
     : {};

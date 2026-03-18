@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { IconSettings, IconChevronLeft } from "../../icons";
+import { ProfileRow } from "./ProfileRow";
 
 export interface ModernHeaderProps {
   /** Profile name shown on the left, e.g. on the Home page. */
@@ -54,28 +55,20 @@ export function ModernHeader({
           </button>
         ) : null}
 
-        {displayName ? (
-          <div
-            className={
-              pillChip ? "modern-profile-block modern-profile-row" : "modern-profile-block"
-            }
-          >
-            <div
-              className={
-                pillChip ? "modern-avatar modern-avatar--profile" : "modern-avatar"
-              }
-            >
+        {displayName && pillChip ? (
+          <ProfileRow
+            name={displayName}
+            status={pillChip}
+            onSettings={handleSettings}
+          />
+        ) : displayName ? (
+          <div className="modern-profile-block">
+            <div className="modern-avatar">
               {avatarUrl ? <img src={avatarUrl} alt="" /> : <span>{avatarInitial}</span>}
             </div>
-            <div
-              className={
-                pillChip
-                  ? "modern-profile-info modern-profile-info--row"
-                  : "modern-profile-info"
-              }
-            >
+            <div className="modern-profile-info">
               <span className="modern-header-title">{displayName}</span>
-              {pillChip ?? (subtitle ? <div className="modern-header-label">{subtitle}</div> : null)}
+              {subtitle ? <div className="modern-header-label">{subtitle}</div> : null}
             </div>
           </div>
         ) : (
@@ -86,7 +79,7 @@ export function ModernHeader({
         )}
       </div>
       
-      {showSettings ? (
+      {showSettings && !(displayName && pillChip) ? (
         <button
           className="modern-icon-button settings-pill"
           onClick={handleSettings}

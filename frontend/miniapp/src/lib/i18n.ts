@@ -1490,6 +1490,8 @@ const messages: MessageTable = {
     "support.troubleshooter_title": "Диагностика",
     "support.troubleshooter_description":
       "Пройдите эти шаги, чтобы проверить тариф, устройство и восстановление доступа перед обращением в поддержку.",
+    "support.troubleshooter_description_short":
+      "Следуйте шагам ниже для диагностики подключения.",
     "support.recovery_paths_title": "Маршруты восстановления",
     "support.recovery_paths_description": "Выберите вариант, который лучше всего описывает вашу проблему.",
     "support.quick_paths_title": "Частые решения",

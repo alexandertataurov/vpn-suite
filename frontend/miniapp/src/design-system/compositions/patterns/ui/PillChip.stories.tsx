@@ -3,11 +3,12 @@ import { PillChip } from "./PillChip";
 import { Inline } from "@/design-system/core/primitives";
 
 const meta: Meta<typeof PillChip> = {
-  title: "Patterns/PillChip",
+  title: "Components/PillChip",
   tags: ["autodocs"],
   component: PillChip,
   parameters: {
     layout: "padded",
+    status: { type: "stable" },
     docs: {
       description: {
         component: "Pill chip for plan/status labels. Variants: beta, active, expiring, expired. Uses design tokens.",
