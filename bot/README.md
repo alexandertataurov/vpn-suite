@@ -16,7 +16,7 @@ Telegram bot for VPN subscription and device management. The chat menu button sh
 
 ## Running tests
 
-From the bot/ directory:
+From the bot/ directory (with venv activated or `python` from venv):
 
 - All tests: `pytest`
 - With coverage: `pytest --cov=. --cov-report=html`
