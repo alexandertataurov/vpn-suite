@@ -1,4 +1,5 @@
 import { useId } from "react";
+import { Button } from "../../components/Button";
 
 export interface FaqDisclosureItemProps {
   title: string;
@@ -20,9 +21,11 @@ export function FaqDisclosureItem({
 
   return (
     <li className={["support-faq-item", className].filter(Boolean).join(" ")}>
-      <button
+      <Button
         id={triggerId}
         type="button"
+        variant="ghost"
+        fullWidth
         className="support-faq-trigger"
         aria-expanded={isOpen}
         aria-controls={panelId}
@@ -32,7 +35,7 @@ export function FaqDisclosureItem({
         <span className="support-faq-symbol" aria-hidden>
           {isOpen ? "−" : "+"}
         </span>
-      </button>
+      </Button>
       <div
         id={panelId}
         role="region"

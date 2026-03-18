@@ -14,6 +14,7 @@ These rules are enforced by CI. PRs that violate them will not merge.
 - To add a token: update tokens.css, follow the existing naming scheme, get reviewed
 
 ### Components (miniapp)
+- **Build order:** Foundations → Primitives → Components → Patterns → Recipes → Pages (each layer may only use layers below it)
 - Need a UI pattern? Check design-system and components first
 - If it exists: use it — never rebuild inline
 - If it doesn't exist: build it in `frontend/miniapp/src/design-system` or `frontend/miniapp/src/components`, not in a feature folder

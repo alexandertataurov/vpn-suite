@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Button } from "../../components/Button";
 import { IconAlertTriangle, IconChevronRight, IconRotateCw } from "../../icons";
 
 /** Renewal banner variant per amnezia spec §4.4 */
@@ -33,19 +34,21 @@ export function RenewalBanner({
   ].filter(Boolean).join(" ");
 
   return (
-    <button
+    <Button
       type="button"
+      variant="ghost"
+      fullWidth
       className={cardClass}
       onClick={onClick}
       aria-label={title}
       data-layer="RenewalBanner"
+      startIcon={<div className="renewal-banner-icon">{icon ?? DEFAULT_ICONS[variant]}</div>}
+      endIcon={<IconChevronRight size={13} strokeWidth={2} className="renewal-banner-chevron" />}
     >
-      <div className="renewal-banner-icon">{icon ?? DEFAULT_ICONS[variant]}</div>
       <div className="renewal-banner-body">
         <span className="renewal-banner-title">{title}</span>
         <span className="renewal-banner-subtitle">{subtitle}</span>
       </div>
-      <IconChevronRight size={13} strokeWidth={2} className="renewal-banner-chevron" />
-    </button>
+    </Button>
   );
 }

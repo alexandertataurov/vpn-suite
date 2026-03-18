@@ -423,8 +423,10 @@ export function MissionOperationButton({
   ...props
 }: MissionOperationButtonProps) {
   return (
-    <button
+    <Button
       type={type}
+      variant="ghost"
+      fullWidth
       className={joinClasses("op", OP_EDGE_CLASS_MAP[tone], className)}
       {...props}
     >
@@ -436,7 +438,7 @@ export function MissionOperationButton({
         trailing={trailing}
         showChevron={showChevron}
       />
-    </button>
+    </Button>
   );
 }
 

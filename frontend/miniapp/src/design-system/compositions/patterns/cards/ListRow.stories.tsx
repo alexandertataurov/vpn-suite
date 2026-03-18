@@ -4,7 +4,7 @@ import { Badge, ListCard, ListRow } from "@/design-system";
 import { StorySection, StoryShowcase } from "@/design-system";
 
 const meta = {
-  title: "Components/ListRow",
+  title: "Patterns/ListRow",
   tags: ["autodocs"],
   component: ListRow,
   parameters: {

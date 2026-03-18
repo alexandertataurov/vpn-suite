@@ -5,7 +5,7 @@
 }
 
 .docs-layout {
-  margin-top: var(--space-4);
+  margin-top: var(--ds-docs-section-gap, var(--space-8));
 }
 
 .docs-layout--with-toc {

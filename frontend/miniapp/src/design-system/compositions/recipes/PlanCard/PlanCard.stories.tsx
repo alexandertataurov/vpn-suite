@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { PlanCard } from "./PlanCard";
-import { Stack } from "@/design-system/core/primitives";
+import { StorySection, StoryShowcase, StoryStack } from "@/design-system";
 
 const meta: Meta<typeof PlanCard> = {
-  title: "Patterns/PlanCard",
+  title: "Recipes/PlanCard",
   tags: ["autodocs"],
   component: PlanCard,
   parameters: {
@@ -33,11 +33,18 @@ export const Default: Story = {
     deviceLimit: 5,
     renewsLabel: "Apr 1",
   },
+  render: (args) => (
+    <StoryShowcase>
+      <PlanCard {...args} />
+    </StoryShowcase>
+  ),
 };
 
 export const States: Story = {
   render: () => (
-    <Stack gap="4">
+    <StorySection title="States" description="Active, expiring, expired.">
+      <StoryShowcase>
+        <StoryStack>
       <PlanCard
         plan="Pro"
         planSub="5 devices · annual"
@@ -62,7 +69,9 @@ export const States: Story = {
         deviceLimit={5}
         renewsLabel="Mar 10"
       />
-    </Stack>
+        </StoryStack>
+      </StoryShowcase>
+    </StorySection>
   ),
 };
 
@@ -75,6 +84,11 @@ export const Active: Story = {
     deviceLimit: 5,
     renewsLabel: "Apr 1",
   },
+  render: (args) => (
+    <StoryShowcase>
+      <PlanCard {...args} />
+    </StoryShowcase>
+  ),
 };
 
 export const Expiring: Story = {
@@ -86,6 +100,11 @@ export const Expiring: Story = {
     deviceLimit: 5,
     renewsLabel: "14d",
   },
+  render: (args) => (
+    <StoryShowcase>
+      <PlanCard {...args} />
+    </StoryShowcase>
+  ),
 };
 
 export const Expired: Story = {
@@ -97,4 +116,9 @@ export const Expired: Story = {
     deviceLimit: 5,
     renewsLabel: "Mar 10",
   },
+  render: (args) => (
+    <StoryShowcase>
+      <PlanCard {...args} />
+    </StoryShowcase>
+  ),
 };

@@ -1,6 +1,6 @@
-import { Meta, Canvas } from "@storybook/addon-docs/blocks";
-import * as ShadowsStories from "./Shadows.stories";
+import { Meta, Canvas, Story } from "@storybook/addon-docs/blocks";
 import { FoundationHeader, FoundationLinks } from "./components";
+import * as ShadowsStories from "./Shadows.stories";
 
 <Meta of={ShadowsStories} />
 
@@ -23,7 +23,9 @@ Shadows communicate elevation and hierarchy. Semantic shadow tokens ensure consi
 
 ## Token inventory
 
-<Canvas of={ShadowsStories.Scale} />
+<Canvas>
+  <Story id="foundations-shadows--scale" />
+</Canvas>
 
 ## Implementation notes
 

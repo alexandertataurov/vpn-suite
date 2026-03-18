@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Button } from "../../components/Button";
 import { IconShield } from "../../icons";
 
 export interface NewUserHeroProps {
@@ -39,14 +40,14 @@ export function NewUserHero({
       <p className="new-user-hero-desc">{description}</p>
       <div className="new-user-hero-actions">
         {primaryAction ?? (onChoosePlan != null ? (
-          <button type="button" className="btn btn-primary btn-full-width new-user-hero-cta" onClick={onChoosePlan}>
+          <Button variant="primary" fullWidth className="new-user-hero-cta" onClick={onChoosePlan}>
             {choosePlanLabel}
-          </button>
+          </Button>
         ) : null)}
         {secondaryAction ?? (onViewGuide != null ? (
-          <button type="button" className="btn btn-secondary btn-full-width new-user-hero-cta" onClick={onViewGuide}>
+          <Button variant="secondary" fullWidth className="new-user-hero-cta" onClick={onViewGuide}>
             {viewGuideLabel}
-          </button>
+          </Button>
         ) : null)}
       </div>
     </div>

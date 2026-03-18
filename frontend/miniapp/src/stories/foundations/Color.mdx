@@ -1,6 +1,6 @@
-import { Meta, Canvas } from "@storybook/addon-docs/blocks";
-import * as ColorStories from "./Color.stories";
+import { Meta, Canvas, Story } from "@storybook/addon-docs/blocks";
 import { FoundationHeader, FoundationLinks, DoDont } from "./components";
+import * as ColorStories from "./Color.stories";
 
 <Meta of={ColorStories} />
 
@@ -24,7 +24,9 @@ Color communicates hierarchy, action, feedback, and state. Semantic tokens must 
 
 ## Token inventory
 
-<Canvas of={ColorStories.All} />
+<Canvas>
+  <Story id="foundations-color--all" />
+</Canvas>
 
 ## Do / Don't
 

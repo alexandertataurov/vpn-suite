@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
+import { Button } from "../../components/Button";
 import { IconSettings, IconChevronLeft } from "../../icons";
 import { ProfileRow } from "./ProfileRow";
 
@@ -46,13 +47,15 @@ export function ModernHeader({
     <div className="modern-header" data-layer="ModernHeader">
       <div className="modern-header-left">
         {onBack ? (
-          <button 
+          <Button
+            variant="ghost"
+            size="icon"
             className="modern-header-back-button"
             onClick={onBack}
             aria-label="Back"
           >
             <IconChevronLeft size={24} strokeWidth={2.4} />
-          </button>
+          </Button>
         ) : null}
 
         {displayName && pillChip ? (
@@ -80,13 +83,15 @@ export function ModernHeader({
       </div>
       
       {showSettings && !(displayName && pillChip) ? (
-        <button
+        <Button
+          variant="ghost"
+          size="icon"
           className="modern-icon-button settings-pill"
           onClick={handleSettings}
           aria-label="Settings"
         >
           <IconSettings size={22} strokeWidth={1.8} />
-        </button>
+        </Button>
       ) : null}
     </div>
   );

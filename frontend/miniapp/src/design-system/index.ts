@@ -1,7 +1,9 @@
 /**
  * Miniapp design system — single entry for all UI.
  * Import from @/design-system or @ds.
- * Layers: core (tokens/primitives/theme), components, compositions (patterns/recipes/layouts).
+ *
+ * Build order (must respect dependency chain):
+ * Foundations → Primitives → Components → Patterns → Recipes → Pages
  */
 export * from "./core";
 export * from "./components";

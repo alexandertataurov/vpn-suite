@@ -1,4 +1,6 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
+import { cn } from "@vpn-suite/shared";
+import { Button } from "../../components/Button";
 import { IconChevronRight } from "../../icons";
 
 export interface SettingsActionRowProps {
@@ -65,15 +67,18 @@ export function SettingsActionRow({
   const classes = `modern-list-item row-item ${className}`.trim();
 
   if (onClick) {
+    const { className: buttonClassName, ...restButtonProps } = buttonProps ?? {};
     return (
-      <button
+      <Button
+        {...restButtonProps}
         type="button"
-        className={classes}
+        variant="ghost"
+        fullWidth
+        className={cn(classes, buttonClassName)}
         onClick={onClick}
-        {...buttonProps}
       >
         {content}
-      </button>
+      </Button>
     );
   }
 

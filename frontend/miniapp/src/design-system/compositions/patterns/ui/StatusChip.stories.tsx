@@ -3,7 +3,7 @@ import { StatusChip } from "./StatusChip";
 import { StorySection, StoryShowcase, StoryGrid } from "@/design-system";
 
 const meta = {
-  title: "Components/StatusChip",
+  title: "Patterns/StatusChip",
   tags: ["autodocs"],
   component: StatusChip,
   parameters: {

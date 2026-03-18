@@ -1,6 +1,6 @@
-import { Meta, Canvas } from "@storybook/addon-docs/blocks";
-import * as SpacingStories from "./Spacing.stories";
+import { Meta, Canvas, Story } from "@storybook/addon-docs/blocks";
 import { FoundationHeader, FoundationLinks } from "./components";
+import * as SpacingStories from "./Spacing.stories";
 
 <Meta of={SpacingStories} />
 
@@ -23,7 +23,9 @@ Consistent spacing creates visual rhythm and alignment. The 4px base scale (4, 8
 
 ## Token inventory
 
-<Canvas of={SpacingStories.Scale} />
+<Canvas>
+  <Story id="foundations-spacing--scale" />
+</Canvas>
 
 ## Implementation notes
 

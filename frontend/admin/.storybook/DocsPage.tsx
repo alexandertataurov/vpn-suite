@@ -6,9 +6,15 @@ import { DOCS_EDIT_BASE_URL, DEFAULT_DOCS_EDIT_PATH } from "./docsConfig";
 import { ComponentHero } from "./components/docs/ComponentHero";
 import { PropsTable } from "./components/docs/PropsTable";
 import { UsagePanel } from "./components/docs/UsagePanel";
+import { StartHereBlock } from "./components/docs/StartHereBlock";
+import { WhenToUseBlock } from "./components/docs/WhenToUseBlock";
+import { KnownLimitationsBlock } from "./components/docs/KnownLimitationsBlock";
+import { RecipeBlock } from "./components/docs/RecipeBlock";
+import { RelatedComponents } from "./components/docs/RelatedComponents";
 import { UseCaseList } from "./components/docs/UseCaseList";
 import { AccessibilitySection } from "./components/docs/AccessibilitySection";
 import type { PropRow } from "./components/docs/PropsTable";
+import { argTypesToPropRows } from "./utils/argTypesToPropRows";
 import type { KeyboardRow } from "./components/docs/KeyboardTable";
 import { useTOC } from "./components/docs/useTOC";
 import { TableOfContents } from "./components/docs/TableOfContents";
@@ -42,7 +48,9 @@ export function DocsPage(props: DocsPageLayoutProps) {
   const next = docsParams.next as { label: string; href: string } | undefined;
   const lastUpdated = docsParams.lastUpdated as string | undefined;
   const editPath = docsParams.editPath as string | undefined;
-  const propsTableRows = (docsParams.propsTable as { rows?: PropRow[] })?.rows;
+  const propsTableRows =
+    (docsParams.propsTable as { rows?: PropRow[] })?.rows ??
+    argTypesToPropRows(params.argTypes as Record<string, unknown> | undefined);
   const usageItems = docsParams.usage as { doItems?: { label: string; node: React.ReactNode; explanation?: string }[]; dontItems?: { label: string; node: React.ReactNode; explanation?: string }[] } | undefined;
   const useCases = docsParams.useCases as { useCases?: { title: string; description: string }[]; antiPatterns?: { title: string; description: string }[] } | undefined;
   const a11y = docsParams.accessibility as {
@@ -51,6 +59,12 @@ export function DocsPage(props: DocsPageLayoutProps) {
     screenReaderNotes?: React.ReactNode;
     contrastRatios?: { label: string; ratio: string; pass: boolean }[];
   } | undefined;
+  const startHere = docsParams.startHere as string | React.ReactNode | undefined;
+  const whenToUse = docsParams.whenToUse as string[] | undefined;
+  const whenNotToUse = docsParams.whenNotToUse as string[] | undefined;
+  const limitations = docsParams.limitations as string[] | undefined;
+  const recipes = docsParams.recipes as { title: string; code: string; description?: string; language?: string }[] | undefined;
+  const related = docsParams.related as { label: string; href: string; description?: string }[] | undefined;
 
   const [activeTab, setActiveTab] = useState("overview");
 
@@ -84,7 +98,7 @@ export function DocsPage(props: DocsPageLayoutProps) {
   ];
 
   return (
-    <div className="docs-custom-page" style={{ maxWidth: 960, margin: "0 auto" }}>
+    <div className="docs-custom-page">
       <ComponentHero
         name={componentName}
         description={description || "Component documentation."}
@@ -116,10 +130,32 @@ export function DocsPage(props: DocsPageLayoutProps) {
             >
               {props.children != null ? props.children : (
                 <>
+                  {startHere != null && (
+                    <StartHereBlock content={startHere} />
+                  )}
+                  <WhenToUseBlock whenToUse={whenToUse} whenNotToUse={whenNotToUse} />
                   <Description />
                   <div className="mt-6">
                     <Canvas />
                   </div>
+                  {usageItems != null && (usageItems.doItems?.length ?? 0) + (usageItems.dontItems?.length ?? 0) > 0 && (
+                    <UsagePanel doItems={usageItems.doItems ?? []} dontItems={usageItems.dontItems ?? []} />
+                  )}
+                  {limitations != null && limitations.length > 0 && (
+                    <KnownLimitationsBlock items={limitations} />
+                  )}
+                  {recipes != null && recipes.length > 0 && (
+                    <RecipeBlock recipes={recipes} />
+                  )}
+                  {related != null && related.length > 0 && (
+                    <RelatedComponents
+                      items={related.map((r) => ({
+                        name: r.label,
+                        description: r.description ?? "",
+                        href: r.href,
+                      }))}
+                    />
+                  )}
                 </>
               )}
             </div>
@@ -127,10 +163,10 @@ export function DocsPage(props: DocsPageLayoutProps) {
 
           {activeTab === "props" && (
             <div id="docs-tabpanel-props" role="tabpanel" aria-labelledby="docs-tab-props" className="docs-tab-content">
-              {propsTableRows != null && propsTableRows.length > 0 ? (
+              {propsTableRows.length > 0 ? (
                 <PropsTable rows={propsTableRows} />
               ) : (
-                <p className="text-sm text-[var(--color-text-muted)]">No props table defined. Add <code>parameters.docs.propsTable.rows</code> or use MDX.</p>
+                <p className="text-sm text-[var(--color-text-muted)]">No props. Add <code>argTypes</code> to meta or <code>parameters.docs.propsTable.rows</code>.</p>
               )}
             </div>
           )}

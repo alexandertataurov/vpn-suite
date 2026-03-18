@@ -6,7 +6,7 @@ import { Inline } from "@/design-system/core/primitives";
 import { StorySection, StoryShowcase } from "@/design-system";
 
 const meta = {
-  title: "Components/PillChip",
+  title: "Patterns/PillChip",
   tags: ["autodocs"],
   component: PillChip,
   parameters: {

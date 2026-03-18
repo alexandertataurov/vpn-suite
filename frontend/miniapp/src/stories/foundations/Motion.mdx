@@ -1,6 +1,6 @@
-import { Meta, Canvas } from "@storybook/addon-docs/blocks";
-import * as MotionStories from "./Motion.stories";
+import { Meta, Canvas, Story } from "@storybook/addon-docs/blocks";
 import { FoundationHeader, FoundationLinks } from "./components";
+import * as MotionStories from "./Motion.stories";
 
 <Meta of={MotionStories} />
 
@@ -23,7 +23,9 @@ Consistent motion creates predictable, polished interactions. Duration and easin
 
 ## Token inventory
 
-<Canvas of={MotionStories.Tokens} />
+<Canvas>
+  <Story id="foundations-motion--tokens" />
+</Canvas>
 
 ## Implementation notes
 

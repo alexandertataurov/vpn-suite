@@ -2,6 +2,21 @@
 
 This doc defines the **Layer 1–6** conventions for the admin design-system Storybook so that component docs, story descriptions, naming, story sets, data, and argTypes stay consistent.
 
+## Design system build order
+
+The design system is built in this dependency chain (each layer may only use layers below it):
+
+1. **Foundations** — Tokens, color, typography, spacing, layout, radius, shadows, motion
+2. **Primitives** — Box, Container, Stack, Inline, Panel, Divider, Text, Heading
+3. **Components** — Button, Input, Switch, Modal, Toast, etc. (single-purpose UI)
+4. **Patterns** — FormField, ToggleRow, ActionCard, EmptyStateBlock, MissionCard (reusable compositions)
+5. **Recipes** — PageHeader, PlanCard, NewUserHero (domain-specific compositions)
+6. **Pages** — Full page compositions
+
+Storybook sidebar follows this order. New components must respect the chain (e.g. recipes use patterns, not raw components).
+
+---
+
 ## Layer 1 — Component description
 
 **Where:** `meta.parameters.docs.description.component`
@@ -19,6 +34,51 @@ This doc defines the **Layer 1–6** conventions for the admin design-system Sto
 - **Related components** — Links to ButtonLink, Field, etc.
 
 Use this for every component and for pattern/overview meta (e.g. Navigation/Overview, Patterns/EmptyStates).
+
+### Curated composition order
+
+Structure `description.component` so the flow feels intentional:
+
+1. **Title** — Component name + status badge (from meta/hero)
+2. **Summary** — One-line description
+3. **Primary preview** — Best example (Default story)
+4. **Usage guidance** — Do/Don't, when to use
+5. **Variants** — AllVariants, AllSizes
+6. **States** — AllStates, Disabled, Loading
+7. **API** — ArgsTable / Props
+8. **Accessibility** — Notes, keyboard, ARIA
+
+### parameters.docs schema
+
+Use these parameters for premium docs (Admin and Miniapp):
+
+| Parameter | Type | Purpose |
+|-----------|------|---------|
+| `docs.startHere` | string \| ReactNode | Start-here block content |
+| `docs.whenToUse` | string[] | "Use when" bullets |
+| `docs.whenNotToUse` | string[] | "Avoid when" bullets |
+| `docs.usage` | `{ doItems, dontItems }` | Do/Don't examples |
+| `docs.limitations` | string[] | Known limitations |
+| `docs.recipes` | `{ title, code, description?, language? }[]` | Copy-paste recipes |
+| `docs.related` | `{ label, href, description? }[]` | Related components |
+
+### Callouts
+
+Use `Callout` (Admin) or `DocsCallout` (Miniapp) in MDX for:
+
+- **info** — General note
+- **tip** — Best practice
+- **warning** — Constraint or caveat
+- **danger** — Don't use / deprecation
+- **accessibility** — A11y note (use `info` with a11y content)
+
+Example (MDX):
+
+```mdx
+<Callout variant="warning" title="Constraint">
+  Do not use this component for form validation.
+</Callout>
+```
 
 ---
 

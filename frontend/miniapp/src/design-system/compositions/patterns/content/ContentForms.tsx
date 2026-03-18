@@ -7,6 +7,8 @@ import {
   type HTMLAttributes,
   type ReactNode,
 } from "react";
+import { Button } from "../../../components/Button";
+import { Switch } from "../../../components/forms/Switch";
 import { IconCheck } from "../../../icons";
 
 function joinClasses(...classes: Array<string | false | null | undefined>) {
@@ -146,24 +148,13 @@ export function ToggleRow({
         {description != null ? <div className="ts-desc">{description}</div> : null}
         {showReason ? <div className="ts-disabled-reason">{disabledReason}</div> : null}
       </div>
-      <button
-        type="button"
-        className={`ts-toggle ${checked ? "on" : ""}`.trim()}
-        onClick={() => {
-          if (disabled) return;
-          onChange(!checked);
-        }}
-        role="switch"
-        aria-checked={checked}
+      <Switch
+        checked={checked}
+        onCheckedChange={onChange}
         aria-label={name}
-        aria-disabled={disabled}
-        title={typeof disabledReason === "string" ? disabledReason : undefined}
         disabled={disabled}
-      >
-        <span className="ts-track" aria-hidden>
-          <div className="ts-knob" />
-        </span>
-      </button>
+        title={typeof disabledReason === "string" ? disabledReason : undefined}
+      />
     </div>
   );
 }
@@ -227,9 +218,10 @@ export function SegmentedControl({
         const selected = selectedId === opt.id;
 
         return (
-          <button
+          <Button
             key={opt.id}
             type="button"
+            variant="ghost"
             className={`seg-btn ${selected ? "on" : ""}`.trim()}
             onClick={() => handleSelect(opt.id)}
             disabled={opt.disabled}
@@ -241,7 +233,7 @@ export function SegmentedControl({
               <span className="seg-btn-label">{opt.label}</span>
               {badge ? <span className={`seg-tag seg-tag--${badge.variant}`}>{badge.label}</span> : null}
             </span>
-          </button>
+          </Button>
         );
       })}
     </div>

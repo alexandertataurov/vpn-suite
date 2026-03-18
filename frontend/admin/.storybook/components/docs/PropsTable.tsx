@@ -18,6 +18,7 @@ export interface PropRow {
   description?: string;
   deprecated?: boolean;
   migration?: string;
+  category?: string;
 }
 
 export interface PropsTableProps {
@@ -36,25 +37,61 @@ const typeKindStyles: Record<PropTypeKind, string> = {
 
 type SortKey = "name" | "required";
 
+const CATEGORY_ORDER = ["Appearance", "Behavior", "Content", "Accessibility", "Events", "Advanced"];
+
+function groupByCategory(rows: PropRow[]): { category: string; rows: PropRow[] }[] {
+  const groups = new Map<string, PropRow[]>();
+  const uncategorized: PropRow[] = [];
+
+  for (const row of rows) {
+    const cat = row.category ?? "";
+    if (!cat) {
+      uncategorized.push(row);
+    } else {
+      const list = groups.get(cat) ?? [];
+      list.push(row);
+      groups.set(cat, list);
+    }
+  }
+
+  const result: { category: string; rows: PropRow[] }[] = [];
+  for (const cat of CATEGORY_ORDER) {
+    const list = groups.get(cat);
+    if (list?.length) result.push({ category: cat, rows: list });
+  }
+  for (const [cat, list] of groups) {
+    if (!CATEGORY_ORDER.includes(cat)) result.push({ category: cat, rows: list });
+  }
+  if (uncategorized.length > 0) result.push({ category: "", rows: uncategorized });
+
+  return result;
+}
+
 export function PropsTable({ rows }: PropsTableProps) {
   const [sortKey, setSortKey] = useState<SortKey | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
 
-  const sortedRows = useMemo(() => {
-    if (!sortKey) return rows;
-    const copy = [...rows];
-    copy.sort((a, b) => {
-      let cmp = 0;
-      if (sortKey === "name") {
-        cmp = a.name.localeCompare(b.name);
-      } else {
-        const ar = a.required ? 1 : 0;
-        const br = b.required ? 1 : 0;
-        cmp = ar - br;
-      }
-      return sortDir === "asc" ? cmp : -cmp;
-    });
-    return copy;
+  const sortFn = (a: PropRow, b: PropRow) => {
+    let cmp = 0;
+    if (sortKey === "name") {
+      cmp = a.name.localeCompare(b.name);
+    } else {
+      const ar = a.required ? 1 : 0;
+      const br = b.required ? 1 : 0;
+      cmp = ar - br;
+    }
+    return sortDir === "asc" ? cmp : -cmp;
+  };
+
+  const grouped = useMemo(() => {
+    const g = groupByCategory(rows);
+    if (sortKey) {
+      return g.map(({ category, rows: groupRows }) => ({
+        category,
+        rows: [...groupRows].sort(sortFn),
+      }));
+    }
+    return g;
   }, [rows, sortKey, sortDir]);
 
   const toggleSort = (key: SortKey) => {
@@ -70,43 +107,50 @@ export function PropsTable({ rows }: PropsTableProps) {
       <h2 className="mb-0 border-b border-[var(--color-border-subtle)] bg-[var(--color-elevated)] px-4 py-3 text-lg font-semibold text-[var(--color-text-primary)]">
         Props
       </h2>
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-[var(--color-border-subtle)] bg-[var(--color-elevated)]">
-            <th className="px-4 py-2 text-left font-medium text-[var(--color-text-primary)]">
-              <button
-                type="button"
-                onClick={() => toggleSort("name")}
-                className="hover:text-[var(--color-text-accent)] transition-colors"
-              >
-                Name {sortKey === "name" && (sortDir === "asc" ? "↑" : "↓")}
-              </button>
-            </th>
-            <th className="px-4 py-2 text-left font-medium text-[var(--color-text-primary)]">
-              Type
-            </th>
-            <th className="px-4 py-2 text-left font-medium text-[var(--color-text-primary)]">
-              Default
-            </th>
-            <th className="px-4 py-2 text-left font-medium text-[var(--color-text-primary)]">
-              <button
-                type="button"
-                onClick={() => toggleSort("required")}
-                className="hover:text-[var(--color-text-accent)] transition-colors"
-              >
-                Required {sortKey === "required" && (sortDir === "asc" ? "↑" : "↓")}
-              </button>
-            </th>
-            <th className="px-4 py-2 text-left font-medium text-[var(--color-text-primary)]">
-              Description
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {sortedRows.map((row) => (
+      {grouped.map(({ category, rows: groupRows }) => (
+        <div key={category || "uncategorized"}>
+          {category !== "" && (
+            <h3 className="border-b border-[var(--color-border-faint)] bg-[var(--color-surface)] px-4 py-2 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
+              {category}
+            </h3>
+          )}
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-[var(--color-border-subtle)] bg-[var(--color-elevated)]">
+                <th className="px-4 py-2 text-left font-medium text-[var(--color-text-primary)]">
+                  <button
+                    type="button"
+                    onClick={() => toggleSort("name")}
+                    className="hover:text-[var(--color-text-accent)] transition-colors"
+                  >
+                    Name {sortKey === "name" && (sortDir === "asc" ? "↑" : "↓")}
+                  </button>
+                </th>
+                <th className="px-4 py-2 text-left font-medium text-[var(--color-text-primary)]">
+                  Type
+                </th>
+                <th className="px-4 py-2 text-left font-medium text-[var(--color-text-primary)]">
+                  Default
+                </th>
+                <th className="px-4 py-2 text-left font-medium text-[var(--color-text-primary)]">
+                  <button
+                    type="button"
+                    onClick={() => toggleSort("required")}
+                    className="hover:text-[var(--color-text-accent)] transition-colors"
+                  >
+                    Required {sortKey === "required" && (sortDir === "asc" ? "↑" : "↓")}
+                  </button>
+                </th>
+                <th className="px-4 py-2 text-left font-medium text-[var(--color-text-primary)]">
+                  Description
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {groupRows.map((row) => (
             <tr
               key={row.name}
-              className={`border-b border-[var(--color-border-faint)] last:border-0 ${row.deprecated ? "opacity-60" : ""}`}
+              className={`border-b border-[var(--color-border-faint)] last:border-0 ${row.deprecated ? "opacity-60" : ""} ${row.category === "Advanced" ? "opacity-75" : ""}`}
             >
               <td className="px-4 py-2">
                 <span className="flex items-center gap-1">
@@ -146,9 +190,11 @@ export function PropsTable({ rows }: PropsTableProps) {
                 {row.description ?? "—"}
               </td>
             </tr>
-          ))}
-        </tbody>
-      </table>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ))}
     </section>
   );
 }

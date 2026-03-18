@@ -5,7 +5,7 @@ import { IconMonitor } from "@/design-system/icons";
 import { StorySection, StoryShowcase } from "@/design-system";
 
 const meta = {
-  title: "Components/SectionLabel",
+  title: "Patterns/SectionLabel",
   tags: ["autodocs"],
   component: SectionLabel,
   parameters: {

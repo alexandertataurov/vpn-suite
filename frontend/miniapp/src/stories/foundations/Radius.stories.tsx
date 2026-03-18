@@ -9,7 +9,7 @@ import {
 } from "./foundationShared";
 
 const meta: Meta = {
-  title: "Foundation/Radius",
+  title: "Foundations/Radius",
   parameters: {
     layout: "padded",
     status: { type: "stable" },

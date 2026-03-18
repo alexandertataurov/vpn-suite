@@ -4,7 +4,7 @@ import { Inline } from "@/design-system/core/primitives";
 import { StorySection, StoryShowcase } from "@/design-system";
 
 const meta = {
-  title: "Components/Avatar",
+  title: "Patterns/Avatar",
   tags: ["autodocs"],
   component: Avatar,
   parameters: {

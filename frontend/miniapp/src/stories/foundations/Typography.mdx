@@ -1,6 +1,6 @@
-import { Meta, Canvas } from "@storybook/addon-docs/blocks";
-import * as TypographyStories from "./Typography.stories";
+import { Meta, Canvas, Story } from "@storybook/addon-docs/blocks";
 import { FoundationHeader, FoundationLinks, DoDont } from "./components";
+import * as TypographyStories from "./Typography.stories";
 
 <Meta of={TypographyStories} />
 
@@ -23,11 +23,15 @@ Typography creates hierarchy and reading comfort. Semantic text styles ensure co
 
 ## Token inventory
 
-<Canvas of={TypographyStories.Scale} />
+<Canvas>
+  <Story id="foundations-typography--scale" />
+</Canvas>
 
 ## Live examples
 
-<Canvas of={TypographyStories.Sample} />
+<Canvas>
+  <Story id="foundations-typography--sample" />
+</Canvas>
 
 ## Do / Don't
 

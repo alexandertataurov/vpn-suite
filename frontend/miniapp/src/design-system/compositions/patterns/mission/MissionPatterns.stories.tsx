@@ -8,7 +8,8 @@ import {
   MissionChip,
   MissionAlert,
 } from "@/design-system/compositions/patterns";
-import { Stack, Panel, Heading, Text } from "@/design-system/core/primitives";
+import { Panel, Heading, Text } from "@/design-system/core/primitives";
+import { StorySection, StoryShowcase, StoryStack, StoryGrid } from "@/design-system";
 
 const meta: Meta = {
   title: "Patterns/Mission",
@@ -37,48 +38,69 @@ type Story = StoryObj<typeof meta>;
 
 export const Buttons: Story = {
   render: () => (
-    <Stack gap="2">
-      <MissionPrimaryButton>Connect now</MissionPrimaryButton>
-      <MissionSecondaryButton>Maybe later</MissionSecondaryButton>
-      <MissionOperationButton tone="blue" icon="↻" title="Refresh config" description="Generate new profile" />
-    </Stack>
+    <StorySection title="Buttons" description="Primary, secondary, and operation buttons.">
+      <StoryShowcase>
+        <StoryStack>
+          <MissionPrimaryButton>Connect now</MissionPrimaryButton>
+          <MissionSecondaryButton>Maybe later</MissionSecondaryButton>
+          <MissionOperationButton
+            tone="blue"
+            icon="↻"
+            title="Refresh config"
+            description="Generate new profile"
+          />
+        </StoryStack>
+      </StoryShowcase>
+    </StorySection>
   ),
 };
 
 export const Chips: Story = {
   render: () => (
-    <Stack gap="2" direction="horizontal" wrap>
-      <MissionChip tone="neutral">Neutral</MissionChip>
-      <MissionChip tone="blue">Blue</MissionChip>
-      <MissionChip tone="green">Connected</MissionChip>
-      <MissionChip tone="amber">Warning</MissionChip>
-      <MissionChip tone="red">Error</MissionChip>
-    </Stack>
+    <StorySection title="Chips" description="Status chips for mission screens.">
+      <StoryShowcase>
+        <StoryGrid>
+          <MissionChip tone="neutral">Neutral</MissionChip>
+          <MissionChip tone="blue">Blue</MissionChip>
+          <MissionChip tone="green">Connected</MissionChip>
+          <MissionChip tone="amber">Warning</MissionChip>
+          <MissionChip tone="red">Error</MissionChip>
+        </StoryGrid>
+      </StoryShowcase>
+    </StorySection>
   ),
 };
 
 export const Alerts: Story = {
   render: () => (
-    <Stack gap="2">
-      <MissionAlert tone="info" title="Info" message="Info message" />
-      <MissionAlert tone="warning" title="Warning" message="Warning message" />
-      <MissionAlert tone="error" title="Error" message="Error message" />
-      <MissionAlert tone="success" title="Success" message="Success message" />
-    </Stack>
+    <StorySection title="Alerts" description="Mission alert variants.">
+      <StoryShowcase>
+        <StoryStack>
+          <MissionAlert tone="info" title="Info" message="Info message" />
+          <MissionAlert tone="warning" title="Warning" message="Warning message" />
+          <MissionAlert tone="error" title="Error" message="Error message" />
+          <MissionAlert tone="success" title="Success" message="Success message" />
+        </StoryStack>
+      </StoryShowcase>
+    </StorySection>
   ),
 };
 
 export const Card: Story = {
   render: () => (
-    <MissionCard tone="blue">
-      <Panel padding="md">
-        <Stack gap="2">
-          <Heading level={3}>Mission card</Heading>
-          <Text as="p" className="story-text-muted">
-            Content
-          </Text>
-        </Stack>
-      </Panel>
-    </MissionCard>
+    <StorySection title="Card" description="Mission card with tone.">
+      <StoryShowcase>
+        <MissionCard tone="blue">
+          <Panel padding="md">
+            <StoryStack>
+              <Heading level={3}>Mission card</Heading>
+              <Text as="p" className="story-text-muted">
+                Content for operational screens.
+              </Text>
+            </StoryStack>
+          </Panel>
+        </MissionCard>
+      </StoryShowcase>
+    </StorySection>
   ),
 };

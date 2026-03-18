@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { PlanHeroCard } from "./PlanHeroCard";
-import { Stack } from "@/design-system/core/primitives";
+import { StorySection, StoryShowcase, StoryStack } from "@/design-system";
 
 const meta: Meta<typeof PlanHeroCard> = {
-  title: "Patterns/PlanHeroCard",
+  title: "Recipes/PlanHeroCard",
   tags: ["autodocs"],
   component: PlanHeroCard,
   parameters: {
@@ -38,11 +38,18 @@ export const Default: Story = {
     status: "active",
     stats: DEFAULT_STATS,
   },
+  render: (args) => (
+    <StoryShowcase>
+      <PlanHeroCard {...args} />
+    </StoryShowcase>
+  ),
 };
 
 export const States: Story = {
   render: () => (
-    <Stack gap="6">
+    <StorySection title="States" description="Active, expiring, expired.">
+      <StoryShowcase>
+        <StoryStack>
       <PlanHeroCard
         eyebrow="Pro Monthly"
         planName="Pro Monthly"
@@ -72,7 +79,9 @@ export const States: Story = {
           { label: "Expires", value: "Apr 15", tone: "expired" as const },
         ]}
       />
-    </Stack>
+        </StoryStack>
+      </StoryShowcase>
+    </StorySection>
   ),
 };
 
@@ -84,6 +93,11 @@ export const Active: Story = {
     status: "active",
     stats: DEFAULT_STATS,
   },
+  render: (args) => (
+    <StoryShowcase>
+      <PlanHeroCard {...args} />
+    </StoryShowcase>
+  ),
 };
 
 export const Expiring: Story = {
@@ -98,6 +112,11 @@ export const Expiring: Story = {
       { label: "Expires", value: "Apr 15", tone: "expiring" as const },
     ],
   },
+  render: (args) => (
+    <StoryShowcase>
+      <PlanHeroCard {...args} />
+    </StoryShowcase>
+  ),
 };
 
 export const Expired: Story = {
@@ -112,4 +131,9 @@ export const Expired: Story = {
       { label: "Expires", value: "Apr 15", tone: "expired" as const },
     ],
   },
+  render: (args) => (
+    <StoryShowcase>
+      <PlanHeroCard {...args} />
+    </StoryShowcase>
+  ),
 };

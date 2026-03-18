@@ -1,6 +1,6 @@
-import { Meta, Canvas } from "@storybook/addon-docs/blocks";
-import * as RadiusStories from "./Radius.stories";
+import { Meta, Canvas, Story } from "@storybook/addon-docs/blocks";
 import { FoundationHeader, FoundationLinks } from "./components";
+import * as RadiusStories from "./Radius.stories";
 
 <Meta of={RadiusStories} />
 
@@ -23,7 +23,9 @@ Consistent border radius creates visual harmony and defines surface elevation. U
 
 ## Token inventory
 
-<Canvas of={RadiusStories.Scale} />
+<Canvas>
+  <Story id="foundations-radius--scale" />
+</Canvas>
 
 ## Implementation notes
 

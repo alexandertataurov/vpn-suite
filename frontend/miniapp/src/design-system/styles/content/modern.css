@@ -962,6 +962,30 @@ html[data-theme="consumer-dark"] .plan-hero-stats {
   flex-shrink: 0;
 }
 
+/* RenewalBanner uses Button: override btn-content layout for card-like structure */
+.renewal-banner .btn-content {
+  width: 100%;
+  justify-content: flex-start;
+  gap: 12px;
+}
+.renewal-banner .btn-content .btn-icon-slot:first-child {
+  width: auto;
+  height: auto;
+  flex: 0 0 auto;
+}
+.renewal-banner .btn-content .btn-label {
+  flex: 1;
+  min-width: 0;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+}
+.renewal-banner .btn-content .btn-icon-slot:last-child {
+  width: auto;
+  height: auto;
+  flex: 0 0 auto;
+}
+
 /* ---- No-device callout (amnezia spec §4.9) ---------- */
 .no-device-callout {
   display: flex;

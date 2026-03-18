@@ -1,6 +1,6 @@
-import { Meta, Canvas } from "@storybook/addon-docs/blocks";
-import * as LayoutStories from "./Layout.stories";
+import { Meta, Canvas, Story } from "@storybook/addon-docs/blocks";
 import { FoundationHeader, FoundationLinks } from "./components";
+import * as LayoutStories from "./Layout.stories";
 
 <Meta of={LayoutStories} />
 
@@ -23,7 +23,9 @@ Layout tokens define viewport breakpoints, container widths, and responsive beha
 
 ## Token inventory
 
-<Canvas of={LayoutStories.Tokens} />
+<Canvas>
+  <Story id="foundations-layout--tokens" />
+</Canvas>
 
 ## Implementation notes
 

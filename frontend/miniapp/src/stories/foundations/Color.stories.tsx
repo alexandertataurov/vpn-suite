@@ -10,7 +10,7 @@ import {
 } from "./foundationShared";
 
 const meta: Meta = {
-  title: "Foundation/Color",
+  title: "Foundations/Color",
   parameters: {
     layout: "padded",
     status: { type: "stable" },

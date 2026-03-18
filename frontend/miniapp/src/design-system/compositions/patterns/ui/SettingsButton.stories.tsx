@@ -6,7 +6,7 @@ import { Inline } from "@/design-system/core/primitives";
 import { StorySection, StoryShowcase } from "@/design-system";
 
 const meta = {
-  title: "Components/SettingsButton",
+  title: "Patterns/SettingsButton",
   tags: ["autodocs"],
   component: SettingsButton,
   parameters: {

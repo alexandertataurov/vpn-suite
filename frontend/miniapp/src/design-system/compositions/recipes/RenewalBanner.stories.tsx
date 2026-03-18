@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { RenewalBanner } from "./RenewalBanner";
-import { Stack } from "@/design-system/core/primitives";
+import { StorySection, StoryShowcase, StoryStack } from "@/design-system";
 
 const meta: Meta<typeof RenewalBanner> = {
-  title: "Patterns/RenewalBanner",
+  title: "Recipes/RenewalBanner",
   tags: ["autodocs"],
   component: RenewalBanner,
   parameters: {
@@ -31,24 +31,33 @@ export const Default: Story = {
     subtitle: "Renew now to keep your plan active.",
     onClick: () => {},
   },
+  render: (args) => (
+    <StoryShowcase>
+      <RenewalBanner {...args} />
+    </StoryShowcase>
+  ),
 };
 
 export const Variants: Story = {
   render: () => (
-    <Stack gap="4">
-      <RenewalBanner
-        variant="expiring"
-        title="Subscription expires in 14 days"
-        subtitle="Renew now to keep your plan active."
-        onClick={() => {}}
-      />
-      <RenewalBanner
-        variant="expired"
-        title="Subscription expired"
-        subtitle="Renew to restore access."
-        onClick={() => {}}
-      />
-    </Stack>
+    <StorySection title="Variants" description="Expiring and expired states.">
+      <StoryShowcase>
+        <StoryStack>
+          <RenewalBanner
+            variant="expiring"
+            title="Subscription expires in 14 days"
+            subtitle="Renew now to keep your plan active."
+            onClick={() => {}}
+          />
+          <RenewalBanner
+            variant="expired"
+            title="Subscription expired"
+            subtitle="Renew to restore access."
+            onClick={() => {}}
+          />
+        </StoryStack>
+      </StoryShowcase>
+    </StorySection>
   ),
 };
 
@@ -59,6 +68,11 @@ export const Expiring: Story = {
     subtitle: "Renew now to keep your plan active.",
     onClick: () => {},
   },
+  render: (args) => (
+    <StoryShowcase>
+      <RenewalBanner {...args} />
+    </StoryShowcase>
+  ),
 };
 
 export const Expired: Story = {
@@ -68,4 +82,9 @@ export const Expired: Story = {
     subtitle: "Renew to restore access.",
     onClick: () => {},
   },
+  render: (args) => (
+    <StoryShowcase>
+      <RenewalBanner {...args} />
+    </StoryShowcase>
+  ),
 };

@@ -5,7 +5,7 @@ import { Inline } from "@/design-system/core/primitives";
 import { StorySection, StoryShowcase } from "@/design-system";
 
 const meta = {
-  title: "Components/Badge",
+  title: "Patterns/Badge",
   tags: ["autodocs"],
   component: Badge,
   parameters: {

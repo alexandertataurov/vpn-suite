@@ -2,10 +2,14 @@ import type { Preview } from "@storybook/react";
 import React from "react";
 import { withTelegramEnvironment } from "../src/storybook/telegramEnvironment";
 import { withMiniAppShell } from "../src/storybook/decorators/withMiniAppShell";
+import { ThemedDocsContainer } from "./ThemedDocsContainer";
+import { DocsPage } from "./DocsPage";
+import { DocsCallout } from "./components/DocsCallout";
 import "../src/design-system/styles/index.css";
 import "../src/design-system/styles/layout-story.css";
 import "../src/styles/app/index.css";
 import "../src/storybook/preview.css";
+import "./docs.css";
 
 const preview: Preview = {
   globalTypes: {
@@ -74,6 +78,13 @@ const preview: Preview = {
   parameters: {
     layout: "fullscreen",
     controls: { matchers: { color: /(background|color)$/i, date: /Date$/i } },
+    docs: {
+      container: ThemedDocsContainer,
+      page: DocsPage,
+      components: {
+        Callout: DocsCallout,
+      },
+    },
     status: {
       statuses: {
         stable: {
@@ -120,7 +131,9 @@ const preview: Preview = {
             "Text",
             "Heading",
           ],
+          "Components",
           "Patterns",
+          "Recipes",
           "Layouts",
           [
             "Pages",

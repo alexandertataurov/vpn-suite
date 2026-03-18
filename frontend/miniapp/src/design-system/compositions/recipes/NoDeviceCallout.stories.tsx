@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { NoDeviceCallout } from "./NoDeviceCallout";
+import { StorySection, StoryShowcase } from "@/design-system";
 
 const meta: Meta<typeof NoDeviceCallout> = {
-  title: "Patterns/NoDeviceCallout",
+  title: "Recipes/NoDeviceCallout",
   tags: ["autodocs"],
   component: NoDeviceCallout,
   parameters: {
@@ -27,4 +28,11 @@ export const Default: Story = {
     ctaLabel: "Add device",
     onCtaClick: () => {},
   },
+  render: (args) => (
+    <StorySection title="Default" description="Inline prompt when user has paid but no device.">
+      <StoryShowcase>
+        <NoDeviceCallout {...args} />
+      </StoryShowcase>
+    </StorySection>
+  ),
 };

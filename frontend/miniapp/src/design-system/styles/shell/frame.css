@@ -4818,6 +4818,20 @@ button.op {
   background: color-mix(in oklch, var(--color-error) 8%, var(--color-surface-2));
 }
 
+/* miniapp-menu-item uses Button: align btn-content with menu layout */
+.miniapp-menu-item.btn .btn-content {
+  justify-content: flex-start;
+  gap: 12px;
+  padding: 0;
+}
+.miniapp-menu-item.btn .btn-label {
+  flex: 1;
+  min-width: 0;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+}
+
 .miniapp-menu-divider {
   display: block;
   height: 1px;

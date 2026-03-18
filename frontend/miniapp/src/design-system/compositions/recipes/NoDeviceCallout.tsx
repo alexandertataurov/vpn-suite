@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Button } from "../../components/Button";
 import { IconMonitor } from "../../icons";
 
 export interface NoDeviceCalloutProps {
@@ -32,15 +33,15 @@ export function NoDeviceCallout({
         <span className="no-device-callout-title">{title}</span>
         <span className="no-device-callout-subtitle">{subtitle}</span>
       </div>
-      <button
-        type="button"
+      <Button
+        variant="ghost"
         className="no-device-callout-cta nd-cta"
         onClick={onAddDevice ?? onCtaClick ?? (() => {})}
         aria-label={ctaLabel}
+        startIcon={ctaIcon}
       >
-        {ctaIcon}
         {ctaLabel}
-      </button>
+      </Button>
     </div>
   );
 }

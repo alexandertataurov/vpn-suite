@@ -86,19 +86,21 @@ export function OverflowActionMenu({
           <li key={item.id} role="none">
             <>
               {item.dividerBefore ? <div role="separator" className="miniapp-menu-divider" aria-hidden /> : null}
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                fullWidth
                 role="menuitem"
                 className={`miniapp-menu-item${item.danger ? " miniapp-menu-item--danger" : ""}`}
                 onClick={() => handleSelect(item)}
                 disabled={item.disabled}
+                startIcon={item.icon ? <span className="miniapp-menu-item-icon" aria-hidden>{item.icon}</span> : undefined}
               >
-                {item.icon ? <span className="miniapp-menu-item-icon" aria-hidden>{item.icon}</span> : null}
                 <span className="miniapp-menu-item-text">
                   <span className="miniapp-menu-item-title">{item.label}</span>
                   {item.hint ? <span className="miniapp-menu-item-hint">{item.hint}</span> : null}
                 </span>
-              </button>
+              </Button>
             </>
           </li>
         ))}

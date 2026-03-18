@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { PageHeader } from "./PageHeader";
+import { StorySection, StoryShowcase, StoryStack } from "@/design-system";
 
 const meta: Meta<typeof PageHeader> = {
   title: "Recipes/PageHeader",
@@ -26,6 +27,28 @@ export const Default: Story = {
     subtitle: "Manage your account and preferences",
     onBack: () => {},
   },
+  render: (args) => (
+    <StoryShowcase>
+      <PageHeader {...args} />
+    </StoryShowcase>
+  ),
+};
+
+export const Variants: Story = {
+  render: () => (
+    <StorySection title="Variants" description="With subtitle and title only.">
+      <StoryShowcase>
+        <StoryStack>
+          <PageHeader
+            title="Settings"
+            subtitle="Manage your account and preferences"
+            onBack={() => {}}
+          />
+          <PageHeader title="Plan" onBack={() => {}} />
+        </StoryStack>
+      </StoryShowcase>
+    </StorySection>
+  ),
 };
 
 export const TitleOnly: Story = {
@@ -33,4 +56,9 @@ export const TitleOnly: Story = {
     title: "Plan",
     onBack: () => {},
   },
+  render: (args) => (
+    <StoryShowcase>
+      <PageHeader {...args} />
+    </StoryShowcase>
+  ),
 };
