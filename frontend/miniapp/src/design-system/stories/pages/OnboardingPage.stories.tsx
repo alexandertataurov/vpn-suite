@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Route } from "react-router-dom";
-import { OnboardingPage } from "./Onboarding";
+import { OnboardingPage } from "@/pages/Onboarding";
 import { OnboardingSandbox, readyScenario } from "@/storybook/page-contracts";
 
 const meta = {

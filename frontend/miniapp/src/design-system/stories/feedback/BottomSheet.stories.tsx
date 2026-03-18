@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
-import { BottomSheet } from "./BottomSheet";
+import { BottomSheet } from "@/components/BottomSheet";
 import { Button } from "@/design-system";
 
 const meta = {

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Route } from "react-router-dom";
-import { HomePage } from "./Home";
+import { HomePage } from "@/pages/Home";
 import {
   connectedScenario,
   emptyDevicesScenario,

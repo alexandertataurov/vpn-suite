@@ -178,13 +178,13 @@
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  background: linear-gradient(140deg, #bbf7d0 0%, #99f6e4 100%);
+  background: linear-gradient(140deg, var(--green-avatar-gradient-start) 0%, var(--green-avatar-gradient-end) 100%);
   border: none;
   box-shadow: none;
   font-size: var(--amnezia-avatar-initials, 11.5px);
   font-weight: 700;
   letter-spacing: 0.2px;
-  color: #065f46;
+  color: var(--green-avatar-text);
 }
 
 .modern-profile-row .modern-avatar--profile img {
@@ -491,7 +491,7 @@
 }
 
 .renewal-banner--expiring .renewal-banner-icon {
-  background: rgba(146, 64, 14, 0.09);
+  background: var(--amber-icon-bg);
   color: var(--amber, var(--color-warning));
 }
 
@@ -501,7 +501,7 @@
 }
 
 .renewal-banner--expired .renewal-banner-icon {
-  background: rgba(153, 27, 27, 0.09);
+  background: var(--red-icon-bg);
   color: var(--red, var(--color-error));
 }
 

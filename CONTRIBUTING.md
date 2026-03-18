@@ -9,6 +9,7 @@ These rules are enforced by CI. PRs that violate them will not merge.
 ### Tokens (miniapp)
 - All design values (color, spacing, type, motion, z-index) live in
   `frontend/miniapp/src/design-system/styles/tokens/base.css` and `theme/consumer.css` — the single source of truth
+- **Amnezia Mini App spec**: `docs/frontend/design/amnezia-miniapp-design-guidelines.md` — canonical UI spec for consumer miniapp (tokens, components, screen states)
 - No value is defined anywhere else
 - To add a token: update tokens.css, follow the existing naming scheme, get reviewed
 

@@ -4,7 +4,11 @@ import {
   ActionCard,
   Button,
   FallbackScreen,
+  NewUserHero,
+  NoDeviceCallout,
   PillChip,
+  PlanHeroCard,
+  RenewalBanner,
   Skeleton,
   PageScaffold,
   ModernHeader,
@@ -75,31 +79,95 @@ export function HomePage() {
         showSettings={false}
       />
 
-      <ModernHeroCard
-        status={heroStatus}
-        icon={
-          status === "expired" ? (
-            <IconAlertTriangle size={36} />
-          ) : (
-            <IconShield size={36} strokeWidth={status === "ready" ? 3 : 2} />
-          )
-        }
-        title={uiConfig?.title ?? ""}
-        description={uiConfig?.description ?? ""}
-        actions={
-          !isGenerating && uiConfig && !uiConfig.ctaDisabled ? (
+      {model.showNewUserHero ? (
+        <NewUserHero
+          title="Setup Required"
+          description="Choose a plan to get VPN access. Manage devices and subscription here."
+          primaryAction={
             <Button
               variant="primary"
               fullWidth
               size="lg"
-              onClick={uiConfig.ctaAction}
+              onClick={() => navigate("/plan")}
               endIcon={<IconArrowRight />}
             >
-              {uiConfig.ctaLabel}
+              Choose a Plan →
             </Button>
-          ) : null
-        }
-      />
+          }
+        />
+      ) : model.showPlanHero && model.planHeroData ? (
+        <>
+          <PlanHeroCard
+            eyebrow={model.planHeroData.eyebrow}
+            planName={model.planHeroData.planName}
+            subtitle={model.planHeroData.subtitle}
+            status={model.planHeroData.status}
+            stats={[...model.planHeroData.stats]}
+          />
+          {model.showRenewalBanner && (
+            <RenewalBanner
+              variant={model.planHeroData.status === "expired" ? "expired" : "expiring"}
+              title={status === "expired" ? "Renew your plan" : "Plan expiring soon"}
+              subtitle={
+                status === "expired"
+                  ? "Renew to keep VPN access"
+                  : `Renews ${model.expiryValue}. Renew now to avoid interruption.`
+              }
+              onClick={() => navigate(status === "expired" ? "/restore-access" : "/plan")}
+            />
+          )}
+          {model.showNoDeviceCallout && (
+            <NoDeviceCallout
+              title="Add your first device"
+              subtitle="Generate a config to import in AmneziaVPN"
+              ctaLabel="Add Device"
+              onCtaClick={() => navigate("/devices")}
+            />
+          )}
+          {!model.showNoDeviceCallout &&
+            !isGenerating &&
+            uiConfig &&
+            !uiConfig.ctaDisabled && (
+              <div className="modern-hero-actions modern-content-pad">
+                <Button
+                  variant="primary"
+                  fullWidth
+                  size="lg"
+                  onClick={uiConfig.ctaAction}
+                  endIcon={<IconArrowRight />}
+                >
+                  {uiConfig.ctaLabel}
+                </Button>
+              </div>
+            )}
+        </>
+      ) : (
+        <ModernHeroCard
+          status={heroStatus}
+          icon={
+            status === "expired" ? (
+              <IconAlertTriangle size={36} />
+            ) : (
+              <IconShield size={36} strokeWidth={status === "ready" ? 3 : 2} />
+            )
+          }
+          title={uiConfig?.title ?? ""}
+          description={uiConfig?.description ?? ""}
+          actions={
+            !isGenerating && uiConfig && !uiConfig.ctaDisabled ? (
+              <Button
+                variant="primary"
+                fullWidth
+                size="lg"
+                onClick={uiConfig.ctaAction}
+                endIcon={<IconArrowRight />}
+              >
+                {uiConfig.ctaLabel}
+              </Button>
+            ) : null
+          }
+        />
+      )}
 
       {(model.showDevices || model.showExpiry) && (
         <div className="modern-action-grid">

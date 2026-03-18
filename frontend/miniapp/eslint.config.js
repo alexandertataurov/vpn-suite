@@ -170,7 +170,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ["src/pages/**/*.stories.tsx"],
+    files: ["src/pages/**/*.stories.tsx", "src/design-system/stories/pages/**/*.stories.tsx"],
     rules: {
       "local/no-manual-shell-in-page-stories": "error",
     },

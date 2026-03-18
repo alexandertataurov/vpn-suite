@@ -5,7 +5,7 @@ import { Inline } from "@/design-system/core/primitives";
 
 const meta = {
   title: "Components/Button",
-  tags: ["autodocs"],
+  tags: ["autodocs", "contract-test"],
   component: Button,
   decorators: [
     (Story) => (

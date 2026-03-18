@@ -43,6 +43,7 @@ vi.mock("@/hooks/useTelemetry", () => ({
 
 vi.mock("@/design-system", () => ({
   useToast: () => ({ addToast: mockAddToast }),
+  usePrefersReducedMotion: () => false,
 }));
 
 vi.mock("@/lib/query-keys/webapp.query-keys", () => ({

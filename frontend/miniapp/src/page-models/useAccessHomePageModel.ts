@@ -166,6 +166,65 @@ export function useAccessHomePageModel() {
       ? getPillChipForAccess(status, data.has_plan, data.expires_at)
       : null;
 
+  const hasPlan = data?.has_plan ?? false;
+  const planHeroStatus =
+    pillChip?.variant === "expired"
+      ? ("expired" as const)
+      : pillChip?.variant === "expiring"
+        ? ("expiring" as const)
+        : ("active" as const);
+
+  const showNewUserHero = status === "no_plan" || !hasPlan;
+  const showPlanHero =
+    hasPlan &&
+    status !== "generating_config" &&
+    (status === "needs_device" ||
+      status === "ready" ||
+      status === "expired" ||
+      status === "device_limit");
+
+  const renewsLabel = status === "expired" ? "Expired" : "Renews";
+  const renewsValue =
+    status === "expired" && data?.expires_at
+      ? formatExpiry(data.expires_at)
+      : data?.expires_at
+        ? (() => {
+            const d = new Date(data.expires_at);
+            return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+          })()
+        : "—";
+
+  const planHeroData = showPlanHero && data
+    ? {
+        eyebrow: "YOUR PLAN",
+        planName: "Pro",
+        subtitle: `${data.device_limit ?? 0} devices · ann`,
+        status: planHeroStatus,
+        stats: [
+          {
+            label: "DEVICES",
+            value: String(data.devices_used),
+            dim: ` / ${data.device_limit ?? 0}`,
+            tone: "default" as const,
+          },
+          {
+            label: renewsLabel,
+            value: renewsValue,
+            tone:
+              planHeroStatus === "expired"
+                ? ("expired" as const)
+                : planHeroStatus === "expiring"
+                  ? ("expiring" as const)
+                  : ("default" as const),
+          },
+          { label: "TRAFFIC", value: "∞", tone: "default" as const },
+        ] as const,
+      }
+    : null;
+
+  const showRenewalBanner = hasPlan && (planHeroStatus === "expiring" || planHeroStatus === "expired");
+  const showNoDeviceCallout = status === "needs_device";
+
   return {
     pageState,
     status,
@@ -177,6 +236,11 @@ export function useAccessHomePageModel() {
     expiryValue,
     expiryLabel,
     pillChip,
+    showNewUserHero,
+    showPlanHero,
+    planHeroData,
+    showRenewalBanner,
+    showNoDeviceCallout,
     onRetry: () => void queryClient.invalidateQueries({ queryKey: [...webappQueryKeys.access()] }),
   };
 }

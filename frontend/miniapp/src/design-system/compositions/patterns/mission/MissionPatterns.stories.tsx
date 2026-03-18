@@ -12,7 +12,7 @@ import { Stack } from "@/design-system/core/primitives";
 
 const meta = {
   title: "Patterns/Mission",
-  tags: ["autodocs"],
+  tags: ["autodocs", "contract-test"],
   parameters: {
     docs: { description: { component: "Mission patterns for operational screens." } },
   },

@@ -1,13 +1,13 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Route } from "react-router-dom";
-import { SettingsPage } from "./Settings";
+import { SupportPage } from "@/pages/Support";
 import { PageSandbox, readyScenario } from "@/storybook/page-contracts";
 
 const meta = {
-  title: "Pages/Settings",
+  title: "Pages/Support",
   tags: ["autodocs"],
   parameters: {
-    docs: { description: { component: "Account and settings." } },
+    docs: { description: { component: "Support and help." } },
   },
 } satisfies Meta;
 
@@ -17,8 +17,8 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   render: () => (
-    <PageSandbox scenario={readyScenario} initialEntries={["/settings"]}>
-      <Route path="/settings" element={<SettingsPage />} />
+    <PageSandbox scenario={readyScenario} initialEntries={["/support"]}>
+      <Route path="/support" element={<SupportPage />} />
     </PageSandbox>
   ),
 };

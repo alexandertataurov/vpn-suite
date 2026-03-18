@@ -12,5 +12,5 @@
 
 - Documented color semantics, motion usage mapping, and typography production usage.
   Reason: foundations stories described tokens but not enough decision rules.
-  Affects: `Color.stories.tsx`, `Motion.stories.tsx`, `Typography.stories.tsx`, `FoundationsShowcase.stories.tsx`.
+  Affects: `Color.stories.tsx`, `Motion.stories.tsx`, `Typography.stories.tsx`.
   Migration: reference the foundations stories before introducing new status or motion behaviors.

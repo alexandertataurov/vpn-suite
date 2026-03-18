@@ -1,13 +1,13 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Route } from "react-router-dom";
-import { SupportPage } from "./Support";
+import { CheckoutPage } from "@/pages/Checkout";
 import { PageSandbox, readyScenario } from "@/storybook/page-contracts";
 
 const meta = {
-  title: "Pages/Support",
+  title: "Pages/Checkout",
   tags: ["autodocs"],
   parameters: {
-    docs: { description: { component: "Support and help." } },
+    docs: { description: { component: "Checkout flow." } },
   },
 } satisfies Meta;
 
@@ -17,8 +17,8 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   render: () => (
-    <PageSandbox scenario={readyScenario} initialEntries={["/support"]}>
-      <Route path="/support" element={<SupportPage />} />
+    <PageSandbox scenario={readyScenario} initialEntries={["/plan/checkout/pro-monthly"]}>
+      <Route path="/plan/checkout/:planId" element={<CheckoutPage />} />
     </PageSandbox>
   ),
 };

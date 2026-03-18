@@ -98,8 +98,8 @@ $PAGE_ANCESTOR_SELECTORS
 EOF
 fi
 
-# 7. No raw hex/rgba in design-system CSS except in token source files (base, consumer, telegram, frame).
-ALLOWED_CSS="$STYLES_DIR/tokens/base.css $STYLES_DIR/theme/consumer.css $STYLES_DIR/theme/telegram.css $STYLES_DIR/shell/frame.css"
+# 7. No raw hex/rgba in design-system CSS except in token source files (base, consumer, telegram, amnezia, frame).
+ALLOWED_CSS="$STYLES_DIR/tokens/base.css $STYLES_DIR/theme/consumer.css $STYLES_DIR/theme/telegram.css $STYLES_DIR/theme/amnezia.css $STYLES_DIR/shell/frame.css"
 while IFS= read -r f; do
   [ -z "$f" ] && continue
   allowed=

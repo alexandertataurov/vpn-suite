@@ -34,6 +34,11 @@ html[data-theme="consumer-light"] {
   --green-border: rgba(22, 101, 52, 0.14);
   --green-d: #f0fdf4;
   --green-b: rgba(22, 101, 52, 0.14);
+  --green-avatar-gradient-start: #bbf7d0;
+  --green-avatar-gradient-end: #99f6e4;
+  --green-avatar-text: #065f46;
+  --amber-icon-bg: rgba(146, 64, 14, 0.09);
+  --red-icon-bg: rgba(153, 27, 27, 0.09);
 
   /* Semantic — warning */
   --color-warning: #92400e;

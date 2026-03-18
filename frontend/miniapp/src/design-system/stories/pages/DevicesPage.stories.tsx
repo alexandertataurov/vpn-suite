@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Route } from "react-router-dom";
-import { DevicesPage } from "./Devices";
+import { DevicesPage } from "@/pages/Devices";
 import { limitReachedScenario, PageSandbox, readyScenario } from "@/storybook/page-contracts";
 
 const meta = {

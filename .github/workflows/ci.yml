@@ -249,7 +249,7 @@ jobs:
 
       - name: Install Chromium (Playwright)
         working-directory: frontend/admin
-        run: npx playwright install chromium --with-deps
+        run: pnpm exec playwright install chromium --with-deps
 
       - name: Serve admin for Lighthouse
         run: |
@@ -278,7 +278,7 @@ jobs:
 
       - name: Storybook build (admin)
         working-directory: frontend
-        run: pnpm run build-storybook -w admin
+        run: pnpm --filter admin run build-storybook
 
       - name: Storybook test runner (admin)
         timeout-minutes: 8
@@ -286,17 +286,17 @@ jobs:
         working-directory: frontend
         run: |
           set -euo pipefail
-          npm run storybook -w admin -- --ci --no-open --host 127.0.0.1 --port 6006 &
+          pnpm run storybook:admin -- --ci --no-open --host 127.0.0.1 --port 6006 &
           for i in $(seq 1 90); do
             curl -sf http://127.0.0.1:6006/ > /dev/null && break
             sleep 1
           done
           curl -sf http://127.0.0.1:6006/ > /dev/null || { echo "Storybook did not become ready"; exit 1; }
-          npm run storybook:test -w admin
+          pnpm --filter admin run storybook:test
 
       - name: Storybook guardrails (admin)
-        working-directory: frontend/admin
-        run: npm run storybook:guardrails
+        working-directory: frontend
+        run: pnpm --filter admin run storybook:guardrails
 
       - name: Script preflight
         run: chmod +x scripts/check-tokens.sh
@@ -402,24 +402,28 @@ jobs:
           echo "API did not become ready"
           exit 1
 
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "npm"
-          cache-dependency-path: frontend/package-lock.json
+          cache: "pnpm"
 
       - name: Install frontend deps
         working-directory: frontend
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Install Playwright browsers
         working-directory: frontend/admin
-        run: npx playwright install chromium --with-deps
+        run: pnpm exec playwright install chromium --with-deps
 
       - name: Start admin dev server
         working-directory: frontend
-        run: npm run dev:admin &
+        run: pnpm run dev:admin &
         env:
           CI: ""
 
@@ -446,7 +450,7 @@ jobs:
 
       - name: Run E2E
         working-directory: frontend
-        run: npm run test:e2e:ci
+        run: pnpm run test:e2e:ci
         env:
           CI: "true"
           ADMIN_EMAIL: admin@ci

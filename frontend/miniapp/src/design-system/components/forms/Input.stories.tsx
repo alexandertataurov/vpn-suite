@@ -4,7 +4,7 @@ import { Stack } from "@/design-system/core/primitives";
 
 const meta = {
   title: "Components/Input",
-  tags: ["autodocs"],
+  tags: ["autodocs", "contract-test"],
   component: Input,
   argTypes: {
     type: { control: "select", options: ["text", "email", "password"] },

@@ -80,9 +80,18 @@ New screens must compose from these building blocks; no one-off page-specific sy
 
 - Canonical badge: `StatusChip` (`design-system/patterns/StatusChip.tsx`).
   - Variants: `active`, `paid`, `info`, `pend`, `offline`.
+- `PillChip` (`design-system/patterns/ui/PillChip.tsx`) — profile row badge per amnezia spec.
+  - Variants: `beta`, `active`, `expiring`, `expired`.
 - Rule:
-  - All pill/badge status indicators use `StatusChip`.
+  - All pill/badge status indicators use `StatusChip` or `PillChip` per context.
   - No additional bespoke badge color systems for beta.
+
+**Amnezia-spec primitives** (see `docs/frontend/design/amnezia-miniapp-design-guidelines.md`):
+
+- `PlanHeroCard` — plan body + 3-col stats grid, status badge (Active/Expiring/Expired).
+- `RenewalBanner` — Expiring/Expired states, links to renew flow.
+- `NoDeviceCallout` — inline prompt when paid but no device added.
+- `NewUserHero` — centered card when no plan purchased.
 
 **Modal**
 

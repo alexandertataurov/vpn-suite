@@ -51,6 +51,21 @@ function createBaseModel(overrides: Record<string, unknown> = {}) {
     expiryValue: "May 1, 2030",
     expiryLabel: "Valid until",
     pillChip: { variant: "active" as const, label: "PRO" },
+    showNewUserHero: false,
+    showPlanHero: true,
+    planHeroData: {
+      eyebrow: "YOUR PLAN",
+      planName: "Pro",
+      subtitle: "5 devices · ann",
+      status: "active" as const,
+      stats: [
+        { label: "DEVICES", value: "2", dim: " / 5", tone: "default" as const },
+        { label: "Renews", value: "May 1", tone: "default" as const },
+        { label: "TRAFFIC", value: "∞", tone: "default" as const },
+      ],
+    },
+    showRenewalBanner: false,
+    showNoDeviceCallout: false,
     onRetry: vi.fn(),
     ...overrides,
   };
@@ -65,8 +80,8 @@ describe("HomePage", () => {
   it("renders ready state with hero and CTA", () => {
     renderWithProviders(<HomePage />);
 
-    expect(screen.getByText("Your VPN is ready")).toBeInTheDocument();
-    expect(screen.getByText("Manage your devices and subscription here. Connect in AmneziaVPN.")).toBeInTheDocument();
+    expect(screen.getByText("YOUR PLAN")).toBeInTheDocument();
+    expect(screen.getByText("Pro")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Manage Devices/i })).toBeInTheDocument();
     expect(screen.getByText("2 / 5")).toBeInTheDocument();
     expect(screen.getByText("May 1, 2030")).toBeInTheDocument();
@@ -99,12 +114,25 @@ describe("HomePage", () => {
       devicesValue: "0 / 5",
       expiryValue: "",
       pillChip: { variant: "active" as const, label: "PRO" },
+      showPlanHero: true,
+      showNoDeviceCallout: true,
+      planHeroData: {
+        eyebrow: "YOUR PLAN",
+        planName: "Pro",
+        subtitle: "5 devices · ann",
+        status: "active" as const,
+        stats: [
+          { label: "DEVICES", value: "0", dim: " / 5", tone: "default" as const },
+          { label: "Renews", value: "—", tone: "default" as const },
+          { label: "TRAFFIC", value: "∞", tone: "default" as const },
+        ],
+      },
     });
 
     renderWithProviders(<HomePage />);
 
-    expect(screen.getByText("Add your device")).toBeInTheDocument();
-    expect(screen.getByText("You need to add a device to generate your VPN configuration")).toBeInTheDocument();
+    expect(screen.getByText("Add your first device")).toBeInTheDocument();
+    expect(screen.getByText("Generate a config to import in AmneziaVPN")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Add Device/i })).toBeInTheDocument();
     expect(screen.getByText("0 / 5")).toBeInTheDocument();
   });
@@ -136,13 +164,16 @@ describe("HomePage", () => {
       devicesValue: "",
       expiryValue: "",
       pillChip: { variant: "beta" as const, label: "Beta" },
+      showNewUserHero: true,
+      showPlanHero: false,
+      planHeroData: null,
     });
 
     renderWithProviders(<HomePage />);
 
-    expect(screen.getByText("No active plan")).toBeInTheDocument();
-    expect(screen.getByText("Choose a plan to get VPN access")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Choose Plan/i })).toBeInTheDocument();
+    expect(screen.getByText("Setup Required")).toBeInTheDocument();
+    expect(screen.getByText(/Choose a plan to get VPN access/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Choose a Plan/i })).toBeInTheDocument();
   });
 
   it("renders expired state", () => {
@@ -174,14 +205,27 @@ describe("HomePage", () => {
       expiryValue: "Mar 10, 2030",
       expiryLabel: "Expired on",
       pillChip: { variant: "expired" as const, label: "Expired" },
+      showPlanHero: true,
+      showRenewalBanner: true,
+      planHeroData: {
+        eyebrow: "YOUR PLAN",
+        planName: "Pro",
+        subtitle: "5 devices · ann",
+        status: "expired" as const,
+        stats: [
+          { label: "DEVICES", value: "2", dim: " / 5", tone: "default" as const },
+          { label: "Expired", value: "Mar 10, 2030", tone: "expired" as const },
+          { label: "TRAFFIC", value: "∞", tone: "default" as const },
+        ],
+      },
     });
 
     renderWithProviders(<HomePage />);
 
-    expect(screen.getByText("Access expired")).toBeInTheDocument();
-    expect(screen.getByText("Renew your plan to continue using VPN")).toBeInTheDocument();
+    expect(screen.getByText("Renew your plan")).toBeInTheDocument();
+    expect(screen.getByText("Renew to keep VPN access")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Renew Access/i })).toBeInTheDocument();
-    expect(screen.getByText("Mar 10, 2030")).toBeInTheDocument();
+    expect(screen.getAllByText("Mar 10, 2030").length).toBeGreaterThanOrEqual(1);
   });
 
   it("renders support link in footer", () => {

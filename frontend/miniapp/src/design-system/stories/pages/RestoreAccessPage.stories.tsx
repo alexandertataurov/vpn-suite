@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Route } from "react-router-dom";
-import { RestoreAccessPage } from "./RestoreAccess";
+import { RestoreAccessPage } from "@/pages/RestoreAccess";
 import { PageSandbox, restoreScenario } from "@/storybook/page-contracts";
 
 const meta = {
