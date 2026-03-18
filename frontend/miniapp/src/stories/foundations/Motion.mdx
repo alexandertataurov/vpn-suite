@@ -1,0 +1,41 @@
+import { Meta, Canvas } from "@storybook/addon-docs/blocks";
+import * as MotionStories from "./Motion.stories";
+import { FoundationHeader, FoundationLinks } from "./components";
+
+<Meta of={MotionStories} />
+
+<FoundationHeader
+  title="Motion"
+  description="Duration and easing tokens for transitions and animations."
+  status="Stable"
+/>
+<FoundationLinks tokens="src/design-system/core/tokens/motion.ts" />
+
+## Why it exists
+
+Consistent motion creates predictable, polished interactions. Duration and easing tokens keep animations aligned across the app.
+
+## Rules
+
+- Use `--duration-*` and `--ease-*` tokens
+- Do not hardcode transition durations
+- Respect `prefers-reduced-motion: reduce` for accessibility
+
+## Token inventory
+
+<Canvas of={MotionStories.Tokens} />
+
+## Implementation notes
+
+- Duration: `--duration-fast`, `--duration-normal`, `--duration-slow`
+- Easing: `--ease-in`, `--ease-out`, `--ease-in-out`
+
+## Accessibility
+
+- The design system shortens animations when `prefers-reduced-motion: reduce` is set
+- Do not convey critical information through motion alone
+
+## Related
+
+- Foundations / Accessibility
+- Components / Modal

@@ -1,0 +1,38 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+import { FoundationHeader } from "./components";
+
+<Meta title="Foundations/Overview" />
+
+<FoundationHeader
+  title="Foundations Overview"
+  description="Design tokens and primitives that power the VPN Suite design system."
+  status="Stable"
+/>
+
+## Why it exists
+
+Foundations define the rules and building blocks for consistent UI. Tokens (color, typography, spacing, etc.) ensure that components look and behave the same across the app. Using semantic tokens instead of raw values reduces drift and makes theming and accessibility easier.
+
+## Core principles
+
+- **Intro → tokens → visual primitives → layout primitives → accessibility guardrails**
+- **Foundations** = rules and primitives
+- **Components** = reusable UI units
+- **Patterns** = multi-component solutions
+- **Templates** = page-level composition
+
+## Foundation map
+
+| Foundation | Purpose |
+|------------|---------|
+| Color | Semantic color system for meaning, contrast, and interaction |
+| Typography | Type scale, readability rules, and semantic text use |
+| Spacing | 8px grid, insets, gaps, and layout rhythm |
+| Layout | Breakpoints, grid, containers, and responsive rules |
+| Accessibility | Contrast, focus, keyboard, touch targets, motion safety |
+
+## Quick links
+
+- Use semantic tokens in product code; avoid raw hex, px, or arbitrary values
+- Theme toggle (toolbar) for light/dark preview
+- Token source: `src/design-system/styles/` and `src/design-system/core/tokens/`

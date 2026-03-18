@@ -6,6 +6,15 @@ const meta = {
   title: "Components/Input",
   tags: ["autodocs", "contract-test"],
   component: Input,
+  parameters: {
+    layout: "padded",
+    docs: {
+      description: {
+        component:
+          "Text input with optional label, description, error, success. Uses Field primitive and design tokens.",
+      },
+    },
+  },
   argTypes: {
     type: { control: "select", options: ["text", "email", "password"] },
   },
@@ -23,8 +32,24 @@ export const WithLabel: Story = {
   args: { label: "Email", placeholder: "you@example.com", type: "email" },
 };
 
+export const WithDescription: Story = {
+  args: {
+    label: "Username",
+    placeholder: "username",
+    description: "Choose a unique username.",
+  },
+};
+
 export const WithError: Story = {
   args: { label: "Username", placeholder: "username", error: "Username is required" },
+};
+
+export const WithSuccess: Story = {
+  args: {
+    label: "Email",
+    value: "valid@example.com",
+    success: "Email verified",
+  },
 };
 
 export const Disabled: Story = {
@@ -33,7 +58,7 @@ export const Disabled: Story = {
 
 export const Stacked: Story = {
   render: () => (
-    <Stack gap="2">
+    <Stack gap="4">
       <Input label="First" placeholder="First field" />
       <Input label="Second" placeholder="Second field" />
     </Stack>

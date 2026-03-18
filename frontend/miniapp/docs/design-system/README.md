@@ -26,6 +26,7 @@ The design system follows a **layered model**. Each layer has strict responsibil
 
 - Page composition (Page Header → Hero → Section Divider → Content Cards)
 - Class names (e.g. `.page-hd`, `.shead`, `.shead-lbl`, `.shead-rule`, `.op`, `.data-grid`, `.btn-primary`). CSS keeps `.shead-label`/`.shead-line` as aliases for `.shead-lbl`/`.shead-rule`.
+- Plan hero patterns: `.plan-hero` (library.css) is the legacy content-library hero block. `.plan-hero-card` (modern.css) is the Amnezia-spec implementation used by `PlanHeroCard` recipe. Prefer `PlanHeroCard` and `.plan-hero-card` for new code.
 - Progress: Content Library §8 uses `.bar-track`/`.bar-fill` (`.ok`/`.warn`/`.crit`/`.info`) in content/library.css. Legacy: `.h-track`, `.h-fill`, `.h-fill.pct-*` (0–100) in shell/frame.css. Prefer ProgressBar component or `.bar-track`/`.bar-fill` for new code.
 - Error vs danger: Semantic token is `--color-error`; `.btn-danger` uses "danger" as legacy name for the same semantic (see tokens/colors.ts).
 - Buttons: Prefer the `Button` component and `getButtonClassName()` from `@/design-system` for consistency and theming. Raw `.btn`, `.btn-primary`, etc. in shell/frame.css are legacy; migrate over time. See **Mission\* vs Button** below.

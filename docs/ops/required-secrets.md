@@ -31,7 +31,6 @@
 | BOT_API_KEY | Internal API key for bot (if used) |
 | BOT_USERNAME / VITE_TELEGRAM_BOT_USERNAME | Bot @username without @. Referral links require it: Compose passes VITE_* to admin-api as TELEGRAM_BOT_USERNAME; without Compose, set TELEGRAM_BOT_USERNAME or rely on backend fallback to VITE_TELEGRAM_BOT_USERNAME. |
 | SUPPORT_HANDLE | Support handle (e.g. @support) |
-| SUPPORT_LINK | Optional deep link for support |
 
 ## Required in Production (validate_production_secrets)
 

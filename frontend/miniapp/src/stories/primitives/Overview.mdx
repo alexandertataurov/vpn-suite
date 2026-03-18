@@ -1,0 +1,46 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+import { FoundationHeader } from "../foundations/components";
+
+<Meta title="Primitives/Overview" />
+
+<FoundationHeader
+  title="Primitives Overview"
+  description="Low-level layout and typography building blocks. No business logic; use design tokens."
+  status="Stable"
+/>
+
+## Why it exists
+
+Primitives are the smallest reusable units in the design system. They provide consistent structure (layout, spacing, typography) without business logic. All higher-level components compose these primitives.
+
+## Core principles
+
+- **Layout** = Box, Container, Stack, Inline, Panel
+- **Separator** = Divider
+- **Typography** = Text, Heading
+- Use design tokens via `className` or CSS; no hardcoded values in primitives
+
+## Primitive map
+
+| Group | Primitive | Purpose |
+|-------|-----------|---------|
+| Layout | Box | Base div with `ds-box`; layout or wrapper |
+| Layout | Container | Constrained width + padding (`size`, `padding`) |
+| Layout | Stack | Vertical/horizontal flex with gap, align, justify |
+| Layout | Inline | Horizontal Stack (gap, align, wrap) |
+| Layout | Panel | Surface or outline panel (`variant`, `padding`) |
+| Separator | Divider | Horizontal/vertical separator (`orientation`, `tone`) |
+| Typography | Text | body, body-sm, meta, caption variants |
+| Typography | Heading | h1–h4 levels |
+
+## Rules
+
+- Use semantic tokens (`--spacing-*`, `--color-*`, `--typo-*`) in CSS
+- Do not add business logic to primitives
+- Prefer composition: Stack > Stack > Panel for complex layouts
+
+## Related
+
+- Foundations / Spacing
+- Foundations / Typography
+- Components / Button

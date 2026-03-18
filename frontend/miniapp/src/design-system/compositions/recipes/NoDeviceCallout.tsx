@@ -27,7 +27,12 @@ export function NoDeviceCallout({
         <span className="no-device-callout-title">{title}</span>
         <span className="no-device-callout-subtitle">{subtitle}</span>
       </div>
-      <button type="button" className="no-device-callout-cta" onClick={onCtaClick}>
+      <button
+        type="button"
+        className="no-device-callout-cta"
+        onClick={onCtaClick}
+        aria-label={ctaLabel}
+      >
         {ctaIcon}
         {ctaLabel}
       </button>

@@ -317,11 +317,8 @@ html {
   --blur-none: 0;
   --blur-sm: 4px;
   --blur-md: 8px;
-  /* Duration: single source — see MOTION section below */
+  /* Duration: single source — see MOTION section above (--ease-in/out/in-out aliased there) */
   --ease-linear: linear;
-  --ease-in: cubic-bezier(0.4, 0, 1, 1);
-  --ease-out: cubic-bezier(0, 0, 0.2, 1);
-  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
   --ease-standard: var(--ease-in-out);
   --icon-size-sm: 16px;
   --icon-size-md: 20px;

@@ -152,7 +152,7 @@ TEXTS = {
         "config_hint_add": "Конфиг показывается при добавлении устройства. Для нового: меню → Добавить устройство.",
         "config_hint_reissue": "Конфиг выдаётся один раз. Переиздать: удалите устройство, затем снова Добавить устройство.",
 
-        # Menu buttons / common literals (used as keys via menus.render)
+        # Menu buttons / common literals
         "🏠 Home": "🏠 Домой",
         "⬅ Back": "⬅ Назад",
         "🚀 Connect VPN": "🚀 Подключить VPN",
@@ -358,12 +358,6 @@ TEXTS = {
 
 
 def t(locale: str, key: str, **kwargs) -> str:
-    if key == "instruction_text":
-        from config import INSTRUCTION_TEXT, INSTALL_GUIDE_URL
-        if INSTRUCTION_TEXT:
-            return INSTRUCTION_TEXT
-        msg = TEXTS.get(locale, TEXTS["en"]).get(key, TEXTS["en"].get(key, key))
-        return msg.replace("https://amnezia.org", INSTALL_GUIDE_URL)
     msg = TEXTS.get(locale, TEXTS["en"]).get(key, TEXTS["en"].get(key, key))
     if kwargs:
         msg = msg.format(**kwargs)

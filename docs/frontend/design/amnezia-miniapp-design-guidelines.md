@@ -5,6 +5,12 @@
 
 ---
 
+## 0. Theme behavior
+
+**Amnezia tokens apply only when `data-theme="consumer-light"`.** The file `theme/amnezia.css` overrides consumer-light tokens (warm gray bg `#f2f2ef`, near-black primary button, no shadows, borders for depth). When the user has dark mode (`consumer-dark`), the standard consumer-dark palette is used; Amnezia spec does not define a dark variant. See `docs/frontend/design/THEME-RUNTIME.md` for runtime theme flow.
+
+---
+
 ## 1. Product context
 
 This is a **Telegram Mini App** that handles subscription sales and device management only.

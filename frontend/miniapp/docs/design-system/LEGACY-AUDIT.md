@@ -81,17 +81,19 @@
 
 ---
 
-## 7. Orphan Classes
+## 7. Utility Classes (u-mt-*, u-mb-*, etc.)
 
-| Class | Used In | Status |
-|-------|---------|--------|
-| `u-mt-4` | RestoreAccess, ServerSelection | Not defined — replace with token |
-| `u-mt-12` | ServerSelection, CheckoutFlowCard | Not defined |
-| `u-mt-16` | RestoreAccess, CheckoutFlowCard, ServerSelection | Not defined |
-| `u-mt-24` | RestoreAccess, ServerSelection, Support, Plan, Devices | Not defined |
-| `u-mb-8` | ServerSelection, Support, Plan, Devices | Not defined |
-| `u-p-16` | RestoreAccess, CheckoutFlowCard | Not defined |
-| `u-flex-1` | (grep) | Not defined |
+Defined in `design-system/styles/tokens/base.css`. Use these or token-based alternatives.
+
+| Class | Maps to | Used In |
+|-------|---------|---------|
+| `u-mt-4` | `--spacing-4` (16px) | RestoreAccess, ServerSelection |
+| `u-mt-12` | `--spacing-3` (12px) | ServerSelection, CheckoutFlowCard |
+| `u-mt-16` | `--spacing-4` (16px) | RestoreAccess, CheckoutFlowCard, ServerSelection, Home, Checkout |
+| `u-mt-24` | `--spacing-6` (24px) | RestoreAccess, ServerSelection, Support, Plan, Devices |
+| `u-mb-8` | `--spacing-2` (8px) | ServerSelection, Support, Plan, Devices |
+| `u-p-16` | `--spacing-4` (16px) | RestoreAccess, CheckoutFlowCard |
+| `u-flex-1` | `flex: 1` | (grep) |
 
 ---
 

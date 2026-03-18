@@ -29,7 +29,7 @@
 
 - [ ] `BOT_TOKEN`, `BOT_API_KEY` заданы в `.env` сервиса bot
 - [ ] `BOT_USERNAME` задан (без @) — иначе реферальные ссылки не работают
-- [ ] `SUPPORT_LINK` или `SUPPORT_HANDLE` заданы для команды /support (иначе показывается @support)
+- [ ] `SUPPORT_HANDLE` задан для бота
 - [ ] Webhook: `BOT_WEBHOOK_URL` и `BOT_WEBHOOK_PATH` заданы при использовании webhook‑режима
 - [ ] Команды бота синхронизированы при старте (`set_my_commands`); при необходимости обновить список в `bot/commands.py`
 

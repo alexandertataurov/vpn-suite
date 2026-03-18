@@ -1,11 +1,21 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Textarea } from "./Textarea";
+import { Stack } from "@/design-system/core/primitives";
 
-const meta = {
+const meta: Meta<typeof Textarea> = {
   title: "Components/Textarea",
   tags: ["autodocs"],
   component: Textarea,
-} satisfies Meta<typeof Textarea>;
+  parameters: {
+    layout: "padded",
+    docs: {
+      description: {
+        component:
+          "Multi-line text input with optional label, description, error. Uses Field primitive and design tokens.",
+      },
+    },
+  },
+};
 
 export default meta;
 
@@ -36,4 +46,13 @@ export const Disabled: Story = {
     value: "Pre-filled content",
     disabled: true,
   },
+};
+
+export const Stacked: Story = {
+  render: () => (
+    <Stack gap="4">
+      <Textarea label="First" placeholder="First field" />
+      <Textarea label="Second" placeholder="Second field" />
+    </Stack>
+  ),
 };

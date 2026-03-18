@@ -1,12 +1,21 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { MemoryRouter } from "react-router-dom";
 import { Button } from ".";
-import { Inline } from "@/design-system/core/primitives";
+import { Inline, Stack } from "@/design-system/core/primitives";
 
 const meta = {
   title: "Components/Button",
   tags: ["autodocs", "contract-test"],
   component: Button,
+  parameters: {
+    layout: "padded",
+    docs: {
+      description: {
+        component:
+          "Primary action control. Variants: primary, secondary, ghost, outline, danger, link. Use design tokens for styling.",
+      },
+    },
+  },
   decorators: [
     (Story) => (
       <MemoryRouter>
@@ -51,6 +60,19 @@ export const Sizes: Story = {
         ★
       </Button>
     </Inline>
+  ),
+};
+
+export const States: Story = {
+  render: () => (
+    <Stack gap="4">
+      <Inline gap="2" wrap>
+        <Button loading loadingText="Loading…">
+          Loading
+        </Button>
+        <Button disabled>Disabled</Button>
+      </Inline>
+    </Stack>
   ),
 };
 

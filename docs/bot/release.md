@@ -6,7 +6,7 @@
 - [x] i18n: ключи для всех пользовательских строк (ru/en); заглушки (receipts, usage, FAQ, security, report).
 - [x] Навигация: inline меню (nav:*, act:*, dev:*, pay:*), fallback для неизвестных callback.
 - [x] Мёртвый код: extra_commands.py удалён (дублировал /status, /devices и т.д.).
-- [ ] Переменные окружения: BOT_TOKEN, BOT_USERNAME, PANEL_URL, SUPPORT_HANDLE или SUPPORT_LINK; опционально REDIS_URL, INSTALL_GUIDE_URL.
+- [ ] Переменные окружения: BOT_TOKEN, BOT_USERNAME, PANEL_URL, SUPPORT_HANDLE; опционально REDIS_URL.
 - [ ] Тесты: `docker build -f bot/Dockerfile.test -t vpn-bot-test . && docker run --rm vpn-bot-test`
 
 ## Оплата и синхронизация с сервером

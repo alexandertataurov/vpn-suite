@@ -1,0 +1,40 @@
+import { Meta, Canvas } from "@storybook/addon-docs/blocks";
+import * as ShadowsStories from "./Shadows.stories";
+import { FoundationHeader, FoundationLinks } from "./components";
+
+<Meta of={ShadowsStories} />
+
+<FoundationHeader
+  title="Shadows"
+  description="Elevation and depth tokens for layering and focus."
+  status="Stable"
+/>
+<FoundationLinks tokens="src/design-system/core/tokens/shadows.ts" />
+
+## Why it exists
+
+Shadows communicate elevation and hierarchy. Semantic shadow tokens ensure consistent depth across surfaces and focus states.
+
+## Rules
+
+- Use `--shadow-*` tokens for elevation
+- Do not hardcode box-shadow values
+- Focus ring: use `--shadow-focus` or `--color-focus-ring` for focus visibility
+
+## Token inventory
+
+<Canvas of={ShadowsStories.Scale} />
+
+## Implementation notes
+
+- Tokens: `--shadow-sm`, `--shadow-md`, `--shadow-lg`, `--shadow-focus`
+- Layering: higher elevation = stronger shadow
+
+## Accessibility
+
+- Focus outline must be visible; use `--shadow-focus` or equivalent
+
+## Related
+
+- Foundations / Radius
+- Foundations / Accessibility

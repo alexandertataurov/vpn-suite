@@ -3,6 +3,7 @@ import React from "react";
 import { withTelegramEnvironment } from "../src/storybook/telegramEnvironment";
 import { withMiniAppShell } from "../src/storybook/decorators/withMiniAppShell";
 import "../src/design-system/styles/index.css";
+import "../src/design-system/styles/layout-story.css";
 import "../src/styles/app/index.css";
 import "../src/storybook/preview.css";
 
@@ -94,7 +95,37 @@ const preview: Preview = {
     },
     options: {
       storySort: {
-        order: ["Foundation", "Primitives", "Patterns", "Layouts", "Pages", "States", "*"],
+        order: [
+          "Foundations",
+          [
+            "Overview",
+            "Color",
+            "Typography",
+            "Spacing",
+            "Layout",
+            "Radius",
+            "Shadows",
+            "Motion",
+            "Accessibility",
+          ],
+          "Primitives",
+          [
+            "Overview",
+            "Box",
+            "Container",
+            "Stack",
+            "Inline",
+            "Panel",
+            "Divider",
+            "Text",
+            "Heading",
+          ],
+          "Patterns",
+          "Layouts",
+          "Pages",
+          "States",
+          "*",
+        ],
       },
     },
   },

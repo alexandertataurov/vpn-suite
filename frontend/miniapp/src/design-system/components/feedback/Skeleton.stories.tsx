@@ -6,6 +6,18 @@ const meta = {
   title: "Components/Skeleton",
   tags: ["autodocs"],
   component: Skeleton,
+  parameters: {
+    layout: "padded",
+    docs: {
+      description: {
+        component:
+          "Loading placeholder. Variants: default, line, card, list, shimmer. Uses design tokens for animation.",
+      },
+    },
+  },
+  argTypes: {
+    variant: { control: "select", options: ["default", "line", "card", "list", "shimmer"] },
+  },
 } satisfies Meta<typeof Skeleton>;
 
 export default meta;
@@ -13,7 +25,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  render: () => <Skeleton style={{ width: 120, height: 24 }} />,
+  args: { width: "120px", height: "24px" },
 };
 
 export const Line: Story = {
@@ -27,7 +39,17 @@ export const Card: Story = {
 export const List: Story = {
   render: () => (
     <Stack gap="2">
-      <SkeletonList count={3} />
+      <SkeletonList lines={3} />
+    </Stack>
+  ),
+};
+
+export const Variants: Story = {
+  render: () => (
+    <Stack gap="4">
+      <Skeleton variant="line" />
+      <Skeleton variant="card" width="100%" height="80px" />
+      <Skeleton variant="shimmer" width="120px" height="24px" />
     </Stack>
   ),
 };

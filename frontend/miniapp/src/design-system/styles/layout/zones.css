@@ -1,6 +1,9 @@
 /**
  * Layout — single source of truth for miniapp shell, zones, page, and section.
  * Imported by index.css before shell/frame.css.
+ *
+ * Canonical spacing: --miniapp-content-gutter, --miniapp-page-gap, --miniapp-section-gap,
+ * --miniapp-card-padding. Prefer these over --ds-space-* for page/section layout.
  */
 
 /* ---------- Layout variables ----------
@@ -539,6 +542,74 @@ html {
 
 .ds-stack[data-gap="6"] {
   gap: var(--spacing-6);
+}
+
+.ds-stack[data-align="start"] { align-items: flex-start; }
+.ds-stack[data-align="center"] { align-items: center; }
+.ds-stack[data-align="end"] { align-items: flex-end; }
+.ds-stack[data-align="stretch"] { align-items: stretch; }
+.ds-stack[data-justify="start"] { justify-content: flex-start; }
+.ds-stack[data-justify="center"] { justify-content: center; }
+.ds-stack[data-justify="end"] { justify-content: flex-end; }
+.ds-stack[data-justify="between"] { justify-content: space-between; }
+.ds-stack[data-wrap="true"] { flex-wrap: wrap; }
+
+/* ---------- Box ---------- */
+.ds-box {
+  display: block;
+}
+
+/* ---------- Container ---------- */
+.ds-container {
+  width: 100%;
+  margin-inline: auto;
+}
+
+.ds-container[data-size="sm"] { max-width: var(--container-sm, 480px); }
+.ds-container[data-size="md"] { max-width: var(--container-md, 720px); }
+.ds-container[data-size="lg"] { max-width: var(--container-lg, 960px); }
+
+.ds-container[data-padding="sm"] { padding-inline: var(--spacing-4); }
+.ds-container[data-padding="md"] { padding-inline: var(--spacing-6); }
+
+/* ---------- Panel ---------- */
+.ds-panel {
+  border-radius: var(--radius-md);
+}
+
+.ds-panel[data-variant="surface"] {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+}
+
+.ds-panel[data-variant="outline"] {
+  background: transparent;
+  border: 1px solid var(--color-border);
+}
+
+.ds-panel[data-padding="sm"] { padding: var(--spacing-3); }
+.ds-panel[data-padding="md"] { padding: var(--spacing-4); }
+.ds-panel[data-padding="lg"] { padding: var(--spacing-6); }
+
+/* ---------- Divider ---------- */
+.ds-divider {
+  flex-shrink: 0;
+  background: var(--color-border-subtle);
+}
+
+.ds-divider[data-orientation="horizontal"] {
+  width: 100%;
+  height: 1px;
+}
+
+.ds-divider[data-orientation="vertical"] {
+  width: 1px;
+  align-self: stretch;
+  min-height: 1em;
+}
+
+.ds-divider[data-tone="default"] {
+  background: var(--color-border);
 }
 
 /* ---------- Mobile-first overrides ---------- */

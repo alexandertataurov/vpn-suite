@@ -102,6 +102,7 @@ html[data-theme="consumer-light"] {
   --amnezia-hero-title: 20px;
   --amnezia-hero-desc: 13px;
   --amnezia-badge-text: 11px;
+  --amnezia-badge-padding-h: 10px;
   --amnezia-row-label: 13.5px;
   --amnezia-row-sub: 11.5px;
   --amnezia-banner-title: 13px;

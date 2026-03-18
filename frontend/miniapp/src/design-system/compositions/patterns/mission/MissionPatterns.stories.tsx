@@ -8,13 +8,19 @@ import {
   MissionChip,
   MissionAlert,
 } from "@/design-system/compositions/patterns";
-import { Stack } from "@/design-system/core/primitives";
+import { Stack, Panel, Heading, Text } from "@/design-system/core/primitives";
 
-const meta = {
+const meta: Meta = {
   title: "Patterns/Mission",
   tags: ["autodocs", "contract-test"],
   parameters: {
-    docs: { description: { component: "Mission patterns for operational screens." } },
+    layout: "padded",
+    docs: {
+      description: {
+        component:
+          "Mission patterns for operational screens: buttons, chips, alerts, cards. Uses design tokens.",
+      },
+    },
   },
   decorators: [
     (Story) => (
@@ -23,7 +29,7 @@ const meta = {
       </MemoryRouter>
     ),
   ],
-} satisfies Meta;
+};
 
 export default meta;
 
@@ -65,10 +71,14 @@ export const Alerts: Story = {
 export const Card: Story = {
   render: () => (
     <MissionCard tone="blue">
-      <div style={{ padding: "var(--spacing-4)" }}>
-        <h3 style={{ margin: 0, fontSize: "var(--typo-h3-size)" }}>Mission card</h3>
-        <p style={{ margin: "var(--spacing-2) 0 0", color: "var(--color-text-muted)" }}>Content</p>
-      </div>
+      <Panel padding="md">
+        <Stack gap="2">
+          <Heading level={3}>Mission card</Heading>
+          <Text as="p" className="story-text-muted">
+            Content
+          </Text>
+        </Stack>
+      </Panel>
     </MissionCard>
   ),
 };

@@ -1,6 +1,9 @@
 # VPN Suite Bot
 
-Telegram bot for VPN subscription and device management. The chat menu button shows **"Open App"** and opens the Mini App (Web App) when tapped.
+Bridge between backend API and miniapp frontend. **All user interaction happens in the miniapp.** The bot:
+
+- **Connects**: /start → "Open App" button (miniapp), payment relay (Telegram Stars → backend)
+- **Telemetry**: commands, payments, API latency (Prometheus), funnel events (backend)
 
 ## Config
 

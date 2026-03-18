@@ -7,7 +7,15 @@ const meta = {
   title: "Components/BottomSheet",
   tags: ["autodocs"],
   component: BottomSheet,
-  parameters: { layout: "centered" },
+  parameters: {
+    layout: "centered",
+    docs: {
+      description: {
+        component:
+          "Sheet-style confirmation dialog. Primary and secondary actions. Uses design tokens.",
+      },
+    },
+  },
 } satisfies Meta<typeof BottomSheet>;
 
 export default meta;

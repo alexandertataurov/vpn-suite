@@ -18,7 +18,7 @@ export function NewUserHero({
 }: NewUserHeroProps) {
   return (
     <div className={["new-user-hero", "hero-card", className].filter(Boolean).join(" ")} data-layer="NewUserHero">
-      <div className="new-user-hero-icon">
+      <div className="new-user-hero-icon" aria-hidden>
         <IconShield size={44} strokeWidth={1.25} />
       </div>
       <h2 className="new-user-hero-title">{title}</h2>

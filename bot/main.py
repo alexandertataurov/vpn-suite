@@ -1,4 +1,9 @@
-"""Telegram VPN Bot — aiogram 3, Admin API client."""
+"""Telegram VPN Bot — bridge between backend API and miniapp frontend.
+
+All user interaction happens in the miniapp. The bot:
+- Connects: /start → Open App button (miniapp), payment relay (Telegram Stars → backend)
+- Telemetry: commands, payments, API latency to Prometheus + backend events
+"""
 
 import asyncio
 
@@ -32,6 +37,7 @@ from commands import COMMANDS, register_commands
 from aiogram.types import MenuButtonWebApp, WebAppInfo as MenuWebAppInfo
 from utils.config_validator import validate_config
 from middleware.logging import LoggingMiddleware
+from api_client import init_api
 from handlers.payment import router as payment_router
 from handlers.start import router as start_router
 from otel_tracing import setup_otel_tracing
@@ -117,6 +123,7 @@ async def run_healthz_app(tracing_enabled: bool, app: web.Application | None = N
 
 async def run_bot():
     validate_config()
+    await init_api()
     tracing_enabled = setup_otel_tracing(OTEL_TRACES_ENDPOINT)
     global TRACING_ENABLED
     TRACING_ENABLED = tracing_enabled

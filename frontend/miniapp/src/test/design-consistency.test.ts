@@ -13,6 +13,7 @@ const STYLES_DIR = join(SRC, "design-system", "styles");
 
 const ALLOWED_ROOT = [
   join(STYLES_DIR, "tokens", "base.css"),
+  join(STYLES_DIR, "tokens", "_breakpoints.css"),
   join(STYLES_DIR, "theme", "consumer.css"),
   join(STYLES_DIR, "shell", "frame.css"),
 ];
@@ -22,6 +23,7 @@ const ALLOWED_HEX_CSS = [
   join(STYLES_DIR, "theme", "consumer.css"),
   join(STYLES_DIR, "theme", "telegram.css"),
   join(STYLES_DIR, "theme", "amnezia.css"),
+  join(STYLES_DIR, "theme", "storybook.css"),
   join(STYLES_DIR, "shell", "frame.css"),
 ];
 
@@ -64,7 +66,12 @@ describe("Design consistency", () => {
     it("app TSX files use CSS classes, not style={{}}", () => {
       const violations: string[] = [];
       for (const f of walkDir(SRC, [".tsx"])) {
-        if (f.endsWith(".stories.tsx") || f.includes("story-helpers")) continue;
+        if (
+          f.endsWith(".stories.tsx") ||
+          f.includes("story-helpers") ||
+          f.includes(join("src", "stories"))
+        )
+          continue;
         const content = readFileSync(f, "utf8");
         if (/style=\s*\{\{/.test(content)) {
           violations.push(rel(f));
@@ -202,6 +209,8 @@ describe("Design consistency", () => {
         "--amnezia-card-gap",
         "--amnezia-plan-name",
         "--amnezia-profile-name",
+        "--amnezia-badge-text",
+        "--amnezia-badge-padding-h",
       ];
       const missing = required.filter((t) => !content.includes(t));
       expect(missing).toEqual([]);

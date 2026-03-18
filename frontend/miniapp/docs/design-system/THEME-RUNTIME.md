@@ -26,6 +26,10 @@ The miniapp uses exactly two themes at runtime:
 - `themes={["consumer-dark", "consumer-light"]}`, `defaultTheme="consumer-dark"`.
 - `TelegramThemeBridge` syncs from Telegram/OS to ThemeProvider.
 
+## Amnezia overrides (consumer-light only)
+
+`theme/amnezia.css` overrides consumer-light per `docs/frontend/design/amnezia-miniapp-design-guidelines.md`: warm gray bg, near-black primary button, no shadows. Amnezia does **not** apply when `data-theme="consumer-dark"`; the default theme uses consumer-dark, so Amnezia tokens are only active in light mode.
+
 ## Deprecated Themes
 
 - `dark`, `light`, `dim` — Removed from base.css. Do not use.

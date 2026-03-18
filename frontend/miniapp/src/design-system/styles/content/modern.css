@@ -363,10 +363,10 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 11px;
+  font-size: var(--amnezia-badge-text, 11px);
   font-weight: 600;
   letter-spacing: 0.1px;
-  padding: 4px 10px;
+  padding: var(--spacing-1) var(--amnezia-badge-padding-h, 10px);
   border-radius: 100px;
   white-space: nowrap;
 }
@@ -957,11 +957,12 @@
 
 .modern-mt-4 { margin-top: var(--spacing-4); }
 .modern-mt-3 { margin-top: var(--spacing-3); }
+/* Reset utilities: !important overrides inherited padding/margin from parent layout */
 .modern-p-0 { padding: 0 !important; }
 .modern-m-0 { margin: 0 !important; }
 .modern-h-24 { height: var(--spacing-6); }
-.modern-px-6 { padding-left: var(--spacing-6) !important; padding-right: var(--spacing-6) !important; }
-.modern-px-4 { padding-left: var(--spacing-4) !important; padding-right: var(--spacing-4) !important; }
+.modern-px-6 { padding-inline: var(--spacing-6) !important; }
+.modern-px-4 { padding-inline: var(--spacing-4) !important; }
 
 .modern-store-buttons {
   display: flex;

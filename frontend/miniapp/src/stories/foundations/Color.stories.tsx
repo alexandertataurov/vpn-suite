@@ -1,8 +1,16 @@
 import React from "react";
 import type { Meta, StoryObj } from "@storybook/react";
+import {
+  FoundationSection,
+  GroupLabel,
+  TokenGrid,
+  TokenSlot,
+  FOUNDATION,
+  resolveToken,
+} from "./foundationShared";
 
 const meta: Meta = {
-  title: "Foundation/Colors",
+  title: "Foundations/Color",
   parameters: {
     layout: "padded",
     status: { type: "stable" },
@@ -16,25 +24,24 @@ const meta: Meta = {
 };
 export default meta;
 
-function resolveToken(token: string): string {
-  if (typeof window === "undefined") return "";
-  return getComputedStyle(document.documentElement)
-    .getPropertyValue(token)
-    .trim();
-}
+type ColorItem = { token: string; usage: string };
 
-function Swatch({ token, usage }: { token: string; usage?: string }) {
+function ColorSwatch({ token, usage }: ColorItem) {
   const value = resolveToken(token);
   const isLight = token.includes("on-accent") || token.includes("overlay");
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 5, width: 80 }}>
+    <TokenSlot
+      label={token.replace("--color-", "")}
+      value={value}
+      usage={usage}
+    >
       <div
         title={value}
         style={{
-          width: 64,
-          height: 64,
-          borderRadius: 12,
+          width: FOUNDATION.cardSize,
+          height: FOUNDATION.cardSize,
+          borderRadius: FOUNDATION.cardRadius,
           background: `var(${token})`,
           backgroundImage: isLight
             ? `linear-gradient(45deg, #ddd 25%, transparent 25%),
@@ -45,48 +52,10 @@ function Swatch({ token, usage }: { token: string; usage?: string }) {
             : undefined,
           backgroundSize: isLight ? "8px 8px, 8px 8px, 8px 8px, 8px 8px, 100%" : undefined,
           backgroundPosition: isLight ? "0 0, 0 4px, 4px -4px, -4px 0px, 0 0" : undefined,
-          border: "1px solid rgba(0,0,0,0.08)",
-          flexShrink: 0,
+          border: FOUNDATION.cardBorder,
         }}
       />
-      <code style={{ fontSize: 10, color: "var(--color-text-muted, #888)", lineHeight: 1.4 }}>
-        {token.replace("--color-", "")}
-      </code>
-      <code style={{ fontSize: 9, color: "var(--color-text-tertiary, #aaa)", lineHeight: 1.4 }}>
-        {value || "—"}
-      </code>
-      {usage && (
-        <code style={{ fontSize: 9, color: "var(--color-text-tertiary, #aaa)", lineHeight: 1.4 }}>
-          {usage}
-        </code>
-      )}
-    </div>
-  );
-}
-
-type ColorItem = { token: string; usage: string };
-
-function SwatchGroup({ name, items }: { name: string; items: ColorItem[] }) {
-  return (
-    <div>
-      <p
-        style={{
-          fontSize: 11,
-          fontWeight: 600,
-          letterSpacing: "0.07em",
-          textTransform: "uppercase",
-          color: "var(--color-text-tertiary, #888)",
-          marginBottom: 12,
-        }}
-      >
-        {name}
-      </p>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
-        {items.map(({ token, usage }) => (
-          <Swatch key={token} token={token} usage={usage} />
-        ))}
-      </div>
-    </div>
+    </TokenSlot>
   );
 }
 
@@ -123,10 +92,17 @@ const COLOR_GROUPS: Record<string, ColorItem[]> = {
 export const All: StoryObj = {
   name: "All tokens",
   render: () => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+    <FoundationSection>
       {Object.entries(COLOR_GROUPS).map(([name, items]) => (
-        <SwatchGroup key={name} name={name} items={items} />
+        <div key={name}>
+          <GroupLabel>{name}</GroupLabel>
+          <TokenGrid>
+            {items.map(({ token, usage }) => (
+              <ColorSwatch key={token} token={token} usage={usage} />
+            ))}
+          </TokenGrid>
+        </div>
       ))}
-    </div>
+    </FoundationSection>
   ),
 };

@@ -123,18 +123,10 @@ ERROR_MESSAGES = {
 
 SUCCESS_MESSAGES = {
     "en": {
-        "device_added": "✅ Device added successfully!\n📥 Download your configuration below.",
-        "device_removed": "✅ Device removed.",
-        "config_reissued": "✅ New configuration issued.",
         "payment_success": "✅ Payment successful! Your subscription is active.",
-        "payment_pending_activation": "✅ Payment received. Subscription activation is in progress, please wait a moment.",
     },
     "ru": {
-        "device_added": "✅ Устройство добавлено!\n📥 Скачайте конфигурацию ниже.",
-        "device_removed": "✅ Устройство удалено.",
-        "config_reissued": "✅ Новая конфигурация выдана.",
         "payment_success": "✅ Оплата прошла! Подписка активна.",
-        "payment_pending_activation": "✅ Платёж получен. Активация подписки выполняется, подождите немного.",
     },
 }
 

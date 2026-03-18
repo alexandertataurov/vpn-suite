@@ -7,14 +7,6 @@ bot_commands_total = Counter(
     "Total bot commands by command name",
     ["command"],
 )
-bot_trial_activations_total = Counter(
-    "bot_trial_activations_total",
-    "Trial activations",
-)
-bot_payment_start_total = Counter(
-    "bot_payment_start_total",
-    "Payment flow started",
-)
 bot_payment_success_total = Counter(
     "bot_payment_success_total",
     "Payment completed successfully",
@@ -63,16 +55,6 @@ def _status_class(status_code: int | None) -> str:
 def record_command(command: str) -> None:
     """Increment command counter."""
     bot_commands_total.labels(command=command).inc()
-
-
-def record_trial_activation() -> None:
-    """Increment trial activation counter."""
-    bot_trial_activations_total.inc()
-
-
-def record_payment_start() -> None:
-    """Increment payment start counter."""
-    bot_payment_start_total.inc()
 
 
 def record_payment_success() -> None:

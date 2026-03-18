@@ -34,19 +34,6 @@ def _safe_parse_json(r: httpx.Response | None) -> dict | None:
         return None
 
 
-def _api_error_message(data: dict | None, fallback: str) -> str:
-    if not isinstance(data, dict):
-        return fallback
-    if "error" in data:
-        err = data["error"]
-        if isinstance(err, dict) and "message" in err:
-            return err["message"]
-    if "detail" in data:
-        d = data["detail"]
-        return d if isinstance(d, str) else str(d)
-    return fallback
-
-
 def _extract_error_code_from_data(data: dict | None) -> str | None:
     """Best-effort extract backend error code from parsed response."""
     if not isinstance(data, dict):

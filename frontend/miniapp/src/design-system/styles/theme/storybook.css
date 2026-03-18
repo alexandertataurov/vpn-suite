@@ -1,0 +1,20 @@
+/* Storybook dark preview theme — used by typography/label story frames.
+   Single source for story-specific hex; frame.css references these vars. */
+
+.typography-story-dark-frame,
+.label-story-dark-frame {
+  --story-dark-bg: radial-gradient(circle at top, rgba(92, 174, 255, 0.12), transparent 52%),
+    linear-gradient(180deg, #10151a 0%, #07090b 100%);
+  --story-dark-border: rgba(255, 255, 255, 0.08);
+  --color-bg: #000000;
+  --color-surface: #07090b;
+  --color-surface-2: #10151a;
+  --color-text: #f2f6f9;
+  --color-text-muted: #9badba;
+  --color-text-tertiary: #70818f;
+  --color-warning: #f0a428;
+  --color-error: #e85858;
+  --color-success: #2ed87a;
+  --color-accent: #5caeff;
+  --color-label: rgba(242, 246, 249, 0.55);
+}

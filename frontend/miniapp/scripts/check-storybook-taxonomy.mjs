@@ -5,7 +5,7 @@ import { join } from "node:path";
 const root = process.cwd();
 const storyFiles = globSync("src/**/*.stories.@(ts|tsx|js|jsx|mjs)", { cwd: root });
 
-const allowedRoots = new Set(["Foundation", "Primitives", "Components", "Patterns", "Layouts", "Pages", "States"]);
+const allowedRoots = new Set(["Foundations", "Primitives", "Components", "Patterns", "Layouts", "Pages", "States"]);
 const pageModes = new Set(["Contracts", "Sandbox"]);
 const violations = [];
 

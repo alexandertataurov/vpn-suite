@@ -37,6 +37,7 @@ export function RenewalBanner({
       type="button"
       className={cardClass}
       onClick={onClick}
+      aria-label={title}
       data-layer="RenewalBanner"
     >
       <div className="renewal-banner-icon">{icon ?? DEFAULT_ICONS[variant]}</div>

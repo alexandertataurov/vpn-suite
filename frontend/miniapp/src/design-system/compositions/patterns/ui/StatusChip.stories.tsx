@@ -2,17 +2,26 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { StatusChip } from "./StatusChip";
 import { Inline } from "@/design-system/core/primitives";
 
-const meta = {
+const meta: Meta<typeof StatusChip> = {
   title: "Patterns/StatusChip",
   tags: ["autodocs"],
   component: StatusChip,
+  parameters: {
+    layout: "padded",
+    docs: {
+      description: {
+        component:
+          "Status chip for subscription/connection states. Variants: active, paid, info, pending, offline, blocked, warning, danger. Uses design tokens.",
+      },
+    },
+  },
   argTypes: {
     variant: {
       control: "select",
       options: ["active", "paid", "info", "pending", "pend", "offline", "blocked", "warning", "danger"],
     },
   },
-} satisfies Meta<typeof StatusChip>;
+};
 
 export default meta;
 

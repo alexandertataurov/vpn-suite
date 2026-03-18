@@ -6,6 +6,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(__dirname, "../../..");
 const cssFiles = [
   "src/design-system/styles/tokens/base.css",
+  "src/design-system/styles/tokens/_breakpoints.css",
   "src/design-system/styles/theme/telegram.css",
   "src/design-system/styles/theme/consumer.css",
 ];

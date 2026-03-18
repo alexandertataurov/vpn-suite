@@ -2,14 +2,22 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { PillChip } from "./PillChip";
 import { Inline } from "@/design-system/core/primitives";
 
-const meta = {
+const meta: Meta<typeof PillChip> = {
   title: "Patterns/PillChip",
   tags: ["autodocs"],
   component: PillChip,
+  parameters: {
+    layout: "padded",
+    docs: {
+      description: {
+        component: "Pill chip for plan/status labels. Variants: beta, active, expiring, expired. Uses design tokens.",
+      },
+    },
+  },
   argTypes: {
     variant: { control: "select", options: ["beta", "active", "expiring", "expired"] },
   },
-} satisfies Meta<typeof PillChip>;
+};
 
 export default meta;
 

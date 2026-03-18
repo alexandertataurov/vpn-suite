@@ -1394,7 +1394,7 @@ html:not([data-theme="consumer-light"]) .miniapp-popover-panel {
 
 .op-chev {
   font-size: var(--text-xl);
-  color: var(--tx-dim);
+  color: var(--color-text-tertiary);
   flex-shrink: 0;
   transition: transform .15s;
 }
@@ -5549,19 +5549,9 @@ html:not([data-theme="consumer-dark"]):not([data-theme="consumer-light"]) {
   max-width: 390px;
   padding: 20px 16px;
   border-radius: 16px;
-  background:
-    radial-gradient(circle at top, rgba(92, 174, 255, 0.12), transparent 52%),
-    linear-gradient(180deg, #10151a 0%, #07090b 100%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #f2f6f9;
-  --color-bg: #000000;
-  --color-surface: #07090b;
-  --color-surface-2: #10151a;
-  --color-text: #f2f6f9;
-  --color-text-muted: #9badba;
-  --color-text-tertiary: #70818f;
-  --color-warning: #f0a428;
-  --color-error: #e85858;
+  background: var(--story-dark-bg);
+  border: 1px solid var(--story-dark-border);
+  color: var(--color-text);
 }
 
 .label-story-frame {
@@ -5619,22 +5609,9 @@ html:not([data-theme="consumer-dark"]):not([data-theme="consumer-light"]) {
   max-width: 390px;
   padding: 20px 16px;
   border-radius: 16px;
-  background:
-    radial-gradient(circle at top, rgba(92, 174, 255, 0.12), transparent 52%),
-    linear-gradient(180deg, #10151a 0%, #07090b 100%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #f2f6f9;
-  --color-bg: #000000;
-  --color-surface: #07090b;
-  --color-surface-2: #10151a;
-  --color-text: #f2f6f9;
-  --color-text-muted: #9badba;
-  --color-text-tertiary: #70818f;
-  --color-label: rgba(242, 246, 249, 0.55);
-  --color-warning: #f0a428;
-  --color-error: #e85858;
-  --color-success: #2ed87a;
-  --color-accent: #5caeff;
+  background: var(--story-dark-bg);
+  border: 1px solid var(--story-dark-border);
+  color: var(--color-text);
 }
 
 .helper-story-frame {

@@ -12,7 +12,7 @@ from aiogram.types import (
     WebAppInfo,
 )
 
-from api_client import get_referral_my_link
+from api_client import get_referral_my_link, post_event
 from config import BOT_USERNAME, MINIAPP_URL
 from i18n import t
 from utils.logging import get_logger
@@ -76,6 +76,11 @@ async def cmd_start(message: Message):
     ref = _get_ref_from_start(message.text)
     greeting = t(locale, "welcome")
     tg_id = message.from_user.id if message.from_user else None
+    if tg_id:
+        try:
+            await post_event("user_started", tg_id, {"ref": ref} if ref else {})
+        except Exception as e:
+            _log.debug("telemetry_skip", tg_id=tg_id, error=str(e))
     if tg_id:
         try:
             result = await get_referral_my_link(tg_id)

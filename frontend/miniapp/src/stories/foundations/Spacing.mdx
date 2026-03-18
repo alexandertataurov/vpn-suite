@@ -1,0 +1,42 @@
+import { Meta, Canvas } from "@storybook/addon-docs/blocks";
+import * as SpacingStories from "./Spacing.stories";
+import { FoundationHeader, FoundationLinks } from "./components";
+
+<Meta of={SpacingStories} />
+
+<FoundationHeader
+  title="Spacing"
+  description="8px grid, insets, gaps, and layout rhythm."
+  status="Stable"
+/>
+<FoundationLinks tokens="src/design-system/core/tokens/spacing.ts" />
+
+## Why it exists
+
+Consistent spacing creates visual rhythm and alignment. The 4px base scale (4, 8, 12, 16, 20, 24, 32, 40, 48) keeps layouts predictable.
+
+## Rules
+
+- Use `--spacing-*` or `--space-*` tokens
+- Do not hardcode px values in components
+- Touch targets: minimum 48px for interactive elements
+
+## Token inventory
+
+<Canvas of={SpacingStories.Scale} />
+
+## Implementation notes
+
+- Tokens: `--spacing-1` (4px) through `--spacing-12` (48px)
+- Aliases: `--space-*` maps to `--spacing-*`
+- Component padding: `--spacing-component-padding`, `--spacing-section-gap`
+
+## Accessibility
+
+- Touch targets: minimum 48×48px for interactive elements
+- Spacing between targets: at least 8px
+
+## Related
+
+- Foundations / Layout
+- Foundations / Accessibility

@@ -2,10 +2,6 @@
    Uses semantic tokens (--color-*, --font-sans, etc.) from miniapp-tokens + theme. */
 
 /* ----- Stagger (Section 0) ----- */
-.stagger-0 {
-  animation: fadeup 0.4s 0s cubic-bezier(.22, 1, .36, 1) both;
-}
-
 .stagger-1 {
   animation: fadeup 0.4s 0.04s cubic-bezier(.22, 1, .36, 1) both;
 }
@@ -2250,7 +2246,7 @@
 
 .tier-orig {
   font: 400 var(--typo-meta-size) / 1.2 var(--font-mono);
-  color: var(--tx-dim);
+  color: var(--color-text-tertiary);
   text-decoration: line-through;
   margin-top: 2px;
 }
@@ -2298,7 +2294,7 @@
 }
 
 .feat-ico.no {
-  color: var(--tx-dim);
+  color: var(--color-text-tertiary);
 }
 
 .feat-ico.amber {
@@ -2626,7 +2622,7 @@
 }
 
 .plan-billing-page__plans-section .shead-note {
-  color: var(--tx-ter);
+  color: var(--color-text-tertiary);
 }
 
 .plan-billing-page__secondary-section .shead-lbl,

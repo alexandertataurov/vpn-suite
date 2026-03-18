@@ -16,15 +16,9 @@ BOT_USERNAME = get_env("BOT_USERNAME")
 if not BOT_USERNAME:
     raise ValueError("BOT_USERNAME must be set in .env")
 
-SUPPORT_LINK = get_env("SUPPORT_LINK", "")
 SUPPORT_HANDLE = get_env("SUPPORT_HANDLE")
 if not SUPPORT_HANDLE:
     raise ValueError("SUPPORT_HANDLE must be set in .env")
-
-# Optional: override instruction/install text. If set, replaces i18n instruction_text.
-INSTRUCTION_TEXT = get_env("INSTRUCTION_TEXT", "")
-# Optional: install guide URL. Override if using custom install page. Default: Amnezia.
-INSTALL_GUIDE_URL = get_env("INSTALL_GUIDE_URL", "https://amnezia.org")
 
 PORT = int(get_env("PORT", "8090"))
 
