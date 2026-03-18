@@ -10,17 +10,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "npm"
-          cache-dependency-path: frontend/package-lock.json
+          cache: "pnpm"
 
       - name: Install deps
-        run: npm ci --prefix frontend
+        run: pnpm install --frozen-lockfile --dir frontend
 
       - name: Miniapp design check
-        run: npm --prefix frontend run design:check -w miniapp
+        run: pnpm run guardrails --dir frontend
 
       - name: No hardcoded colors (miniapp)
         run: |
@@ -85,4 +89,4 @@ jobs:
           [ "$COUNT" -eq 1 ] || (echo "❌ $COUNT :root files found (expected 1)" && exit 1)
 
       - name: TypeScript
-        run: npm --prefix frontend run typecheck -w miniapp
+        run: pnpm --dir frontend --filter miniapp run typecheck
