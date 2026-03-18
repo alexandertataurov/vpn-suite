@@ -83,6 +83,9 @@ reports/
 # pnpm store (local)
 .pnpm-store/
 
+# Orphaned lockfiles (project uses pnpm)
+yarn.lock
+
 # Local secrets (mTLS CA, keys, certs). .env is the single source for config.
 secrets/
 !secrets/README.md

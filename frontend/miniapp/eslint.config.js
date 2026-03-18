@@ -131,7 +131,11 @@ export default tseslint.config(
     },
   },
   {
-    files: ["src/design-system/**/*.tsx", "src/storybook/**/*.tsx"],
+    files: [
+      "src/design-system/**/*.tsx",
+      "src/storybook/**/*.tsx",
+      "src/stories/**/*.tsx",
+    ],
     rules: {
       "react/forbid-dom-props": "off",
     },

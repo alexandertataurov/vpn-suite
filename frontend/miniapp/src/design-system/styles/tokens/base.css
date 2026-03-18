@@ -54,26 +54,31 @@ html {
   --color-info-500: oklch(0.623 0.214 259);
   --color-info-600: oklch(0.546 0.245 262);
   /* ========== SEMANTIC (dark) ========== */
-  --color-bg: oklch(0.129 0.004 265);
-  --color-surface: oklch(0.21 0.006 247);
-  --color-surface-2: oklch(0.279 0.01 247);
-  --color-overlay: oklch(0 0 0 / 0.5);
-  --color-text: oklch(0.985 0.002 247);
-  --color-text-muted: oklch(0.704 0.015 247);
-  --color-text-tertiary: oklch(0.551 0.016 247);
+  /* Surfaces */
+  --color-bg: #0f1117;
+  --color-surface: #1a1d27;
+  --color-surface-2: #252836;
+  --color-overlay: #0a0b0f;
+  /* Text */
+  --color-text: #f0f2f8;
+  --color-text-muted: #8b90a4;
+  --color-text-tertiary: #5a5f73;
   --color-text-inverse: oklch(0.129 0.004 265);
-  --color-border: oklch(0.372 0.014 247);
-  --color-border-subtle: oklch(0.279 0.01 247);
-  --color-border-strong: oklch(0.446 0.016 247);
-  --color-accent: oklch(0.623 0.214 259);
-  --color-accent-hover: oklch(0.707 0.152 252);
+  /* Borders */
+  --color-border: #252836;
+  --color-border-subtle: #1e2130;
+  --color-border-strong: #3a3f52;
+  /* Accent */
+  --color-accent: #3b7ef8;
+  --color-accent-hover: #5b94ff;
   --color-accent-active: oklch(0.546 0.245 262);
-  --color-on-accent: oklch(1 0 0);
-  --color-focus-ring: oklch(0.623 0.214 259);
-  --color-success: oklch(0.646 0.222 145);
-  --color-warning: oklch(0.796 0.184 86);
-  --color-error: oklch(0.637 0.237 25);
-  --color-info: oklch(0.623 0.214 259);
+  --color-on-accent: #ffffff;
+  --color-focus-ring: #3b7ef8;
+  /* Semantic */
+  --color-success: #22c55e;
+  --color-warning: #e9a125;
+  --color-error: #ef4444;
+  --color-info: #3b82f6;
   --color-connected: oklch(0.646 0.222 145);
   --color-syncing: oklch(0.623 0.214 259);
   /* Surface aliases */

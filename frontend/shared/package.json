@@ -11,7 +11,7 @@
     }
   },
   "scripts": {
-    "build": "npm run build:types",
+    "build": "pnpm run build:types",
     "test": "echo 'No tests in shared'",
     "lint": "eslint src --ext .ts,.tsx",
     "typecheck": "tsc -p tsconfig.json --noEmit",

@@ -13,11 +13,11 @@
 
 ## Contract Test Commands
 
-- `npm run storybook:contract -w miniapp`
+- `pnpm run storybook:contract:miniapp`
   Verifies that the required executable Storybook contract stories and `contract-test` tags are present.
-- `npm run test-storybook -w miniapp`
+- `pnpm run test-storybook:miniapp`
   Runs the enforced reduced Storybook contract suite.
-- `npm run test-storybook:official -w miniapp`
+- `pnpm run test-storybook:official:miniapp`
   Attempts the official `@storybook/test-runner` path first. This is currently exploratory because the installed runner does not resolve Storybook 10 metadata correctly in this workspace.
 
 CI behavior:
