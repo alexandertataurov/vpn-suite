@@ -278,5 +278,7 @@ export function usePlanPageModel() {
     heroView,
     formatStars,
     locale,
+    activeDeviceCount,
+    deviceLimit,
   };
 }

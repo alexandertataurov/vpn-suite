@@ -32,6 +32,7 @@ export function RestoreAccessPage() {
                   variant="info"
                   title={model.pageState.title ?? t("restore.inline_no_expired_title")}
                   body={model.pageState.message ?? t("restore.inline_no_expired_message")}
+                  className="inline-alert--modern"
                 />
                 <VpnBoundaryNote messageKey="common.vpn_boundary_billing_note" />
               </Stack>
@@ -88,6 +89,7 @@ export function RestoreAccessPage() {
             variant="warning"
             title={model.pageState.title ?? model.header.title}
             body={model.pageState.message ?? model.description}
+            className="inline-alert--modern"
           />
 
           <div>

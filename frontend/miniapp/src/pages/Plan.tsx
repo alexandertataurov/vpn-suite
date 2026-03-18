@@ -2,13 +2,12 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   PlanBillingHistorySection,
-  PlanBillingHeroCard,
   PlanOptionsSection,
   PlanNextStepCard,
   SessionMissing,
   VpnBoundaryNote,
 } from "@/components";
-import { FallbackScreen, FooterHelp, PageHeader, PageScaffold, PageSection, Skeleton } from "@/design-system";
+import { Button, FallbackScreen, FooterHelp, PageHeader, PageScaffold, PageSection, PlanCard, Skeleton } from "@/design-system";
 import { Stack } from "@/design-system/core/primitives";
 
 import { useI18n } from "@/hooks";
@@ -48,7 +47,8 @@ export function PlanPage() {
     historyError,
     nextStepCard,
     heroView,
-    formatStars,
+    activeDeviceCount,
+    deviceLimit,
   } = model;
   const showRenewOrUpgradeCta = (canShowRenew && showUpsellExpiry) || showUpsellTrialEnd;
 
@@ -145,12 +145,6 @@ export function PlanPage() {
     scrollToPlans();
   };
 
-  const planStateLabel = subscriptionState === "active"
-    ? t("plan.badge_active")
-    : subscriptionState === "expiring"
-      ? t("plan.badge_expiring")
-      : t("plan.badge_expired");
-
   return (
     <PageScaffold className="plan-billing-page">
       <PageHeader
@@ -160,29 +154,26 @@ export function PlanPage() {
       />
 
       {isSubscribed ? (
-        <PlanBillingHeroCard
-          title={`${heroView.heroPlanName} — ${heroView.heroPlanPeriod}`}
-          statusLine={`${planStateLabel} · ${primarySub?.auto_renew
-            ? t("plan.renews_short", { date: heroView.expiryText })
-            : t("plan.valid_until_short", { date: heroView.expiryText })}`}
-          statusBadge={planStateLabel}
-          statusBadgeTone={
-            subscriptionState === "active"
-              ? "active"
-              : subscriptionState === "expiring"
-                ? "pending"
-                : "offline"
-          }
-          metaItems={[
-            { label: t("plan.hero_price_label"), value: formatStars(heroView.heroStars) },
-            { label: t("plan.hero_devices_label"), value: heroView.devicesLabel },
-            { label: t("plan.hero_valid_until_label"), value: heroView.expiryText },
-          ]}
-          primaryActionLabel={heroView.manageLabel}
-          secondaryActionLabel={t("plan.cta_renew_plan")}
-          onPrimaryAction={() => navigate("/devices")}
-          onSecondaryAction={handleRenewAction}
-        />
+        <Stack gap="4">
+          <PlanCard
+            plan={heroView.heroPlanName}
+            planSub={heroView.heroPlanPeriod}
+            status={subscriptionState}
+            devices={activeDeviceCount}
+            deviceLimit={deviceLimit}
+            renewsLabel={heroView.expiryText}
+          />
+          <Stack gap="3">
+            <Button variant="primary" fullWidth onClick={() => navigate("/devices")}>
+              {heroView.manageLabel}
+            </Button>
+            {canShowRenew && (
+              <Button variant="secondary" fullWidth onClick={handleRenewAction}>
+                {t("plan.cta_renew_plan")}
+              </Button>
+            )}
+          </Stack>
+        </Stack>
       ) : (
         <PageSection
           title={t("plan.no_subscription_note_title")}

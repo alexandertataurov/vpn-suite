@@ -4,6 +4,39 @@
  * Single source for .modern-* and .troubleshooter-card classes.
  */
 
+/* ---- InlineAlert (unified secondary pages) ---- */
+.inline-alert--modern {
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--r-sm, var(--radius-sm));
+  padding: 12px 14px;
+  grid-template-columns: 6px minmax(0, 1fr);
+  column-gap: 10px;
+}
+
+.inline-alert--modern .alert-icon {
+  width: 6px;
+  height: 6px;
+  margin-top: 5px;
+}
+
+.inline-alert--modern .inline-alert-title {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.inline-alert--modern .inline-alert-message {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.inline-alert--modern.inline-alert-info .alert-icon { color: var(--color-info, var(--color-accent)); }
+.inline-alert--modern.inline-alert-warning .alert-icon { color: var(--color-warning); }
+.inline-alert--modern.inline-alert-error .alert-icon { color: var(--color-error); }
+.inline-alert--modern.inline-alert-success .alert-icon { color: var(--color-success); }
+
 /* ---- PageHeader (secondary pages with back button) - */
 .page-header {
   display: flex;
@@ -523,8 +556,7 @@
 }
 
 .plan-hero-body {
-  padding: 18px;
-  padding-bottom: 0;
+  padding: 18px 18px 0 18px;
 }
 
 .plan-hero-head {
@@ -594,9 +626,9 @@
 }
 
 .plan-hero-badge--expiring {
-  color: var(--amber, var(--color-warning));
-  background: var(--amber-bg, var(--color-warning-soft));
-  border: 1px solid var(--amber-border, var(--surface-border-warning));
+  color: var(--color-warning);
+  background: rgba(146, 64, 14, 0.12);
+  border: 1px solid rgba(146, 64, 14, 0.22);
 }
 
 .plan-hero-badge--expiring .plan-hero-badge-dot {
@@ -616,7 +648,7 @@
 .plan-hero-stats {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  border-top: 1px solid var(--border, var(--color-border-subtle));
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .plan-hero-stat {
@@ -1061,7 +1093,7 @@
 
 html[data-theme="consumer-dark"] .modern-list-item,
 html[data-theme="consumer-dark"] .row-item {
-  border-bottom-color: rgba(255, 255, 255, 0.06);
+  border-bottom-color: rgba(255, 255, 255, 0.08);
 }
 
 .modern-list-item:last-child {
