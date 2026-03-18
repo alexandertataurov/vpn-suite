@@ -103,11 +103,11 @@ className="home-card-row module-card settings-list-card"
 
 | Class | Defined in | Used by |
 |-------|------------|---------|
-| `.settings-action-value` | — | SettingsLanguageMenuRow, PlanBillingHistorySection | 
+| `.settings-action-value` | — | LanguageMenuRow, PlanBillingHistorySection | 
 | `.settings-action-row__value` | library.css (plan-billing-page scope) | PlanBillingHistorySection uses `.settings-action-value` | 
 | `.settings-action-row` | library.css (plan-billing-page) | PlanBillingHistorySection uses `.settings-action-row` | 
 
-**SettingsLanguageMenuRow** uses `settings-action-value` but there is **no global style** for it in Settings context. PlanBillingHistorySection uses `.settings-action-row` + `.settings-action-row__value`; library.css styles `.settings-action-row__value` (font-size). The class `settings-action-value` may inherit from parent or have no explicit style.
+**LanguageMenuRow** uses `settings-action-value` but there is **no global style** for it in Settings context. PlanBillingHistorySection uses `.settings-action-row` + `.settings-action-row__value`; library.css styles `.settings-action-row__value` (font-size). The class `settings-action-value` may inherit from parent or have no explicit style.
 
 ---
 

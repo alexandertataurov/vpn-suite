@@ -776,11 +776,11 @@ html[data-theme="starlink"] {
   --ds-control-height-md: var(--height-btn-md);
 }
 
+/* When html has data-animations="force", bypass reduced-motion for debugging. */
 @media (prefers-reduced-motion: reduce) {
-
-  *,
-  *::before,
-  *::after {
+  html:not([data-animations="force"]) *,
+  html:not([data-animations="force"]) *::before,
+  html:not([data-animations="force"]) *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

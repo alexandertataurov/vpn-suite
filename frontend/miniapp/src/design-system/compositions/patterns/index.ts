@@ -97,5 +97,26 @@ export type { SelectionCardProps } from "./cards/SelectionCard";
 export { EmptyStateBlock, EMPTY_STATE_VARIANTS } from "./blocks/EmptyStateBlock";
 export type { EmptyStateBlockProps, EmptyStateVariant } from "./blocks/EmptyStateBlock";
 
+export { HeroCard } from "./blocks/HeroCard";
+export type { HeroCardProps, HeroCardStatus, HeroCardVariant } from "./blocks/HeroCard";
+export { CalloutBlock } from "./blocks/CalloutBlock";
+export type { CalloutBlockProps } from "./blocks/CalloutBlock";
+export { ActionBanner } from "./blocks/ActionBanner";
+export type { ActionBannerProps, ActionBannerTone } from "./blocks/ActionBanner";
+export { HelpFooter } from "./blocks/HelpFooter";
+export type { HelpFooterProps } from "./blocks/HelpFooter";
+export { HelperNote } from "./blocks/HelperNote";
+export type { HelperNoteProps } from "./blocks/HelperNote";
+
+export { DisclosureItem } from "./ui/DisclosureItem";
+export type { DisclosureItemProps } from "./ui/DisclosureItem";
+export { ToneBadge } from "./ui/ToneBadge";
+export type { ToneBadgeProps, ToneBadgeTone } from "./ui/ToneBadge";
+
+export { HeaderBar } from "./content/HeaderBar";
+export type { HeaderBarProps } from "./content/HeaderBar";
+export { LabeledRow } from "./content/LabeledRow";
+export type { LabeledRowProps } from "./content/LabeledRow";
+
 export { SupportActionList } from "./ui/SupportActionList";
 export type { SupportActionListProps, SupportActionItem } from "./ui/SupportActionList";

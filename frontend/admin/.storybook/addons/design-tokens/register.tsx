@@ -1,5 +1,5 @@
 import React from "react";
-import { addons, types } from "@storybook/manager-api";
+import { addons, types } from "storybook/manager-api";
 import { DesignTokensPanel } from "./DesignTokensPanel";
 
 const ADDON_ID = "design-tokens";
@@ -9,6 +9,7 @@ addons.register(ADDON_ID, () => {
   addons.add(PANEL_ID, {
     type: types.PANEL,
     title: "Design Tokens",
-    render: ({ active }) => (active ? <DesignTokensPanel /> : null),
+    render: ({ active }: { active: boolean }) =>
+      active ? React.createElement(DesignTokensPanel) : null,
   });
 });

@@ -5,11 +5,11 @@ import {
   AccountCancellationModal,
   SessionMissing,
   SettingsAccountOverviewCard,
-  SettingsDangerSection,
-  SettingsPlanSection,
-  SettingsProfileModal,
-  SettingsProfileSection,
-  SettingsSupportSection,
+  DangerSection,
+  PlanSection,
+  ProfileModal,
+  ProfileSection,
+  SupportSection,
   SubscriptionCancellationModal,
 } from "@/components";
 import { getSupportBotHref } from "@/config/env";
@@ -151,7 +151,7 @@ export function SettingsPage() {
         />
       </PageSection>
 
-      <SettingsProfileSection
+      <ProfileSection
         sectionTitle={t("settings.section_profile")}
         editProfileTitle={t("settings.edit_profile_title")}
         editProfileDescription={t("settings.edit_profile_description")}
@@ -170,7 +170,7 @@ export function SettingsPage() {
         }}
       />
 
-      <SettingsPlanSection
+      <PlanSection
         sectionTitle={t("settings.section_plan_billing")}
         hasPlan={model.hasPlan}
         planTitle={model.hasPlan ? t("settings.change_plan_title") : t("plan.cta_choose_plan")}
@@ -197,7 +197,7 @@ export function SettingsPage() {
         }}
       />
 
-      <SettingsSupportSection
+      <SupportSection
         sectionTitle={t("settings.section_help")}
         setupGuideTitle={t("settings.setup_guide_title")}
         setupGuideDescription={t("settings.setup_guide_description")}
@@ -216,7 +216,7 @@ export function SettingsPage() {
         }}
       />
 
-      <SettingsDangerSection
+      <DangerSection
         sectionTitle={t("settings.danger_section_title")}
         warningText={t("settings.danger_warning")}
         hasActiveDevices={model.activeDevices.length > 0}
@@ -260,7 +260,7 @@ export function SettingsPage() {
         loading={model.isDeletingAccount}
       />
 
-      <SettingsProfileModal
+      <ProfileModal
         open={profileModalOpen}
         onClose={closeProfileModal}
         title={t("settings.edit_profile_title")}

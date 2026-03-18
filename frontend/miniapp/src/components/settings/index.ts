@@ -7,15 +7,15 @@ export type {
   SettingsAccountOverviewCardProps,
   PlanStatus,
 } from "./SettingsAccountOverviewCard";
-export { SettingsDangerSection } from "./SettingsDangerSection";
-export type { SettingsDangerSectionProps } from "./SettingsDangerSection";
-export { SettingsLanguageMenuRow } from "./SettingsLanguageMenuRow";
-export type { SettingsLanguageMenuRowProps, SettingsLanguageOption } from "./SettingsLanguageMenuRow";
-export { SettingsPlanSection } from "./SettingsPlanSection";
-export type { SettingsPlanSectionProps } from "./SettingsPlanSection";
-export { SettingsProfileModal } from "./SettingsProfileModal";
-export type { SettingsProfileModalProps } from "./SettingsProfileModal";
-export { SettingsProfileSection } from "./SettingsProfileSection";
-export type { SettingsProfileSectionProps } from "./SettingsProfileSection";
-export { SettingsSupportSection } from "./SettingsSupportSection";
-export type { SettingsSupportSectionProps } from "./SettingsSupportSection";
+export { DangerSection } from "./DangerSection";
+export type { DangerSectionProps } from "./DangerSection";
+export { LanguageMenuRow } from "./LanguageMenuRow";
+export type { LanguageMenuRowProps, LanguageOption } from "./LanguageMenuRow";
+export { PlanSection } from "./PlanSection";
+export type { PlanSectionProps } from "./PlanSection";
+export { ProfileModal } from "./ProfileModal";
+export type { ProfileModalProps } from "./ProfileModal";
+export { ProfileSection } from "./ProfileSection";
+export type { ProfileSectionProps } from "./ProfileSection";
+export { SupportSection } from "./SupportSection";
+export type { SupportSectionProps } from "./SupportSection";

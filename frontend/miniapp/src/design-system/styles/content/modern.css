@@ -192,8 +192,9 @@
 }
 
 /* ---- Page Scaffold & Headers ----------------------- */
+/* padding-top: 0 — PageLayout provides 24px; avoid double spacing to ProfileRow */
 .modern-header {
-  padding: var(--spacing-6) var(--space-gutter) var(--spacing-4);
+  padding: 0 var(--space-gutter) var(--spacing-4);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -324,6 +325,23 @@
   transition: background 0.12s ease, filter 0.12s ease;
 }
 
+/* Override global min-height: 44px bleed — profile row uses 34×34 */
+.profile-row .settings-button,
+.settings-pill {
+  width: 34px !important;
+  height: 34px !important;
+  min-height: unset !important;
+  min-width: unset !important;
+  position: relative;
+}
+
+.profile-row .settings-button::before,
+.settings-pill::before {
+  content: "";
+  position: absolute;
+  inset: -5px;
+}
+
 .modern-icon-button:active,
 .settings-pill:active {
   transform: scale(0.92);
@@ -335,8 +353,10 @@
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-1);
-  height: 26px;
-  padding: var(--spacing-1) var(--spacing-3);
+  min-height: unset !important;
+  height: auto !important;
+  padding: 4px 10px !important;
+  line-height: 1 !important;
   border-radius: 100px;
   font-size: var(--amnezia-badge-text, var(--font-size-xs));
   font-weight: var(--font-weight-semibold);
@@ -387,10 +407,6 @@
   opacity: 0.8;
 }
 
-.pill-chip--active .pill-chip-dot,
-.pill-chip--expiring .pill-chip-dot {
-  animation: blink 2.5s ease-in-out infinite;
-}
 
 .pill-chip--expired .pill-chip-dot {
   opacity: 0.5;
@@ -529,26 +545,24 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
   width: 100%;
 }
 
-@keyframes up {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+
+/* LED-style border for hero cards — static accent border */
+.new-user-hero,
+.modern-hero-card {
+  position: relative;
 }
 
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
+.new-user-hero::before,
+.modern-hero-card::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: calc(var(--r, var(--radius-lg)) + 3px);
+  border: 2px solid var(--color-accent);
+  box-shadow: 0 0 8px var(--color-accent);
+  z-index: -1;
+  pointer-events: none;
 }
-
-/* Amnezia stagger — apply to top-level sections per spec §6 */
-.profile-row,
-.modern-profile-row { animation: up 0.3s 0s ease both; }
-.hero-card,
-.modern-hero-card,
-.plan-hero-card,
-.new-user-hero { animation: up 0.3s 0.04s ease both; }
-.card-row { animation: up 0.3s 0s ease both; }
-.help,
-.footer-help { animation: up 0.3s 0.2s ease both; }
 
 /* ---- FooterHelp (design-system recipe) ----------------- */
 .footer-help {
@@ -575,6 +589,72 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
 }
 
 .footer-help__link:hover {
+  color: var(--color-accent);
+}
+
+/* ---- HelperNote (pattern) — note with optional title and tone ---- */
+.helper-note {
+  padding: var(--spacing-3);
+  border-radius: var(--radius-lg);
+  border: 0;
+  background: color-mix(in oklch, var(--color-surface-2) 88%, transparent);
+  color: var(--color-text-muted);
+  font: 400 var(--text-caption, 13px) / 1.45 var(--font-sans);
+}
+
+.helper-note--info {
+  background: color-mix(in oklch, var(--color-accent) 6%, var(--color-surface-2));
+  border: 1px solid color-mix(in oklch, var(--color-accent) 20%, var(--color-border));
+}
+
+.helper-note--warning {
+  background: color-mix(in oklch, var(--color-warning) 6%, var(--color-surface-2));
+  border: 1px solid color-mix(in oklch, var(--color-warning) 20%, var(--color-border));
+}
+
+.helper-note--danger {
+  background: color-mix(in oklch, var(--color-error) 6%, var(--color-surface-2));
+  border: 1px solid color-mix(in oklch, var(--color-error) 20%, var(--color-border));
+}
+
+.helper-note__title {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.helper-note__body {
+  margin-top: var(--spacing-0-5);
+}
+
+.helper-note:not(:has(.helper-note__title)) .helper-note__body {
+  margin-top: 0;
+}
+
+/* ---- HelpFooter (pattern) — note + clickable link ---- */
+.help-footer {
+  padding: var(--spacing-4) var(--spacing-6) var(--spacing-6);
+  margin-top: 0;
+  text-align: center;
+}
+
+.help-footer__note {
+  margin: 0;
+  font-size: var(--amnezia-help-text, var(--font-size-xs));
+  color: var(--text3, var(--color-text-tertiary));
+  font-weight: var(--font-weight-normal);
+}
+
+.help-footer__link {
+  color: var(--color-accent);
+  font-weight: var(--font-weight-medium);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.help-footer__link:hover {
   color: var(--color-accent);
 }
 
@@ -654,18 +734,10 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
   border: 1px solid var(--green-border, var(--surface-border-success));
 }
 
-.plan-hero-badge--active .plan-hero-badge-dot {
-  animation: blink 2.5s ease-in-out infinite;
-}
-
 .plan-hero-badge--expiring {
   color: var(--color-warning);
   background: var(--color-warning-bg);
   border: 1px solid var(--color-warning-border);
-}
-
-.plan-hero-badge--expiring .plan-hero-badge-dot {
-  animation: blink 2s ease-in-out infinite;
 }
 
 .plan-hero-badge--expired {
@@ -1283,86 +1355,6 @@ html[data-theme="consumer-dark"] .row-item {
   width: auto;
 }
 
-/* ---- Support Contact Card -------------------------- */
-.modern-contact-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-6);
-  margin: 0 var(--spacing-4) var(--spacing-4);
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-4);
-  box-shadow: var(--shadow-card);
-}
-
-.modern-contact-card__header {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--spacing-3);
-}
-
-.modern-contact-card__icon {
-  width: 44px;
-  height: 44px;
-  border-radius: var(--radius-md);
-  background: color-mix(in oklch, var(--color-accent) 6%, var(--color-surface-2));
-  color: var(--color-text-muted);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.modern-contact-card__meta {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-1);
-}
-
-.modern-contact-card__title {
-  font-size: var(--text-body, 18px);
-  font-weight: var(--font-weight-bold);
-  color: var(--color-text);
-  letter-spacing: -0.02em;
-}
-
-.modern-contact-card__desc {
-  font-size: var(--text-body, var(--font-size-md));
-  color: var(--color-text-muted);
-  line-height: 1.5;
-}
-
-.modern-contact-card__status {
-  display: flex;
-}
-
-.modern-contact-card__cta {
-  text-decoration: none;
-  height: 52px;
-}
-
-.modern-contact-card__unavailable {
-  background: color-mix(in srgb, var(--color-warning) 6%, var(--color-surface));
-  border: 1px solid color-mix(in srgb, var(--color-warning) 20%, transparent);
-  border-radius: var(--radius-sm);
-  padding: var(--spacing-3) var(--spacing-4);
-  font-size: var(--text-caption, var(--font-size-sm));
-  color: var(--color-text-muted);
-}
-
-.modern-contact-card__unavailable strong {
-  display: block;
-  color: var(--color-text);
-  margin-bottom: var(--spacing-1);
-  font-size: var(--text-body, var(--font-size-md));
-}
-
-.modern-contact-card__unavailable p {
-  margin: 0;
-}
-
 /* ---- Troubleshooter Card --------------------------- */
 .troubleshooter-card {
   background: var(--color-surface);
@@ -1430,4 +1422,13 @@ html[data-theme="consumer-dark"] .row-item {
 .troubleshooter-card__action--primary {
   flex: 2;
   height: 56px;
+}
+
+/* ---- Protective resets (global bleed prevention) ---- */
+.pill-chip,
+.status-chip,
+.badge {
+  text-transform: none;
+  min-height: unset;
+  height: auto;
 }

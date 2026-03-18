@@ -3,6 +3,23 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "@/design-system";
+
+/* Set bypass: ?animations=force in URL, or always in dev so animations are visible during development */
+if (typeof window !== "undefined") {
+  const forceFromUrl = new URLSearchParams(window.location.search).get("animations") === "force";
+  const forceInDev = import.meta.env.DEV;
+  if (forceFromUrl || forceInDev) {
+    document.documentElement.setAttribute("data-animations", "force");
+    console.log(
+      "[anim] bypass set",
+      document.documentElement.getAttribute("data-animations"),
+      "reduced-motion:",
+      matchMedia("(prefers-reduced-motion: reduce)").matches,
+      "reason:",
+      forceFromUrl ? "url" : "dev"
+    );
+  }
+}
 import { ApiError } from "@vpn-suite/shared";
 import { webappQueryKeys } from "@/lib";
 import { wireGlobalErrors } from "@/telemetry/errors";

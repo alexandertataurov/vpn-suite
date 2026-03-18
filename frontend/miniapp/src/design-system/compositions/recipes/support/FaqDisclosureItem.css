@@ -1,0 +1,8 @@
+/* FaqDisclosureItem — faq-list container for DisclosureItem children */
+
+.faq-list {
+  background: var(--card-row-bg);
+  border: 1px solid var(--card-row-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}

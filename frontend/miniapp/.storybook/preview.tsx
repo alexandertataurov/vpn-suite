@@ -1,3 +1,4 @@
+import "./preview-init";
 import type { Preview } from "@storybook/react";
 import React from "react";
 import { withTelegramEnvironment } from "../src/storybook/telegramEnvironment";
@@ -64,12 +65,25 @@ const preview: Preview = {
         dynamicTitle: true,
       },
     },
+    forceAnimations: {
+      description: "Bypass prefers-reduced-motion (show animations in Storybook)",
+      toolbar: {
+        title: "Force animations",
+        icon: "play",
+        items: [
+          { value: "false", title: "Respect reduced motion" },
+          { value: "true", title: "Force animations" },
+        ],
+        dynamicTitle: true,
+      },
+    },
   },
   initialGlobals: {
     theme: "consumer-dark",
     viewportWidth: "390",
     tgPlatform: "ios",
     tgFullscreen: "false",
+    forceAnimations: "true",
   },
   decorators: [
     withTelegramEnvironment,
@@ -169,6 +183,7 @@ const preview: Preview = {
               "Contracts",
               [
                 "Home",
+                "SplashAndLoading",
                 "Plan",
                 "Devices",
                 "Onboarding",

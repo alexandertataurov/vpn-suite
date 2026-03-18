@@ -657,10 +657,10 @@
   gap: var(--spacing-2);
   padding: var(--spacing-2) var(--spacing-3);
   border-radius: 999px;
-  font-size: var(--font-size-xs);
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: var(--letter-spacing-label, 0.08em);
-  text-transform: uppercase;
+  letter-spacing: 0.1px;
+  text-transform: none !important;
   border: none;
   background: var(--color-border-subtle);
   color: var(--color-text-muted);

@@ -3887,23 +3887,22 @@ html[data-theme="consumer-dark"] .subscription-cancellation-modal {
 }
 
 @media (prefers-reduced-motion: reduce) {
-
-  .btn,
-  .btn-state,
-  .card,
-  .op,
-  .miniapp-scroll-content,
-  .miniapp-main>.tab-content>*,
-  .miniapp-main>.miniapp-scroll-content>.tab-content>*,
-  .miniapp-popover-overlay,
-  .miniapp-popover-panel,
-  .modal-backdrop,
-  .modal-shell,
-  .modal,
-  .miniapp-shell-context-action svg,
-  .miniapp-shell-context-gesture-indicator::after,
-  .miniapp-popover-sheet-handle,
-  .modal-handle {
+  html:not([data-animations="force"]) .btn,
+  html:not([data-animations="force"]) .btn-state,
+  html:not([data-animations="force"]) .card,
+  html:not([data-animations="force"]) .op,
+  html:not([data-animations="force"]) .miniapp-scroll-content,
+  html:not([data-animations="force"]) .miniapp-main>.tab-content>*,
+  html:not([data-animations="force"]) .miniapp-main>.miniapp-scroll-content>.tab-content>*,
+  html:not([data-animations="force"]) .miniapp-popover-overlay,
+  html:not([data-animations="force"]) .miniapp-popover-panel,
+  html:not([data-animations="force"]) .modal-backdrop,
+  html:not([data-animations="force"]) .modal-shell,
+  html:not([data-animations="force"]) .modal,
+  html:not([data-animations="force"]) .miniapp-shell-context-action svg,
+  html:not([data-animations="force"]) .miniapp-shell-context-gesture-indicator::after,
+  html:not([data-animations="force"]) .miniapp-popover-sheet-handle,
+  html:not([data-animations="force"]) .modal-handle {
     transition: none;
     animation: none;
   }

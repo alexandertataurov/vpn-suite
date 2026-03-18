@@ -162,6 +162,7 @@ export function PlanPage() {
           <PlanCard
             plan={heroView.heroPlanName}
             planSub={heroView.heroPlanPeriod}
+            eyebrow={t("plan.current_plan_label")}
             status={subscriptionState}
             devices={activeDeviceCount}
             deviceLimit={deviceLimit}

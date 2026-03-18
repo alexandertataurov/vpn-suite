@@ -19,6 +19,8 @@ export interface RowItemProps extends Omit<HTMLAttributes<HTMLDivElement>, "chil
   subtitle?: ReactNode;
   /** Optional class for subtitle (e.g. lr-mono for monospace). */
   subtitleClassName?: string;
+  /** Optional class for label (e.g. danger text color). */
+  labelClassName?: string;
   right?: ReactNode;
   /** When false, chevron is hidden (e.g. when right is a Toggle). Default true. */
   showChevron?: boolean;
@@ -31,6 +33,7 @@ export function RowItem({
   label,
   subtitle,
   subtitleClassName,
+  labelClassName,
   right,
   showChevron = true,
   className = "",
@@ -54,7 +57,7 @@ export function RowItem({
     <div className={`row-item ${className}`.trim()} {...a11y} {...props}>
       <div className={`ri-icon ri-icon--${iconVariant}`}>{icon}</div>
       <div className="ri-body">
-        <div className="ri-label">{label}</div>
+        <div className={`ri-label ${labelClassName ?? ""}`.trim()}>{label}</div>
         {subtitle != null ? (
           <div className={`ri-sub ${subtitleClassName ?? ""}`.trim()}>{subtitle}</div>
         ) : null}

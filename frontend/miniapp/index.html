@@ -22,6 +22,12 @@
       if (window.Telegram?.WebApp) document.documentElement.setAttribute('data-tg', 'true');
       document.documentElement.setAttribute('data-theme', initialTheme);
       document.documentElement.style.colorScheme = initialTheme === 'consumer-light' ? 'light' : 'dark';
+      /* Bypass prefers-reduced-motion: ?animations=force in URL, or localhost (dev) */
+      const forceFromUrl = new URLSearchParams(location.search).get('animations') === 'force';
+      const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+      if (forceFromUrl || isLocalhost) {
+        document.documentElement.setAttribute('data-animations', 'force');
+      }
     </script>
   </head>
   <body>

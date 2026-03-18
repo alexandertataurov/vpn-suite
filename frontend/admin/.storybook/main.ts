@@ -6,9 +6,9 @@ const config: StorybookConfig = {
     "../src/**/*.stories.@(js|jsx|mjs|ts|tsx)",
   ],
   addons: [
+    "@storybook/addon-docs",
     "@storybook/addon-links",
-    "@storybook/addon-essentials",
-    "./addons/design-tokens/register.tsx",
+    // "./addons/design-tokens/register.tsx", // TODO: migrate to Storybook 10 addon API
   ],
   framework: {
     name: "@storybook/react-vite",

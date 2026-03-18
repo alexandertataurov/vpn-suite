@@ -464,6 +464,42 @@ export const accessErrorScenario: MockScenario = {
 
 export const restoreScenario: MockScenario = expiredScenario;
 
+const longNameSession = {
+  ...activeSession,
+  user: {
+    ...activeSession.user,
+    display_name: "Alexandra Maria Consuelo Rodriguez-Garcia de la Vega III",
+    email: "alexandra.rodriguez.garcia@example.org",
+  },
+};
+
+export const longNameScenario: MockScenario = {
+  ...readyScenario,
+  responses: {
+    ...readyScenario.responses,
+    me: longNameSession,
+  },
+};
+
+const expiringSoonSession = {
+  ...activeSession,
+  subscriptions: [
+    {
+      ...activeSession.subscriptions[0],
+      valid_until: "2026-03-25T12:00:00Z",
+      trial_ends_at: "2026-03-25T12:00:00Z",
+    },
+  ],
+};
+
+export const expiringSoonScenario: MockScenario = {
+  ...readyScenario,
+  responses: {
+    ...readyScenario.responses,
+    me: expiringSoonSession,
+  },
+};
+
 export function PageSandbox({
   children,
   scenario,
@@ -544,11 +580,34 @@ export function OnboardingSandbox({
   children,
   scenario,
   initialEntries,
+  step = 0,
 }: {
   children: ReactNode;
   scenario: MockScenario;
   initialEntries: string[];
+  step?: number;
 }) {
+  const [onboardingStep, setOnboardingStep] = useState(step);
+  const [isCompletingOnboarding, setIsCompletingOnboarding] = useState(false);
+  const bootstrapValue = useMemo(
+    () => ({
+      phase: "onboarding" as const,
+      onboardingStep,
+      onboardingVersion: 2,
+      onboardingError: null,
+      isCompletingOnboarding,
+      setOnboardingStep: async (next: number) => {
+        setOnboardingStep(next);
+      },
+      completeOnboarding: async () => {
+        setIsCompletingOnboarding(true);
+        await Promise.resolve();
+        setIsCompletingOnboarding(false);
+        return { done: true, synced: true };
+      },
+    }),
+    [isCompletingOnboarding, onboardingStep],
+  );
   const client = useMemo(
     () =>
       new QueryClient({
@@ -590,9 +649,11 @@ export function OnboardingSandbox({
   return (
     <QueryClientProvider client={client}>
       <ToastContainer>
-        <ViewportShellRoutes initialEntries={initialEntries} variant="stack">
-          {children}
-        </ViewportShellRoutes>
+        <BootstrapContextProvider value={bootstrapValue}>
+          <ViewportShellRoutes initialEntries={initialEntries} variant="stack">
+            {children}
+          </ViewportShellRoutes>
+        </BootstrapContextProvider>
       </ToastContainer>
     </QueryClientProvider>
   );

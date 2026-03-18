@@ -1,0 +1,166 @@
+/* PlanCard — amnezia spec §4.3. Borders only, no shadows. */
+
+.root {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  background: var(--white, var(--color-surface));
+  border: 1px solid var(--border, var(--color-border-subtle));
+  border-radius: var(--r, var(--radius-lg));
+  overflow: hidden;
+  transition:
+    border-color var(--motion-duration-micro, 0.2s) var(--motion-ease-standard, ease),
+    box-shadow var(--motion-duration-micro, 0.2s) var(--motion-ease-standard, ease);
+}
+
+/* LED-style border — one constant line, cycles through colors */
+.ledWrapper {
+  position: relative;
+  padding: 3px;
+  border-radius: calc(var(--r, var(--radius-lg)) + 3px);
+  overflow: hidden;
+}
+
+.ledWrapper::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: inherit;
+  border: 2px solid var(--color-accent);
+  box-shadow: 0 0 8px var(--color-accent);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.ledWrapper .root {
+  position: relative;
+  z-index: 1;
+  border-radius: var(--r, var(--radius-lg));
+}
+
+/* Hero border — status-based colors, no animation */
+.root.hero-card[data-status="active"] {
+  border-color: var(--green-border, var(--color-success-border));
+}
+
+.root.hero-card[data-status="expiring"] {
+  border-color: var(--amber-border, var(--color-warning-border));
+}
+
+.root.hero-card[data-status="expired"] {
+  border-color: var(--red-border, var(--color-error-border));
+}
+
+.body {
+  padding: 18px 18px 0 18px !important;
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-2, 8px);
+}
+
+.meta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-0-5);
+}
+
+.eyebrow {
+  font-size: var(--amnezia-plan-eyebrow, var(--font-size-xs));
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--text3, var(--color-text-tertiary));
+}
+
+.planName {
+  font-family: "Inter", var(--font-sans), sans-serif !important;
+  font-size: 28px !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.8px !important;
+  line-height: 1 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  color: var(--text, var(--color-text));
+}
+
+.planSub {
+  font-size: var(--amnezia-plan-subtitle, var(--font-size-sm));
+  font-weight: var(--font-weight-normal);
+  letter-spacing: -0.1px;
+  color: var(--text3, var(--color-text-tertiary));
+}
+
+/* Stats strip — 3-column grid, border-left dividers */
+.stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  border-top: 1px solid var(--divider, var(--color-border-subtle));
+}
+
+.stat {
+  padding: var(--miniapp-data-cell-padding) 0 var(--miniapp-data-cell-padding) var(--miniapp-hero-padding);
+  border-left: 1px solid var(--divider, var(--color-border-subtle));
+}
+
+.stat:first-child {
+  border-left: none;
+  padding-left: var(--miniapp-hero-padding);
+}
+
+.statLabel {
+  display: block;
+  font-size: var(--amnezia-stat-label, var(--font-size-xs));
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  color: var(--text3, var(--color-text-tertiary));
+  margin-bottom: var(--spacing-0-5);
+}
+
+.statValue {
+  font-size: var(--amnezia-stat-value, var(--font-size-lg));
+  font-weight: var(--font-weight-bold);
+  letter-spacing: -0.5px;
+  color: var(--text, var(--color-text));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.statDim {
+  font-size: var(--amnezia-stat-dim, var(--font-size-sm));
+  font-weight: var(--font-weight-normal);
+  color: var(--text3, var(--color-text-tertiary));
+}
+
+.statValueExpiring {
+  color: var(--amber, var(--color-warning));
+}
+
+.statValueExpired {
+  color: var(--red, var(--color-error));
+}
+
+@media (max-width: 360px) {
+  .planName {
+    font-size: var(--amnezia-plan-name-sm, 24px);
+    letter-spacing: -0.4px;
+  }
+  .statValue {
+    font-size: var(--font-size-lg);
+  }
+  .statLabel {
+    font-size: var(--font-size-xs);
+  }
+  .stat + .stat {
+    padding-left: var(--spacing-3);
+  }
+  .stat {
+    padding-right: var(--spacing-2);
+  }
+}

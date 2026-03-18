@@ -32,6 +32,7 @@ vi.mock("@/hooks/useSession", () => ({
         },
       ],
     },
+    isLoading: false,
   }),
 }));
 

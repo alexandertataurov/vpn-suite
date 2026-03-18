@@ -160,6 +160,10 @@ html:not([data-theme]) {
   text-overflow: ellipsis;
 }
 
+.ri-label.ri-label--danger {
+  color: var(--color-error);
+}
+
 .ri-sub {
   font-family: var(--font-sans);
   font-size: var(--amnezia-row-sub, var(--font-size-sm));

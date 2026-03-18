@@ -1,0 +1,127 @@
+/* DisclosureItem — accordion trigger + collapsible content. Reuses RowItem tokens. */
+@import "../RowItem/RowItem.css";
+
+.disclosure-item {
+  border-bottom: 1px solid var(--row-divider);
+  background: var(--row-bg);
+}
+.disclosure-item:last-child {
+  border-bottom: none;
+}
+
+.disclosure-item__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 15px 16px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 48px;
+}
+@media (pointer: fine) {
+  .disclosure-item__trigger:hover {
+    background: var(--row-hover-bg);
+  }
+}
+.disclosure-item__trigger:active {
+  background: var(--row-active-bg);
+}
+.disclosure-item__trigger:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
+.disclosure-item__trigger-text {
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--row-label);
+  letter-spacing: -0.2px;
+  line-height: 1.4;
+  flex: 1;
+  min-width: 0;
+}
+
+.disclosure-item__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: var(--row-chev);
+  transition:
+    transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.15s ease;
+}
+.disclosure-item__icon svg {
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+}
+
+.disclosure-item[data-open="true"] .disclosure-item__icon {
+  transform: rotate(45deg);
+  color: var(--row-label);
+}
+
+.disclosure-item__content {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.disclosure-item[data-open="true"] .disclosure-item__content {
+  max-height: 800px;
+}
+.disclosure-item__content[hidden] {
+  display: block !important;
+  visibility: hidden;
+  pointer-events: none;
+}
+.disclosure-item[data-open="true"] .disclosure-item__content[hidden] {
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.disclosure-item__content-inner {
+  padding: 0 16px 16px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--row-sub);
+  line-height: 1.65;
+  border-top: 1px solid var(--row-divider);
+  padding-top: 12px;
+  margin-top: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .disclosure-item__icon {
+    transition: none;
+  }
+  .disclosure-item__content {
+    transition: none;
+  }
+  .disclosure-item__trigger {
+    transition: none;
+  }
+}
+
+@media (max-width: 360px) {
+  .disclosure-item__trigger-text {
+    font-size: 13px;
+  }
+  .disclosure-item__trigger {
+    padding: 13px 14px;
+  }
+  .disclosure-item__content-inner {
+    padding: 0 14px 14px;
+    padding-top: 11px;
+  }
+}

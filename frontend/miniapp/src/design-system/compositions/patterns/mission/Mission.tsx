@@ -442,6 +442,39 @@ export function MissionOperationButton({
   );
 }
 
+export interface MissionOperationAnchorProps
+  extends Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "children" | "className" | "title">,
+    MissionOperationBaseProps {}
+
+export function MissionOperationAnchor({
+  tone,
+  iconTone = tone,
+  icon,
+  title,
+  description,
+  trailing,
+  showChevron = true,
+  className,
+  ...props
+}: MissionOperationAnchorProps) {
+  return (
+    <a
+      className={joinClasses("op", OP_EDGE_CLASS_MAP[tone], className)}
+      data-pressable="true"
+      {...props}
+    >
+      <MissionOperationContent
+        icon={icon}
+        iconTone={iconTone}
+        title={title}
+        description={description}
+        trailing={trailing}
+        showChevron={showChevron}
+      />
+    </a>
+  );
+}
+
 export interface MissionOperationLinkProps
   extends Omit<LinkProps, "children" | "className" | "title">,
     MissionOperationBaseProps {}

@@ -1,0 +1,56 @@
+/* ToneBadge — uses design tokens. Mirrors page-hd-badge from library.css. */
+
+.tone-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 26px;
+  padding: 0 9px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklch, var(--color-text) 8%, transparent);
+  background: color-mix(in oklch, var(--color-surface) 92%, var(--color-surface-2));
+  color: var(--color-text-muted);
+  font: 600 var(--amnezia-stat-label, var(--font-size-xs))/1 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  box-shadow: inset 0 1px 0 color-mix(in oklch, white 5%, transparent);
+}
+
+.tone-badge .pulse {
+  opacity: 0.72;
+  background: currentColor;
+  border-radius: 999px;
+  box-shadow: 0 0 0 3px color-mix(in oklch, currentColor 10%, transparent);
+}
+
+.tone-badge--neutral {
+  color: var(--color-text-muted);
+  border-color: var(--surface-border);
+  background: color-mix(in oklch, var(--color-surface) 94%, var(--color-surface-2) 6%);
+}
+
+.tone-badge--info {
+  color: color-mix(in oklch, var(--color-accent) 60%, var(--color-text) 40%);
+  border-color: var(--surface-border-accent);
+  background: color-mix(in oklch, var(--color-surface) 95%, var(--color-accent) 5%);
+}
+
+.tone-badge--success {
+  color: color-mix(in oklch, var(--color-success) 60%, var(--color-text) 40%);
+  border-color: var(--surface-border-success);
+  background: color-mix(in oklch, var(--color-surface) 95%, var(--color-success) 5%);
+}
+
+.tone-badge--warning {
+  color: color-mix(in oklch, var(--color-warning) 60%, var(--color-text) 40%);
+  border-color: var(--surface-border-warning);
+  background: color-mix(in oklch, var(--color-surface) 95%, var(--color-warning) 5%);
+}
+
+.tone-badge--danger {
+  color: color-mix(in oklch, var(--color-error) 60%, var(--color-text) 40%);
+  border-color: var(--surface-border-error);
+  background: color-mix(in oklch, var(--color-surface) 95%, var(--color-error) 5%);
+}

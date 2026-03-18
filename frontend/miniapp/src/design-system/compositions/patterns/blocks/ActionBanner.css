@@ -1,0 +1,178 @@
+/* ActionBanner — uses banner-tokens.css for theme. */
+
+.action-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  border-radius: var(--r, var(--radius-lg));
+  border: 1px solid transparent;
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  margin-bottom: 0;
+  transition: filter 0.15s ease;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 0;
+}
+
+.action-banner:hover {
+  filter: brightness(1.06);
+}
+
+.action-banner:active {
+  filter: brightness(0.96);
+}
+
+.action-banner__accent {
+  width: 3px;
+  align-self: stretch;
+  flex-shrink: 0;
+  border-radius: 0;
+}
+
+.action-banner__icon-wrap {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  border-radius: var(--r-sm, var(--radius-sm));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin: var(--spacing-3) 0;
+}
+
+.action-banner__body {
+  flex: 1;
+  min-width: 0;
+  padding: var(--miniapp-data-cell-padding) 0;
+}
+
+.action-banner__title-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  flex-wrap: wrap;
+}
+
+.action-banner__title {
+  font-family: var(--font-sans);
+  font-size: var(--amnezia-banner-title, var(--font-size-sm));
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: -0.2px;
+  line-height: 1.2;
+}
+
+.action-banner__badge {
+  font-size: var(--amnezia-badge-text, var(--font-size-xs));
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.1px;
+  padding: var(--spacing-0-5) var(--spacing-2);
+  border-radius: 100px;
+  border: 1px solid transparent;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.action-banner .action-banner__sub,
+.action-banner p.action-banner__sub {
+  font-family: var(--font-sans);
+  font-size: var(--amnezia-banner-sub, var(--amnezia-row-sub, var(--banner-subtitle-size, 11px)));
+  font-weight: var(--font-weight-normal);
+  line-height: 1.45;
+  margin: var(--spacing-0-5) 0 0;
+}
+
+.action-banner__chev {
+  flex-shrink: 0;
+  padding-right: var(--spacing-4);
+  display: flex;
+  align-items: center;
+}
+
+.action-banner__chev svg {
+  width: 13px;
+  height: 13px;
+}
+
+.action-banner--warning {
+  background: var(--banner-warn-bg);
+  border-color: var(--banner-warn-border);
+}
+
+.action-banner--warning .action-banner__accent {
+  background: var(--banner-warn-accent);
+}
+
+.action-banner--warning .action-banner__icon-wrap {
+  background: var(--banner-warn-icon-bg);
+  color: var(--banner-warn-icon);
+}
+
+.action-banner--warning .action-banner__title {
+  color: var(--banner-warn-title);
+}
+
+.action-banner--warning .action-banner__sub {
+  color: var(--banner-warn-sub);
+}
+
+.action-banner--warning .action-banner__badge {
+  color: var(--banner-warn-title);
+  background: var(--banner-warn-bg);
+  border-color: var(--banner-warn-border);
+}
+
+.action-banner--warning .action-banner__chev {
+  color: var(--banner-warn-title);
+  opacity: 0.5;
+}
+
+.action-banner--danger {
+  background: var(--banner-err-bg);
+  border-color: var(--banner-err-border);
+}
+
+.action-banner--danger .action-banner__accent {
+  background: var(--banner-err-accent);
+}
+
+.action-banner--danger .action-banner__icon-wrap {
+  background: var(--banner-err-icon-bg);
+  color: var(--banner-err-icon);
+}
+
+.action-banner--danger .action-banner__title {
+  color: var(--banner-err-title);
+}
+
+.action-banner--danger .action-banner__sub {
+  color: var(--banner-err-sub);
+}
+
+.action-banner--danger .action-banner__badge {
+  color: var(--banner-err-title);
+  background: var(--banner-err-bg);
+  border-color: var(--banner-err-border);
+}
+
+.action-banner--danger .action-banner__chev {
+  color: var(--banner-err-title);
+  opacity: 0.5;
+}
+
+@media (min-width: 768px) {
+  .action-banner {
+    max-width: 480px;
+  }
+}
+
+@media (max-width: 360px) {
+  .action-banner__title-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-0-5);
+  }
+}

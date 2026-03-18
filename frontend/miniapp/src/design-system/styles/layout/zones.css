@@ -669,10 +669,10 @@ html {
       transform 0ms linear;
   }
 
-  .tg-app-root[data-overlay-active="true"] .miniapp-main,
-  .tg-app-root[data-overlay-active="true"] .miniapp-header-inner,
-  .tg-app-root[data-overlay-active="false"] .miniapp-main,
-  .tg-app-root[data-overlay-active="false"] .miniapp-header-inner {
+  html:not([data-animations="force"]) .tg-app-root[data-overlay-active="true"] .miniapp-main,
+  html:not([data-animations="force"]) .tg-app-root[data-overlay-active="true"] .miniapp-header-inner,
+  html:not([data-animations="force"]) .tg-app-root[data-overlay-active="false"] .miniapp-main,
+  html:not([data-animations="force"]) .tg-app-root[data-overlay-active="false"] .miniapp-header-inner {
     animation: none;
     transition: none;
   }

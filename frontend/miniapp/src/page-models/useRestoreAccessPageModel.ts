@@ -1,16 +1,33 @@
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { ApiError } from "@vpn-suite/shared";
 import { webappApi } from "@/api/client";
 import { useTrackScreen, useTelemetry, useSession } from "@/hooks";
 import { webappQueryKeys } from "@/lib";
 import { useI18n } from "@/hooks";
 import { getPrimarySubscription } from "./helpers";
 
+function getRestoreErrorMessage(err: unknown, t: (k: string) => string): string {
+  if (err instanceof ApiError) {
+    switch (err.code) {
+      case "NOT_RESTORABLE":
+        return t("restore.error_not_restorable");
+      case "NO_SUBSCRIPTION":
+        return t("restore.error_no_subscription");
+      case "NO_PLAN":
+        return t("restore.error_no_plan");
+      default:
+        return err.message || t("common.could_not_load_generic");
+    }
+  }
+  return t("common.could_not_load_generic");
+}
+
 export function useRestoreAccessPageModel() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { data: session } = useSession(true);
+  const { data: session, isLoading: isSessionLoading } = useSession(true);
   const primarySub = getPrimarySubscription(session);
   const activeSubId = primarySub?.plan_id ?? null;
   useTrackScreen("restore-access", activeSubId ?? null);
@@ -53,7 +70,7 @@ export function useRestoreAccessPageModel() {
       navigate(path, { replace: true });
     },
     onError: (error) => {
-      const err = error as { code?: string; message?: string };
+      const err = error instanceof ApiError ? error : (error as { code?: string; message?: string });
       track("restore_access_failed", {
         screen_name: "restore-access",
         plan_id: activeSubId ?? undefined,
@@ -89,7 +106,7 @@ export function useRestoreAccessPageModel() {
             ? {
                 status: "error" as const,
                 title: t("common.could_not_load_title"),
-                message: t("common.could_not_load_generic"),
+                message: getRestoreErrorMessage(restoreMutation.error, t),
               }
             : { status: "ready" as const };
 
@@ -101,6 +118,8 @@ export function useRestoreAccessPageModel() {
     description: t("restore.info_message"),
     pageState,
     hasGraceOrExpired,
+    hasSession: !!session?.user,
+    isSessionLoading,
     isRestoring: restoreMutation.isPending,
     restoreAccess,
   };

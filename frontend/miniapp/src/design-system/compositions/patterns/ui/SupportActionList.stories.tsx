@@ -32,7 +32,7 @@ type Story = StoryObj<typeof meta>;
 
 const DEFAULT_ITEMS = [
   {
-    to: "/restore",
+    to: "/restore-access",
     title: "Restore access",
     description: "Recover your account",
     icon: <IconLock size={20} strokeWidth={1.75} aria-hidden />,

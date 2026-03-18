@@ -1,4 +1,4 @@
-import { create } from "@storybook/theming";
+import { create } from "storybook/theming";
 
 /* VPN Suite design system — premium editorial theme
  * Accent: #0EA5E9 (sky)

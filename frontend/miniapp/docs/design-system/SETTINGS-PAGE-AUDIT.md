@@ -60,7 +60,7 @@
 
 - **routes.css** defines `.settings-list-row`, `.settings-list-row__icon`, `__body`, `__title`, `__description`, `__value`, `__action`, `--danger`, `--warning`.
 - **Settings** uses `ListRow` component, which renders `row-item` / `modern-list-item` (from ListCard.tsx). No `.settings-list-row` in DOM.
-- **SettingsLanguageMenuRow** passes `className="settings-list-row--single-line-description"` to ListRow. That class targets `.settings-list-row__description`, but ListRow/RowItem outputs `.ri-sub`. **Dead CSS** — no effect.
+- **LanguageMenuRow** passes `className="settings-list-row--single-line-description"` to ListRow. That class targets `.settings-list-row__description`, but ListRow/RowItem outputs `.ri-sub`. **Dead CSS** — no effect.
 
 **Drift**: `.settings-list-row` is legacy HTML structure; `ListRow` uses RowItem (`.row-item`, `.ri-sub`). RowItem already clamps subtitle to 1 line via `-webkit-line-clamp: 1` on `.ri-sub`.
 

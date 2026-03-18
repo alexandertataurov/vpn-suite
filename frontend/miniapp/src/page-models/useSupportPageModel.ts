@@ -61,11 +61,8 @@ export function useSupportPageModel() {
         : { status: "ready" };
 
   const hero = {
-    eyebrow: t("support.header_title"),
     title: t("support.hero_title"),
     subtitle: t("support.hero_subtitle"),
-    edge: "e-b" as const,
-    glow: "g-blue" as const,
   };
 
   /** Only for step 0: label for the "No" path (e.g. navigate to plan). */

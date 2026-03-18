@@ -394,10 +394,78 @@
   max-width: 26ch;
 }
 
-.support-contact-card,
-.support-step {
-  padding: var(--spacing-4);
+.support-contact-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  padding: var(--spacing-6);
+}
+
+.support-contact-card__header {
+  display: flex;
+  align-items: flex-start;
   gap: var(--spacing-3);
+}
+
+.support-contact-card__icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: color-mix(in oklch, var(--color-accent) 6%, var(--color-surface-2));
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.support-contact-card__meta {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.support-contact-card__title {
+  font-size: var(--text-body, 18px);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  letter-spacing: -0.02em;
+}
+
+.support-contact-card__desc {
+  font-size: var(--text-body, var(--font-size-md));
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.support-contact-card__status {
+  display: flex;
+}
+
+.support-contact-card__cta {
+  text-decoration: none;
+  height: 52px;
+}
+
+.support-contact-card__unavailable {
+  background: color-mix(in srgb, var(--color-warning) 6%, var(--color-surface));
+  border: 1px solid color-mix(in srgb, var(--color-warning) 20%, transparent);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-3) var(--spacing-4);
+  font-size: var(--text-caption, var(--font-size-sm));
+  color: var(--color-text-muted);
+}
+
+.support-contact-card__unavailable strong {
+  display: block;
+  color: var(--color-text);
+  margin-bottom: var(--spacing-1);
+  font-size: var(--text-body, var(--font-size-md));
+}
+
+.support-contact-card__unavailable p {
+  margin: 0;
 }
 
 .support-contact-stack {
@@ -428,157 +496,14 @@
   transform: scale(0.994);
 }
 
-.support-faq-list {
-  display: flex;
-  flex-direction: column;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--r, var(--radius-lg));
-  overflow: hidden;
-}
-
-.support-faq-item {
-  overflow: hidden;
-  border-bottom: 1px solid var(--color-border);
-}
-
-.support-faq-item:last-child {
-  border-bottom: 0;
-}
-
-.support-faq-trigger {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--spacing-3);
-  padding: 14px 16px;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  text-align: left;
-  font: 500 14px/1.2 var(--font-sans);
-  cursor: pointer;
-  transition:
-    transform var(--motion-duration-micro) var(--motion-ease-release),
-    color var(--motion-duration-micro) var(--motion-ease-standard);
-  transform: translateZ(0);
-}
-
-.support-faq-trigger:focus-visible {
-  outline: 2px solid color-mix(in oklch, var(--color-accent) 72%, white 28%);
-  outline-offset: var(--spacing-0-5);
-  border-radius: var(--radius-sm);
-}
-
-.support-faq-trigger:active {
-  transform: scale(0.992);
-}
-
-.support-faq-symbol {
-  min-width: 16px;
-  width: 16px;
-  text-align: center;
-  font: 600 16px/1 var(--font-sans);
-  color: var(--color-text-tertiary);
-  transition:
-    transform var(--motion-duration-micro) var(--motion-ease-release),
-    color var(--motion-duration-micro) var(--motion-ease-standard);
-}
-
-.support-faq-trigger[aria-expanded="true"] .support-faq-symbol {
-  transform: rotate(90deg);
-  color: var(--color-text);
-}
-
-.support-faq-panel {
-  display: grid;
-  grid-template-rows: 0fr;
-  opacity: 0;
-  transition:
-    grid-template-rows 180ms ease,
-    opacity 140ms ease;
-}
-
-.support-faq-panel[data-state="open"] {
-  grid-template-rows: 1fr;
-  opacity: 1;
-}
-
-.support-faq-panel__inner {
-  overflow: hidden;
-  padding: 0 16px 14px;
-}
-
-.support-faq-panel__inner .op-desc {
-  margin: 0;
-  font-size: 12px;
-  line-height: 1.55;
-}
-
-.support-step .btn-row {
-  margin-top: var(--spacing-1);
-  gap: var(--miniapp-row-gap);
-}
-
-.support-step .compact-summary-card__footer .btn-row,
-.support-step .compact-summary-card__footer .button-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-2);
-}
-
-.support-step {
-  animation: support-step-enter var(--motion-duration-panel) var(--motion-ease-enter);
-  transform-origin: center top;
-}
-
-.support-step .op-name,
 .support-action-list .op-name {
   line-height: 1.25;
 }
 
-.support-step .op-desc,
-.support-step .type-body-sm,
-.support-contact-card .op-desc,
-.support-contact-card .type-body-sm,
+.support-contact-card__desc,
 .support-action-list .op-desc {
   line-height: 1.45;
   max-width: 30ch;
-}
-
-@keyframes support-step-enter {
-  from {
-    opacity: 0;
-    transform: translateY(var(--motion-distance-xs));
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .support-step {
-    animation-duration: var(--motion-duration-exit);
-  }
-
-  .support-faq-panel {
-    transition:
-      opacity var(--motion-duration-exit) linear,
-      grid-template-rows var(--motion-duration-exit) linear;
-  }
-
-  .support-faq-panel__inner .op-desc,
-  .support-faq-symbol,
-  .support-faq-trigger {
-    transition-duration: var(--motion-duration-exit);
-    transform: none;
-  }
 }
 
 .page-shell--centered {
@@ -660,11 +585,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-
-  .home-signal-card,
-  .device-row-motion,
-  .referral-share-card__surface,
-  .referral-share-card__icon {
+  html:not([data-animations="force"]) .home-signal-card,
+  html:not([data-animations="force"]) .device-row-motion,
+  html:not([data-animations="force"]) .referral-share-card__surface,
+  html:not([data-animations="force"]) .referral-share-card__icon {
     animation: none;
     transform: none;
   }
@@ -688,10 +612,7 @@
 
   .devices-utility-card .op-desc,
   .devices-utility-card .type-body-sm,
-  .support-contact-card .op-desc,
-  .support-contact-card .type-body-sm,
-  .support-step .op-desc,
-  .support-step .type-body-sm,
+  .support-contact-card__desc,
   .home-qa-card .quick-action-grid .op-desc {
     font-size: var(--typo-caption-size);
   }
@@ -702,7 +623,6 @@
   }
 
   .devices-utility-card .op-name,
-  .support-step .op-name,
   .support-action-list .op-name,
   .home-qa-card .quick-action-grid .op-name {
     font-size: var(--typo-body-size);

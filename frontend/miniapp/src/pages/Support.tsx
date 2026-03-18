@@ -2,13 +2,11 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SessionMissing, SupportContactCard, TroubleshooterStep } from "@/components";
 import { useOpenLink } from "@/hooks";
-import { IconChevronRight, IconCreditCard, IconHelpCircle, IconRotateCw, IconServer } from "@/design-system/icons";
+import { IconCreditCard, IconHelpCircle, IconRotateCw, IconServer } from "@/design-system/icons";
 import {
   FaqDisclosureItem,
   FallbackScreen,
   FooterHelp,
-  ListCard,
-  ListRow,
   Skeleton,
   SkeletonList,
   PageScaffold,
@@ -16,6 +14,7 @@ import {
   PageHeader,
   PageSection,
   Stack,
+  SupportActionList,
 } from "@/design-system";
 import { useSupportPageModel } from "@/page-models";
 import { useI18n } from "@/hooks";
@@ -122,47 +121,59 @@ export function SupportPage() {
           title={model.hero.title}
           description={model.hero.subtitle ?? t("support.contact_card_description")}
           supportHref={supportHref}
+          onContactClick={supportHref ? (href) => openLink(href) : undefined}
         />
 
         <PageSection
           title={t("support.quick_paths_title")}
           description={t("support.quick_paths_description")}
         >
-          <ListCard className="home-card-row">
-            <ListRow
-              icon={<IconRotateCw size={15} strokeWidth={2} />}
-              iconTone="blue"
-              title={t("onboarding.restore_access")}
-              subtitle={t("support.quick_paths_restore_description")}
-              right={<IconChevronRight size={13} strokeWidth={2.5} />}
-              onClick={() => navigate("/restore-access")}
-            />
-            <ListRow
-              icon={<IconServer size={15} strokeWidth={2} />}
-              iconTone="green"
-              title={t("devices.header_title")}
-              subtitle={t("support.quick_paths_devices_description")}
-              right={<IconChevronRight size={13} strokeWidth={2.5} />}
-              onClick={() => navigate("/devices")}
-            />
-            <ListRow
-              icon={<IconCreditCard size={15} strokeWidth={2} />}
-              iconTone="amber"
-              title={t("plan.header_title")}
-              subtitle={t("support.quick_paths_plan_description")}
-              right={<IconChevronRight size={13} strokeWidth={2.5} />}
-              onClick={() => navigate("/plan")}
-            />
-            <ListRow
-              icon={<IconHelpCircle size={15} strokeWidth={2} />}
-              iconTone="blue"
-              title={t("settings.contact_support_title")}
-              subtitle={t("support.quick_paths_support_description")}
-              right={<IconChevronRight size={13} strokeWidth={2.5} />}
-              onClick={() => supportHref && openLink(supportHref)}
-              aria-disabled={!supportHref}
-            />
-          </ListCard>
+          <SupportActionList
+            items={[
+              {
+                to: "/restore-access",
+                title: t("onboarding.restore_access"),
+                description: t("support.quick_paths_restore_description"),
+                icon: <IconRotateCw size={20} strokeWidth={1.75} aria-hidden />,
+                tone: "blue",
+              },
+              {
+                to: "/devices",
+                title: t("devices.header_title"),
+                description: t("support.quick_paths_devices_description"),
+                icon: <IconServer size={20} strokeWidth={1.75} aria-hidden />,
+                tone: "green",
+              },
+              {
+                to: "/plan",
+                title: t("plan.header_title"),
+                description: t("support.quick_paths_plan_description"),
+                icon: <IconCreditCard size={20} strokeWidth={1.75} aria-hidden />,
+                tone: "amber",
+              },
+              {
+                ...(supportHref
+                  ? {
+                      href: supportHref,
+                      title: t("settings.contact_support_title"),
+                      description: t("support.quick_paths_support_description"),
+                      icon: <IconHelpCircle size={20} strokeWidth={1.75} aria-hidden />,
+                      tone: "blue" as const,
+                    }
+                  : {
+                      to: "#",
+                      title: t("settings.contact_support_title"),
+                      description: t("support.quick_paths_support_description"),
+                      icon: <IconHelpCircle size={20} strokeWidth={1.75} aria-hidden />,
+                      tone: "blue" as const,
+                      disabled: true,
+                    }),
+              },
+            ]}
+            onItemClick={(item) => {
+              if (item.href) openLink(item.href);
+            }}
+          />
         </PageSection>
 
         <PageSection
@@ -170,35 +181,38 @@ export function SupportPage() {
           description={t("support.troubleshooter_description_short")}
         >
           <TroubleshooterStep
-          key={model.step}
-          stepIndex={model.step + 1}
-          totalSteps={model.totalSteps}
-          title={model.currentStep.title}
-          body={model.currentStep.body}
-          nextLabel={model.currentStep.nextLabel}
-          onNext={model.nextStep}
-          altLabel={model.currentStepAltLabel ?? undefined}
-          onAlt={model.currentStepAltLabel ? () => navigate("/plan", { state: { fromSupport: true } }) : undefined}
-        />
+            key={model.step}
+            stepIndex={model.step + 1}
+            totalSteps={model.totalSteps}
+            title={model.currentStep.title}
+            body={model.currentStep.body}
+            nextLabel={model.currentStep.nextLabel}
+            onNext={model.nextStep}
+            backLabel={model.currentStep.backLabel}
+            onBack={model.previousStep}
+            altLabel={model.currentStepAltLabel ?? undefined}
+            onAlt={model.currentStepAltLabel ? () => navigate("/plan", { state: { fromSupport: true } }) : undefined}
+          />
         </PageSection>
 
         <PageSection
           title={t("support.faq_title")}
           description={t("support.faq_description")}
         >
-          <ListCard className="home-card-row">
+          <div className="faq-list">
             {faqItems.map((item, index) => (
-            <FaqDisclosureItem
-              key={item.title}
-              title={item.title}
-              body={item.body}
-              isOpen={openFaq === index}
-              onToggle={() => setOpenFaq((current) => (current === index ? null : index))}
-            />
+              <FaqDisclosureItem
+                key={index}
+                question={item.title}
+                answer={item.body}
+                isOpen={openFaq === index}
+                onToggle={() => setOpenFaq((current) => (current === index ? null : index))}
+              />
             ))}
-          </ListCard>
+          </div>
         </PageSection>
       </Stack>
+      {/* On Support page, "View setup guide" → /devices (setup = device config); other pages → /support */}
       <FooterHelp
         note={t("footer.having_trouble")}
         linkLabel={t("footer.view_setup_guide")}
