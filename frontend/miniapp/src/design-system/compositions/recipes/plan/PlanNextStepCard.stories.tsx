@@ -40,28 +40,20 @@ export const Default: Story = {
   ),
 };
 
-export const ScrollAction: Story = {
-  args: {
-    title: "Pick the best renewal option",
-    alertTone: "info",
-    alertTitle: "You can switch periods before renewing",
-    alertMessage: "Compare monthly and annual plans, then continue when you are ready.",
-    primaryLabel: "Show plans",
-    primaryUsesScrollAction: true,
-    onPrimaryScrollAction: () => {},
-  },
-  render: (args) => (
-    <StoryShowcase>
-      <PlanNextStepCard {...args} />
-    </StoryShowcase>
-  ),
-};
-
-export const Tones: Story = {
+export const Variants: Story = {
   render: () => (
-    <StorySection title="Alert tones" description="Info, warning, and error variants used by plan renewal flows.">
+    <StorySection title="Variants" description="Scroll-action, warning, and error-state plan next-step flows.">
       <StoryShowcase>
         <StoryStack>
+          <PlanNextStepCard
+            title="Pick the best renewal option"
+            alertTone="info"
+            alertTitle="You can switch periods before renewing"
+            alertMessage="Compare monthly and annual plans, then continue when you are ready."
+            primaryLabel="Show plans"
+            primaryUsesScrollAction={true}
+            onPrimaryScrollAction={() => {}}
+          />
           <PlanNextStepCard
             title="Upgrade available"
             alertTone="info"

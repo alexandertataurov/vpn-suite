@@ -40,11 +40,19 @@ export const Default: Story = {
   ),
 };
 
-export const WithBadge: Story = {
+export const Variants: Story = {
   render: () => (
-    <StorySection title="With badge" description="Badge and chevron in right slot.">
+    <StorySection title="Variants" description="Default row, right-slot badge, and danger treatment.">
       <StoryShowcase>
         <ListCard className="home-card-row">
+          <ListRow
+            icon={<IconMonitor size={15} strokeWidth={2} />}
+            iconTone="neutral"
+            title="Manage Devices"
+            subtitle="2 of 5 devices added"
+            right={<IconChevronRight size={13} strokeWidth={2.5} />}
+            onClick={() => {}}
+          />
           <ListRow
             icon={<IconMonitor size={15} strokeWidth={2} />}
             iconTone="neutral"
@@ -58,17 +66,6 @@ export const WithBadge: Story = {
             }
             onClick={() => {}}
           />
-        </ListCard>
-      </StoryShowcase>
-    </StorySection>
-  ),
-};
-
-export const DangerVariant: Story = {
-  render: () => (
-    <StorySection title="Danger variant" description="Destructive action row.">
-      <StoryShowcase>
-        <ListCard className="home-card-row">
           <ListRow
             icon={<IconMonitor size={15} strokeWidth={2} />}
             iconVariant="danger"

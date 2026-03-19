@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { SubscriptionCancellationModal } from "./SubscriptionCancellationModal";
+import { SubscriptionCancellationModal } from "@/design-system";
 
 vi.mock("@/hooks/useI18n", () => ({
   useI18n: () => ({
@@ -60,7 +60,8 @@ describe("SubscriptionCancellationModal", () => {
       />,
     );
 
-    const cancelNow = screen.getByRole("button", { name: /Cancel now/ });
+    const cancelNow = screen.getByText("Cancel now").closest('[role="button"]');
+    expect(cancelNow).not.toBeNull();
     expect(cancelNow).toHaveAttribute("aria-disabled", "true");
   });
 

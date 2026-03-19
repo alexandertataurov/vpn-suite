@@ -84,31 +84,6 @@ export const Variants: Story = {
           subtitle="Renew to restore access."
           onClick={() => {}}
         />
-      </div>
-    </WithThemes>
-  ),
-};
-
-export const WithBadge: Story = {
-  name: "With urgency badge",
-  parameters: {
-    docs: {
-      description: {
-        story:
-          "Badge reinforces days remaining — matches the badge shown in the Subscription row item for visual consistency.",
-      },
-    },
-  },
-  render: () => (
-    <WithThemes>
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        <RenewalBanner
-          variant="warning"
-          title="Subscription expires in 14 days"
-          subtitle="Renew now to keep your plan active."
-          badge="14d left"
-          onClick={() => {}}
-        />
         <RenewalBanner
           variant="warning"
           title="Subscription expires in 3 days"

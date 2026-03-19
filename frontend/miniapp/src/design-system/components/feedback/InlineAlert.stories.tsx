@@ -132,117 +132,60 @@ export const Variants: Story = {
   ),
 };
 
-export const WithAction: Story = {
-  name: "With action",
+export const Advanced: Story = {
+  name: "Advanced",
   parameters: {
     docs: {
       description: {
         story:
-          "Action button is small, auto-width, semantic color. Never full-width inside an alert.",
+          "Action, compact, dismissible, unlabeled, multi-line, and icon-mode alert permutations in one matrix.",
       },
     },
   },
   render: () => (
     <StorySection
-      title="With action"
-      description="Action button is small, auto-width, semantic color."
+      title="Advanced"
+      description="Action, compact, dismissible, unlabeled, multi-line, and icon-mode states."
     >
       <StoryShowcase>
         <WithThemes>
-          <InlineAlert
-            variant="warning"
-            label="Action required"
-            message="Please review your settings to continue."
-            action={{ label: "Review settings", onClick: () => {} }}
-          />
-        </WithThemes>
-      </StoryShowcase>
-    </StorySection>
-  ),
-};
-
-/** Alias for components-inlinealert--with-actions (legacy/bookmark ID). */
-export const WithActions: Story = { ...WithAction, name: "With actions" };
-
-export const Compact: Story = {
-  name: "Compact",
-  parameters: {
-    docs: {
-      description: {
-        story:
-          "Compact layout for secondary pages: surface-2 background, bordered. Use in RestoreAccess, ActionCard, etc.",
-      },
-    },
-  },
-  render: () => (
-    <StorySection
-      title="Compact"
-      description="Surface-2, bordered layout for secondary pages."
-    >
-      <StoryShowcase>
-        <WithThemes>
-          <InlineAlert
-            variant="info"
-            label="No expired subscription"
-            message="Your subscription is active. If you need help, contact support."
-            compact
-          />
-        </WithThemes>
-      </StoryShowcase>
-    </StorySection>
-  ),
-};
-
-export const Dismissible: Story = {
-  name: "Dismissible",
-  parameters: {
-    docs: {
-      description: {
-        story:
-          "Dismiss × appears top-right. Use for non-critical alerts that the user can acknowledge and close.",
-      },
-    },
-  },
-  render: () => (
-    <StorySection
-      title="Dismissible"
-      description="Dismiss × appears top-right for non-critical alerts."
-    >
-      <StoryShowcase>
-        <WithThemes>
-          <InlineAlert
-            variant="info"
-            label="Did you know?"
-            message="You can add up to 5 devices on your current plan."
-            onDismiss={() => {}}
-          />
-        </WithThemes>
-      </StoryShowcase>
-    </StorySection>
-  ),
-};
-
-export const NoLabel: Story = {
-  name: "No label",
-  parameters: {
-    docs: {
-      description: {
-        story:
-          "When no label is provided, message is left-aligned without indent. Use for short, self-explanatory messages.",
-      },
-    },
-  },
-  render: () => (
-    <StorySection
-      title="No label"
-      description="Message left-aligned without indent when no label."
-    >
-      <StoryShowcase>
-        <WithThemes>
-          <InlineAlert
-            variant="error"
-            message="Connection failed. Please try again."
-          />
+          <StoryStack className="story-stack story-stack--tight">
+            <InlineAlert
+              variant="warning"
+              label="Action required"
+              message="Please review your settings to continue."
+              action={{ label: "Review settings", onClick: () => {} }}
+            />
+            <InlineAlert
+              variant="info"
+              label="No expired subscription"
+              message="Your subscription is active. If you need help, contact support."
+              compact={true}
+            />
+            <InlineAlert
+              variant="info"
+              label="Did you know?"
+              message="You can add up to 5 devices on your current plan."
+              onDismiss={() => {}}
+            />
+            <InlineAlert
+              variant="error"
+              message="Connection failed. Please try again."
+            />
+            <InlineAlert
+              variant="warning"
+              label="Subscription expiring"
+              message={multiLineMessage}
+              action={{ label: "Renew now", onClick: () => {} }}
+              onDismiss={() => {}}
+            />
+            <InlineAlert
+              variant="error"
+              iconMode="icon"
+              label="Error"
+              message="Connection failed. Please try again."
+            />
+          </StoryStack>
         </WithThemes>
       </StoryShowcase>
     </StorySection>
@@ -252,73 +195,6 @@ export const NoLabel: Story = {
 const multiLineMessage =
   "Your Pro plan expires in 7 days. Renew now to keep access on all your devices. If you do not renew, your devices will lose access after the expiry date.";
 
-export const MultiLine: Story = {
-  name: "Multi-line message",
-  parameters: {
-    docs: {
-      description: {
-        story: "Verify alignment holds across wrapping messages.",
-      },
-    },
-  },
-  render: () => (
-    <StorySection
-      title="Multi-line message"
-      description="Verify alignment holds across wrapping messages."
-    >
-      <StoryShowcase>
-        <WithThemes>
-          <StoryStack className="story-stack story-stack--tight">
-            <InlineAlert
-              variant="warning"
-              label="Subscription expiring"
-              message={multiLineMessage}
-              action={{ label: "Renew now", onClick: () => {} }}
-              onDismiss={() => {}}
-            />
-          </StoryStack>
-        </WithThemes>
-      </StoryShowcase>
-    </StorySection>
-  ),
-};
-
-export const IconMode: Story = {
-  name: "Icon mode",
-  parameters: {
-    docs: {
-      description: {
-        story:
-          'Use iconMode="icon" when the alert needs more visual weight — e.g. full-page error states or onboarding prompts.',
-      },
-    },
-  },
-  render: () => (
-    <StorySection
-      title="Icon mode"
-      description='iconMode="icon" for more visual weight.'
-    >
-      <StoryShowcase>
-        <WithThemes>
-          <StoryStack className="story-stack story-stack--tight">
-            <InlineAlert
-              variant="error"
-              iconMode="icon"
-              label="Error"
-              message="Connection failed. Please try again."
-            />
-            <InlineAlert
-              variant="warning"
-              iconMode="icon"
-              label="Warning"
-              message="Your connection may be unstable."
-            />
-          </StoryStack>
-        </WithThemes>
-      </StoryShowcase>
-    </StorySection>
-  ),
-};
 
 const inContextContent = (
   <ListCard>

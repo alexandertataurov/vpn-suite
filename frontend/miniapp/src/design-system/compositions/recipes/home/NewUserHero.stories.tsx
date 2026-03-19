@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { NewUserHero } from "./NewUserHero";
-import { Button, StorySection, StoryShowcase } from "@/design-system";
+import { Button, StorySection, StoryShowcase, StoryStack } from "@/design-system";
 
 const meta: Meta<typeof NewUserHero> = {
   title: "Recipes/Home/NewUserHero",
@@ -35,16 +35,24 @@ export const Default: Story = {
   ),
 };
 
-export const PrimaryOnly: Story = {
-  args: {
-    title: "Setup Required",
-    description: "Choose a plan to get started.",
-    primaryAction: <Button variant="primary">Choose a Plan</Button>,
-  },
-  render: (args) => (
-    <StorySection title="Primary only" description="Single CTA variant.">
+export const Variants: Story = {
+  name: "Variants",
+  render: () => (
+    <StorySection title="Variants" description="Dual-action and single-action new-user hero states.">
       <StoryShowcase>
-        <NewUserHero {...args} />
+        <StoryStack>
+          <NewUserHero
+            title="Setup Required"
+            description="Choose a plan to start using AmneziaVPN with secure access on your devices."
+            primaryAction={<Button variant="primary">Choose a Plan</Button>}
+            secondaryAction={<Button variant="secondary">Learn more</Button>}
+          />
+          <NewUserHero
+            title="Setup Required"
+            description="Choose a plan to get started."
+            primaryAction={<Button variant="primary">Choose a Plan</Button>}
+          />
+        </StoryStack>
       </StoryShowcase>
     </StorySection>
   ),

@@ -69,19 +69,3 @@ export const Variants: Story = {
     </StorySection>
   ),
 };
-
-export const Selected: Story = {
-  args: {
-    name: "Germany",
-    region: "EU",
-    avgPingMs: 89,
-    loadPercent: 34,
-    isCurrent: true,
-    onSelect: () => {},
-  },
-  render: (args) => (
-    <StoryShowcase>
-      <ServerCard {...args} />
-    </StoryShowcase>
-  ),
-};

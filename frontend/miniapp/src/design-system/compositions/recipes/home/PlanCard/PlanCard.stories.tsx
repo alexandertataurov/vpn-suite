@@ -40,86 +40,45 @@ export const Default: Story = {
   ),
 };
 
-export const States: Story = {
+export const Variants: Story = {
   render: () => (
-    <StorySection title="States" description="Active, expiring, expired.">
+    <StorySection title="Variants" description="Active, expiring, expired, and hero-stat variants in one canonical story.">
       <StoryShowcase>
         <StoryStack>
-      <PlanCard
-        plan="Pro"
-        planSub="5 devices · annual"
-        status="active"
-        devices={2}
-        deviceLimit={5}
-        renewsLabel="Apr 1"
-      />
-      <PlanCard
-        plan="Pro"
-        planSub="5 devices · annual"
-        status="expiring"
-        devices={3}
-        deviceLimit={5}
-        renewsLabel="14d"
-      />
-      <PlanCard
-        plan="Pro"
-        planSub="5 devices · annual"
-        status="expired"
-        devices={3}
-        deviceLimit={5}
-        renewsLabel="Mar 10"
-      />
+          <PlanCard
+            plan="Pro"
+            planSub="5 devices · annual"
+            status="active"
+            devices={2}
+            deviceLimit={5}
+            renewsLabel="Apr 1"
+          />
+          <PlanCard
+            plan="Pro"
+            planSub="5 devices · annual"
+            status="expiring"
+            devices={3}
+            deviceLimit={5}
+            renewsLabel="14d"
+          />
+          <PlanCard
+            plan="Pro"
+            planSub="5 devices · annual"
+            status="expired"
+            devices={3}
+            deviceLimit={5}
+            renewsLabel="Mar 10"
+          />
+          <PlanCard
+            eyebrow="YOUR PLAN"
+            plan="Pro"
+            planSub="5 devices · annual"
+            status="active"
+            stats={HERO_STATS}
+          />
         </StoryStack>
       </StoryShowcase>
     </StorySection>
-  ),
-};
-
-export const Active: Story = {
-  args: {
-    plan: "Pro",
-    planSub: "5 devices · annual",
-    status: "active",
-    devices: 2,
-    deviceLimit: 5,
-    renewsLabel: "Apr 1",
-  },
-  render: (args) => (
-    <StoryShowcase>
-      <PlanCard {...args} />
-    </StoryShowcase>
-  ),
-};
-
-export const Expiring: Story = {
-  args: {
-    plan: "Pro",
-    planSub: "5 devices · annual",
-    status: "expiring",
-    devices: 3,
-    deviceLimit: 5,
-    renewsLabel: "14d",
-  },
-  render: (args) => (
-    <StoryShowcase>
-      <PlanCard {...args} />
-    </StoryShowcase>
-  ),
-};
-
-export const Expired: Story = {
-  args: {
-    plan: "Pro",
-    planSub: "5 devices · annual",
-    status: "expired",
-    devices: 3,
-    deviceLimit: 5,
-    renewsLabel: "Mar 10",
-  },
-  render: (args) => (
-    <StoryShowcase>
-      <PlanCard {...args} />
-    </StoryShowcase>
   ),
 };
 

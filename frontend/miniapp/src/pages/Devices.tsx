@@ -3,6 +3,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { IconPlus } from "@/design-system/icons";
 import {
   AddDeviceWizardContent,
+  ConfigCardContent,
+  DeviceRow,
+  DevicesSummaryCard,
   FallbackScreen,
   FooterHelp,
   Skeleton,
@@ -21,15 +24,14 @@ import {
   Input,
   usePrefersReducedMotion,
   Stack,
+  SetupCardContent,
   getMotionDurationMs,
-  DevicesSummaryCard,
 } from "@/design-system";
 import { useTelegramMainButton } from "@/hooks";
 import { useDevicesPageModel } from "@/page-models";
 import { useI18n } from "@/hooks";
 import { AMNEZIA_VPN_ANDROID_URL, AMNEZIA_VPN_IOS_URL } from "@/lib";
 import { useLocation, useNavigate } from "react-router-dom";
-import { SetupCardContent, ConfigCardContent, DeviceRow } from "./devices";
 
 const DEVICE_NAME_MAX_LENGTH = 128;
 type AddDeviceWizardStep = "name" | "install";

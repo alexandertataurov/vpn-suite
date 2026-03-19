@@ -68,20 +68,15 @@ export const Default: Story = {
   ),
 };
 
-export const AnnualSelected: Story = {
-  name: "Annual selected",
+export const Variants: Story = {
+  name: "Variants",
   render: () => (
     <WithThemes>
-      <InteractiveToggle initialValue="annual" discount="20%" />
-    </WithThemes>
-  ),
-};
-
-export const NoDiscount: Story = {
-  name: "Without discount badge",
-  render: () => (
-    <WithThemes>
-      <InteractiveToggle initialValue="monthly" />
+      <StoryStack>
+        <InteractiveToggle initialValue="monthly" discount="20%" />
+        <InteractiveToggle initialValue="annual" discount="20%" />
+        <InteractiveToggle initialValue="monthly" />
+      </StoryStack>
     </WithThemes>
   ),
 };

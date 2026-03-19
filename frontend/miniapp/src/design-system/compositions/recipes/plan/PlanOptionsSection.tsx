@@ -1,4 +1,4 @@
-import { Button, EmptyStateBlock, PageSection, SegmentedControl, StarsAmount, StatusChip } from "@/design-system";
+import { BillingPeriodToggle, Button, EmptyStateBlock, PageSection, StarsAmount, StatusChip } from "@/design-system";
 import { useI18n } from "@/hooks";
 import { tierFeatureToRow, type BillingPeriod } from "@/page-models";
 import type { TierFeature } from "@/page-models/plan-helpers";
@@ -66,21 +66,17 @@ export function PlanOptionsSection({
     >
       <div className="plan-billing-page__billing-period">
         <span className="plan-billing-page__billing-period-label">{t("plan.billing_period_label")}</span>
-        <SegmentedControl
-          className="plan-billing-page__period-toggle"
-          ariaLabel={t("plan.billing_period_label")}
-          activeId={billingPeriod}
-          onSelect={(id) => onBillingPeriodChange(id as BillingPeriod)}
-          options={[
-            { id: "monthly", label: t("plan.billing_monthly_compact") },
-            {
-              id: "annual",
-              label: t("plan.billing_annual_compact"),
-              tag: t("plan.billing_annual_tag"),
-              disabled: !hasAnnualOptions,
-            },
-          ]}
-        />
+        <div className="plan-billing-page__period-toggle">
+          <BillingPeriodToggle
+            value={billingPeriod}
+            onChange={onBillingPeriodChange}
+            monthlyLabel={t("plan.billing_monthly_compact")}
+            annualLabel={t("plan.billing_annual_compact")}
+            discount={hasAnnualOptions ? t("plan.billing_annual_tag") : undefined}
+            annualDisabled={!hasAnnualOptions}
+            saveLabel={t("common.save")}
+          />
+        </div>
       </div>
 
       {visibleTierPairs.length === 0 ? (

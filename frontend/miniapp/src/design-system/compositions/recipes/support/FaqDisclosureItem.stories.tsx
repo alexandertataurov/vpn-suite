@@ -44,59 +44,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Single: Story = {
-  name: "Single item",
-  parameters: {
-    docs: {
-      description: {
-        story: "Click to expand/collapse. Icon rotates 45deg.",
-      },
-    },
-  },
-  render: () => (
-    <WithThemes>
-      <div className="faq-list">
-        <FaqDisclosureItem
-          question="How do I restore access?"
-          answer="Go to Settings → Restore Access. Your devices and configurations are saved to your account."
-          defaultOpen={false}
-        />
-      </div>
-    </WithThemes>
-  ),
-};
-
-export const DefaultOpen: Story = {
-  name: "Default open",
-  parameters: {
-    docs: {
-      description: {
-        story: "Item starts expanded. Icon shows ×.",
-      },
-    },
-  },
-  render: () => (
-    <WithThemes>
-      <div className="faq-list">
-        <FaqDisclosureItem
-          question="What happens when my subscription expires?"
-          answer="Your devices will lose VPN access. Your account, devices, and configuration files are kept for 30 days. Renew to restore access immediately."
-          defaultOpen={true}
-        />
-      </div>
-    </WithThemes>
-  ),
-};
-
-const listItems: Array<{ question: string; answer: string; defaultOpen?: boolean }> = [
-  { question: "VPN not connecting", answer: "Check your internet connection and try reconnecting. If the issue persists, contact support." },
-  { question: "How do I add a device?", answer: "Go to Devices, tap Add Device, and follow the setup instructions for your platform." },
-  { question: "How do I restore access?", answer: "Go to Settings → Restore Access. Your devices and configurations are saved to your account.", defaultOpen: true },
-  { question: "How do I cancel my plan?", answer: "Go to Settings → Subscription → Cancel. Your access continues until the end of the billing period." },
-  { question: "What data do you store?", answer: "We store minimal data: email, payment info, and device identifiers. No traffic logs." },
-];
-
-export const List: Story = {
+export const Default: Story = {
   name: "FAQ list",
   parameters: {
     docs: {
@@ -121,6 +69,14 @@ export const List: Story = {
   ),
 };
 
+const listItems: Array<{ question: string; answer: string; defaultOpen?: boolean }> = [
+  { question: "VPN not connecting", answer: "Check your internet connection and try reconnecting. If the issue persists, contact support." },
+  { question: "How do I add a device?", answer: "Go to Devices, tap Add Device, and follow the setup instructions for your platform." },
+  { question: "How do I restore access?", answer: "Go to Settings → Restore Access. Your devices and configurations are saved to your account.", defaultOpen: true },
+  { question: "How do I cancel my plan?", answer: "Go to Settings → Subscription → Cancel. Your access continues until the end of the billing period." },
+  { question: "What data do you store?", answer: "We store minimal data: email, payment info, and device identifiers. No traffic logs." },
+];
+
 const longAnswer = (
   <>
     <p>
@@ -138,54 +94,32 @@ const longAnswer = (
   </>
 );
 
-export const LongAnswer: Story = {
-  name: "Long answer",
+export const Variants: Story = {
+  name: "Variants",
   parameters: {
     docs: {
       description: {
-        story: "Verify panel height animates correctly for multi-paragraph answers.",
+        story: "Closed, open, and long-answer FAQ states without duplicating one-item stories.",
       },
     },
   },
   render: () => (
     <WithThemes>
       <div className="faq-list">
+        <FaqDisclosureItem
+          question="How do I restore access?"
+          answer="Go to Settings → Restore Access. Your devices and configurations are saved to your account."
+          defaultOpen={false}
+        />
+        <FaqDisclosureItem
+          question="What happens when my subscription expires?"
+          answer="Your devices will lose VPN access. Your account, devices, and configuration files are kept for 30 days. Renew to restore access immediately."
+          defaultOpen={true}
+        />
         <FaqDisclosureItem
           question="What is AmneziaWG and how does it work?"
           answer={longAnswer}
           defaultOpen={true}
-        />
-      </div>
-    </WithThemes>
-  ),
-};
-
-export const ThemeComparison: Story = {
-  name: "Theme comparison",
-  parameters: {
-    docs: {
-      description: {
-        story: "Both themes side by side with mixed open/closed states.",
-      },
-    },
-  },
-  render: () => (
-    <WithThemes>
-      <div className="faq-list">
-        <FaqDisclosureItem
-          question="First item (collapsed)"
-          answer="Answer content."
-          defaultOpen={false}
-        />
-        <FaqDisclosureItem
-          question="Second item (expanded)"
-          answer="Answer content."
-          defaultOpen={true}
-        />
-        <FaqDisclosureItem
-          question="Third item (collapsed)"
-          answer="Answer content."
-          defaultOpen={false}
         />
       </div>
     </WithThemes>

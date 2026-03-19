@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { IconDownload } from "@/design-system/icons";
 import { Button, CompactSummaryCard, MissionPrimaryButton, VpnBoundaryNote } from "@/design-system";
+import { IconDownload } from "@/design-system/icons";
 import { useI18n } from "@/hooks";
 
 export interface ConfigCardContentProps {

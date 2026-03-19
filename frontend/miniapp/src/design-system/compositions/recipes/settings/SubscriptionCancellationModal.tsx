@@ -1,6 +1,6 @@
 import type { WebAppSubscriptionOffersResponse } from "@vpn-suite/shared";
-import { IconAlertTriangle, IconClock, IconPause } from "@/design-system/icons";
 import { Button, HelperNote, ListCard, ListRow, Modal } from "@/design-system";
+import { IconAlertTriangle, IconClock, IconPause } from "@/design-system/icons";
 import { useI18n } from "@/hooks";
 import type { CancelReasonGroup, CancelReasonSelection } from "@/page-models";
 

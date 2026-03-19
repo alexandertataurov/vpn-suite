@@ -1,5 +1,5 @@
-import { IconSmartphone } from "@/design-system/icons";
 import { MissionOperationArticle, StatusChip } from "@/design-system";
+import { IconSmartphone } from "@/design-system/icons";
 import { useI18n } from "@/hooks";
 import { DeviceRowActions } from "./DeviceRowActions";
 
@@ -22,7 +22,6 @@ export interface DeviceRowProps {
   isReplacingId: string | null;
 }
 
-/** Reusable device list row: icon, title, description, actions. */
 function normalizeDeviceStatus(status?: string | null): "connected" | "idle" | "config_pending" | "revoked" {
   if (status === "connected" || status === "active") return "connected";
   if (status === "idle") return "idle";
@@ -78,11 +77,13 @@ export function DeviceRow({
           : t("devices.menu_status_revoked");
   const tone: "green" | "amber" | "red" = status === "idle" ? "amber" : status === "revoked" ? "red" : "green";
   const metaParts: string[] = [];
+
   if (device.last_seen_handshake_at) {
     metaParts.push(`Last activity ${resolvedFormatLastSeen(device.last_seen_handshake_at)}`);
   }
+
   metaParts.push(`Issued ${formatIssuedAt(device.issued_at)}`);
-  const metaLine = metaParts.join(" · ");
+
   const title = device.device_name || `Device #${device.id.slice(-6)}`;
   const statusChip = (
     <StatusChip
@@ -99,12 +100,6 @@ export function DeviceRow({
       {statusLabel}
     </StatusChip>
   );
-  const defaultDescription = (
-    <span className="device-row-meta miniapp-tnum">
-      {statusChip}
-      <span className="device-row-meta-text">{metaLine}</span>
-    </span>
-  );
 
   return (
     <MissionOperationArticle
@@ -113,7 +108,12 @@ export function DeviceRow({
       iconTone={tone}
       icon={<IconSmartphone size={20} strokeWidth={1.6} />}
       title={title}
-      description={defaultDescription}
+      description={(
+        <span className="device-row-meta miniapp-tnum">
+          {statusChip}
+          <span className="device-row-meta-text">{metaParts.join(" · ")}</span>
+        </span>
+      )}
       trailing={(
         <DeviceRowActions
           deviceId={device.id}

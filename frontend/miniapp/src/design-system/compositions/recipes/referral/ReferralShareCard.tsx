@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { IconCheck, IconUsers } from "@/design-system/icons";
-import { Button, PageCardSection } from "@/design-system";
 import { useI18n } from "@/hooks";
+import { Button } from "../../../components/Button";
+import { PageCardSection } from "../shared/PageCardSection";
 
 export interface ReferralShareCardProps {
   botUsername: string;

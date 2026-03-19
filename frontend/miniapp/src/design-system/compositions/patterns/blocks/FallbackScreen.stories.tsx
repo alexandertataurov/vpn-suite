@@ -35,31 +35,24 @@ export const Default: Story = {
   ),
 };
 
-export const Retryable: Story = {
+export const Variants: Story = {
   render: () => (
-    <StorySection title="Retryable" description="With retry button.">
+    <StorySection title="Variants" description="Retryable and non-retryable fallback flows.">
       <StoryShowcase>
-        <FallbackScreen
-          title="Couldn't load"
-          message="Check your connection and try again."
-          onRetry={() => {}}
-          retryable
-        />
-      </StoryShowcase>
-    </StorySection>
-  ),
-};
-
-export const NonRetryable: Story = {
-  render: () => (
-    <StorySection title="Non-retryable" description="Contact support CTA.">
-      <StoryShowcase>
-        <FallbackScreen
-          title="Something went wrong"
-          message="We couldn't complete your request."
-          retryable={false}
-          contactSupportHref="https://t.me/support"
-        />
+        <>
+          <FallbackScreen
+            title="Couldn't load"
+            message="Check your connection and try again."
+            onRetry={() => {}}
+            retryable={true}
+          />
+          <FallbackScreen
+            title="Something went wrong"
+            message="We couldn't complete your request."
+            retryable={false}
+            contactSupportHref="https://t.me/support"
+          />
+        </>
       </StoryShowcase>
     </StorySection>
   ),

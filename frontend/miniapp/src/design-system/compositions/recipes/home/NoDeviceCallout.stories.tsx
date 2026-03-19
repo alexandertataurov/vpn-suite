@@ -33,7 +33,7 @@ function WithThemes({ children }: { children: React.ReactNode }) {
 }
 
 const meta: Meta<typeof NoDeviceCallout> = {
-  title: "Patterns/NoDeviceCallout",
+  title: "Recipes/Home/NoDeviceCallout",
   tags: ["autodocs"],
   component: NoDeviceCallout,
   parameters: {
@@ -71,23 +71,39 @@ export const Default: Story = {
   ),
 };
 
-export const CustomCopy: Story = {
-  name: "Custom copy",
+export const Variants: Story = {
+  name: "Variants",
   parameters: {
     docs: {
       description: {
-        story: "Copy adapts to context — e.g. after purchase.",
+        story: "Default copy, custom post-purchase copy, and narrow viewport behavior.",
       },
     },
   },
   render: () => (
-    <WithThemes>
-      <NoDeviceCallout
-        title="Ready to connect"
-        subtitle="Your Pro plan is active. Add a device to get started."
-        onAddDevice={() => {}}
-      />
-    </WithThemes>
+    <>
+      <WithThemes>
+        <div className="nd-story-stack">
+          <NoDeviceCallout
+            title="No devices added"
+            subtitle="Add a device to generate your configuration."
+            onAddDevice={() => {}}
+          />
+          <NoDeviceCallout
+            title="Ready to connect"
+            subtitle="Your Pro plan is active. Add a device to get started."
+            onAddDevice={() => {}}
+          />
+        </div>
+      </WithThemes>
+      <ThemePane theme="dark" narrow>
+        <NoDeviceCallout
+          title="No devices added"
+          subtitle="Add a device to generate your configuration."
+          onAddDevice={() => {}}
+        />
+      </ThemePane>
+    </>
   ),
 };
 
@@ -125,26 +141,5 @@ export const InContext: Story = {
         </CardRow>
       </div>
     </WithThemes>
-  ),
-};
-
-export const NarrowViewport: Story = {
-  name: "Narrow viewport (320px)",
-  parameters: {
-    viewport: { defaultViewport: "iphoneSE" },
-    docs: {
-      description: {
-        story: "CTA wraps below body text at 320px width.",
-      },
-    },
-  },
-  render: () => (
-    <ThemePane theme="dark" narrow>
-      <NoDeviceCallout
-        title="No devices added"
-        subtitle="Add a device to generate your configuration."
-        onAddDevice={() => {}}
-      />
-    </ThemePane>
   ),
 };

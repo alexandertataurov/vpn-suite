@@ -1,6 +1,6 @@
 import type { OverflowActionMenuItem } from "@/design-system";
-import { IconCircleX, IconDownload, IconPencil, IconShield } from "@/design-system/icons";
 import { OverflowActionMenu } from "@/design-system";
+import { IconCircleX, IconDownload, IconPencil, IconShield } from "@/design-system/icons";
 import { useTelegramHaptics } from "@/hooks";
 import { useI18n } from "@/hooks";
 
@@ -15,7 +15,6 @@ export interface DeviceRowActionsProps {
   isReplacingId: string | null;
 }
 
-/** Device row actions: popup menu (Confirm · Reissue · Server · Revoke). */
 export function DeviceRowActions({
   deviceId,
   deviceStatus,

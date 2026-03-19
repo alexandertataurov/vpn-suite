@@ -112,9 +112,6 @@ export const Confirm: Story = {
   ),
 };
 
-/** Alias for components-bottomsheet--confirm-flow (legacy/bookmark ID). */
-export const ConfirmFlow: Story = { ...Confirm, name: "Confirm flow" };
-
 function DangerDemo() {
   const [open, setOpen] = useState(false);
   return (

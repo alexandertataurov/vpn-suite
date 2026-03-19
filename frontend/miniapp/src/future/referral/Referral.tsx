@@ -1,11 +1,12 @@
 import { useNavigate } from "react-router-dom";
-import { ReferralShareCard, SessionMissing } from "@/components";
+import { SessionMissing } from "@/components";
 import {
   FallbackScreen,
   Skeleton,
   InlineAlert,
   PageScaffold,
   PageHeader,
+  ReferralShareCard,
 } from "@/design-system";
 import { Stack } from "@/design-system/core/primitives";
 import { useReferralPageModel } from "@/page-models";

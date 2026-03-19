@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AppRoot } from "@/app/AppRoot";
 import { AppErrorBoundary } from "@/app/AppErrorBoundary";
 import { OverlayLayer } from "@/app/OverlayLayer";
@@ -21,33 +22,46 @@ export function StorybookMiniappShell({
   viewportWidth = 390,
   isDesktop = false,
 }: StorybookMiniappShellProps) {
+  const client = useMemo(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: { retry: false },
+          mutations: { retry: false },
+        },
+      }),
+    [],
+  );
+
   return (
     <AppErrorBoundary>
-      <AppRoot>
-        <TelegramProvider>
-          <TelegramThemeBridge />
-          <TelegramEventManager />
-          <SafeAreaLayer>
-            <MainButtonReserveProvider>
-              <OverlayLayer>
-                <div
-                  className="sb-miniapp-frame"
-                  data-page-story={isPageStory ? "true" : "false"}
-                >
+      <QueryClientProvider client={client}>
+        <AppRoot>
+          <TelegramProvider>
+            <TelegramThemeBridge />
+            <TelegramEventManager />
+            <SafeAreaLayer>
+              <MainButtonReserveProvider>
+                <OverlayLayer>
                   <div
-                    className="sb-miniapp-viewport"
+                    className="sb-miniapp-frame"
                     data-page-story={isPageStory ? "true" : "false"}
-                    data-desktop={isDesktop ? "true" : "false"}
-                    data-viewport-width={String(viewportWidth)}
                   >
-                    {children}
+                    <div
+                      className="sb-miniapp-viewport"
+                      data-page-story={isPageStory ? "true" : "false"}
+                      data-desktop={isDesktop ? "true" : "false"}
+                      data-viewport-width={String(viewportWidth)}
+                    >
+                      {children}
+                    </div>
                   </div>
-                </div>
-              </OverlayLayer>
-            </MainButtonReserveProvider>
-          </SafeAreaLayer>
-        </TelegramProvider>
-      </AppRoot>
+                </OverlayLayer>
+              </MainButtonReserveProvider>
+            </SafeAreaLayer>
+          </TelegramProvider>
+        </AppRoot>
+      </QueryClientProvider>
     </AppErrorBoundary>
   );
 }

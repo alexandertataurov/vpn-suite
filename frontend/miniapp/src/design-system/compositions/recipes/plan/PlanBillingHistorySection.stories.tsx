@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { PlanBillingHistorySection } from "./PlanBillingHistorySection";
-import { StoryShowcase } from "@/design-system";
+import { StorySection, StoryShowcase, StoryStack } from "@/design-system";
 
 const meta: Meta<typeof PlanBillingHistorySection> = {
   title: "Recipes/Plan/PlanBillingHistorySection",
@@ -64,50 +64,45 @@ export const Default: Story = {
   ),
 };
 
-export const Expanded: Story = {
-  args: {
-    items,
-    loading: false,
-    error: false,
-    expanded: true,
-    canExpand: true,
-    onToggleExpanded: () => {},
-  },
-  render: (args) => (
-    <StoryShowcase>
-      <PlanBillingHistorySection {...args} />
-    </StoryShowcase>
-  ),
-};
-
-export const Loading: Story = {
-  args: {
-    items: [],
-    loading: true,
-    error: false,
-    expanded: false,
-    canExpand: false,
-    onToggleExpanded: () => {},
-  },
-  render: (args) => (
-    <StoryShowcase>
-      <PlanBillingHistorySection {...args} />
-    </StoryShowcase>
-  ),
-};
-
-export const Empty: Story = {
-  args: {
-    items: [],
-    loading: false,
-    error: false,
-    expanded: false,
-    canExpand: false,
-    onToggleExpanded: () => {},
-  },
-  render: (args) => (
-    <StoryShowcase>
-      <PlanBillingHistorySection {...args} />
-    </StoryShowcase>
+export const Variants: Story = {
+  render: () => (
+    <StorySection title="Variants" description="Collapsed, expanded, loading, and empty billing-history states.">
+      <StoryShowcase>
+        <StoryStack>
+          <PlanBillingHistorySection
+            items={items.slice(0, 3)}
+            loading={false}
+            error={false}
+            expanded={false}
+            canExpand
+            onToggleExpanded={() => {}}
+          />
+          <PlanBillingHistorySection
+            items={items}
+            loading={false}
+            error={false}
+            expanded
+            canExpand
+            onToggleExpanded={() => {}}
+          />
+          <PlanBillingHistorySection
+            items={[]}
+            loading
+            error={false}
+            expanded={false}
+            canExpand={false}
+            onToggleExpanded={() => {}}
+          />
+          <PlanBillingHistorySection
+            items={[]}
+            loading={false}
+            error={false}
+            expanded={false}
+            canExpand={false}
+            onToggleExpanded={() => {}}
+          />
+        </StoryStack>
+      </StoryShowcase>
+    </StorySection>
   ),
 };

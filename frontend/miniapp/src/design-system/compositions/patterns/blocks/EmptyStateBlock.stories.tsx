@@ -38,58 +38,20 @@ export const Default: Story = {
 
 export const Variants: Story = {
   render: () => (
-    <StorySection title="Variants" description="Empty state for different contexts.">
+    <StorySection title="Variants" description="Different empty, retry, and custom-action states in one matrix.">
       <StoryShowcase>
         <StoryStack>
           <EmptyStateBlock variant="no_devices" onAction={() => {}} />
           <EmptyStateBlock variant="no_servers" onAction={() => {}} />
           <EmptyStateBlock variant="no_results" onAction={() => {}} />
+          <EmptyStateBlock variant="loading_failed" onAction={() => {}} />
+          <EmptyStateBlock
+            title="CUSTOM"
+            message="Custom empty state message."
+            actionLabel="DO SOMETHING"
+            onAction={() => {}}
+          />
         </StoryStack>
-      </StoryShowcase>
-    </StorySection>
-  ),
-};
-
-export const NoDevices: Story = {
-  render: () => (
-    <StorySection title="No devices" description="Add device CTA.">
-      <StoryShowcase>
-        <EmptyStateBlock variant="no_devices" onAction={() => {}} />
-      </StoryShowcase>
-    </StorySection>
-  ),
-};
-
-export const NoServers: Story = {
-  render: () => (
-    <StorySection title="No servers" description="Server selection empty.">
-      <StoryShowcase>
-        <EmptyStateBlock variant="no_servers" onAction={() => {}} />
-      </StoryShowcase>
-    </StorySection>
-  ),
-};
-
-export const LoadingFailed: Story = {
-  render: () => (
-    <StorySection title="Loading failed" description="Retry CTA.">
-      <StoryShowcase>
-        <EmptyStateBlock variant="loading_failed" onAction={() => {}} />
-      </StoryShowcase>
-    </StorySection>
-  ),
-};
-
-export const Custom: Story = {
-  render: () => (
-    <StorySection title="Custom" description="Custom title, message, and action.">
-      <StoryShowcase>
-        <EmptyStateBlock
-          title="CUSTOM"
-          message="Custom empty state message."
-          actionLabel="DO SOMETHING"
-          onAction={() => {}}
-        />
       </StoryShowcase>
     </StorySection>
   ),

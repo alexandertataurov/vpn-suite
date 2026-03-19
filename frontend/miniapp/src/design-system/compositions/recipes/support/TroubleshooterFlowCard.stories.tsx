@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
+import { StorySection, StoryShowcase, StoryStack } from "@/design-system";
 import { TroubleshooterFlowCard } from "./TroubleshooterFlowCard";
 
 const meta: Meta<typeof TroubleshooterFlowCard> = {
@@ -22,13 +23,29 @@ export const Default: Story = {
   },
 };
 
-export const WithBack: Story = {
-  args: {
-    eyebrow: "Troubleshooter",
-    stepLabel: "Step 2/4",
-    title: "Check device setup",
-    body: "Open Devices and verify your config is imported.",
-    backAction: { label: "Back", onClick: () => {} },
-    nextAction: { label: "Next", onClick: () => {} },
-  },
+export const Variants: Story = {
+  render: () => (
+    <StorySection title="Variants" description="Initial step and back-enabled follow-up step.">
+      <StoryShowcase>
+        <StoryStack>
+          <TroubleshooterFlowCard
+            eyebrow="Troubleshooter"
+            stepLabel="Step 1/4"
+            title="Check access status"
+            body="Open Home or Plan. If there is no active plan, choose one before trying device setup."
+            altAction={{ label: "No, choose plan", onClick: () => {} }}
+            nextAction={{ label: "Access is active", onClick: () => {} }}
+          />
+          <TroubleshooterFlowCard
+            eyebrow="Troubleshooter"
+            stepLabel="Step 2/4"
+            title="Check device setup"
+            body="Open Devices and verify your config is imported."
+            backAction={{ label: "Back", onClick: () => {} }}
+            nextAction={{ label: "Next", onClick: () => {} }}
+          />
+        </StoryStack>
+      </StoryShowcase>
+    </StorySection>
+  ),
 };
