@@ -65,8 +65,9 @@ describe("SubscriptionCancellationModal", () => {
       />,
     );
 
-    const cancelNow = screen.getByText("Cancel now").closest('[role="button"]');
-    expect(cancelNow).not.toBeNull();
+    const cancelNowText = screen.getByText("Cancel now");
+    const cancelNow = cancelNowText.closest("[role='button']");
+    expect(cancelNow).toBeInTheDocument();
     expect(cancelNow).toHaveAttribute("aria-disabled", "true");
   });
 
