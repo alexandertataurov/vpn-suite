@@ -65,23 +65,23 @@ Captured from browser at `https://vpn.vega.llc/admin` (authenticated).
 | Path | Lazy component | Protected | Wrapped in ErrorBoundary |
 |------|----------------|-----------|--------------------------|
 | `/login` | `LoginPage` | No | Yes |
-| `/` | `DashboardPage` (index) | Yes | Yes |
+| `/` | `OverviewPage` (index) | Yes | Yes |
 | `/telemetry` | `TelemetryPage` | Yes | Yes |
-| `/automation` | `ControlPlanePage` | Yes | Yes |
+| `/automation` | `AutomationPage` | Yes | Yes |
 | `/control-plane` | — | Yes | Redirect → `/automation` replace |
 | `/servers` | `ServersPage` | Yes | Yes |
-| `/servers/new` | `ServerNewPage` | Yes | Yes |
-| `/servers/:id` | `ServerDetailPage` | Yes | Yes |
-| `/servers/:id/edit` | `ServerEditPage` | Yes | Yes |
+| `/servers/nodes` | `VpnNodesPage` | Yes | Yes |
 | `/users` | `UsersPage` | Yes | Yes |
-| `/users/:id` | `UserDetailPage` | Yes | Yes |
 | `/billing` | `BillingPage` | Yes | Yes |
 | `/subscriptions` | — | Yes | Redirect → `/billing?tab=subscriptions` replace |
 | `/payments` | — | Yes | Redirect → `/billing?tab=payments` replace |
 | `/devices` | `DevicesPage` | Yes | Yes |
 | `/audit` | `AuditPage` | Yes | Yes |
+| `/revenue` | `RevenuePage` | Yes | Yes |
 | `/settings` | `SettingsPage` | Yes | Yes |
-| `/styleguide` | `StyleguidePage` | Yes | Yes (only when `import.meta.env.DEV`) |
+| `/styleguide` | `StyleguidePage` | Yes | Yes |
+| `/promo` | — | Yes | Redirect → `/` replace |
+| `/referrals` | — | Yes | Redirect → `/` replace |
 | `*` | — | — | `<Navigate to="/" replace />` |
 
 ### 2.2 Layout and protection

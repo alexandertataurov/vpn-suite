@@ -75,12 +75,13 @@ The bot is the entry point; most product flows happen in the Mini App.
 | Route | Purpose | Key APIs |
 |-------|---------|----------|
 | **Home** `/` | Connection hero, quick actions, subscription summary | `/webapp/me`, `/webapp/plans`, `/webapp/servers`, `/webapp/usage`, health |
-| **Plan** `/plan` | Current plan, tier carousel, usage, billing history, renewal toggle | `/webapp/me`, `/webapp/plans`, `/webapp/usage`, `/webapp/payments/history`, PATCH subscription (auto_renew) |
+| **Plan** `/plan` | Current plan, tier carousel, usage, billing history, renewal toggle; `/account/subscription` redirects here | `/webapp/me`, `/webapp/plans`, `/webapp/usage`, `/webapp/payments/history`, PATCH subscription (auto_renew) |
 | **Checkout** `/plan/checkout/:planId` | Select plan, optional promo → pay with Telegram Stars | `/webapp/plans`, `POST /webapp/promo/validate`, `POST /webapp/payments/create-invoice`, `GET /webapp/payments/:id/status` (poll) |
-| **Devices** `/devices` | List devices, issue config, revoke | `/webapp/me`, `POST /webapp/devices/issue`, `POST /webapp/devices/:id/revoke` |
-| **Servers** `/servers` | List servers, select auto or specific server | `GET /webapp/servers`, `POST /webapp/servers/select` |
-| **Settings** `/settings` | Account, pause/resume/cancel, revoke all, links | `/webapp/me`, `/webapp/subscription/offers`, pause/resume/cancel, revoke devices |
-| **Referral** `/referral` | Share link, stats (earned days, active referrals) | `GET /webapp/referral/my-link`, `GET /webapp/referral/stats` |
+| **Devices** `/devices`, `/devices/issue` | List devices, issue config, revoke; `/devices/issue` auto-opens add wizard | `/webapp/me`, `POST /webapp/devices/issue`, `POST /webapp/devices/:id/revoke` |
+| **Connect status** `/connect-status` | Confirm connection after device issuance | `/webapp/me`, `POST /webapp/devices/:id/confirm-connected` |
+| **Servers** `/servers` | Redirects to `/` (beta) | — |
+| **Settings** `/settings` | Account, pause/resume/cancel, revoke all, links; includes referral entry point | `/webapp/me`, `/webapp/subscription/offers`, pause/resume/cancel, revoke devices |
+| **Referral** `/referral` | Redirects to `/settings` (beta) | — |
 | **Support** `/support` | Troubleshooter steps, FAQ, contact link | Session only |
 
 **Navigation:** Bottom tabs (Home, Devices, Plan, Support, Account/Settings). Checkout, Referral, Servers are stack/full-screen (no tabs).

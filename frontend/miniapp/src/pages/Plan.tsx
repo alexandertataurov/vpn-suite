@@ -1,13 +1,22 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { SessionMissing } from "@/components";
 import {
+  Button,
+  FallbackScreen,
+  FooterHelp,
+  PageHeader,
+  PageLayout,
+  PageScaffold,
+  PageSection,
   PlanBillingHistorySection,
-  PlanOptionsSection,
+  PlanCard,
   PlanNextStepCard,
-  SessionMissing,
+  PlanOptionsSection,
+  Skeleton,
+  Stack,
   VpnBoundaryNote,
-} from "@/components";
-import { Button, FallbackScreen, FooterHelp, PageHeader, PageScaffold, PageLayout, PageSection, PlanCard, Skeleton, Stack } from "@/design-system";
+} from "@/design-system";
 
 import { useI18n } from "@/hooks";
 import { usePlanPageModel, type BillingPeriod } from "@/page-models";

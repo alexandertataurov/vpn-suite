@@ -1,6 +1,6 @@
 import { useNavigate, Link } from "react-router-dom";
-import { SessionMissing, VpnBoundaryNote } from "@/components";
-import { ActionCard, Button, FooterHelp, InlineAlert, PageScaffold, PageLayout, PageHeader, Stack, StickyBottomBar } from "@/design-system";
+import { SessionMissing } from "@/components";
+import { ActionCard, Button, FooterHelp, InlineAlert, PageScaffold, PageLayout, PageHeader, Stack, StickyBottomBar, VpnBoundaryNote } from "@/design-system";
 import { useRestoreAccessPageModel } from "@/page-models";
 import { useI18n } from "@/hooks";
 

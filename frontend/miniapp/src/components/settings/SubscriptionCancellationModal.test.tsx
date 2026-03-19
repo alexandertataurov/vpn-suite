@@ -37,7 +37,7 @@ describe("SubscriptionCancellationModal", () => {
   it("disables destructive cancellation until a reason is selected", () => {
     render(
       <SubscriptionCancellationModal
-        open={true}
+        isOpen={true}
         onClose={() => undefined}
         cancelReason={null}
         offers={{
@@ -69,7 +69,7 @@ describe("SubscriptionCancellationModal", () => {
 
     const { rerender } = render(
       <SubscriptionCancellationModal
-        open={true}
+        isOpen={true}
         onClose={() => undefined}
         cancelReason="price"
         offers={{
@@ -98,7 +98,7 @@ describe("SubscriptionCancellationModal", () => {
 
     rerender(
       <SubscriptionCancellationModal
-        open={true}
+        isOpen={true}
         onClose={() => undefined}
         cancelReason="technical"
         offers={{

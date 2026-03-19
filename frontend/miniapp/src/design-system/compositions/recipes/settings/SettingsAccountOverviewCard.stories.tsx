@@ -55,7 +55,7 @@ const activeArgs = {
   onEdit: () => {},
 };
 
-export const Active: Story = {
+export const Default: Story = {
   args: activeArgs,
   render: (args) => (
     <WithThemes>
@@ -64,29 +64,24 @@ export const Active: Story = {
   ),
 };
 
-export const Expiring: Story = {
-  args: {
-    ...activeArgs,
-    planStatus: "expiring",
-    renewalDate: "Mar 24, 2026",
-    devicesUsed: 3,
-    devicesTotal: 5,
-  },
-  render: (args) => (
-    <WithThemes>
-      <SettingsAccountOverviewCard {...args} />
-    </WithThemes>
-  ),
-};
-
-export const Readonly: Story = {
-  args: {
-    ...activeArgs,
-    onEdit: undefined,
-  },
-  render: (args) => (
-    <WithThemes>
-      <SettingsAccountOverviewCard {...args} />
-    </WithThemes>
+export const Variants: Story = {
+  render: () => (
+    <div className="story-stack">
+      <WithThemes>
+        <SettingsAccountOverviewCard {...activeArgs} />
+      </WithThemes>
+      <WithThemes>
+        <SettingsAccountOverviewCard
+          {...activeArgs}
+          planStatus="expiring"
+          renewalDate="Mar 24, 2026"
+          devicesUsed={3}
+          devicesTotal={5}
+        />
+      </WithThemes>
+      <WithThemes>
+        <SettingsAccountOverviewCard {...activeArgs} onEdit={undefined} />
+      </WithThemes>
+    </div>
   ),
 };

@@ -19,7 +19,7 @@ html {
   --miniapp-header-content-height: 58px;
   --miniapp-header-slot-width: 48px;
   --miniapp-content-top-gap: 2px;
-  --miniapp-bottom-safe-gap: 20px;
+  --miniapp-bottom-safe-gap: 12px;
   --miniapp-shell-margin: 0;
   --miniapp-content-gutter: 16px;
   --space-gutter: var(--miniapp-content-gutter);
@@ -59,7 +59,7 @@ html {
 
 html[data-tg-fullscreen="true"] {
   --miniapp-header-safe-top: max(var(--safe-top), var(--miniapp-fullscreen-top-buffer));
-  --miniapp-bottom-safe-gap: 20px;
+  --miniapp-bottom-safe-gap: 12px;
 }
 
 html[data-tg-fullscreen="true"][data-tg-platform="ios"] {
@@ -228,7 +228,7 @@ body,
 .miniapp-main--stack {
   min-height: 0;
   padding-top: 0;
-  padding-bottom: max(110px, env(safe-area-inset-bottom) + 80px);
+  padding-bottom: var(--content-bottom);
 }
 
 .miniapp-main--stack-with-main-button {

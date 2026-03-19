@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../../../components/Button";
-import { IconSettings, IconChevronLeft } from "../../../icons";
+import { IconChevronLeft } from "../../../icons";
 import { ProfileRow } from "./ProfileRow";
+import { SettingsButton } from "../../patterns";
 
 export interface ModernHeaderProps {
   /** Profile name shown on the left, e.g. on the Home page. */
@@ -85,15 +86,11 @@ export function ModernHeader({
       </div>
       
       {showSettings && !(displayName && pillChip) ? (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="modern-icon-button settings-pill"
+        <SettingsButton
           onClick={handleSettings}
+          className="settings-pill"
           aria-label="Settings"
-        >
-          <IconSettings size={22} strokeWidth={1.8} />
-        </Button>
+        />
       ) : null}
     </div>
   );

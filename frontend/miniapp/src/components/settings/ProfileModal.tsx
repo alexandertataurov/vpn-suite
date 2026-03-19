@@ -1,7 +1,7 @@
 import { Button, Input, Modal } from "@/design-system";
 
 export interface ProfileModalProps {
-  open: boolean;
+  isOpen: boolean;
   onClose: () => void;
   title: string;
   description: string;
@@ -27,7 +27,7 @@ export interface ProfileModalProps {
 }
 
 export function ProfileModal({
-  open,
+  isOpen: open,
   onClose,
   title,
   description,
@@ -53,12 +53,12 @@ export function ProfileModal({
 }: ProfileModalProps) {
   return (
     <Modal
-      open={open}
+      isOpen={open}
       onClose={() => {
         if (!isSaving) onClose();
       }}
       title={title}
-      description={description}
+      subtitle={description}
       className="settings-profile-modal"
       footer={
         <>

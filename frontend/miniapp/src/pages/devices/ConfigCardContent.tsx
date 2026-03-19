@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { IconDownload } from "@/design-system/icons";
-import { Button, CompactSummaryCard, MissionPrimaryButton } from "@/design-system";
+import { Button, CompactSummaryCard, MissionPrimaryButton, VpnBoundaryNote } from "@/design-system";
 import { useI18n } from "@/hooks";
-import { VpnBoundaryNote } from "@/components/VpnBoundaryNote";
 
 export interface ConfigCardContentProps {
   configText: string;

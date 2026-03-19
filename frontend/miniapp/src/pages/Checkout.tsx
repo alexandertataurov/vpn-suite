@@ -1,14 +1,16 @@
 import { useNavigate } from "react-router-dom";
-import { CheckoutFlowCard, CheckoutSummaryCard, SessionMissing } from "@/components";
+import { SessionMissing } from "@/components";
 import {
+  CheckoutFlowCard,
+  CheckoutSummaryCard,
   FallbackScreen,
   HelperNote,
-  Skeleton,
   InlineAlert,
-  PageScaffold,
-  PageLayout,
   PageHeader,
+  PageLayout,
+  PageScaffold,
   PageSection,
+  Skeleton,
   Stack,
 } from "@/design-system";
 import { useCheckoutPageModel } from "@/page-models";
@@ -37,8 +39,8 @@ export function CheckoutPage() {
           <PageSection>
             <InlineAlert
               variant="error"
-              title={model.pageState.title}
-              body={
+              label={model.pageState.title}
+              message={
                 model.pageState.message ??
                 t("checkout.plan_not_found_message", { planId: model.selectedPlanId ?? "" })
               }

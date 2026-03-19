@@ -10,7 +10,7 @@ const meta: Meta<typeof PlanSection> = {
     layout: "padded",
     docs: {
       description: {
-        component: "Plan and billing section with plan, devices, cancel, auto-renew toggle.",
+        component: "Canonical plan and billing recipe used by Settings, covering active-plan and no-plan variants without duplicate wrapper stories.",
       },
     },
   },
@@ -38,7 +38,7 @@ const baseArgs = {
   onAutoRenewChange: () => {},
 };
 
-export const WithPlan: Story = {
+export const Default: Story = {
   args: {
     ...baseArgs,
     hasPlan: true,
@@ -50,36 +50,29 @@ export const WithPlan: Story = {
   ),
 };
 
-export const WithoutPlan: Story = {
-  args: {
-    ...baseArgs,
-    hasPlan: false,
-    planTitle: "Choose plan",
-    planDescription: "Get started with a VPN plan",
-    autoRenewDisabled: true,
-    autoRenewDisabledReason: "No active subscription",
-  },
-  render: (args) => (
-    <StoryShowcase>
-      <PlanSection {...args} />
-    </StoryShowcase>
-  ),
-};
-
 export const Variants: Story = {
   render: () => (
-    <StorySection title="Variants" description="With plan, without plan.">
-      <StoryStack>
-        <PlanSection {...baseArgs} hasPlan={true} />
-        <PlanSection
-          {...baseArgs}
-          hasPlan={false}
-          planTitle="Choose plan"
-          planDescription="Get started"
-          autoRenewDisabled={true}
-          autoRenewDisabledReason="No subscription"
-        />
-      </StoryStack>
+    <StorySection title="Variants" description="Active subscription, no subscription, and disabled auto-renew states.">
+      <StoryShowcase>
+        <StoryStack>
+          <PlanSection {...baseArgs} hasPlan />
+          <PlanSection
+            {...baseArgs}
+            hasPlan={false}
+            planTitle="Choose plan"
+            planDescription="Get started with a VPN plan"
+            autoRenewDisabled
+            autoRenewDisabledReason="No active subscription"
+          />
+          <PlanSection
+            {...baseArgs}
+            hasPlan
+            autoRenewChecked={false}
+            autoRenewDisabled
+            autoRenewDisabledReason="Updating auto-renew"
+          />
+        </StoryStack>
+      </StoryShowcase>
     </StorySection>
   ),
 };

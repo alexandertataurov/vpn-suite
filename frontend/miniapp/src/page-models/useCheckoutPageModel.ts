@@ -93,16 +93,7 @@ export function useCheckoutPageModel() {
       queryKey: [...webappQueryKeys.me()],
       queryFn: getMe,
     });
-    const reason = session.routing?.reason;
-    const section =
-      reason === "no_subscription"
-        ? "plans"
-        : reason === "no_device"
-          ? "devices"
-          : reason === "connection_not_confirmed"
-            ? "setup"
-            : undefined;
-    const target = section ? `/?section=${section}` : "/";
+    const target = session.routing?.recommended_route ?? "/";
     navigate(target, { replace: true });
   }, [navigate, queryClient]);
 

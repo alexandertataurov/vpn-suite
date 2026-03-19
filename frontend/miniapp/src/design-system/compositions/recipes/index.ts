@@ -4,8 +4,14 @@ export { PageHeaderBadge } from "./shared/PageHeaderBadge";
 export type { PageHeaderBadgeProps, PageHeaderBadgeTone } from "./shared/PageHeaderBadge";
 export { PageCardSection } from "./shared/PageCardSection";
 export type { PageCardSectionProps } from "./shared/PageCardSection";
+export { VpnBoundaryNote } from "./shared/VpnBoundaryNote";
+export type { VpnBoundaryNoteProps } from "./shared/VpnBoundaryNote";
 export { LabeledControlRow } from "./settings/LabeledControlRow";
 export type { LabeledControlRowProps } from "./settings/LabeledControlRow";
+export { LanguageMenuRow } from "./settings/LanguageMenuRow";
+export type { LanguageMenuRowProps, LanguageOption } from "./settings/LanguageMenuRow";
+export { ProfileSection } from "./settings/ProfileSection";
+export type { ProfileSectionProps } from "./settings/ProfileSection";
 export { FaqDisclosureItem } from "./support/FaqDisclosureItem";
 export type { FaqDisclosureItemProps } from "./support/FaqDisclosureItem";
 export { TroubleshooterFlowCard } from "./support/TroubleshooterFlowCard";
@@ -23,11 +29,17 @@ export type {
 } from "./settings/SettingsAccountOverviewCard";
 export { CompactSummaryCard } from "./devices/CompactSummaryCard";
 export type { CompactSummaryCardProps, CompactSummaryCardStat } from "./devices/CompactSummaryCard";
+export { DevicesSummaryCard } from "./devices/DevicesSummaryCard";
+export type { DevicesSummaryCardProps, DevicesSummaryMetric } from "./devices/DevicesSummaryCard";
 export { AddDeviceWizardContent } from "./devices/AddDeviceWizardContent";
 export type {
   AddDeviceWizardContentProps,
   AddDeviceWizardStep,
 } from "./devices/AddDeviceWizardContent";
+export { CheckoutFlowCard } from "./checkout/CheckoutFlowCard";
+export type { CheckoutFlowCardProps } from "./checkout/CheckoutFlowCard";
+export { CheckoutSummaryCard } from "./checkout/CheckoutSummaryCard";
+export type { CheckoutSummaryCardProps } from "./checkout/CheckoutSummaryCard";
 export { HelperNote } from "./shared/HelperNote";
 export type { HelperNoteProps } from "./shared/HelperNote";
 export { CompactStepper } from "./flow/CompactStepper";
@@ -55,3 +67,11 @@ export type {
 } from "./plan/PlanBillingHistorySection";
 export { PlanNextStepCard } from "./plan/PlanNextStepCard";
 export type { PlanNextStepCardProps } from "./plan/PlanNextStepCard";
+export { PlanOptionsSection } from "./plan/PlanOptionsSection";
+export type { PlanOptionsSectionProps } from "./plan/PlanOptionsSection";
+export { ONBOARDING_STEPS, OnboardingStepCard } from "./onboarding/OnboardingStepCard";
+export type {
+  OnboardingStepCardProps,
+  OnboardingStepDefinition,
+  OnboardingStepId,
+} from "./onboarding/OnboardingStepCard";

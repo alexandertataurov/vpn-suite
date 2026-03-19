@@ -7,7 +7,7 @@ import { StartupError } from "@/bootstrap/StartupError";
 import { pageStoryParameters } from "@/storybook/page-contracts";
 
 const meta: Meta<{ theme: "dark" | "light" }> = {
-  title: "Pages/BootScreen",
+  title: "Pages/Sandbox/Boot Screen",
   tags: ["autodocs"],
   parameters: {
     ...pageStoryParameters,

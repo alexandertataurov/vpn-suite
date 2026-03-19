@@ -5,7 +5,7 @@ import { useI18n } from "@/hooks";
 import type { CancelReasonGroup, CancelReasonSelection } from "@/page-models";
 
 export interface SubscriptionCancellationModalProps {
-  open: boolean;
+  isOpen: boolean;
   onClose: () => void;
   cancelReason: CancelReasonSelection;
   offers: WebAppSubscriptionOffersResponse | undefined;
@@ -24,7 +24,7 @@ const CANCEL_REASON_OPTIONS: CancelReasonGroup[] = [
 ];
 
 export function SubscriptionCancellationModal({
-  open,
+  isOpen: open,
   onClose,
   cancelReason,
   offers,
@@ -74,10 +74,10 @@ export function SubscriptionCancellationModal({
 
   return (
     <Modal
-      open={open}
+      isOpen={open}
       onClose={onClose}
       title={t("settings.cancel_modal_title")}
-      description={t("settings.cancel_modal_description")}
+      subtitle={t("settings.cancel_modal_description")}
       className="subscription-cancellation-modal"
       footer={(
         <>

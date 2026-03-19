@@ -1,5 +1,5 @@
-import { DevicesSummaryCard, SessionMissing } from "@/components";
-import { useCallback, useEffect, useState } from "react";
+import { SessionMissing } from "@/components";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { IconPlus } from "@/design-system/icons";
 import {
   AddDeviceWizardContent,
@@ -22,12 +22,13 @@ import {
   usePrefersReducedMotion,
   Stack,
   getMotionDurationMs,
+  DevicesSummaryCard,
 } from "@/design-system";
 import { useTelegramMainButton } from "@/hooks";
 import { useDevicesPageModel } from "@/page-models";
 import { useI18n } from "@/hooks";
 import { AMNEZIA_VPN_ANDROID_URL, AMNEZIA_VPN_IOS_URL } from "@/lib";
-import { Link, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { SetupCardContent, ConfigCardContent, DeviceRow } from "./devices";
 
 const DEVICE_NAME_MAX_LENGTH = 128;
@@ -40,6 +41,7 @@ type AnimatedDeviceEntry = {
 export function DevicesPage() {
   const model = useDevicesPageModel();
   const navigate = useNavigate();
+  const location = useLocation();
   const { activeDevices, handleRenameDevice } = model;
   const { t } = useI18n();
   const prefersReducedMotion = usePrefersReducedMotion();
@@ -49,6 +51,7 @@ export function DevicesPage() {
   const [isAddWizardOpen, setIsAddWizardOpen] = useState(false);
   const [addWizardStep, setAddWizardStep] = useState<AddDeviceWizardStep>("name");
   const [newDeviceName, setNewDeviceName] = useState("");
+  const hasAutoOpenedFromIssuePath = useRef(false);
   const [animatedDevices, setAnimatedDevices] = useState<AnimatedDeviceEntry[]>(() =>
     activeDevices.map((device) => ({ device, phase: "idle" })),
   );
@@ -94,6 +97,23 @@ export function DevicesPage() {
     closeRename();
   }, [renameDeviceId, renameValue, handleRenameDevice, closeRename]);
   const summaryTitle = model.summaryHero.title === model.header.title ? undefined : model.summaryHero.title;
+
+  useEffect(() => {
+    if (
+      location.pathname === "/devices/issue" &&
+      model.canAddDevice &&
+      !model.isAddPending &&
+      !hasAutoOpenedFromIssuePath.current
+    ) {
+      hasAutoOpenedFromIssuePath.current = true;
+      setIsAddWizardOpen(true);
+      setAddWizardStep("name");
+      setNewDeviceName("");
+    }
+    if (location.pathname !== "/devices/issue") {
+      hasAutoOpenedFromIssuePath.current = false;
+    }
+  }, [location.pathname, model.canAddDevice, model.isAddPending]);
 
   useEffect(() => {
     setAnimatedDevices((current) => {
@@ -180,14 +200,13 @@ export function DevicesPage() {
       {model.planRequiredAlert ? (
         <InlineAlert
           variant="warning"
-          title={model.planRequiredAlert.title}
-          body={model.planRequiredAlert.body}
+          label={model.planRequiredAlert.title}
+          message={model.planRequiredAlert.body}
           className="devices-plan-required-alert"
-          actions={(
-            <Link className="inline-alert-action-link devices-plan-required-link" to={model.planRequiredAlert.to}>
-              {model.planRequiredAlert.ctaLabel}
-            </Link>
-          )}
+          action={{
+            label: model.planRequiredAlert.ctaLabel,
+            onClick: () => navigate(model.planRequiredAlert!.to),
+          }}
         />
       ) : null}
 
@@ -221,21 +240,21 @@ export function DevicesPage() {
         {(model.isDeviceLimitError || model.showUpgradeCta) ? (
           <InlineAlert
             variant="warning"
-            title={model.deviceLimitUpsellCopy?.title ?? t("devices.limit_reached_default_title")}
-            body={model.deviceLimitUpsellCopy?.body ?? t("devices.limit_reached_default_message")}
-            actions={
-              <Button size="sm" asChild>
-                <Link to={model.upgradeTargetTo} onClick={model.handleUpgradePlanClick}>
-                  {model.deviceLimitUpsellCopy?.ctaLabel ?? t("devices.limit_reached_default_cta")}
-                </Link>
-              </Button>
-            }
+            label={model.deviceLimitUpsellCopy?.title ?? t("devices.limit_reached_default_title")}
+            message={model.deviceLimitUpsellCopy?.body ?? t("devices.limit_reached_default_message")}
+            action={{
+              label: model.deviceLimitUpsellCopy?.ctaLabel ?? t("devices.limit_reached_default_cta"),
+              onClick: () => {
+                navigate(model.upgradeTargetTo);
+                model.handleUpgradePlanClick();
+              },
+            }}
           />
         ) : model.issueErrorMessage ? (
           <InlineAlert
             variant="error"
-            title={t("devices.issue_error_title")}
-            body={model.issueErrorMessage}
+            label={t("devices.issue_error_title")}
+            message={model.issueErrorMessage}
           />
         ) : null}
 
@@ -291,7 +310,7 @@ export function DevicesPage() {
       ) : null}
 
       <ConfirmModal
-        open={model.revokeId !== null}
+        isOpen={model.revokeId !== null}
         onClose={() => !model.isRevoking && model.setRevokeId(null)}
         onConfirm={model.handleConfirmRevoke}
         title={t("devices.revoke_modal_title")}
@@ -303,10 +322,10 @@ export function DevicesPage() {
       />
 
       <Modal
-        open={isAddWizardOpen}
+        isOpen={isAddWizardOpen}
         onClose={closeAddWizard}
         title={addWizardStep === "name" ? t("devices.wizard_title_name") : t("devices.wizard_title_install")}
-        description={addWizardStep === "name" ? t("devices.wizard_description_name") : t("devices.wizard_description_install")}
+        subtitle={addWizardStep === "name" ? t("devices.wizard_description_name") : t("devices.wizard_description_install")}
         variant="plain"
         disableDismiss={model.isAddPending}
         footer={
@@ -367,7 +386,7 @@ export function DevicesPage() {
       </Modal>
 
       <Modal
-        open={renameDeviceId !== null}
+        isOpen={renameDeviceId !== null}
         onClose={closeRename}
         title={t("devices.rename_modal_title")}
         variant="plain"

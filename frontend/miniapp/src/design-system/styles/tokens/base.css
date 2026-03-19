@@ -208,10 +208,10 @@ html {
   --safe-right: 0px;
   /* Page layout tokens */
   --page-padding-x: 16px;
-  --page-padding-top: 24px;
+  --page-padding-top: 16px;
   --page-max-width: var(--bp-sm);
   --page-max-width-wide: 520px;
-  --content-bottom: max(110px, calc(env(safe-area-inset-bottom) + 80px));
+  --content-bottom: max(96px, calc(env(safe-area-inset-bottom) + 80px));
 }
 
 /* data-theme="primitives" removed — miniapp uses consumer-dark/consumer-light only (see REFACTOR_ROADMAP) */

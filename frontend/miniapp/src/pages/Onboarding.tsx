@@ -6,8 +6,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { ONBOARDING_STEPS, OnboardingStepCard } from "@/components";
-import { FooterHelp, PageHeader, PageScaffold, PageLayout, useToast } from "@/design-system";
+import {
+  FooterHelp,
+  ONBOARDING_STEPS,
+  OnboardingStepCard,
+  PageHeader,
+  PageLayout,
+  PageScaffold,
+  useToast,
+} from "@/design-system";
 import { useBootstrapContext } from "@/bootstrap/context";
 import { webappApi } from "@/api/client";
 import { useOpenLink, useSession, useTelemetry, useTelegramWebApp } from "@/hooks";

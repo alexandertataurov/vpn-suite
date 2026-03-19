@@ -2,14 +2,14 @@ import { ConfirmDanger } from "@/design-system";
 import { useI18n } from "@/hooks";
 
 export interface AccountCancellationModalProps {
-  open: boolean;
+  isOpen: boolean;
   onClose: () => void;
   onConfirm: (confirmToken: string) => void | Promise<void>;
   loading?: boolean;
 }
 
 export function AccountCancellationModal({
-  open,
+  isOpen: open,
   onClose,
   onConfirm,
   loading = false,
@@ -18,7 +18,7 @@ export function AccountCancellationModal({
 
   return (
     <ConfirmDanger
-      open={open}
+      isOpen={open}
       onClose={onClose}
       title={t("settings.delete_account_confirm_title")}
       message={t("settings.delete_account_confirm_message")}

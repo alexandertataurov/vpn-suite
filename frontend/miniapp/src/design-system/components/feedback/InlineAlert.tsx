@@ -13,17 +13,11 @@ export interface InlineAlertProps {
   variant: "info" | "warning" | "error" | "success";
   /** Bold label, e.g. "Action required". Optional. */
   label?: string;
-  /** Body text. Required for new API; falls back to body for backward compat. */
+  /** Body text. */
   message?: string | ReactNode;
-  /** @deprecated Use label + message. Kept for RestoreAccess. */
-  title?: string;
-  /** @deprecated Use message. Kept for RestoreAccess. */
-  body?: ReactNode;
   submessage?: ReactNode;
-  /** New API: semantic action button. */
+  /** Semantic action button. For custom content (e.g. Link), use action with onClick that navigates. */
   action?: { label: string; onClick: () => void };
-  /** @deprecated Use action. Custom actions slot for backward compat. */
-  actions?: ReactNode;
   onDismiss?: () => void;
   iconMode?: "dot" | "icon";
   fullWidth?: boolean;
@@ -51,11 +45,8 @@ export function InlineAlert({
   variant,
   label: labelProp,
   message: messageProp,
-  title,
-  body,
   submessage,
   action,
-  actions,
   onDismiss,
   iconMode = "dot",
   fullWidth = true,
@@ -63,9 +54,8 @@ export function InlineAlert({
   className,
   "data-testid": dataTestId,
 }: InlineAlertProps) {
-  const label = labelProp ?? title;
-  const hasLabel = Boolean(label);
-  const resolvedMessage = messageProp ?? body;
+  const hasLabel = Boolean(labelProp);
+  const resolvedMessage = messageProp;
   const IconComponent = variantIcons[variant];
 
   return (
@@ -94,7 +84,7 @@ export function InlineAlert({
             <span className="alert-dot alert-icon" aria-hidden />
           )}
           {hasLabel ? (
-            <span className="alert-label inline-alert-title">{label}</span>
+            <span className="alert-label inline-alert-title">{labelProp}</span>
           ) : null}
         </div>
         {resolvedMessage != null ? (
@@ -113,9 +103,6 @@ export function InlineAlert({
           >
             {action.label}
           </button>
-        ) : null}
-        {actions && !action ? (
-          <div className="inline-alert-actions">{actions}</div>
         ) : null}
       </div>
       {onDismiss ? (

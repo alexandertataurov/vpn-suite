@@ -3,25 +3,25 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   AccountCancellationModal,
-  SessionMissing,
-  SettingsAccountOverviewCard,
-  DangerSection,
-  PlanSection,
   ProfileModal,
-  ProfileSection,
-  SupportSection,
+  SessionMissing,
   SubscriptionCancellationModal,
 } from "@/components";
 import { getSupportBotHref } from "@/config/env";
 import {
+  DangerSection,
   FallbackScreen,
   FooterHelp,
   PageHeader,
-  PageScaffold,
   PageLayout,
+  PageScaffold,
   PageSection,
+  PlanSection,
+  ProfileSection,
+  SettingsAccountOverviewCard,
   Skeleton,
   Stack,
+  SupportSection,
   useToast,
 } from "@/design-system";
 import { useOpenLink, useI18n, useTelegramWebApp, useUpdateSubscription } from "@/hooks";
@@ -201,7 +201,7 @@ export function SettingsPage() {
         sectionTitle={t("settings.section_help")}
         setupGuideTitle={t("settings.setup_guide_title")}
         setupGuideDescription={t("settings.setup_guide_description")}
-        onSetupGuideClick={() => navigate("/devices")}
+        onSetupGuideClick={() => navigate("/connect-status")}
         faqTitle={t("settings.faq_title")}
         faqDescription={t("settings.faq_description")}
         onFaqClick={() => navigate(model.supportActionTo)}
@@ -234,7 +234,7 @@ export function SettingsPage() {
       />
 
       <SubscriptionCancellationModal
-        open={model.cancelOpen}
+        isOpen={model.cancelOpen}
         onClose={() => !model.isCancelling && model.closeCancelFlow()}
         cancelReason={model.cancelReason}
         offers={model.offers}
@@ -254,14 +254,14 @@ export function SettingsPage() {
       />
 
       <AccountCancellationModal
-        open={deleteAccountOpen}
+        isOpen={deleteAccountOpen}
         onClose={() => !model.isDeletingAccount && setDeleteAccountOpen(false)}
         onConfirm={model.handleDeleteAccount}
         loading={model.isDeletingAccount}
       />
 
       <ProfileModal
-        open={profileModalOpen}
+        isOpen={profileModalOpen}
         onClose={closeProfileModal}
         title={t("settings.edit_profile_title")}
         description={t("settings.profile_modal_description")}

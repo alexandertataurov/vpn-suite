@@ -28,6 +28,7 @@ export function BootstrapController({ children }: { children: ReactNode }) {
   const machine = useBootstrapMachine({ initData, isInsideTelegram });
   const {
     phase,
+    session,
     onboardingStep,
     onboardingVersion,
     onboardingError,
@@ -38,6 +39,8 @@ export function BootstrapController({ children }: { children: ReactNode }) {
     retry,
     startupError,
   } = machine;
+
+  const recommendedRouteRedirectDone = useRef(false);
 
   const handleOnboardingBack = useCallback(() => {
     if (onboardingStep <= 0) return;
@@ -56,9 +59,22 @@ export function BootstrapController({ children }: { children: ReactNode }) {
       return;
     }
     if (phase === "app_ready" && location.pathname === "/onboarding") {
-      navigate("/", { replace: true });
+      const target = session?.routing?.recommended_route ?? "/";
+      navigate(target, { replace: true });
+      return;
     }
-  }, [location.pathname, navigate, phase]);
+    if (
+      phase === "app_ready" &&
+      location.pathname === "/" &&
+      !recommendedRouteRedirectDone.current
+    ) {
+      const recommended = session?.routing?.recommended_route;
+      if (recommended && recommended !== "/") {
+        recommendedRouteRedirectDone.current = true;
+        navigate(recommended, { replace: true });
+      }
+    }
+  }, [location.pathname, navigate, phase, session?.routing?.recommended_route]);
 
   const readyTracked = useRef(false);
   useEffect(() => {

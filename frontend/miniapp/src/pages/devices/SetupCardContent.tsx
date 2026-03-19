@@ -1,9 +1,9 @@
 import {
   CompactSummaryCard,
   MissionPrimaryButton,
+  VpnBoundaryNote,
 } from "@/design-system";
 import { useI18n } from "@/hooks";
-import { VpnBoundaryNote } from "@/components/VpnBoundaryNote";
 
 export type SetupStep = "subscription" | "issue" | "pending";
 

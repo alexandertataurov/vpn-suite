@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
 import { ProfileSection } from "./ProfileSection";
-import { StoryShowcase } from "@/design-system";
+import { StorySection, StoryShowcase, StoryStack } from "@/design-system";
 
 const meta: Meta<typeof ProfileSection> = {
   title: "Recipes/Settings/ProfileSection",
@@ -11,7 +11,7 @@ const meta: Meta<typeof ProfileSection> = {
     layout: "padded",
     docs: {
       description: {
-        component: "Profile section with edit profile and language menu rows.",
+        component: "Settings profile recipe with edit-profile and language rows, moved out of the app wrapper layer.",
       },
     },
   },
@@ -27,10 +27,15 @@ const localeOptions = [
   { id: "ru" as const, label: "Русский" },
 ];
 
-function ProfileSectionWithState() {
+function ProfileSectionWithState({
+  initialActiveId = "en",
+}: {
+  initialActiveId?: "auto" | "en" | "ru";
+}) {
   const [open, setOpen] = useState(false);
-  const [activeId, setActiveId] = useState<"auto" | "en" | "ru">("en");
-  const summary = localeOptions.find((o) => o.id === activeId)?.label ?? "English";
+  const [activeId, setActiveId] = useState<"auto" | "en" | "ru">(initialActiveId);
+  const summary = localeOptions.find((option) => option.id === activeId)?.label ?? "English";
+
   return (
     <ProfileSection
       sectionTitle="Profile"
@@ -58,5 +63,18 @@ export const Default: Story = {
     <StoryShowcase>
       <ProfileSectionWithState />
     </StoryShowcase>
+  ),
+};
+
+export const Variants: Story = {
+  render: () => (
+    <StorySection title="Variants" description="Default locale and auto-detected locale variants.">
+      <StoryShowcase>
+        <StoryStack>
+          <ProfileSectionWithState initialActiveId="en" />
+          <ProfileSectionWithState initialActiveId="auto" />
+        </StoryStack>
+      </StoryShowcase>
+    </StorySection>
   ),
 };

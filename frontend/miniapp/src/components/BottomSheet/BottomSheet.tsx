@@ -30,8 +30,6 @@ export interface BottomSheetActions {
 }
 
 export interface BottomSheetProps {
-  /** @deprecated Use isOpen */
-  open?: boolean;
   isOpen?: boolean;
   onClose: () => void;
   title: string;
@@ -42,7 +40,6 @@ export interface BottomSheetProps {
 }
 
 export function BottomSheet({
-  open: openLegacy,
   isOpen: isOpenProp,
   onClose,
   title,
@@ -51,7 +48,7 @@ export function BottomSheet({
   actions,
   showSwipeHint = true,
 }: BottomSheetProps) {
-  const isOpen = isOpenProp ?? openLegacy ?? false;
+  const isOpen = isOpenProp ?? false;
   const theme =
     (typeof document !== "undefined" &&
       document.documentElement.dataset.theme) ??

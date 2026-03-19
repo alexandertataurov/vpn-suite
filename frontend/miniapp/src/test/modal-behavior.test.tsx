@@ -26,7 +26,7 @@ describe("modal variants", () => {
     const onClose = vi.fn();
     render(
       <ConfirmModal
-        open={true}
+        isOpen={true}
         onClose={onClose}
         onConfirm={() => undefined}
         title="Disconnect tunnel?"
@@ -49,7 +49,7 @@ describe("modal variants", () => {
   it("uses an instructional placeholder and disabled destructive CTA in danger modals", () => {
     render(
       <ConfirmDanger
-        open={true}
+        isOpen={true}
         onClose={() => undefined}
         onConfirm={() => undefined}
         title="Delete configuration?"
@@ -72,7 +72,7 @@ describe("modal variants", () => {
   it("shows the confirm label as the loading label in confirm modals", () => {
     render(
       <ConfirmModal
-        open={true}
+        isOpen={true}
         onClose={() => undefined}
         onConfirm={() => undefined}
         title="Disconnect tunnel?"
@@ -94,7 +94,7 @@ describe("modal variants", () => {
   it("normalizes confirm-token input to uppercase for typed confirmation flows", () => {
     render(
       <ConfirmDanger
-        open={true}
+        isOpen={true}
         onClose={() => undefined}
         onConfirm={() => undefined}
         title="Delete configuration?"

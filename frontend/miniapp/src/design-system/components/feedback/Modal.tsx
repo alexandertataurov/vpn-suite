@@ -26,13 +26,9 @@ export interface ModalActions {
 }
 
 export interface ModalProps {
-  /** @deprecated Use isOpen */
-  open?: boolean;
   isOpen?: boolean;
   onClose: () => void;
   title: string;
-  /** @deprecated Use subtitle */
-  description?: string;
   subtitle?: string;
   variant?: "plain" | "confirm" | "danger";
   children: ReactNode;
@@ -55,12 +51,10 @@ export interface ModalProps {
 }
 
 export function Modal({
-  open: openLegacy,
   isOpen: isOpenProp,
   onClose,
   title,
-  description,
-  subtitle,
+  subtitle: subtitleProp,
   children,
   actions,
   footer,
@@ -74,8 +68,8 @@ export function Modal({
   inline = false,
   "data-testid": dataTestId,
 }: ModalProps) {
-  const open = isOpenProp ?? openLegacy ?? false;
-  const sub = subtitle ?? description;
+  const open = isOpenProp ?? false;
+  const sub = subtitleProp;
 
   const { selectionChanged } = useTelegramHaptics();
   const prefersReducedMotion = usePrefersReducedMotion();
@@ -274,7 +268,7 @@ export function Modal({
 }
 
 export interface ConfirmModalProps {
-  open: boolean;
+  isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void | Promise<void>;
   title: string;
@@ -288,7 +282,7 @@ export interface ConfirmModalProps {
 }
 
 export function ConfirmModal({
-  open,
+  isOpen: open,
   onClose,
   onConfirm,
   title,
@@ -307,7 +301,7 @@ export function ConfirmModal({
 
   return (
     <Modal
-      open={open}
+      isOpen={open}
       onClose={onClose}
       title={title}
       variant="confirm"
@@ -336,7 +330,7 @@ export interface ConfirmDangerPayload {
 }
 
 export interface ConfirmDangerProps {
-  open: boolean;
+  isOpen: boolean;
   onClose: () => void;
   title: string;
   message: string;
@@ -353,7 +347,7 @@ export interface ConfirmDangerProps {
 }
 
 export function ConfirmDanger({
-  open,
+  isOpen: open,
   onClose,
   title,
   message,
@@ -401,7 +395,7 @@ export function ConfirmDanger({
 
   return (
     <Modal
-      open={open}
+      isOpen={open}
       onClose={onClose}
       title={title}
       variant="danger"

@@ -307,20 +307,6 @@
   color: var(--alert-success-text);
 }
 
-/* Legacy actions slot (backward compat) */
-.alert .inline-alert-actions {
-  margin-top: var(--spacing-2);
-  margin-left: var(--spacing-3);
-  display: flex;
-  gap: var(--spacing-2);
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.alert--no-label .inline-alert-actions {
-  margin-left: 0;
-}
-
 .alert .inline-alert-submessage {
   margin-top: var(--spacing-1);
   font-size: var(--font-size-xs);

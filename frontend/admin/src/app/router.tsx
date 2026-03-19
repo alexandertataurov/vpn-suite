@@ -78,6 +78,7 @@ export function AppRouter() {
           <Route path="audit" element={<AuditPage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="styleguide" element={<StyleguidePage />} />
+          <Route path="control-plane" element={<Navigate to="/automation" replace />} />
           <Route path="subscriptions" element={<Navigate to="/billing?tab=subscriptions" replace />} />
           <Route path="payments" element={<Navigate to="/billing?tab=payments" replace />} />
           <Route path="promo" element={<Navigate to="/" replace />} />

@@ -32,7 +32,7 @@ function ModalWithState() {
         Open profile modal
       </Button>
       <ProfileModal
-        open={open}
+        isOpen={open}
         onClose={() => setOpen(false)}
         title="Edit profile"
         description="Update your profile details"
@@ -72,7 +72,7 @@ export const Open: Story = {
   render: () => (
     <StoryShowcase>
       <ProfileModal
-        open={true}
+        isOpen={true}
         onClose={() => {}}
         title="Edit profile"
         description="Update your profile details"
@@ -104,7 +104,7 @@ export const Saving: Story = {
   render: () => (
     <StoryShowcase>
       <ProfileModal
-        open={true}
+        isOpen={true}
         onClose={() => {}}
         title="Edit profile"
         description="Update your profile details"

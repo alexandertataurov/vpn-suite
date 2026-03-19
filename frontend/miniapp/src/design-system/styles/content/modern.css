@@ -191,7 +191,7 @@
 }
 
 /* ---- Page Scaffold & Headers ----------------------- */
-/* padding-top: 0 — PageLayout provides 24px; avoid double spacing to ProfileRow */
+/* padding-top: 0 — PageLayout provides top padding; avoid double spacing to ProfileRow */
 .modern-header {
   padding: 0 var(--space-gutter) var(--spacing-4);
   display: flex;
@@ -300,27 +300,9 @@
   font-weight: var(--font-weight-medium);
 }
 
-.modern-icon-button {
-  width: var(--size-touch-target, 44px);
-  height: var(--size-touch-target, 44px);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  color: var(--color-text-muted);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
-  box-shadow: var(--shadow-sm);
-}
-
-.modern-header .modern-icon-button,
+.modern-header .settings-pill,
 .settings-pill {
   border: 1px solid var(--color-border);
-}
-
-.modern-icon-button,
-.settings-pill {
   transition: background var(--duration-micro) ease, filter var(--duration-micro) ease;
 }
 
@@ -341,7 +323,6 @@
   inset: -5px;
 }
 
-.modern-icon-button:active,
 .settings-pill:active {
   transform: scale(0.92);
   background: var(--color-surface-2);
@@ -455,20 +436,6 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
   font-size: var(--amnezia-profile-name, var(--font-size-md));
   font-weight: var(--font-weight-semibold);
   letter-spacing: -0.3px;
-}
-
-.modern-profile-row .modern-icon-button {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border-strong);
-  color: var(--color-text-tertiary);
-  box-shadow: none;
-}
-
-.modern-profile-row .modern-icon-button:hover {
-  color: var(--color-text-muted);
 }
 
 /* ---- Hero Status Card (variant="status" layout) ----- */

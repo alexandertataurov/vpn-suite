@@ -10,7 +10,7 @@ const meta: Meta<typeof DangerSection> = {
     layout: "padded",
     docs: {
       description: {
-        component: "Danger zone with reset configs, logout, delete account.",
+        component: "Destructive actions recipe for Settings, covering device-dependent and loading variants in a single canonical file.",
       },
     },
   },
@@ -36,7 +36,7 @@ const baseArgs = {
   onDeleteAccount: () => {},
 };
 
-export const WithDevices: Story = {
+export const Default: Story = {
   args: {
     ...baseArgs,
     hasActiveDevices: true,
@@ -48,25 +48,17 @@ export const WithDevices: Story = {
   ),
 };
 
-export const WithoutDevices: Story = {
-  args: {
-    ...baseArgs,
-    hasActiveDevices: false,
-  },
-  render: (args) => (
-    <StoryShowcase>
-      <DangerSection {...args} />
-    </StoryShowcase>
-  ),
-};
-
-export const LoadingVariants: Story = {
+export const Variants: Story = {
   render: () => (
-    <StorySection title="Loading states" description="Revoking / logging out.">
-      <StoryStack>
-        <DangerSection {...baseArgs} hasActiveDevices={true} isRevoking={true} />
-        <DangerSection {...baseArgs} hasActiveDevices={false} isLoggingOut={true} />
-      </StoryStack>
+    <StorySection title="Variants" description="With devices, without devices, and loading states.">
+      <StoryShowcase>
+        <StoryStack>
+          <DangerSection {...baseArgs} hasActiveDevices />
+          <DangerSection {...baseArgs} hasActiveDevices={false} />
+          <DangerSection {...baseArgs} hasActiveDevices isRevoking />
+          <DangerSection {...baseArgs} hasActiveDevices={false} isLoggingOut />
+        </StoryStack>
+      </StoryShowcase>
     </StorySection>
   ),
 };
