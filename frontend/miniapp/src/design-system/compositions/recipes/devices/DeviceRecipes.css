@@ -1,0 +1,171 @@
+.device-hero-card .plan-name {
+  font-size: 24px;
+  letter-spacing: -0.4px;
+}
+
+.device-hero-card .status-chip {
+  align-self: flex-start;
+}
+
+.device-row {
+  align-items: flex-start;
+}
+
+.device-row .ri-body {
+  min-width: 0;
+  flex: 1;
+}
+
+.device-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  width: fit-content;
+  margin: 3px 0 4px;
+  padding: 3px 9px;
+  border-radius: 100px;
+  border: 1px solid transparent;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1px;
+  line-height: 1;
+}
+
+.device-chip--imported {
+  background: var(--device-imported-bg);
+  border-color: var(--device-imported-border);
+  color: var(--device-imported-text);
+}
+
+.device-chip--pending {
+  background: var(--device-pending-bg);
+  border-color: var(--device-pending-border);
+  color: var(--device-pending-text);
+}
+
+.device-chip--inactive {
+  background: var(--device-inactive-bg);
+  border-color: var(--device-inactive-border);
+  color: var(--device-inactive-text);
+}
+
+.device-chip-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.device-chip--imported .device-chip-dot {
+  background: var(--device-imported-dot);
+  animation: blink 2.5s ease-in-out infinite;
+}
+
+.device-chip--pending .device-chip-dot {
+  background: var(--device-pending-dot);
+  animation: blink 2s ease-in-out infinite;
+}
+
+.device-chip--inactive .device-chip-dot {
+  background: var(--device-inactive-dot);
+}
+
+.device-meta,
+.device-row .ri-sub.device-meta {
+  max-width: calc(100vw - 140px);
+  margin-top: 0;
+  color: var(--row-sub);
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.device-menu-btn.btn {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--row-chev);
+  flex-shrink: 0;
+  position: relative;
+}
+
+.device-menu-btn.btn::before {
+  content: "";
+  position: absolute;
+  inset: -8px;
+}
+
+.device-menu-btn.btn:active {
+  background: var(--row-active-bg);
+}
+
+.device-menu-btn.btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.devices-setup-card {
+  display: flex;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: var(--color-surface);
+  overflow: hidden;
+}
+
+.devices-setup-card__accent {
+  width: 3px;
+  min-width: 3px;
+  background: color-mix(in oklch, var(--color-accent) 45%, transparent);
+  flex-shrink: 0;
+}
+
+.devices-setup-card__inner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  padding: var(--miniapp-data-cell-padding) var(--miniapp-card-padding);
+}
+
+.devices-setup-card__eyebrow {
+  color: var(--color-text-tertiary);
+  font-size: var(--amnezia-plan-eyebrow, var(--typo-meta-size));
+  font-weight: 600;
+  letter-spacing: 0.7px;
+}
+
+.devices-setup-card__title {
+  margin: 0;
+  color: var(--color-text);
+  font-size: var(--typo-h3-size, 16px);
+  font-weight: 700;
+  letter-spacing: -0.2px;
+}
+
+.devices-setup-card__desc {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--typo-caption-size, 14px);
+  line-height: 1.55;
+}
+
+.devices-empty-card {
+  margin-bottom: 0;
+}
+
+@media (max-width: 360px) {
+  .device-hero-card .p-stat-val,
+  .device-hero-card .plan-name {
+    font-size: 16px;
+  }
+
+  .device-hero-card .p-stat-label {
+    font-size: 8.5px;
+  }
+}

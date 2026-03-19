@@ -3,9 +3,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { IconPlus } from "@/design-system/icons";
 import {
   AddDeviceWizardContent,
+  CardRow,
   ConfigCardContent,
   DeviceRow,
-  DevicesSummaryCard,
+  DeviceHeroCard,
   FallbackScreen,
   FooterHelp,
   Skeleton,
@@ -18,10 +19,8 @@ import {
   PageScaffold,
   PageLayout,
   PageSection,
-  ListCard,
-  EmptyStateBlock,
-  HelperNote,
   Input,
+  SectionLabel,
   usePrefersReducedMotion,
   Stack,
   SetupCardContent,
@@ -98,8 +97,6 @@ export function DevicesPage() {
     handleRenameDevice(renameDeviceId, name);
     closeRename();
   }, [renameDeviceId, renameValue, handleRenameDevice, closeRename]);
-  const summaryTitle = model.summaryHero.title === model.header.title ? undefined : model.summaryHero.title;
-
   useEffect(() => {
     if (
       location.pathname === "/devices/issue" &&
@@ -182,6 +179,7 @@ export function DevicesPage() {
           />
           <Stack gap="4">
             <Skeleton variant="card" height={160} />
+            <Skeleton variant="line" height={44} />
             <Skeleton variant="line" width="40%" />
             <SkeletonList lines={3} />
           </Stack>
@@ -212,33 +210,29 @@ export function DevicesPage() {
         />
       ) : null}
 
-      <DevicesSummaryCard
-        title={model.hasSubscription ? summaryTitle : undefined}
-        description={model.hasSubscription ? model.summaryHero.subtitle : undefined}
-        className="devices-summary-section"
-        metrics={model.summaryHero.metrics}
-        action={
-          model.canAddDevice ? (
-            <Button
-              type="button"
-              variant="primary"
-              size="sm"
-              status={model.isAddPending ? "loading" : "idle"}
-              statusText={t("devices.wizard_creating")}
-              onClick={openAddWizard}
-              disabled={model.isAddPending}
-              aria-label={t("devices.add_new_device")}
-              startIcon={<IconPlus size={16} strokeWidth={2} aria-hidden />}
-            >
-              {t("devices.add_new_device")}
-            </Button>
-          ) : undefined
-        }
+      <DeviceHeroCard
+        devicesUsed={model.activeDevices.length}
+        devicesTotal={model.deviceLimit}
+        setupPending={model.pendingConnectionCount}
+        trafficUsed={model.trafficUsedLabel}
       />
 
-      <HelperNote>{t("common.vpn_boundary_devices_note")}</HelperNote>
+      <Button
+        type="button"
+        variant="primary"
+        fullWidth
+        status={model.isAddPending ? "loading" : "idle"}
+        statusText={t("devices.wizard_creating")}
+        onClick={openAddWizard}
+        disabled={!model.canAddDevice || model.isAddPending}
+        aria-label={t("devices.add_new_device")}
+        startIcon={<IconPlus size={16} strokeWidth={2} aria-hidden />}
+      >
+        {t("devices.add_new_device")}
+      </Button>
 
-      <PageSection id="devices-section" title={t("devices.section_devices_title")}>
+      <SectionLabel label={t("devices.section_devices_title")} />
+      <div id="devices-section">
         {(model.isDeviceLimitError || model.showUpgradeCta) ? (
           <InlineAlert
             variant="warning"
@@ -260,12 +254,11 @@ export function DevicesPage() {
           />
         ) : null}
 
-        <ListCard className="devices-list-card">
+        <CardRow className="devices-list-card">
           {model.activeDevices.length === 0 ? (
-            <EmptyStateBlock
-              title={t("devices.empty_title")}
-              message={model.hasSubscription ? t("devices.empty_message_has_sub") : t("devices.empty_message_no_sub")}
-            />
+            <div className="card-row-empty devices-empty-card">
+              {t("devices.empty_title")}
+            </div>
           ) : (
             animatedDevices.map(({ device, phase }) => (
               <div key={device.id} className="device-row-motion" data-phase={phase}>
@@ -282,11 +275,11 @@ export function DevicesPage() {
               </div>
             ))
           )}
-        </ListCard>
-      </PageSection>
+        </CardRow>
+      </div>
 
-      {model.showSetupCard ? (
-        <PageSection id="setup-section">
+      {model.hasSubscription && model.showSetupCard ? (
+        <div id="setup-section">
           <SetupCardContent
             step={model.setupStep}
             onIssueDevice={openAddWizard}
@@ -294,7 +287,7 @@ export function DevicesPage() {
             isAddPending={model.isAddPending}
             issueActionLabel={model.issueActionLabel}
           />
-        </PageSection>
+        </div>
       ) : null}
 
       {model.issuedConfig ? (

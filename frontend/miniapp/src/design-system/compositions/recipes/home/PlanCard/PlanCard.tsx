@@ -32,6 +32,7 @@ export interface PlanCardProps extends HTMLAttributes<HTMLDivElement> {
   renewsLabel?: string;
   /** Traffic display; default "∞" */
   traffic?: string;
+  statusLabel?: string;
 }
 
 const BADGE_LABEL: Record<PlanCardStatus, string> = {
@@ -73,6 +74,7 @@ export function PlanCard({
   deviceLimit = 0,
   renewsLabel = "",
   traffic = "∞",
+  statusLabel,
   className = "",
   ...props
 }: PlanCardProps) {
@@ -89,34 +91,34 @@ export function PlanCard({
       data-status={status}
       {...props}
     >
-      <div className={styles.body}>
-        <div className={styles.head}>
+      <div className={`${styles.body} plan-body`}>
+        <div className={`${styles.head} plan-top`}>
           <div className={styles.meta}>
             {eyebrow ? (
-              <span className={styles.eyebrow}>{eyebrow}</span>
+              <span className={`${styles.eyebrow} plan-eyebrow`}>{eyebrow}</span>
             ) : null}
             <p className={`${styles.planName} plan-name`}>{plan}</p>
-            <span className={styles.planSub}>{planSub}</span>
+            <span className={`${styles.planSub} plan-sub`}>{planSub}</span>
           </div>
-          <StatusChip variant={status} label={BADGE_LABEL[status]} />
+          <StatusChip variant={status} label={statusLabel ?? BADGE_LABEL[status]} />
         </div>
       </div>
-      <div className={styles.stats}>
+      <div className={`${styles.stats} plan-stats`}>
         {stats.map((stat) => (
-          <div key={stat.label} className={styles.stat}>
-            <span className={styles.statLabel}>{stat.label}</span>
+          <div key={stat.label} className={`${styles.stat} p-stat`}>
+            <span className={`${styles.statLabel} p-stat-label`}>{stat.label}</span>
             <span
               className={
                 stat.tone === "expiring"
-                  ? `${styles.statValue} ${styles.statValueExpiring}`
+                  ? `${styles.statValue} ${styles.statValueExpiring} p-stat-val`
                   : stat.tone === "expired"
-                    ? `${styles.statValue} ${styles.statValueExpired}`
-                    : styles.statValue
+                    ? `${styles.statValue} ${styles.statValueExpired} p-stat-val`
+                    : `${styles.statValue} p-stat-val`
               }
             >
               {stat.value}
               {stat.dim ? (
-                <span className={styles.statDim}>{stat.dim}</span>
+                <span className={`${styles.statDim} dim`}>{stat.dim}</span>
               ) : null}
             </span>
           </div>

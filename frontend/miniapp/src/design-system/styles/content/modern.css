@@ -419,7 +419,6 @@
 /* ---- Profile row (amnezia spec §4.1) ---------------- */
 .profile-row,
 .modern-profile-row {
-  padding-left: var(--spacing-4);
   gap: var(--spacing-2);
   margin-bottom: var(--amnezia-profile-margin-bottom, var(--spacing-5));
 }
@@ -591,7 +590,7 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
 
 /* ---- FooterHelp (design-system recipe) ----------------- */
 .footer-help {
-  padding: var(--spacing-4) 0 0;
+  padding: var(--spacing-4) 0 var(--spacing-4);
   margin-top: 0;
   text-align: center;
 }
@@ -657,7 +656,7 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
 
 /* ---- HelpFooter (pattern) — note + clickable link ---- */
 .help-footer {
-  padding: var(--spacing-4) 0 0;
+  padding: var(--spacing-4) 0 var(--spacing-4);
   margin-top: 0;
   text-align: center;
 }
@@ -1156,7 +1155,7 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
 /* ---- Device Metrics --------------------------------- */
 .modern-device-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--spacing-4);
   width: 100%;
 }
@@ -1165,6 +1164,7 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-2);
+  min-width: 0;
 }
 
 .modern-progress-bar-bg {

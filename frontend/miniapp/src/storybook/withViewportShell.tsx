@@ -1,28 +1,13 @@
-import { useMemo, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import type { Decorator } from "@storybook/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { StackFlowLayout } from "@/app/ViewportLayout";
+import { StorybookQueryClientProvider } from "./queryClient";
 
 export type ViewportShellVariant = "stack";
 
 export function ViewportShellProviders({ children }: { children: ReactNode }) {
-  const client = useMemo(
-    () =>
-      new QueryClient({
-        defaultOptions: {
-          queries: { retry: false },
-          mutations: { retry: false },
-        },
-      }),
-    [],
-  );
-
-  return (
-    <QueryClientProvider client={client}>
-      {children}
-    </QueryClientProvider>
-  );
+  return <StorybookQueryClientProvider>{children}</StorybookQueryClientProvider>;
 }
 
 export function ViewportShellRoutes({

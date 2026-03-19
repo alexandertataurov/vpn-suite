@@ -55,6 +55,48 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+const baseRowArgs = {
+  icon: <IconSettings size={15} strokeWidth={2} />,
+  label: "Account",
+  subtitle: "Manage email and password",
+  onClick: () => {},
+};
+
+const baseRows = {
+  account: (
+    <RowItem
+      icon={<IconSettings size={15} strokeWidth={2} />}
+      label="Account"
+      subtitle="Manage email and password"
+      onClick={() => {}}
+    />
+  ),
+  language: (
+    <RowItem
+      icon={<IconGlobe size={15} strokeWidth={2} />}
+      label="Language"
+      subtitle="Telegram default → English"
+      onClick={() => {}}
+    />
+  ),
+  faq: (
+    <RowItem
+      icon={<IconHelpCircle size={15} strokeWidth={2} />}
+      label="FAQ"
+      onClick={() => {}}
+    />
+  ),
+  danger: (
+    <RowItem
+      icon={<IconTrash2 size={15} strokeWidth={2} />}
+      iconVariant="danger"
+      label="Delete account"
+      subtitle="Permanently remove your account"
+      onClick={() => {}}
+    />
+  ),
+};
+
 export const Default: Story = {
   name: "Default",
   parameters: {
@@ -65,10 +107,7 @@ export const Default: Story = {
     },
   },
   args: {
-    icon: <IconSettings size={15} strokeWidth={2} />,
-    label: "Account",
-    subtitle: "Manage email and password",
-    onClick: () => {},
+    ...baseRowArgs,
   },
   render: (args) => (
     <WithThemes>
@@ -85,108 +124,56 @@ export const Variants: Story = {
     docs: {
       description: {
         story:
-          "Icon treatments, badge rows, toggle rows, and label-only navigation rows.",
+          "Icon treatments, badge rows, toggle rows, label-only navigation rows, loading skeletons, and empty-card states.",
       },
     },
   },
   render: function VariantsStory() {
     const [checked, setChecked] = useState(true);
     return (
-    <WithThemes>
-      <CardRow>
-        <RowItem
-          icon={<IconSettings size={15} strokeWidth={2} />}
-          iconVariant="default"
-          label="Account"
-          subtitle="Manage email and password"
-          onClick={() => {}}
-        />
-        <RowItem
-          icon={<IconGlobe size={15} strokeWidth={2} />}
-          iconVariant="default"
-          label="Language"
-          subtitle="Telegram default → English"
-          onClick={() => {}}
-        />
-        <RowItem
-          icon={<IconRotateCw size={15} strokeWidth={2} />}
-          iconVariant="warning"
-          label="Reset configs"
-          subtitle="Remove access from all devices"
-          onClick={() => {}}
-        />
-        <RowItem
-          icon={<IconTrash2 size={15} strokeWidth={2} />}
-          iconVariant="danger"
-          label="Delete account"
-          subtitle="Permanently remove your account"
-          onClick={() => {}}
-        />
-        <RowItem
-          icon={<IconBox size={15} strokeWidth={2} />}
-          label="Subscription"
-          subtitle="Expires Mar 24 · Pro annual"
-          right={<Badge label="14d left" variant="warning" />}
-          onClick={() => {}}
-        />
-        <RowItem
-          icon={<IconRotateCw size={15} strokeWidth={2} />}
-          label="Auto-renew"
-          subtitle="Renews on Mar 24, 2026. Charged via Telegram."
-          right={<Switch checked={checked} onCheckedChange={setChecked} aria-label="Auto-renew" />}
-          showChevron={false}
-          onClick={() => setChecked(!checked)}
-        />
-        <RowItem
-          icon={<IconHelpCircle size={15} strokeWidth={2} />}
-          label="FAQ"
-          onClick={() => {}}
-        />
-      </CardRow>
-    </WithThemes>
+      <WithThemes>
+        <CardRow>
+          {baseRows.account}
+          {baseRows.language}
+          <RowItem
+            icon={<IconRotateCw size={15} strokeWidth={2} />}
+            iconVariant="warning"
+            label="Reset configs"
+            subtitle="Remove access from all devices"
+            onClick={() => {}}
+          />
+          {baseRows.danger}
+          <RowItem
+            icon={<IconBox size={15} strokeWidth={2} />}
+            label="Subscription"
+            subtitle="Expires Mar 24 · Pro annual"
+            right={<Badge label="14d left" variant="warning" />}
+            onClick={() => {}}
+          />
+          <RowItem
+            icon={<IconRotateCw size={15} strokeWidth={2} />}
+            label="Auto-renew"
+            subtitle="Renews on Mar 24, 2026. Charged via Telegram."
+            right={<Switch checked={checked} onCheckedChange={setChecked} aria-label="Auto-renew" />}
+            showChevron={false}
+            onClick={() => setChecked(!checked)}
+          />
+          {baseRows.faq}
+        </CardRow>
+        <CardRow>
+          <RowItemSkeleton />
+          <RowItemSkeleton />
+        </CardRow>
+        <CardRow>
+          <div className="card-row-empty">No devices added yet</div>
+        </CardRow>
+      </WithThemes>
     );
   },
 };
 
-export const Loading: Story = {
-  name: "Loading skeleton",
-  parameters: {
-    docs: {
-      description: {
-        story: "Shown while row data is fetching.",
-      },
-    },
-  },
-  render: () => (
-    <WithThemes>
-      <CardRow>
-        <RowItemSkeleton />
-        <RowItemSkeleton />
-      </CardRow>
-    </WithThemes>
-  ),
-};
-
-export const EmptyState: Story = {
-  name: "Empty card row",
-  parameters: {
-    docs: {
-      description: {
-        story: "When a section has no items yet.",
-      },
-    },
-  },
-  render: () => (
-    <WithThemes>
-      <CardRow>
-        <div className="card-row-empty">No devices added yet</div>
-      </CardRow>
-    </WithThemes>
-  ),
-};
-
-export const WithSectionLabel: Story = {
-  name: "With section label",
+export const InContext: Story = {
+  name: "In context",
   parameters: {
     docs: {
       description: {
@@ -204,22 +191,11 @@ export const WithSectionLabel: Story = {
           subtitle="Update name and email"
           onClick={() => {}}
         />
-        <RowItem
-          icon={<IconGlobe size={15} strokeWidth={2} />}
-          label="Language"
-          subtitle="Telegram default → English"
-          onClick={() => {}}
-        />
+        {baseRows.language}
       </CardRow>
       <SectionLabel label="Danger zone" />
       <CardRow>
-        <RowItem
-          icon={<IconTrash2 size={15} strokeWidth={2} />}
-          iconVariant="danger"
-          label="Delete account"
-          subtitle="Permanently remove your account"
-          onClick={() => {}}
-        />
+        {baseRows.danger}
       </CardRow>
     </WithThemes>
   ),
@@ -238,29 +214,18 @@ export const KeyboardNav: Story = {
   render: () => (
     <WithThemes>
       <CardRow>
-        <RowItem
-          icon={<IconSettings size={15} strokeWidth={2} />}
-          label="Account"
-          subtitle="Manage email and password"
-          onClick={() => {}}
-        />
+        {baseRows.account}
         <RowItem
           icon={<IconShield size={15} strokeWidth={2} />}
           label="Security"
           subtitle="Two-factor and sessions"
           onClick={() => {}}
         />
-        <RowItem
-          icon={<IconGlobe size={15} strokeWidth={2} />}
-          label="Language"
-          subtitle="English"
-          onClick={() => {}}
-        />
+        <RowItem icon={<IconGlobe size={15} strokeWidth={2} />} label="Language" subtitle="English" onClick={() => {}} />
       </CardRow>
     </WithThemes>
   ),
 };
-
 
 export const Responsive: Story = {
   name: "Responsive — long text",

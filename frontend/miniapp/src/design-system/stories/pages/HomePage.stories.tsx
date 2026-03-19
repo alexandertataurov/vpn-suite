@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { Route } from "react-router-dom";
 import { HomePage } from "@/pages/Home";
 import {
+  type MockScenario,
   accessErrorScenario,
   emptyDevicesScenario,
   expiredScenario,
@@ -32,94 +33,64 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const NoPlan: Story = {
-  name: "No active plan",
-  render: () => (
-    <PageSandbox scenario={noPlanScenario} initialEntries={["/"]}>
+function renderHomePage(scenario: MockScenario) {
+  return (
+    <PageSandbox scenario={scenario} initialEntries={["/"]}>
       <Route path="/" element={<HomePage />} />
     </PageSandbox>
-  ),
-  parameters: {
-    docs: {
-      description: {
-        story: "New-user state with the onboarding hero and plan/setup prompts.",
-      },
-    },
-  },
-};
+  );
+}
 
-export const NoDevices: Story = {
-  render: () => (
-    <PageSandbox scenario={emptyDevicesScenario} initialEntries={["/"]}>
-      <Route path="/" element={<HomePage />} />
-    </PageSandbox>
-  ),
-  parameters: {
-    docs: {
-      description: {
-        story: "Active subscription with no issued devices yet. Shows the no-device callout and subscription row.",
-      },
-    },
-  },
-};
+function createHomeStory(name: string, scenario: MockScenario, description?: string): Story {
+  return {
+    name,
+    render: () => renderHomePage(scenario),
+    ...(description
+      ? {
+          parameters: {
+            docs: {
+              description: {
+                story: description,
+              },
+            },
+          },
+        }
+      : {}),
+  };
+}
 
-export const Active: Story = {
-  render: () => (
-    <PageSandbox scenario={readyScenario} initialEntries={["/"]}>
-      <Route path="/" element={<HomePage />} />
-    </PageSandbox>
-  ),
-};
+export const NoPlan = createHomeStory(
+  "No active plan",
+  noPlanScenario,
+  "New-user state with the onboarding hero and plan/setup prompts.",
+);
 
-export const Home: Story = {
+export const NoDevices = createHomeStory(
+  "No devices yet",
+  emptyDevicesScenario,
+  "Active subscription with no issued devices yet. Shows the no-device callout and subscription row.",
+);
+
+export const Active = createHomeStory("Active subscription", readyScenario);
+
+export const Home = {
   ...Active,
   name: "Home",
-};
+} satisfies Story;
 
-export const Expiring: Story = {
-  render: () => (
-    <PageSandbox scenario={trialScenario} initialEntries={["/"]}>
-      <Route path="/" element={<HomePage />} />
-    </PageSandbox>
-  ),
-  parameters: {
-    docs: {
-      description: {
-        story: "Trial or renewal-warning state. Toggle `expiringNoDevices` to see the callout-above-banner variant used in the live home screen.",
-      },
-    },
-  },
-};
+export const Expiring = createHomeStory(
+  "Expiring soon",
+  trialScenario,
+  "Trial or renewal-warning state. See the dedicated no-device variant for the callout-above-banner layout used in the live home screen.",
+);
 
-export const ExpiringNoDevices: Story = {
-  name: "Expiring with no devices",
-  render: () => (
-    <PageSandbox scenario={expiringNoDevicesScenario} initialEntries={["/"]}>
-      <Route path="/" element={<HomePage />} />
-    </PageSandbox>
-  ),
-};
+export const ExpiringNoDevices = createHomeStory(
+  "Expiring with no devices",
+  expiringNoDevicesScenario,
+);
 
-export const Expired: Story = {
-  render: () => (
-    <PageSandbox scenario={expiredScenario} initialEntries={["/"]}>
-      <Route path="/" element={<HomePage />} />
-    </PageSandbox>
-  ),
-};
-export const Loading: Story = {
-  name: "Home loading",
-  render: () => (
-    <PageSandbox scenario={loadingSessionScenario} initialEntries={["/"]}>
-      <Route path="/" element={<HomePage />} />
-    </PageSandbox>
-  ),
-};
-export const Error: Story = {
-  name: "Could not load home",
-  render: () => (
-    <PageSandbox scenario={accessErrorScenario} initialEntries={["/"]}>
-      <Route path="/" element={<HomePage />} />
-    </PageSandbox>
-  ),
-};
+export const Expired = createHomeStory("Subscription expired", expiredScenario);
+
+export const Loading = createHomeStory("Home loading", loadingSessionScenario);
+
+export const Error = createHomeStory("Could not load home", accessErrorScenario);

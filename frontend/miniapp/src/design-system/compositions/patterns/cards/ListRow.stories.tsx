@@ -22,15 +22,21 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+function renderChevron() {
+  return <IconChevronRight size={13} strokeWidth={2.5} />;
+}
+
+const manageDevicesRow = {
+  icon: <IconMonitor size={15} strokeWidth={2} />,
+  iconTone: "neutral" as const,
+  title: "Manage Devices",
+  subtitle: "2 of 5 devices added",
+  right: renderChevron(),
+  onClick: () => {},
+};
+
 export const Default: Story = {
-  args: {
-    icon: <IconMonitor size={15} strokeWidth={2} />,
-    iconTone: "neutral",
-    title: "Manage Devices",
-    subtitle: "2 of 5 devices added",
-    right: <IconChevronRight size={13} strokeWidth={2.5} />,
-    onClick: () => {},
-  },
+  args: manageDevicesRow,
   render: (args) => (
     <StoryShowcase>
       <ListCard className="home-card-row">
@@ -46,32 +52,24 @@ export const Variants: Story = {
       <StoryShowcase>
         <ListCard className="home-card-row">
           <ListRow
-            icon={<IconMonitor size={15} strokeWidth={2} />}
-            iconTone="neutral"
-            title="Manage Devices"
-            subtitle="2 of 5 devices added"
-            right={<IconChevronRight size={13} strokeWidth={2.5} />}
-            onClick={() => {}}
+            {...manageDevicesRow}
           />
           <ListRow
-            icon={<IconMonitor size={15} strokeWidth={2} />}
-            iconTone="neutral"
-            title="Manage Devices"
+            {...manageDevicesRow}
             subtitle="2 of 5 devices"
             right={
               <div className="home-row-right-group">
                 <Badge label="Full" variant="muted" />
-                <IconChevronRight size={13} strokeWidth={2.5} />
+                {renderChevron()}
               </div>
             }
-            onClick={() => {}}
           />
           <ListRow
             icon={<IconMonitor size={15} strokeWidth={2} />}
             iconVariant="danger"
             title="Delete account"
             subtitle="Permanently remove your account"
-            right={<IconChevronRight size={13} strokeWidth={2.5} />}
+            right={renderChevron()}
             onClick={() => {}}
           />
         </ListCard>
@@ -85,20 +83,13 @@ export const InContext: Story = {
     <StorySection title="In context" description="Multiple rows in ListCard.">
       <StoryShowcase>
         <ListCard className="home-card-row">
-          <ListRow
-            icon={<IconMonitor size={15} strokeWidth={2} />}
-            iconTone="neutral"
-            title="Manage Devices"
-            subtitle="2 of 5 devices"
-            right={<IconChevronRight size={13} strokeWidth={2.5} />}
-            onClick={() => {}}
-          />
+          <ListRow {...manageDevicesRow} subtitle="2 of 5 devices" />
           <ListRow
             icon={<IconMonitor size={15} strokeWidth={2} />}
             iconTone="neutral"
             title="Settings"
             subtitle="Account and preferences"
-            right={<IconChevronRight size={13} strokeWidth={2.5} />}
+            right={renderChevron()}
             onClick={() => {}}
           />
         </ListCard>

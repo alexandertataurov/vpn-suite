@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef } from "react";
 import type { ReactNode } from "react";
 import { IconMonitor } from "@/design-system/icons";
-import { HeroCard } from "@/design-system";
+import { HeroCard } from "../../patterns";
 import { useI18n } from "@/hooks";
 
 export interface DevicesSummaryMetric {

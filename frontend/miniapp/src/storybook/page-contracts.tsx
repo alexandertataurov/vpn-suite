@@ -1,8 +1,9 @@
-import { useEffect, useLayoutEffect, useMemo, useState, type ReactElement, type ReactNode } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useLayoutEffect, useMemo, useState, type ReactElement, type ReactNode } from "react";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { setWebappToken } from "@/api/client";
 import { BootstrapContextProvider } from "@/bootstrap";
 import { ToastContainer } from "@/design-system";
+import { createStorybookQueryClient } from "./queryClient";
 import { ViewportShellRoutes } from "./withViewportShell";
 
 export type MockEndpoint =
@@ -526,57 +527,22 @@ export function PageSandbox({
     }),
     [],
   );
-  const client = useMemo(
-    () =>
-      new QueryClient({
-        defaultOptions: {
-          queries: { retry: false },
-          mutations: { retry: false },
-        },
-      }),
-    [],
-  );
+  const client = useMemo(() => createStorybookQueryClient(), []);
 
-  useLayoutEffect(() => {
-    setWebappToken(scenario.token ?? null);
+  useMockScenarioFetch(client, scenario, () => {
     setTokenReady(true);
-    const originalFetch = window.fetch.bind(window);
-
-    window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
-      const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
-      const method = (init?.method ?? (typeof input === "object" && "method" in input ? input.method : "GET") ?? "GET").toUpperCase();
-      const endpoint = resolveEndpoint(url, method);
-      if (!endpoint) return originalFetch(input, init);
-      if (scenario.loading?.includes(endpoint)) {
-        return new Promise<Response>(() => undefined as never);
-      }
-      const status = scenario.statuses?.[endpoint] ?? 200;
-      const body = scenario.responses?.[endpoint] ?? defaultResponse(endpoint);
-      if (status >= 400) {
-        return jsonResponse({ error: { message: "Mocked error" } }, status);
-      }
-      return jsonResponse(body, status);
-    };
-
-    return () => {
-      window.fetch = originalFetch;
-      setWebappToken(null);
-      client.clear();
-    };
-  }, [client, scenario]);
+  });
 
   if (!tokenReady) return null;
 
   return (
-    <QueryClientProvider client={client}>
-      <ToastContainer>
-        <BootstrapContextProvider value={bootstrapValue}>
-          <ViewportShellRoutes initialEntries={initialEntries} variant="stack">
-            {children}
-          </ViewportShellRoutes>
-        </BootstrapContextProvider>
-      </ToastContainer>
-    </QueryClientProvider>
+    <StorybookPageProviders
+      client={client}
+      bootstrapValue={bootstrapValue}
+      initialEntries={initialEntries}
+    >
+      {children}
+    </StorybookPageProviders>
   );
 }
 
@@ -612,19 +578,53 @@ export function OnboardingSandbox({
     }),
     [isCompletingOnboarding, onboardingStep],
   );
-  const client = useMemo(
-    () =>
-      new QueryClient({
-        defaultOptions: {
-          queries: { retry: false },
-          mutations: { retry: false },
-        },
-      }),
-    [],
-  );
+  const client = useMemo(() => createStorybookQueryClient(), []);
 
-  useEffect(() => {
+  useMockScenarioFetch(client, scenario);
+
+  return (
+    <StorybookPageProviders
+      client={client}
+      bootstrapValue={bootstrapValue}
+      initialEntries={initialEntries}
+    >
+      {children}
+    </StorybookPageProviders>
+  );
+}
+
+function StorybookPageProviders({
+  children,
+  client,
+  bootstrapValue,
+  initialEntries,
+}: {
+  children: ReactNode;
+  client: ReturnType<typeof createStorybookQueryClient>;
+  bootstrapValue: ReactElement<typeof BootstrapContextProvider>["props"]["value"];
+  initialEntries: string[];
+}) {
+  return (
+    <QueryClientProvider client={client}>
+      <ToastContainer>
+        <BootstrapContextProvider value={bootstrapValue}>
+          <ViewportShellRoutes initialEntries={initialEntries} variant="stack">
+            {children}
+          </ViewportShellRoutes>
+        </BootstrapContextProvider>
+      </ToastContainer>
+    </QueryClientProvider>
+  );
+}
+
+function useMockScenarioFetch(
+  client: ReturnType<typeof createStorybookQueryClient>,
+  scenario: MockScenario,
+  onReady?: () => void,
+) {
+  useLayoutEffect(() => {
     setWebappToken(scenario.token ?? null);
+    onReady?.();
     const originalFetch = window.fetch.bind(window);
 
     window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -648,19 +648,7 @@ export function OnboardingSandbox({
       setWebappToken(null);
       client.clear();
     };
-  }, [client, scenario]);
-
-  return (
-    <QueryClientProvider client={client}>
-      <ToastContainer>
-        <BootstrapContextProvider value={bootstrapValue}>
-          <ViewportShellRoutes initialEntries={initialEntries} variant="stack">
-            {children}
-          </ViewportShellRoutes>
-        </BootstrapContextProvider>
-      </ToastContainer>
-    </QueryClientProvider>
-  );
+  }, [client, onReady, scenario]);
 }
 
 function resolveEndpoint(url: string, method: string): MockEndpoint | null {

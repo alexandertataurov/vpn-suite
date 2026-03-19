@@ -121,6 +121,25 @@
   }
 }
 
+@media (max-width: 360px) {
+  .nd-callout {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .nd-body {
+    flex-basis: calc(100% - 52px);
+  }
+
+  .nd-title {
+    white-space: normal;
+  }
+
+  .nd-cta {
+    margin-left: 52px;
+  }
+}
+
 .story-theme-pane--no-device {
   width: 358px;
   flex: 0 0 358px;

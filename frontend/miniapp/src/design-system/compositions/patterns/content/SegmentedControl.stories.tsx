@@ -7,11 +7,12 @@ const meta: Meta<typeof SegmentedControl> = {
   tags: ["autodocs"],
   component: SegmentedControl,
   parameters: {
+    status: { type: "deprecated" },
     layout: "padded",
     docs: {
       description: {
         component:
-          "Segmented control for plan selection (Monthly/Annual). Supports badges and disabled options.",
+          "Legacy segmented control for content forms. Active plan-selection flows now use BillingPeriodToggle instead.",
       },
     },
   },

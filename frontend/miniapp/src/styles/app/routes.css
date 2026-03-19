@@ -188,6 +188,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--spacing-2);
+  min-width: 0;
 }
 
 .device-row-meta-text {
@@ -464,6 +465,20 @@
 }
 
 @media (max-width: var(--vp-mid-mobile)) {
+
+  .devices-summary-section .hero-card-actions,
+  .devices-summary-section .modern-hero-actions {
+    width: 100%;
+  }
+
+  .devices-summary-section .hero-card-actions .btn,
+  .devices-summary-section .modern-hero-actions .btn {
+    width: 100%;
+  }
+
+  .devices-list-card .empty-state-block {
+    padding: var(--spacing-3);
+  }
 
   .devices-utility-card {
     padding: var(--miniapp-card-padding-tight);

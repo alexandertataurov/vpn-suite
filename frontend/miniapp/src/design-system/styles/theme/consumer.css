@@ -114,6 +114,18 @@ html[data-theme="consumer-light"] {
   --nd-cta-bg: var(--color-surface-2);
   --nd-cta-border: var(--color-border);
   --nd-cta-text: var(--color-text);
+  --device-imported-bg: rgba(22, 101, 52, 0.10);
+  --device-imported-border: rgba(22, 101, 52, 0.22);
+  --device-imported-text: #166534;
+  --device-imported-dot: #22c55e;
+  --device-pending-bg: rgba(59, 130, 246, 0.10);
+  --device-pending-border: rgba(59, 130, 246, 0.22);
+  --device-pending-text: #1d4ed8;
+  --device-pending-dot: #3b82f6;
+  --device-inactive-bg: rgba(0, 0, 0, 0.06);
+  --device-inactive-border: rgba(0, 0, 0, 0.10);
+  --device-inactive-text: #6b6a67;
+  --device-inactive-dot: #a8a7a3;
 
   /* Typography (canonical: 24/12/16/14/11) */
   --text-title: 24px;
@@ -307,6 +319,18 @@ html[data-theme="consumer-dark"] {
   --nd-cta-bg: var(--color-surface-2);
   --nd-cta-border: var(--color-border);
   --nd-cta-text: var(--color-text);
+  --device-imported-bg: rgba(34, 197, 94, 0.10);
+  --device-imported-border: rgba(34, 197, 94, 0.22);
+  --device-imported-text: #4ade80;
+  --device-imported-dot: #22c55e;
+  --device-pending-bg: rgba(59, 130, 246, 0.10);
+  --device-pending-border: rgba(59, 130, 246, 0.22);
+  --device-pending-text: #93c5fd;
+  --device-pending-dot: #60a5fa;
+  --device-inactive-bg: rgba(255, 255, 255, 0.06);
+  --device-inactive-border: rgba(255, 255, 255, 0.10);
+  --device-inactive-text: #5a5f73;
+  --device-inactive-dot: #3a3f52;
 
   /* Typography (same scale) */
   --text-title: 24px;

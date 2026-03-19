@@ -38,6 +38,32 @@
     font-size: 11px;
   }
 
+  .modern-device-grid {
+    gap: var(--spacing-3);
+  }
+
+  .devices-add-wizard-card {
+    padding: var(--spacing-3);
+  }
+
+  .devices-add-wizard-links {
+    flex-direction: column;
+  }
+
+  .devices-add-wizard-links .btn {
+    width: 100%;
+  }
+
+  .device-row-surface.op {
+    align-items: flex-start;
+    padding-right: var(--spacing-3);
+  }
+
+  .device-row-surface .op-ico {
+    width: 36px;
+    height: 36px;
+  }
+
   .troubleshooter-flow-card__actions {
     flex-direction: column-reverse;
   }
@@ -45,6 +71,43 @@
   .troubleshooter-flow-card__actions .btn {
     width: 100%;
   }
+
+  .modern-status-group.devices-summary-header--has-action {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .devices-summary-card__header-action {
+    width: 100%;
+  }
+
+  .devices-summary-card__header-action .btn {
+    width: 100%;
+  }
+
+  .modern-device-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-3);
+  }
+
+  .devices-add-wizard-card {
+    padding: var(--spacing-3);
+  }
+
+  .devices-add-wizard-links {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .devices-add-wizard-links .btn {
+    width: 100%;
+  }
+}
+
+.modern-metric-label,
+.devices-summary-metric-value,
+.device-row-meta-text {
+  overflow-wrap: anywhere;
 }
 
 .card-row,

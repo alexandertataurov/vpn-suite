@@ -1,5 +1,4 @@
-import { useMemo, type ReactNode } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import type { ReactNode } from "react";
 import { AppRoot } from "@/app/AppRoot";
 import { AppErrorBoundary } from "@/app/AppErrorBoundary";
 import { OverlayLayer } from "@/app/OverlayLayer";
@@ -8,6 +7,7 @@ import { TelegramEventManager } from "@/app/TelegramEventManager";
 import { MainButtonReserveProvider } from "@/context/MainButtonReserveContext";
 import { TelegramProvider } from "@/context/TelegramContext";
 import { TelegramThemeBridge } from "@/design-system";
+import { StorybookQueryClientProvider } from "./queryClient";
 
 export interface StorybookMiniappShellProps {
   children: ReactNode;
@@ -22,20 +22,9 @@ export function StorybookMiniappShell({
   viewportWidth = 390,
   isDesktop = false,
 }: StorybookMiniappShellProps) {
-  const client = useMemo(
-    () =>
-      new QueryClient({
-        defaultOptions: {
-          queries: { retry: false },
-          mutations: { retry: false },
-        },
-      }),
-    [],
-  );
-
   return (
     <AppErrorBoundary>
-      <QueryClientProvider client={client}>
+      <StorybookQueryClientProvider>
         <AppRoot>
           <TelegramProvider>
             <TelegramThemeBridge />
@@ -61,7 +50,7 @@ export function StorybookMiniappShell({
             </SafeAreaLayer>
           </TelegramProvider>
         </AppRoot>
-      </QueryClientProvider>
+      </StorybookQueryClientProvider>
     </AppErrorBoundary>
   );
 }

@@ -26,59 +26,48 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const ProfileModalOpen: Story = {
-  render: () => (
-    <PageSandbox scenario={readyScenario} initialEntries={["/settings?modal=profile"]}>
+function renderSettingsPage(initialEntry = "/settings") {
+  return (
+    <PageSandbox scenario={readyScenario} initialEntries={[initialEntry]}>
       <Route path="/settings" element={<SettingsPage />} />
     </PageSandbox>
-  ),
-  parameters: {
-    docs: {
-      description: {
-        story: "Profile edit modal opened via URL param.",
-      },
-    },
-  },
-};
+  );
+}
 
-export const MobileNarrow: Story = {
-  render: () => (
-    <PageSandbox scenario={readyScenario} initialEntries={["/settings"]}>
-      <Route path="/settings" element={<SettingsPage />} />
-    </PageSandbox>
-  ),
-  parameters: {
-    viewport: { defaultViewport: "iphoneSE" },
-    docs: {
-      description: {
-        story: "320px viewport. Smallest supported mobile.",
+function createSettingsInteractionStory(
+  description: string,
+  options?: { initialEntry?: string; viewport?: { defaultViewport: string } },
+): Story {
+  return {
+    render: () => renderSettingsPage(options?.initialEntry),
+    parameters: {
+      ...(options?.viewport ? { viewport: options.viewport } : {}),
+      docs: {
+        description: {
+          story: description,
+        },
       },
     },
-  },
-};
+  };
+}
 
-export const Tablet: Story = {
-  render: () => (
-    <PageSandbox scenario={readyScenario} initialEntries={["/settings"]}>
-      <Route path="/settings" element={<SettingsPage />} />
-    </PageSandbox>
-  ),
-  parameters: {
-    viewport: { defaultViewport: "adminDesktop" },
-    docs: {
-      description: {
-        story: "Desktop/tablet viewport. Stack layout adapts.",
-      },
-    },
-  },
-};
+export const ProfileModalOpen = createSettingsInteractionStory(
+  "Profile edit modal opened via URL param.",
+  { initialEntry: "/settings?modal=profile" },
+);
+
+export const MobileNarrow = createSettingsInteractionStory(
+  "320px viewport. Smallest supported mobile.",
+  { viewport: { defaultViewport: "iphoneSE" } },
+);
+
+export const Tablet = createSettingsInteractionStory(
+  "Desktop/tablet viewport. Stack layout adapts.",
+  { viewport: { defaultViewport: "adminDesktop" } },
+);
 
 export const OpenProfileModal: Story = {
-  render: () => (
-    <PageSandbox scenario={readyScenario} initialEntries={["/settings"]}>
-      <Route path="/settings" element={<SettingsPage />} />
-    </PageSandbox>
-  ),
+  render: () => renderSettingsPage(),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const previewDocument = canvasElement.ownerDocument;
@@ -102,11 +91,7 @@ export const OpenProfileModal: Story = {
 };
 
 export const OpenLanguageMenu: Story = {
-  render: () => (
-    <PageSandbox scenario={readyScenario} initialEntries={["/settings"]}>
-      <Route path="/settings" element={<SettingsPage />} />
-    </PageSandbox>
-  ),
+  render: () => renderSettingsPage(),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const previewDocument = canvasElement.ownerDocument;
@@ -130,11 +115,7 @@ export const OpenLanguageMenu: Story = {
 };
 
 export const OpenCancelFlow: Story = {
-  render: () => (
-    <PageSandbox scenario={readyScenario} initialEntries={["/settings"]}>
-      <Route path="/settings" element={<SettingsPage />} />
-    </PageSandbox>
-  ),
+  render: () => renderSettingsPage(),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const previewDocument = canvasElement.ownerDocument;

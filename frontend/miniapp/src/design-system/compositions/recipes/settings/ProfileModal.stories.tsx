@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { useState } from "react";
+import { useState, type ComponentProps } from "react";
 import { Button, StorySection, StoryShowcase, StoryStack } from "@/design-system";
 import { ProfileModal } from "./ProfileModal";
 
@@ -21,6 +21,30 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+const profileModalBaseProps = {
+  onClose: () => {},
+  title: "Edit profile",
+  description: "Update your profile details",
+  hintText: "Changes are saved to your account.",
+  nameLabel: "Name",
+  nameValue: "Alex Morgan",
+  namePlaceholder: "Your name",
+  onNameChange: () => {},
+  emailLabel: "Email",
+  emailValue: "alex@example.com",
+  emailPlaceholder: "you@example.com",
+  onEmailChange: () => {},
+  phoneLabel: "Phone",
+  phoneValue: "+1 555 0100",
+  phonePlaceholder: "+1 555 0000",
+  onPhoneChange: () => {},
+  cancelLabel: "Cancel",
+  saveLabel: "Save",
+  onCancel: () => {},
+  onSave: () => {},
+  savingLabel: "Saving...",
+} satisfies Partial<ComponentProps<typeof ProfileModal>>;
+
 function ModalWithState() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("Alex Morgan");
@@ -33,29 +57,17 @@ function ModalWithState() {
         Open profile modal
       </Button>
       <ProfileModal
+        {...profileModalBaseProps}
         isOpen={open}
-        onClose={() => setOpen(false)}
-        title="Edit profile"
-        description="Update your profile details"
-        hintText="Changes are saved to your account."
-        nameLabel="Name"
         nameValue={name}
-        namePlaceholder="Your name"
         onNameChange={setName}
-        emailLabel="Email"
         emailValue={email}
-        emailPlaceholder="you@example.com"
         onEmailChange={setEmail}
-        phoneLabel="Phone"
         phoneValue={phone}
-        phonePlaceholder="+1 555 0000"
         onPhoneChange={setPhone}
-        cancelLabel="Cancel"
-        saveLabel="Save"
         onCancel={() => setOpen(false)}
         onSave={() => setOpen(false)}
         isSaving={false}
-        savingLabel="Saving..."
       />
     </>
   );
@@ -75,54 +87,14 @@ export const Variants: Story = {
       <StoryShowcase>
         <StoryStack>
           <ProfileModal
+            {...profileModalBaseProps}
             isOpen
-            onClose={() => {}}
-            title="Edit profile"
-            description="Update your profile details"
-            hintText="Changes are saved to your account."
-            nameLabel="Name"
-            nameValue="Alex Morgan"
-            namePlaceholder="Your name"
-            onNameChange={() => {}}
-            emailLabel="Email"
-            emailValue="alex@example.com"
-            emailPlaceholder="you@example.com"
-            onEmailChange={() => {}}
-            phoneLabel="Phone"
-            phoneValue="+1 555 0100"
-            phonePlaceholder="+1 555 0000"
-            onPhoneChange={() => {}}
-            cancelLabel="Cancel"
-            saveLabel="Save"
-            onCancel={() => {}}
-            onSave={() => {}}
             isSaving={false}
-            savingLabel="Saving..."
           />
           <ProfileModal
+            {...profileModalBaseProps}
             isOpen
-            onClose={() => {}}
-            title="Edit profile"
-            description="Update your profile details"
-            hintText="Changes are saved to your account."
-            nameLabel="Name"
-            nameValue="Alex Morgan"
-            namePlaceholder="Your name"
-            onNameChange={() => {}}
-            emailLabel="Email"
-            emailValue="alex@example.com"
-            emailPlaceholder="you@example.com"
-            onEmailChange={() => {}}
-            phoneLabel="Phone"
-            phoneValue="+1 555 0100"
-            phonePlaceholder="+1 555 0000"
-            onPhoneChange={() => {}}
-            cancelLabel="Cancel"
-            saveLabel="Save"
-            onCancel={() => {}}
-            onSave={() => {}}
             isSaving
-            savingLabel="Saving..."
           />
         </StoryStack>
       </StoryShowcase>

@@ -15,6 +15,7 @@ import {
 import { useToast } from "@/design-system";
 import { usePrefersReducedMotion } from "@/design-system";
 import { webappQueryKeys } from "@/lib";
+import { formatDate } from "@/lib/utils/format";
 import type { SupportedLocale } from "@/lib/i18n";
 import { getErrorMessage, formatBytes } from "@/lib";
 import type { MissionTone } from "@/design-system";
@@ -31,18 +32,9 @@ import {
 import { getUpgradeOfferForIntent, type PlanLikeForUpsell } from "./upsell";
 import { clamp, DEFAULT_USAGE_SOFT_CAP_BYTES } from "./plan-helpers";
 
-function toIntlLocale(locale: SupportedLocale): string {
-  return locale === "ru" ? "ru-RU" : "en-US";
-}
-
 function formatIssuedAt(value: string, locale: SupportedLocale): string {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "--";
-  return new Intl.DateTimeFormat(toIntlLocale(locale), {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).format(date);
+  const resolvedLocale = locale === "ru" ? "ru-RU" : "en-US";
+  return formatDate(value, resolvedLocale);
 }
 
 export interface DevicesPageModel {
@@ -77,6 +69,8 @@ export interface DevicesPageModel {
   recommendedRoute: string;
   routeReason: RecommendedRouteReason;
   pendingConnectionCount: number;
+  deviceLimit: number | null;
+  trafficUsedLabel: string;
   canAddDevice: boolean;
   issueActionLabel: string;
   isAddPending: boolean;
@@ -487,6 +481,8 @@ export function useDevicesPageModel(): DevicesPageModel {
     recommendedRoute,
     routeReason,
     pendingConnectionCount,
+    deviceLimit,
+    trafficUsedLabel: trafficMetricValue,
     canAddDevice,
     issueActionLabel,
     isAddPending: issueMutation.isPending,

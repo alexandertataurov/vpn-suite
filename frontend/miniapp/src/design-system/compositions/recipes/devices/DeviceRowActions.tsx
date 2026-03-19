@@ -1,5 +1,5 @@
-import type { OverflowActionMenuItem } from "@/design-system";
-import { OverflowActionMenu } from "@/design-system";
+import type { OverflowActionMenuItem } from "../../patterns";
+import { OverflowActionMenu } from "../../patterns";
 import { IconCircleX, IconDownload, IconPencil, IconShield } from "@/design-system/icons";
 import { useTelegramHaptics } from "@/hooks";
 import { useI18n } from "@/hooks";
@@ -13,6 +13,7 @@ export interface DeviceRowActionsProps {
   onRename?: (id: string) => void;
   isConfirmingId: string | null;
   isReplacingId: string | null;
+  className?: string;
 }
 
 export function DeviceRowActions({
@@ -24,6 +25,7 @@ export function DeviceRowActions({
   onRename,
   isConfirmingId,
   isReplacingId,
+  className,
 }: DeviceRowActionsProps) {
   const { impact } = useTelegramHaptics();
   const { t } = useI18n();
@@ -107,6 +109,7 @@ export function DeviceRowActions({
   return (
     <OverflowActionMenu
       ariaLabel={t("devices.menu_trigger_aria")}
+      className={className}
       menuLabel={statusLabel}
       onTriggerClick={() => impact("light")}
       items={menuItems}

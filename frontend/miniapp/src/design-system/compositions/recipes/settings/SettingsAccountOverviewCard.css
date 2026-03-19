@@ -190,16 +190,26 @@
 
 @media (max-width: var(--vp-minimal)) {
   .ac-stats {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
   }
 
   .ac-stat {
-    flex: 0 0 50%;
-    border-top: 1px solid var(--color-border-subtle);
+    flex: 1 1 0;
+    padding: var(--spacing-2) 0 var(--spacing-2) 12px;
+  }
+
+  .ac-stat-label {
+    font-size: 10.5px;
+    letter-spacing: 0.4px;
+  }
+
+  .ac-stat-value {
+    font-size: 13.5px;
   }
 
   .ac-stat-sep {
-    display: none;
+    display: block;
+    height: 24px;
   }
 }
 

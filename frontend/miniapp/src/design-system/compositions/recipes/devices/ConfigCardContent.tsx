@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
-import { Button, CompactSummaryCard, MissionPrimaryButton, VpnBoundaryNote } from "@/design-system";
+import { Button } from "../../../components";
 import { IconDownload } from "@/design-system/icons";
 import { useI18n } from "@/hooks";
+import { MissionPrimaryButton } from "../../patterns";
+import { CompactSummaryCard } from "./CompactSummaryCard";
+import { VpnBoundaryNote } from "../shared/VpnBoundaryNote";
 
 export interface ConfigCardContentProps {
   configText: string;

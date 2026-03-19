@@ -45,21 +45,25 @@ const baseMetrics = [
   },
 ];
 
+function renderAddDeviceAction() {
+  return (
+    <Button
+      type="button"
+      variant="primary"
+      size="sm"
+      startIcon={<IconPlus size={16} strokeWidth={2} aria-hidden />}
+    >
+      Add new device
+    </Button>
+  );
+}
+
 export const Default: Story = {
   args: {
     title: "Protected devices",
     description: "Manage device access and configuration delivery.",
     metrics: baseMetrics,
-    action: (
-      <Button
-        type="button"
-        variant="primary"
-        size="sm"
-        startIcon={<IconPlus size={16} strokeWidth={2} aria-hidden />}
-      >
-        Add new device
-      </Button>
-    ),
+    action: renderAddDeviceAction(),
   },
   render: (args) => (
     <StoryShowcase>
@@ -77,16 +81,7 @@ export const Variants: Story = {
             title="Protected devices"
             description="Manage device access and configuration delivery."
             metrics={baseMetrics}
-            action={(
-              <Button
-                type="button"
-                variant="primary"
-                size="sm"
-                startIcon={<IconPlus size={16} strokeWidth={2} aria-hidden />}
-              >
-                Add new device
-              </Button>
-            )}
+            action={renderAddDeviceAction()}
           />
           <DevicesSummaryCard
             title="Device limit approaching"

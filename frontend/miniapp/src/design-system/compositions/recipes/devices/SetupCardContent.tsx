@@ -1,9 +1,6 @@
-import {
-  CompactSummaryCard,
-  MissionPrimaryButton,
-  VpnBoundaryNote,
-} from "@/design-system";
+import { InlineAlert } from "../../../components/feedback/InlineAlert";
 import { useI18n } from "@/hooks";
+import "./DeviceRecipes.css";
 
 export type SetupStep = "subscription" | "issue" | "pending";
 
@@ -17,58 +14,32 @@ export interface SetupCardContentProps {
 
 export function SetupCardContent({
   step,
-  onIssueDevice,
-  canAddDevice = false,
-  isAddPending = false,
-  issueActionLabel = "Add device",
 }: SetupCardContentProps) {
   const { t } = useI18n();
-
-  if (step === "subscription") {
-    return (
-      <CompactSummaryCard
-        eyebrow={t("devices.section_setup_title")}
-        title={t("plan.next_step_no_subscription_alert_title")}
-        subtitle={t("plan.next_step_no_subscription_alert_message")}
-        tone="blue"
-      >
-        <VpnBoundaryNote messageKey="devices.setup_subscription_note" />
-      </CompactSummaryCard>
-    );
-  }
-
-  if (step === "issue") {
-    return (
-      <CompactSummaryCard
-        eyebrow={t("devices.section_setup_title")}
-        title={t("devices.setup_issue_title")}
-        subtitle={t("devices.setup_issue_body")}
-        tone="blue"
-        actions={(
-          <MissionPrimaryButton
-            onClick={onIssueDevice}
-            disabled={!canAddDevice || isAddPending}
-            className="miniapp-compact-action"
-            status={isAddPending ? "loading" : "idle"}
-            statusText={t("devices.issue_primary_label_pending")}
-          >
-            {issueActionLabel}
-          </MissionPrimaryButton>
-        )}
-      >
-        <VpnBoundaryNote messageKey="common.vpn_boundary_devices_note" />
-      </CompactSummaryCard>
-    );
-  }
+  const title =
+    step === "issue"
+      ? t("devices.setup_issue_title")
+      : t("devices.setup_pending_title");
+  const body =
+    step === "issue"
+      ? "Import the config in AmneziaVPN, connect there, then return here if needed."
+      : "Import the config in AmneziaVPN, connect there, then return here if needed.";
+  const alertMessage =
+    step === "issue"
+      ? "Use the latest config for one device, then confirm setup if needed."
+      : "Use the latest config for one device, then confirm setup if needed.";
 
   return (
-    <CompactSummaryCard
-      eyebrow={t("devices.section_setup_title")}
-      title={t("devices.setup_pending_title")}
-      subtitle={t("devices.setup_pending_body")}
-      tone="amber"
-    >
-      <VpnBoundaryNote messageKey="devices.setup_pending_note" />
-    </CompactSummaryCard>
+    <div className="devices-setup-card">
+      <span className="devices-setup-card__accent" aria-hidden />
+      <div className="devices-setup-card__inner">
+        <div className="devices-setup-card__eyebrow">{t("devices.section_setup_title")}</div>
+        <div>
+          <h3 className="devices-setup-card__title">{step === "issue" ? "Connect in AmneziaVPN" : title}</h3>
+          <p className="devices-setup-card__desc">{body}</p>
+        </div>
+        <InlineAlert variant="info" message={alertMessage} />
+      </div>
+    </div>
   );
 }

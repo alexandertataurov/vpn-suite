@@ -1,7 +1,8 @@
-import { MissionOperationArticle, StatusChip } from "@/design-system";
-import { IconSmartphone } from "@/design-system/icons";
-import { useI18n } from "@/hooks";
+import { IconMonitor } from "@/design-system/icons";
+import { formatDate } from "@/lib/utils/format";
 import { DeviceRowActions } from "./DeviceRowActions";
+import { DeviceStatusChip, type DeviceStatusVariant } from "./DeviceStatusChip";
+import "./DeviceRecipes.css";
 
 export interface DeviceRowProps {
   device: {
@@ -13,7 +14,6 @@ export interface DeviceRowProps {
     last_seen_handshake_at?: string | null;
   };
   formatIssuedAt: (value: string) => string;
-  formatLastSeen?: (value: string) => string;
   onConfirm: (id: string) => void;
   onReplace: (id: string) => void;
   onRevoke: (id: string) => void;
@@ -29,33 +29,15 @@ function normalizeDeviceStatus(status?: string | null): "connected" | "idle" | "
   return "config_pending";
 }
 
-function toIntlLocale(locale: "en" | "ru"): string {
-  return locale === "ru" ? "ru-RU" : "en-US";
-}
-
-function formatLastSeenDefault(
-  value: string,
-  locale: "en" | "ru",
-  formatAbsoluteDate: (value: string) => string,
-): string {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "--";
-  const diff = Date.now() - date.getTime();
-  const mins = Math.max(0, Math.floor(diff / 60_000));
-  const hours = Math.floor(mins / 60);
-  const days = Math.floor(hours / 24);
-  const formatter = new Intl.RelativeTimeFormat(toIntlLocale(locale), { numeric: "auto", style: "short" });
-  if (mins < 1) return formatter.format(0, "minute");
-  if (mins < 60) return formatter.format(-mins, "minute");
-  if (hours < 24) return formatter.format(-hours, "hour");
-  if (days < 7) return formatter.format(-days, "day");
-  return formatAbsoluteDate(value);
+function mapChipStatus(status: "connected" | "idle" | "config_pending" | "revoked"): DeviceStatusVariant {
+  if (status === "connected") return "imported";
+  if (status === "revoked") return "inactive";
+  return "pending";
 }
 
 export function DeviceRow({
   device,
   formatIssuedAt,
-  formatLastSeen,
   onConfirm,
   onReplace,
   onRevoke,
@@ -63,58 +45,29 @@ export function DeviceRow({
   isConfirmingId,
   isReplacingId,
 }: DeviceRowProps) {
-  const { locale, t } = useI18n();
   const status = normalizeDeviceStatus(device.status);
-  const resolvedFormatLastSeen =
-    formatLastSeen ?? ((value: string) => formatLastSeenDefault(value, locale, formatIssuedAt));
-  const statusLabel =
-    status === "connected"
-      ? t("devices.menu_status_connected")
-      : status === "idle"
-        ? t("devices.menu_status_idle")
-        : status === "config_pending"
-          ? t("devices.menu_status_config_pending")
-          : t("devices.menu_status_revoked");
-  const tone: "green" | "amber" | "red" = status === "idle" ? "amber" : status === "revoked" ? "red" : "green";
   const metaParts: string[] = [];
 
   if (device.last_seen_handshake_at) {
-    metaParts.push(`Last activity ${resolvedFormatLastSeen(device.last_seen_handshake_at)}`);
+    metaParts.push(`Last activity ${formatDate(device.last_seen_handshake_at, "en-US")}`);
   }
 
   metaParts.push(`Issued ${formatIssuedAt(device.issued_at)}`);
 
   const title = device.device_name || `Device #${device.id.slice(-6)}`;
-  const statusChip = (
-    <StatusChip
-      variant={
-        status === "connected"
-          ? "active"
-          : status === "idle"
-            ? "pending"
-            : status === "config_pending"
-              ? "info"
-              : "offline"
-      }
-    >
-      {statusLabel}
-    </StatusChip>
-  );
+  const chipStatus = mapChipStatus(status);
 
   return (
-    <MissionOperationArticle
-      className="device-row-surface"
-      tone={tone}
-      iconTone={tone}
-      icon={<IconSmartphone size={20} strokeWidth={1.6} />}
-      title={title}
-      description={(
-        <span className="device-row-meta miniapp-tnum">
-          {statusChip}
-          <span className="device-row-meta-text">{metaParts.join(" · ")}</span>
-        </span>
-      )}
-      trailing={(
+    <div className="row-item device-row">
+      <div className="ri-icon ri-icon--default" aria-hidden>
+        <IconMonitor size={15} strokeWidth={2} />
+      </div>
+      <div className="ri-body">
+        <div className="ri-label">{title}</div>
+        <DeviceStatusChip status={chipStatus} />
+        <div className="ri-sub device-meta miniapp-tnum">{metaParts.join(" · ")}</div>
+      </div>
+      <div className="ri-right">
         <DeviceRowActions
           deviceId={device.id}
           deviceStatus={status}
@@ -124,8 +77,9 @@ export function DeviceRow({
           onRename={onRename}
           isConfirmingId={isConfirmingId}
           isReplacingId={isReplacingId}
+          className="device-menu-btn"
         />
-      )}
-    />
+      </div>
+    </div>
   );
 }

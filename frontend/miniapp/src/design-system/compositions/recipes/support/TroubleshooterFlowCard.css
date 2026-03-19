@@ -67,7 +67,7 @@
   flex: 1;
 }
 
-@media (min-width: var(--vp-mobile)) {
+@media (min-width: 480px) {
   .troubleshooter-flow-card__actions {
     flex-direction: row;
   }

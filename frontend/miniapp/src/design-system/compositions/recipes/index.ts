@@ -41,6 +41,8 @@ export { CompactSummaryCard } from "./devices/CompactSummaryCard";
 export type { CompactSummaryCardProps, CompactSummaryCardStat } from "./devices/CompactSummaryCard";
 export { DevicesSummaryCard } from "./devices/DevicesSummaryCard";
 export type { DevicesSummaryCardProps, DevicesSummaryMetric } from "./devices/DevicesSummaryCard";
+export { DeviceHeroCard } from "./devices/DeviceHeroCard";
+export type { DeviceHeroCardProps } from "./devices/DeviceHeroCard";
 export { AddDeviceWizardContent } from "./devices/AddDeviceWizardContent";
 export type {
   AddDeviceWizardContentProps,
@@ -52,6 +54,8 @@ export { SetupCardContent } from "./devices/SetupCardContent";
 export type { SetupCardContentProps, SetupStep } from "./devices/SetupCardContent";
 export { DeviceRow } from "./devices/DeviceRow";
 export type { DeviceRowProps } from "./devices/DeviceRow";
+export { DeviceStatusChip } from "./devices/DeviceStatusChip";
+export type { DeviceStatusChipProps, DeviceStatusVariant } from "./devices/DeviceStatusChip";
 export { DeviceRowActions } from "./devices/DeviceRowActions";
 export type { DeviceRowActionsProps } from "./devices/DeviceRowActions";
 export { CheckoutFlowCard } from "./checkout/CheckoutFlowCard";

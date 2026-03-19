@@ -61,82 +61,58 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Confirmed: Story = {
-  name: "Connected and confirmed",
-  render: () => (
-    <PageSandbox scenario={readyScenario} initialEntries={["/connect-status"]}>
+function renderConnectStatusPage(scenario: MockScenario) {
+  return (
+    <PageSandbox scenario={scenario} initialEntries={["/connect-status"]}>
       <Route path="/connect-status" element={<ConnectStatusPage />} />
     </PageSandbox>
-  ),
-  parameters: {
-    docs: {
-      description: {
-        story: "Latest device is already confirmed, so the route shows the confirmed summary and a follow-up action instead of the confirm CTA.",
-      },
-    },
-  },
-};
+  );
+}
 
-export const PendingConfirmation: Story = {
-  name: "Pending confirmation",
-  render: () => (
-    <PageSandbox scenario={pendingConfirmationScenario} initialEntries={["/connect-status"]}>
-      <Route path="/connect-status" element={<ConnectStatusPage />} />
-    </PageSandbox>
-  ),
-  parameters: {
-    docs: {
-      description: {
-        story: "Latest device has not been confirmed yet, so the route keeps the confirmation CTA visible.",
+function createConnectStatusStory(
+  name: string,
+  scenario: MockScenario,
+  description: string,
+): Story {
+  return {
+    name,
+    render: () => renderConnectStatusPage(scenario),
+    parameters: {
+      docs: {
+        description: {
+          story: description,
+        },
       },
     },
-  },
-};
+  };
+}
 
-export const NoDevice: Story = {
-  name: "No devices yet",
-  render: () => (
-    <PageSandbox scenario={emptyDevicesScenario} initialEntries={["/connect-status"]}>
-      <Route path="/connect-status" element={<ConnectStatusPage />} />
-    </PageSandbox>
-  ),
-  parameters: {
-    docs: {
-      description: {
-        story: "Subscribed user without issued devices. The route redirects the user back toward Devices setup.",
-      },
-    },
-  },
-};
+export const Confirmed = createConnectStatusStory(
+  "Connected and confirmed",
+  readyScenario,
+  "Latest device is already confirmed, so the route shows the confirmed summary and a follow-up action instead of the confirm CTA.",
+);
 
-export const NoPlan: Story = {
-  name: "No active plan",
-  render: () => (
-    <PageSandbox scenario={noPlanScenario} initialEntries={["/connect-status"]}>
-      <Route path="/connect-status" element={<ConnectStatusPage />} />
-    </PageSandbox>
-  ),
-  parameters: {
-    docs: {
-      description: {
-        story: "No active subscription. The route shows the no-plan summary and points back to plan selection.",
-      },
-    },
-  },
-};
+export const PendingConfirmation = createConnectStatusStory(
+  "Pending confirmation",
+  pendingConfirmationScenario,
+  "Latest device has not been confirmed yet, so the route keeps the confirmation CTA visible.",
+);
 
-export const SessionMissing: Story = {
-  name: "Session missing",
-  render: () => (
-    <PageSandbox scenario={loggedOutScenario} initialEntries={["/connect-status"]}>
-      <Route path="/connect-status" element={<ConnectStatusPage />} />
-    </PageSandbox>
-  ),
-  parameters: {
-    docs: {
-      description: {
-        story: "No active miniapp session. The route resolves to the session-missing state.",
-      },
-    },
-  },
-};
+export const NoDevice = createConnectStatusStory(
+  "No devices yet",
+  emptyDevicesScenario,
+  "Subscribed user without issued devices. The route redirects the user back toward Devices setup.",
+);
+
+export const NoPlan = createConnectStatusStory(
+  "No active plan",
+  noPlanScenario,
+  "No active subscription. The route shows the no-plan summary and points back to plan selection.",
+);
+
+export const SessionMissing = createConnectStatusStory(
+  "Session missing",
+  loggedOutScenario,
+  "No active miniapp session. The route resolves to the session-missing state.",
+);
