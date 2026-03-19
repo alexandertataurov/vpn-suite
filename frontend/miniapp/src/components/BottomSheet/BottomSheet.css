@@ -6,11 +6,11 @@
   background: var(--modal-overlay);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
-  z-index: 1000;
+  z-index: var(--z-modal);
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  animation: bs-overlay-in 0.15s ease both;
+  animation: bs-overlay-in var(--duration-fast) ease both;
 }
 
 @keyframes bs-overlay-in {
@@ -29,13 +29,13 @@
   border-radius: var(--radius-xl, var(--r)) var(--radius-xl, var(--r)) 0 0;
   box-shadow: var(--modal-shadow);
   width: 100%;
-  max-width: 480px;
+  max-width: var(--bp-sm);
   max-height: 90vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   box-sizing: border-box;
-  animation: bs-in 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: bs-in var(--duration-sheet) cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @keyframes bs-in {
@@ -77,7 +77,7 @@
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: var(--bp-sm)) {
   .bs {
     max-width: 100%;
   }
@@ -97,9 +97,9 @@
 }
 
 .bs-handle {
-  width: 40px;
-  height: 4px;
-  border-radius: 100px;
+  width: calc(var(--spacing-10) + var(--spacing-0-5));
+  height: var(--spacing-1);
+  border-radius: var(--radius-full);
   background: oklch(1 0 0 / 0.2);
   flex-shrink: 0;
 }
@@ -146,11 +146,11 @@
 }
 
 .bs-close {
-  width: 32px;
-  height: 32px;
-  min-width: 32px;
+  width: var(--spacing-8);
+  height: var(--spacing-8);
+  min-width: var(--spacing-8);
   min-height: unset;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   border: none;
   background: transparent;
   color: var(--modal-close-color);
@@ -174,8 +174,8 @@
 }
 
 .bs-close svg {
-  width: 14px;
-  height: 14px;
+  width: var(--font-size-md);
+  height: var(--font-size-md);
   pointer-events: none;
 }
 

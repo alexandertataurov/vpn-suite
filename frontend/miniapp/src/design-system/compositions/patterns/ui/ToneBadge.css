@@ -4,10 +4,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
-  min-height: 26px;
-  padding: 0 9px;
-  border-radius: 999px;
+  gap: var(--spacing-1);
+  min-height: var(--miniapp-chip-min-height);
+  padding: 0 var(--miniapp-chip-padding-inline);
+  border-radius: var(--radius-full);
   border: 1px solid color-mix(in oklch, var(--color-text) 8%, transparent);
   background: color-mix(in oklch, var(--color-surface) 92%, var(--color-surface-2));
   color: var(--color-text-muted);
@@ -21,7 +21,7 @@
 .tone-badge .pulse {
   opacity: 0.72;
   background: currentColor;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   box-shadow: 0 0 0 3px color-mix(in oklch, currentColor 10%, transparent);
 }
 

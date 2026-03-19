@@ -17,12 +17,17 @@ import {
   expiringSoonScenario,
 } from "@/storybook/page-contracts";
 
+const pageStoryParameters = {
+  layout: "fullscreen" as const,
+  viewport: { defaultViewport: "iphone14" },
+  status: { type: "stable" as const },
+};
+
 const meta: Meta = {
   title: "Pages/Contracts/Settings",
   tags: ["autodocs"],
   parameters: {
-    viewport: { defaultViewport: "iphone14" },
-    layout: "fullscreen",
+    ...pageStoryParameters,
     docs: {
       description: {
         component:
@@ -36,7 +41,8 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
+export const ActiveSubscription: Story = {
+  name: "Active subscription",
   render: () => (
     <PageSandbox scenario={readyScenario} initialEntries={["/settings"]}>
       <Route path="/settings" element={<SettingsPage />} />
@@ -52,6 +58,7 @@ export const Default: Story = {
 };
 
 export const Loading: Story = {
+  name: "Settings loading",
   render: () => (
     <PageSandbox scenario={loadingSessionScenario} initialEntries={["/settings"]}>
       <Route path="/settings" element={<SettingsPage />} />
@@ -67,6 +74,7 @@ export const Loading: Story = {
 };
 
 export const Error: Story = {
+  name: "Could not load settings",
   render: () => (
     <PageSandbox scenario={failureScenario} initialEntries={["/settings"]}>
       <Route path="/settings" element={<SettingsPage />} />
@@ -82,6 +90,7 @@ export const Error: Story = {
 };
 
 export const SessionMissing: Story = {
+  name: "Session missing",
   render: () => (
     <PageSandbox scenario={loggedOutScenario} initialEntries={["/settings"]}>
       <Route path="/settings" element={<SettingsPage />} />
@@ -97,6 +106,7 @@ export const SessionMissing: Story = {
 };
 
 export const NoPlan: Story = {
+  name: "No active plan",
   render: () => (
     <PageSandbox scenario={noPlanScenario} initialEntries={["/settings"]}>
       <Route path="/settings" element={<SettingsPage />} />
@@ -112,6 +122,7 @@ export const NoPlan: Story = {
 };
 
 export const Expired: Story = {
+  name: "Subscription expired",
   render: () => (
     <PageSandbox scenario={expiredScenario} initialEntries={["/settings"]}>
       <Route path="/settings" element={<SettingsPage />} />
@@ -256,14 +267,19 @@ export const OpenProfileModal: Story = {
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const editProfile = await canvas.findByRole("button", { name: /edit profile/i });
+    const page = within(canvasElement.ownerDocument.body);
+    const editProfileLabel = await canvas.findByText("Edit profile");
+    const editProfile = editProfileLabel.closest('[role="button"]');
+    if (!editProfile) {
+      throw new Error('Could not find button container for "Edit profile".');
+    }
     await userEvent.click(editProfile);
-    await expect(canvas.getByRole("dialog")).toBeInTheDocument();
+    await expect(await page.findByRole("dialog")).toBeInTheDocument();
   },
   parameters: {
     docs: {
       description: {
-        story: "Interactive: click Edit profile to open modal.",
+        story: 'Interactive: tap the "Edit profile" row and verify the profile dialog opens.',
       },
     },
   },
@@ -277,14 +293,19 @@ export const OpenLanguageMenu: Story = {
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const languageRow = await canvas.findByRole("button", { name: /language/i });
+    const page = within(canvasElement.ownerDocument.body);
+    const languageLabel = await canvas.findByText("Language");
+    const languageRow = languageLabel.closest('[role="button"]');
+    if (!languageRow) {
+      throw new Error('Could not find button container for "Language".');
+    }
     await userEvent.click(languageRow);
-    await expect(canvas.getByRole("menu")).toBeInTheDocument();
+    await expect(await page.findByRole("menu")).toBeInTheDocument();
   },
   parameters: {
     docs: {
       description: {
-        story: "Interactive: open language selector menu.",
+        story: 'Interactive: tap the "Language" row and verify the locale menu opens.',
       },
     },
   },
@@ -298,14 +319,19 @@ export const OpenCancelFlow: Story = {
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const cancelPlan = await canvas.findByRole("button", { name: /cancel plan/i });
+    const page = within(canvasElement.ownerDocument.body);
+    const cancelPlanLabel = await canvas.findByText("Cancel plan");
+    const cancelPlan = cancelPlanLabel.closest('[role="button"]');
+    if (!cancelPlan) {
+      throw new Error('Could not find button container for "Cancel plan".');
+    }
     await userEvent.click(cancelPlan);
-    await expect(canvas.getByRole("dialog")).toBeInTheDocument();
+    await expect(await page.findByRole("dialog")).toBeInTheDocument();
   },
   parameters: {
     docs: {
       description: {
-        story: "Interactive: open subscription cancellation flow.",
+        story: 'Interactive: tap the "Cancel plan" row and verify the cancellation flow opens.',
       },
     },
   },

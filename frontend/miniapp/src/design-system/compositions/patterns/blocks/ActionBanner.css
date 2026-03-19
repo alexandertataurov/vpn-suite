@@ -163,13 +163,13 @@
   opacity: 0.5;
 }
 
-@media (min-width: 768px) {
+@media (min-width: var(--bp-md)) {
   .action-banner {
-    max-width: 480px;
+    max-width: var(--bp-sm);
   }
 }
 
-@media (max-width: 360px) {
+@media (max-width: var(--vp-narrow)) {
   .action-banner__title-row {
     flex-direction: column;
     align-items: flex-start;

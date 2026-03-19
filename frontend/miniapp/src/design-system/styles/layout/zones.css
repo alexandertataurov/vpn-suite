@@ -43,13 +43,13 @@ html {
   --miniapp-overlay-bottom-offset: max(16px, var(--safe-bottom));
 }
 
-@media (min-width: 430px) {
+@media (min-width: var(--vp-wide-mobile)) {
   html {
     --miniapp-content-gutter: 20px;
   }
 }
 
-@media (min-width: 768px) {
+@media (min-width: var(--bp-md)) {
   html {
     --miniapp-content-gutter: max(24px, 5vw);
     --miniapp-shell-max: var(--page-max-width-wide);
@@ -89,6 +89,7 @@ html {
   --miniapp-main-button-reserve: 120px;
   --z-header: 200;
   --z-nav: 200;
+  --z-modal: 1000; /* Above Telegram WebView native UI */
   --tg-top: 0px;
   --tg-bottom: 0px;
   --tg-left: 0px;
@@ -490,7 +491,7 @@ html {
 }
 
 .ds-container[data-size="sm"] { max-width: var(--container-sm, 480px); }
-.ds-container[data-size="md"] { max-width: var(--container-md, 720px); }
+.ds-container[data-size="md"] { max-width: var(--container-md, 768px); }
 .ds-container[data-size="lg"] { max-width: var(--container-lg, 960px); }
 
 .ds-container[data-padding="sm"] { padding-inline: var(--spacing-4); }
@@ -537,7 +538,7 @@ html {
 }
 
 /* ---------- Mobile-first overrides ---------- */
-@media (max-width: 480px) {
+@media (max-width: var(--bp-sm)) {
   .shead {
     gap: var(--spacing-2);
     margin-bottom: var(--spacing-1);

@@ -1,0 +1,102 @@
+.seg-track {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: var(--seg-track-bg);
+  border: 1px solid var(--seg-track-border);
+  border-radius: 12px;
+  padding: 3px;
+  gap: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.seg-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: calc(50% - 3px);
+  bottom: 3px;
+  background: var(--seg-thumb-bg);
+  border: 1px solid var(--seg-thumb-border);
+  border-radius: 9px;
+  box-shadow: var(--seg-thumb-shadow);
+  transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.seg-track[data-value="annual"] .seg-thumb {
+  transform: translateX(calc(100% - 4px));
+}
+
+.seg-option {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 8px 12px;
+  min-height: 44px;
+  border: none;
+  background: transparent;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: none;
+  -webkit-tap-highlight-color: transparent;
+  font-family: "Inter", sans-serif;
+  user-select: none;
+}
+
+.seg-label {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  letter-spacing: -0.1px;
+  color: var(--seg-label-inactive);
+  transition: color var(--duration-enter) ease;
+  line-height: 1;
+}
+
+.seg-option--active .seg-label {
+  color: var(--seg-label-active);
+}
+
+.seg-save-badge {
+  font-size: var(--typo-meta-size);
+  font-weight: 600;
+  letter-spacing: 0.1px;
+  padding: var(--spacing-0-5) var(--spacing-2);
+  border-radius: 100px;
+  border: 1px solid var(--seg-save-border);
+  background: var(--seg-save-bg);
+  color: var(--seg-save-text);
+  line-height: 1.4;
+  transition: opacity var(--duration-enter) ease;
+  white-space: nowrap;
+}
+
+.seg-option:not(.seg-option--active) .seg-save-badge {
+  opacity: 0.6;
+}
+
+.seg-option:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
+@media (min-width: var(--bp-md)) {
+  .seg-track {
+    max-width: var(--vp-narrow);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .seg-thumb,
+  .seg-label,
+  .seg-save-badge {
+    transition: none;
+  }
+}

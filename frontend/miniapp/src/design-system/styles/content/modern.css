@@ -1,6 +1,6 @@
 /**
  * Modern patterns — used by design-system components (ListCard, SettingsActionRow,
- * ActionCard, ModernHeroCard, SupportContactCard, TroubleshooterStep).
+ * ActionCard, ModernHeroCard).
  * Single source for .modern-* and .troubleshooter-card classes.
  */
 
@@ -75,7 +75,7 @@
   width: 48px;
   height: 48px;
   min-width: 48px;
-  font-size: 14px;
+  font-size: var(--typo-body-sm-size);
   letter-spacing: 0.1px;
 }
 
@@ -124,7 +124,7 @@
 
 /* ---- SectionLabel (eyebrow) ---- */
 .section-label {
-  font-size: var(--font-size-xs);
+  font-size: var(--amnezia-plan-eyebrow, var(--typo-meta-size));
   font-weight: var(--font-weight-medium);
   letter-spacing: 0.6px;
   text-transform: uppercase;
@@ -149,7 +149,7 @@
   cursor: pointer;
   padding: 0;
   margin: 0;
-  transition: background 0.15s, color 0.15s;
+  transition: background var(--duration-fast), color var(--duration-fast);
 }
 
 .settings-button:hover {
@@ -322,16 +322,16 @@
 
 .modern-icon-button,
 .settings-pill {
-  transition: background 0.12s ease, filter 0.12s ease;
+  transition: background var(--duration-micro) ease, filter var(--duration-micro) ease;
 }
 
 /* Override global min-height: 44px bleed — profile row uses 34×34 */
 .profile-row .settings-button,
 .settings-pill {
-  width: 34px !important;
-  height: 34px !important;
-  min-height: unset !important;
-  min-width: unset !important;
+  width: 34px;
+  height: 34px;
+  min-height: 34px;
+  min-width: 34px;
   position: relative;
 }
 
@@ -353,41 +353,41 @@
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-1);
-  min-height: unset !important;
-  height: auto !important;
-  padding: 4px 10px !important;
-  line-height: 1 !important;
-  border-radius: 100px;
+  min-height: var(--miniapp-chip-min-height);
+  height: auto;
+  padding: var(--spacing-1) var(--amnezia-badge-padding-h, var(--spacing-3));
+  line-height: 1;
+  border-radius: var(--radius-full);
   font-size: var(--amnezia-badge-text, var(--font-size-xs));
   font-weight: var(--font-weight-semibold);
   letter-spacing: 0.2px;
   white-space: nowrap;
   line-height: 1;
-  transition: background 0.12s ease, filter 0.12s ease;
+  transition: background var(--duration-micro) ease, filter var(--duration-micro) ease;
 }
 
 .pill-chip--beta {
-  background: var(--white, var(--color-surface));
-  border: 1px solid var(--border, var(--color-border));
-  color: var(--text3, var(--color-text-tertiary));
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-tertiary);
 }
 
 .pill-chip--active {
-  color: var(--green, var(--color-success));
-  background: var(--color-success-bg, var(--green-bg, var(--color-success-soft)));
-  border: 1px solid var(--color-success-border, var(--green-border, var(--surface-border-success)));
+  color: var(--color-success);
+  background: var(--color-success-bg, var(--color-success-soft));
+  border: 1px solid var(--color-success-border, var(--surface-border-success));
 }
 
 .pill-chip--expiring {
-  color: var(--amber, var(--color-warning));
-  background: var(--color-warning-bg, var(--amber-bg, var(--color-warning-soft)));
-  border: 1px solid var(--color-warning-border, var(--amber-border, var(--surface-border-warning)));
+  color: var(--color-warning);
+  background: var(--color-warning-bg, var(--color-warning-soft));
+  border: 1px solid var(--color-warning-border, var(--surface-border-warning));
 }
 
 .pill-chip--expired {
-  color: var(--red, var(--color-error));
-  background: var(--color-error-bg, var(--red-bg, var(--color-error-soft)));
-  border: 1px solid var(--color-error-border, var(--red-border, var(--surface-border-error)));
+  color: var(--color-error);
+  background: var(--color-error-bg, var(--color-error-soft));
+  border: 1px solid var(--color-error-border, var(--surface-border-error));
 }
 
 .pill-chip-dot {
@@ -462,17 +462,52 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: var(--white, var(--color-surface));
-  border: 1px solid var(--border-med, var(--color-border-strong));
-  color: var(--text3, var(--color-text-tertiary));
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  color: var(--color-text-tertiary);
   box-shadow: none;
 }
 
 .modern-profile-row .modern-icon-button:hover {
-  color: var(--text2, var(--color-text-muted));
+  color: var(--color-text-muted);
 }
 
-/* ---- Hero Status Card ------------------------------ */
+/* ---- Hero Status Card (variant="status" layout) ----- */
+.modern-status-group {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-status-group-gap, var(--spacing-4));
+  width: 100%;
+  text-align: left;
+}
+
+.modern-pulse-indicator {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: color-mix(in oklch, var(--color-accent) 6%, var(--color-surface-2));
+  color: var(--color-text-tertiary);
+}
+
+.modern-status-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.modern-status-title {
+  font-size: var(--amnezia-hero-title, var(--text-title-md, 24px));
+  font-weight: var(--font-weight-extrabold);
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+}
+
 .modern-status-subtitle {
   display: flex;
   align-items: center;
@@ -574,7 +609,7 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
 .footer-help__note {
   margin: 0;
   font-size: var(--amnezia-help-text, var(--font-size-xs));
-  color: var(--text3, var(--color-text-tertiary));
+  color: var(--color-text-tertiary);
   font-weight: var(--font-weight-normal);
 }
 
@@ -585,7 +620,7 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
   text-underline-offset: 2px;
   text-decoration-thickness: 1px;
   cursor: pointer;
-  transition: color 0.15s ease;
+  transition: color var(--duration-fast) ease;
 }
 
 .footer-help__link:hover {
@@ -640,7 +675,7 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
 .help-footer__note {
   margin: 0;
   font-size: var(--amnezia-help-text, var(--font-size-xs));
-  color: var(--text3, var(--color-text-tertiary));
+  color: var(--color-text-tertiary);
   font-weight: var(--font-weight-normal);
 }
 
@@ -651,7 +686,7 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
   text-underline-offset: 2px;
   text-decoration-thickness: 1px;
   cursor: pointer;
-  transition: color 0.15s ease;
+  transition: color var(--duration-fast) ease;
 }
 
 .help-footer__link:hover {
@@ -660,8 +695,8 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
 
 /* ---- Plan Hero Card (amnezia spec §4.3) ------------- */
 .plan-hero-card {
-  background: var(--white, var(--color-surface));
-  border: 1px solid var(--border, var(--color-border-subtle));
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
   border-radius: var(--r, var(--radius-lg));
   overflow: hidden;
   margin: 0 0 var(--amnezia-card-gap, var(--miniapp-row-gap));
@@ -691,7 +726,7 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
   font-weight: var(--font-weight-medium);
   letter-spacing: 0.6px;
   text-transform: uppercase;
-  color: var(--text3, var(--color-text-tertiary));
+  color: var(--color-text-tertiary);
 }
 
 .plan-hero-name,
@@ -699,14 +734,14 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
   font-size: var(--amnezia-plan-name, var(--text-h1, 28px));
   font-weight: var(--font-weight-bold);
   letter-spacing: -0.8px;
-  color: var(--text, var(--color-text));
+  color: var(--color-text);
 }
 
 .plan-hero-subtitle {
   font-size: var(--amnezia-plan-subtitle, var(--font-size-sm));
   font-weight: var(--font-weight-normal);
   letter-spacing: -0.1px;
-  color: var(--text3, var(--color-text-tertiary));
+  color: var(--color-text-tertiary);
 }
 
 .plan-hero-badge {
@@ -729,9 +764,9 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
 }
 
 .plan-hero-badge--active {
-  color: var(--green, var(--color-success));
-  background: var(--green-bg, var(--color-success-soft));
-  border: 1px solid var(--green-border, var(--surface-border-success));
+  color: var(--color-success);
+  background: var(--color-success-soft);
+  border: 1px solid var(--surface-border-success);
 }
 
 .plan-hero-badge--expiring {
@@ -741,9 +776,9 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
 }
 
 .plan-hero-badge--expired {
-  color: var(--red, var(--color-error));
-  background: var(--red-bg, var(--color-error-soft));
-  border: 1px solid var(--red-border, var(--surface-border-error));
+  color: var(--color-error);
+  background: var(--color-error-soft);
+  border: 1px solid var(--surface-border-error);
 }
 
 .plan-hero-badge--expired .plan-hero-badge-dot {
@@ -753,16 +788,12 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
 .plan-hero-stats {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  border-top: 1px solid var(--border, var(--color-border-subtle));
-}
-
-html[data-theme="consumer-dark"] .plan-hero-stats {
-  border-top-color: var(--divider);
+  border-top: 1px solid var(--color-border-subtle);
 }
 
 .plan-hero-stat {
   padding: var(--miniapp-data-cell-padding) 0 var(--miniapp-data-cell-padding) var(--miniapp-hero-padding);
-  border-left: 1px solid var(--border, var(--color-border-subtle));
+  border-left: 1px solid var(--color-border-subtle);
 }
 
 .plan-hero-stat:first-child {
@@ -775,7 +806,7 @@ html[data-theme="consumer-dark"] .plan-hero-stats {
   font-weight: var(--font-weight-semibold);
   letter-spacing: 0.7px;
   text-transform: uppercase;
-  color: var(--text3, var(--color-text-tertiary));
+  color: var(--color-text-tertiary);
   margin-bottom: var(--spacing-0-5);
 }
 
@@ -783,7 +814,7 @@ html[data-theme="consumer-dark"] .plan-hero-stats {
   font-size: var(--amnezia-stat-value, var(--font-size-lg));
   font-weight: var(--font-weight-bold);
   letter-spacing: -0.5px;
-  color: var(--text, var(--color-text));
+  color: var(--color-text);
 }
 
 .plan-hero-stat-value .plan-hero-stat-dim {
@@ -791,17 +822,17 @@ html[data-theme="consumer-dark"] .plan-hero-stats {
 }
 
 .plan-hero-stat-value--expiring {
-  color: var(--amber, var(--color-warning));
+  color: var(--color-warning);
 }
 
 .plan-hero-stat-value--expired {
-  color: var(--red, var(--color-error));
+  color: var(--color-error);
 }
 
 .plan-hero-stat-dim {
   font-size: var(--amnezia-stat-dim, var(--font-size-sm));
   font-weight: var(--font-weight-normal);
-  color: var(--text3, var(--color-text-tertiary));
+  color: var(--color-text-tertiary);
 }
 
 /* ---- No-device callout (amnezia spec §4.9) ---------- */
@@ -809,8 +840,8 @@ html[data-theme="consumer-dark"] .plan-hero-stats {
   display: flex;
   align-items: center;
   gap: var(--spacing-3);
-  background: var(--white, var(--color-surface));
-  border: 1px solid var(--border, var(--color-border));
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--r, var(--radius-lg));
   padding: var(--miniapp-card-padding) var(--miniapp-hero-padding);
   margin: 0 0 var(--amnezia-card-gap, var(--miniapp-row-gap));
@@ -820,12 +851,12 @@ html[data-theme="consumer-dark"] .plan-hero-stats {
   width: 40px;
   height: 40px;
   border-radius: var(--r-sm, var(--radius-sm));
-  background: var(--bg, var(--color-surface-2));
-  border: 1px solid var(--border, var(--color-border));
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text3, var(--color-text-tertiary));
+  color: var(--color-text-tertiary);
   flex-shrink: 0;
 }
 
@@ -840,13 +871,13 @@ html[data-theme="consumer-dark"] .plan-hero-stats {
   font-size: var(--amnezia-callout-title, var(--font-size-md));
   font-weight: var(--font-weight-semibold);
   letter-spacing: -0.2px;
-  color: var(--text, var(--color-text));
+  color: var(--color-text);
 }
 
 .no-device-callout-subtitle {
   font-size: var(--amnezia-callout-sub, var(--font-size-xs));
   font-weight: var(--font-weight-normal);
-  color: var(--text3, var(--color-text-tertiary));
+  color: var(--color-text-tertiary);
 }
 
 .no-device-callout-cta,
@@ -857,10 +888,10 @@ html[data-theme="consumer-dark"] .plan-hero-stats {
   gap: var(--spacing-1);
   font-size: var(--amnezia-cta-pill, var(--font-size-xs));
   font-weight: var(--font-weight-semibold);
-  color: var(--text, var(--color-text));
-  transition: background 0.12s ease, filter 0.12s ease;
-  background: var(--bg, var(--color-surface-2));
-  border: 1px solid var(--border-med, var(--color-border-strong));
+  color: var(--color-text);
+  transition: background var(--duration-micro) ease, filter var(--duration-micro) ease;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border-strong);
   border-radius: 100px;
   padding: var(--spacing-1) var(--spacing-3);
   flex-shrink: 0;
@@ -875,8 +906,8 @@ html[data-theme="consumer-dark"] .plan-hero-stats {
 
 /* ---- New-user hero (amnezia spec §4.10) ------------ */
 .new-user-hero {
-  background: var(--white, var(--color-surface));
-  border: 1px solid var(--border, var(--color-border));
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--r, var(--radius-lg));
   padding: var(--spacing-10) var(--spacing-6) var(--spacing-6);
   text-align: center;
@@ -884,7 +915,7 @@ html[data-theme="consumer-dark"] .plan-hero-stats {
 }
 
 .new-user-hero-icon {
-  color: var(--text3, var(--color-text-tertiary));
+  color: var(--color-text-tertiary);
   margin-bottom: var(--spacing-4);
   display: flex;
   justify-content: center;
@@ -894,7 +925,7 @@ html[data-theme="consumer-dark"] .plan-hero-stats {
   font-size: var(--amnezia-hero-title, 20px);
   font-weight: var(--font-weight-bold);
   letter-spacing: -0.5px;
-  color: var(--text, var(--color-text));
+  color: var(--color-text);
   margin: 0 0 var(--spacing-2);
 }
 
@@ -902,7 +933,7 @@ html[data-theme="consumer-dark"] .plan-hero-stats {
 .new-user-hero .new-user-hero-desc {
   font-size: var(--amnezia-hero-desc, var(--font-size-sm));
   font-weight: var(--font-weight-normal);
-  color: var(--text2, var(--color-text-muted));
+  color: var(--color-text-muted);
   line-height: 1.6;
   max-width: 210px;
   margin: 0 auto var(--spacing-6);
@@ -1008,8 +1039,8 @@ html[data-theme="consumer-dark"] .plan-hero-stats {
 .modern-list {
   display: flex;
   flex-direction: column;
-  background: var(--white, var(--color-surface));
-  border: 1px solid var(--border, var(--color-border-subtle));
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
   border-radius: var(--r, var(--radius-lg));
   overflow: hidden;
   margin: var(--spacing-4);
@@ -1042,8 +1073,8 @@ html[data-theme="consumer-dark"] .plan-hero-stats {
   width: 36px;
   height: 36px;
   border-radius: var(--r-sm, var(--radius-sm));
-  background: var(--bg, var(--color-surface-2));
-  border: 1px solid var(--border, var(--color-border));
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
   color: var(--color-text-muted);
 }
 
@@ -1083,15 +1114,15 @@ html[data-theme="consumer-dark"] .plan-hero-stats {
 }
 
 .home-row-badge--amber {
-  color: var(--amber, var(--color-warning));
-  background: var(--amber-bg, var(--color-warning-soft));
-  border-color: var(--amber-border, var(--surface-border-warning));
+  color: var(--color-warning);
+  background: var(--color-warning-soft);
+  border-color: var(--surface-border-warning);
 }
 
 .home-row-badge--red {
-  color: var(--red, var(--color-error));
-  background: var(--red-bg, var(--color-error-soft));
-  border-color: var(--red-border, var(--surface-border-error));
+  color: var(--color-error);
+  background: var(--color-error-soft);
+  border-color: var(--surface-border-error);
 }
 
 .home-row-badge--full {
@@ -1117,16 +1148,12 @@ html[data-theme="consumer-dark"] .plan-hero-stats {
   text-align: left;
   font: inherit;
   font-family: inherit;
-  border-bottom: 1px solid var(--divider, var(--color-border-subtle, var(--color-border)));
-  transition: background 0.12s ease, filter 0.12s ease;
+  border-bottom: 1px solid var(--color-border-subtle);
+  transition: background var(--duration-micro) ease, filter var(--duration-micro) ease;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
 
-html[data-theme="consumer-dark"] .modern-list-item,
-html[data-theme="consumer-dark"] .row-item {
-  border-bottom-color: var(--divider);
-}
 
 .modern-list-item:last-child,
 .row-item:last-child {
@@ -1295,6 +1322,7 @@ html[data-theme="consumer-dark"] .row-item {
 }
 
 .modern-progress-bar-fill {
+  width: var(--progress-width, 0);
   height: 100%;
   border-radius: var(--radius-2);
   transition: width 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -1353,75 +1381,6 @@ html[data-theme="consumer-dark"] .row-item {
 .store-badge-img {
   height: var(--spacing-6);
   width: auto;
-}
-
-/* ---- Troubleshooter Card --------------------------- */
-.troubleshooter-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-6);
-  margin: 0 var(--spacing-4) var(--spacing-4);
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-5);
-  box-shadow: var(--shadow-card);
-}
-
-.troubleshooter-card__head {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--spacing-3);
-}
-
-.troubleshooter-card__icon {
-  width: 44px;
-  height: 44px;
-  border-radius: var(--radius-md);
-  background: color-mix(in oklch, var(--color-warning) 6%, var(--color-surface-2));
-  color: var(--color-warning);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.troubleshooter-card__meta {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-1);
-}
-
-.troubleshooter-card__title {
-  font-size: var(--text-body, 17px);
-  font-weight: var(--font-weight-bold);
-  color: var(--color-text);
-  letter-spacing: -0.01em;
-}
-
-.troubleshooter-card__body {
-  font-size: var(--text-body, var(--font-size-md));
-  color: var(--color-text-muted);
-  line-height: 1.5;
-}
-
-.troubleshooter-card__chip {
-  flex-shrink: 0;
-}
-
-.troubleshooter-card__actions {
-  display: flex;
-  gap: var(--spacing-2);
-}
-
-.troubleshooter-card__action {
-  flex: 1;
-}
-
-.troubleshooter-card__action--primary {
-  flex: 2;
-  height: 56px;
 }
 
 /* ---- Protective resets (global bleed prevention) ---- */

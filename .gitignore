@@ -107,3 +107,6 @@ config/monitoring/discovery/.targets_state.json
 
 # Playwright CLI artifacts
 .playwright-cli/
+
+# Storybook/Vitest cache
+frontend/miniapp/.cache/

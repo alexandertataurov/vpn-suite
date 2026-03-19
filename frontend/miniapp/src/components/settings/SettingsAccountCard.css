@@ -1,11 +1,11 @@
 /* SettingsAccountCard — two-zone layout, tokenized, responsive */
 
 .account-card {
-  background: var(--ac-bg);
-  border: 1px solid var(--ac-border);
-  border-radius: 14px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--r, var(--radius-lg));
   overflow: hidden;
-  margin-bottom: 8px;
+  margin-bottom: var(--miniapp-row-gap);
   width: 100%;
   box-sizing: border-box;
   cursor: pointer;
@@ -37,39 +37,39 @@
 .ac-identity {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 18px 18px 16px;
+  gap: var(--spacing-3);
+  padding: var(--miniapp-card-padding) var(--miniapp-card-padding) var(--miniapp-data-cell-padding);
 }
 
 .ac-identity .avatar {
   width: 48px;
   height: 48px;
   min-width: 48px;
-  font-size: 14px;
-  border-radius: 50%;
+  font-size: var(--typo-body-sm-size, var(--font-size-md));
+  border-radius: var(--radius-full);
 }
 
 .ac-identity-text {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--spacing-1);
   flex: 1;
   min-width: 0;
 }
 
 .ac-eyebrow {
-  font-size: 9.5px;
-  font-weight: 600;
+  font-size: var(--typo-meta-size, var(--font-size-xs));
+  font-weight: var(--font-weight-semibold);
   letter-spacing: 0.7px;
   text-transform: uppercase;
-  color: var(--ac-eyebrow);
+  color: var(--color-text-tertiary);
   line-height: 1;
 }
 
 .ac-name {
-  font-size: 17px;
-  font-weight: 700;
-  color: var(--ac-name);
+  font-size: var(--typo-h3-size, var(--font-size-lg));
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
   letter-spacing: -0.4px;
   line-height: 1.1;
   white-space: nowrap;
@@ -79,13 +79,13 @@
 
 .ac-identity-text .pill-chip {
   align-self: flex-start;
-  margin-top: 2px;
+  margin-top: var(--spacing-0-5);
 }
 
 /* ── Divider ── */
 .ac-divider {
   height: 1px;
-  background: var(--ac-divider);
+  background: var(--color-border-subtle);
   margin: 0;
 }
 
@@ -100,31 +100,31 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  padding: 14px 0 14px 18px;
+  gap: var(--spacing-1);
+  padding: var(--miniapp-data-cell-padding) 0 var(--miniapp-data-cell-padding) var(--miniapp-card-padding);
   min-width: 0;
 }
 
 .ac-stat-sep {
   width: 1px;
   height: 32px;
-  background: var(--ac-stat-sep);
+  background: var(--color-border-subtle);
   flex-shrink: 0;
 }
 
 .ac-stat-label {
-  font-size: 9px;
-  font-weight: 600;
+  font-size: var(--typo-meta-size, var(--font-size-xs));
+  font-weight: var(--font-weight-semibold);
   letter-spacing: 0.7px;
   text-transform: uppercase;
-  color: var(--ac-stat-label);
+  color: var(--color-text-tertiary);
   line-height: 1;
 }
 
 .ac-stat-value {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--ac-stat-value);
+  font-size: var(--typo-h4-size, var(--font-size-lg));
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
   letter-spacing: -0.3px;
   line-height: 1;
   white-space: nowrap;
@@ -133,27 +133,27 @@
 }
 
 .ac-stat-dim {
-  font-size: 12px;
-  font-weight: 400;
-  color: var(--ac-stat-dim);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-normal);
+  color: var(--color-text-muted);
 }
 
 .ac-stat-value--active {
-  color: var(--ac-stat-active);
+  color: var(--color-success);
 }
 .ac-stat-value--expiring {
-  color: var(--ac-stat-expiring);
+  color: var(--color-warning);
 }
 .ac-stat-value--expired {
-  color: var(--ac-stat-expired);
+  color: var(--color-error);
 }
 
 /* ── Edit hint chevron ── */
 .ac-edit-hint {
   position: absolute;
-  top: 18px;
-  right: 16px;
-  color: var(--ac-edit-hint);
+  top: var(--miniapp-card-padding);
+  right: var(--spacing-4);
+  color: var(--color-text-tertiary);
   display: flex;
   align-items: center;
 }
@@ -163,29 +163,29 @@
 }
 
 /* ── Responsive ── */
-@media (max-width: 360px) {
+@media (max-width: var(--vp-narrow)) {
   .ac-name {
-    font-size: 15px;
+    font-size: var(--typo-h4-size, var(--font-size-lg));
   }
   .ac-stat-value {
-    font-size: 14px;
+    font-size: var(--typo-body-sm-size, var(--font-size-md));
   }
   .ac-stat {
-    padding: 12px 0 12px 14px;
+    padding: var(--spacing-3) 0 var(--spacing-3) var(--spacing-3);
   }
   .ac-identity {
-    padding: 16px 14px 14px;
-    gap: 12px;
+    padding: var(--spacing-4) var(--spacing-3) var(--spacing-3);
+    gap: var(--spacing-3);
   }
 }
 
-@media (max-width: 320px) {
+@media (max-width: var(--vp-minimal)) {
   .ac-stats {
     flex-wrap: wrap;
   }
   .ac-stat {
     flex: 0 0 50%;
-    border-top: 1px solid var(--ac-stat-sep);
+    border-top: 1px solid var(--color-border-subtle);
   }
   .ac-stat-sep {
     display: none;

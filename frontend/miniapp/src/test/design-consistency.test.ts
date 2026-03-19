@@ -10,29 +10,15 @@ import { join, relative } from "node:path";
 const ROOT = process.cwd();
 const SRC = join(ROOT, "src");
 const STYLES_DIR = join(SRC, "design-system", "styles");
+const config = JSON.parse(readFileSync(join(ROOT, "scripts", "design-check-config.json"), "utf8")) as {
+  allowedRoot: string[];
+  allowedHexCss: string[];
+  enforcedCssRoots: string[];
+};
 
-const ALLOWED_ROOT = [
-  join(STYLES_DIR, "tokens", "base.css"),
-  join(STYLES_DIR, "tokens", "_breakpoints.css"),
-  join(STYLES_DIR, "theme", "consumer.css"),
-  join(STYLES_DIR, "theme", "modal-tokens.css"),
-  join(STYLES_DIR, "shell", "frame.css"),
-];
-
-const ALLOWED_HEX_CSS = [
-  join(STYLES_DIR, "tokens", "base.css"),
-  join(STYLES_DIR, "content", "modern.css"), // avatar gradient fallbacks for themes without --green-avatar-*
-  join(STYLES_DIR, "theme", "consumer.css"),
-  join(STYLES_DIR, "theme", "telegram.css"),
-  join(STYLES_DIR, "theme", "amnezia.css"),
-  join(STYLES_DIR, "theme", "storybook.css"),
-  join(STYLES_DIR, "theme", "modal-tokens.css"),
-  join(STYLES_DIR, "theme", "alert-tokens.css"),
-  join(STYLES_DIR, "theme", "button-tokens.css"),
-  join(STYLES_DIR, "theme", "progress-bar-tokens.css"),
-  join(STYLES_DIR, "theme", "banner-tokens.css"),
-  join(STYLES_DIR, "shell", "frame.css"),
-];
+const ALLOWED_ROOT = config.allowedRoot.map((path) => join(ROOT, path));
+const ALLOWED_HEX_CSS = config.allowedHexCss.map((path) => join(ROOT, path));
+const ENFORCED_CSS_ROOTS = config.enforcedCssRoots.map((path) => join(ROOT, path));
 
 function* walkDir(dir: string, ext: string[]): Generator<string> {
   const entries = readdirSync(dir, { withFileTypes: true });
@@ -58,7 +44,7 @@ describe("Design consistency", () => {
       const violations: string[] = [];
       for (const f of walkDir(SRC, [".css"])) {
         const content = readFileSync(f, "utf8");
-        if (/^:root\s*\{/m.test(content)) {
+        if (/^:root\b/m.test(content)) {
           const allowed = ALLOWED_ROOT.some((a) => f === a || f.startsWith(a + "/"));
           if (!allowed) {
             violations.push(rel(f));
@@ -146,6 +132,26 @@ describe("Design consistency", () => {
       } catch {
         // ignore
       }
+      expect(violations).toEqual([]);
+    });
+  });
+
+  describe("5b. No raw hex/rgba in component or app CSS", () => {
+    it("component, composition, and app CSS derive colors from token sources", () => {
+      const hexRgba = /#[0-9a-fA-F]{3}\b|#[0-9a-fA-F]{6}\b|rgba\s*\(/;
+      const violations: string[] = [];
+
+      for (const dir of ENFORCED_CSS_ROOTS) {
+        for (const f of walkDir(dir, [".css"])) {
+          const allowed = ALLOWED_HEX_CSS.some((a) => f === a);
+          if (allowed) continue;
+          const content = readFileSync(f, "utf8");
+          if (hexRgba.test(content)) {
+            violations.push(rel(f));
+          }
+        }
+      }
+
       expect(violations).toEqual([]);
     });
   });

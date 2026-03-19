@@ -1,55 +1,10 @@
-/* RowItem theme tokens. [data-theme] on containers (ThemePane) or html. */
-:root,
-[data-theme="light"],
-[data-theme="consumer-light"] {
-  --row-bg: #ffffff;
-  --row-hover-bg: #f7f8fb;
-  --row-active-bg: #f2f2ef;
-  --row-border: rgba(0, 0, 0, 0.08);
-  --row-divider: rgba(0, 0, 0, 0.07);
-  --row-label: #111110;
-  --row-sub: #a8a7a3;
-  --row-chev: #c4c3bf;
-  --row-icon-bg: #f2f2ef;
-  --row-icon-border: rgba(0, 0, 0, 0.07);
-  --row-icon-color: #63625f;
-  --row-icon-danger-bg: rgba(153, 27, 27, 0.08);
-  --row-icon-warning-bg: rgba(146, 64, 14, 0.08);
-  --row-icon-danger-color: #991b1b;
-  --row-icon-warning-color: #92400e;
-  --card-row-bg: #ffffff;
-  --card-row-border: rgba(0, 0, 0, 0.08);
-}
-
-[data-theme="dark"],
-[data-theme="consumer-dark"],
-html:not([data-theme]) {
-  --row-bg: #1a1d27;
-  --row-hover-bg: #1e2233;
-  --row-active-bg: #252836;
-  --row-border: rgba(255, 255, 255, 0.09);
-  --row-divider: rgba(255, 255, 255, 0.08);
-  --row-label: #f0f2f8;
-  --row-sub: #5a5f73;
-  --row-chev: #3a3f52;
-  --row-icon-bg: #252836;
-  --row-icon-border: rgba(255, 255, 255, 0.08);
-  --row-icon-color: #8b90a4;
-  --row-icon-danger-bg: rgba(248, 113, 113, 0.10);
-  --row-icon-warning-bg: rgba(251, 191, 36, 0.10);
-  --row-icon-danger-color: #f87171;
-  --row-icon-warning-color: #fbbf24;
-  --card-row-bg: #1a1d27;
-  --card-row-border: rgba(255, 255, 255, 0.10);
-}
-
 .row-item {
   display: flex;
   align-items: center;
   gap: var(--spacing-3);
   padding: var(--miniapp-data-cell-padding) var(--miniapp-card-padding);
-  background: var(--row-bg);
-  border-bottom: 1px solid var(--row-divider);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border-subtle);
   cursor: pointer;
   transition: background 0.12s ease;
   box-sizing: border-box;
@@ -65,16 +20,16 @@ html:not([data-theme]) {
 /* Hover only on non-touch (pointer: fine) devices */
 @media (pointer: fine) {
   .row-item:hover {
-    background: var(--row-hover-bg);
+    background: var(--color-hover, var(--color-surface-2));
   }
 }
 .row-item:active {
-  background: var(--row-active-bg);
+  background: var(--color-surface-2);
 }
 .row-item:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: -2px;
-  background: var(--row-hover-bg);
+  background: var(--color-hover, var(--color-surface-2));
 }
 
 .ri-icon {
@@ -82,13 +37,13 @@ html:not([data-theme]) {
   height: 36px;
   min-width: 36px;
   border-radius: var(--r-sm, var(--radius-sm));
-  background: var(--row-icon-bg);
-  border: 1px solid var(--row-icon-border);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border-subtle);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  color: var(--row-icon-color);
+  color: var(--color-text-muted);
 }
 
 .ri-icon svg {
@@ -100,43 +55,43 @@ html:not([data-theme]) {
 }
 
 .ri-icon--danger {
-  background: var(--row-icon-danger-bg);
-  color: var(--row-icon-danger-color);
+  background: var(--color-icon-danger-bg, var(--color-error-soft, var(--color-error-bg)));
+  color: var(--color-error);
   border-color: transparent;
 }
 
 .ri-icon--warning {
-  background: var(--row-icon-warning-bg);
-  color: var(--row-icon-warning-color);
+  background: var(--color-icon-warning-bg, var(--color-warning-soft, var(--color-warning-bg)));
+  color: var(--color-warning);
   border-color: transparent;
 }
 
 /* Extended variants for ListRow iconTone compatibility */
 .ri-icon--blue {
-  background: color-mix(in oklch, var(--color-accent) 6%, var(--row-icon-bg));
+  background: color-mix(in oklch, var(--color-accent) 6%, var(--color-surface-2));
   color: var(--color-accent);
 }
 
 .ri-icon--green {
-  background: color-mix(in oklch, var(--color-success) 6%, var(--row-icon-bg));
+  background: color-mix(in oklch, var(--color-success) 6%, var(--color-surface-2));
   color: var(--color-success);
 }
 
 .ri-icon--amber {
-  background: var(--row-icon-warning-bg);
-  color: var(--row-icon-warning-color);
+  background: var(--color-icon-warning-bg, var(--color-warning-soft, var(--color-warning-bg)));
+  color: var(--color-warning);
 }
 
 .ri-icon--red {
-  background: var(--row-icon-danger-bg);
-  color: var(--row-icon-danger-color);
+  background: var(--color-icon-danger-bg, var(--color-error-soft, var(--color-error-bg)));
+  color: var(--color-error);
   border-color: transparent;
 }
 
 .ri-icon--neutral {
-  background: var(--row-icon-bg);
-  border-color: var(--row-icon-border);
-  color: var(--row-icon-color);
+  background: var(--color-surface-2);
+  border-color: var(--color-border-subtle);
+  color: var(--color-text-muted);
 }
 
 .ri-body {
@@ -151,7 +106,7 @@ html:not([data-theme]) {
   font-family: var(--font-sans);
   font-size: var(--amnezia-row-label, var(--font-size-sm));
   font-weight: var(--font-weight-medium);
-  color: var(--row-label);
+  color: var(--color-text);
   letter-spacing: -0.2px;
   line-height: 1.2;
   opacity: 1 !important;
@@ -168,7 +123,7 @@ html:not([data-theme]) {
   font-family: var(--font-sans);
   font-size: var(--amnezia-row-sub, var(--font-size-sm));
   font-weight: var(--font-weight-normal);
-  color: var(--row-sub);
+  color: var(--color-text-muted);
   line-height: 1.4;
   margin-top: var(--spacing-0-5);
   white-space: normal;
@@ -189,7 +144,7 @@ html:not([data-theme]) {
 .ri-chev {
   display: flex;
   align-items: center;
-  color: var(--row-chev);
+  color: var(--color-text-tertiary);
 }
 
 .ri-chev svg {
@@ -198,8 +153,8 @@ html:not([data-theme]) {
 }
 
 .card-row {
-  background: var(--card-row-bg);
-  border: 1px solid var(--card-row-border);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--r, var(--radius-lg));
   overflow: hidden;
   margin-bottom: var(--spacing-2);
@@ -207,10 +162,18 @@ html:not([data-theme]) {
   box-sizing: border-box;
 }
 
+/* Override frame.css grid: RowItem list stacks vertically, not as grid cells */
+.card-row:has(.row-item) {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  align-items: stretch;
+}
+
 .card-row-empty {
   padding: var(--spacing-5) var(--spacing-4);
-  font-size: var(--font-size-sm);
-  color: var(--row-sub);
+  font-size: var(--typo-body-sm-size, var(--font-size-sm));
+  color: var(--color-text-muted);
   text-align: center;
 }
 
@@ -233,13 +196,13 @@ html:not([data-theme]) {
   border-radius: 2px;
 }
 
-@media (min-width: 768px) {
+@media (min-width: var(--bp-md)) {
   .card-row {
-    max-width: 480px;
+    max-width: var(--bp-sm);
   }
 }
 
-@media (max-width: 360px) {
+@media (max-width: var(--vp-narrow)) {
   .ri-label,
   .ri-sub {
     white-space: normal;

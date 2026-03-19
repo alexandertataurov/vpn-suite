@@ -28,6 +28,11 @@ export { Select, type SelectOption, type SelectProps } from "./forms/Select";
 export { Textarea, type TextareaProps } from "./forms/Textarea";
 export { Checkbox, type CheckboxProps } from "./forms/Checkbox";
 export { Switch, type SwitchProps } from "./forms/Switch";
+export {
+  BillingPeriodToggle,
+  type BillingPeriodToggleProps,
+  type BillingPeriodValue,
+} from "./forms/BillingPeriodToggle";
 
 // —— Feedback ——
 export { Skeleton, SkeletonLine, SkeletonCard, SkeletonList } from "./feedback/Skeleton";

@@ -11,8 +11,8 @@
 @import "./theme/progress-bar-tokens.css";
 @import "./theme/alert-tokens.css";
 @import "./theme/banner-tokens.css";
-@import "./theme/account-card-tokens.css";
 @import "./theme/modal-tokens.css";
+@import "./theme/boot-tokens.css";
 @import "./theme/amnezia.css";
 @import "./theme/storybook.css";
 @import "./layout/zones.css";

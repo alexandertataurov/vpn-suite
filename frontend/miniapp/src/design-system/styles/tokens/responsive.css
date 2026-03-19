@@ -1,6 +1,6 @@
-/* Fluid typography — breakpoint overrides for small screens (max-width: 360px) */
+/* Fluid typography — breakpoint overrides for small screens */
 
-@media (max-width: 360px) {
+@media (max-width: var(--vp-narrow)) {
   /* Plan card */
   .plan-name {
     font-size: var(--amnezia-plan-name-sm, 24px);
@@ -28,7 +28,7 @@
 
   /* General */
   .row-item {
-    padding: 12px 14px;
+    padding: var(--spacing-3) var(--miniapp-card-padding-tight);
   }
   .ri-label {
     font-size: var(--amnezia-row-label, var(--font-size-sm));

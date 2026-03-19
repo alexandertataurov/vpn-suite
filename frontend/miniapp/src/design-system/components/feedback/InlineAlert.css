@@ -16,9 +16,9 @@
   width: 100%;
 }
 
-@media (min-width: 768px) {
+@media (min-width: var(--bp-md)) {
   .alert {
-    max-width: 560px;
+    max-width: var(--vp-compact);
   }
 }
 

@@ -8,10 +8,28 @@ export { LabeledControlRow } from "./settings/LabeledControlRow";
 export type { LabeledControlRowProps } from "./settings/LabeledControlRow";
 export { FaqDisclosureItem } from "./support/FaqDisclosureItem";
 export type { FaqDisclosureItemProps } from "./support/FaqDisclosureItem";
+export { TroubleshooterFlowCard } from "./support/TroubleshooterFlowCard";
+export type { TroubleshooterFlowCardProps } from "./support/TroubleshooterFlowCard";
 export { SettingsActionRow } from "./settings/SettingsActionRow";
 export type { SettingsActionRowProps } from "./settings/SettingsActionRow";
+export { PlanSection } from "./settings/PlanSection";
+export type { PlanSectionProps } from "./settings/PlanSection";
+export { SupportSection } from "./settings/SupportSection";
+export type { SupportSectionProps } from "./settings/SupportSection";
+export { DangerSection } from "./settings/DangerSection";
+export type { DangerSectionProps } from "./settings/DangerSection";
+export { SettingsAccountOverviewCard } from "./settings/SettingsAccountOverviewCard";
+export type {
+  PlanStatus,
+  SettingsAccountOverviewCardProps,
+} from "./settings/SettingsAccountOverviewCard";
 export { CompactSummaryCard } from "./devices/CompactSummaryCard";
 export type { CompactSummaryCardProps, CompactSummaryCardStat } from "./devices/CompactSummaryCard";
+export { AddDeviceWizardContent } from "./devices/AddDeviceWizardContent";
+export type {
+  AddDeviceWizardContentProps,
+  AddDeviceWizardStep,
+} from "./devices/AddDeviceWizardContent";
 export { HelperNote } from "./shared/HelperNote";
 export type { HelperNoteProps } from "./shared/HelperNote";
 export { CompactStepper } from "./flow/CompactStepper";
@@ -32,3 +50,10 @@ export { NewUserHero } from "./home/NewUserHero";
 export type { NewUserHeroProps } from "./home/NewUserHero";
 export { FooterHelp } from "./shared/FooterHelp";
 export type { FooterHelpProps } from "./shared/FooterHelp";
+export { PlanBillingHistorySection } from "./plan/PlanBillingHistorySection";
+export type {
+  PlanBillingHistoryItem,
+  PlanBillingHistorySectionProps,
+} from "./plan/PlanBillingHistorySection";
+export { PlanNextStepCard } from "./plan/PlanNextStepCard";
+export type { PlanNextStepCardProps } from "./plan/PlanNextStepCard";

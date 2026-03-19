@@ -209,7 +209,7 @@ html {
   /* Page layout tokens */
   --page-padding-x: 16px;
   --page-padding-top: 24px;
-  --page-max-width: 480px;
+  --page-max-width: var(--bp-sm);
   --page-max-width-wide: 520px;
   --content-bottom: max(110px, calc(env(safe-area-inset-bottom) + 80px));
 }
@@ -396,7 +396,7 @@ html {
   --size-touch-target: 48px;
   --max-width-form: 360px;
   --max-width-modal: 480px;
-  --max-width-container-md: 720px;
+  --max-width-container-md: 768px;
   --max-width-container-lg: 960px;
   --grid-min-card: 200px;
   --grid-min-col: 240px;
@@ -414,10 +414,10 @@ html {
   --z-overlay: 200;
   --z-toast: 300;
   --z-modal: 400;
-  --breakpoint-sm: 640px;
-  --breakpoint-md: 768px;
-  --breakpoint-lg: 1024px;
-  --breakpoint-xl: 1280px;
+  --breakpoint-sm: var(--bp-sm);
+  --breakpoint-md: var(--bp-md);
+  --breakpoint-lg: var(--bp-lg);
+  --breakpoint-xl: var(--bp-xl);
 }
 
 /* ========== MOTION ========== */
@@ -533,7 +533,7 @@ html[data-theme="consumer-dark"] [data-console="operator"] {
 }
 
 /* Page scaffolding gutter: p-6 desktop, p-4 mobile (design system) */
-@media (min-width: 640px) {
+@media (min-width: var(--bp-sm)) {
   [data-console="operator"] {
     --spacing-layout-gutter: var(--spacing-op-6);
   }
@@ -637,7 +637,7 @@ html[data-theme="consumer-dark"] [data-console="operator"] {
 
   /* Layout */
   --container-sm: 480px;
-  --container-md: 720px;
+  --container-md: 768px;
   --container-lg: 960px;
   --container-xl: 1200px;
   --content-max-width: 1280px;
@@ -645,7 +645,7 @@ html[data-theme="consumer-dark"] [data-console="operator"] {
   --header-height: 56px;
 
   /* Legacy layout breakpoints kept for reference only. Do not use for miniapp runtime logic. */
-  --layout-bp-sm: 640px;
+  --layout-bp-sm: 480px;
   --layout-bp-md: 768px;
   --layout-bp-lg: 1024px;
   --layout-bp-xl: 1280px;

@@ -8,7 +8,7 @@
 | Hard-coded widths (56px, 48px, 80px) | Tokens: `--height-header`, `--height-button` |
 | Per-page layout wrappers | Single `miniapp-layout` or `miniapp-stack` |
 | Magic paddings | `--container-pad`, `--space-*` |
-| Duplicate responsive breakpoints | `600px` (sm), `900px` (md) |
+| Duplicate responsive breakpoints | `--bp-sm`, `--bp-md`, `--bp-lg`, `--bp-xl` |
 | `overflow: hidden` masking | Proper `min-width: 0`, `text-overflow`, `overflow-wrap` |
 
 ## New layout architecture
@@ -31,7 +31,8 @@
 --app-height, --safe-top, --safe-bottom
 --height-header, --height-button
 --space-1..12 (8px grid: 4,8,12,16,20,24,32,48)
---bp-sm: 600px, --bp-md: 900px, --bp-lg: 1200px
+--bp-sm: 480px, --bp-md: 768px, --bp-lg: 1024px, --bp-xl: 1280px
+--vp-narrow: 360px, --vp-mobile: 390px, --vp-wide-mobile: 430px
 ```
 
 ### 4. App shells
@@ -45,8 +46,8 @@
 
 ### 6. Responsive
 
-- Mobile default; `@media (min-width: 600px)` for tablet; `@media (min-width: 900px)` for desktop
-- Max-width: 480px mobile, 600px desktop; 90vw cap at 900px+
+- Mobile default; `@media (min-width: var(--bp-md))` for tablet; `@media (min-width: var(--bp-lg))` for desktop
+- Max-width: 480px mobile, 768px tablet+; 90vw cap at 1024px+
 - Buttons: full-width mobile, auto desktop
 - Plan list, feature grid: 1 col mobile, 2 col tablet+
 

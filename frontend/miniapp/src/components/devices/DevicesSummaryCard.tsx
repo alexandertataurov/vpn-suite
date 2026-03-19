@@ -1,6 +1,8 @@
 import { useLayoutEffect, useRef } from "react";
 import type { ReactNode } from "react";
 import { IconMonitor } from "@/design-system/icons";
+import { HeroCard } from "@/design-system";
+import { useI18n } from "@/hooks";
 
 export interface DevicesSummaryMetric {
   keyLabel: string;
@@ -34,7 +36,6 @@ export interface DevicesSummaryCardProps {
   metrics: DevicesSummaryMetric[];
 }
 
-
 export function DevicesSummaryCard({
   title,
   description,
@@ -42,24 +43,17 @@ export function DevicesSummaryCard({
   className = "",
   metrics,
 }: DevicesSummaryCardProps) {
+  const { t } = useI18n();
   return (
-    <div className={`modern-hero-card ${className}`}>
-      <div className={action ? "modern-status-group devices-summary-header--has-action" : "modern-status-group devices-summary-header"}>
-        <div className="modern-pulse-indicator">
-           <IconMonitor strokeWidth={2.5} size={22} />
-        </div>
-        <div className="modern-status-text u-flex-1">
-          <div className="modern-header-label">DEVICE MANAGEMENT</div>
-          <div className="modern-status-title">{title ?? "Devices"}</div>
-          {description && <div className="modern-status-subtitle">{description}</div>}
-        </div>
-        {action && (
-          <div className="devices-summary-card__header-action">
-            {action}
-          </div>
-        )}
-      </div>
-
+    <HeroCard
+      variant="status"
+      icon={<IconMonitor strokeWidth={2.5} size={22} />}
+      eyebrow={t("devices.eyebrow_label")}
+      title={title ?? "Devices"}
+      subtitle={description ?? undefined}
+      actions={action}
+      className={className}
+    >
       <div className="modern-device-grid">
         {metrics.map((metric) => (
           <div key={metric.keyLabel} className="modern-device-metric">
@@ -75,6 +69,6 @@ export function DevicesSummaryCard({
           </div>
         ))}
       </div>
-    </div>
+    </HeroCard>
   );
 }

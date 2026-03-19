@@ -1,18 +1,27 @@
 /* Mobile-first. Use min-width media queries only.
  *
- * Usage:
- *   @media (min-width: var(--bp-sm)) { ... }   ← wide phones
- *   @media (min-width: var(--bp-md)) { ... }   ← tablet
- *   @media (min-width: var(--bp-lg)) { ... }   ← desktop
- *   @media (min-width: var(--bp-xl)) { ... }   ← wide desktop
+ * Breakpoints (min-width):
+ *   --bp-sm, --bp-md, --bp-lg, --bp-xl
  *
- * The Mini App itself targets 390px and needs no breakpoints internally.
- * Breakpoints apply to: admin panel, onboarding pages, Storybook layout.
+ * Viewport cutoffs (max-width for narrow layouts):
+ *   --vp-narrow: 360px   (small phones, typography tweaks)
+ *   --vp-mobile: 390px   (target mobile, iPhone 14)
+ *   --vp-wide-mobile: 430px
+ *
+ * Usage:
+ *   @media (min-width: var(--bp-sm)) { ... }
+ *   @media (max-width: var(--vp-narrow)) { ... }
  */
 
 :root {
-  --bp-sm: 480px;   /* large phones landscape */
-  --bp-md: 768px;   /* tablets */
-  --bp-lg: 1024px; /* small laptops */
-  --bp-xl: 1280px; /* desktop */
+  --bp-sm: 480px;
+  --bp-md: 768px;
+  --bp-lg: 1024px;
+  --bp-xl: 1280px;
+  --vp-minimal: 320px;   /* iPhone SE, smallest supported */
+  --vp-narrow: 360px;
+  --vp-mobile: 390px;
+  --vp-mid-mobile: 420px;
+  --vp-wide-mobile: 430px;
+  --vp-compact: 560px;   /* max-width for compact layouts */
 }

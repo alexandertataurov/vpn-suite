@@ -2,6 +2,7 @@ import { DevicesSummaryCard, SessionMissing } from "@/components";
 import { useCallback, useEffect, useState } from "react";
 import { IconPlus } from "@/design-system/icons";
 import {
+  AddDeviceWizardContent,
   FallbackScreen,
   FooterHelp,
   Skeleton,
@@ -326,12 +327,9 @@ export function DevicesPage() {
           </>
         }
       >
-        {addWizardStep === "name" ? (
-          <div className="devices-add-wizard">
-            <div className="devices-add-wizard-stepper" aria-hidden="true">
-              <span className="devices-add-wizard-step devices-add-wizard-step--active" />
-              <span className="devices-add-wizard-step" />
-            </div>
+        <AddDeviceWizardContent
+          step={addWizardStep}
+          nameSlot={
             <Input
               type="text"
               label={t("devices.wizard_name_label")}
@@ -342,37 +340,30 @@ export function DevicesPage() {
               placeholder={t("devices.wizard_name_placeholder")}
               aria-label={t("devices.wizard_name_label")}
             />
-          </div>
-        ) : (
-          <div className="devices-add-wizard">
-            <div className="devices-add-wizard-stepper" aria-hidden="true">
-              <span className="devices-add-wizard-step devices-add-wizard-step--complete" />
-              <span className="devices-add-wizard-step devices-add-wizard-step--active" />
-            </div>
-            <div className="devices-add-wizard-card">
-              <p className="devices-add-wizard-kicker">{t("devices.wizard_install_kicker")}</p>
-              <p className="devices-add-wizard-message">{t("devices.wizard_install_body")}</p>
-              <ol className="devices-add-wizard-list">
-                <li>{t("devices.wizard_install_step_download_app")}</li>
-                <li>{t("devices.wizard_install_step_create_config")}</li>
-                <li>{t("devices.wizard_install_step_import_config")}</li>
-                <li>{t("devices.wizard_install_step_connect")}</li>
-              </ol>
-              <div className="devices-add-wizard-links">
-                <Button variant="outline" size="sm" asChild>
-                  <a href={AMNEZIA_VPN_IOS_URL} target="_blank" rel="noreferrer">
-                    {t("devices.wizard_install_ios")}
-                  </a>
-                </Button>
-                <Button variant="outline" size="sm" asChild>
-                  <a href={AMNEZIA_VPN_ANDROID_URL} target="_blank" rel="noreferrer">
-                    {t("devices.wizard_install_android")}
-                  </a>
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
+          }
+          installKicker={t("devices.wizard_install_kicker")}
+          installMessage={t("devices.wizard_install_body")}
+          installSteps={[
+            t("devices.wizard_install_step_download_app"),
+            t("devices.wizard_install_step_create_config"),
+            t("devices.wizard_install_step_import_config"),
+            t("devices.wizard_install_step_connect"),
+          ]}
+          storeLinks={
+            <>
+              <Button variant="outline" size="sm" asChild>
+                <a href={AMNEZIA_VPN_IOS_URL} target="_blank" rel="noreferrer">
+                  {t("devices.wizard_install_ios")}
+                </a>
+              </Button>
+              <Button variant="outline" size="sm" asChild>
+                <a href={AMNEZIA_VPN_ANDROID_URL} target="_blank" rel="noreferrer">
+                  {t("devices.wizard_install_android")}
+                </a>
+              </Button>
+            </>
+          }
+        />
       </Modal>
 
       <Modal

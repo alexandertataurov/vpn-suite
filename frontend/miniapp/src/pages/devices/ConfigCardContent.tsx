@@ -45,6 +45,7 @@ export function ConfigCardContent({
 
   return (
     <CompactSummaryCard
+      className="devices-utility-card"
       eyebrow={t("devices.section_config_title")}
       title={title}
       subtitle={message}

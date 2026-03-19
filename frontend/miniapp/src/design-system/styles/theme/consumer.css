@@ -86,6 +86,8 @@ html[data-theme="consumer-light"] {
   --ds-font-body-size: 16px;
   --ds-font-caption-size: 14px;
   --ds-font-label-size: 11px;
+  --ds-font-weight-regular: 400;
+  --ds-font-weight-semibold: 600;
   --font-weight-regular: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
@@ -119,6 +121,17 @@ html[data-theme="consumer-light"] {
   --control-placeholder: var(--color-text-tertiary);
   --control-muted-border: var(--color-border-subtle);
   --control-muted-fg: var(--color-text-muted);
+  --seg-track-bg: rgba(0, 0, 0, 0.06);
+  --seg-track-border: rgba(0, 0, 0, 0.08);
+  --seg-thumb-bg: #ffffff;
+  --seg-thumb-border: rgba(0, 0, 0, 0.10);
+  --seg-thumb-shadow: 0 1px 4px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.08);
+  --seg-label-active: #111110;
+  --seg-label-inactive: #6b6a67;
+  --seg-sublabel: #a8a7a3;
+  --seg-save-bg: rgba(22, 101, 52, 0.10);
+  --seg-save-border: rgba(22, 101, 52, 0.22);
+  --seg-save-text: #166534;
 
   /* Layout (4px scale) */
   --space-gutter: var(--spacing-5);
@@ -211,6 +224,8 @@ html[data-theme="consumer-dark"] {
   --ds-font-body-size: 16px;
   --ds-font-caption-size: 14px;
   --ds-font-label-size: 11px;
+  --ds-font-weight-regular: 400;
+  --ds-font-weight-semibold: 600;
   --font-weight-regular: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
@@ -244,6 +259,17 @@ html[data-theme="consumer-dark"] {
   --control-placeholder: var(--color-text-tertiary);
   --control-muted-border: var(--color-border-subtle);
   --control-muted-fg: var(--color-text-muted);
+  --seg-track-bg: rgba(255, 255, 255, 0.06);
+  --seg-track-border: rgba(255, 255, 255, 0.08);
+  --seg-thumb-bg: #252836;
+  --seg-thumb-border: rgba(255, 255, 255, 0.12);
+  --seg-thumb-shadow: 0 1px 4px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --seg-label-active: #f0f2f8;
+  --seg-label-inactive: #5a5f73;
+  --seg-sublabel: #3a3f52;
+  --seg-save-bg: rgba(34, 197, 94, 0.12);
+  --seg-save-border: rgba(34, 197, 94, 0.24);
+  --seg-save-text: #4ade80;
 
   /* Layout (4px scale) */
   --space-gutter: var(--spacing-5);

@@ -6,13 +6,13 @@
   background: var(--modal-overlay);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
-  z-index: 1000;
+  z-index: var(--z-modal);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: var(--spacing-4);
   box-sizing: border-box;
-  animation: overlay-in 0.15s ease both;
+  animation: overlay-in var(--duration-fast) ease both;
 }
 
 @keyframes overlay-in {
@@ -30,17 +30,17 @@
   border-radius: var(--r, var(--radius-lg));
   box-shadow: var(--modal-shadow);
   width: 100%;
-  max-width: 480px;
+  max-width: var(--bp-sm);
   max-height: 85vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   box-sizing: border-box;
-  animation: modal-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: modal-in var(--duration-panel) cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .modal--sm {
-  max-width: 360px;
+  max-width: var(--vp-narrow);
 }
 
 @keyframes modal-in {
@@ -186,7 +186,7 @@
 }
 
 /* Modal footer: stack below 420px (375–390px phones show side-by-side) */
-@media (max-width: 420px) {
+@media (max-width: var(--vp-mid-mobile)) {
   .modal-footer {
     flex-direction: column-reverse;
   }
@@ -197,7 +197,7 @@
 }
 
 /* Mobile: full-width, slides up from bottom */
-@media (max-width: 480px) {
+@media (max-width: var(--bp-sm)) {
   .modal-overlay {
     align-items: flex-end;
     padding: 0;
@@ -238,7 +238,7 @@
 }
 
 /* Tablet and above: always centered */
-@media (min-width: 481px) {
+@media (min-width: calc(var(--bp-sm) + 1px)) {
   .modal-overlay {
     align-items: center;
     padding: var(--spacing-4);

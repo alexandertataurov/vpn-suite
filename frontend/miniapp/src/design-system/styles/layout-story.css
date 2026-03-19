@@ -214,7 +214,7 @@
 
 .story-home-stack {
   width: 100%;
-  max-width: 420px;
+  max-width: var(--vp-mid-mobile);
   display: grid;
   gap: var(--spacing-4);
 }
@@ -296,7 +296,7 @@
   gap: var(--spacing-4);
 }
 
-@media (max-width: 480px) {
+@media (max-width: var(--bp-sm)) {
   .story-comparison {
     grid-template-columns: 1fr;
   }

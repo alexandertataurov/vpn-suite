@@ -11,12 +11,34 @@
 .story-theme-pane[data-theme="dark"] {
   --story-pane-bg: #0f1117;
   --story-pane-label: rgba(255, 255, 255, 0.35);
+  --seg-track-bg: rgba(255, 255, 255, 0.06);
+  --seg-track-border: rgba(255, 255, 255, 0.08);
+  --seg-thumb-bg: #252836;
+  --seg-thumb-border: rgba(255, 255, 255, 0.12);
+  --seg-thumb-shadow: 0 1px 4px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --seg-label-active: #f0f2f8;
+  --seg-label-inactive: #5a5f73;
+  --seg-sublabel: #3a3f52;
+  --seg-save-bg: rgba(34, 197, 94, 0.12);
+  --seg-save-border: rgba(34, 197, 94, 0.24);
+  --seg-save-text: #4ade80;
   background: var(--story-pane-bg);
 }
 
 .story-theme-pane[data-theme="light"] {
   --story-pane-bg: #f2f2ef;
   --story-pane-label: rgba(0, 0, 0, 0.35);
+  --seg-track-bg: rgba(0, 0, 0, 0.06);
+  --seg-track-border: rgba(0, 0, 0, 0.08);
+  --seg-thumb-bg: #ffffff;
+  --seg-thumb-border: rgba(0, 0, 0, 0.10);
+  --seg-thumb-shadow: 0 1px 4px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.08);
+  --seg-label-active: #111110;
+  --seg-label-inactive: #6b6a67;
+  --seg-sublabel: #a8a7a3;
+  --seg-save-bg: rgba(22, 101, 52, 0.10);
+  --seg-save-border: rgba(22, 101, 52, 0.22);
+  --seg-save-text: #166534;
   background: var(--story-pane-bg);
 }
 

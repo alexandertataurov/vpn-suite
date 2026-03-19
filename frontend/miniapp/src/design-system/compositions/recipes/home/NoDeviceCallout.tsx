@@ -1,36 +1,41 @@
-import { IconMonitor } from "@/design-system/icons";
-import { CalloutBlock } from "../../patterns";
+import type { ReactNode } from "react";
+import { IconMonitor, IconPlus } from "@/design-system/icons";
+import "./NoDeviceCallout.css";
 
 export interface NoDeviceCalloutProps {
-  title: string;
-  subtitle: string;
+  title?: string;
+  subtitle?: string;
   ctaLabel?: string;
   onCtaClick?: () => void;
   onAddDevice?: () => void;
-  ctaIcon?: React.ReactNode;
+  ctaIcon?: ReactNode;
   className?: string;
 }
 
-/** No-device callout recipe. Uses CalloutBlock pattern. */
 export function NoDeviceCallout({
-  title,
-  subtitle,
-  ctaLabel = "Add device",
+  title = "No devices added",
+  subtitle = "Add a device to generate your configuration.",
+  ctaLabel = "Add Device",
   onCtaClick,
   onAddDevice,
   ctaIcon,
   className,
 }: NoDeviceCalloutProps) {
+  const handleAddDevice = onAddDevice ?? onCtaClick;
+
   return (
-    <CalloutBlock
-      icon={<IconMonitor size={20} strokeWidth={2} />}
-      title={title}
-      subtitle={subtitle}
-      ctaLabel={ctaLabel}
-      onCtaClick={onAddDevice ?? onCtaClick}
-      ctaIcon={ctaIcon}
-      className={className}
-      dataLayer="NoDeviceCallout"
-    />
+    <div className={["nd-callout", className].filter(Boolean).join(" ")} data-layer="NoDeviceCallout">
+      <div className="nd-icon-wrap" aria-hidden>
+        <IconMonitor size={20} strokeWidth={1.75} />
+      </div>
+      <div className="nd-body">
+        <div className="nd-title">{title}</div>
+        <div className="nd-sub">{subtitle}</div>
+      </div>
+      <button type="button" className="nd-cta" onClick={handleAddDevice}>
+        {ctaIcon ?? <IconPlus size={13} strokeWidth={2.5} aria-hidden />}
+        <span>{ctaLabel}</span>
+      </button>
+    </div>
   );
 }

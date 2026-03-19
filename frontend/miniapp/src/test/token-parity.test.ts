@@ -4,7 +4,7 @@ import { loadDesignSystemCss } from "./utils/loadDesignSystemCss";
 
 describe("Design token CSS parity", () => {
   beforeAll(() => {
-    loadDesignSystemCss();
+    loadDesignSystemCss({ includeTelegram: false });
   });
 
   afterEach(() => {
@@ -32,5 +32,20 @@ describe("Design token CSS parity", () => {
       const coverage = getTokenCoverage({ [token]: token }, { [token]: expected });
       expect(normalizeCssValue(coverage.results[0]?.actual ?? "")).toBe(normalizeCssValue(expected));
     }
+  });
+
+  test("consumer theme weight tokens resolve without telegram fallback CSS", () => {
+    document.documentElement.setAttribute("data-theme", "consumer-dark");
+    const coverage = getTokenCoverage(
+      {
+        fontWeightRegular: "--ds-font-weight-regular",
+        fontWeightSemibold: "--ds-font-weight-semibold",
+      },
+      {
+        "--ds-font-weight-regular": "400",
+        "--ds-font-weight-semibold": "600",
+      },
+    );
+    expect(coverage.failing).toEqual([]);
   });
 });

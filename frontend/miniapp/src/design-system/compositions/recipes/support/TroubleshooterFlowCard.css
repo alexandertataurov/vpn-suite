@@ -1,0 +1,83 @@
+/* TroubleshooterFlowCard — step card with accent bar, amnezia-* tokens */
+
+.troubleshooter-flow-card {
+  display: flex;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--r, var(--radius-lg));
+  overflow: hidden;
+  margin-bottom: var(--amnezia-card-gap, var(--spacing-2));
+}
+
+.troubleshooter-flow-card__accent {
+  width: 3px;
+  min-width: 3px;
+  background: color-mix(in oklch, var(--color-accent) 45%, transparent);
+  flex-shrink: 0;
+}
+
+.troubleshooter-flow-card__inner {
+  flex: 1;
+  padding: var(--miniapp-data-cell-padding) var(--miniapp-card-padding);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+.troubleshooter-flow-card__eyebrow-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-2);
+}
+
+.troubleshooter-flow-card__eyebrow {
+  font-size: var(--amnezia-plan-eyebrow, var(--typo-meta-size));
+  font-weight: 600;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+
+.troubleshooter-flow-card__title {
+  font-size: var(--amnezia-hero-title, var(--typo-h3-size));
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: -0.3px;
+  margin: 0;
+}
+
+.troubleshooter-flow-card__desc {
+  font-size: var(--amnezia-hero-desc, var(--typo-caption-size));
+  font-weight: 400;
+  color: var(--color-text-muted);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.troubleshooter-flow-card__actions {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: var(--spacing-2);
+}
+
+.troubleshooter-flow-card__actions .btn {
+  white-space: nowrap;
+  min-width: 0;
+  flex: 1;
+}
+
+@media (min-width: var(--vp-mobile)) {
+  .troubleshooter-flow-card__actions {
+    flex-direction: row;
+  }
+}
+
+@media (max-width: var(--vp-narrow)) {
+  .troubleshooter-flow-card__actions {
+    flex-direction: column-reverse;
+  }
+  .troubleshooter-flow-card__inner {
+    padding: var(--miniapp-data-cell-padding) var(--miniapp-card-padding-tight);
+  }
+}

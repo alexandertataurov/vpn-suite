@@ -30,7 +30,7 @@
   overscroll-behavior-y: contain;
 }
 
-@media (min-width: 768px) {
+@media (min-width: var(--bp-md)) {
   .page-layout {
     padding-left: var(--spacing-6);
     padding-right: var(--spacing-6);

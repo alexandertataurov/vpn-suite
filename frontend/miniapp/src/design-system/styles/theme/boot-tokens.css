@@ -1,0 +1,28 @@
+/* Boot/splash/loading screen theme tokens.
+   [data-theme] on containers (ThemePane); html[data-theme] for app runtime. */
+
+[data-theme="dark"],
+html[data-theme="consumer-dark"],
+html:not([data-theme]) {
+  --boot-bg: #0f1117;
+  --boot-icon-default: rgba(255, 255, 255, 0.75);
+  --boot-icon-error: #f87171;
+  --boot-icon-success: #4ade80;
+  --boot-wordmark: #f0f2f8;
+  --boot-tagline: #5a5f73;
+  --boot-hint: #5a5f73;
+  --boot-progress: #3b7ef8;
+}
+
+:root,
+[data-theme="light"],
+html[data-theme="consumer-light"] {
+  --boot-bg: #f2f2ef;
+  --boot-icon-default: rgba(0, 0, 0, 0.55);
+  --boot-icon-error: #991b1b;
+  --boot-icon-success: #166534;
+  --boot-wordmark: #111110;
+  --boot-tagline: #a8a7a3;
+  --boot-hint: #a8a7a3;
+  --boot-progress: #2563eb;
+}

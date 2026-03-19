@@ -61,7 +61,7 @@ export default mergeConfig(
             storybookTest({
               configDir: path.join(__dirname, ".storybook"),
               // Use an ephemeral port to avoid collisions with `storybook` dev (6007).
-              storybookScript: "npm exec -- storybook dev -p 0 --ci --no-open",
+              storybookScript: "pnpm exec storybook dev -p 0 --ci --no-open",
             }),
           ],
           test: {

@@ -1,0 +1,35 @@
+{
+  "allowedRoot": [
+    "src/design-system/styles/tokens/base.css",
+    "src/design-system/styles/tokens/_breakpoints.css",
+    "src/design-system/styles/theme/consumer.css",
+    "src/design-system/styles/theme/alert-tokens.css",
+    "src/design-system/styles/theme/banner-tokens.css",
+    "src/design-system/styles/theme/button-tokens.css",
+    "src/design-system/styles/theme/modal-tokens.css",
+    "src/design-system/styles/theme/progress-bar-tokens.css",
+    "src/design-system/styles/shell/frame.css",
+    "src/design-system/compositions/recipes/home/NoDeviceCallout.css"
+  ],
+  "allowedHexCss": [
+    "src/design-system/styles/tokens/base.css",
+    "src/design-system/styles/content/modern.css",
+    "src/design-system/styles/theme/consumer.css",
+    "src/design-system/styles/theme/telegram.css",
+    "src/design-system/styles/theme/amnezia.css",
+    "src/design-system/styles/theme/storybook.css",
+    "src/design-system/styles/theme/modal-tokens.css",
+    "src/design-system/styles/theme/alert-tokens.css",
+    "src/design-system/styles/theme/button-tokens.css",
+    "src/design-system/styles/theme/progress-bar-tokens.css",
+    "src/design-system/styles/theme/banner-tokens.css",
+    "src/design-system/styles/shell/frame.css",
+    "src/design-system/compositions/recipes/home/NoDeviceCallout.css"
+  ],
+  "enforcedCssRoots": [
+    "src/design-system/components",
+    "src/design-system/compositions",
+    "src/components",
+    "src/styles/app"
+  ]
+}

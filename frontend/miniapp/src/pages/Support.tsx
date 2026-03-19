@@ -1,20 +1,30 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { SessionMissing, SupportContactCard, TroubleshooterStep } from "@/components";
+import { SessionMissing } from "@/components";
 import { useOpenLink } from "@/hooks";
-import { IconCreditCard, IconHelpCircle, IconRotateCw, IconServer } from "@/design-system/icons";
 import {
+  IconCreditCard,
+  IconHelpCircle,
+  IconMessageCircle,
+  IconMonitor,
+  IconRotateCw,
+} from "@/design-system/icons";
+import {
+  CardRow,
   FaqDisclosureItem,
   FallbackScreen,
   FooterHelp,
+  InlineAlert,
+  PageHeader,
+  PageLayout,
+  PageScaffold,
+  RowItem,
+  SectionLabel,
   Skeleton,
   SkeletonList,
-  PageScaffold,
-  PageLayout,
-  PageHeader,
-  PageSection,
   Stack,
-  SupportActionList,
+  StatusChip,
+  TroubleshooterFlowCard,
 } from "@/design-system";
 import { useSupportPageModel } from "@/page-models";
 import { useI18n } from "@/hooks";
@@ -29,47 +39,21 @@ export function SupportPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   const faqItems = [
-    {
-      title: t("support.faq_item_connection_title"),
-      body: t("support.faq_item_connection_body"),
-    },
-    {
-      title: t("support.faq_item_install_title"),
-      body: t("support.faq_item_install_body"),
-    },
-    {
-      title: t("support.faq_item_restore_title"),
-      body: t("support.faq_item_restore_body"),
-    },
-    {
-      title: t("support.faq_item_device_title"),
-      body: t("support.faq_item_device_body"),
-    },
-    {
-      title: t("support.faq_item_billing_title"),
-      body: t("support.faq_item_billing_body"),
-    },
-    {
-      title: t("support.faq_item_privacy_title"),
-      body: t("support.faq_item_privacy_body"),
-    },
-    {
-      title: t("support.faq_item_support_title"),
-      body: t("support.faq_item_support_body"),
-    },
-    {
-      title: t("support.faq_item_slow_title"),
-      body: t("support.faq_item_slow_body"),
-    },
-    {
-      title: t("support.faq_item_cancel_title"),
-      body: t("support.faq_item_cancel_body"),
-    },
-    {
-      title: t("support.faq_item_data_title"),
-      body: t("support.faq_item_data_body"),
-    },
+    { title: t("support.faq_item_connection_title"), body: t("support.faq_item_connection_body") },
+    { title: t("support.faq_item_install_title"), body: t("support.faq_item_install_body") },
+    { title: t("support.faq_item_restore_title"), body: t("support.faq_item_restore_body") },
+    { title: t("support.faq_item_device_title"), body: t("support.faq_item_device_body") },
+    { title: t("support.faq_item_billing_title"), body: t("support.faq_item_billing_body") },
+    { title: t("support.faq_item_privacy_title"), body: t("support.faq_item_privacy_body") },
+    { title: t("support.faq_item_support_title"), body: t("support.faq_item_support_body") },
+    { title: t("support.faq_item_slow_title"), body: t("support.faq_item_slow_body") },
+    { title: t("support.faq_item_cancel_title"), body: t("support.faq_item_cancel_body") },
+    { title: t("support.faq_item_data_title"), body: t("support.faq_item_data_body") },
   ];
+
+  const openTelegramSupport = () => {
+    if (supportHref) openLink(supportHref);
+  };
 
   if (model.pageState.status === "empty") {
     return <SessionMissing />;
@@ -107,98 +91,101 @@ export function SupportPage() {
     );
   }
 
+  const supportStatus = supportHref ? "active" : "expired";
+  const statusLabel = supportHref ? t("common.status_online") : t("common.status_offline");
+
   return (
     <PageScaffold>
       <PageLayout scrollable={false}>
-      <PageHeader
-        title={model.header.title}
-        subtitle={model.header.subtitle}
-        onBack={() => navigate(-1)}
-        backAriaLabel={t("common.back_aria")}
-      />
-      <Stack gap="4">
-        <SupportContactCard
-          title={model.hero.title}
-          description={model.hero.subtitle ?? t("support.contact_card_description")}
-          supportHref={supportHref}
-          onContactClick={supportHref ? (href) => openLink(href) : undefined}
+        <PageHeader
+          title={model.header.title}
+          subtitle={model.header.subtitle}
+          onBack={() => navigate(-1)}
+          backAriaLabel={t("common.back_aria")}
         />
+        <Stack gap="4">
+          {/* Contact Support */}
+          <SectionLabel label={t("support.contact_card_title")} />
+          <CardRow className="support-contact-card">
+            <RowItem
+              icon={<IconHelpCircle size={15} strokeWidth={2} aria-hidden />}
+              iconVariant="neutral"
+              label={model.hero.title}
+              subtitle={model.hero.subtitle ?? t("support.contact_card_description")}
+              subtitleClassName="support-contact-sub"
+              right={<StatusChip variant={supportStatus} label={statusLabel} />}
+              showChevron={false}
+            />
+          </CardRow>
+          {!supportHref && (
+            <InlineAlert
+              variant="warning"
+              label={t("support.support_link_unavailable_title")}
+              message={t("support.support_link_unavailable_message")}
+            />
+          )}
 
-        <PageSection
-          title={t("support.quick_paths_title")}
-          description={t("support.quick_paths_description")}
-        >
-          <SupportActionList
-            items={[
-              {
-                to: "/restore-access",
-                title: t("onboarding.restore_access"),
-                description: t("support.quick_paths_restore_description"),
-                icon: <IconRotateCw size={20} strokeWidth={1.75} aria-hidden />,
-                tone: "blue",
-              },
-              {
-                to: "/devices",
-                title: t("devices.header_title"),
-                description: t("support.quick_paths_devices_description"),
-                icon: <IconServer size={20} strokeWidth={1.75} aria-hidden />,
-                tone: "green",
-              },
-              {
-                to: "/plan",
-                title: t("plan.header_title"),
-                description: t("support.quick_paths_plan_description"),
-                icon: <IconCreditCard size={20} strokeWidth={1.75} aria-hidden />,
-                tone: "amber",
-              },
-              {
-                ...(supportHref
-                  ? {
-                      href: supportHref,
-                      title: t("settings.contact_support_title"),
-                      description: t("support.quick_paths_support_description"),
-                      icon: <IconHelpCircle size={20} strokeWidth={1.75} aria-hidden />,
-                      tone: "blue" as const,
-                    }
-                  : {
-                      to: "#",
-                      title: t("settings.contact_support_title"),
-                      description: t("support.quick_paths_support_description"),
-                      icon: <IconHelpCircle size={20} strokeWidth={1.75} aria-hidden />,
-                      tone: "blue" as const,
-                      disabled: true,
-                    }),
-              },
-            ]}
-            onItemClick={(item) => {
-              if (item.href) openLink(item.href);
-            }}
-          />
-        </PageSection>
+          {/* Common Fixes */}
+          <SectionLabel label={t("support.quick_paths_title")} />
+          <p className="section-desc">{t("support.quick_paths_description")}</p>
+          <CardRow>
+            <RowItem
+              icon={<IconRotateCw size={15} strokeWidth={2} aria-hidden />}
+              iconVariant="default"
+              label={t("onboarding.restore_access")}
+              subtitle={t("support.quick_paths_restore_description")}
+              onClick={() => navigate("/restore-access")}
+            />
+            <RowItem
+              icon={<IconMonitor size={15} strokeWidth={2} aria-hidden />}
+              iconVariant="default"
+              label={t("devices.header_title")}
+              subtitle={t("support.quick_paths_devices_description")}
+              onClick={() => navigate("/devices")}
+            />
+            <RowItem
+              icon={<IconCreditCard size={15} strokeWidth={2} aria-hidden />}
+              iconVariant="default"
+              label={t("plan.header_title")}
+              subtitle={t("support.quick_paths_plan_description")}
+              onClick={() => navigate("/plan")}
+            />
+            <RowItem
+              icon={<IconMessageCircle size={15} strokeWidth={2} aria-hidden />}
+              iconVariant="default"
+              label={t("settings.contact_support_title")}
+              subtitle={t("support.quick_paths_support_description")}
+              onClick={supportHref ? openTelegramSupport : undefined}
+            />
+          </CardRow>
 
-        <PageSection
-          title={t("support.troubleshooter_title")}
-          description={t("support.troubleshooter_description_short")}
-        >
-          <TroubleshooterStep
-            key={model.step}
-            stepIndex={model.step + 1}
-            totalSteps={model.totalSteps}
+          {/* Troubleshooter */}
+          <SectionLabel label={t("support.troubleshooter_title")} />
+          <p className="section-desc">{t("support.troubleshooter_description_short")}</p>
+          <TroubleshooterFlowCard
+            eyebrow={t("support.troubleshooter_flow_label")}
+            stepLabel={`Step ${model.step + 1}/${model.totalSteps}`}
             title={model.currentStep.title}
             body={model.currentStep.body}
-            nextLabel={model.currentStep.nextLabel}
-            onNext={model.nextStep}
-            backLabel={model.currentStep.backLabel}
-            onBack={model.previousStep}
-            altLabel={model.currentStepAltLabel ?? undefined}
-            onAlt={model.currentStepAltLabel ? () => navigate("/plan", { state: { fromSupport: true } }) : undefined}
+            altAction={
+              model.currentStepAltLabel
+                ? {
+                    label: model.currentStepAltLabel,
+                    onClick: () => navigate("/plan", { state: { fromSupport: true } }),
+                  }
+                : undefined
+            }
+            backAction={
+              model.previousStep
+                ? { label: model.currentStep.backLabel, onClick: model.previousStep }
+                : undefined
+            }
+            nextAction={{ label: model.currentStep.nextLabel, onClick: model.nextStep }}
           />
-        </PageSection>
 
-        <PageSection
-          title={t("support.faq_title")}
-          description={t("support.faq_description")}
-        >
+          {/* FAQ */}
+          <SectionLabel label={t("support.faq_title")} />
+          <p className="section-desc">{t("support.faq_description")}</p>
           <div className="faq-list">
             {faqItems.map((item, index) => (
               <FaqDisclosureItem
@@ -210,14 +197,12 @@ export function SupportPage() {
               />
             ))}
           </div>
-        </PageSection>
-      </Stack>
-      {/* On Support page, "View setup guide" → /devices (setup = device config); other pages → /support */}
-      <FooterHelp
-        note={t("footer.having_trouble")}
-        linkLabel={t("footer.view_setup_guide")}
-        onLinkClick={() => navigate("/devices")}
-      />
+        </Stack>
+        <FooterHelp
+          note={t("footer.having_trouble")}
+          linkLabel={t("footer.view_setup_guide")}
+          onLinkClick={() => navigate("/devices")}
+        />
       </PageLayout>
     </PageScaffold>
   );

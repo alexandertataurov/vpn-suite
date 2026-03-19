@@ -58,7 +58,7 @@ export const Sizes: Story = {
             color: "var(--color-text-muted)",
           }}
         >
-          size=md (720px max)
+          size=md (768px max)
         </div>
       </Container>
       <Container size="lg" padding="md">

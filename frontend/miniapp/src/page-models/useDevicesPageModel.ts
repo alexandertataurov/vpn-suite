@@ -123,8 +123,8 @@ export function useDevicesPageModel(): DevicesPageModel {
   const configSectionRef = useRef<HTMLDivElement>(null);
   const { impact, notify } = useTelegramHaptics();
   const { t, locale } = useI18n();
-  const activeSub = getActiveSubscription(data);
-  const activeDevices = getActiveDevices(data);
+  const activeSub = useMemo(() => getActiveSubscription(data), [data]);
+  const activeDevices = useMemo(() => getActiveDevices(data), [data]);
   const recommendedRoute = data?.routing?.recommended_route ?? "/devices";
   const routeReason = (data?.routing?.reason ?? "unknown") as RecommendedRouteReason;
 

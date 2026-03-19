@@ -4,11 +4,15 @@ set -e
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SRC="$ROOT/src"
 STYLES_DIR="$SRC/design-system/styles"
+CONFIG_JSON="$ROOT/scripts/design-check-config.json"
 VIOLATIONS=0
 
+ALLOWED_ROOT=$(node -e "const c=require(process.argv[1]); console.log(c.allowedRoot.map((p) => process.argv[2] + '/' + p).join(' '));" "$CONFIG_JSON" "$ROOT")
+ALLOWED_CSS=$(node -e "const c=require(process.argv[1]); console.log(c.allowedHexCss.map((p) => process.argv[2] + '/' + p).join(' '));" "$CONFIG_JSON" "$ROOT")
+ENFORCED_CSS_ROOTS=$(node -e "const c=require(process.argv[1]); console.log(c.enforcedCssRoots.map((p) => process.argv[2] + '/' + p).join(' '));" "$CONFIG_JSON" "$ROOT")
+
 # 1. Only token/shell files may define :root
-ROOT_FILES=$(grep -rl "^:root\s*{" "$SRC" --include="*.css" 2>/dev/null || true)
-ALLOWED_ROOT="$SRC/design-system/styles/tokens/base.css $SRC/design-system/styles/tokens/_breakpoints.css $SRC/design-system/styles/theme/consumer.css $SRC/design-system/styles/shell/frame.css"
+ROOT_FILES=$(grep -rlE "^:root\\b" "$SRC" --include="*.css" 2>/dev/null || true)
 if [ -n "$ROOT_FILES" ]; then
   for f in $ROOT_FILES; do
     allowed=
@@ -16,7 +20,7 @@ if [ -n "$ROOT_FILES" ]; then
       [ "$(realpath "$f" 2>/dev/null)" = "$(realpath "$a" 2>/dev/null)" ] && allowed=1 && break
     done
     if [ -z "$allowed" ]; then
-      echo "design:check — :root only allowed in design-system/styles (tokens/base, theme/consumer, shell/frame), found in: $f"
+      echo "design:check — :root only allowed in approved token/theme files, found in: $f"
       VIOLATIONS=$((VIOLATIONS + 1))
     fi
   done
@@ -99,7 +103,6 @@ EOF
 fi
 
 # 7. No raw hex/rgba in design-system CSS except in token source files.
-ALLOWED_CSS="$STYLES_DIR/tokens/base.css $STYLES_DIR/theme/consumer.css $STYLES_DIR/theme/telegram.css $STYLES_DIR/theme/amnezia.css $STYLES_DIR/theme/storybook.css $STYLES_DIR/theme/alert-tokens.css $STYLES_DIR/theme/banner-tokens.css $STYLES_DIR/theme/button-tokens.css $STYLES_DIR/theme/modal-tokens.css $STYLES_DIR/theme/progress-bar-tokens.css $STYLES_DIR/shell/frame.css"
 while IFS= read -r f; do
   [ -z "$f" ] && continue
   allowed=
@@ -107,25 +110,43 @@ while IFS= read -r f; do
     [ "$(realpath "$f" 2>/dev/null)" = "$(realpath "$a" 2>/dev/null)" ] && allowed=1 && break
   done
   if [ -z "$allowed" ] && grep -qE '#[0-9a-fA-F]{3}\b|#[0-9a-fA-F]{6}\b|rgba\s*\(' "$f" 2>/dev/null; then
-    echo "design:check — no raw hex/rgba in design-system CSS outside token sources (tokens/base, theme/consumer, theme/telegram, shell/frame). File: $f"
+    echo "design:check — no raw hex/rgba in design-system CSS outside approved token sources. File: $f"
     VIOLATIONS=$((VIOLATIONS + 1))
   fi
 done <<EOF
 $(find "$STYLES_DIR" -name "*.css" 2>/dev/null)
 EOF
 
-# 8. Token drift — tokens-map PRIMITIVES vs tokens/*.ts
+# 8. No raw hex/rgba in component/recipe/app CSS outside token source files.
+for dir in $ENFORCED_CSS_ROOTS; do
+  [ -d "$dir" ] || continue
+  while IFS= read -r f; do
+    [ -z "$f" ] && continue
+    allowed=
+    for a in $ALLOWED_CSS; do
+      [ "$(realpath "$f" 2>/dev/null)" = "$(realpath "$a" 2>/dev/null)" ] && allowed=1 && break
+    done
+    if [ -z "$allowed" ] && grep -qE '#[0-9a-fA-F]{3}\b|#[0-9a-fA-F]{6}\b|rgba\s*\(' "$f" 2>/dev/null; then
+      echo "design:check — no raw hex/rgba in component or app CSS. File: $f"
+      VIOLATIONS=$((VIOLATIONS + 1))
+    fi
+  done <<EOF
+$(find "$dir" -name "*.css" 2>/dev/null)
+EOF
+done
+
+# 9. Token drift — tokens-map PRIMITIVES vs tokens/*.ts
 if ! node "$ROOT/scripts/check-token-drift.mjs" 2>/dev/null; then
   VIOLATIONS=$((VIOLATIONS + 1))
 fi
 
-# 9. Typography parity test must pass whenever token or CSS layers drift.
-if ! npm run test -- --run src/test/token-parity.test.ts >/dev/null 2>&1; then
-  echo "design:check — typography/breakpoint token parity failed. Run: npm run test -- --run src/test/token-parity.test.ts"
+# 10. Typography parity test must pass whenever token or CSS layers drift.
+if ! pnpm exec vitest run src/test/token-parity.test.ts >/dev/null 2>&1; then
+  echo "design:check — typography/breakpoint token parity failed. Run: pnpm exec vitest run src/test/token-parity.test.ts"
   VIOLATIONS=$((VIOLATIONS + 1))
 fi
 
-# 10. Storybook taxonomy must stay aligned with the UI-platform layer model.
+# 11. Storybook taxonomy must stay aligned with the UI-platform layer model.
 if ! node "$ROOT/scripts/check-storybook-taxonomy.mjs" >/dev/null 2>&1; then
   echo "design:check — Storybook taxonomy drifted. Run: npm run storybook:taxonomy"
   VIOLATIONS=$((VIOLATIONS + 1))

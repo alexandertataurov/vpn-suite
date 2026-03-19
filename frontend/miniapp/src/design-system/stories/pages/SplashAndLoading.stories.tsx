@@ -7,12 +7,17 @@ import {
 } from "@/bootstrap/BootScreens";
 import { StorySection } from "@/design-system";
 
+const pageStoryParameters = {
+  layout: "fullscreen" as const,
+  viewport: { defaultViewport: "iphone14" },
+  status: { type: "stable" as const },
+};
+
 const meta: Meta = {
   title: "Pages/Contracts/SplashAndLoading",
   tags: ["autodocs"],
   parameters: {
-    viewport: { defaultViewport: "iphone14" },
-    layout: "fullscreen",
+    ...pageStoryParameters,
     docs: {
       description: {
         component:
@@ -62,7 +67,7 @@ export const BootError: Story = {
   render: () => (
     <StorySection title="Startup error" description="Error screen with retry.">
       <BootErrorScreen
-        title="Session error"
+        title="Could not load session"
         message="Please try again."
         onRetry={() => {}}
       />

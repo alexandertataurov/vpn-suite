@@ -35,6 +35,8 @@ const messages: MessageTable = {
     "common.cancel": "Cancel",
     "common.retry": "Retry",
     "common.back_aria": "Back",
+    "common.status_offline": "Offline",
+    "common.status_online": "Online",
     "footer.having_trouble": "Having trouble?",
     "footer.view_setup_guide": "View setup guide",
     "common.vpn_boundary_note": "Manage access here. Connect in AmneziaVPN.",
@@ -497,6 +499,7 @@ const messages: MessageTable = {
     // Devices
     "devices.header_title": "Devices",
     "devices.header_subtitle": "Manage configs",
+    "devices.eyebrow_label": "DEVICE MANAGEMENT",
     "devices.summary_eyebrow": "Devices",
     "devices.summary_title_plan_required": "Plan required",
     "devices.summary_subtitle_plan_required": "Choose a plan before you add a device.",
@@ -919,6 +922,8 @@ const messages: MessageTable = {
     "common.cancel": "Отмена",
     "common.retry": "Повторить",
     "common.back_aria": "Назад",
+    "common.status_offline": "Офлайн",
+    "common.status_online": "Онлайн",
     "footer.having_trouble": "Возникли проблемы?",
     "footer.view_setup_guide": "Инструкция по настройке",
     "common.vpn_boundary_note": "Управляйте доступом здесь. Подключайтесь в AmneziaVPN.",
@@ -1398,6 +1403,7 @@ const messages: MessageTable = {
     // Devices
     "devices.header_title": "Устройства",
     "devices.header_subtitle": "Управление конфигами",
+    "devices.eyebrow_label": "УПРАВЛЕНИЕ УСТРОЙСТВАМИ",
     "devices.summary_eyebrow": "Устройства",
     "devices.summary_title_plan_required": "Нужен тариф",
     "devices.summary_subtitle_plan_required":

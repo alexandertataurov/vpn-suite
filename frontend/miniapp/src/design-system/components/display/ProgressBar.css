@@ -4,9 +4,9 @@
   width: 100%;
 }
 
-@media (min-width: 768px) {
+@media (min-width: var(--bp-md)) {
   .pb-wrap {
-    max-width: 480px;
+    max-width: var(--bp-sm);
   }
 }
 
@@ -202,7 +202,7 @@
   margin-top: 0;
 }
 
-@media (max-width: 359px) {
+@media (max-width: var(--vp-narrow)) {
   .pb-wrap--inline .pb-row,
   .pb-wrap--split .pb-row {
     flex-direction: column;
