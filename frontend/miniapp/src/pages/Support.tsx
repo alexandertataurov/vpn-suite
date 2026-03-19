@@ -164,7 +164,7 @@ export function SupportPage() {
           <p className="section-desc">{t("support.troubleshooter_description_short")}</p>
           <TroubleshooterFlowCard
             eyebrow={t("support.troubleshooter_flow_label")}
-            stepLabel={`Step ${model.step + 1}/${model.totalSteps}`}
+            stepLabel={t("support.troubleshooter_step_chip", { index: model.step + 1, total: model.totalSteps })}
             title={model.currentStep.title}
             body={model.currentStep.body}
             altAction={

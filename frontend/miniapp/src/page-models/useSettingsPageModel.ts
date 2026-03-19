@@ -8,6 +8,7 @@ import {
   type WebAppReferralStatsResponse,
   type WebAppSubscriptionOffersResponse,
 } from "@vpn-suite/shared";
+import { getPlans } from "@/api";
 import { useSession } from "@/hooks";
 import { useTelegramInitData } from "@/hooks/telegram/useTelegramInitData";
 import { useWebappToken, webappApi } from "@/api/client";
@@ -20,6 +21,7 @@ import { setWebappToken } from "@/api/client";
 import { appVersion, buildId } from "@/config/env";
 import type { StandardPageHeader, StandardPageState } from "./types";
 import { daysUntil, getActiveDevices, getActiveSubscription } from "./helpers";
+import { sanitizePlanDisplayName } from "./plan-helpers";
 
 export type ProfileLocaleId = "auto" | "en" | "ru";
 
@@ -71,7 +73,7 @@ export function useSettingsPageModel() {
   const { addToast } = useToast();
   const activeSub = getActiveSubscription(data);
   const { track } = useTelemetry(activeSub?.plan_id ?? null);
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState<CancelReasonSelection>(null);
   const [cancelFreeText, setCancelFreeText] = useState("");
@@ -106,6 +108,12 @@ export function useSettingsPageModel() {
     queryKey: [...webappQueryKeys.referralStats()],
     queryFn: () => webappApi.get<WebAppReferralStatsResponse>("/webapp/referral/stats"),
     enabled: hasToken,
+  });
+  const plansQuery = useQuery({
+    queryKey: [...webappQueryKeys.plans()],
+    queryFn: getPlans,
+    enabled: hasToken && !!activeSub?.plan_id,
+    staleTime: 60_000,
   });
 
   const pauseMutation = useMutation({
@@ -271,7 +279,12 @@ export function useSettingsPageModel() {
   ]);
 
   const activeDevices = getActiveDevices(data);
-  const planLabel = formatPlanLabel(activeSub?.plan_id ?? null, t);
+  const currentPlan = activeSub?.plan_id
+    ? plansQuery.data?.items.find((plan) => plan.id === activeSub.plan_id)
+    : undefined;
+  const planLabel = currentPlan?.name?.trim()
+    ? sanitizePlanDisplayName(currentPlan.name, locale)
+    : formatPlanLabel(activeSub?.plan_id ?? null, t);
   const renewalDate = formatShortDate(activeSub?.valid_until ?? null);
   const renewalDays = daysUntil(activeSub?.valid_until ?? null);
   const renewalCountdownLabel = activeSub

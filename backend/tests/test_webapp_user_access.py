@@ -46,8 +46,12 @@ async def test_webapp_user_access_no_subscription_returns_no_plan(
         payload = response.json()
         assert payload["status"] == "no_plan"
         assert payload["has_plan"] is False
+        assert payload["plan_id"] is None
+        assert payload["plan_name"] is None
+        assert payload["plan_duration_days"] is None
         assert payload["devices_used"] == 0
         assert payload["device_limit"] is None
+        assert payload["traffic_used_bytes"] == 0
         assert payload["config_ready"] is False
         assert payload["config_id"] is None
         assert payload["expires_at"] is None
@@ -112,8 +116,12 @@ async def test_webapp_user_access_active_sub_no_devices_returns_needs_device(
         payload = response.json()
         assert payload["status"] == "needs_device"
         assert payload["has_plan"] is True
+        assert payload["plan_id"] == plan.id
+        assert payload["plan_name"] == "Pro"
+        assert payload["plan_duration_days"] == 30
         assert payload["devices_used"] == 0
         assert payload["device_limit"] == 5
+        assert payload["traffic_used_bytes"] == 0
         assert payload["config_ready"] is False
         assert payload["config_id"] is None
         assert payload["expires_at"] is None
@@ -178,6 +186,10 @@ async def test_webapp_user_access_expired_returns_expired(
         payload = response.json()
         assert payload["status"] == "expired"
         assert payload["has_plan"] is True
+        assert payload["plan_id"] == plan.id
+        assert payload["plan_name"] == "Pro"
+        assert payload["plan_duration_days"] == 30
+        assert payload["traffic_used_bytes"] == 0
         assert payload["expires_at"] is not None
     finally:
         app.dependency_overrides.pop(get_db, None)

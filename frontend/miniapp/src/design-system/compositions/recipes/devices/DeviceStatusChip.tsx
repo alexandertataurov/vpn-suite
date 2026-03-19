@@ -1,20 +1,23 @@
-export type DeviceStatusVariant = "imported" | "pending" | "inactive";
+import { useI18n } from "@/hooks";
 
-const DEVICE_STATUS_LABEL: Record<DeviceStatusVariant, string> = {
-  imported: "Imported",
-  pending: "Pending",
-  inactive: "Inactive",
-};
+export type DeviceStatusVariant = "imported" | "pending" | "inactive";
 
 export interface DeviceStatusChipProps {
   status: DeviceStatusVariant;
 }
 
 export function DeviceStatusChip({ status }: DeviceStatusChipProps) {
+  const { t } = useI18n();
+  const label =
+    status === "imported"
+      ? t("devices.device_chip_imported")
+      : status === "pending"
+        ? t("devices.device_chip_pending")
+        : t("devices.device_chip_inactive");
   return (
     <span className={`device-chip device-chip--${status}`}>
       <span className="device-chip-dot" aria-hidden />
-      <span>{DEVICE_STATUS_LABEL[status]}</span>
+      <span>{label}</span>
     </span>
   );
 }

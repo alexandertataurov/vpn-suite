@@ -48,7 +48,7 @@ export function HomePage() {
   const navigate = useNavigate();
   const hasToken = !!useWebappToken();
   const session = useSession(hasToken).data;
-  const profileName = (session?.user?.display_name ?? "").trim() || "Guest";
+  const profileName = (session?.user?.display_name ?? "").trim() || t("home.guest_name");
   const profileInitial = profileName.charAt(0).toUpperCase() || "G";
   const profilePhotoUrl = (session?.user?.photo_url ?? "").trim() || undefined;
 
@@ -128,7 +128,7 @@ export function HomePage() {
         <>
           <PlanCard
             plan={model.planHeroData.planName}
-            planSub={model.planHeroData.subtitle}
+            planSub={model.planHeroData.subtitle ?? ""}
             eyebrow={model.planHeroData.eyebrow}
             status={model.planHeroData.status}
             stats={[...model.planHeroData.stats]}
@@ -177,7 +177,7 @@ export function HomePage() {
                       iconVariant="neutral"
                       label={t("home.manage_devices")}
                       subtitle={model.devicesSubtitle}
-                      right={model.devicesFull ? <Badge label="Full" variant="muted" /> : undefined}
+                      right={model.devicesFull ? <Badge label={t("home.badge_full")} variant="muted" /> : undefined}
                       onClick={() => navigate("/devices")}
                     />
                   )}
@@ -194,7 +194,7 @@ export function HomePage() {
                           model.daysLeft <= 14 ? (
                             <Badge label={`${model.daysLeft}d left`} variant="warning" />
                           ) : null}
-                          {status === "expired" ? <Badge label="Renew" variant="error" /> : null}
+                          {status === "expired" ? <Badge label={t("home.badge_renew")} variant="error" /> : null}
                         </>
                       }
                       onClick={() =>

@@ -20,14 +20,8 @@ export function SetupCardContent({
     step === "issue"
       ? t("devices.setup_issue_title")
       : t("devices.setup_pending_title");
-  const body =
-    step === "issue"
-      ? "Import the config in AmneziaVPN, connect there, then return here if needed."
-      : "Import the config in AmneziaVPN, connect there, then return here if needed.";
-  const alertMessage =
-    step === "issue"
-      ? "Use the latest config for one device, then confirm setup if needed."
-      : "Use the latest config for one device, then confirm setup if needed.";
+  const body = t("devices.setup_flow_body");
+  const alertMessage = t("devices.setup_flow_alert");
 
   return (
     <div className="devices-setup-card">
@@ -35,7 +29,7 @@ export function SetupCardContent({
       <div className="devices-setup-card__inner">
         <div className="devices-setup-card__eyebrow">{t("devices.section_setup_title")}</div>
         <div>
-          <h3 className="devices-setup-card__title">{step === "issue" ? "Connect in AmneziaVPN" : title}</h3>
+          <h3 className="devices-setup-card__title">{step === "issue" ? t("devices.setup_connect_title") : title}</h3>
           <p className="devices-setup-card__desc">{body}</p>
         </div>
         <InlineAlert variant="info" message={alertMessage} />

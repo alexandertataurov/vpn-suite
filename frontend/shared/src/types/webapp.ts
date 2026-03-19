@@ -136,8 +136,12 @@ export type UserAccessStatus =
 export interface UserAccessResponse {
   status: UserAccessStatus;
   has_plan: boolean;
+  plan_id?: string | null;
+  plan_name?: string | null;
+  plan_duration_days?: number | null;
   devices_used: number;
   device_limit: number | null;
+  traffic_used_bytes?: number | null;
   config_ready: boolean;
   config_id: string | null;
   expires_at: string | null;

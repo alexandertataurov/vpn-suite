@@ -169,11 +169,11 @@ export function usageToneFromPercent(percent: number): UsageTone {
   return "ok";
 }
 
-export function historyStatusLabel(status: WebAppBillingHistoryStatus): string {
-  if (status === "paid") return "Paid";
-  if (status === "failed") return "Failed";
-  if (status === "refunded") return "Refunded";
-  return "Pending";
+export function historyStatusLabel(status: WebAppBillingHistoryStatus, locale: "en" | "ru" = "en"): string {
+  if (status === "paid") return translate(locale, "plan.status_paid");
+  if (status === "failed") return translate(locale, "plan.status_failed");
+  if (status === "refunded") return translate(locale, "plan.status_refunded");
+  return translate(locale, "plan.status_pending");
 }
 
 export function historyStatusClass(status: WebAppBillingHistoryStatus): "paid" | "pend" | "crit" {
@@ -222,83 +222,84 @@ export function buildNextStepCard(params: {
   isSubscribed: boolean;
   routeReason: string;
   recommendedRoute: string;
+  locale?: "en" | "ru";
 }): NextStepCardConfig | null {
-  const { isSubscribed, routeReason, recommendedRoute } = params;
+  const { isSubscribed, routeReason, recommendedRoute, locale = "en" } = params;
   if (!isSubscribed) {
     return {
-      title: "Next step",
-      description: "Choose a plan first, then continue setup.",
+      title: translate(locale, "plan.next_step_title"),
+      description: translate(locale, "plan.next_step_choose_plan_desc"),
       alertTone: "info",
-      alertTitle: "No active subscription",
-      alertMessage: "Choose a plan to activate access before you add a device.",
-      primaryLabel: "Choose plan",
+      alertTitle: translate(locale, "plan.next_step_choose_plan_alert_title"),
+      alertMessage: translate(locale, "plan.next_step_choose_plan_alert_body"),
+      primaryLabel: translate(locale, "plan.next_step_choose_plan_primary"),
       primaryActionType: "scrollToPlans" as const,
-      secondaryLabel: "Contact support",
+      secondaryLabel: translate(locale, "plan.next_step_contact_support"),
       secondaryTo: "/support",
     };
   }
   if (routeReason === "no_device") {
     return {
-      title: "Next step",
-      description: "Add your first device to continue setup.",
+      title: translate(locale, "plan.next_step_title"),
+      description: translate(locale, "plan.next_step_manage_devices_desc"),
       alertTone: "warning",
-      alertTitle: "Add your first device",
-      alertMessage: "Open Devices to create a config you can import in AmneziaVPN.",
-      primaryLabel: "Add device",
+      alertTitle: translate(locale, "plan.next_step_manage_devices_alert_title"),
+      alertMessage: translate(locale, "plan.next_step_manage_devices_alert_body"),
+      primaryLabel: translate(locale, "plan.next_step_manage_devices_primary"),
       primaryTo: recommendedRoute,
-      secondaryLabel: "Contact support",
+      secondaryLabel: translate(locale, "plan.next_step_contact_support"),
       secondaryTo: "/support",
     };
   }
   if (routeReason === "connection_not_confirmed") {
     return {
-      title: "Next step",
-      description: "Finish setup for your latest config.",
+      title: translate(locale, "plan.next_step_title"),
+      description: translate(locale, "plan.next_step_finish_setup_desc"),
       alertTone: "warning",
-      alertTitle: "Connect in AmneziaVPN",
-      alertMessage: "Import the issued config in AmneziaVPN, connect there, then return here if needed.",
-      primaryLabel: "View setup",
+      alertTitle: translate(locale, "plan.next_step_finish_setup_alert_title"),
+      alertMessage: translate(locale, "plan.next_step_finish_setup_alert_body"),
+      primaryLabel: translate(locale, "plan.next_step_finish_setup_primary"),
       primaryTo: recommendedRoute,
-      secondaryLabel: "Manage devices",
+      secondaryLabel: translate(locale, "plan.cta_manage_devices"),
       secondaryTo: "/devices",
     };
   }
   if (routeReason === "grace" || routeReason === "expired_with_grace") {
     return {
-      title: "Access state",
-      description: "Grace access is still available for now.",
+      title: translate(locale, "plan.next_step_access_title"),
+      description: translate(locale, "plan.next_step_restore_access_desc"),
       alertTone: "warning",
-      alertTitle: "Grace period active",
-      alertMessage: "Restore billing before grace ends to avoid losing access.",
-      primaryLabel: "Restore access",
+      alertTitle: translate(locale, "plan.next_step_restore_access_alert_title"),
+      alertMessage: translate(locale, "plan.next_step_restore_access_alert_body"),
+      primaryLabel: translate(locale, "plan.next_step_restore_access_primary"),
       primaryTo: recommendedRoute,
-      secondaryLabel: "Contact support",
+      secondaryLabel: translate(locale, "plan.next_step_contact_support"),
       secondaryTo: "/support",
     };
   }
   if (routeReason === "paused_access") {
     return {
-      title: "Access state",
-      description: "The subscription is on the account, but access is paused.",
+      title: translate(locale, "plan.next_step_access_title"),
+      description: translate(locale, "plan.next_step_open_settings_desc_paused"),
       alertTone: "info",
-      alertTitle: "Access paused",
-      alertMessage: "Resume the subscription from settings before issuing or using configs again.",
-      primaryLabel: "Open settings",
+      alertTitle: translate(locale, "plan.next_step_open_settings_alert_title_paused"),
+      alertMessage: translate(locale, "plan.next_step_open_settings_alert_body_paused"),
+      primaryLabel: translate(locale, "plan.next_step_open_settings_primary"),
       primaryTo: "/settings",
-      secondaryLabel: "Contact support",
+      secondaryLabel: translate(locale, "plan.next_step_contact_support"),
       secondaryTo: "/support",
     };
   }
   if (routeReason === "cancelled_at_period_end") {
     return {
-      title: "Access state",
-      description: "The subscription is active, but it will stop at period end.",
+      title: translate(locale, "plan.next_step_access_title"),
+      description: translate(locale, "plan.next_step_open_settings_desc_cancelled"),
       alertTone: "info",
-      alertTitle: "Access remains active",
-      alertMessage: "Review billing settings if you want to keep renewal turned on.",
-      primaryLabel: "Open settings",
+      alertTitle: translate(locale, "plan.next_step_open_settings_alert_title_cancelled"),
+      alertMessage: translate(locale, "plan.next_step_open_settings_alert_body_cancelled"),
+      primaryLabel: translate(locale, "plan.next_step_open_settings_primary"),
       primaryTo: "/settings",
-      secondaryLabel: "Manage devices",
+      secondaryLabel: translate(locale, "plan.cta_manage_devices"),
       secondaryTo: "/devices",
     };
   }
@@ -335,7 +336,7 @@ export function toBillingHistoryView(
         invoice: invoiceRef,
       }),
       amount: formatStarsFn(item.amount),
-      statusLabel: historyStatusLabel(item.status),
+      statusLabel: historyStatusLabel(item.status, locale),
       statusVariant: statusClass === "crit" ? "offline" : statusClass,
     };
   });

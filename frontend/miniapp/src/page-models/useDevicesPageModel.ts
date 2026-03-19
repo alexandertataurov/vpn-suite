@@ -358,9 +358,9 @@ export function useDevicesPageModel(): DevicesPageModel {
       const canUseShareWithFiles = typeof nav.share === "function" && typeof nav.canShare === "function" && nav.canShare({ files: [file] });
 
       if (canUseShareWithFiles) {
-        void nav.share({ files: [file], title: "VPN config" })
-          .then(() => addToast("Config ready to save/share", "success"))
-          .catch(() => addToast("Could not open share sheet. Try download or copy instead.", "error"));
+        void nav.share({ files: [file], title: t("devices.share_title") })
+          .then(() => addToast(t("devices.share_ready"), "success"))
+          .catch(() => addToast(t("devices.share_failed"), "error"));
         return;
       }
 

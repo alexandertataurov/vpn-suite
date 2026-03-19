@@ -1,5 +1,6 @@
 import { IconMonitor } from "@/design-system/icons";
 import { formatDate } from "@/lib/utils/format";
+import { useI18n } from "@/hooks";
 import { DeviceRowActions } from "./DeviceRowActions";
 import { DeviceStatusChip, type DeviceStatusVariant } from "./DeviceStatusChip";
 import "./DeviceRecipes.css";
@@ -45,14 +46,15 @@ export function DeviceRow({
   isConfirmingId,
   isReplacingId,
 }: DeviceRowProps) {
+  const { t } = useI18n();
   const status = normalizeDeviceStatus(device.status);
   const metaParts: string[] = [];
 
   if (device.last_seen_handshake_at) {
-    metaParts.push(`Last activity ${formatDate(device.last_seen_handshake_at, "en-US")}`);
+    metaParts.push(t("devices.meta_last_activity", { date: formatDate(device.last_seen_handshake_at, "en-US") }));
   }
 
-  metaParts.push(`Issued ${formatIssuedAt(device.issued_at)}`);
+  metaParts.push(t("devices.meta_issued", { date: formatIssuedAt(device.issued_at) }));
 
   const title = device.device_name || `Device #${device.id.slice(-6)}`;
   const chipStatus = mapChipStatus(status);

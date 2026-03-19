@@ -5,6 +5,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useWebappToken, webappApi } from "@/api/client";
 import { useOnlineStatus, useSession, useTrackScreen, useTelemetry } from "@/hooks";
 import { useToast } from "@/design-system";
+import { useI18n } from "@/hooks";
 import { webappQueryKeys } from "@/lib";
 import type { StandardPageHeader, StandardPageState } from "./types";
 import { getActiveSubscription } from "./helpers";
@@ -16,6 +17,7 @@ export function useServerSelectionPageModel() {
   const navigate = useNavigate();
   const location = useLocation();
   const { addToast } = useToast();
+  const { t } = useI18n();
   const [pendingServerId, setPendingServerId] = useState<string | null>(null);
   const returnTo =
     typeof (location.state as { from?: string } | null)?.from === "string" &&
@@ -38,7 +40,7 @@ export function useServerSelectionPageModel() {
     mutationFn: (payload: { server_id?: string; mode?: "auto" | "manual" }) =>
       webappApi.post("/webapp/servers/select", payload),
     onSuccess: (_data, variables) => {
-      addToast("Server preference updated", "success");
+      addToast(t("server_selection.toast_updated"), "success");
       queryClient.invalidateQueries({ queryKey: [...webappQueryKeys.servers()] });
       track("server_switched", {
         screen_name: "servers",
@@ -47,29 +49,29 @@ export function useServerSelectionPageModel() {
       navigate(returnTo, { replace: true });
     },
     onError: () => {
-      addToast("Could not update server preference", "error");
+      addToast(t("server_selection.toast_failed"), "error");
     },
     onSettled: () => setPendingServerId(null),
   });
 
   const header: StandardPageHeader = {
-    title: "Server location",
-    subtitle: "Choose where new configs should route by default",
+    title: t("server_selection.header_title"),
+    subtitle: t("server_selection.header_subtitle"),
   };
 
   const pageState: StandardPageState = !hasToken
-    ? { status: "empty", title: "Session missing" }
+    ? { status: "empty", title: t("common.session_missing_title") }
     : !isOnline
       ? {
           status: "error",
-          title: "Offline",
-          message: "You appear to be offline. Check your connection and try again.",
+          title: t("server_selection.offline_title"),
+          message: t("server_selection.offline_message"),
         }
       : error
         ? {
             status: "error",
-            title: "Could not load servers",
-            message: "We could not load server list. Please try again later.",
+            title: t("server_selection.load_error_title"),
+            message: t("server_selection.load_error_message"),
             onRetry: () => queryClient.invalidateQueries({ queryKey: [...webappQueryKeys.servers()] }),
           }
         : isLoading || !data

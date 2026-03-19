@@ -1,4 +1,5 @@
 import { PlanCard, type PlanCardStatus, type PlanCardStat } from "../home/PlanCard";
+import { useI18n } from "@/hooks";
 
 export interface DeviceHeroCardProps {
   devicesUsed: number;
@@ -13,22 +14,23 @@ export function DeviceHeroCard({
   setupPending,
   trafficUsed,
 }: DeviceHeroCardProps) {
+  const { t } = useI18n();
   const totalLabel = devicesTotal ?? "\u2014";
   const status: PlanCardStatus = setupPending > 0 ? "expiring" : "active";
-  const statusLabel = setupPending > 0 ? `${setupPending} pending` : "All set";
+  const statusLabel = setupPending > 0 ? t("devices.hero_status_pending", { count: setupPending }) : t("devices.hero_status_all_set");
   const stats: [PlanCardStat, PlanCardStat, PlanCardStat] = [
     {
-      label: "Capacity",
+      label: t("devices.hero_stat_capacity"),
       value: String(devicesUsed),
       dim: ` / ${totalLabel}`,
     },
     {
-      label: "Setup",
-      value: setupPending > 0 ? `${setupPending} pending` : "Done",
+      label: t("devices.hero_stat_setup"),
+      value: setupPending > 0 ? t("devices.hero_status_pending", { count: setupPending }) : t("devices.hero_setup_done"),
       tone: setupPending > 0 ? "expiring" : "default",
     },
     {
-      label: "Traffic",
+      label: t("devices.hero_stat_traffic"),
       value: trafficUsed,
     },
   ];
@@ -36,9 +38,9 @@ export function DeviceHeroCard({
   return (
     <PlanCard
       className="device-hero-card"
-      eyebrow="Device Management"
+      eyebrow={t("devices.hero_eyebrow_management")}
       plan={`${devicesUsed} / ${totalLabel}`}
-      planSub="devices active"
+      planSub={t("devices.hero_sub_devices_active")}
       status={status}
       statusLabel={statusLabel}
       stats={stats}

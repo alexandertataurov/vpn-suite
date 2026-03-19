@@ -59,7 +59,7 @@ export function DeviceRowActions({
   if (showConfirm) {
     menuItems.push({
       id: "confirm",
-      label: isConfirmingId === deviceId ? "Confirming…" : t("devices.menu_confirm_setup"),
+      label: isConfirmingId === deviceId ? t("devices.menu_confirming") : t("devices.menu_confirm_setup"),
       hint: statusLabel,
       icon: <IconShield size={15} strokeWidth={1.8} />,
       onSelect: () => {
@@ -77,7 +77,7 @@ export function DeviceRowActions({
   menuItems.push(
     {
       id: "replace",
-      label: isReplacingId === deviceId ? "Reissuing…" : t("devices.menu_reissue_config"),
+      label: isReplacingId === deviceId ? t("devices.menu_reissuing") : t("devices.menu_reissue_config"),
       icon: <IconDownload size={15} strokeWidth={1.8} />,
       onSelect: () => {
         onReplace(deviceId);

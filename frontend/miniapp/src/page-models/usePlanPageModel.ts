@@ -141,8 +141,9 @@ export function usePlanPageModel() {
         isSubscribed,
         routeReason,
         recommendedRoute,
+        locale,
       }),
-    [isSubscribed, routeReason, recommendedRoute],
+    [isSubscribed, routeReason, recommendedRoute, locale],
   );
 
   const selectedTierPlan = visibleTierPairs[0]

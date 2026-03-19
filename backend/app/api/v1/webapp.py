@@ -697,12 +697,45 @@ class UserAccessResponse(BaseModel):
 
     status: str  # no_plan | needs_device | generating_config | ready | expired | device_limit | error
     has_plan: bool
+    plan_id: str | None = None
+    plan_name: str | None = None
+    plan_duration_days: int | None = None
     devices_used: int
     device_limit: int | None
+    traffic_used_bytes: int | None = None
     config_ready: bool
     config_id: str | None
     expires_at: str | None
     amnezia_vpn_key: str | None = None
+
+
+async def _sum_usage_bytes_for_devices(device_ids: list[str]) -> int:
+    if not device_ids:
+        return 0
+    telemetry_map = await get_device_telemetry_bulk(device_ids)
+    if not telemetry_map:
+        return 0
+    total_bytes = 0
+    for telemetry in telemetry_map.values():
+        total_bytes += int(telemetry.transfer_rx_bytes or 0) + int(telemetry.transfer_tx_bytes or 0)
+    return total_bytes
+
+
+async def _build_access_plan_context(
+    db: AsyncSession,
+    subscription: Subscription | None,
+) -> tuple[str | None, str | None, int | None]:
+    if subscription is None:
+        return None, None, None
+    plan_id = getattr(subscription, "plan_id", None)
+    if not plan_id:
+        return None, None, None
+    plan_result = await db.execute(select(Plan).where(Plan.id == plan_id))
+    plan = plan_result.scalar_one_or_none()
+    if not plan:
+        return plan_id, None, None
+    _style, clean_name = _extract_plan_style(plan.name)
+    return plan_id, clean_name or plan_id, int(plan.duration_days or 0)
 
 
 @router.get("/user/access", response_model=UserAccessResponse)
@@ -726,8 +759,12 @@ async def webapp_user_access(
         return UserAccessResponse(
             status="no_plan",
             has_plan=False,
+            plan_id=None,
+            plan_name=None,
+            plan_duration_days=None,
             devices_used=0,
             device_limit=None,
+            traffic_used_bytes=0,
             config_ready=False,
             config_id=None,
             expires_at=None,
@@ -736,6 +773,7 @@ async def webapp_user_access(
 
     now = datetime.now(timezone.utc)
     active_devices = [d for d in user.devices if d.revoked_at is None]
+    active_device_ids = [str(d.id) for d in active_devices]
     ordered_subs = sort_subscriptions(list(user.subscriptions))
 
     primary_sub = next(
@@ -758,11 +796,17 @@ async def webapp_user_access(
         grace_sub = next((s for s in ordered_subs if is_restorable(s, now=now)), None)
         if grace_sub:
             valid_until = grace_sub.valid_until.isoformat()[:10] if grace_sub.valid_until else None
+            plan_id, plan_name, plan_duration_days = await _build_access_plan_context(db, grace_sub)
+            traffic_used_bytes = await _sum_usage_bytes_for_devices(active_device_ids)
             return UserAccessResponse(
                 status="expired",
                 has_plan=bool(grace_sub.plan_id),
+                plan_id=plan_id,
+                plan_name=plan_name,
+                plan_duration_days=plan_duration_days,
                 devices_used=len(active_devices),
                 device_limit=getattr(grace_sub, "device_limit", None),
+                traffic_used_bytes=traffic_used_bytes,
                 config_ready=False,
                 config_id=None,
                 expires_at=valid_until,
@@ -771,8 +815,12 @@ async def webapp_user_access(
         return UserAccessResponse(
             status="no_plan",
             has_plan=False,
+            plan_id=None,
+            plan_name=None,
+            plan_duration_days=None,
             devices_used=len(active_devices),
             device_limit=None,
+            traffic_used_bytes=0,
             config_ready=False,
             config_id=None,
             expires_at=None,
@@ -780,14 +828,20 @@ async def webapp_user_access(
         )
 
     access_status_val = subscription_access_status(primary_sub)
+    plan_id, plan_name, plan_duration_days = await _build_access_plan_context(db, primary_sub)
+    traffic_used_bytes = await _sum_usage_bytes_for_devices(active_device_ids)
     grace_until = getattr(primary_sub, "grace_until", None)
     if access_status_val == "grace" and grace_until and grace_until > now:
         valid_until = primary_sub.valid_until.isoformat()[:10] if primary_sub.valid_until else None
         return UserAccessResponse(
             status="expired",
             has_plan=True,
+            plan_id=plan_id,
+            plan_name=plan_name,
+            plan_duration_days=plan_duration_days,
             devices_used=len(active_devices),
             device_limit=getattr(primary_sub, "device_limit", None),
+            traffic_used_bytes=traffic_used_bytes,
             config_ready=False,
             config_id=None,
             expires_at=valid_until,
@@ -798,8 +852,12 @@ async def webapp_user_access(
         return UserAccessResponse(
             status="expired",
             has_plan=True,
+            plan_id=plan_id,
+            plan_name=plan_name,
+            plan_duration_days=plan_duration_days,
             devices_used=len(active_devices),
             device_limit=getattr(primary_sub, "device_limit", None),
+            traffic_used_bytes=traffic_used_bytes,
             config_ready=False,
             config_id=None,
             expires_at=valid_until,
@@ -811,8 +869,12 @@ async def webapp_user_access(
         return UserAccessResponse(
             status="needs_device",
             has_plan=True,
+            plan_id=plan_id,
+            plan_name=plan_name,
+            plan_duration_days=plan_duration_days,
             devices_used=0,
             device_limit=device_limit_val,
+            traffic_used_bytes=traffic_used_bytes,
             config_ready=False,
             config_id=None,
             expires_at=None,
@@ -829,8 +891,12 @@ async def webapp_user_access(
             return UserAccessResponse(
                 status="ready",
                 has_plan=True,
+                plan_id=plan_id,
+                plan_name=plan_name,
+                plan_duration_days=plan_duration_days,
                 devices_used=len(active_devices),
                 device_limit=device_limit_val,
+                traffic_used_bytes=traffic_used_bytes,
                 config_ready=True,
                 config_id=str(config_id) if config_id else None,
                 expires_at=valid_until,
@@ -839,8 +905,12 @@ async def webapp_user_access(
         return UserAccessResponse(
             status="device_limit",
             has_plan=True,
+            plan_id=plan_id,
+            plan_name=plan_name,
+            plan_duration_days=plan_duration_days,
             devices_used=len(active_devices),
             device_limit=device_limit_val,
+            traffic_used_bytes=traffic_used_bytes,
             config_ready=config_ready,
             config_id=str(config_id) if config_id else None,
             expires_at=None,
@@ -857,8 +927,12 @@ async def webapp_user_access(
         return UserAccessResponse(
             status="ready",
             has_plan=True,
+            plan_id=plan_id,
+            plan_name=plan_name,
+            plan_duration_days=plan_duration_days,
             devices_used=len(active_devices),
             device_limit=device_limit_val,
+            traffic_used_bytes=traffic_used_bytes,
             config_ready=True,
             config_id=str(config_id) if config_id else None,
             expires_at=valid_until,
@@ -869,8 +943,12 @@ async def webapp_user_access(
         return UserAccessResponse(
             status="expired",
             has_plan=True,
+            plan_id=plan_id,
+            plan_name=plan_name,
+            plan_duration_days=plan_duration_days,
             devices_used=len(active_devices),
             device_limit=device_limit_val,
+            traffic_used_bytes=traffic_used_bytes,
             config_ready=config_ready,
             config_id=str(config_id) if config_id else None,
             expires_at=valid_until,
@@ -880,8 +958,12 @@ async def webapp_user_access(
     return UserAccessResponse(
         status="needs_device",
         has_plan=True,
+        plan_id=plan_id,
+        plan_name=plan_name,
+        plan_duration_days=plan_duration_days,
         devices_used=len(active_devices),
         device_limit=device_limit_val,
+        traffic_used_bytes=traffic_used_bytes,
         config_ready=config_ready,
         config_id=str(config_id) if config_id else None,
         expires_at=None,
