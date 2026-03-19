@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
+import { useEffect } from "react";
 import { TelegramLoadingScreen } from "@/app/TelegramLoadingScreen";
 import {
   BootLoadingScreen,
@@ -8,7 +9,7 @@ import {
 import { StorySection } from "@/design-system";
 import { pageStoryParameters } from "@/storybook/page-contracts";
 
-const meta: Meta = {
+const meta: Meta<{ theme: "dark" | "light" }> = {
   title: "Pages/Contracts/SplashAndLoading",
   tags: ["autodocs"],
   parameters: {
@@ -20,11 +21,35 @@ const meta: Meta = {
       },
     },
   },
+  argTypes: {
+    theme: {
+      control: "inline-radio",
+      options: ["dark", "light"],
+      defaultValue: "dark",
+    },
+  },
+  args: { theme: "dark" },
 };
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
+
+function ThemeWrapper({
+  theme,
+  children,
+}: {
+  theme: "dark" | "light";
+  children: React.ReactNode;
+}) {
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme === "light" ? "consumer-light" : "consumer-dark");
+    return () => {
+      document.documentElement.removeAttribute("data-theme");
+    };
+  }, [theme]);
+  return <>{children}</>;
+}
 
 export const TelegramLoading: Story = {
   render: () => (
@@ -35,37 +60,45 @@ export const TelegramLoading: Story = {
 };
 
 export const BootLoading: Story = {
-  render: () => (
-    <StorySection title="Bootstrap loading" description="Session/auth loading with skeleton.">
-      <BootLoadingScreen slowNetwork={false} onRetry={() => {}} />
-    </StorySection>
+  render: (args) => (
+    <ThemeWrapper theme={args.theme ?? "dark"}>
+      <StorySection title="Bootstrap loading" description="Session/auth loading with skeleton.">
+        <BootLoadingScreen slowNetwork={false} onRetry={() => {}} />
+      </StorySection>
+    </ThemeWrapper>
   ),
 };
 
 export const BootLoadingSlowNetwork: Story = {
-  render: () => (
-    <StorySection title="Bootstrap loading (slow)" description="Shows retry CTA when network is slow.">
-      <BootLoadingScreen slowNetwork onRetry={() => {}} />
-    </StorySection>
+  render: (args) => (
+    <ThemeWrapper theme={args.theme ?? "dark"}>
+      <StorySection title="Bootstrap loading (slow)" description="Shows retry CTA when network is slow.">
+        <BootLoadingScreen slowNetwork onRetry={() => {}} />
+      </StorySection>
+    </ThemeWrapper>
   ),
 };
 
 export const BrandSplash: Story = {
-  render: () => (
-    <StorySection title="Brand splash" description="Welcome screen before onboarding.">
-      <BrandSplashScreen />
-    </StorySection>
+  render: (args) => (
+    <ThemeWrapper theme={args.theme ?? "dark"}>
+      <StorySection title="Brand splash" description="Welcome screen before onboarding.">
+        <BrandSplashScreen />
+      </StorySection>
+    </ThemeWrapper>
   ),
 };
 
 export const BootError: Story = {
-  render: () => (
-    <StorySection title="Startup error" description="Error screen with retry.">
-      <BootErrorScreen
-        title="Could not load session"
-        message="Please try again."
-        onRetry={() => {}}
-      />
-    </StorySection>
+  render: (args) => (
+    <ThemeWrapper theme={args.theme ?? "dark"}>
+      <StorySection title="Startup error" description="Error screen with retry.">
+        <BootErrorScreen
+          title="Could not load session"
+          message="Please try again."
+          onRetry={() => {}}
+        />
+      </StorySection>
+    </ThemeWrapper>
   ),
 };

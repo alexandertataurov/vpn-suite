@@ -61,7 +61,7 @@ Layers: **tokens** → **theme** → **primitives** → **components** → **pat
 - **theme/** — ThemeProvider, tokens-map, z-index constants
 - **primitives/** — Layout (Box, Container, Inline, Panel, Stack) → Separator (Divider) → Typography (Text, Heading). See [primitives/README.md](../../src/design-system/primitives/README.md).
 - **components/** — typography (Display, H1–H3, Body, Caption) → Buttons → Forms → Feedback → Display → Utility. See [components/README.md](../../src/design-system/components/README.md).
-- **patterns/** — Grouped by domain: `mission/` (Mission*), `content/` (FormField, ButtonRow, ContentForms/ContentButtons), `blocks/` (FallbackScreen, PageStateScreen, EmptyStateBlock, OfflineBanner), `cards/` (ListCard, ServerCard), `home/` (Home*), `ui/` (DataGrid, StatusChip, OverflowActionMenu). Product-specific patterns (heroes, tier/usage/billing cards, DangerZone, LimitStrip, TroubleshooterStep, SessionMissing) live in `src/components` and are imported from `@/components`.
+- **patterns/** — Grouped by domain: `mission/` (Mission*), `content/` (FormField, ButtonRow, ContentForms/ContentButtons), `blocks/` (FallbackScreen, PageStateScreen, EmptyStateBlock, OfflineBanner), `cards/` (ListCard, ServerCard), `home/` (Home*), `ui/` (DataGrid, StatusChip, OverflowActionMenu). Product-specific patterns (heroes, tier/usage/billing cards, SessionMissing) live in `src/components` and are imported from `@/components`.
 
 ### Field vs FormField
 
