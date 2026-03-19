@@ -143,7 +143,11 @@ def _effective_handshake_for_live(
     *,
     telemetry_map: dict[str, object],
 ) -> tuple[datetime | None, int | None]:
-    telemetry = telemetry_map.get(device.id) if isinstance(device.id, str) else telemetry_map.get(str(device.id))
+    telemetry = (
+        telemetry_map.get(device.id)
+        if isinstance(device.id, str)
+        else telemetry_map.get(str(device.id))
+    )
     if telemetry and getattr(telemetry, "handshake_latest_at", None) is not None:
         return telemetry.handshake_latest_at, getattr(telemetry, "handshake_age_sec", None)
     if device.last_seen_handshake_at is not None:
@@ -166,7 +170,9 @@ def _build_live_connection(
         "device_name": None,
         "last_handshake_at": None,
         "handshake_age_sec": None,
-        "telemetry_updated_at": telemetry_last_updated.isoformat() if telemetry_last_updated else None,
+        "telemetry_updated_at": telemetry_last_updated.isoformat()
+        if telemetry_last_updated
+        else None,
     }
     if not active_devices:
         return base
@@ -174,7 +180,8 @@ def _build_live_connection(
     ranked_devices = sorted(
         active_devices,
         key=lambda device: (
-            _effective_handshake_for_live(device, telemetry_map=telemetry_map)[0] or device.issued_at,
+            _effective_handshake_for_live(device, telemetry_map=telemetry_map)[0]
+            or device.issued_at,
             device.issued_at,
         ),
         reverse=True,
@@ -186,7 +193,9 @@ def _build_live_connection(
     )
 
     for device in ranked_devices:
-        handshake_at, handshake_age = _effective_handshake_for_live(device, telemetry_map=telemetry_map)
+        handshake_at, handshake_age = _effective_handshake_for_live(
+            device, telemetry_map=telemetry_map
+        )
         if not telemetry_fresh or handshake_at is None:
             continue
         resolved_age = handshake_age
@@ -264,7 +273,9 @@ async def _build_latest_device_delivery(
         return None
 
     download_url = None
-    public_host = getattr(settings, "public_domain", None) or getattr(settings, "vpn_default_host", "")
+    public_host = getattr(settings, "public_domain", None) or getattr(
+        settings, "vpn_default_host", ""
+    )
     if public_host:
         ttl = getattr(settings, "awg_download_token_ttl_seconds", 600) or 600
         try:
@@ -304,7 +315,11 @@ def _resolve_route(
             for s in subscriptions
             if (
                 subscription_commercial_status(s) in ("active", "pending")
-                and (getattr(s, "valid_until", None) and s.valid_until > now or is_restorable(s, now=now))
+                and (
+                    getattr(s, "valid_until", None)
+                    and s.valid_until > now
+                    or is_restorable(s, now=now)
+                )
             )
         ),
         None,
@@ -695,7 +710,9 @@ async def webapp_me(request: Request, db: AsyncSession = Depends(get_db)):
 class UserAccessResponse(BaseModel):
     """Flat access state for state-driven Home UI. GET /webapp/user/access."""
 
-    status: str  # no_plan | needs_device | generating_config | ready | expired | device_limit | error
+    status: (
+        str  # no_plan | needs_device | generating_config | ready | expired | device_limit | error
+    )
     has_plan: bool
     plan_id: str | None = None
     plan_name: str | None = None
@@ -1613,7 +1630,10 @@ async def webapp_issue_device(
         if preferred_server_id is None:
             raise HTTPException(
                 status_code=503,
-                detail={"code": "NO_NODE", "message": "No active server available for device issuance."},
+                detail={
+                    "code": "NO_NODE",
+                    "message": "No active server available for device issuance.",
+                },
             )
     try:
         out = await issue_device(
@@ -1849,7 +1869,10 @@ async def webapp_replace_device(
         if preferred_server_id is None:
             raise HTTPException(
                 status_code=503,
-                detail={"code": "NO_NODE", "message": "No active server available for device issuance."},
+                detail={
+                    "code": "NO_NODE",
+                    "message": "No active server available for device issuance.",
+                },
             )
     try:
         out = await issue_device(
@@ -2500,8 +2523,12 @@ async def webapp_create_invoice(
                 payload=existing_payment.id,
                 star_count=star_count,
             )
-        discounted = int(float(existing_payment.amount or 0)) if existing_payment.amount else star_count
-        existing_discount = max(0, original_price_xtr - discounted) if discounted < original_price_xtr else 0
+        discounted = (
+            int(float(existing_payment.amount or 0)) if existing_payment.amount else star_count
+        )
+        existing_discount = (
+            max(0, original_price_xtr - discounted) if discounted < original_price_xtr else 0
+        )
         return {
             "invoice_id": existing_payment.id,
             "payment_id": existing_payment.id,
@@ -2810,7 +2837,9 @@ async def webapp_servers(request: Request, db: AsyncSession = Depends(get_db)):
     counts: dict[str, int] = {row[0]: int(row[1]) for row in counts_result.all()}
     # Per-server RTT from this user's device telemetry (for latency display)
     server_avg_ping_ms: dict[str, float] = {}
-    connected_server_id: str | None = None  # server of most recently connected device (for is_current when auto-select)
+    connected_server_id: str | None = (
+        None  # server of most recently connected device (for is_current when auto-select)
+    )
     user_devices_result = await db.execute(
         select(Device.id, Device.server_id, Device.last_seen_handshake_at, Device.issued_at).where(
             Device.user_id == user.id, Device.revoked_at.is_(None)
@@ -3018,18 +3047,13 @@ async def webapp_subscription_offers(
         )
     now = datetime.now(timezone.utc)
     sub_result = await db.execute(
-        select(Subscription)
-        .where(
+        select(Subscription).where(
             Subscription.user_id == user.id,
         )
     )
     subs = sort_subscriptions(list(sub_result.scalars().all()))
     sub = next(
-        (
-            candidate
-            for candidate in subs
-            if is_commercially_active(candidate)
-        ),
+        (candidate for candidate in subs if is_commercially_active(candidate)),
         subs[0] if subs else None,
     )
     if not sub:
@@ -3181,11 +3205,7 @@ async def webapp_subscription_restore(
         )
         subs = list(sub_result.scalars().all())
         sub = next(
-            (
-                candidate
-                for candidate in subs
-                if is_restorable(candidate)
-            ),
+            (candidate for candidate in subs if is_restorable(candidate)),
             subs[0] if subs else None,
         )
     if not sub:

@@ -66,9 +66,7 @@ async def list_plans(
     )
     sub_counts = dict(sub_counts_result.all())
     items = [
-        PlanOut.model_validate(r).model_copy(
-            update={"subscription_count": sub_counts.get(r.id, 0)}
-        )
+        PlanOut.model_validate(r).model_copy(update={"subscription_count": sub_counts.get(r.id, 0)})
         for r in rows
     ]
     return PlanList(items=items, total=total)
@@ -95,9 +93,7 @@ async def reorder_plans(
     request.state.audit_resource_type = "plans"
     request.state.audit_old_new = {"reorder": body.plan_ids}
     await db.commit()
-    result = await db.execute(
-        select(Plan).order_by(Plan.display_order.asc(), Plan.id.asc())
-    )
+    result = await db.execute(select(Plan).order_by(Plan.display_order.asc(), Plan.id.asc()))
     rows = result.scalars().all()
     return PlanList(
         items=[PlanOut.model_validate(r) for r in rows],

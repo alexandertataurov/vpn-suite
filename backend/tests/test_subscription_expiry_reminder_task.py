@@ -150,4 +150,3 @@ async def test_send_telegram_message_short_circuits_when_token_missing(
     monkeypatch.setattr(config.settings, "telegram_bot_token", "")
     ok = await _send_telegram_message(tg_id=1, text="test")
     assert ok is False
-

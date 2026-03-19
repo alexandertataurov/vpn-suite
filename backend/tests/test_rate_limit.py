@@ -60,4 +60,3 @@ async def test_rate_limit_login_failure_raises_after_limit(monkeypatch: pytest.M
     with pytest.raises(HTTPException) as exc_info:
         await rate_limit.rate_limit_login_failure(request)
     assert exc_info.value.status_code == 429
-

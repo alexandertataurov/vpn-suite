@@ -173,7 +173,9 @@ def apply_state_overrides(
                 subscription,
                 now=now,
                 grace_until=grace_until or getattr(subscription, "grace_until", None) or now,
-                reason=grace_reason or getattr(subscription, "grace_reason", None) or "admin_override",
+                reason=grace_reason
+                or getattr(subscription, "grace_reason", None)
+                or "admin_override",
             )
             return
         subscription.status = "expired"
@@ -195,7 +197,9 @@ def apply_state_overrides(
                 subscription,
                 now=now,
                 grace_until=grace_until or getattr(subscription, "grace_until", None) or now,
-                reason=grace_reason or getattr(subscription, "grace_reason", None) or "admin_override",
+                reason=grace_reason
+                or getattr(subscription, "grace_reason", None)
+                or "admin_override",
             )
             return
         normalize_active_state(subscription)
@@ -216,7 +220,9 @@ def apply_subscription_cycle(
     was_active = is_commercially_active(subscription)
     base = (
         subscription.valid_until
-        if was_active and getattr(subscription, "valid_until", None) and subscription.valid_until > now
+        if was_active
+        and getattr(subscription, "valid_until", None)
+        and subscription.valid_until > now
         else now
     )
     normalize_active_state(subscription)

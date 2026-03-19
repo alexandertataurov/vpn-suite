@@ -37,18 +37,12 @@ const meta = {
   title: "Components/Button",
   tags: ["autodocs", "contract-test"],
   component: Button,
-  args: {
-    variant: "primary",
-    size: "md",
-    children: "Save changes",
-  },
   parameters: {
     layout: "padded",
-    status: { type: "stable" },
     docs: {
       description: {
         component:
-          "Primary action control for the miniapp. Variants: primary, secondary, danger, external. Tones apply to primary buttons only: default, success, warning, danger.",
+          "Primary action control. Variants: primary, secondary, danger, external. Tones (primary only): default, success, warning, danger. Theme-aware via --btn-* tokens.",
       },
     },
   },
@@ -60,16 +54,14 @@ const meta = {
     ),
   ],
   argTypes: {
-    children: { control: "text", table: { category: "Content" } },
     variant: {
       control: "select",
       options: ["primary", "secondary", "danger", "external"],
-      table: { category: "Appearance" },
     },
-    size: { control: "select", options: ["sm", "md"], table: { category: "Appearance" } },
-    tone: { control: "select", options: ["default", "success", "warning", "danger"], table: { category: "Appearance" } },
-    loading: { control: "boolean", table: { category: "State" } },
-    fullWidth: { control: "boolean", table: { category: "Layout" } },
+    size: { control: "select", options: ["sm", "md"] },
+    tone: { control: "select", options: ["default", "success", "warning", "danger"] },
+    loading: { control: "boolean" },
+    fullWidth: { control: "boolean" },
   },
 } satisfies Meta<typeof Button>;
 
@@ -78,20 +70,15 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  parameters: {
-    docs: {
-      description: {
-        story:
-          "Single primary button with default sizing. Use this as the baseline contract for standalone CTAs.",
-      },
-    },
+  args: {
+    variant: "primary",
+    size: "md",
+    children: "Save changes",
   },
   render: (args) => (
-    <StorySection title="Default" description="Baseline standalone button contract for primary actions.">
-      <StoryShowcase>
-        <Button {...args} />
-      </StoryShowcase>
-    </StorySection>
+    <StoryShowcase>
+      <Button {...args} />
+    </StoryShowcase>
   ),
 };
 
@@ -100,8 +87,7 @@ export const VariantHierarchy: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          "Primary, secondary, danger, and external buttons stacked by emphasis. This is the clearest reference for CTA hierarchy.",
+        story: "Use one primary CTA per screen.",
       },
     },
   },
@@ -112,7 +98,7 @@ export const VariantHierarchy: Story = {
     >
       <StoryShowcase>
         <WithThemes>
-          <div className="layout-story-column layout-story-column--medium">
+          <div style={{ width: 390, display: "flex", flexDirection: "column", gap: 8 }}>
             <Button variant="primary" fullWidth>
               Save changes
             </Button>
@@ -137,12 +123,12 @@ export const VariantHierarchy: Story = {
 };
 
 export const Tones: Story = {
-  name: "Tones",
+  name: "Primary tones",
   parameters: {
     docs: {
       description: {
         story:
-          "Primary button tones in dark and light themes. Use this to verify the token-driven tint mapping rather than the control itself.",
+          "Semantic tones for primary buttons. All use tinted backgrounds. Dark theme: Default = near-white, Success = green tint, Warning = amber tint, Danger = red tint. Light theme: Default = near-black, all tones = pale tinted bg. If Default appears blue in either theme, --btn-primary-bg token is not resolving — check [data-theme] selector scope.",
       },
     },
   },
@@ -153,7 +139,7 @@ export const Tones: Story = {
     >
       <StoryShowcase>
         <WithThemes>
-          <div className="layout-story-column layout-story-column--narrow">
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, maxWidth: 320 }}>
             <Button variant="primary" tone="default" fullWidth>
               Save changes
             </Button>
@@ -175,18 +161,10 @@ export const Tones: Story = {
 
 export const Sizes: Story = {
   name: "Sizes",
-  parameters: {
-    docs: {
-      description: {
-        story:
-          "Medium and small buttons shown side by side. This is the quick sizing reference for dense toolbars and compact forms.",
-      },
-    },
-  },
   render: () => (
     <StorySection title="Sizes">
       <StoryShowcase>
-        <div className="layout-story-inline layout-story-inline--center">
+        <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "center" }}>
           <Button variant="primary" size="md">
             Primary md
           </Button>
@@ -206,19 +184,11 @@ export const Sizes: Story = {
 };
 
 export const WithIcons: Story = {
-  name: "Icons",
-  parameters: {
-    docs: {
-      description: {
-        story:
-          "Label-only, icon-leading, and icon-trailing combinations. The icon should support the label, not replace it.",
-      },
-    },
-  },
+  name: "Icon combinations",
   render: () => (
     <StorySection title="Icon combinations">
       <StoryShowcase>
-        <div className="layout-story-inline">
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
           <Button variant="primary">Label only</Button>
           <Button
             variant="primary"
@@ -243,8 +213,7 @@ export const ButtonGroup: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          "Primary button stacked above secondary button. This is the standard confirmation pattern for the app.",
+        story: "Primary stacked above secondary. Standard pattern in the app.",
       },
     },
   },
@@ -255,7 +224,7 @@ export const ButtonGroup: Story = {
     >
       <StoryShowcase>
         <WithThemes>
-          <div className="layout-story-column layout-story-column--medium">
+          <div style={{ width: 390, display: "flex", flexDirection: "column", gap: 8 }}>
             <Button variant="primary" fullWidth>
               Choose a Plan →
             </Button>
@@ -269,35 +238,25 @@ export const ButtonGroup: Story = {
   ),
 };
 
-export const States: Story = {
-  name: "States",
-  parameters: {
-    docs: {
-      description: {
-        story:
-          "Loading, disabled, success, and error states for the button primitive. Use it to confirm the interaction ladder stays legible.",
-      },
-    },
-  },
-  render: function StatesStory() {
-    const [successState, setSuccessState] = useState<"idle" | "success">("idle");
-    const [errorState, setErrorState] = useState<"idle" | "error">("idle");
-    useEffect(() => {
-      if (successState === "success") {
-        const t = setTimeout(() => setSuccessState("idle"), 1500);
-        return () => clearTimeout(t);
-      }
-    }, [successState]);
-    useEffect(() => {
-      if (errorState === "error") {
-        const t = setTimeout(() => setErrorState("idle"), 2000);
-        return () => clearTimeout(t);
-      }
-    }, [errorState]);
-    return (
-      <StorySection
-        title="States"
-        description="Loading, disabled, active, success, error."
+function StatesStory() {
+  const [successState, setSuccessState] = useState<"idle" | "success">("idle");
+  const [errorState, setErrorState] = useState<"idle" | "error">("idle");
+  useEffect(() => {
+    if (successState === "success") {
+      const t = setTimeout(() => setSuccessState("idle"), 1500);
+      return () => clearTimeout(t);
+    }
+  }, [successState]);
+  useEffect(() => {
+    if (errorState === "error") {
+      const t = setTimeout(() => setErrorState("idle"), 2000);
+      return () => clearTimeout(t);
+    }
+  }, [errorState]);
+  return (
+    <StorySection
+      title="States"
+      description="Loading, disabled, active, success, error. Active uses :active styles (opacity 0.85, scale 0.99)."
       >
         <StoryShowcase>
           <WithThemes>
@@ -342,8 +301,65 @@ export const States: Story = {
           </WithThemes>
         </StoryShowcase>
       </StorySection>
-    );
+  );
+}
+
+export const States: Story = {
+  name: "States",
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Loading, disabled, active, success, error. Active uses :active styles (opacity 0.85, scale 0.99).",
+      },
+    },
   },
+  render: () => <StatesStory />,
+};
+
+export const ThemeComparison: Story = {
+  name: "Theme comparison",
+  parameters: {
+    docs: {
+      description: {
+        story: "All variants in dark and light contexts simultaneously.",
+      },
+    },
+  },
+  render: () => (
+    <StorySection
+      title="Theme comparison"
+      description="All variants in dark and light contexts simultaneously."
+    >
+      <StoryShowcase>
+        <WithThemes>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, maxWidth: 320 }}>
+            <Button variant="primary" fullWidth>
+              Primary
+            </Button>
+            <Button variant="secondary" fullWidth>
+              Secondary
+            </Button>
+            <Button variant="danger" fullWidth>
+              Danger
+            </Button>
+            <Button variant="external" fullWidth>
+              External
+            </Button>
+            <Button variant="primary" tone="success" fullWidth>
+              Success
+            </Button>
+            <Button variant="primary" tone="warning" fullWidth>
+              Warning
+            </Button>
+            <Button variant="primary" tone="danger" fullWidth>
+              Danger tone
+            </Button>
+          </div>
+        </WithThemes>
+      </StoryShowcase>
+    </StorySection>
+  ),
 };
 
 export const ResponsiveGroup: Story = {
@@ -371,52 +387,6 @@ export const ResponsiveGroup: Story = {
             Cancel
           </Button>
         </ButtonGroupComponent>
-      </StoryShowcase>
-    </StorySection>
-  ),
-};
-
-export const ThemeComparison: Story = {
-  name: "Theme comparison",
-  parameters: {
-    docs: {
-      description: {
-        story:
-          "All button variants rendered in both themes at once. This is the fastest way to compare token behavior across contexts.",
-      },
-    },
-  },
-  render: () => (
-    <StorySection
-      title="Theme comparison"
-      description="All variants in dark and light contexts simultaneously."
-    >
-      <StoryShowcase>
-        <WithThemes>
-          <div className="layout-story-column layout-story-column--narrow">
-            <Button variant="primary" fullWidth>
-              Primary
-            </Button>
-            <Button variant="secondary" fullWidth>
-              Secondary
-            </Button>
-            <Button variant="danger" fullWidth>
-              Danger
-            </Button>
-            <Button variant="external" fullWidth>
-              External
-            </Button>
-            <Button variant="primary" tone="success" fullWidth>
-              Success
-            </Button>
-            <Button variant="primary" tone="warning" fullWidth>
-              Warning
-            </Button>
-            <Button variant="primary" tone="danger" fullWidth>
-              Danger tone
-            </Button>
-          </div>
-        </WithThemes>
       </StoryShowcase>
     </StorySection>
   ),

@@ -268,7 +268,9 @@ async def create_invoice(
                 sub,
                 now=now,
                 duration_days=plan.duration_days,
-                device_limit=int(getattr(plan, "device_limit", sub.device_limit) or sub.device_limit),
+                device_limit=int(
+                    getattr(plan, "device_limit", sub.device_limit) or sub.device_limit
+                ),
             )
         await db.commit()
         await db.refresh(payment)

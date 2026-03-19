@@ -35,7 +35,9 @@ async def pause_subscription(
         return True
     mark_paused(sub, now=datetime.now(timezone.utc), reason=reason)
     await session.flush()
-    await emit_access_paused(session, subscription_id=subscription_id, user_id=user_id, reason=reason)
+    await emit_access_paused(
+        session, subscription_id=subscription_id, user_id=user_id, reason=reason
+    )
     return True
 
 

@@ -105,14 +105,14 @@ def test_subscription_state_helpers_handle_entitled_and_restorable_states():
 def test_subscription_state_sql_helpers_encode_canonical_filters():
     now = datetime.now(timezone.utc)
     entitled_sql = str(
-        select(Subscription.id).where(*entitled_active_where(now=now)).compile(
-            compile_kwargs={"literal_binds": True}
-        )
+        select(Subscription.id)
+        .where(*entitled_active_where(now=now))
+        .compile(compile_kwargs={"literal_binds": True})
     )
     commercially_active_sql = str(
-        select(Subscription.id).where(*commercially_active_where(now=now)).compile(
-            compile_kwargs={"literal_binds": True}
-        )
+        select(Subscription.id)
+        .where(*commercially_active_where(now=now))
+        .compile(compile_kwargs={"literal_binds": True})
     )
 
     assert "subscription_status = 'active'" in entitled_sql
@@ -569,7 +569,9 @@ async def test_webapp_me_routes_no_subscription_to_plan(async_session: AsyncSess
 
 
 @pytest.mark.asyncio
-async def test_webapp_me_routes_connected_user_with_device_to_home(async_session: AsyncSession) -> None:
+async def test_webapp_me_routes_connected_user_with_device_to_home(
+    async_session: AsyncSession,
+) -> None:
     """Active subscription + confirmed device should route to home '/' with connected_user reason."""
     now = datetime.now(timezone.utc)
     tg_id = int(uuid.uuid4().int % 10_000_000_000)
@@ -722,7 +724,9 @@ async def test_webapp_me_includes_latest_device_delivery_when_awg_config_exists(
         assert payload["latest_device_delivery"]["device_id"] == device.id
         assert payload["latest_device_delivery"]["device_name"] == "MacBook Pro"
         assert payload["latest_device_delivery"]["amnezia_vpn_key"].startswith("vpn://")
-        assert payload["latest_device_delivery"]["download_url"].startswith("https://downloads.example/d/")
+        assert payload["latest_device_delivery"]["download_url"].startswith(
+            "https://downloads.example/d/"
+        )
     finally:
         app.dependency_overrides.pop(get_db, None)
 
@@ -788,7 +792,9 @@ async def test_webapp_me_includes_live_connection_from_recent_handshake(
         return now
 
     monkeypatch.setattr("app.api.v1.webapp.get_device_telemetry_bulk", _fake_telemetry_bulk)
-    monkeypatch.setattr("app.api.v1.webapp.get_telemetry_last_updated", _fake_telemetry_last_updated)
+    monkeypatch.setattr(
+        "app.api.v1.webapp.get_telemetry_last_updated", _fake_telemetry_last_updated
+    )
 
     token = create_webapp_session_token(tg_id)
 
@@ -878,7 +884,9 @@ async def test_webapp_me_marks_live_connection_unknown_when_telemetry_is_stale(
         return now - timedelta(minutes=10)
 
     monkeypatch.setattr("app.api.v1.webapp.get_device_telemetry_bulk", _fake_telemetry_bulk)
-    monkeypatch.setattr("app.api.v1.webapp.get_telemetry_last_updated", _fake_telemetry_last_updated)
+    monkeypatch.setattr(
+        "app.api.v1.webapp.get_telemetry_last_updated", _fake_telemetry_last_updated
+    )
 
     token = create_webapp_session_token(tg_id)
 
@@ -900,7 +908,10 @@ async def test_webapp_me_marks_live_connection_unknown_when_telemetry_is_stale(
         payload = response.json()
         assert payload["live_connection"]["status"] == "unknown"
         assert payload["live_connection"]["device_id"] == device.id
-        assert payload["live_connection"]["last_handshake_at"] == (now - timedelta(seconds=30)).isoformat()
+        assert (
+            payload["live_connection"]["last_handshake_at"]
+            == (now - timedelta(seconds=30)).isoformat()
+        )
     finally:
         app.dependency_overrides.pop(get_db, None)
 

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { useState, type CSSProperties } from "react";
+import { useState } from "react";
 import {
   IconBox,
   IconGlobe,
@@ -45,7 +45,7 @@ const meta: Meta<typeof RowItem> = {
     status: { type: "stable" },
     docs: {
       description: {
-        component: "Settings row with icon, label and subtitle, optional right slot, and optional chevron.",
+        component: "Settings row: icon + label/subtitle + right slot + chevron. Single horizontal layout.",
       },
     },
   },
@@ -102,7 +102,7 @@ export const Default: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Label, subtitle, and chevron. The standard settings row.",
+        story: "Label + subtitle + chevron. The standard settings row.",
       },
     },
   },
@@ -177,7 +177,7 @@ export const InContext: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Standard grouped settings layout for profile and danger-zone sections.",
+        story: "Standard grouped settings layout.",
       },
     },
   },
@@ -207,7 +207,7 @@ export const KeyboardNav: Story = {
     docs: {
       description: {
         story:
-          "Tab to focus rows, Enter or Space to activate. Focus ring uses `--color-accent`.",
+          "Tab to focus rows, Enter/Space to activate. Focus ring uses --color-accent. Tab through rows in this story to verify focus ring.",
       },
     },
   },
@@ -227,42 +227,40 @@ export const KeyboardNav: Story = {
   ),
 };
 
+function ResponsiveStory() {
+  const [width, setWidth] = useState(390);
+  return (
+    <WithThemes>
+      <div style={{ width: "100%", maxWidth: 390 }}>
+        <input
+          type="range"
+          min={240}
+          max={390}
+          value={width}
+          onChange={(e) => setWidth(Number(e.target.value))}
+          style={{ marginBottom: 12, width: "100%" }}
+          aria-label="Row width in pixels"
+        />
+        <CardRow style={{ width, overflow: "hidden" }}>
+          <RowItem
+            icon={<IconSettings size={15} strokeWidth={2} />}
+            label="Manage email, password and account preferences"
+            subtitle="Last updated March 14, 2026 · Account ID: 84920"
+            onClick={() => {}}
+          />
+        </CardRow>
+      </div>
+    </WithThemes>
+  );
+}
 export const Responsive: Story = {
   name: "Responsive — long text",
   parameters: {
     docs: {
       description: {
-        story: "Labels and subtitles truncate at narrow widths without breaking the row layout.",
+        story: "Labels truncate at narrow widths. Subtitle truncates too.",
       },
     },
   },
-  render: function ResponsiveStory() {
-    const [width, setWidth] = useState(390);
-    return (
-      <WithThemes>
-        <div
-          className="layout-story-column layout-story-column--medium"
-          style={{ "--layout-story-row-width": `${width}px` } as CSSProperties}
-        >
-          <input
-            type="range"
-            min={240}
-            max={390}
-            value={width}
-            onChange={(e) => setWidth(Number(e.target.value))}
-            className="layout-story-slider"
-            aria-label="Width in pixels"
-          />
-          <CardRow className="layout-story-row-frame">
-            <RowItem
-              icon={<IconSettings size={15} strokeWidth={2} />}
-              label="Manage email, password and account preferences"
-              subtitle="Last updated March 14, 2026 · Account ID: 84920"
-              onClick={() => {}}
-            />
-          </CardRow>
-        </div>
-      </WithThemes>
-    );
-  },
+  render: () => <ResponsiveStory />,
 };

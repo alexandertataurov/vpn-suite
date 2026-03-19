@@ -506,7 +506,8 @@ async def get_server_peers_live(
 
     # NOTE: docker socket is mounted read-only into admin-api; adapter uses Docker SDK exec.
     adapter = DockerNodeRuntimeAdapter(
-        container_filter=getattr(settings, "docker_vpn_container_prefixes", "amnezia-awg") or "amnezia-awg",
+        container_filter=getattr(settings, "docker_vpn_container_prefixes", "amnezia-awg")
+        or "amnezia-awg",
         interface=getattr(settings, "agent_interface_name", "awg0") or "awg0",
     )
     try:

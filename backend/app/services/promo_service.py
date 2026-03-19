@@ -54,9 +54,7 @@ async def validate_promo_code(
     if not norm:
         raise PromoCodeError(PromoErrorCode.PROMO_NOT_FOUND, "Code required")
 
-    result = await db.execute(
-        select(PromoCode).where(func.upper(PromoCode.code) == norm)
-    )
+    result = await db.execute(select(PromoCode).where(func.upper(PromoCode.code) == norm))
     promo = result.scalar_one_or_none()
     if not promo:
         raise PromoCodeError(PromoErrorCode.PROMO_NOT_FOUND, "Code not found")
@@ -72,9 +70,7 @@ async def validate_promo_code(
             exp = expires_at()
         else:
             try:
-                exp = datetime.fromisoformat(
-                    str(expires_at).replace("Z", "+00:00")
-                )
+                exp = datetime.fromisoformat(str(expires_at).replace("Z", "+00:00"))
             except (TypeError, ValueError):
                 exp = None
         if exp and exp < datetime.now(timezone.utc):
@@ -86,7 +82,9 @@ async def validate_promo_code(
 
     max_per_user = getattr(promo, "max_uses_per_user", 1)
     red_count = await db.execute(
-        select(func.count()).select_from(PromoRedemption).where(
+        select(func.count())
+        .select_from(PromoRedemption)
+        .where(
             PromoRedemption.promo_code_id == promo.id,
             PromoRedemption.user_id == user_id,
         )
@@ -98,9 +96,9 @@ async def validate_promo_code(
     global_limit = getattr(promo, "global_use_limit", None)
     if global_limit is not None:
         total_count = await db.execute(
-            select(func.count()).select_from(PromoRedemption).where(
-                PromoRedemption.promo_code_id == promo.id
-            )
+            select(func.count())
+            .select_from(PromoRedemption)
+            .where(PromoRedemption.promo_code_id == promo.id)
         )
         if int(total_count.scalar() or 0) >= global_limit:
             raise PromoCodeError(PromoErrorCode.PROMO_EXHAUSTED, "Code exhausted")
@@ -128,9 +126,7 @@ async def redeem_promo_code(
     result = await validate_promo_code(db, code, user_id, plan_id, original_price_xtr)
 
     norm = _normalize_code(code)
-    promo_result = await db.execute(
-        select(PromoCode).where(func.upper(PromoCode.code) == norm)
-    )
+    promo_result = await db.execute(select(PromoCode).where(func.upper(PromoCode.code) == norm))
     promo = promo_result.scalar_one_or_none()
     if not promo:
         raise PromoCodeError(PromoErrorCode.PROMO_NOT_FOUND, "Code not found")

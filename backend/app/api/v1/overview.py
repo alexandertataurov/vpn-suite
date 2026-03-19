@@ -258,9 +258,7 @@ async def get_overview(
     users_total = (await db.execute(select(func.count()).select_from(User))).scalar() or 0
     subs_active = (
         await db.execute(
-            select(func.count())
-            .select_from(Subscription)
-            .where(*entitled_active_where(now=now))
+            select(func.count()).select_from(Subscription).where(*entitled_active_where(now=now))
         )
     ).scalar() or 0
 

@@ -28,4 +28,3 @@ def assert_error_response(
         assert message_substring in (error.get("message") or "")
     meta = body.get("meta") or {}
     assert "request_id" in meta
-

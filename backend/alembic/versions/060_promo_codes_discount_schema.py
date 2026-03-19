@@ -42,7 +42,9 @@ def upgrade() -> None:
         "promo_codes",
         sa.Column("applicable_plan_ids", postgresql.ARRAY(sa.Text()), nullable=True),
     )
-    op.execute("UPDATE promo_codes SET discount_xtr = COALESCE((value)::int, 0) WHERE discount_xtr IS NULL")
+    op.execute(
+        "UPDATE promo_codes SET discount_xtr = COALESCE((value)::int, 0) WHERE discount_xtr IS NULL"
+    )
     op.alter_column(
         "promo_codes",
         "discount_xtr",
@@ -61,7 +63,9 @@ def upgrade() -> None:
         "promo_redemptions",
         sa.Column("discount_applied_xtr", sa.Integer(), nullable=True),
     )
-    op.execute("UPDATE promo_redemptions SET discount_applied_xtr = 0 WHERE discount_applied_xtr IS NULL")
+    op.execute(
+        "UPDATE promo_redemptions SET discount_applied_xtr = 0 WHERE discount_applied_xtr IS NULL"
+    )
     op.alter_column(
         "promo_redemptions",
         "discount_applied_xtr",

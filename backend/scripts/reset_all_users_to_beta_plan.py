@@ -69,9 +69,7 @@ async def main() -> None:
         )
 
         # 3) Archive all other plans
-        await session.execute(
-            update(Plan).where(Plan.id != beta_plan.id).values(is_archived=True)
-        )
+        await session.execute(update(Plan).where(Plan.id != beta_plan.id).values(is_archived=True))
 
         await session.commit()
 
@@ -83,4 +81,3 @@ async def main() -> None:
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     asyncio.run(main())
-

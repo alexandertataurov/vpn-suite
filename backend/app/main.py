@@ -115,9 +115,7 @@ async def _generic_exception_handler(request: Request, exc: Exception) -> JSONRe
     return JSONResponse(status_code=500, content=body)
 
 
-async def _validation_exception_handler(
-    request: Request, exc: Exception
-) -> JSONResponse:
+async def _validation_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     """Return unified 422 error shape for validation errors."""
     if not isinstance(exc, RequestValidationError):
         return await _generic_exception_handler(request, exc)

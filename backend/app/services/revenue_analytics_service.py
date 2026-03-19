@@ -16,9 +16,7 @@ async def get_revenue_snapshot(session: AsyncSession) -> dict:
     now = datetime.now(timezone.utc)
     # Active paid subs (status=active, valid_until > now, not trial or trial_ends_at in past)
     active_result = await session.execute(
-        select(func.count())
-        .select_from(Subscription)
-        .where(*entitled_active_where(now=now))
+        select(func.count()).select_from(Subscription).where(*entitled_active_where(now=now))
     )
     active_count = active_result.scalar() or 0
 

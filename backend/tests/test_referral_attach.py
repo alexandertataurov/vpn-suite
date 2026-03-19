@@ -229,9 +229,7 @@ async def test_webapp_referral_attach_no_overwrite(
 ):
     """Referee with referrer A, attach B → already_attached with referrer A."""
     await async_session.execute(delete(Referral).where(Referral.referee_user_id == 600003))
-    await async_session.execute(
-        delete(User).where(User.tg_id.in_([600001, 600002, 600003]))
-    )
+    await async_session.execute(delete(User).where(User.tg_id.in_([600001, 600002, 600003])))
     await async_session.flush()
     referrer_a = User(tg_id=600001)
     referrer_b = User(tg_id=600002)

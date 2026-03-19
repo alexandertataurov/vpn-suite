@@ -144,7 +144,9 @@ async def test_get_server_peers_live_route_exists(client: AsyncClient, monkeypat
     session = _FakeSession([_FakeResult(role), _FakeResult(server), _FakeResult(None)])
 
     app.dependency_overrides[get_db] = lambda: session
-    app.dependency_overrides[get_current_admin] = lambda: SimpleNamespace(id="admin-1", role_id="r1")
+    app.dependency_overrides[get_current_admin] = lambda: SimpleNamespace(
+        id="admin-1", role_id="r1"
+    )
 
     try:
         fake_adapter = SimpleNamespace(
@@ -160,7 +162,9 @@ async def test_get_server_peers_live_route_exists(client: AsyncClient, monkeypat
                 ]
             )
         )
-        with patch("app.services.node_runtime_docker.DockerNodeRuntimeAdapter", return_value=fake_adapter):
+        with patch(
+            "app.services.node_runtime_docker.DockerNodeRuntimeAdapter", return_value=fake_adapter
+        ):
             r = await client.get("/api/v1/servers/srv-1/peers-live")
             assert r.status_code == 200
             data = r.json()

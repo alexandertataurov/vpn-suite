@@ -10,6 +10,7 @@ vi.mock("@/hooks/useI18n", () => ({
       }
 
       const copy: Record<string, string> = {
+        "common.cancel": "Cancel",
         "settings.cancel_modal_title": "Cancel subscription?",
         "settings.cancel_modal_description":
           "Choose a reason first. Your access continues until the current period ends.",
@@ -22,6 +23,8 @@ vi.mock("@/hooks/useI18n", () => ({
         "settings.cancel_pause_instead": "Pause instead",
         "settings.cancel_at_period_end": "Cancel at period end",
         "settings.cancel_now": "Cancel now",
+        "settings.cancel_plan_description_generic": "Cancel future renewals.",
+        "settings.danger_warning": "These actions are hard to undo.",
         "settings.cancel_offer_price_eyebrow": "Stay and save",
         "settings.cancel_offer_price_body":
           "Your next renewal will be discounted if you keep your subscription active.",

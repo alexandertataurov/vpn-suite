@@ -182,4 +182,3 @@ async def test_grace_on_expiry_disabled_when_window_zero(
 
     emit_grace_started.assert_not_awaited()
     emit_access_blocked.assert_not_awaited()
-

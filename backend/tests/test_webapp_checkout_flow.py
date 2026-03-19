@@ -159,7 +159,9 @@ async def test_webapp_create_invoice_free_plan_activates_subscription(
         assert payload["discounted_price_xtr"] == 0
 
         result = await async_session.execute(
-            select(Subscription).where(Subscription.user_id == user.id, Subscription.plan_id == plan.id)
+            select(Subscription).where(
+                Subscription.user_id == user.id, Subscription.plan_id == plan.id
+            )
         )
         sub = result.scalar_one_or_none()
         assert sub is not None
@@ -306,4 +308,3 @@ async def test_webapp_promo_validate_returns_422_for_invalid_code(
         assert "expired" in payload["message"].lower()
     finally:
         app.dependency_overrides.pop(get_db, None)
-

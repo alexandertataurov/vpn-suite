@@ -24,9 +24,7 @@ class PromoCode(Base, TimestampMixin):
     global_use_limit: Mapped[int | None] = mapped_column(Integer, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    applicable_plan_ids: Mapped[list[str] | None] = mapped_column(
-        ARRAY(Text), nullable=True
-    )
+    applicable_plan_ids: Mapped[list[str] | None] = mapped_column(ARRAY(Text), nullable=True)
     created_by: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     updated_by: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     updated_at: Mapped[datetime] = mapped_column(

@@ -54,9 +54,7 @@ async def _ensure_pending_referral(
     referee_user_id: int,
 ) -> Referral:
     """Get or create a pending Referral row for a referee, resetting state for repeatable tests."""
-    row = await session.execute(
-        select(Referral).where(Referral.referee_user_id == referee_user_id)
-    )
+    row = await session.execute(select(Referral).where(Referral.referee_user_id == referee_user_id))
     ref = row.scalar_one_or_none()
     if ref is None:
         ref = Referral(
@@ -78,9 +76,7 @@ async def _ensure_pending_referral(
 
 async def _delete_referrals_for_referee(session: AsyncSession, referee_user_id: int) -> None:
     """Remove all referrals for a referee to simulate 'no referral' state across repeated runs."""
-    await session.execute(
-        delete(Referral).where(Referral.referee_user_id == referee_user_id)
-    )
+    await session.execute(delete(Referral).where(Referral.referee_user_id == referee_user_id))
     await session.flush()
 
 

@@ -61,9 +61,7 @@ async def _create_promo(
     applicable_plan_ids: list[str] | None = None,
 ) -> PromoCode:
     # Idempotent helper: reuse existing promo with same code if present.
-    existing = await db.execute(
-        select(PromoCode).where(PromoCode.code == code.upper())
-    )
+    existing = await db.execute(select(PromoCode).where(PromoCode.code == code.upper()))
     promo = existing.scalar_one_or_none()
     if promo:
         return promo

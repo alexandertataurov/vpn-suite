@@ -573,9 +573,7 @@ async def business_metrics(db: AsyncSession) -> BusinessMetricsOut:
 
     active_subscriptions = (
         await db.execute(
-            select(func.count())
-            .select_from(Subscription)
-            .where(*entitled_active_where(now=now))
+            select(func.count()).select_from(Subscription).where(*entitled_active_where(now=now))
         )
     ).scalar() or 0
 

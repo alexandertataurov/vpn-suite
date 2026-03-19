@@ -428,7 +428,9 @@ async def test_webapp_me_patch_invalid_email_422(client: AsyncClient, monkeypatc
 
 
 @pytest.mark.asyncio
-async def test_webapp_logout_returns_ok_for_valid_session(client: AsyncClient, monkeypatch, async_session):
+async def test_webapp_logout_returns_ok_for_valid_session(
+    client: AsyncClient, monkeypatch, async_session
+):
     from app.core import config
 
     tg_id = 101202303

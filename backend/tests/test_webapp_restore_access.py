@@ -253,5 +253,3 @@ async def test_webapp_subscription_restore_no_subscription_returns_no_subscripti
         assert_error_response(data, "NO_SUBSCRIPTION")
     finally:
         app.dependency_overrides.pop(get_db, None)
-
-

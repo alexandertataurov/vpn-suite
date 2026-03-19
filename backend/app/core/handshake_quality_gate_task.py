@@ -114,11 +114,7 @@ async def run_handshake_quality_gate_once() -> int:
                 }
                 if data.handshake_latest_at is not None:
                     values["last_seen_handshake_at"] = data.handshake_latest_at
-                await session.execute(
-                    update(Device)
-                    .where(Device.id == device_id)
-                    .values(**values)
-                )
+                await session.execute(update(Device).where(Device.id == device_id).values(**values))
                 verified_count += 1
                 if (
                     vpn_handshake_latency_seconds is not None

@@ -117,6 +117,27 @@ Expected:
 - **Rotate server keys:** All existing configs stop working until users get new configs. Plan rollout; communicate “re-download config”.
 - **Apply server profile:** Can change listen port/params; clients may need new config. Validate profile; keep previous snapshot for rollback.
 
+## VPN cluster (VpnNoSchedulableNodes)
+
+Alert fires when `vpn_nodes_total` is absent or no node has `status=~"healthy|degraded"`. Scheduler cannot place new peers.
+
+**Checks (agent mode):**
+
+1. Servers in DB: `curl -sS http://127.0.0.1:8000/api/v1/servers?limit=50 -H "Authorization: Bearer <ADMIN_JWT>"` — need at least one `is_active: true`.
+2. Agent heartbeats in Redis: `docker compose exec redis redis-cli KEYS "agent:hb:*"` — keys must exist and be recent (TTL ~120s).
+3. Node-agent on VPN host: `cd /opt/amnezia/amnezia-awg2 && ./manage.sh up` (or equivalent); agent must reach `https://$PUBLIC_DOMAIN:8443/api/v1/agent/heartbeat` (mTLS + `X-Agent-Token`).
+4. Topology/metrics: `curl -sS http://127.0.0.1:8000/metrics | rg 'vpn_nodes_total'` — should show `vpn_nodes_total{status="healthy"}` or `status="degraded"`.
+5. Prometheus scrape: `curl -sS 'http://127.0.0.1:${PROMETHEUS_HOST_PORT:-19090}/api/v1/query?query=vpn_nodes_total'` — admin-api must be scraped.
+
+**Fix:**
+
+- No servers: Create server in Admin or seed; ensure `SERVER_ID` in node-agent matches server `id`.
+- No heartbeats: Fix network/mTLS/allowlist (`AGENT_ALLOW_CIDRS`); restart node-agent; verify `AGENT_SHARED_TOKEN` matches `.env`.
+- All unhealthy: Check node-agent logs; AmneziaWG container must be running; `wg show` must succeed on node.
+- Force topology rebuild: `curl -sS http://127.0.0.1:8000/api/v1/cluster/topology -H "Authorization: Bearer <ADMIN_JWT>"` (triggers cache miss → rebuild).
+
+**Support bundle:** `./manage.sh support-bundle` includes Redis `agent:hb:*` keys list.
+
 ## Control-plane checklist (zero downtime)
 
 1. Discover node: `NODE_MODE=real`, `NODE_DISCOVERY=docker`; `POST /api/v1/cluster/scan` (Bearer). In this mode **node-agent MUST be off**; peers are managed only by docker runtime reconcile.

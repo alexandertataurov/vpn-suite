@@ -21,9 +21,7 @@ async def get_revenue_overview(session: AsyncSession) -> dict:
 
     # Active paid subs
     active_result = await session.execute(
-        select(func.count())
-        .select_from(Subscription)
-        .where(*entitled_active_where(now=now))
+        select(func.count()).select_from(Subscription).where(*entitled_active_where(now=now))
     )
     subscriptions_active = active_result.scalar() or 0
 
