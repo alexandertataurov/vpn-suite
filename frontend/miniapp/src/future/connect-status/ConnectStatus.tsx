@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
-import { ConnectStatusSummaryCard, ConnectStatusVerifyCard, SessionMissing } from "@/components";
-import { HelperNote, PageScaffold, PageHeader } from "@/design-system";
+import { SessionMissing } from "@/components";
+import { ConnectStatusSummaryCard, ConnectStatusVerifyCard, HelperNote, PageScaffold, PageHeader } from "@/design-system";
 import { useOpenLink } from "@/hooks";
 import { useConnectStatusPageModel } from "@/page-models";
 import { useI18n } from "@/hooks";

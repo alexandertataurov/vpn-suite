@@ -15,6 +15,9 @@ const RestoreAccessPage = lazy(() =>
 const ConnectStatusPage = lazy(() =>
   import("@/pages/ConnectStatus").then((m) => ({ default: m.ConnectStatusPage })),
 );
+const ReferralPage = lazy(() =>
+  import("@/future/referral/Referral").then((m) => ({ default: m.ReferralPage })),
+);
 const StackFlowLayout = lazy(() =>
   import("@/app/ViewportLayout").then((m) => ({ default: m.StackFlowLayout })),
 );
@@ -42,7 +45,7 @@ export function AppRoutes() {
         <Route path="/support" element={<SupportPage />} />
         <Route path="/connect-status" element={<ConnectStatusPage />} />
         <Route path="/restore-access" element={<RestoreAccessPage />} />
-        <Route path="/referral" element={<Navigate to="/settings" replace />} />
+        <Route path="/referral" element={<ReferralPage />} />
         <Route path="/servers" element={<Navigate to="/" replace />} />
         <Route path="/account/subscription" element={<Navigate to="/plan" replace />} />
       </Route>

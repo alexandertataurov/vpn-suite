@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   AccountCancellationModal,
-  ProfileModal,
   SessionMissing,
   SubscriptionCancellationModal,
 } from "@/components";
@@ -17,6 +16,7 @@ import {
   PageScaffold,
   PageSection,
   PlanSection,
+  ProfileModal,
   ProfileSection,
   SettingsAccountOverviewCard,
   Skeleton,

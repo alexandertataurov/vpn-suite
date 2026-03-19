@@ -62,12 +62,7 @@ export function ProfileModal({
       className="settings-profile-modal"
       footer={
         <>
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={onCancel}
-            disabled={isSaving}
-          >
+          <Button type="button" variant="ghost" onClick={onCancel} disabled={isSaving}>
             {cancelLabel}
           </Button>
           <Button

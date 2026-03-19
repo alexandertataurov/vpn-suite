@@ -58,8 +58,8 @@ export function ReferralPage() {
         <Stack gap="4">
           <InlineAlert
             variant="info"
-            title={t("plan.cta_upgrade_plan")}
-            body={t("referral.upsell_description")}
+            label={t("plan.cta_upgrade_plan")}
+            message={t("referral.upsell_description")}
           />
         </Stack>
       ) : null}

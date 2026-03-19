@@ -81,7 +81,7 @@ The bot is the entry point; most product flows happen in the Mini App.
 | **Connect status** `/connect-status` | Confirm connection after device issuance | `/webapp/me`, `POST /webapp/devices/:id/confirm-connected` |
 | **Servers** `/servers` | Redirects to `/` (beta) | — |
 | **Settings** `/settings` | Account, pause/resume/cancel, revoke all, links; includes referral entry point | `/webapp/me`, `/webapp/subscription/offers`, pause/resume/cancel, revoke devices |
-| **Referral** `/referral` | Redirects to `/settings` (beta) | — |
+| **Referral** `/referral` | Share link, stats (earned days, active referrals) | `GET /webapp/referral/my-link`, `GET /webapp/referral/stats` |
 | **Support** `/support` | Troubleshooter steps, FAQ, contact link | Session only |
 
 **Navigation:** Bottom tabs (Home, Devices, Plan, Support, Account/Settings). Checkout, Referral, Servers are stack/full-screen (no tabs).

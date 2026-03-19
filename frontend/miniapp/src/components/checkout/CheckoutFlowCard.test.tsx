@@ -1,7 +1,7 @@
 import type { ComponentProps } from "react";
 import { screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { CheckoutFlowCard } from "./CheckoutFlowCard";
+import { CheckoutFlowCard } from "@/design-system";
 import { renderWithProviders } from "@/test/utils/render";
 
 function renderCard(overrides: Partial<ComponentProps<typeof CheckoutFlowCard>> = {}) {
@@ -27,7 +27,6 @@ function renderCard(overrides: Partial<ComponentProps<typeof CheckoutFlowCard>> 
       onPromoRemove={vi.fn()}
       onPromoRecovery={vi.fn()}
       onContinue={vi.fn()}
-      onBack={vi.fn()}
       onPay={vi.fn()}
       onRetry={vi.fn()}
       {...overrides}

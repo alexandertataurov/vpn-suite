@@ -16,12 +16,18 @@ export { FaqDisclosureItem } from "./support/FaqDisclosureItem";
 export type { FaqDisclosureItemProps } from "./support/FaqDisclosureItem";
 export { TroubleshooterFlowCard } from "./support/TroubleshooterFlowCard";
 export type { TroubleshooterFlowCardProps } from "./support/TroubleshooterFlowCard";
+export { ConnectStatusSummaryCard } from "./connect-status/ConnectStatusSummaryCard";
+export type { ConnectStatusSummaryCardProps } from "./connect-status/ConnectStatusSummaryCard";
+export { ConnectStatusVerifyCard } from "./connect-status/ConnectStatusVerifyCard";
+export type { ConnectStatusVerifyCardProps } from "./connect-status/ConnectStatusVerifyCard";
 export { PlanSection } from "./settings/PlanSection";
 export type { PlanSectionProps } from "./settings/PlanSection";
 export { SupportSection } from "./settings/SupportSection";
 export type { SupportSectionProps } from "./settings/SupportSection";
 export { DangerSection } from "./settings/DangerSection";
 export type { DangerSectionProps } from "./settings/DangerSection";
+export { ProfileModal } from "./settings/ProfileModal";
+export type { ProfileModalProps } from "./settings/ProfileModal";
 export { SettingsAccountOverviewCard } from "./settings/SettingsAccountOverviewCard";
 export type {
   PlanStatus,
