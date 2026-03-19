@@ -1,0 +1,14 @@
+/* StartupError — error content + retry. */
+
+.boot-error-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 358px;
+}
+
+.boot-error-content .alert {
+  width: 100%;
+}

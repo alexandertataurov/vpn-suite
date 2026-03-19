@@ -1,8 +1,8 @@
 import type { HTMLAttributes } from "react";
-import { Skeleton } from "@/design-system/components/feedback/Skeleton";
+import { Skeleton } from "@/design-system";
 import "./RowItem.css";
 
-export interface RowItemSkeletonProps extends HTMLAttributes<HTMLDivElement> {}
+export type RowItemSkeletonProps = HTMLAttributes<HTMLDivElement>;
 
 /** Skeleton placeholder for RowItem while data is loading. */
 export function RowItemSkeleton({ className = "", ...props }: RowItemSkeletonProps) {

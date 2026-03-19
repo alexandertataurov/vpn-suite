@@ -6,12 +6,7 @@ import {
   BootErrorScreen,
 } from "@/bootstrap/BootScreens";
 import { StorySection } from "@/design-system";
-
-const pageStoryParameters = {
-  layout: "fullscreen" as const,
-  viewport: { defaultViewport: "iphone14" },
-  status: { type: "stable" as const },
-};
+import { pageStoryParameters } from "@/storybook/page-contracts";
 
 const meta: Meta = {
   title: "Pages/Contracts/SplashAndLoading",

@@ -1,5 +1,5 @@
 /* Boot/splash/loading screen theme tokens.
-   [data-theme] on containers (ThemePane); html[data-theme] for app runtime. */
+   [data-theme] on BootScreen container; html[data-theme] for app runtime. */
 
 [data-theme="dark"],
 html[data-theme="consumer-dark"],

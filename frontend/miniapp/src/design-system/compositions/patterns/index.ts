@@ -118,5 +118,3 @@ export type { HeaderBarProps } from "./content/HeaderBar";
 export { LabeledRow } from "./content/LabeledRow";
 export type { LabeledRowProps } from "./content/LabeledRow";
 
-export { SupportActionList } from "./ui/SupportActionList";
-export type { SupportActionListProps, SupportActionItem } from "./ui/SupportActionList";

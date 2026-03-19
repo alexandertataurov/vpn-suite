@@ -1,4 +1,4 @@
 export {
   DangerSection,
   type DangerSectionProps,
-} from "@/design-system/compositions/recipes/settings/DangerSection";
+} from "@/design-system";

@@ -2079,11 +2079,6 @@
   animation: server-load-pulse 1.4s ease-in-out infinite;
 }
 
-.support-action-list-item--disabled {
-  opacity: 0.58;
-  pointer-events: none;
-}
-
 @keyframes server-load-pulse {
 
   0%,

@@ -1,9 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Route } from "react-router-dom";
-import { within, userEvent, expect } from "storybook/test";
+import { within, userEvent, expect, waitFor } from "storybook/test";
 import { SettingsPage } from "@/pages/Settings";
 import {
   PageSandbox,
+  pageStoryParameters,
   readyScenario,
   trialScenario,
   expiredScenario,
@@ -16,12 +17,6 @@ import {
   longNameScenario,
   expiringSoonScenario,
 } from "@/storybook/page-contracts";
-
-const pageStoryParameters = {
-  layout: "fullscreen" as const,
-  viewport: { defaultViewport: "iphone14" },
-  status: { type: "stable" as const },
-};
 
 const meta: Meta = {
   title: "Pages/Contracts/Settings",
@@ -267,14 +262,16 @@ export const OpenProfileModal: Story = {
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const page = within(canvasElement.ownerDocument.body);
+    const previewDocument = canvasElement.ownerDocument;
     const editProfileLabel = await canvas.findByText("Edit profile");
     const editProfile = editProfileLabel.closest('[role="button"]');
     if (!editProfile) {
       throw new Error('Could not find button container for "Edit profile".');
     }
     await userEvent.click(editProfile);
-    await expect(await page.findByRole("dialog")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(previewDocument.querySelector('[role="dialog"]')).not.toBeNull();
+    });
   },
   parameters: {
     docs: {
@@ -293,14 +290,16 @@ export const OpenLanguageMenu: Story = {
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const page = within(canvasElement.ownerDocument.body);
+    const previewDocument = canvasElement.ownerDocument;
     const languageLabel = await canvas.findByText("Language");
     const languageRow = languageLabel.closest('[role="button"]');
     if (!languageRow) {
       throw new Error('Could not find button container for "Language".');
     }
     await userEvent.click(languageRow);
-    await expect(await page.findByRole("menu")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(previewDocument.querySelector('[role="menu"]')).not.toBeNull();
+    });
   },
   parameters: {
     docs: {
@@ -319,14 +318,16 @@ export const OpenCancelFlow: Story = {
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const page = within(canvasElement.ownerDocument.body);
+    const previewDocument = canvasElement.ownerDocument;
     const cancelPlanLabel = await canvas.findByText("Cancel plan");
     const cancelPlan = cancelPlanLabel.closest('[role="button"]');
     if (!cancelPlan) {
       throw new Error('Could not find button container for "Cancel plan".');
     }
     await userEvent.click(cancelPlan);
-    await expect(await page.findByRole("dialog")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(previewDocument.querySelector('[role="dialog"]')).not.toBeNull();
+    });
   },
   parameters: {
     docs: {

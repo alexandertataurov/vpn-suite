@@ -37,6 +37,7 @@ export {
 // —— Feedback ——
 export { Skeleton, SkeletonLine, SkeletonCard, SkeletonList } from "./feedback/Skeleton";
 export type { SkeletonVariant } from "./feedback/Skeleton";
+export { BootScreen, type BootScreenProps, type BootIconState } from "./feedback/BootScreen";
 export { InlineAlert, type InlineAlertProps } from "./feedback/InlineAlert";
 export { Modal, ConfirmModal, ConfirmDanger } from "./feedback/Modal";
 export type { ConfirmDangerPayload, ConfirmDangerProps } from "./feedback/Modal";

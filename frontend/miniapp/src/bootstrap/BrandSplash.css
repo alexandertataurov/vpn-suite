@@ -1,0 +1,27 @@
+/* BrandSplash — wordmark + tagline. Uses --boot-wordmark, --boot-tagline. */
+
+.boot-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.boot-wordmark {
+  font-family: "Inter", sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--boot-wordmark);
+  letter-spacing: -0.4px;
+  line-height: 1;
+}
+
+.boot-tagline {
+  font-family: "Inter", sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--boot-tagline);
+  letter-spacing: 0.1px;
+  margin: 0;
+  text-align: center;
+}

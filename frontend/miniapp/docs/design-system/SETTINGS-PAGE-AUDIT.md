@@ -33,16 +33,12 @@
 
 ## 2. Component Pattern Drift
 
-### 2.1 ListRow vs SettingsActionRow
+### 2.1 ListRow (canonical)
 
 - **Settings page** uses `ListRow` for all action rows (edit profile, language, plan, devices, cancel, FAQ, support, reset, logout, delete).
-- **Design-system** exposes `SettingsActionRow` (recipes/) with `modern-list-item`, `row-item`, tone/danger/actionIndicator support.
+- **SettingsActionRow** was deleted; `ListRow` is the canonical settings row.
 - **library.css** defines `.settings-card` + `.settings-divider` for content-library layout.
-- **Settings** uses `ListCard` + `ListRow` instead of `SettingsCard` + `SettingsActionRow`.
-
-**Drift**: Two parallel patterns for settings rows. `ListRow` is the modern choice; `SettingsActionRow` uses `modern-list-item` (different CSS). PlanBillingHistorySection and SubscriptionCancellationModal also use `ListRow` + `settings-list-card`. No usage of `SettingsActionRow` in pages.
-
-**Recommendation**: Keep `ListRow` as the canonical settings row. Document that `SettingsActionRow` is legacy or deprecated for settings pages; or migrate Settings to `SettingsActionRow` if design-system wants a single recipe.
+- **Settings** uses `ListCard` + `ListRow` instead of `SettingsCard`. PlanBillingHistorySection and SubscriptionCancellationModal also use `ListRow` + `settings-list-card`.
 
 ### 2.2 SettingsCard vs ListCard + settings-list-card
 
@@ -130,5 +126,5 @@ className="home-card-row module-card settings-list-card"
 2. **WARNING**: Add `settings.setup_guide_title`, `settings.setup_guide_description` and use `t()`.
 3. **WARNING**: Add `settings.renewal_label` for SettingsAccountOverviewCard "RENEWAL".
 4. **DRIFT**: Remove or clarify `.settings-list-row` vs `ListRow`; ensure `settings-list-row--single-line-description` applies to ListRow output.
-5. **DRIFT**: Document ListRow vs SettingsActionRow usage; decide canonical pattern.
+5. **DRIFT**: ~~Document ListRow vs SettingsActionRow~~ ✓ Resolved: SettingsActionRow deleted; ListRow is canonical.
 6. **COSMETIC**: Align toggle dimensions (modern.css vs routes.css) or document why Settings needs different sizes.

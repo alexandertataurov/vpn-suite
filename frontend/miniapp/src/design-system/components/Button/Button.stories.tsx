@@ -248,7 +248,7 @@ export const States: Story = {
       },
     },
   },
-  render: () => {
+  render: function StatesStory() {
     const [successState, setSuccessState] = useState<"idle" | "success">("idle");
     const [errorState, setErrorState] = useState<"idle" | "error">("idle");
     useEffect(() => {

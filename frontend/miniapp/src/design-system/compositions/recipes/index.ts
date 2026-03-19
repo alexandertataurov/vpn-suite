@@ -10,8 +10,6 @@ export { FaqDisclosureItem } from "./support/FaqDisclosureItem";
 export type { FaqDisclosureItemProps } from "./support/FaqDisclosureItem";
 export { TroubleshooterFlowCard } from "./support/TroubleshooterFlowCard";
 export type { TroubleshooterFlowCardProps } from "./support/TroubleshooterFlowCard";
-export { SettingsActionRow } from "./settings/SettingsActionRow";
-export type { SettingsActionRowProps } from "./settings/SettingsActionRow";
 export { PlanSection } from "./settings/PlanSection";
 export type { PlanSectionProps } from "./settings/PlanSection";
 export { SupportSection } from "./settings/SupportSection";

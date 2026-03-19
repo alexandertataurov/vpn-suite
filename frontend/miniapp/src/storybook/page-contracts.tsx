@@ -4,8 +4,6 @@ import { setWebappToken } from "@/api/client";
 import { BootstrapContextProvider } from "@/bootstrap";
 import { ToastContainer } from "@/design-system";
 import { ViewportShellRoutes } from "./withViewportShell";
-import { OnboardingPage } from "@/pages/Onboarding";
-import { PlanPage } from "@/pages/Plan";
 
 export type MockEndpoint =
   | "me"
@@ -27,6 +25,12 @@ export type MockScenario = {
   responses?: Partial<Record<MockEndpoint, unknown>>;
   statuses?: Partial<Record<MockEndpoint, number>>;
   loading?: MockEndpoint[];
+};
+
+export const pageStoryParameters = {
+  layout: "fullscreen" as const,
+  viewport: { defaultViewport: "iphone14" as const },
+  status: { type: "stable" as const },
 };
 
 const activePlans = {
@@ -656,62 +660,6 @@ export function OnboardingSandbox({
         </BootstrapContextProvider>
       </ToastContainer>
     </QueryClientProvider>
-  );
-}
-
-export function OnboardingStoryHarness({ step = 0 }: { step?: number }) {
-  const [onboardingStep, setOnboardingStep] = useState(step);
-  const [isCompletingOnboarding, setIsCompletingOnboarding] = useState(false);
-
-  const value = useMemo(
-    () => ({
-      phase: "onboarding" as const,
-      onboardingStep,
-      onboardingVersion: 2,
-      onboardingError: null,
-      isCompletingOnboarding,
-      setOnboardingStep: async (nextStep: number) => {
-        setOnboardingStep(nextStep);
-      },
-      completeOnboarding: async () => {
-        setIsCompletingOnboarding(true);
-        await Promise.resolve();
-        setIsCompletingOnboarding(false);
-        return { done: true, synced: true };
-      },
-    }),
-    [isCompletingOnboarding, onboardingStep],
-  );
-
-  return (
-    <ToastContainer>
-      <BootstrapContextProvider value={value}>
-        <OnboardingPage />
-      </BootstrapContextProvider>
-    </ToastContainer>
-  );
-}
-
-export function PlanStoryHarness() {
-  const value = useMemo(
-    () => ({
-      phase: "app_ready" as const,
-      onboardingStep: 0,
-      onboardingVersion: 2,
-      onboardingError: null,
-      isCompletingOnboarding: false,
-      setOnboardingStep: async () => undefined,
-      completeOnboarding: async () => ({ done: true, synced: true }),
-    }),
-    [],
-  );
-
-  return (
-    <ToastContainer>
-      <BootstrapContextProvider value={value}>
-        <PlanPage />
-      </BootstrapContextProvider>
-    </ToastContainer>
   );
 }
 

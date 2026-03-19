@@ -17,7 +17,7 @@ Status: Phases 1–2 complete; Phases 3–5 planned/partial. Library rebuild (20
 **Tasks completed:**
 - `src/components/heroes/` — PlanHero, ConnectionStatusHero, AccountSummaryHero, SummaryHero
 - `src/components/cards/` — TierCard, UsageSummaryCard, BillingHistoryCard
-- `src/components/` — DangerZone, LimitStrip, TroubleshooterStep, SessionMissing
+- `src/components/` — DangerZone, LimitStrip, TroubleshooterStep (removed); SessionMissing moved to `@/components`
 - Removed these from design-system patterns; all consumers import from `@/components`
 - README updated with boundary documentation
 

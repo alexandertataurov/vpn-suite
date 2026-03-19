@@ -111,7 +111,7 @@ Use `@media (max-width: var(--vp-narrow))` instead of raw `360px`. Consolidate 3
 
 | Query | Purpose | Files |
 |-------|---------|-------|
-| `@media (pointer: coarse)` | Larger touch targets on touch devices | SettingsAccountOverviewCard, SettingsAccountCard |
+| `@media (pointer: coarse)` | Larger touch targets on touch devices | SettingsAccountOverviewCard |
 | `@media (pointer: fine)` | Hover/compact layout on mouse | RowItem, DisclosureItem |
 
 **Consistency**: Correct pattern for device-agnostic UX.

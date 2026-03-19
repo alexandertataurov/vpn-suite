@@ -7,14 +7,9 @@ import {
   loadingSessionScenario,
   loggedOutScenario,
   PageSandbox,
+  pageStoryParameters,
   readyScenario,
 } from "@/storybook/page-contracts";
-
-const pageStoryParameters = {
-  layout: "fullscreen" as const,
-  viewport: { defaultViewport: "iphone14" },
-  status: { type: "stable" as const },
-};
 
 const meta: Meta = {
   title: "Pages/Contracts/Support",

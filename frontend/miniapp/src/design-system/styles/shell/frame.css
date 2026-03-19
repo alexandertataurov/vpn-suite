@@ -3161,7 +3161,7 @@ html:not([data-theme="consumer-light"]) .miniapp-popover-panel {
   padding: 6px;
 }
 
-.cancel-flow-actions-card .modern-list-item {
+.cancel-flow-actions-card .row-item {
   min-height: 52px;
 }
 

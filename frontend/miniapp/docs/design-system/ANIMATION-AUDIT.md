@@ -56,7 +56,7 @@ These rules do **not** use `html:not([data-animations="force"])` — they always
 | zones.css:664 | `.miniapp-main`, `.miniapp-header-inner` | `animation: none` when overlay-active |
 | routes.css:662 | `.home-signal-card`, `.device-row-motion`, etc. | `animation: none` |
 | DisclosureItem.css:104 | (reduced-motion block) | — |
-| SettingsAccountCard.css:195 | (reduced-motion block) | — |
+| SettingsAccountOverviewCard.css:195 | (reduced-motion block) | — |
 
 None target hero cards directly. `.miniapp-main` animation:none affects the shell, not children.
 

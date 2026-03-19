@@ -217,8 +217,7 @@ All pages use `scrollable={false}`; ScrollZone in ViewportLayout provides scroll
 
 | Component | Output class | Styling source |
 |-----------|--------------|----------------|
-| ListRow | → RowItem → `row-item` | RowItem.css (padding, icon); `.modern-list-item, .row-item` grouped in modern.css |
-| SettingsActionRow | `modern-list-item row-item` | modern.css `.modern-list-item-*` |
+| ListRow (canonical) | → RowItem → `row-item` | RowItem.css (padding, icon); `.modern-list-item, .row-item` grouped in modern.css. SettingsActionRow deleted. |
 
 `.home-card-row .modern-list-item` (padding, icon) targets `modern-list-item`; RowItem uses `row-item` only. RowItem has its own padding in RowItem.css, so no visual gap. Two parallel BEM trees (modern-list-item vs row-item/ri-*) for similar UI.
 

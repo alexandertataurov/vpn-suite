@@ -4,15 +4,17 @@
 **Scope:** frontend/miniapp only  
 **Purpose:** Full inventory of legacy UI to remove per Design System Unification Plan
 
+**Removed:** TroubleshooterStep, SupportContactCard (replaced by TroubleshooterFlowCard, ListCard + RowItem).
+
 ---
 
 ## 1. Buttons
 
 | Legacy | Location | Replacement |
 |-------|----------|-------------|
-| `modern-primary-button` | OnboardingStepCard (7×), Home, PlanOptionsSection, TroubleshooterStep, SupportContactCard, SettingsAccountOverviewCard, PlanHeroCard | `Button variant="primary"` |
+| `modern-primary-button` | OnboardingStepCard (7×), Home, PlanOptionsSection, SettingsAccountOverviewCard, PlanHeroCard | `Button variant="primary"` |
 | `modern-primary-button--success` | OnboardingStepCard, Home | `Button status="success"` |
-| `modern-secondary-button` | TroubleshooterStep (2×) | `Button variant="secondary"` |
+| `modern-secondary-button` | (removed) | `Button variant="secondary"` |
 | `modern-share-button` | PlanOptionsSection | `Button variant="secondary"` |
 | `modern-banner` | OnboardingStepCard (2×), Home | `Button variant="secondary"` or custom Banner pattern |
 | `modern-icon-button` | ModernHeader | `Button variant="ghost" size="icon"` |
@@ -27,8 +29,8 @@
 | `modern-hero-card` | DevicesSummaryCard, SettingsAccountOverviewCard | HeroCard pattern |
 | `modern-action-card` | RestoreAccess, ServerSelection, Home | ActionCard pattern |
 | `modern-plan-card`, `modern-plan-grid` | PlanOptionsSection | SelectionCard / plan pattern |
-| `troubleshooter-card` | TroubleshooterStep | StepCard or ListCard |
-| `modern-contact-card` | SupportContactCard | ListCard + Button |
+| `troubleshooter-card` | (removed; was TroubleshooterStep) | TroubleshooterFlowCard |
+| `modern-contact-card` | (removed; was SupportContactCard) | ListCard + RowItem |
 | `devices-add-wizard-card` | Devices page | design-system pattern |
 | `modern-list`, `modern-list-item` | ListCard, Support | ListCard (already uses) |
 
@@ -238,7 +240,7 @@ After removing conn-card, acct-hero, summary-hero:
 
 ### 14.3 Tone props: modern-* removed
 
-- **SettingsActionRow**: Removed `modern-blue`, `modern-green`, `modern-amber`, `modern-red`, `modern-neutral` from tone union; simplified `resolveModernTone`
+- **SettingsActionRow**: Component deleted. ListRow is canonical for settings rows.
 - **ListCard**: Removed `modern-*` from `ListRowIconTone`; simplified `resolveModernTone` default to `modern-icon-tone--neutral`
 
 ### 14.4 layout-story.css

@@ -340,7 +340,7 @@ export const Responsive: Story = {
       },
     },
   },
-  render: () => {
+  render: function ResponsiveStory() {
     const [width, setWidth] = useState(390);
     return (
       <WithThemes>
@@ -352,6 +352,7 @@ export const Responsive: Story = {
             value={width}
             onChange={(e) => setWidth(Number(e.target.value))}
             style={{ marginBottom: 12, width: "100%" }}
+            aria-label="Width in pixels"
           />
           <CardRow style={{ width, overflow: "hidden" }}>
             <RowItem

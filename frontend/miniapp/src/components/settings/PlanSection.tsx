@@ -1,4 +1,4 @@
 export {
   PlanSection,
   type PlanSectionProps,
-} from "@/design-system/compositions/recipes/settings/PlanSection";
+} from "@/design-system";

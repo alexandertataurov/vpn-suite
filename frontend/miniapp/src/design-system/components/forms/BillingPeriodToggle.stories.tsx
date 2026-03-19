@@ -2,7 +2,7 @@ import { useState, type ReactNode } from "react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { BillingPeriodToggle, type BillingPeriodValue } from "./BillingPeriodToggle";
 import { CardRow, RowItem, SectionLabel, StoryStack } from "@/design-system";
-import { IconShield } from "@/design-system";
+import { IconShield } from "@/design-system/icons";
 import "@/styles/app/routes.css";
 
 function ThemePane({

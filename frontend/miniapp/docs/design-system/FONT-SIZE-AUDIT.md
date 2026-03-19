@@ -45,12 +45,12 @@
 | routes.css `.referral-share-card__url` | 13px | `var(--font-size-sm)` |
 | routes.css `.referral-share-card__notice-title` | 13px | `var(--font-size-sm)` |
 | routes.css `.referral-share-card__notice-message` | 12px | `var(--font-size-xs)` |
-| SettingsAccountCard.css `.ac-identity .avatar` | 14px | `var(--typo-body-sm-size)` |
-| SettingsAccountCard.css `.ac-eyebrow` | 9.5px | `var(--typo-meta-size)` |
-| SettingsAccountCard.css `.ac-name` | 17px | `var(--typo-h3-size)` |
-| SettingsAccountCard.css `.ac-stat-label` | 9px | `var(--typo-meta-size)` |
-| SettingsAccountCard.css `.ac-stat-value` | 15px | `var(--typo-h4-size)` |
-| SettingsAccountCard.css `.ac-stat-dim` | 12px | `var(--font-size-xs)` |
+| SettingsAccountOverviewCard.css `.ac-identity .avatar` | 14px | `var(--typo-body-sm-size)` |
+| SettingsAccountOverviewCard.css `.ac-eyebrow` | 9.5px | `var(--typo-meta-size)` |
+| SettingsAccountOverviewCard.css `.ac-name` | 17px | `var(--typo-h3-size)` |
+| SettingsAccountOverviewCard.css `.ac-stat-label` | 9px | `var(--typo-meta-size)` |
+| SettingsAccountOverviewCard.css `.ac-stat-value` | 15px | `var(--typo-h4-size)` |
+| SettingsAccountOverviewCard.css `.ac-stat-dim` | 12px | `var(--font-size-xs)` |
 | DisclosureItem.css `.disclosure-item__content-inner` | 13px | `var(--font-size-sm)` |
 | modern.css `.avatar--md` | 14px | `var(--typo-body-sm-size)` |
 | routes.css `.referral-share-card__label` | 10px | `var(--typo-meta-size)` |

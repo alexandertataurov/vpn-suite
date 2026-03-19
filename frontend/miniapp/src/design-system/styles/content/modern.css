@@ -1,7 +1,6 @@
 /**
- * Modern patterns — used by design-system components (ListCard, SettingsActionRow,
- * ActionCard, ModernHeroCard).
- * Single source for .modern-* and .troubleshooter-card classes.
+ * Modern patterns — used by design-system components (ListCard, ActionCard, ModernHeroCard).
+ * Single source for .modern-* classes.
  */
 
 /* ---- InlineAlert (unified secondary pages) ---- */
@@ -1064,12 +1063,12 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
   padding-bottom: 0;
 }
 
-.home-card-row .modern-list-item {
+.home-card-row .row-item {
   padding: var(--amnezia-row-pad-v, var(--miniapp-data-cell-padding)) var(--amnezia-row-pad-h, var(--miniapp-card-padding));
   gap: var(--spacing-3);
 }
 
-.home-card-row .modern-list-item-icon {
+.home-card-row .ri-icon {
   width: 36px;
   height: 36px;
   border-radius: var(--r-sm, var(--radius-sm));
@@ -1078,11 +1077,11 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
   color: var(--color-text-muted);
 }
 
-.home-card-row .modern-list-item-icon svg {
+.home-card-row .ri-icon svg {
   color: var(--color-text-muted);
 }
 
-.home-card-row .modern-list-item-right {
+.home-card-row .ri-right {
   gap: var(--spacing-2);
   align-items: center;
 }
@@ -1093,11 +1092,11 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
   gap: var(--spacing-2);
 }
 
-.home-invite-card .modern-list-item-subtitle {
+.home-invite-card .ri-sub {
   font-size: var(--font-size-sm);
 }
 
-.home-invite-card .modern-list-item {
+.home-invite-card .row-item {
   padding-bottom: 0;
 }
 
@@ -1135,86 +1134,7 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
   margin: var(--spacing-4);
 }
 
-.modern-list-item,
-.row-item {
-  display: flex;
-  align-items: center;
-  padding: var(--miniapp-data-cell-padding) var(--miniapp-card-padding);
-  gap: var(--spacing-3);
-  min-height: 44px;
-  background: transparent;
-  width: 100%;
-  border: none;
-  text-align: left;
-  font: inherit;
-  font-family: inherit;
-  border-bottom: 1px solid var(--color-border-subtle);
-  transition: background var(--duration-micro) ease, filter var(--duration-micro) ease;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-
-
-.modern-list-item:last-child,
-.row-item:last-child {
-  border-bottom: none;
-}
-
-.modern-list-item:active,
-.row-item:active {
-  background: var(--color-surface-2);
-}
-
-.modern-list-item-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--r-sm, var(--radius-sm));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--color-surface-2);
-  border: 1px solid var(--color-border);
-  color: var(--color-text-muted);
-  flex-shrink: 0;
-}
-
-.modern-list-item-content {
-  flex: 1;
-  min-width: 0;
-}
-
-.modern-list-item-title {
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  letter-spacing: -0.2px;
-  color: var(--color-text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.modern-list-item-subtitle {
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-normal);
-  color: var(--color-text-tertiary);
-  margin-top: var(--spacing-px);
-  line-height: 1.4;
-}
-
-.modern-list-item-right {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-}
-
-/* Tone Modifiers for Icons */
-.modern-icon-tone--blue { background: color-mix(in oklch, var(--color-accent) 6%, var(--color-surface-2)); color: var(--color-accent); }
-.modern-icon-tone--green { background: color-mix(in oklch, var(--color-success) 6%, var(--color-surface-2)); color: var(--color-success); }
-.modern-icon-tone--amber,
-.modern-icon-tone--warning { background: var(--color-icon-warning-bg); color: var(--color-warning); }
-.modern-icon-tone--red,
-.modern-icon-tone--danger { background: var(--color-icon-danger-bg); color: var(--color-error); }
-.modern-icon-tone--neutral { background: var(--color-surface-2); border-color: var(--color-border); color: var(--color-text-muted); }
+/* RowItem base styles (home-card-row overrides above); RowItem.css has primary layout */
 
 /* ---- Plan Options ---------------------------------- */
 .modern-plan-grid {

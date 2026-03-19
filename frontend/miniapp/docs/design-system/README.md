@@ -61,14 +61,14 @@ Layers: **tokens** → **theme** → **primitives** → **components** → **pat
 - **theme/** — ThemeProvider, tokens-map, z-index constants
 - **primitives/** — Layout (Box, Container, Inline, Panel, Stack) → Separator (Divider) → Typography (Text, Heading). See [primitives/README.md](../../src/design-system/primitives/README.md).
 - **components/** — typography (Display, H1–H3, Body, Caption) → Buttons → Forms → Feedback → Display → Utility. See [components/README.md](../../src/design-system/components/README.md).
-- **patterns/** — Grouped by domain: `mission/` (Mission*), `content/` (FormField, ButtonRow, ContentForms/ContentButtons), `blocks/` (FallbackScreen, PageStateScreen, EmptyStateBlock, OfflineBanner), `cards/` (ListCard, ServerCard), `home/` (Home*), `ui/` (DataGrid, StatusChip, OverflowActionMenu, SupportActionList). Product-specific patterns (heroes, tier/usage/billing cards, DangerZone, LimitStrip, TroubleshooterStep, SessionMissing) live in `src/components` and are imported from `@/components`.
+- **patterns/** — Grouped by domain: `mission/` (Mission*), `content/` (FormField, ButtonRow, ContentForms/ContentButtons), `blocks/` (FallbackScreen, PageStateScreen, EmptyStateBlock, OfflineBanner), `cards/` (ListCard, ServerCard), `home/` (Home*), `ui/` (DataGrid, StatusChip, OverflowActionMenu). Product-specific patterns (heroes, tier/usage/billing cards, DangerZone, LimitStrip, TroubleshooterStep, SessionMissing) live in `src/components` and are imported from `@/components`.
 
 ### Field vs FormField
 
 - **Field** (components/forms): label + slot + description + error; uses Label, HelperText; semantic structure. Prefer for new forms.
 - **FormField** (patterns/content/ContentForms): content-library class-based (`.field-group`, `.field-label`); different API (label, input, action). Use for content-library layouts.
 - **layouts/** — PageScaffold, PageSection, SectionDivider, ScrollZone, HeaderZone, ShellContextBlock, StickyBottomBar; layout CSS in styles/layout/zones.css
-- **recipes/** — Grouped by page: `shared/` (PageHeader, PageHeaderBadge, PageCardSection, FooterHelp, HelperNote), `home/` (ModernHeader, ProfileRow, PlanCard, RenewalBanner, NewUserHero, NoDeviceCallout, ModernHeroCard), `support/` (FaqDisclosureItem), `settings/` (LabeledControlRow, SettingsActionRow), `devices/` (CompactSummaryCard), `flow/` (CompactStepper). For settings-style action rows, prefer **ListRow** (patterns/cards); `SettingsActionRow` is legacy.
+- **recipes/** — Grouped by page: `shared/` (PageHeader, PageHeaderBadge, PageCardSection, FooterHelp, HelperNote), `home/` (ModernHeader, ProfileRow, PlanCard, RenewalBanner, NewUserHero, NoDeviceCallout, ModernHeroCard), `support/` (FaqDisclosureItem), `settings/` (LabeledControlRow), `devices/` (CompactSummaryCard), `flow/` (CompactStepper). For settings-style action rows, use **ListRow** (patterns/cards).
 - **hooks/** — useThemeMode, useBreakpoint
 - **utils/** — getAriaLabelProps (accessibility). Class merge: use `cn` from `@vpn-suite/shared`.
 - **styles/** — CSS entry and token/component styles

@@ -3,16 +3,11 @@ import {
   emptyDevicesScenario,
   noPlanScenario,
   OnboardingSandbox,
+  pageStoryParameters,
   readyScenario,
 } from "@/storybook/page-contracts";
 import { Route } from "react-router-dom";
 import { OnboardingPage } from "@/pages/Onboarding";
-
-const pageStoryParameters = {
-  layout: "fullscreen" as const,
-  viewport: { defaultViewport: "iphone14" },
-  status: { type: "stable" as const },
-};
 
 const meta: Meta = {
   title: "Pages/Contracts/Onboarding",

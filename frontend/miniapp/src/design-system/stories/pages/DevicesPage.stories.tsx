@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Route } from "react-router-dom";
-import { expect, userEvent, within } from "storybook/test";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 import { DevicesPage } from "@/pages/Devices";
 import {
   emptyDevicesScenario,
@@ -9,14 +9,9 @@ import {
   loadingSessionScenario,
   noPlanScenario,
   PageSandbox,
+  pageStoryParameters,
   readyScenario,
 } from "@/storybook/page-contracts";
-
-const pageStoryParameters = {
-  layout: "fullscreen" as const,
-  viewport: { defaultViewport: "iphone14" },
-  status: { type: "stable" as const },
-};
 
 const meta: Meta = {
   title: "Pages/Contracts/Devices",
@@ -139,11 +134,13 @@ export const AddDeviceWizard: Story = {
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const page = within(canvasElement.ownerDocument.body);
+    const previewDocument = canvasElement.ownerDocument;
     const addDeviceButton = await canvas.findByRole("button", { name: "Add new device" });
     await userEvent.click(addDeviceButton);
-    await expect(await page.findByRole("dialog")).toBeInTheDocument();
-    await expect(page.getByRole("textbox", { name: "Device name" })).toBeInTheDocument();
+    await waitFor(() => {
+      expect(previewDocument.querySelector('[role="dialog"]')).not.toBeNull();
+      expect(previewDocument.querySelector('input[aria-label="Device name"]')).not.toBeNull();
+    });
   },
   parameters: {
     docs: {

@@ -7,15 +7,10 @@ import {
   loadingCheckoutScenario,
   noPlanScenario,
   PageSandbox,
+  pageStoryParameters,
   readyScenario,
   trialScenario,
 } from "@/storybook/page-contracts";
-
-const pageStoryParameters = {
-  layout: "fullscreen" as const,
-  viewport: { defaultViewport: "iphone14" },
-  status: { type: "stable" as const },
-};
 
 const meta: Meta = {
   title: "Pages/Contracts/Plan",

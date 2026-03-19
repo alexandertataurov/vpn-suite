@@ -48,7 +48,7 @@
 
 | Pattern | Issue | Recommendation |
 |---------|-------|----------------|
-| ListRow vs SettingsActionRow | SettingsActionRow exists, unused in pages. ListRow is canonical. | ✓ Documented in README |
+| ListRow (canonical) | SettingsActionRow deleted. ListRow is canonical for settings rows. | ✓ Resolved |
 | SettingsCard vs ListCard | SettingsCard (library.css) unused; pages use ListCard + settings-list-card | Either migrate to SettingsCard or deprecate SettingsCard |
 | home-card-row module-card settings-list-card | Three classes on every card | Consider single .settings-list-card that composes |
 
