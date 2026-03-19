@@ -1,0 +1,142 @@
+/**
+ * Responsive overrides loaded last so they win over component CSS without
+ * changing component logic.
+ */
+
+@media (max-width: 360px) {
+  .plan-name {
+    font-size: 24px;
+    letter-spacing: -0.4px;
+  }
+
+  .hero-title,
+  .modern-hero-title,
+  .new-user-hero-title,
+  .troubleshooter-flow-card__title {
+    font-size: 18px;
+  }
+
+  .page-header-title,
+  .header-bar__title {
+    font-size: 16px;
+  }
+
+  .profile-name,
+  .profile-row .profile-row-name {
+    font-size: 14px;
+  }
+
+  .row-item {
+    padding: 12px 14px;
+  }
+
+  .ri-label {
+    font-size: 13px;
+  }
+
+  .ri-sub {
+    font-size: 11px;
+  }
+
+  .troubleshooter-flow-card__actions {
+    flex-direction: column-reverse;
+  }
+
+  .troubleshooter-flow-card__actions .btn {
+    width: 100%;
+  }
+}
+
+.card-row,
+.hero-card,
+.modern-hero-card,
+.new-user-hero,
+.action-banner,
+.account-card,
+.nd-callout,
+.seg-track,
+.troubleshooter-flow-card,
+.faq-list,
+.alert {
+  max-width: 100%;
+}
+
+@media (min-width: 768px) {
+  .card-row,
+  .hero-card,
+  .modern-hero-card,
+  .new-user-hero,
+  .action-banner,
+  .account-card,
+  .nd-callout,
+  .seg-track,
+  .troubleshooter-flow-card,
+  .faq-list,
+  .alert {
+    max-width: 480px;
+  }
+}
+
+.page-layout,
+.content {
+  padding-bottom: 0;
+}
+
+.page-layout--scrollable,
+.modal-content,
+.bs-content {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+@media (max-width: 420px) {
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .modal {
+    max-width: 100%;
+    border-radius: 14px 14px 0 0;
+  }
+
+  .modal-footer {
+    flex-direction: column-reverse;
+  }
+
+  .modal-footer .btn {
+    width: 100%;
+  }
+}
+
+@media (min-width: 421px) {
+  .modal-overlay {
+    align-items: center;
+    padding: 16px;
+  }
+
+  .modal {
+    border-radius: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .bs {
+    max-width: 100%;
+  }
+}
+
+@media (min-width: 481px) {
+  .bs {
+    max-width: 480px;
+  }
+}
+
+.bs-footer {
+  flex-direction: column;
+  padding-bottom: max(18px, env(safe-area-inset-bottom));
+}
+
+.bs-footer .btn {
+  width: 100%;
+}

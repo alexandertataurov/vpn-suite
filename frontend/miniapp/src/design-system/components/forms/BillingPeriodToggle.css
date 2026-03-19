@@ -4,7 +4,7 @@
   grid-template-columns: 1fr 1fr;
   background: var(--seg-track-bg);
   border: 1px solid var(--seg-track-border);
-  border-radius: 12px;
+  border-radius: 100px;
   padding: 3px;
   gap: 0;
   width: 100%;
@@ -20,7 +20,7 @@
   bottom: 3px;
   background: var(--seg-thumb-bg);
   border: 1px solid var(--seg-thumb-border);
-  border-radius: 9px;
+  border-radius: 100px;
   box-shadow: var(--seg-thumb-shadow);
   transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: none;
@@ -43,12 +43,21 @@
   min-height: 44px;
   border: none;
   background: transparent;
-  border-radius: 9px;
+  border-radius: 10px;
   cursor: pointer;
   transition: none;
   -webkit-tap-highlight-color: transparent;
-  font-family: "Inter", sans-serif;
+  font-family: var(--font-sans);
   user-select: none;
+}
+
+.seg-option[disabled] {
+  cursor: not-allowed;
+}
+
+.seg-option[aria-disabled="true"] .seg-label,
+.seg-option[aria-disabled="true"] .seg-save-badge {
+  opacity: 0.45;
 }
 
 .seg-label {
@@ -84,7 +93,11 @@
 
 .seg-option:focus-visible {
   outline: 2px solid var(--color-accent);
-  outline-offset: -2px;
+  outline-offset: 2px;
+}
+
+.seg-option:active {
+  filter: brightness(0.98);
 }
 
 @media (min-width: var(--bp-md)) {

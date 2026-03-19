@@ -2,12 +2,11 @@ import { useEffect, useState } from "react";
 
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
-  AccountCancellationModal,
   SessionMissing,
-  SubscriptionCancellationModal,
 } from "@/components";
 import { getSupportBotHref } from "@/config/env";
 import {
+  AccountCancellationModal,
   DangerSection,
   FallbackScreen,
   FooterHelp,
@@ -21,6 +20,7 @@ import {
   SettingsAccountOverviewCard,
   Skeleton,
   Stack,
+  SubscriptionCancellationModal,
   SupportSection,
   useToast,
 } from "@/design-system";
@@ -102,7 +102,7 @@ export function SettingsPage() {
             onBack={() => navigate("/")}
             backAriaLabel={t("common.back_aria")}
           />
-          <Stack gap="4">
+          <Stack gap="2">
             <Skeleton width="60%" height={18} />
             <Skeleton width="100%" height={72} />
           </Stack>

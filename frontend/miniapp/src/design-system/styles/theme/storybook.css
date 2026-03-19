@@ -49,7 +49,7 @@
   text-transform: uppercase;
   color: var(--story-pane-label);
   margin-bottom: 16px;
-  font-family: Inter, sans-serif;
+  font-family: var(--font-sans);
 }
 
 .story-themes-row {

@@ -95,7 +95,7 @@ export function PlanCard({
             {eyebrow ? (
               <span className={styles.eyebrow}>{eyebrow}</span>
             ) : null}
-            <span className={`${styles.planName} plan-name`}>{plan}</span>
+            <p className={`${styles.planName} plan-name`}>{plan}</p>
             <span className={styles.planSub}>{planSub}</span>
           </div>
           <StatusChip variant={status} label={BADGE_LABEL[status]} />

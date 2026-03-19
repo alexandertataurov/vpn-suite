@@ -12,6 +12,12 @@ import {
 const SUCCESS_REVERT_MS = 1500;
 const ERROR_REVERT_MS = 2000;
 
+function resolveComponentTheme(): "light" | "dark" {
+  if (typeof document === "undefined") return "dark";
+  const theme = document.documentElement.dataset.theme;
+  return theme === "light" || theme === "consumer-light" ? "light" : "dark";
+}
+
 function Spinner() {
   return (
     <span className="btn-spinner" aria-hidden>
@@ -138,6 +144,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
 ) {
   const [internalState, setInternalState] = useState<TransientState>("idle");
   const [revertOver, setRevertOver] = useState(false);
+  const themeAttr = resolveComponentTheme();
 
   const iconLeft = iconLeftProp ?? startIcon;
   const iconRight = iconRightProp ?? endIcon;
@@ -237,6 +244,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
         className={mergedClassName}
         aria-label={resolvedAriaLabel}
         {...props}
+        data-theme={themeAttr}
       >
         {children}
       </ButtonPrimitive>
@@ -262,6 +270,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       className={mergedClassName}
       aria-label={resolvedAriaLabel}
       {...props}
+      data-theme={themeAttr}
     >
       {content}
     </ButtonPrimitive>

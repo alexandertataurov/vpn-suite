@@ -1,9 +1,10 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { formatDateDisplay, type UserAccessResponse } from "@vpn-suite/shared";
+import type { UserAccessResponse } from "@vpn-suite/shared";
 import { getUserAccess } from "@/api";
 import { useWebappToken } from "@/api/client";
 import { webappQueryKeys } from "@/lib";
+import { formatDate } from "@/lib/utils/format";
 import type { StandardPageState } from "./types";
 
 export type AccessStatus = UserAccessResponse["status"];
@@ -82,7 +83,7 @@ const ACCESS_UI_MAP: Record<
 
 function formatExpiry(expiresAt: string | null): string {
   if (!expiresAt) return "";
-  return formatDateDisplay(expiresAt);
+  return formatDate(expiresAt, "en-US");
 }
 
 export type PillChipVariant = "beta" | "active" | "expiring" | "expired";
@@ -190,12 +191,12 @@ export function useAccessHomePageModel() {
         ? (() => {
             const days = daysUntil(data.expires_at);
             if (days > 0 && days <= 14) return `${days}d`;
-            return formatDateDisplay(data.expires_at);
+            return formatDate(data.expires_at, "en-US");
           })()
         : "—";
 
   const expiryDateShort =
-    data?.expires_at ? formatDateDisplay(data.expires_at) : "";
+    data?.expires_at ? formatDate(data.expires_at, "en-US") : "";
 
   const subscriptionSubtitle =
     status === "expired"

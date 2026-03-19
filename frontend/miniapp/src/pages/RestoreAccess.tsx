@@ -23,7 +23,7 @@ export function RestoreAccessPage() {
             onBack={() => navigate(-1)}
             backAriaLabel={t("common.back_aria")}
           />
-          <Stack gap="4">
+          <Stack gap="2">
             <ActionCard title={t("restore.info_title")} description={t("restore.loading_status_message")} />
           </Stack>
         </PageLayout>
@@ -41,9 +41,9 @@ export function RestoreAccessPage() {
             onBack={() => navigate(-1)}
             backAriaLabel={t("common.back_aria")}
           />
-          <Stack gap="4">
+          <Stack gap="2">
             <ActionCard title={t("restore.inline_no_expired_title")} description={model.description}>
-              <Stack gap="4">
+              <Stack gap="2">
                 <InlineAlert
                   variant="info"
                   label={model.pageState.title ?? t("restore.inline_no_expired_title")}
@@ -83,7 +83,7 @@ export function RestoreAccessPage() {
             onBack={() => navigate(-1)}
             backAriaLabel={t("common.back_aria")}
           />
-          <Stack gap="4">
+          <Stack gap="2">
             <ActionCard
               title={t("restore.info_title")}
               description={t("restore.restoring_status_message")}
@@ -104,12 +104,12 @@ export function RestoreAccessPage() {
             onBack={() => navigate(-1)}
             backAriaLabel={t("common.back_aria")}
           />
-          <Stack gap="4">
+          <Stack gap="2">
             <ActionCard
               title={t("restore.info_title")}
               description={model.description}
             >
-              <Stack gap="4">
+              <Stack gap="2">
                 <InlineAlert
                   variant="warning"
                   label={model.pageState.title ?? model.header.title}
@@ -153,7 +153,7 @@ export function RestoreAccessPage() {
           onBack={() => navigate(-1)}
           backAriaLabel={t("common.back_aria")}
         />
-        <Stack gap="4">
+        <Stack gap="2">
           <ActionCard
             title={t("restore.info_title")}
             description={model.description}

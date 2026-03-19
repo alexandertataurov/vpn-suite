@@ -34,7 +34,7 @@ export function SupportPage() {
   const navigate = useNavigate();
   const model = useSupportPageModel();
   const supportHref = getSupportBotHref();
-  const { t } = useI18n();
+  const { t, tOr } = useI18n();
   const { openLink } = useOpenLink();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
@@ -79,7 +79,7 @@ export function SupportPage() {
             subtitle={model.header.subtitle}
             onBack={() => navigate(-1)}
           />
-          <Stack gap="4">
+          <Stack gap="2">
             <Skeleton variant="card" height={180} />
             <Skeleton variant="line" width="40%" />
             <SkeletonList lines={4} />
@@ -91,8 +91,8 @@ export function SupportPage() {
     );
   }
 
-  const supportStatus = supportHref ? "active" : "expired";
-  const statusLabel = supportHref ? t("common.status_online") : t("common.status_offline");
+  const supportStatus = supportHref ? "active" : "offline";
+  const statusLabel = supportHref ? tOr("common.status_online", "Online") : tOr("common.status_offline", "Offline");
 
   return (
     <PageScaffold>
@@ -103,7 +103,7 @@ export function SupportPage() {
           onBack={() => navigate(-1)}
           backAriaLabel={t("common.back_aria")}
         />
-        <Stack gap="4">
+        <Stack gap="2">
           {/* Contact Support */}
           <SectionLabel label={t("support.contact_card_title")} />
           <CardRow className="support-contact-card">

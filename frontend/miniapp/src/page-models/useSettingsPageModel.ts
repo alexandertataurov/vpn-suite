@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ApiError,
-  formatDateDisplay,
   type WebAppMeProfileUpdate,
   type WebAppMeProfileUpdateResponse,
   type WebAppLogoutResponse,
@@ -15,6 +14,7 @@ import { useWebappToken, webappApi } from "@/api/client";
 import { useTelemetry, useTrackScreen } from "@/hooks";
 import { useToast } from "@/design-system";
 import { webappQueryKeys } from "@/lib";
+import { formatDate } from "@/lib/utils/format";
 import { useI18n } from "@/hooks";
 import { setWebappToken } from "@/api/client";
 import { appVersion, buildId } from "@/config/env";
@@ -41,19 +41,11 @@ function resolveTelegramLocale(languageCode: string | undefined): "en" | "ru" {
   return code === "ru" ? "ru" : "en";
 }
 
-function toIntlLocale(locale: "en" | "ru"): string {
-  return locale === "ru" ? "ru-RU" : "en-US";
-}
-
-function formatShortDate(value: string | null | undefined, locale: "en" | "ru"): string | null {
+function formatShortDate(value: string | null | undefined): string | null {
   if (!value) return null;
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return null;
-  return new Intl.DateTimeFormat(toIntlLocale(locale), {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).format(date);
+  return formatDate(date, "en-US");
 }
 
 function formatPlanLabel(rawPlanId: string | null | undefined, t: (key: string) => string): string {
@@ -79,7 +71,7 @@ export function useSettingsPageModel() {
   const { addToast } = useToast();
   const activeSub = getActiveSubscription(data);
   const { track } = useTelemetry(activeSub?.plan_id ?? null);
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState<CancelReasonSelection>(null);
   const [cancelFreeText, setCancelFreeText] = useState("");
@@ -280,7 +272,7 @@ export function useSettingsPageModel() {
 
   const activeDevices = getActiveDevices(data);
   const planLabel = formatPlanLabel(activeSub?.plan_id ?? null, t);
-  const renewalDate = formatShortDate(activeSub?.valid_until ?? null, locale);
+  const renewalDate = formatShortDate(activeSub?.valid_until ?? null);
   const renewalDays = daysUntil(activeSub?.valid_until ?? null);
   const renewalCountdownLabel = activeSub
     ? renewalDays <= 0
@@ -329,10 +321,7 @@ export function useSettingsPageModel() {
       try {
         const d = new Date(firstAt);
         if (!Number.isNaN(d.getTime())) {
-          memberSince = new Intl.DateTimeFormat(toIntlLocale(locale), {
-            month: "long",
-            year: "numeric",
-          }).format(d);
+          memberSince = formatDate(d, "en-US");
         }
       } catch {
         // leave undefined
@@ -383,9 +372,7 @@ export function useSettingsPageModel() {
   const accountStatusLabel = activeSub
     ? `${t("settings.plan_active_label")} · ${deviceCountLabel}`
     : t("settings.banner_no_plan_title");
-  const accountRenewalValue = activeSub?.valid_until
-    ? formatDateDisplay(activeSub.valid_until)
-    : null;
+  const accountRenewalValue = activeSub?.valid_until ? formatDate(activeSub.valid_until, "en-US") : null;
   const accountRenewalLabel = activeSub
     ? accountRenewalValue ?? renewalCountdownLabel
     : t("settings.summary_no_plan_hint");

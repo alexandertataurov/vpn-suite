@@ -295,7 +295,7 @@ body,
 
 /* ---------- StickyBottomBar (transactional CTA) ---------- */
 html {
-  --sticky-bar-clearance: 24px;
+  --sticky-bar-clearance: 0px;
   --sticky-bar-height: calc(64px + max(16px, var(--safe-bottom)));
   --sticky-bar-total-offset: calc(var(--sticky-bar-height) + var(--sticky-bar-clearance));
 }

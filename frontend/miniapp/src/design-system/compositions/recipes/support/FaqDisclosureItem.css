@@ -3,6 +3,6 @@
 .faq-list {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--r, var(--radius-lg));
+  border-radius: 14px;
   overflow: hidden;
 }

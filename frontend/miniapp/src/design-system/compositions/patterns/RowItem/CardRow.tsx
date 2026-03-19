@@ -4,7 +4,13 @@ import type { HTMLAttributes, ReactNode } from "react";
 export interface CardRowProps extends Omit<HTMLAttributes<HTMLDivElement>, "children"> {
   children: ReactNode;
   /** Override theme when used outside a themed ancestor. */
-  "data-theme"?: "light" | "dark" | "consumer-light" | "consumer-dark";
+  "data-theme"?: "light" | "dark";
+}
+
+function resolveComponentTheme(): "light" | "dark" {
+  if (typeof document === "undefined") return "dark";
+  const theme = document.documentElement.dataset.theme;
+  return theme === "light" || theme === "consumer-light" ? "light" : "dark";
 }
 
 function hasThemedAncestor(el: HTMLElement | null): boolean {
@@ -20,9 +26,7 @@ function hasThemedAncestor(el: HTMLElement | null): boolean {
 export function CardRow({ children, className = "", "data-theme": dataTheme, ...props }: CardRowProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [needsTheme, setNeedsTheme] = useState(true);
-  const [theme, setTheme] = useState<"light" | "dark" | "consumer-light" | "consumer-dark">(
-    dataTheme ?? "dark"
-  );
+  const [theme, setTheme] = useState<"light" | "dark">(dataTheme ?? "dark");
 
   useLayoutEffect(() => {
     if (dataTheme != null) return;
@@ -31,8 +35,7 @@ export function CardRow({ children, className = "", "data-theme": dataTheme, ...
       setNeedsTheme(false);
       return;
     }
-    const t = document.documentElement.dataset.theme;
-    setTheme((t as "light" | "dark" | "consumer-light" | "consumer-dark") ?? "dark");
+    setTheme(resolveComponentTheme());
   }, [dataTheme]);
 
   const dataThemeAttr = dataTheme != null ? dataTheme : needsTheme ? theme : undefined;

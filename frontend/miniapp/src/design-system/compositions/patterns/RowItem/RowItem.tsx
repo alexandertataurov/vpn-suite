@@ -1,4 +1,4 @@
-import type { HTMLAttributes, ReactNode } from "react";
+import type { HTMLAttributes, KeyboardEvent, MouseEvent, ReactNode } from "react";
 import { IconChevronRight } from "@/design-system/icons";
 import "./RowItem.css";
 
@@ -40,11 +40,11 @@ export function RowItem({
   onClick,
   ...props
 }: RowItemProps) {
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (onClick == null) return;
-    if (e.key === "Enter" || e.key === " ") {
+    if (e.key === "Enter" || e.key === " " || e.key === "Spacebar") {
       e.preventDefault();
-      onClick(e as unknown as React.MouseEvent<HTMLDivElement>);
+      onClick(e as unknown as MouseEvent<HTMLDivElement>);
     }
   };
 

@@ -24,7 +24,7 @@ function renderPillChip(status: ProfileRowStatus, planName?: string, daysLeft?: 
     case "expiring":
       return (
         <PillChip variant="expiring">
-          {planName ?? "PRO"} · {daysLeft ?? 0}d
+          {planName ?? "PRO"} · {daysLeft ?? 0}d left
         </PillChip>
       );
     case "expired":

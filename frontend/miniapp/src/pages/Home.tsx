@@ -1,7 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import {
   IconBox,
-  IconChevronRight,
   IconMonitor,
   IconPlus,
   IconUsers,
@@ -10,14 +9,14 @@ import {
   Badge,
   FallbackScreen,
   FooterHelp,
-  ListCard,
-  ListRow,
+  CardRow,
   NewUserHero,
   NoDeviceCallout,
   PillChip,
   PlanCard,
   RenewalBanner,
   Skeleton,
+  RowItem,
   PageScaffold,
   PageLayout,
   ModernHeader,
@@ -31,20 +30,15 @@ import { useAccessHomePageModel } from "@/page-models";
 function InviteFriendsCard({ t }: { t: (k: string) => string }) {
   const navigate = useNavigate();
   return (
-    <ListCard className="home-card-row home-invite-card">
-      <ListRow
-        icon={<IconUsers size={15} strokeWidth={2} />}
-        iconTone="neutral"
-        title={t("home.invite_friends_title")}
+    <CardRow className="home-card-row home-invite-card">
+      <RowItem
+        icon={<IconUsers size={15} strokeWidth={2} aria-hidden />}
+        iconVariant="neutral"
+        label={t("home.invite_friends_title")}
         subtitle={t("home.invite_friends_subtitle")}
-        right={
-          <div className="home-row-right-group">
-            <IconChevronRight size={13} strokeWidth={2.5} />
-          </div>
-        }
         onClick={() => navigate("/support")}
       />
-    </ListCard>
+    </CardRow>
   );
 }
 
@@ -119,20 +113,15 @@ export function HomePage() {
             choosePlanLabel={t("home.choose_plan_cta")}
             viewGuideLabel={t("home.view_guide_label")}
           />
-          <ListCard className="home-card-row">
-            <ListRow
-              icon={<IconMonitor size={15} strokeWidth={2} />}
-              iconTone="neutral"
-              title={t("home.primary_manage_devices")}
+          <CardRow className="home-card-row">
+            <RowItem
+              icon={<IconMonitor size={15} strokeWidth={2} aria-hidden />}
+              iconVariant="neutral"
+              label={t("home.primary_manage_devices")}
               subtitle={t("home.devices_none_added")}
-              right={
-                <div className="home-row-right-group">
-                  <IconChevronRight size={13} strokeWidth={2.5} />
-                </div>
-              }
               onClick={() => navigate("/devices")}
             />
-          </ListCard>
+          </CardRow>
           <InviteFriendsCard t={t} />
         </>
       ) : model.showPlanHero && model.planHeroData ? (
@@ -181,49 +170,39 @@ export function HomePage() {
           {!isGenerating && (
             <>
               {(model.showDevices || model.showExpiry || model.showNoDeviceCallout) && (
-                <ListCard className="home-card-row">
+                <CardRow className="home-card-row">
                   {model.showDevices && !model.showNoDeviceCallout && (
-                    <ListRow
-                      icon={<IconMonitor size={15} strokeWidth={2} />}
-                      iconTone="neutral"
-                      title={t("home.manage_devices")}
+                    <RowItem
+                      icon={<IconMonitor size={15} strokeWidth={2} aria-hidden />}
+                      iconVariant="neutral"
+                      label={t("home.manage_devices")}
                       subtitle={model.devicesSubtitle}
-                      right={
-                        <div className="home-row-right-group">
-                          {model.devicesFull && (
-                            <Badge label="Full" variant="muted" />
-                          )}
-                          <IconChevronRight size={13} strokeWidth={2.5} />
-                        </div>
-                      }
+                      right={model.devicesFull ? <Badge label="Full" variant="muted" /> : undefined}
                       onClick={() => navigate("/devices")}
                     />
                   )}
                   {(model.showExpiry || model.showNoDeviceCallout) && (
-                    <ListRow
-                      icon={<IconBox size={15} strokeWidth={2} />}
-                      iconTone="neutral"
-                      title={model.subscriptionLabel}
+                    <RowItem
+                      icon={<IconBox size={15} strokeWidth={2} aria-hidden />}
+                      iconVariant="neutral"
+                      label={model.subscriptionLabel}
                       subtitle={model.subscriptionSubtitle}
                       right={
-                        <div className="home-row-right-group">
+                        <>
                           {model.daysLeft != null &&
-                            model.daysLeft > 0 &&
-                            model.daysLeft <= 14 && (
-                              <Badge label={`${model.daysLeft}d left`} variant="warning" />
-                            )}
-                          {status === "expired" && (
-                            <Badge label="Renew" variant="error" />
-                          )}
-                          <IconChevronRight size={13} strokeWidth={2.5} />
-                        </div>
+                          model.daysLeft > 0 &&
+                          model.daysLeft <= 14 ? (
+                            <Badge label={`${model.daysLeft}d left`} variant="warning" />
+                          ) : null}
+                          {status === "expired" ? <Badge label="Renew" variant="error" /> : null}
+                        </>
                       }
                       onClick={() =>
                         navigate(status === "expired" ? "/restore-access" : "/plan")
                       }
                     />
                   )}
-                </ListCard>
+                </CardRow>
               )}
               <InviteFriendsCard t={t} />
             </>

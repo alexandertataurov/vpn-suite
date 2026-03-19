@@ -4,8 +4,6 @@ import {
   IconBox,
   IconGlobe,
   IconHelpCircle,
-  IconMessageCircle,
-  IconMonitor,
   IconRotateCw,
   IconSettings,
   IconShield,
@@ -39,7 +37,7 @@ function WithThemes({ children }: { children: React.ReactNode }) {
 }
 
 const meta: Meta<typeof RowItem> = {
-  title: "Components/RowItem",
+  title: "Patterns/RowItem",
   tags: ["autodocs"],
   component: RowItem,
   parameters: {
@@ -82,16 +80,18 @@ export const Default: Story = {
 };
 
 export const Variants: Story = {
-  name: "Icon variants",
+  name: "Variants",
   parameters: {
     docs: {
       description: {
         story:
-          "default, danger, warning icon treatments. Danger and warning for destructive or urgent actions.",
+          "Icon treatments, badge rows, toggle rows, and label-only navigation rows.",
       },
     },
   },
-  render: () => (
+  render: function VariantsStory() {
+    const [checked, setChecked] = useState(true);
+    return (
     <WithThemes>
       <CardRow>
         <RowItem
@@ -122,9 +122,30 @@ export const Variants: Story = {
           subtitle="Permanently remove your account"
           onClick={() => {}}
         />
+        <RowItem
+          icon={<IconBox size={15} strokeWidth={2} />}
+          label="Subscription"
+          subtitle="Expires Mar 24 · Pro annual"
+          right={<Badge label="14d left" variant="warning" />}
+          onClick={() => {}}
+        />
+        <RowItem
+          icon={<IconRotateCw size={15} strokeWidth={2} />}
+          label="Auto-renew"
+          subtitle="Renews on Mar 24, 2026. Charged via Telegram."
+          right={<Switch checked={checked} onCheckedChange={setChecked} aria-label="Auto-renew" />}
+          showChevron={false}
+          onClick={() => setChecked(!checked)}
+        />
+        <RowItem
+          icon={<IconHelpCircle size={15} strokeWidth={2} />}
+          label="FAQ"
+          onClick={() => {}}
+        />
       </CardRow>
     </WithThemes>
-  ),
+    );
+  },
 };
 
 export const Loading: Story = {
@@ -240,96 +261,6 @@ export const KeyboardNav: Story = {
   ),
 };
 
-export const WithBadge: Story = {
-  name: "With badge",
-  parameters: {
-    docs: {
-      description: {
-        story: "Right-side badge for status or urgency signals.",
-      },
-    },
-  },
-  render: () => (
-    <WithThemes>
-      <CardRow>
-        <RowItem
-          icon={<IconBox size={15} strokeWidth={2} />}
-          label="Subscription"
-          subtitle="Expires Mar 24 · Pro annual"
-          right={<Badge label="14d left" variant="warning" />}
-          onClick={() => {}}
-        />
-        <RowItem
-          icon={<IconMonitor size={15} strokeWidth={2} />}
-          label="Manage Devices"
-          subtitle="2 of 5 active"
-          right={<Badge label="Full" variant="muted" />}
-          onClick={() => {}}
-        />
-      </CardRow>
-    </WithThemes>
-  ),
-};
-
-export const WithToggle: Story = {
-  name: "With toggle",
-  parameters: {
-    docs: {
-      description: {
-        story: "Right-side toggle for boolean settings (auto-renew etc.).",
-      },
-    },
-  },
-  render: function WithToggleStory() {
-    const [checked, setChecked] = useState(true);
-    return (
-      <WithThemes>
-        <CardRow>
-          <RowItem
-            icon={<IconRotateCw size={15} strokeWidth={2} />}
-            label="Auto-renew"
-            subtitle="Renews on Mar 24, 2026. Charged via Telegram."
-            right={<Switch checked={checked} onCheckedChange={setChecked} aria-label="Auto-renew" />}
-            showChevron={false}
-            onClick={() => setChecked(!checked)}
-          />
-        </CardRow>
-      </WithThemes>
-    );
-  },
-};
-
-export const LabelOnly: Story = {
-  name: "Label only",
-  parameters: {
-    docs: {
-      description: {
-        story: "No subtitle — used for simple navigation rows.",
-      },
-    },
-  },
-  render: () => (
-    <WithThemes>
-      <CardRow>
-        <RowItem
-          icon={<IconShield size={15} strokeWidth={2} />}
-          label="Setup guide"
-          onClick={() => {}}
-        />
-        <RowItem
-          icon={<IconHelpCircle size={15} strokeWidth={2} />}
-          label="FAQ"
-          onClick={() => {}}
-        />
-        <RowItem
-          icon={<IconMessageCircle size={15} strokeWidth={2} />}
-          label="Contact support"
-          onClick={() => {}}
-        />
-      </CardRow>
-    </WithThemes>
-  ),
-};
 
 export const Responsive: Story = {
   name: "Responsive — long text",

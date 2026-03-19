@@ -4,7 +4,7 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-3);
-  border-radius: var(--r, var(--radius-lg));
+  border-radius: 14px;
   border: 1px solid transparent;
   overflow: hidden;
   position: relative;
@@ -25,6 +25,11 @@
   filter: brightness(0.96);
 }
 
+.action-banner:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
 .action-banner__accent {
   width: 3px;
   align-self: stretch;
@@ -36,7 +41,7 @@
   width: 34px;
   height: 34px;
   min-width: 34px;
-  border-radius: var(--r-sm, var(--radius-sm));
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;

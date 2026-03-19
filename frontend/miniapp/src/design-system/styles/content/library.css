@@ -40,7 +40,7 @@
   color: var(--color-text-muted);
   font: 600 var(--amnezia-stat-label, var(--font-size-xs))/1 var(--font-mono);
   letter-spacing: 0.08em;
-  text-transform: uppercase;
+  text-transform: none;
   white-space: nowrap;
   box-shadow: inset 0 1px 0 color-mix(in oklch, white 5%, transparent);
 }
@@ -110,12 +110,13 @@
   min-height: var(--size-touch-target);
   height: var(--size-touch-target);
   padding: 0 var(--spacing-btn-padding-x);
-  border-radius: 9px;
+  border-radius: 10px;
   background: var(--blue-d);
   border: 1px solid color-mix(in oklch, var(--color-accent) 16%, transparent);
   color: var(--color-accent);
   font: 600 var(--typo-meta-size) / 1.2 var(--font-mono);
   letter-spacing: 0.08em;
+  text-transform: none;
   cursor: pointer;
   transition: background var(--duration-micro);
 }
@@ -655,9 +656,9 @@
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-2);
-  padding: var(--spacing-2) var(--spacing-3);
+  padding: 2.5px 8px;
   border-radius: 999px;
-  font-size: var(--typo-meta-size);
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.1px;
   text-transform: none !important;
@@ -665,6 +666,7 @@
   background: var(--color-border-subtle);
   color: var(--color-text-muted);
   white-space: nowrap;
+  line-height: 1.2;
 }
 
 .status-chip-dot {
@@ -1348,10 +1350,10 @@
 }
 
 .ts-toggle {
-  width: 48px;
-  height: 48px;
+  width: 38px;
+  height: 22px;
   padding: 0;
-  border-radius: var(--radius-md);
+  border-radius: 100px;
   flex-shrink: 0;
   background: transparent;
   border: none;
@@ -1364,39 +1366,42 @@
 }
 
 .ts-toggle:focus-visible {
-  outline: 2px solid color-mix(in oklab, var(--color-accent) 32%, transparent);
+  outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }
 
+.ts-toggle:active {
+  transform: scale(0.98);
+}
+
 .ts-track {
-  width: 44px;
-  height: 26px;
-  border-radius: 13px;
-  background: var(--color-surface-2);
+  width: 38px;
+  height: 22px;
+  border-radius: 100px;
+  background: var(--color-border-strong);
   position: relative;
   display: inline-flex;
   align-items: center;
 }
 
 .ts-toggle.on .ts-track {
-  background: var(--green-d);
-  border-color: var(--green-b);
+  background: var(--color-success);
 }
 
 .ts-knob {
   position: absolute;
-  top: 3px;
-  left: 3px;
+  top: 2px;
+  left: 2px;
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: var(--color-text-tertiary);
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
   transition: transform 0.2s, background 0.2s;
 }
 
 .ts-toggle.on .ts-knob {
-  transform: translateX(20px);
-  background: var(--color-success);
+  transform: translateX(16px);
 }
 
 .seg-toggle {

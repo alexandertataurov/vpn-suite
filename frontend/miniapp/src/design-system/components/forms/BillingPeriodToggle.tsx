@@ -7,6 +7,10 @@ export interface BillingPeriodToggleProps {
   value: BillingPeriodValue;
   onChange: (value: BillingPeriodValue) => void;
   discount?: string;
+  monthlyLabel?: string;
+  annualLabel?: string;
+  annualDisabled?: boolean;
+  saveLabel?: string;
 }
 
 const OPTIONS: BillingPeriodValue[] = ["monthly", "annual"];
@@ -50,7 +54,18 @@ export function BillingPeriodToggle({
   value,
   onChange,
   discount,
+  monthlyLabel = "Monthly",
+  annualLabel = "Annual",
+  annualDisabled = false,
+  saveLabel = "Save",
 }: BillingPeriodToggleProps) {
+  const handleChange = (nextValue: BillingPeriodValue) => {
+    if (nextValue === "annual" && annualDisabled) {
+      return;
+    }
+    onChange(nextValue);
+  };
+
   return (
     <div
       className="seg-track"
@@ -66,10 +81,10 @@ export function BillingPeriodToggle({
         role="radio"
         aria-checked={value === "monthly"}
         tabIndex={value === "monthly" ? 0 : -1}
-        onClick={() => onChange("monthly")}
-        onKeyDown={(event) => handleOptionKeyDown(event, value, onChange)}
+        onClick={() => handleChange("monthly")}
+        onKeyDown={(event) => handleOptionKeyDown(event, value, handleChange)}
       >
-        <span className="seg-label">Monthly</span>
+        <span className="seg-label">{monthlyLabel}</span>
       </button>
 
       <button
@@ -78,11 +93,13 @@ export function BillingPeriodToggle({
         role="radio"
         aria-checked={value === "annual"}
         tabIndex={value === "annual" ? 0 : -1}
-        onClick={() => onChange("annual")}
-        onKeyDown={(event) => handleOptionKeyDown(event, value, onChange)}
+        aria-disabled={annualDisabled}
+        disabled={annualDisabled}
+        onClick={() => handleChange("annual")}
+        onKeyDown={(event) => handleOptionKeyDown(event, value, handleChange)}
       >
-        <span className="seg-label">Annual</span>
-        {discount ? <span className="seg-save-badge">Save {discount}</span> : null}
+        <span className="seg-label">{annualLabel}</span>
+        {discount ? <span className="seg-save-badge">{saveLabel} {discount}</span> : null}
       </button>
     </div>
   );

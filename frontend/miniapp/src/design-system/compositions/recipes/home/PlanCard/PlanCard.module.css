@@ -5,7 +5,7 @@
   -webkit-font-smoothing: antialiased;
   background: var(--color-surface);
   border: 1px solid var(--color-border-subtle);
-  border-radius: var(--r, var(--radius-lg));
+  border-radius: 14px;
   overflow: hidden;
   transition:
     border-color var(--duration-micro, 0.14s) var(--ease-standard, ease),
@@ -16,7 +16,7 @@
 .ledWrapper {
   position: relative;
   padding: 3px;
-  border-radius: calc(var(--r, var(--radius-lg)) + 3px);
+  border-radius: 17px;
   overflow: hidden;
 }
 
@@ -34,7 +34,7 @@
 .ledWrapper .root {
   position: relative;
   z-index: 1;
-  border-radius: var(--r, var(--radius-lg));
+  border-radius: 14px;
 }
 
 /* Hero border — status-based colors, no animation */
@@ -70,17 +70,17 @@
 
 .eyebrow {
   font-size: var(--amnezia-plan-eyebrow, var(--font-size-xs));
-  font-weight: var(--font-weight-medium);
-  letter-spacing: 0.6px;
-  text-transform: uppercase;
-  color: var(--color-text-tertiary);
+  font-weight: 500;
+  letter-spacing: 0.1px;
+  color: #5a5f73;
+  text-transform: none;
 }
 
 .planName {
   font-family: var(--font-sans);
-  font-size: var(--amnezia-plan-name, var(--text-title-lg, var(--typo-h1-size)));
-  font-weight: var(--font-weight-bold);
-  letter-spacing: -0.8px;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.6px;
   line-height: 1;
   margin: 0;
   padding: 0;
@@ -98,17 +98,17 @@
 .stats {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  border-top: 1px solid var(--color-border-subtle);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .stat {
-  padding: var(--miniapp-data-cell-padding) 0 var(--miniapp-data-cell-padding) var(--miniapp-hero-padding);
-  border-left: 1px solid var(--color-border-subtle);
+  padding: 12px 18px 14px;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .stat:first-child {
   border-left: none;
-  padding-left: var(--miniapp-hero-padding);
+  padding-left: 18px;
 }
 
 .statLabel {
@@ -116,7 +116,7 @@
   font-size: var(--amnezia-stat-label, var(--font-size-xs));
   font-weight: var(--font-weight-semibold);
   letter-spacing: 0.7px;
-  text-transform: uppercase;
+  text-transform: none;
   color: var(--color-text-tertiary);
   margin-bottom: var(--spacing-0-5);
 }

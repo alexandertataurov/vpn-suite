@@ -1,0 +1,115 @@
+/* Shared animation system for the Mini App design system. */
+
+@keyframes up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes card-border-in {
+  from {
+    border-color: transparent;
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    border-color: inherit;
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes dot-blink {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.92);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes banner-urgency-pulse {
+  0% {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+  45% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.hero-card,
+.account-card {
+  animation: card-border-in 0.3s 0.04s ease both;
+}
+
+.card-row {
+  animation: card-border-in 0.3s 0.04s ease both;
+}
+
+.card-row:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.card-row:nth-child(3) {
+  animation-delay: 0.16s;
+}
+
+.card-row:nth-child(4) {
+  animation-delay: 0.22s;
+}
+
+.card-row:nth-child(5) {
+  animation-delay: 0.28s;
+}
+
+.card-row:nth-child(6) {
+  animation-delay: 0.34s;
+}
+
+.action-banner--warning,
+.action-banner--danger {
+  animation: banner-urgency-pulse 0.38s 0.02s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.pill-chip-dot,
+.status-chip-dot,
+.pulse-dot-sm {
+  animation: dot-blink 1.4s ease-in-out infinite;
+}
+
+.pill-chip--expired .pill-chip-dot {
+  animation-duration: 1.8s;
+}
+
+.status-chip.expired .status-chip-dot,
+.status-chip.offline .status-chip-dot,
+.status-chip.blocked .status-chip-dot {
+  animation-duration: 1.8s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-card,
+  .account-card,
+  .card-row,
+  .action-banner--warning,
+  .action-banner--danger,
+  .pill-chip-dot,
+  .status-chip-dot,
+  .pulse-dot-sm {
+    animation: none;
+  }
+}

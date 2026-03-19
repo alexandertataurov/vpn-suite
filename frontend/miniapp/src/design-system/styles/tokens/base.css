@@ -2,7 +2,7 @@
 /* Theme: data-theme on <html>. Build: node scripts/build-tokens.js */
 
 /* Default semantic tokens (consumer-dark-like) — consumer.css overrides when data-theme is set */
-html {
+:root {
   color-scheme: dark;
   /* ========== PRIMITIVES ========== */
   --color-gray-50: oklch(0.985 0.002 247);
@@ -66,6 +66,7 @@ html {
   --color-text-inverse: oklch(0.129 0.004 265);
   /* Borders */
   --color-border: #252836;
+  --color-border-med: #2f3442;
   --color-border-subtle: #1e2130;
   --color-border-strong: #3a3f52;
   /* Accent */
@@ -161,6 +162,50 @@ html {
   /* Icon danger/warning tints — Settings danger zone rows */
   --color-icon-danger-bg: rgba(153, 27, 27, 0.12);
   --color-icon-warning-bg: rgba(146, 64, 14, 0.12);
+  --color-icon-danger-color: var(--color-error);
+  --color-icon-warning-color: var(--color-warning);
+
+  /* Row / card / account / no-device aliases */
+  --row-bg: var(--color-surface);
+  --row-hover-bg: var(--color-surface-2);
+  --row-active-bg: color-mix(in oklch, var(--color-accent) 8%, var(--color-surface));
+  --row-border: var(--color-border-subtle);
+  --row-divider: var(--divider);
+  --row-label: var(--color-text);
+  --row-sub: var(--color-text-muted);
+  --row-chev: var(--color-text-tertiary);
+  --row-icon-bg: var(--color-surface-2);
+  --row-icon-border: var(--color-border-subtle);
+  --row-icon-color: var(--color-text-muted);
+  --row-icon-danger-bg: var(--color-icon-danger-bg);
+  --row-icon-warning-bg: var(--color-icon-warning-bg);
+  --row-icon-danger-color: var(--color-icon-danger-color);
+  --row-icon-warning-color: var(--color-icon-warning-color);
+  --card-row-bg: var(--color-surface);
+  --card-row-border: var(--color-border);
+  --ac-bg: var(--color-surface);
+  --ac-border: var(--color-border);
+  --ac-divider: var(--color-border-subtle);
+  --ac-eyebrow: var(--color-text-tertiary);
+  --ac-name: var(--color-text);
+  --ac-stat-label: var(--color-text-tertiary);
+  --ac-stat-value: var(--color-text);
+  --ac-stat-dim: var(--color-text-muted);
+  --ac-stat-sep: var(--color-border-subtle);
+  --ac-edit-hint: var(--color-text-tertiary);
+  --ac-stat-active: var(--color-success);
+  --ac-stat-expiring: var(--color-warning);
+  --ac-stat-expired: var(--color-error);
+  --nd-bg: var(--color-surface);
+  --nd-border: var(--color-border-subtle);
+  --nd-icon-bg: var(--color-surface-2);
+  --nd-icon-border: var(--color-border-subtle);
+  --nd-icon-color: var(--color-text-tertiary);
+  --nd-title: var(--color-text);
+  --nd-sub: var(--color-text-muted);
+  --nd-cta-bg: var(--color-surface-2);
+  --nd-cta-border: var(--color-border);
+  --nd-cta-text: var(--color-text);
 }
 
 /* Font overrides for dark — consumer.css sets Inter for consumer themes */
@@ -208,10 +253,10 @@ html {
   --safe-right: 0px;
   /* Page layout tokens */
   --page-padding-x: 16px;
-  --page-padding-top: 16px;
+  --page-padding-top: 8px;
   --page-max-width: var(--bp-sm);
   --page-max-width-wide: 520px;
-  --content-bottom: max(96px, calc(env(safe-area-inset-bottom) + 80px));
+  --content-bottom: 0px;
 }
 
 /* data-theme="primitives" removed — miniapp uses consumer-dark/consumer-light only (see REFACTOR_ROADMAP) */
@@ -243,7 +288,7 @@ html {
 }
 
 /* ========== SPACING ========== */
-html {
+:root {
   --spacing-0: 0px;
   --spacing-1: 4px;
   --spacing-2: 8px;
@@ -295,9 +340,9 @@ html {
 
 /* ========== TYPOGRAPHY ========== */
 html {
-  --font-sans: "Inter Variable", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI Variable", system-ui, sans-serif;
-  --font-serif: "Charter", "Iowan Old Style", Georgia, serif;
-  --font-mono: "JetBrains Mono Variable", "SF Mono", "Cascadia Code", Consolas, monospace;
+  --font-sans: "Inter", sans-serif;
+  --font-serif: "Inter", sans-serif;
+  --font-mono: "Inter", sans-serif;
   --font-weight-light: 300;
   --font-weight-normal: 400;
   --font-weight-medium: 500;
@@ -599,8 +644,8 @@ html[data-theme="consumer-dark"] [data-console="operator"] {
 
 /* ========== SHARED (all themes) ========== */
 :root {
-  --font-sans-techspec: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
-  --font-mono-techspec: "SF Mono", "Cascadia Code", Consolas, monospace;
+  --font-sans-techspec: "Inter", sans-serif;
+  --font-mono-techspec: "Inter", sans-serif;
   /* Typography scale */
   --text-display: 32px;
   --text-h1: 28px;
@@ -663,8 +708,8 @@ html[data-theme="consumer-dark"] [data-console="operator"] {
 
 /* ========== STARLINK MISSION CONTROL (admin operator console) ========== */
 html[data-theme="starlink"] {
-  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-mono: "JetBrains Mono", "SF Mono", "Cascadia Code", Consolas, monospace;
+  --font-sans: "Inter", sans-serif;
+  --font-mono: "Inter", sans-serif;
 
   /* Base Layer: Pure void */
   --color-bg: #020408;

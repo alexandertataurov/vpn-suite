@@ -4,7 +4,7 @@
   display: flex;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--r, var(--radius-lg));
+  border-radius: 14px;
   overflow: hidden;
   margin-bottom: var(--amnezia-card-gap, var(--spacing-2));
 }
@@ -35,7 +35,7 @@
   font-size: var(--amnezia-plan-eyebrow, var(--typo-meta-size));
   font-weight: 600;
   letter-spacing: 0.7px;
-  text-transform: uppercase;
+  text-transform: none;
   color: var(--color-text-tertiary);
 }
 

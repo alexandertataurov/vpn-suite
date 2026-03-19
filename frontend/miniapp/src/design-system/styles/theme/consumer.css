@@ -4,8 +4,8 @@
 
 html[data-theme="consumer-light"] {
   color-scheme: light;
-  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", sans-serif;
-  --font-mono: "IBM Plex Mono", monospace;
+  --font-sans: "Inter", sans-serif;
+  --font-mono: "Inter", sans-serif;
 
   /* Core */
   --color-bg: #F7F8FB;
@@ -16,6 +16,7 @@ html[data-theme="consumer-light"] {
   --color-text-muted: #6B7280;
   --color-text-tertiary: #9CA3AF;
   --color-border: #E6E8EC;
+  --color-border-med: #D8DCE3;
   --color-border-subtle: #EEF1F5;
   --color-border-strong: #D1D5DB;
 
@@ -28,10 +29,19 @@ html[data-theme="consumer-light"] {
   /* States */
   --color-success: #22C55E;
   --color-success-soft: #E8F7EE;
+  --color-success-bg: rgba(22, 101, 52, 0.12);
+  --color-success-border: rgba(22, 101, 52, 0.22);
   --color-warning: #F59E0B;
   --color-warning-soft: #FEF3C7;
+  --color-warning-bg: rgba(146, 64, 14, 0.12);
+  --color-warning-border: rgba(146, 64, 14, 0.22);
   --color-error: #EF4444;
   --color-error-soft: #FEE2E2;
+  --color-error-bg: rgba(153, 27, 27, 0.12);
+  --color-error-border: rgba(153, 27, 27, 0.22);
+  --color-info: #3b82f6;
+  --color-info-bg: rgba(59, 130, 246, 0.12);
+  --color-info-border: rgba(59, 130, 246, 0.22);
 
   /* Neutral UI */
   --color-hover: #F3F5F8;
@@ -59,6 +69,51 @@ html[data-theme="consumer-light"] {
   --surface-border-success: color-mix(in oklch, var(--color-success) 25%, transparent);
   --surface-border-warning: color-mix(in oklch, var(--color-warning) 25%, transparent);
   --surface-border-error: color-mix(in oklch, var(--color-error) 25%, transparent);
+  --divider: rgba(0, 0, 0, 0.07);
+  --color-icon-danger-bg: rgba(153, 27, 27, 0.12);
+  --color-icon-warning-bg: rgba(146, 64, 14, 0.12);
+  --color-icon-danger-color: var(--color-error);
+  --color-icon-warning-color: var(--color-warning);
+  --row-bg: var(--color-surface);
+  --row-hover-bg: var(--color-surface-2);
+  --row-active-bg: color-mix(in oklch, var(--color-accent) 8%, var(--color-surface));
+  --row-border: var(--color-border-subtle);
+  --row-divider: var(--divider);
+  --row-label: var(--color-text);
+  --row-sub: var(--color-text-muted);
+  --row-chev: var(--color-text-tertiary);
+  --row-icon-bg: var(--color-surface-2);
+  --row-icon-border: var(--color-border-subtle);
+  --row-icon-color: var(--color-text-muted);
+  --row-icon-danger-bg: var(--color-icon-danger-bg);
+  --row-icon-warning-bg: var(--color-icon-warning-bg);
+  --row-icon-danger-color: var(--color-icon-danger-color);
+  --row-icon-warning-color: var(--color-icon-warning-color);
+  --card-row-bg: var(--color-surface);
+  --card-row-border: var(--color-border);
+  --ac-bg: var(--color-surface);
+  --ac-border: var(--color-border);
+  --ac-divider: var(--color-border-subtle);
+  --ac-eyebrow: var(--color-text-tertiary);
+  --ac-name: var(--color-text);
+  --ac-stat-label: var(--color-text-tertiary);
+  --ac-stat-value: var(--color-text);
+  --ac-stat-dim: var(--color-text-muted);
+  --ac-stat-sep: var(--color-border-subtle);
+  --ac-edit-hint: var(--color-text-tertiary);
+  --ac-stat-active: var(--color-success);
+  --ac-stat-expiring: var(--color-warning);
+  --ac-stat-expired: var(--color-error);
+  --nd-bg: var(--color-surface);
+  --nd-border: var(--color-border-subtle);
+  --nd-icon-bg: var(--color-surface-2);
+  --nd-icon-border: var(--color-border-subtle);
+  --nd-icon-color: var(--color-text-tertiary);
+  --nd-title: var(--color-text);
+  --nd-sub: var(--color-text-muted);
+  --nd-cta-bg: var(--color-surface-2);
+  --nd-cta-border: var(--color-border);
+  --nd-cta-text: var(--color-text);
 
   /* Typography (canonical: 24/12/16/14/11) */
   --text-title: 24px;
@@ -142,8 +197,8 @@ html[data-theme="consumer-light"] {
 
 html[data-theme="consumer-dark"] {
   color-scheme: dark;
-  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", sans-serif;
-  --font-mono: "IBM Plex Mono", monospace;
+  --font-sans: "Inter", sans-serif;
+  --font-mono: "Inter", sans-serif;
 
   /* Core (Stripe/Linear dark) */
   --color-bg: #0F1419;
@@ -154,6 +209,7 @@ html[data-theme="consumer-dark"] {
   --color-text-muted: #8B949E;
   --color-text-tertiary: #6E7681;
   --color-border: #30363D;
+  --color-border-med: #2b3139;
   --color-border-subtle: #21262D;
   --color-border-strong: #484F58;
 
@@ -166,10 +222,19 @@ html[data-theme="consumer-dark"] {
   /* States */
   --color-success: #3FB950;
   --color-success-soft: rgba(63,185,80,0.15);
+  --color-success-bg: rgba(34, 197, 94, 0.12);
+  --color-success-border: rgba(34, 197, 94, 0.22);
   --color-warning: #D29922;
   --color-warning-soft: rgba(210,153,34,0.15);
+  --color-warning-bg: rgba(251, 191, 36, 0.09);
+  --color-warning-border: rgba(251, 191, 36, 0.22);
   --color-error: #F85149;
   --color-error-soft: rgba(248,81,73,0.15);
+  --color-error-bg: rgba(248, 113, 113, 0.09);
+  --color-error-border: rgba(248, 113, 113, 0.22);
+  --color-info: #58A6FF;
+  --color-info-bg: rgba(59, 130, 246, 0.10);
+  --color-info-border: rgba(59, 130, 246, 0.22);
 
   /* Neutral UI */
   --color-hover: #21262D;
@@ -197,6 +262,51 @@ html[data-theme="consumer-dark"] {
   --surface-border-success: color-mix(in oklch, var(--color-success) 25%, transparent);
   --surface-border-warning: color-mix(in oklch, var(--color-warning) 25%, transparent);
   --surface-border-error: color-mix(in oklch, var(--color-error) 25%, transparent);
+  --divider: rgba(255, 255, 255, 0.08);
+  --color-icon-danger-bg: rgba(248, 113, 113, 0.12);
+  --color-icon-warning-bg: rgba(251, 191, 36, 0.12);
+  --color-icon-danger-color: var(--color-error);
+  --color-icon-warning-color: var(--color-warning);
+  --row-bg: var(--color-surface);
+  --row-hover-bg: var(--color-surface-2);
+  --row-active-bg: color-mix(in oklch, var(--color-accent) 8%, var(--color-surface));
+  --row-border: var(--color-border-subtle);
+  --row-divider: var(--divider);
+  --row-label: var(--color-text);
+  --row-sub: var(--color-text-muted);
+  --row-chev: var(--color-text-tertiary);
+  --row-icon-bg: var(--color-surface-2);
+  --row-icon-border: var(--color-border-subtle);
+  --row-icon-color: var(--color-text-muted);
+  --row-icon-danger-bg: var(--color-icon-danger-bg);
+  --row-icon-warning-bg: var(--color-icon-warning-bg);
+  --row-icon-danger-color: var(--color-icon-danger-color);
+  --row-icon-warning-color: var(--color-icon-warning-color);
+  --card-row-bg: var(--color-surface);
+  --card-row-border: var(--color-border);
+  --ac-bg: var(--color-surface);
+  --ac-border: var(--color-border);
+  --ac-divider: var(--color-border-subtle);
+  --ac-eyebrow: var(--color-text-tertiary);
+  --ac-name: var(--color-text);
+  --ac-stat-label: var(--color-text-tertiary);
+  --ac-stat-value: var(--color-text);
+  --ac-stat-dim: var(--color-text-muted);
+  --ac-stat-sep: var(--color-border-subtle);
+  --ac-edit-hint: var(--color-text-tertiary);
+  --ac-stat-active: var(--color-success);
+  --ac-stat-expiring: var(--color-warning);
+  --ac-stat-expired: var(--color-error);
+  --nd-bg: var(--color-surface);
+  --nd-border: var(--color-border-subtle);
+  --nd-icon-bg: var(--color-surface-2);
+  --nd-icon-border: var(--color-border-subtle);
+  --nd-icon-color: var(--color-text-tertiary);
+  --nd-title: var(--color-text);
+  --nd-sub: var(--color-text-muted);
+  --nd-cta-bg: var(--color-surface-2);
+  --nd-cta-border: var(--color-border);
+  --nd-cta-text: var(--color-text);
 
   /* Typography (same scale) */
   --text-title: 24px;

@@ -50,6 +50,12 @@ export interface ModalProps {
   "data-testid"?: string;
 }
 
+function resolveComponentTheme(): "light" | "dark" {
+  if (typeof document === "undefined") return "dark";
+  const theme = document.documentElement.dataset.theme;
+  return theme === "light" || theme === "consumer-light" ? "light" : "dark";
+}
+
 export function Modal({
   isOpen: isOpenProp,
   onClose,
@@ -168,7 +174,7 @@ export function Modal({
   };
 
   const hasFooter = actions != null || footer != null;
-  const theme = (typeof document !== "undefined" && document.documentElement.dataset.theme) ?? "dark";
+  const theme = resolveComponentTheme();
 
   const dialog = (
     <div

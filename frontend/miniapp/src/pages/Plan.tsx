@@ -3,8 +3,10 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { SessionMissing } from "@/components";
 import {
   Button,
+  CardRow,
   FallbackScreen,
   FooterHelp,
+  RowItem,
   PageHeader,
   PageLayout,
   PageScaffold,
@@ -13,10 +15,12 @@ import {
   PlanCard,
   PlanNextStepCard,
   PlanOptionsSection,
+  SectionLabel,
   Skeleton,
   Stack,
   VpnBoundaryNote,
 } from "@/design-system";
+import { IconClock, IconCreditCard, IconSmartphone } from "@/design-system/icons";
 
 import { useI18n } from "@/hooks";
 import { usePlanPageModel, type BillingPeriod } from "@/page-models";
@@ -113,7 +117,7 @@ export function PlanPage() {
             onBack={() => navigate(fromOnboarding ? "/onboarding" : "/")}
             backAriaLabel={t("common.back_aria")}
           />
-          <Stack gap="4">
+          <Stack gap="2">
             <Skeleton variant="card" height={220} />
             <Skeleton variant="line" width="40%" />
             <Skeleton variant="card" height={360} />
@@ -167,7 +171,7 @@ export function PlanPage() {
       />
 
       {isSubscribed ? (
-        <Stack gap="4">
+        <Stack gap="2">
           <PlanCard
             plan={heroView.heroPlanName}
             planSub={heroView.heroPlanPeriod}
@@ -177,6 +181,32 @@ export function PlanPage() {
             deviceLimit={deviceLimit}
             renewsLabel={heroView.expiryText}
           />
+          <Stack gap="2">
+            <SectionLabel label={t("plan.current_plan_label")} />
+            <CardRow className="plan-current-summary">
+              <RowItem
+                icon={<IconCreditCard size={15} strokeWidth={2} aria-hidden />}
+                iconVariant="neutral"
+                label={t("plan.hero_price_label")}
+                subtitle={model.formatStars(heroView.heroStars)}
+                showChevron={false}
+              />
+              <RowItem
+                icon={<IconSmartphone size={15} strokeWidth={2} aria-hidden />}
+                iconVariant="neutral"
+                label={t("plan.hero_devices_label")}
+                subtitle={heroView.devicesLabel}
+                showChevron={false}
+              />
+              <RowItem
+                icon={<IconClock size={15} strokeWidth={2} aria-hidden />}
+                iconVariant="neutral"
+                label={t("plan.hero_valid_until_label")}
+                subtitle={heroView.expiryText}
+                showChevron={false}
+              />
+            </CardRow>
+          </Stack>
           <Stack gap="3">
             <Button variant="primary" fullWidth onClick={() => navigate("/devices")}>
               {heroView.manageLabel}

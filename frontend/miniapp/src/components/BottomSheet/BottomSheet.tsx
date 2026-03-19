@@ -39,6 +39,12 @@ export interface BottomSheetProps {
   showSwipeHint?: boolean;
 }
 
+function resolveComponentTheme(): "light" | "dark" {
+  if (typeof document === "undefined") return "dark";
+  const theme = document.documentElement.dataset.theme;
+  return theme === "light" || theme === "consumer-light" ? "light" : "dark";
+}
+
 export function BottomSheet({
   isOpen: isOpenProp,
   onClose,
@@ -49,10 +55,7 @@ export function BottomSheet({
   showSwipeHint = true,
 }: BottomSheetProps) {
   const isOpen = isOpenProp ?? false;
-  const theme =
-    (typeof document !== "undefined" &&
-      document.documentElement.dataset.theme) ??
-    "dark";
+  const theme = resolveComponentTheme();
   const titleId = useId();
   const bodyId = useId();
   const sheetRef = useRef<HTMLDivElement | null>(null);

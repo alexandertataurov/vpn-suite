@@ -27,7 +27,7 @@
 .modal {
   background: var(--modal-bg);
   border: 1px solid var(--modal-border);
-  border-radius: var(--r, var(--radius-lg));
+  border-radius: 14px;
   box-shadow: var(--modal-shadow);
   width: 100%;
   max-width: var(--bp-sm);
@@ -126,6 +126,11 @@
   opacity: 0.7;
 }
 
+.modal-close:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
 .modal-close svg {
   width: 14px;
   height: 14px;
@@ -185,8 +190,8 @@
   min-width: 88px;
 }
 
-/* Modal footer: stack below 420px (375–390px phones show side-by-side) */
-@media (max-width: var(--vp-mid-mobile)) {
+/* Modal footer: stack below 420px */
+@media (max-width: 420px) {
   .modal-footer {
     flex-direction: column-reverse;
   }
@@ -197,7 +202,7 @@
 }
 
 /* Mobile: full-width, slides up from bottom */
-@media (max-width: var(--bp-sm)) {
+@media (max-width: 420px) {
   .modal-overlay {
     align-items: flex-end;
     padding: 0;
@@ -207,7 +212,7 @@
     max-width: 100%;
     width: 100%;
     max-height: 92vh;
-    border-radius: var(--r, var(--radius-lg)) var(--r, var(--radius-lg)) 0 0;
+    border-radius: 14px 14px 0 0;
     animation: modal-in-mobile 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
@@ -238,13 +243,13 @@
 }
 
 /* Tablet and above: always centered */
-@media (min-width: calc(var(--bp-sm) + 1px)) {
+@media (min-width: 421px) {
   .modal-overlay {
     align-items: center;
     padding: var(--spacing-4);
   }
 
   .modal {
-    border-radius: var(--r, var(--radius-lg));
+    border-radius: 14px;
   }
 }
