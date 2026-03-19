@@ -4,7 +4,9 @@
 **Scope:** frontend/miniapp only  
 **Purpose:** Full inventory of legacy UI to remove per Design System Unification Plan
 
-**Removed:** TroubleshooterStep, SupportContactCard (replaced by TroubleshooterFlowCard, ListCard + RowItem).
+**Removed:** TroubleshooterStep, SupportContactCard, SettingsActionRow, SupportActionList (replaced by TroubleshooterFlowCard, ListCard + RowItem). Orphaned CSS: SettingsAccountCard.css, modern-icon-tone, modern-banner, modern-list-item (migrated to row-item/ri-*).
+
+**Remaining (intentional):** Deprecated props in InlineAlert, Modal, BottomSheet, Button, Toast — kept for RestoreAccess and other consumers until migration. btn-primary/btn-secondary/btn-row — used by design-system Button and ContentButtons.
 
 ---
 
