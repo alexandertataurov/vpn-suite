@@ -340,9 +340,9 @@
 
 /* ========== TYPOGRAPHY ========== */
 html {
-  --font-sans: "Inter", sans-serif;
-  --font-serif: "Inter", sans-serif;
-  --font-mono: "Inter", sans-serif;
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", sans-serif;
+  --font-serif: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
   --font-weight-light: 300;
   --font-weight-normal: 400;
   --font-weight-medium: 500;

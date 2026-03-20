@@ -19,7 +19,7 @@ describe("button status contract", () => {
 
   it("uses success and error labels for accessible names when status changes", () => {
     const { rerender } = render(
-      <Button status="success" statusText="Copied">
+      <Button status="success" successText="Copied">
         Copy
       </Button>,
     );

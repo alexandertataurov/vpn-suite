@@ -28,6 +28,10 @@ export default defineConfig({
   resolve: {
     dedupe: ["react", "react-dom", "react-router-dom"],
     alias: {
+      "@/design-system/patterns/FallbackScreen": path.resolve(
+        __dirname,
+        "./src/design-system/compositions/patterns/FallbackScreen.tsx",
+      ),
       "@": path.resolve(__dirname, "./src"),
       "@/lib": path.resolve(__dirname, "./src/lib"),
       "@ds": path.resolve(__dirname, "./src/design-system/index.ts"),

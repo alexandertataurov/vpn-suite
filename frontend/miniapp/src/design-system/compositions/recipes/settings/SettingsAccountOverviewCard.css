@@ -91,7 +91,7 @@
 
 .ac-divider {
   height: 1px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--divider);
   margin: 0;
 }
 
@@ -113,7 +113,7 @@
 .ac-stat-sep {
   width: 1px;
   height: 32px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--divider);
   flex-shrink: 0;
 }
 

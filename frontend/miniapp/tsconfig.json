@@ -7,6 +7,9 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
+      "@/design-system/patterns/FallbackScreen": [
+        "./src/design-system/compositions/patterns/FallbackScreen.tsx"
+      ],
       "@shared/*": ["../shared/src/*"],
       "@/lib": ["./src/lib"],
       "@/lib/*": ["./src/lib/*"],

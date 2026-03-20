@@ -15,7 +15,6 @@ import { useWebappToken, webappApi } from "@/api/client";
 import { useTelemetry, useTrackScreen } from "@/hooks";
 import { useToast } from "@/design-system";
 import { webappQueryKeys } from "@/lib";
-import { formatDate } from "@/lib/utils/format";
 import { useI18n } from "@/hooks";
 import { setWebappToken } from "@/api/client";
 import { appVersion, buildId } from "@/config/env";
@@ -47,7 +46,11 @@ function formatShortDate(value: string | null | undefined): string | null {
   if (!value) return null;
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return null;
-  return formatDate(date, "en-US");
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(date);
 }
 
 function formatPlanLabel(rawPlanId: string | null | undefined, t: (key: string) => string): string {
@@ -289,7 +292,7 @@ export function useSettingsPageModel() {
 
   const activeDevices = getActiveDevices(data);
   const currentPlan = activeSub?.plan_id
-    ? plansQuery.data?.items.find((plan) => plan.id === activeSub.plan_id)
+    ? plansQuery.data?.items?.find((plan) => plan.id === activeSub.plan_id)
     : undefined;
   const planLabel = currentPlan?.name?.trim()
     ? sanitizePlanDisplayName(currentPlan.name, locale)
@@ -343,7 +346,10 @@ export function useSettingsPageModel() {
       try {
         const d = new Date(firstAt);
         if (!Number.isNaN(d.getTime())) {
-          memberSince = formatDate(d, "en-US");
+          memberSince = new Intl.DateTimeFormat(locale === "ru" ? "ru-RU" : "en-US", {
+            month: "long",
+            year: "numeric",
+          }).format(d);
         }
       } catch {
         // leave undefined
@@ -394,7 +400,7 @@ export function useSettingsPageModel() {
   const accountStatusLabel = activeSub
     ? `${t("settings.plan_active_label")} · ${deviceCountLabel}`
     : t("settings.banner_no_plan_title");
-  const accountRenewalValue = activeSub?.valid_until ? formatDate(activeSub.valid_until, "en-US") : null;
+  const accountRenewalValue = activeSub?.valid_until ? formatShortDate(activeSub.valid_until) : null;
   const accountRenewalLabel = activeSub
     ? accountRenewalValue ?? renewalCountdownLabel
     : t("settings.summary_no_plan_hint");

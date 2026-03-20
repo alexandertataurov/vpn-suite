@@ -4,8 +4,8 @@
 
 html[data-theme="consumer-light"] {
   color-scheme: light;
-  --font-sans: "Inter", sans-serif;
-  --font-mono: "Inter", sans-serif;
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
 
   /* Core */
   --color-bg: #F7F8FB;
@@ -209,8 +209,8 @@ html[data-theme="consumer-light"] {
 
 html[data-theme="consumer-dark"] {
   color-scheme: dark;
-  --font-sans: "Inter", sans-serif;
-  --font-mono: "Inter", sans-serif;
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
 
   /* Core (Stripe/Linear dark) */
   --color-bg: #0F1419;

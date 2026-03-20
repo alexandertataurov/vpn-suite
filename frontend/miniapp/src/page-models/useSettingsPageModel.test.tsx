@@ -53,6 +53,7 @@ vi.mock("@/design-system", async () => {
 vi.mock("@/lib/query-keys/webapp.query-keys", () => ({
   webappQueryKeys: {
     me: () => ["me"],
+    plans: () => ["plans"],
     subscriptionOffers: (reason = "") => ["subscriptionOffers", reason],
     subscriptionOffersRoot: () => ["subscriptionOffers"],
     referralStats: () => ["referralStats"],

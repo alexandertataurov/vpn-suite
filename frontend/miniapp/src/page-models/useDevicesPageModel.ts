@@ -15,7 +15,6 @@ import {
 import { useToast } from "@/design-system";
 import { usePrefersReducedMotion } from "@/design-system";
 import { webappQueryKeys } from "@/lib";
-import { formatDate } from "@/lib/utils/format";
 import type { SupportedLocale } from "@/lib/i18n";
 import { getErrorMessage, formatBytes } from "@/lib";
 import type { MissionTone } from "@/design-system";
@@ -34,7 +33,13 @@ import { clamp, DEFAULT_USAGE_SOFT_CAP_BYTES } from "./plan-helpers";
 
 function formatIssuedAt(value: string, locale: SupportedLocale): string {
   const resolvedLocale = locale === "ru" ? "ru-RU" : "en-US";
-  return formatDate(value, resolvedLocale);
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat(resolvedLocale, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(date);
 }
 
 export interface DevicesPageModel {

@@ -1,15 +1,17 @@
 import { useNavigate } from "react-router-dom";
 import { SessionMissing } from "@/components";
+import { FallbackScreen } from "@/design-system/patterns/FallbackScreen";
 import {
-  FallbackScreen,
-  Skeleton,
+  FooterHelp,
   InlineAlert,
   PageCardSection,
-  PageScaffold,
   PageHeader,
+  PageLayout,
+  PageScaffold,
   ReferralShareCard,
+  Skeleton,
+  Stack,
 } from "@/design-system";
-import { Stack } from "@/design-system/core/primitives";
 import { useReferralPageModel } from "@/page-models";
 import { useI18n } from "@/hooks";
 
@@ -35,58 +37,68 @@ export function ReferralPage() {
   if (model.pageState.status === "loading") {
     return (
       <PageScaffold>
-        <PageHeader
-          title={model.header.title}
-          subtitle={model.header.subtitle}
-          onBack={() => navigate(-1)}
-          backAriaLabel={t("common.back_aria")}
-        />
-        <Stack gap="4">
-          <Skeleton className="skeleton-h-3xl" />
-        </Stack>
+        <PageLayout scrollable={false}>
+          <PageHeader
+            title={model.header.title}
+            subtitle={model.header.subtitle}
+            onBack={() => navigate(-1)}
+            backAriaLabel={t("common.back_aria")}
+          />
+          <Stack gap="2">
+            <Skeleton variant="card" height={160} />
+            <Skeleton variant="line" width="55%" />
+          </Stack>
+        </PageLayout>
       </PageScaffold>
     );
   }
 
   return (
     <PageScaffold>
-      <PageHeader
-        title={model.header.title}
-        subtitle={model.header.subtitle}
-        onBack={() => navigate(-1)}
-        backAriaLabel={t("common.back_aria")}
-      />
-      {model.showUpsellReferral ? (
-        <Stack gap="4">
-          <InlineAlert
-            variant="info"
-            label={t("plan.cta_upgrade_plan")}
-            message={t("referral.upsell_description")}
+      <PageLayout scrollable={false}>
+        <PageHeader
+          title={model.header.title}
+          subtitle={model.header.subtitle}
+          onBack={() => navigate(-1)}
+          backAriaLabel={t("common.back_aria")}
+        />
+        <Stack gap="2">
+          {model.showUpsellReferral ? (
+            <InlineAlert
+              variant="info"
+              label={t("plan.cta_upgrade_plan")}
+              message={t("referral.upsell_description")}
+            />
+          ) : null}
+          {model.statsData != null ? (
+            <PageCardSection title={t("referral.stats_section_title")} cardTone="blue">
+              <Stack gap="3">
+                <p className="referral-stat-line">{t("referral.stats_total", { count: model.totalReferrals })}</p>
+                <p className="referral-stat-line">{t("referral.stats_active", { count: model.activeReferrals })}</p>
+                <p className="referral-stat-line">{t("referral.stats_pending", { count: model.pendingRewards })}</p>
+                <p className="referral-stat-line">{t("referral.stats_earned_days", { count: model.earnedDays })}</p>
+                {model.nextBonusDays != null ? (
+                  <p className="referral-stat-line">
+                    {t("referral.stats_next_bonus", { count: model.nextBonusDays })}
+                  </p>
+                ) : null}
+              </Stack>
+            </PageCardSection>
+          ) : null}
+          <ReferralShareCard
+            botUsername={model.botUsername}
+            shareUrl={model.shareUrl}
+            isOnline={model.isOnline}
+            onCopy={model.copyToClipboard}
+            onNativeShare={() => void model.handleShare()}
           />
         </Stack>
-      ) : null}
-      {model.statsData != null ? (
-        <PageCardSection title={t("referral.stats_section_title")} cardTone="blue">
-          <Stack gap="3">
-            <p className="referral-stat-line">{t("referral.stats_total", { count: model.totalReferrals })}</p>
-            <p className="referral-stat-line">{t("referral.stats_active", { count: model.activeReferrals })}</p>
-            <p className="referral-stat-line">{t("referral.stats_pending", { count: model.pendingRewards })}</p>
-            <p className="referral-stat-line">{t("referral.stats_earned_days", { count: model.earnedDays })}</p>
-            {model.nextBonusDays != null ? (
-              <p className="referral-stat-line">
-                {t("referral.stats_next_bonus", { count: model.nextBonusDays })}
-              </p>
-            ) : null}
-          </Stack>
-        </PageCardSection>
-      ) : null}
-      <ReferralShareCard
-        botUsername={model.botUsername}
-        shareUrl={model.shareUrl}
-        isOnline={model.isOnline}
-        onCopy={model.copyToClipboard}
-        onNativeShare={() => void model.handleShare()}
-      />
+        <FooterHelp
+          note={t("footer.having_trouble")}
+          linkLabel={t("footer.view_setup_guide")}
+          onLinkClick={() => navigate("/support")}
+        />
+      </PageLayout>
     </PageScaffold>
   );
 }

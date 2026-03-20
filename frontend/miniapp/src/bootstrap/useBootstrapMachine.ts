@@ -141,6 +141,9 @@ export function useBootstrapMachine({
   const autoCompletedUserId = useRef<number | null>(null);
   const bootStartRef = useRef<number>(typeof performance !== "undefined" ? performance.now() : 0);
   const prevPhaseRef = useRef<BootPhase>("boot_init");
+  /** One automatic re-auth after transient (e.g. network) failure — avoids infinite loops on permanent auth errors. */
+  const pendingTransientAuthRetryRef = useRef(false);
+  const authTransientRetryUsedRef = useRef(false);
 
   useEffect(() => {
     if (prevPhaseRef.current !== phase) {
@@ -183,6 +186,8 @@ export function useBootstrapMachine({
   }, [hasToken]);
 
   const retry = useCallback(() => {
+    pendingTransientAuthRetryRef.current = false;
+    authTransientRetryUsedRef.current = false;
     setStartupError(null);
     setOnboardingError(null);
     setSlowNetwork(false);
@@ -199,10 +204,13 @@ export function useBootstrapMachine({
   }, [hasToken, initData, sessionQuery]);
 
   useEffect(() => {
-    if (phase === "startup_error" && initData) {
-      retry();
-    }
-  }, [phase, initData, retry]);
+    if (phase !== "startup_error" || !initData || !pendingTransientAuthRetryRef.current) return;
+    pendingTransientAuthRetryRef.current = false;
+    setStartupError(null);
+    setOnboardingError(null);
+    setSlowNetwork(false);
+    setPhase("telegram_ready");
+  }, [phase, initData]);
 
   useEffect(() => {
     if (phase === "boot_init") {
@@ -233,6 +241,7 @@ export function useBootstrapMachine({
       setPhase("authenticating");
       authenticateWebApp(initData)
         .then((res) => {
+          authTransientRetryUsedRef.current = false;
           setWebappToken(res.session_token, res.expires_in);
           setStartupError(null);
           setPhase("loading_session");
@@ -248,6 +257,13 @@ export function useBootstrapMachine({
             rawMessage?.toLowerCase().includes("initdata") ||
             rawMessage?.toLowerCase().includes("init_data") ||
             (err instanceof ApiError && err.code === "INVALID_INIT_DATA");
+          const isNetworkFailure = String((err as Error)?.message ?? "").toLowerCase().includes("network");
+          if (isNetworkFailure && !isInvalidInitData && !authTransientRetryUsedRef.current) {
+            authTransientRetryUsedRef.current = true;
+            pendingTransientAuthRetryRef.current = true;
+          } else {
+            pendingTransientAuthRetryRef.current = false;
+          }
           const message = isTimeout
             ? "Request timed out. Try again."
             : isInvalidInitData

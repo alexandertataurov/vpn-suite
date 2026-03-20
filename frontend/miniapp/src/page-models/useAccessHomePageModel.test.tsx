@@ -5,9 +5,13 @@ import { useAccessHomePageModel } from "./useAccessHomePageModel";
 
 const mockGetUserAccess = vi.fn();
 
-vi.mock("@/api", () => ({
-  getUserAccess: () => mockGetUserAccess(),
-}));
+vi.mock("@/api", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/api")>();
+  return {
+    ...actual,
+    getUserAccess: () => mockGetUserAccess(),
+  };
+});
 
 vi.mock("@/api/client", () => ({
   useWebappToken: () => "token",
