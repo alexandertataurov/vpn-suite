@@ -33,8 +33,8 @@
 }
 
 .account-card:focus-visible {
-  outline: var(--radius-2) solid var(--color-accent);
-  outline-offset: var(--radius-2);
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
 }
 
 .account-card--readonly {
@@ -78,10 +78,10 @@
 .ac-eyebrow {
   font-size: var(--typo-meta-size, var(--font-size-xs));
   font-weight: var(--font-weight-semibold);
-  letter-spacing: 0.7px;
+  letter-spacing: var(--letter-spacing-widest);
   text-transform: none;
   color: var(--color-text-tertiary);
-  line-height: 1;
+  line-height: var(--line-height-label);
 }
 
 .ac-name {
@@ -132,18 +132,18 @@
 .ac-stat-label {
   font-size: var(--typo-meta-size, var(--font-size-xs));
   font-weight: var(--font-weight-semibold);
-  letter-spacing: 0.7px;
+  letter-spacing: var(--letter-spacing-widest);
   text-transform: none;
   color: var(--color-text-tertiary);
-  line-height: 1;
+  line-height: var(--line-height-label);
 }
 
 .ac-stat-value {
-  font-size: var(--font-size-14);
+  font-size: var(--typo-body-sm-size, var(--font-size-md));
   font-weight: var(--font-weight-bold);
   color: var(--color-text);
   letter-spacing: var(--letter-spacing-tight);
-  line-height: 1;
+  line-height: var(--line-height-title);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

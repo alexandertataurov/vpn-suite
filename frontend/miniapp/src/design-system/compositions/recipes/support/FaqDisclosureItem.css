@@ -3,6 +3,6 @@
 .faq-list {
   background: var(--card-row-bg, var(--color-surface));
   border: var(--border-width-hairline) solid var(--card-row-border, var(--color-border));
-  border-radius: var(--radius-lg, 14px);
+  border-radius: var(--radius-lg);
   overflow: hidden;
 }

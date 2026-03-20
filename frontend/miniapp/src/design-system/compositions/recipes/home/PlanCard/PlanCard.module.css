@@ -4,7 +4,7 @@
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   background: var(--color-surface);
-  border: 1px solid var(--color-border-subtle);
+  border: var(--border-width-hairline) solid var(--color-border-subtle);
   border-radius: var(--radius-lg);
   overflow: hidden;
   /* Borders only on base card; LED glow is on .ledWrapper, not .root */
@@ -64,25 +64,26 @@
 .meta {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-0-5);
+  gap: var(--spacing-1);
   min-width: 0;
   flex: 1 1 auto;
 }
 
 .eyebrow {
   font-size: var(--amnezia-plan-eyebrow, var(--font-size-xs));
-  font-weight: 500;
-  letter-spacing: 0.1px;
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--letter-spacing-widest);
   color: var(--color-text-tertiary);
   text-transform: none;
+  line-height: var(--line-height-label);
 }
 
 .planName {
   font-family: var(--font-sans);
   font-size: var(--amnezia-plan-name, var(--typo-h1-size));
-  font-weight: 700;
-  letter-spacing: -0.6px;
-  line-height: 1;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-tighter);
+  line-height: var(--line-height-title);
   margin: 0;
   padding: 0;
   color: var(--color-text);
@@ -94,7 +95,8 @@
 .planSub {
   font-size: var(--amnezia-plan-subtitle, var(--font-size-sm));
   font-weight: var(--font-weight-normal);
-  letter-spacing: -0.1px;
+  letter-spacing: var(--letter-spacing-tight);
+  line-height: var(--line-height-body);
   color: var(--color-text-tertiary);
 }
 
@@ -102,13 +104,13 @@
 .stats {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  border-top: 1px solid var(--divider);
+  border-top: var(--border-width-hairline) solid var(--divider);
 }
 
 .stat {
   padding: var(--spacing-3) calc(var(--spacing-4) + var(--spacing-0-5))
     calc(var(--spacing-3) + var(--spacing-0-5));
-  border-left: 1px solid var(--divider);
+  border-left: var(--border-width-hairline) solid var(--divider);
 }
 
 .stat:first-child {
@@ -120,9 +122,10 @@
   display: block;
   font-size: var(--amnezia-stat-label, var(--font-size-xs));
   font-weight: var(--font-weight-semibold);
-  letter-spacing: 0.7px;
+  letter-spacing: var(--letter-spacing-widest);
   text-transform: none;
   color: var(--color-text-tertiary);
+  line-height: var(--line-height-label);
   margin-bottom: var(--spacing-0-5);
 }
 
@@ -132,7 +135,8 @@
   gap: var(--spacing-0-5);
   font-size: var(--amnezia-stat-value, var(--font-size-lg));
   font-weight: var(--font-weight-bold);
-  letter-spacing: -0.5px;
+  letter-spacing: var(--letter-spacing-tight);
+  line-height: var(--line-height-title);
   color: var(--color-text);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -161,7 +165,7 @@
 
   .stat {
     border-left: none;
-    border-top: 1px solid var(--divider);
+    border-top: var(--border-width-hairline) solid var(--divider);
     padding-left: calc(var(--spacing-4) + var(--spacing-0-5));
     padding-right: calc(var(--spacing-4) + var(--spacing-0-5));
   }
@@ -172,7 +176,7 @@
 
   .planName {
     font-size: var(--amnezia-plan-name-sm, var(--typo-display-size));
-    letter-spacing: -0.4px;
+    letter-spacing: var(--letter-spacing-tight);
   }
 
   .statValue {
