@@ -20,10 +20,10 @@ const plansLoadErrorScenario = {
 } satisfies MockScenario;
 
 const DOC_BODY = [
-  "**Audience:** design and QA for **Checkout** (`/plan/checkout/:planId`): review step, confirmation step, promos, and error branches.",
-  "**What is mocked:** token + `plans` (and default handlers for promo/invoice paths); `PageSandbox` mirrors miniapp routing and layout.",
-  "**Scenarios:** [`page-contracts.tsx`](../../../storybook/page-contracts.tsx) — `readyScenario`, `loadingCheckoutScenario`, `loggedOutScenario`; plus invalid `planId` route and a local **plans** 500 preset for load failure.",
-  "Default **iphone14**; **Viewport ·** stories add `iphoneSE` / `adminDesktop` where layout density matters.",
+  "**Audience:** design and QA for **Checkout** (`/plan/checkout/:planId`) covering review, confirmation, promos, and failure states.",
+  "**What is mocked:** token plus `plans`, promo, and invoice paths inside `PageSandbox`, which keeps routing and layout aligned with the app.",
+  "**Scenarios:** [`page-contracts.tsx`](../../../storybook/page-contracts.tsx) presets for `readyScenario`, `loadingCheckoutScenario`, and `loggedOutScenario`, plus an invalid `planId` route and a local `plans` 500 failure preset.",
+  "Default viewport is **iphone14**; `Viewport ·` stories add `iphoneSE` and `adminDesktop` when density matters.",
 ].join("\n\n");
 
 const VIEW_NARROW = { viewport: { defaultViewport: "iphoneSE" as const } };

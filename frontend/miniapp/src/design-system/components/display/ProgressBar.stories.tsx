@@ -48,7 +48,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "Progress indicator with value, unit, label, annotation, thresholds. Layouts: stacked, inline, split. Sizes: primary (8px), secondary (5px), connection (3px). Theme-aware via --pb-* tokens.",
+          "Progress indicator for storage, usage, and device-slot states. Layouts: stacked, inline, and split. Sizes: primary, secondary, and connection.",
       },
     },
   },

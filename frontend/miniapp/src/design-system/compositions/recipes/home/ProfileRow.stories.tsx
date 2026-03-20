@@ -11,7 +11,7 @@ const meta: Meta<typeof ProfileRow> = {
     docs: {
       description: {
         component:
-          "Home screen header. Single horizontal row — avatar, name, plan chip, settings button.",
+          "Home-screen profile row with avatar, account name, plan chip, and settings action.",
       },
     },
   },
@@ -38,7 +38,7 @@ export const Default: Story = {
 
 export const Variants: Story = {
   render: () => (
-    <StorySection title="Variants" description="Beta, active, expiring, and expired account states.">
+    <StorySection title="Variants" description="Beta, active, expiring, and expired account states in one row pattern.">
       <StoryShowcase>
         <StoryStack>
           <ProfileRow

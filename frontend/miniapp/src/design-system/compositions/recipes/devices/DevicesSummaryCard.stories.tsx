@@ -11,7 +11,7 @@ const meta: Meta<typeof DevicesSummaryCard> = {
     layout: "padded",
     docs: {
       description: {
-        component: "Devices overview hero used on the Devices page, with plan, capacity, and recent activity metrics.",
+        component: "Devices overview hero used on the Devices page, with plan, capacity, and recent-activity metrics.",
       },
     },
   },

@@ -20,10 +20,10 @@ import {
 } from "@/storybook/page-contracts";
 
 const DOC_BODY = [
-  "**Settings** (`/settings`): account overview, profile + locale (`ProfileSection` / `LanguageMenuRow`), plan & billing (`PlanSection`), help links, logout/delete.",
-  "**Scenarios**: active subscription · loading · `me` error · logged out · no plan · expired · expiring · trial · empty devices · device limit · long profile text · deep link `?modal=profile`.",
-  "**Interactions** use `getByRole('button', …)` so they track `ListRow`/`RowItem` semantics (`settings.edit_profile_title`, `settings.language_label`, `settings.cancel_plan_title`).",
-  "Cancellation opens `SubscriptionCancellationModal`; profile opens `ProfileModal` or URL `modal=profile`.",
+  "**Settings** (`/settings`) covers the account overview, profile and locale controls, plan and billing, help links, and destructive actions.",
+  "**Scenarios** cover active subscription, loading, `me` error, logged out, no plan, expired, expiring, trial, empty devices, device limit, long profile text, and deep link `?modal=profile`.",
+  "**Interactions** use `getByRole('button', …)` so they stay aligned with `ListRow` / `RowItem` semantics (`settings.edit_profile_title`, `settings.language_label`, `settings.cancel_plan_title`).",
+  "Cancellation opens `SubscriptionCancellationModal`; profile opens `ProfileModal` or the `modal=profile` URL state.",
 ].join("\n\n");
 
 const VIEW_NARROW = { viewport: { defaultViewport: "iphoneSE" as const } };

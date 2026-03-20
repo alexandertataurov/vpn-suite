@@ -11,7 +11,7 @@ const meta: Meta<typeof ModernHeader> = {
     layout: "padded",
     docs: {
       description: {
-        component: "Adaptive home and inner-page header recipe used across the miniapp.",
+        component: "Adaptive home and inner-page header recipe used across the miniapp for profile and page navigation.",
       },
     },
   },
@@ -44,7 +44,7 @@ export const Default: Story = {
 
 export const Variants: Story = {
   render: () => (
-    <StorySection title="Variants" description="Profile header, simple avatar header, and inner page header states.">
+    <StorySection title="Variants" description="Profile header, avatar-only header, and inner-page header states.">
       <StoryShowcase>
         <StoryStack>
           <ModernHeader

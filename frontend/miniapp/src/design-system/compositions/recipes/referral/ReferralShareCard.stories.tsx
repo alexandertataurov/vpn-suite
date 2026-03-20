@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { StorySection, StoryShowcase, StoryStack } from "@/design-system/utils";
+import { StorySection, StoryShowcase, StoryStack } from "@/design-system";
 import { ReferralShareCard } from "./ReferralShareCard";
 
 const meta: Meta<typeof ReferralShareCard> = {
@@ -21,15 +21,24 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story: "Default share card for a live referral link.",
+      },
+    },
+  },
   render: () => (
-    <StoryShowcase>
-      <ReferralShareCard
-        botUsername="vpn_suite_bot"
-        shareUrl="https://t.me/vpn_suite_bot?start=ref_123"
-        isOnline={true}
-        onCopy={() => Promise.resolve(true)}
-      />
-    </StoryShowcase>
+    <StorySection title="Default" description="Live referral link with online sharing affordances.">
+      <StoryShowcase>
+        <ReferralShareCard
+          botUsername="vpn_suite_bot"
+          shareUrl="https://t.me/vpn_suite_bot?start=ref_123"
+          isOnline={true}
+          onCopy={() => Promise.resolve(true)}
+        />
+      </StoryShowcase>
+    </StorySection>
   ),
 };
 

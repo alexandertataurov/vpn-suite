@@ -16,7 +16,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "Overlay dialog. Variants: plain, confirm, danger. Uses design tokens. Escape to close.",
+          "Overlay dialog for confirmations, destructive actions, and focused forms. Use the variant that matches the level of risk and keep the primary action obvious.",
       },
     },
   },
@@ -40,7 +40,7 @@ export const Default: Story = {
     docs: {
       description: {
         story:
-          "Use the Theme control in the Controls panel to switch between dark and light theme for this modal.",
+          "Open the modal from a button and verify the content stays aligned in both theme modes.",
       },
     },
   },
@@ -76,7 +76,7 @@ export const WithDescription: Story = {
     docs: {
       description: {
         story:
-          "Modal with subtitle/description below the title. Use the Theme control in the Controls panel to switch between dark and light theme for this modal.",
+          "Subtitle text sits under the title and makes the confirm flow easier to scan.",
       },
     },
   },
@@ -114,7 +114,7 @@ export const Inline: Story = {
     docs: {
       description: {
         story:
-          "inline=true renders modal in document flow instead of overlay. Useful for Storybook previews. Use the Theme control in the Controls panel to switch between dark and light theme for this modal.",
+          "inline=true renders the dialog in document flow instead of overlaying the page. Useful for Storybook previews and local layout checks.",
       },
     },
   },
@@ -167,7 +167,7 @@ export const Variants: Story = {
     docs: {
       description: {
         story:
-          "plain: informational. confirm: requires acknowledgement. danger: destructive — header is red-tinted, title is red. Use the Theme control in the Controls panel to switch between dark and light theme for this modal.",
+          "Compare the three variants: plain for information, confirm for acknowledgement, danger for destructive actions.",
       },
     },
   },
@@ -243,7 +243,7 @@ export const Loading: Story = {
     docs: {
       description: {
         story:
-          "Primary action enters loading state on click. Button shows spinner, modal stays open. Use the Theme control in the Controls panel to switch between dark and light theme for this modal.",
+          "Primary action can enter a loading state while keeping the dialog open. Use this for async confirmation flows.",
       },
     },
   },
@@ -280,7 +280,7 @@ export const LongContent: Story = {
     docs: {
       description: {
         story:
-          "Content area scrolls when taller than max-height. Header and footer remain fixed. Use the Theme control in the Controls panel to switch between dark and light theme for this modal.",
+          "Long content scrolls while header and footer remain fixed. This checks max-height behavior and footer persistence.",
       },
     },
   },
@@ -320,7 +320,7 @@ export const MobileView: Story = {
     docs: {
       description: {
         story:
-          "Below 480px: slides up from bottom, full width, rounded top corners only. Footer buttons stack vertically. Use the Theme control in the Controls panel to switch between dark and light theme for this modal.",
+          "Mobile modal layout should adapt to the narrow viewport and stack the footer actions vertically.",
       },
     },
   },

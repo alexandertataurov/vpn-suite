@@ -10,10 +10,11 @@ const meta = {
   component: Badge,
   parameters: {
     layout: "padded",
+    status: { type: "stable" },
     docs: {
       description: {
         component:
-          "Inline badge for status indicators (e.g. 7d left, Full, Renew). Variants: warning, error, muted, success.",
+          "Inline badge for compact status indicators such as plan age, capacity, or renewals. Keep labels short and actionable.",
       },
     },
   },
@@ -37,7 +38,7 @@ export const Default: Story = {
 
 export const Variants: Story = {
   render: () => (
-    <StorySection title="Variants" description="warning, error, muted, success.">
+    <StorySection title="Variants" description="Warning, error, muted, and success states shown in one row.">
       <StoryShowcase>
         <Inline gap="2" wrap>
           <Badge label="7d left" variant="warning" />
@@ -52,7 +53,7 @@ export const Variants: Story = {
 
 export const InContext: Story = {
   render: () => (
-    <StorySection title="In context" description="List row with badge and chevron.">
+    <StorySection title="In context" description="Inline badge alongside a settings row label and chevron.">
       <StoryShowcase>
         <Inline gap="2" wrap align="center">
           <span className="story-label">Manage Devices</span>

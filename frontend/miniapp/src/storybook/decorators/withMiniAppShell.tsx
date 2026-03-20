@@ -13,14 +13,27 @@ function StorybookThemeSync({ theme, forceAnimations }: { theme: Theme; forceAni
   const { setTheme } = useTheme();
 
   useEffect(() => {
+    const root = document.documentElement;
+    const previous = {
+      tg: root.getAttribute("data-tg"),
+      animations: root.getAttribute("data-animations"),
+    };
+
     setTheme(theme);
-    document.documentElement.setAttribute("data-theme", theme);
-    document.documentElement.setAttribute("data-tg", "true");
+    root.setAttribute("data-tg", "true");
     if (forceAnimations) {
-      document.documentElement.setAttribute("data-animations", "force");
+      root.setAttribute("data-animations", "force");
     } else {
-      document.documentElement.removeAttribute("data-animations");
+      root.removeAttribute("data-animations");
     }
+
+    return () => {
+      if (previous.tg == null) root.removeAttribute("data-tg");
+      else root.setAttribute("data-tg", previous.tg);
+
+      if (previous.animations == null) root.removeAttribute("data-animations");
+      else root.setAttribute("data-animations", previous.animations);
+    };
   }, [setTheme, theme, forceAnimations]);
 
   return null;

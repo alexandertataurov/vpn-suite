@@ -12,10 +12,11 @@ const meta = {
   component: Input,
   parameters: {
     layout: "padded",
+    status: { type: "stable" },
     docs: {
       description: {
         component:
-          "Text input with optional label, description, error, success. Uses Field primitive and design tokens.",
+          "Text input for labeled form fields. Use it for free-form text entry and pair it with helper, error, or success messages when needed.",
       },
     },
   },
@@ -48,7 +49,7 @@ export const Default: Story = {
 
 export const WithDescription: Story = {
   render: () => (
-    <StorySection title="With helper text" description="Use for hints and guidance.">
+    <StorySection title="With helper text" description="Use helper text to explain constraints before the user types.">
       <StoryShowcase>
         <Input
           label="Username"
@@ -62,7 +63,7 @@ export const WithDescription: Story = {
 
 export const ValidationStates: Story = {
   render: () => (
-    <StorySection title="Validation states" description="Error and success feedback.">
+    <StorySection title="Validation states" description="Show the error only when validation fails and the success state once a field is confirmed.">
       <StoryShowcase>
         <StoryStack>
           <Input
@@ -83,7 +84,7 @@ export const ValidationStates: Story = {
 
 export const Disabled: Story = {
   render: () => (
-    <StorySection title="Disabled" description="Read-only or unavailable field.">
+    <StorySection title="Disabled" description="Use disabled for unavailable actions; keep the value visible.">
       <StoryShowcase>
         <Input label="Protocol" value="AmneziaWG" disabled />
       </StoryShowcase>
@@ -93,7 +94,7 @@ export const Disabled: Story = {
 
 export const FormContext: Story = {
   render: () => (
-    <StorySection title="In form context" description="Realistic form with multiple fields.">
+    <StorySection title="In form context" description="Three-field form for realistic spacing and label rhythm.">
       <StoryShowcase>
         <StoryStack>
           <Input label="Email" placeholder="you@example.com" type="email" />
@@ -107,7 +108,7 @@ export const FormContext: Story = {
 
 export const ContentStress: Story = {
   render: () => (
-    <StorySection title="Content stress" description="Long text and placeholder.">
+    <StorySection title="Content stress" description="Long values and long placeholders should not break the layout.">
       <StoryShowcase>
         <StoryStack>
           <Input

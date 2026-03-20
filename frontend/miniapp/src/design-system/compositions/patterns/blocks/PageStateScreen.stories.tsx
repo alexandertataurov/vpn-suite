@@ -12,7 +12,7 @@ const meta: Meta<typeof PageStateScreen> = {
     docs: {
       description: {
         component:
-          "Page-state shell for blocking auth/error screens. Variants: attention, blocked, info, fatal.",
+          "Page-state shell for blocking auth and error screens. Variants: attention, blocked, info, and fatal.",
       },
     },
   },
@@ -40,7 +40,7 @@ export const Default: Story = {
 
 export const Variants: Story = {
   render: () => (
-    <StorySection title="Variants" description="attention, blocked, info, fatal.">
+    <StorySection title="Variants" description="Attention, blocked, info, and fatal states.">
       <StoryShowcase>
         <StoryStack>
           <PageStateScreen

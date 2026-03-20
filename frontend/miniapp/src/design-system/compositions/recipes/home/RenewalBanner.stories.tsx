@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { RenewalBanner } from "./RenewalBanner";
+import { StorySection, StoryShowcase, StoryStack } from "@/design-system";
 
 function ThemePane({
   theme,
@@ -35,7 +36,7 @@ const meta: Meta<typeof RenewalBanner> = {
     docs: {
       description: {
         component:
-          "Renewal banner per amnezia spec §4.4. Expiring or expired subscription prompt. Uses design tokens.",
+          "Renewal banner for expiring and expired subscriptions. Use it as the high-priority prompt on home and settings surfaces.",
       },
     },
   },
@@ -56,6 +57,13 @@ export const Default: Story = {
     badge: "14d left",
     onClick: () => {},
   },
+  parameters: {
+    docs: {
+      description: {
+        story: "Default warning prompt for an expiring subscription.",
+      },
+    },
+  },
 };
 
 export const Variants: Story = {
@@ -64,42 +72,46 @@ export const Variants: Story = {
     docs: {
       description: {
         story:
-          "Warning = expiring subscription (days remaining). Danger = expired (access lost, renew immediately). Left accent strip provides instant peripheral recognition.",
+          "Warning marks an expiring subscription; danger marks an expired one. The left accent strip gives the prompt a consistent high-priority shape.",
       },
     },
   },
   render: () => (
-    <WithThemes>
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        <RenewalBanner
-          variant="warning"
-          title="Subscription expires in 14 days"
-          subtitle="Renew now to keep your plan active."
-          badge="14d left"
-          onClick={() => {}}
-        />
-        <RenewalBanner
-          variant="danger"
-          title="Subscription expired"
-          subtitle="Renew to restore access."
-          onClick={() => {}}
-        />
-        <RenewalBanner
-          variant="warning"
-          title="Subscription expires in 3 days"
-          subtitle="Renew now to keep your plan active."
-          badge="3d left"
-          onClick={() => {}}
-        />
-        <RenewalBanner
-          variant="warning"
-          title="Subscription expires today"
-          subtitle="Renew now to keep your plan active."
-          badge="Today"
-          onClick={() => {}}
-        />
-      </div>
-    </WithThemes>
+    <StorySection title="Variants" description="Expiring, expired, and urgency-copy examples across themes.">
+      <StoryShowcase>
+        <WithThemes>
+          <StoryStack>
+            <RenewalBanner
+              variant="warning"
+              title="Subscription expires in 14 days"
+              subtitle="Renew now to keep your plan active."
+              badge="14d left"
+              onClick={() => {}}
+            />
+            <RenewalBanner
+              variant="danger"
+              title="Subscription expired"
+              subtitle="Renew to restore access."
+              onClick={() => {}}
+            />
+            <RenewalBanner
+              variant="warning"
+              title="Subscription expires in 3 days"
+              subtitle="Renew now to keep your plan active."
+              badge="3d left"
+              onClick={() => {}}
+            />
+            <RenewalBanner
+              variant="warning"
+              title="Subscription expires today"
+              subtitle="Renew now to keep your plan active."
+              badge="Today"
+              onClick={() => {}}
+            />
+          </StoryStack>
+        </WithThemes>
+      </StoryShowcase>
+    </StorySection>
   ),
 };
 
@@ -108,27 +120,31 @@ export const Responsive: Story = {
   parameters: {
     docs: {
       description: {
-        story: "On narrow viewports title and badge stack vertically.",
+        story: "On narrow viewports the title and badge stack vertically without clipping the copy.",
       },
     },
   },
   render: () => (
-    <WithThemes>
-      <div
-        style={{
-          width: 390,
-          overflow: "hidden",
-          animation: "header-responsive-shrink 3s ease-in-out 0.5s forwards",
-        }}
-      >
-        <RenewalBanner
-          variant="warning"
-          title="Subscription expires in 14 days"
-          subtitle="Renew now to keep your plan active."
-          badge="14d left"
-          onClick={() => {}}
-        />
-      </div>
-    </WithThemes>
+    <StorySection title="Responsive" description="Compact width check for the renewal banner layout.">
+      <StoryShowcase>
+        <WithThemes>
+          <div
+            style={{
+              width: 390,
+              overflow: "hidden",
+              animation: "header-responsive-shrink 3s ease-in-out 0.5s forwards",
+            }}
+          >
+            <RenewalBanner
+              variant="warning"
+              title="Subscription expires in 14 days"
+              subtitle="Renew now to keep your plan active."
+              badge="14d left"
+              onClick={() => {}}
+            />
+          </div>
+        </WithThemes>
+      </StoryShowcase>
+    </StorySection>
   ),
 };

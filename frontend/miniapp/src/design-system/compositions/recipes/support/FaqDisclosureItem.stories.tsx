@@ -1,29 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { FaqDisclosureItem } from "./FaqDisclosureItem";
-
-function ThemePane({
-  theme,
-  children,
-}: {
-  theme: "dark" | "light";
-  children: React.ReactNode;
-}) {
-  return (
-    <div data-theme={theme} className="story-theme-pane">
-      <p className="story-theme-pane-label">{theme}</p>
-      {children}
-    </div>
-  );
-}
-
-function WithThemes({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="story-themes-row">
-      <ThemePane theme="dark">{children}</ThemePane>
-      <ThemePane theme="light">{children}</ThemePane>
-    </div>
-  );
-}
+import { StorySection, StoryShowcase, StoryStack } from "@/design-system";
 
 const meta: Meta<typeof FaqDisclosureItem> = {
   title: "Recipes/Support/FaqDisclosureItem",
@@ -34,7 +11,7 @@ const meta: Meta<typeof FaqDisclosureItem> = {
     status: { type: "stable" },
     docs: {
       description: {
-        component: "FAQ accordion item. Expandable question + answer.",
+        component: "FAQ accordion item with expandable question and answer content.",
       },
     },
   },
@@ -49,23 +26,25 @@ export const Default: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Multiple items in a card. Independent expand/collapse.",
+        story: "Multiple items in a card with independent expand and collapse behavior.",
       },
     },
   },
   render: () => (
-    <WithThemes>
-      <div className="faq-list">
-        {listItems.map((item) => (
-          <FaqDisclosureItem
-            key={item.question}
-            question={item.question}
-            answer={item.answer}
-            defaultOpen={item.defaultOpen ?? false}
-          />
-        ))}
-      </div>
-    </WithThemes>
+    <StorySection title="FAQ list" description="A multi-item FAQ list rendered as the default reference state.">
+      <StoryShowcase>
+        <StoryStack>
+          {listItems.map((item) => (
+            <FaqDisclosureItem
+              key={item.question}
+              question={item.question}
+              answer={item.answer}
+              defaultOpen={item.defaultOpen ?? false}
+            />
+          ))}
+        </StoryStack>
+      </StoryShowcase>
+    </StorySection>
   ),
 };
 
@@ -104,24 +83,26 @@ export const Variants: Story = {
     },
   },
   render: () => (
-    <WithThemes>
-      <div className="faq-list">
-        <FaqDisclosureItem
-          question="How do I restore access?"
-          answer="Go to Settings → Restore Access. Your devices and configurations are saved to your account."
-          defaultOpen={false}
-        />
-        <FaqDisclosureItem
-          question="What happens when my subscription expires?"
-          answer="Your devices will lose VPN access. Your account, devices, and configuration files are kept for 30 days. Renew to restore access immediately."
-          defaultOpen={true}
-        />
-        <FaqDisclosureItem
-          question="What is AmneziaWG and how does it work?"
-          answer={longAnswer}
-          defaultOpen={true}
-        />
-      </div>
-    </WithThemes>
+    <StorySection title="Variants" description="Collapsed, open, and long-answer FAQ rows in a single matrix.">
+      <StoryShowcase>
+        <StoryStack>
+          <FaqDisclosureItem
+            question="How do I restore access?"
+            answer="Go to Settings → Restore Access. Your devices and configurations are saved to your account."
+            defaultOpen={false}
+          />
+          <FaqDisclosureItem
+            question="What happens when my subscription expires?"
+            answer="Your devices will lose VPN access. Your account, devices, and configuration files are kept for 30 days. Renew to restore access immediately."
+            defaultOpen={true}
+          />
+          <FaqDisclosureItem
+            question="What is AmneziaWG and how does it work?"
+            answer={longAnswer}
+            defaultOpen={true}
+          />
+        </StoryStack>
+      </StoryShowcase>
+    </StorySection>
   ),
 };

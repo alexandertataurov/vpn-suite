@@ -10,7 +10,7 @@ const meta: Meta<typeof CheckoutSummaryCard> = {
     layout: "padded",
     docs: {
       description: {
-        component: "Checkout order summary grid used before and after plan confirmation.",
+        component: "Checkout summary grid used before and after plan confirmation.",
       },
     },
   },
@@ -36,7 +36,7 @@ export const Default: Story = {
 
 export const Variants: Story = {
   render: () => (
-    <StorySection title="Variants" description="Selection summary and full payment confirmation summary.">
+    <StorySection title="Variants" description="Selection summary and full confirmation summary.">
       <StoryShowcase>
         <StoryStack>
           <CheckoutSummaryCard

@@ -15,9 +15,9 @@ import {
 } from "@/storybook/page-contracts";
 
 const DOC_BODY = [
-  "**Connect status** (`/connect-status`): latest device delivery, confirm-connected flow, and reminders.",
-  "Uses `useConnectStatusPageModel` — page states: **empty** (no token / no user), **loading**, **error**, **ready** with summary variants from subscription, devices, `live_connection`, and `last_connection_confirmed_at` / per-device milestones (`helpers.hasConfirmedConnection`).",
-  "Shared `readyScenario.me` omits confirmation milestones → **pending** summary; use story-local mocks for **confirmed** vs **live tunnel** vs **pendingConfirmationScenario** (forced delivery + unconfirmed device).",
+  "**Connect status** (`/connect-status`) covers latest device delivery, the confirm-connected flow, and reminder states.",
+  "Uses `useConnectStatusPageModel`: page states include **empty** (no token or no user), **loading**, **error**, and **ready** summaries driven by subscription, devices, `live_connection`, and `last_connection_confirmed_at` / per-device milestones.",
+  "The shared `readyScenario.me` omits confirmation milestones, so it renders the **pending** summary; story-local mocks cover **confirmed**, **live tunnel**, and **pendingConfirmationScenario** variations.",
 ].join("\n\n");
 
 const VIEW_NARROW = { viewport: { defaultViewport: "iphoneSE" as const } };

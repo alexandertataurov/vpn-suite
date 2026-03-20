@@ -50,7 +50,7 @@ export const Default: Story = {
 
 export const Variants: Story = {
   render: () => (
-    <StorySection title="Variants" description="All status variants.">
+    <StorySection title="Variants" description="All status variants for subscription and connection states.">
       <StoryShowcase>
         <StoryGrid>
           <StatusChip variant="active">Active</StatusChip>
@@ -71,7 +71,7 @@ export const Variants: Story = {
 
 export const InContext: Story = {
   render: () => (
-    <StorySection title="In context" description="Plan card and device row.">
+    <StorySection title="In context" description="Status chip inside plan and device summary cards.">
       <StoryShowcase>
         <div className="story-stack">
           <div className="story-preview-card">

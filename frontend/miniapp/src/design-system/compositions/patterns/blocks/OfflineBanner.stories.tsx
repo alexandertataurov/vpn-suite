@@ -11,7 +11,7 @@ const meta: Meta<typeof OfflineBanner> = {
     docs: {
       description: {
         component:
-          "Fixed top banner when offline. Auto-hides when connectivity returns. Use visible to force show in Storybook.",
+          "Fixed top banner when offline. Auto-hides when connectivity returns; use `visible` to force it on in Storybook.",
       },
     },
   },
@@ -28,7 +28,7 @@ export const Default: Story = {
     hint: "Actions will resume when connection is restored.",
   },
   render: (args) => (
-    <StorySection title="Visible" description="Force visible for design review.">
+    <StorySection title="Visible" description="Force the banner on for design review.">
       <StoryShowcase>
         <OfflineBanner {...args} />
       </StoryShowcase>

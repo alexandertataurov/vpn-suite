@@ -12,10 +12,10 @@ import {
 } from "@/storybook/page-contracts";
 
 const DOC_BODY = [
-  "**Audience:** design and QA validating **Referral** (`/referral`): share link card, stats section, referral upgrade upsell, session-missing, loading, and error paths.",
-  "**What is mocked:** webapp `me`, `plans`, **`referralLink`** (`GET /webapp/referral/my-link`), and **`referralStats`** (`GET /webapp/referral/stats`), plus defaults for other intercepted endpoints in `PageSandbox`.",
-  "**Scenarios:** presets in [`page-contracts.tsx`](../../../storybook/page-contracts.tsx) — `readyScenario`, `loggedOutScenario`; story-local **`referralLink`** / **`referralStats`** loading and HTTP error overrides; local plan + session for **no referral upsell** (`upsell_methods` without `\"referral\"`).",
-  "Default viewport **iphone14**; **Viewport · narrow** uses **iphoneSE**. Driven by `useReferralPageModel` (empty / loading / error / ready).",
+  "**Audience:** design and QA validating **Referral** (`/referral`): share-link card, stats, upsell, loading, and error paths.",
+  "**What is mocked:** webapp `me`, `plans`, `referralLink` (`GET /webapp/referral/my-link`), and `referralStats` (`GET /webapp/referral/stats`) plus the default `PageSandbox` interceptors.",
+  "**Scenarios:** presets in [`page-contracts.tsx`](../../../storybook/page-contracts.tsx) for `readyScenario` and `loggedOutScenario`, plus story-local loading and HTTP error overrides for `referralLink` / `referralStats` and a local no-upsell plan variant.",
+  "Default viewport is **iphone14**; `Viewport · narrow` uses **iphoneSE**. The page is driven by `useReferralPageModel` (empty, loading, error, ready).",
 ].join("\n\n");
 
 const VIEW_NARROW = { viewport: { defaultViewport: "iphoneSE" as const } };

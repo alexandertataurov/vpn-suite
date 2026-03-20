@@ -10,7 +10,7 @@ const meta: Meta<typeof PlanSection> = {
     layout: "padded",
     docs: {
       description: {
-        component: "Canonical plan and billing recipe used by Settings, covering active-plan and no-plan variants without duplicate wrapper stories.",
+        component: "Canonical plan and billing recipe used by Settings, covering active-plan and no-plan states without wrapper duplication.",
       },
     },
   },

@@ -11,10 +11,11 @@ const meta = {
   component: PillChip,
   parameters: {
     layout: "padded",
+    status: { type: "stable" },
     docs: {
       description: {
         component:
-          "Profile row badge for subscription state. Variants: beta, active, expiring, expired. Supports bold · dim format.",
+          "Profile row pill for subscription state and short metadata. Variants: beta, active, expiring, expired.",
       },
     },
   },
@@ -38,7 +39,7 @@ export const Default: Story = {
 
 export const Variants: Story = {
   render: () => (
-    <StorySection title="Variants" description="beta, active, expiring, expired.">
+    <StorySection title="Variants" description="Beta, active, expiring, and expired states shown together.">
       <StoryShowcase>
         <Inline gap="2" wrap>
           <PillChip variant="beta">Beta</PillChip>
@@ -53,7 +54,7 @@ export const Variants: Story = {
 
 export const WithDimPart: Story = {
   render: () => (
-    <StorySection title="Bold · dim format" description="e.g. Expiring · 14d">
+    <StorySection title="Bold · dim format" description="Use the separator to split primary and secondary label fragments.">
       <StoryShowcase>
         <Inline gap="2" wrap>
           <PillChip variant="expiring">Expiring · 14d</PillChip>
@@ -66,7 +67,7 @@ export const WithDimPart: Story = {
 
 export const InContext: Story = {
   render: () => (
-    <StorySection title="In context" description="Profile row with avatar and name.">
+    <StorySection title="In context" description="Profile row with avatar, name, and a trailing settings action.">
       <StoryShowcase>
         <Inline gap="2" wrap align="center">
           <Avatar initials="JD" size="md" />

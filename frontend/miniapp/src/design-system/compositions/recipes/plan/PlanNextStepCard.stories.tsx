@@ -11,7 +11,7 @@ const meta: Meta<typeof PlanNextStepCard> = {
     status: { type: "stable" },
     docs: {
       description: {
-        component: "Plan page next-step card pairing a helper note with primary and optional secondary actions.",
+        component: "Plan-page next-step card pairing helper text with primary and optional secondary actions.",
       },
     },
   },

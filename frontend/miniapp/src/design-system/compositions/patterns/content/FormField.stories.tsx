@@ -9,10 +9,11 @@ const meta: Meta<typeof FormField> = {
   component: FormField,
   parameters: {
     layout: "padded",
+    status: { type: "stable" },
     docs: {
       description: {
         component:
-          "Form field wrapper with label, validation states, helper/error/success messages, optional action slot.",
+          "Form field wrapper that handles label, helper text, validation states, and optional actions without duplicating layout logic.",
       },
     },
   },
@@ -28,15 +29,17 @@ export const Default: Story = {
     input: <Input placeholder="you@example.com" />,
   },
   render: (args) => (
-    <StoryShowcase>
-      <FormField {...args} />
-    </StoryShowcase>
+    <StorySection title="Default" description="Label plus input with the wrapper handling spacing and alignment.">
+      <StoryShowcase>
+        <FormField {...args} />
+      </StoryShowcase>
+    </StorySection>
   ),
 };
 
 export const States: Story = {
   render: () => (
-    <StorySection title="States" description="Idle, error, success, required.">
+    <StorySection title="States" description="Idle, error, and success states kept in the same column width.">
       <StoryShowcase>
         <StoryStack>
           <FormField label="Email" input={<Input placeholder="you@example.com" />} />

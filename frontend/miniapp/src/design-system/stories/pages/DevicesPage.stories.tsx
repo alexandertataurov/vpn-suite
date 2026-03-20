@@ -16,10 +16,10 @@ import {
 } from "@/storybook/page-contracts";
 
 const DOC_BODY = [
-  "**Devices** (`/devices`): hero metrics, device list with overflow actions, add-device wizard, setup card, and config delivery.",
-  "**Scenarios** (from `page-contracts`): ready · empty devices · limit reached · no plan · loading (`me` pending) · load error (`me` 500) · session missing (no token).",
-  "**Interactions**: primary CTA opens the wizard; first row **Device actions → Rename** opens the rename modal (stable English `devices.*` strings).",
-  "Viewport stories use `iphoneSE` / `adminDesktop` to catch layout regressions.",
+  "**Devices** (`/devices`) covers the device hero metrics, list actions, add-device wizard, setup card, and config delivery flow.",
+  "**Scenarios** (from `page-contracts`) cover ready, empty devices, limit reached, no plan, loading (`me` pending), load error (`me` 500), and session missing.",
+  "**Interactions**: the primary CTA opens the wizard; the first row `Device actions → Rename` opens the rename modal with stable English `devices.*` strings.",
+  "Viewport stories use `iphoneSE` and `adminDesktop` to catch layout regressions.",
 ].join("\n\n");
 
 const VIEW_NARROW = { viewport: { defaultViewport: "iphoneSE" as const } };

@@ -17,10 +17,10 @@ import {
 } from "@/storybook/page-contracts";
 
 const DOC_BODY = [
-  "**Audience:** design and QA validating **Plan & billing** (`/plan`): hero, tier picker, billing history, next-step cards, and error/empty paths.",
-  "**What is mocked:** webapp `me`, `plans`, and `billingHistory` (and defaults for other intercepted endpoints) inside `PageSandbox`.",
-  "**Scenarios:** [`page-contracts.tsx`](../../../storybook/page-contracts.tsx) — `readyScenario`, `noPlanScenario`, `trialScenario`, `expiredScenario`, `loadingCheckoutScenario` (plans pending), `loadingSessionScenario` (session pending), `failureScenario` (`me` error), `loggedOutScenario`, `limitReachedScenario` (device cap / upgrade affordances).",
-  "Default viewport **iphone14**; **Viewport ·** stories stress `iphoneSE` vs `adminDesktop`. Continuation flow: **Pages/Contracts/Checkout**.",
+  "**Audience:** design and QA validating **Plan & billing** (`/plan`) as the production contract for pricing, renewal, and billing-history UI.",
+  "**What is mocked:** webapp `me`, `plans`, and `billingHistory` inside `PageSandbox`, with defaults for the remaining intercepted endpoints.",
+  "**Scenarios:** [`page-contracts.tsx`](../../../storybook/page-contracts.tsx) presets for `readyScenario`, `noPlanScenario`, `trialScenario`, `expiredScenario`, `loadingCheckoutScenario`, `loadingSessionScenario`, `failureScenario`, `loggedOutScenario`, and `limitReachedScenario` when the user is at the device cap.",
+  "Default viewport is **iphone14**; `Viewport ·` stories stress `iphoneSE` versus `adminDesktop`. Continuation flow: **Pages/Contracts/Checkout**.",
 ].join("\n\n");
 
 const VIEW_NARROW = { viewport: { defaultViewport: "iphoneSE" as const } };

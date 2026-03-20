@@ -1,15 +1,17 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Stack } from "./index";
+import { StorySection, StoryShowcase } from "@/design-system";
 
 const meta: Meta<typeof Stack> = {
   title: "Primitives/Stack",
   component: Stack,
   parameters: {
     layout: "padded",
+    status: { type: "stable" },
     docs: {
       description: {
         component:
-          "Flex container with direction, gap, align, justify. Use for vertical or horizontal layouts.",
+          "Flex container for vertical and horizontal composition. Use `Stack` for gap, alignment, and spacing control instead of hand-rolled flex wrappers.",
       },
     },
   },
@@ -40,196 +42,103 @@ export const Default: Story = {
 
 export const Gaps: Story = {
   render: () => (
-    <Stack gap="6">
-      <div>
-        <div
-          style={{
-            fontFamily: "var(--font-mono)",
-            fontSize: "var(--typo-caption-size)",
-            color: "var(--color-text-muted)",
-            marginBottom: "var(--spacing-2)",
-          }}
-        >
-          gap=1 (4px)
-        </div>
-        <Stack gap="1" direction="horizontal">
-          <div
-            style={{
-              width: 40,
-              height: 24,
-              background: "var(--color-accent)",
-              opacity: 0.5,
-              borderRadius: "var(--radius-sm)",
-            }}
-          />
-          <div
-            style={{
-              width: 40,
-              height: 24,
-              background: "var(--color-accent)",
-              opacity: 0.5,
-              borderRadius: "var(--radius-sm)",
-            }}
-          />
-          <div
-            style={{
-              width: 40,
-              height: 24,
-              background: "var(--color-accent)",
-              opacity: 0.5,
-              borderRadius: "var(--radius-sm)",
-            }}
-          />
+    <StorySection title="Gaps" description="Gap tokens render consistently across layouts.">
+      <StoryShowcase>
+        <Stack gap="6">
+          <StackExample label="gap=1 (4px)" gap="1" />
+          <StackExample label="gap=4 (16px)" gap="4" />
         </Stack>
-      </div>
-      <div>
-        <div
-          style={{
-            fontFamily: "var(--font-mono)",
-            fontSize: "var(--typo-caption-size)",
-            color: "var(--color-text-muted)",
-            marginBottom: "var(--spacing-2)",
-          }}
-        >
-          gap=4 (16px)
-        </div>
-        <Stack gap="4" direction="horizontal">
-          <div
-            style={{
-              width: 40,
-              height: 24,
-              background: "var(--color-accent)",
-              opacity: 0.5,
-              borderRadius: "var(--radius-sm)",
-            }}
-          />
-          <div
-            style={{
-              width: 40,
-              height: 24,
-              background: "var(--color-accent)",
-              opacity: 0.5,
-              borderRadius: "var(--radius-sm)",
-            }}
-          />
-          <div
-            style={{
-              width: 40,
-              height: 24,
-              background: "var(--color-accent)",
-              opacity: 0.5,
-              borderRadius: "var(--radius-sm)",
-            }}
-          />
-        </Stack>
-      </div>
-    </Stack>
+      </StoryShowcase>
+    </StorySection>
   ),
 };
 
 export const Directions: Story = {
   render: () => (
-    <Stack gap="6">
-      <Stack gap="2" direction="vertical">
-        <span
-          style={{
-            fontFamily: "var(--font-mono)",
-            fontSize: "var(--typo-caption-size)",
-            color: "var(--color-text-muted)",
-          }}
-        >
-          direction=vertical
-        </span>
-        <Stack gap="2" direction="vertical">
-          <div
-            style={{
-              padding: "var(--spacing-2)",
-              background: "var(--color-surface)",
-              borderRadius: "var(--radius-sm)",
-            }}
-          >
-            A
-          </div>
-          <div
-            style={{
-              padding: "var(--spacing-2)",
-              background: "var(--color-surface)",
-              borderRadius: "var(--radius-sm)",
-            }}
-          >
-            B
-          </div>
+    <StorySection title="Directions" description="Vertical and horizontal compositions use the same API.">
+      <StoryShowcase>
+        <Stack gap="6">
+          <DirectionExample direction="vertical" />
+          <DirectionExample direction="horizontal" />
         </Stack>
-      </Stack>
-      <Stack gap="2" direction="horizontal">
-        <span
-          style={{
-            fontFamily: "var(--font-mono)",
-            fontSize: "var(--typo-caption-size)",
-            color: "var(--color-text-muted)",
-          }}
-        >
-          direction=horizontal
-        </span>
-        <Stack gap="2" direction="horizontal">
-          <div
-            style={{
-              padding: "var(--spacing-2)",
-              background: "var(--color-surface)",
-              borderRadius: "var(--radius-sm)",
-            }}
-          >
-            A
-          </div>
-          <div
-            style={{
-              padding: "var(--spacing-2)",
-              background: "var(--color-surface)",
-              borderRadius: "var(--radius-sm)",
-            }}
-          >
-            B
-          </div>
-        </Stack>
-      </Stack>
-    </Stack>
+      </StoryShowcase>
+    </StorySection>
   ),
 };
 
 export const AlignJustify: Story = {
   render: () => (
-    <Stack gap="6">
-      <Stack gap="2" direction="horizontal" justify="between">
-        <span
-          style={{
-            fontFamily: "var(--font-mono)",
-            fontSize: "var(--typo-caption-size)",
-            color: "var(--color-text-muted)",
-          }}
-        >
-          justify=between
-        </span>
-        <Stack gap="2" direction="horizontal" justify="between">
-          <div
-            style={{
-              padding: "var(--spacing-2)",
-              background: "var(--color-surface)",
-              borderRadius: "var(--radius-sm)",
-            }}
-          >
-            Left
-          </div>
-          <div
-            style={{
-              padding: "var(--spacing-2)",
-              background: "var(--color-surface)",
-              borderRadius: "var(--radius-sm)",
-            }}
-          >
-            Right
-          </div>
+    <StorySection title="Alignment" description="Use justify and align to keep wrappers semantic.">
+      <StoryShowcase>
+        <Stack gap="6">
+          <Stack gap="2" direction="horizontal" justify="between">
+            <ExampleLabel>justify=between</ExampleLabel>
+            <Stack gap="2" direction="horizontal" justify="between">
+              <Pill>A</Pill>
+              <Pill>B</Pill>
+            </Stack>
+          </Stack>
         </Stack>
-      </Stack>
-    </Stack>
+      </StoryShowcase>
+    </StorySection>
   ),
 };
+
+function StackExample({ label, gap }: { label: string; gap: "1" | "4" }) {
+  return (
+    <div>
+      <ExampleLabel>{label}</ExampleLabel>
+      <Stack gap={gap} direction="horizontal">
+        <Pill />
+        <Pill />
+        <Pill />
+      </Stack>
+    </div>
+  );
+}
+
+function DirectionExample({ direction }: { direction: "vertical" | "horizontal" }) {
+  return (
+    <Stack gap="2" direction="vertical">
+      <ExampleLabel>direction={direction}</ExampleLabel>
+      <Stack gap="2" direction={direction}>
+        <Pill>A</Pill>
+        <Pill>B</Pill>
+      </Stack>
+    </Stack>
+  );
+}
+
+function ExampleLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <span
+      style={{
+        fontFamily: "var(--font-mono)",
+        fontSize: "var(--typo-caption-size)",
+        color: "var(--color-text-muted)",
+      }}
+    >
+      {children}
+    </span>
+  );
+}
+
+function Pill({ children = "" }: { children?: React.ReactNode }) {
+  return (
+    <div
+      style={{
+        width: 40,
+        height: 24,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "var(--color-accent)",
+        opacity: 0.5,
+        borderRadius: "var(--radius-sm)",
+        paddingInline: 8,
+      }}
+    >
+      {children}
+    </div>
+  );
+}

@@ -11,7 +11,7 @@ const meta: Meta<typeof PlanOptionsSection> = {
     layout: "padded",
     docs: {
       description: {
-        component: "Plan selection section with billing-period toggle, tier cards, and empty-state handling.",
+        component: "Plan-selection section with billing-period toggle, tier cards, and empty-state handling.",
       },
     },
   },
@@ -101,7 +101,7 @@ export const Default: Story = {
 
 export const Variants: Story = {
   render: () => (
-    <StorySection title="Variants" description="Subscribed annual selection, renewal prompt, and empty plan catalog states.">
+    <StorySection title="Variants" description="Subscribed annual selection, renewal prompt, and empty catalog states.">
       <StoryShowcase>
         <StoryStack>
           <PlanOptionsSection {...baseArgs} />

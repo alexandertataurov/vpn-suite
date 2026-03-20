@@ -11,7 +11,7 @@ const meta: Meta<typeof NewUserHero> = {
     docs: {
       description: {
         component:
-          "New-user hero per amnezia spec §4.10. Centered card when no plan purchased. Uses design tokens.",
+          "New-user hero used when the user has not bought a plan yet. Centered card layout with primary and secondary actions.",
       },
     },
   },
@@ -38,7 +38,7 @@ export const Default: Story = {
 export const Variants: Story = {
   name: "Variants",
   render: () => (
-    <StorySection title="Variants" description="Dual-action and single-action new-user hero states.">
+    <StorySection title="Variants" description="Dual-action and single-action hero states for the no-plan entry flow.">
       <StoryShowcase>
         <StoryStack>
           <NewUserHero

@@ -11,9 +11,11 @@ const meta = {
   component: SettingsButton,
   parameters: {
     layout: "padded",
+    status: { type: "stable" },
     docs: {
       description: {
-        component: "34×34 circular settings gear button for profile row.",
+        component:
+          "Compact circular settings button used in profile rows and other secondary action slots.",
       },
     },
   },
@@ -33,7 +35,7 @@ export const Default: Story = {
 
 export const InContext: Story = {
   render: () => (
-    <StorySection title="In context" description="Profile row.">
+    <StorySection title="In context" description="Profile row with avatar, plan badge, and trailing settings action.">
       <StoryShowcase>
         <Inline gap="2" wrap align="center">
           <Avatar initials="JD" size="md" />

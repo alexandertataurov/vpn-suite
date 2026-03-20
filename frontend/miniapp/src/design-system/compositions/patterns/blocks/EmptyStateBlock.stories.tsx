@@ -11,7 +11,7 @@ const meta: Meta<typeof EmptyStateBlock> = {
     docs: {
       description: {
         component:
-          "Empty state for lists. Variants: no_devices, no_servers, no_history, no_results, loading_failed. Uses design tokens.",
+          "Empty state for lists. Variants: no_devices, no_servers, no_history, no_results, and loading_failed.",
       },
     },
   },
@@ -38,7 +38,7 @@ export const Default: Story = {
 
 export const Variants: Story = {
   render: () => (
-    <StorySection title="Variants" description="Different empty, retry, and custom-action states in one matrix.">
+    <StorySection title="Variants" description="Empty, retry, and custom-action states in one matrix.">
       <StoryShowcase>
         <StoryStack>
           <EmptyStateBlock variant="no_devices" onAction={() => {}} />

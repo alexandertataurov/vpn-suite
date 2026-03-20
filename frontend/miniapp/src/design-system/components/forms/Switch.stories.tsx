@@ -10,10 +10,11 @@ const meta = {
   component: Switch,
   parameters: {
     layout: "padded",
+    status: { type: "stable" },
     docs: {
       description: {
         component:
-          "Standalone switch control. Use ToggleRow for settings-style label + switch. Uses design tokens.",
+          "Standalone switch control for boolean settings. Use `ToggleRow` when you need a settings-style label plus control row.",
       },
     },
   },
@@ -36,7 +37,7 @@ function SwitchDemo() {
 
 export const Default: Story = {
   render: () => (
-    <StorySection title="Interactive" description="Toggle to change state.">
+    <StorySection title="Interactive" description="Basic uncontrolled interaction with a label-only control.">
       <StoryShowcase>
         <SwitchDemo />
       </StoryShowcase>
@@ -46,7 +47,7 @@ export const Default: Story = {
 
 export const States: Story = {
   render: () => (
-    <StorySection title="States" description="On, off, disabled.">
+    <StorySection title="States" description="Off, on, and disabled states shown together for comparison.">
       <StoryShowcase>
         <div className="story-stack">
           <Inline gap="2" wrap align="center">

@@ -19,9 +19,9 @@ const supportFaqEndpointErrorScenario = {
 } satisfies MockScenario;
 
 const DOC_BODY = [
-  "**Support** (`/support`): contact card, quick paths, stepped troubleshooter (`TroubleshooterFlowCard`), and FAQ disclosures (`FaqDisclosureItem`).",
-  "**States**: ready · `me`+`access` loading (skeleton) · `me` error · logged out · **FAQ endpoint error** (inline scenario: `supportFaq` 500, copy from i18n fallbacks).",
-  "FAQ button label matches **`support.faq_item_connection_title`** (EN: **VPN not connecting**). Troubleshooter primary action on step 1 is **`support.troubleshooter_step_access_next`** (EN: **Access is active**).",
+  "**Support** (`/support`) combines the contact card, quick paths, stepped troubleshooter, and FAQ disclosures into one reviewable contract.",
+  "**States** cover ready, `me` + `access` loading, `me` error, logged out, and the inline FAQ endpoint failure (`supportFaq` 500).",
+  "FAQ button text matches **`support.faq_item_connection_title`** (EN: **VPN not connecting**). The troubleshooter primary action on step 1 is **`support.troubleshooter_step_access_next`** (EN: **Access is active**).",
 ].join("\n\n");
 
 const VIEW_NARROW = { viewport: { defaultViewport: "iphoneSE" as const } };

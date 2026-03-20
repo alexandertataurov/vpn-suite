@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Skeleton, SkeletonCard, SkeletonList } from "./Skeleton";
 import { StorySection, StoryShowcase, StoryStack } from "@/design-system";
+import { StoryPreviewCard } from "@/design-system";
 
 const meta = {
   title: "Components/Skeleton",
@@ -8,10 +9,11 @@ const meta = {
   component: Skeleton,
   parameters: {
     layout: "padded",
+    status: { type: "stable" },
     docs: {
       description: {
         component:
-          "Loading placeholder. Variants: default, line, card, list, shimmer. Uses design tokens for animation.",
+          "Loading placeholder for content that has not resolved yet. Use `Skeleton` to preserve layout during loading, then swap to the final content once data arrives.",
       },
     },
   },
@@ -35,7 +37,7 @@ export const Default: Story = {
 
 export const Variants: Story = {
   render: () => (
-    <StorySection title="Variants" description="line, card, list, shimmer.">
+    <StorySection title="Variants" description="Line, card, list, and shimmer show different loading densities.">
       <StoryShowcase>
         <StoryStack>
           <Skeleton variant="line" />
@@ -49,11 +51,11 @@ export const Variants: Story = {
 
 export const InContext: Story = {
   render: () => (
-    <StorySection title="In context" description="Card loading state.">
+    <StorySection title="In context" description="Card loading state. Preserve the final geometry so the page does not jump.">
       <StoryShowcase>
-        <div className="story-preview-card">
+        <StoryPreviewCard>
           <SkeletonCard />
-        </div>
+        </StoryPreviewCard>
       </StoryShowcase>
     </StorySection>
   ),
@@ -61,7 +63,7 @@ export const InContext: Story = {
 
 export const ListLoading: Story = {
   render: () => (
-    <StorySection title="List loading" description="SkeletonList with 3 lines.">
+    <StorySection title="List loading" description="SkeletonList with three rows.">
       <StoryShowcase>
         <SkeletonList lines={3} />
       </StoryShowcase>

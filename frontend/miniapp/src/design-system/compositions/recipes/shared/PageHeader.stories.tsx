@@ -12,7 +12,7 @@ const meta: Meta<typeof PageHeader> = {
     docs: {
       description: {
         component:
-          "Inner page header with back button, title, subtitle, and optional right action.",
+          "Inner-page header with back button, title, subtitle, and optional right action.",
       },
     },
   },

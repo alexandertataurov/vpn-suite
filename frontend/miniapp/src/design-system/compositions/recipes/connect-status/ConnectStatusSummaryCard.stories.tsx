@@ -10,7 +10,7 @@ const meta: Meta<typeof ConnectStatusSummaryCard> = {
     layout: "padded",
     docs: {
       description: {
-        component: "Status summary card used on the connection confirmation route.",
+        component: "Status summary card used on the connection-confirmation route.",
       },
     },
   },

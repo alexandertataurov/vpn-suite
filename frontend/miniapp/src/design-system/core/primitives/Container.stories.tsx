@@ -1,15 +1,17 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Container, Stack } from "./index";
+import { StorySection, StoryShowcase } from "@/design-system";
 
 const meta: Meta<typeof Container> = {
   title: "Primitives/Container",
   component: Container,
   parameters: {
     layout: "padded",
+    status: { type: "stable" },
     docs: {
       description: {
         component:
-          "Constrained width + padding. Use for page content, forms, or centered layouts.",
+          "Constrained width and consistent padding for page content, forms, and centered layouts. Choose the size token instead of hardcoding max-width.",
       },
     },
   },
@@ -32,78 +34,70 @@ export const Default: Story = {
 
 export const Sizes: Story = {
   render: () => (
-    <Stack gap="6">
-      <Container size="sm" padding="md">
-        <div
-          style={{
-            padding: "var(--spacing-2)",
-            background: "var(--color-surface-2)",
-            borderRadius: "var(--radius-sm)",
-            fontFamily: "var(--font-mono)",
-            fontSize: "var(--typo-caption-size)",
-            color: "var(--color-text-muted)",
-          }}
-        >
-          size=sm (480px max)
-        </div>
-      </Container>
-      <Container size="md" padding="md">
-        <div
-          style={{
-            padding: "var(--spacing-2)",
-            background: "var(--color-surface-2)",
-            borderRadius: "var(--radius-sm)",
-            fontFamily: "var(--font-mono)",
-            fontSize: "var(--typo-caption-size)",
-            color: "var(--color-text-muted)",
-          }}
-        >
-          size=md (768px max)
-        </div>
-      </Container>
-      <Container size="lg" padding="md">
-        <div
-          style={{
-            padding: "var(--spacing-2)",
-            background: "var(--color-surface-2)",
-            borderRadius: "var(--radius-sm)",
-            fontFamily: "var(--font-mono)",
-            fontSize: "var(--typo-caption-size)",
-            color: "var(--color-text-muted)",
-          }}
-        >
-          size=lg (960px max)
-        </div>
-      </Container>
-    </Stack>
+    <StorySection title="Sizes" description="Use the size token to control readable content width.">
+      <StoryShowcase>
+        <Stack gap="6">
+          <Container size="sm" padding="md">
+            <ContainerLabel>size=sm (480px max)</ContainerLabel>
+          </Container>
+          <Container size="md" padding="md">
+            <ContainerLabel>size=md (768px max)</ContainerLabel>
+          </Container>
+          <Container size="lg" padding="md">
+            <ContainerLabel>size=lg (960px max)</ContainerLabel>
+          </Container>
+        </Stack>
+      </StoryShowcase>
+    </StorySection>
   ),
 };
 
 export const PaddingVariants: Story = {
   render: () => (
-    <Stack gap="4">
-      <Container size="md" padding="sm">
-        <div
-          style={{
-            background: "var(--color-accent)",
-            opacity: 0.2,
-            height: 24,
-            borderRadius: "var(--radius-sm)",
-          }}
-        />
-        padding=sm
-      </Container>
-      <Container size="md" padding="md">
-        <div
-          style={{
-            background: "var(--color-accent)",
-            opacity: 0.2,
-            height: 24,
-            borderRadius: "var(--radius-sm)",
-          }}
-        />
-        padding=md
-      </Container>
-    </Stack>
+    <StorySection title="Padding variants" description="Compact and standard padding tokens.">
+      <StoryShowcase>
+        <Stack gap="4">
+          <Container size="md" padding="sm">
+            <TokenBar label="padding=sm" />
+          </Container>
+          <Container size="md" padding="md">
+            <TokenBar label="padding=md" />
+          </Container>
+        </Stack>
+      </StoryShowcase>
+    </StorySection>
   ),
 };
+
+function ContainerLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      style={{
+        padding: "var(--spacing-2)",
+        background: "var(--color-surface-2)",
+        borderRadius: "var(--radius-sm)",
+        fontFamily: "var(--font-mono)",
+        fontSize: "var(--typo-caption-size)",
+        color: "var(--color-text-muted)",
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function TokenBar({ label }: { label: string }) {
+  return (
+    <>
+      <div
+        style={{
+          background: "var(--color-accent)",
+          opacity: 0.2,
+          height: 24,
+          borderRadius: "var(--radius-sm)",
+        }}
+      />
+      {label}
+    </>
+  );
+}

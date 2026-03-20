@@ -11,7 +11,7 @@ const meta: Meta<typeof PlanBillingHistorySection> = {
     status: { type: "stable" },
     docs: {
       description: {
-        component: "Billing history section used on the plan page, including empty, loading, and expandable history states.",
+        component: "Billing-history section used on the plan page, including empty, loading, and expandable states.",
       },
     },
   },
@@ -66,7 +66,7 @@ export const Default: Story = {
 
 export const Variants: Story = {
   render: () => (
-    <StorySection title="Variants" description="Collapsed, expanded, loading, and empty billing-history states.">
+    <StorySection title="Variants" description="Collapsed, expanded, loading, and empty billing-history states in one matrix.">
       <StoryShowcase>
         <StoryStack>
           <PlanBillingHistorySection

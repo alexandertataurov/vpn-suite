@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { NoDeviceCallout } from "./NoDeviceCallout";
-import { CardRow, PlanCard, RowItem } from "@/design-system";
+import { CardRow, PlanCard, RowItem, StorySection, StoryShowcase, StoryStack } from "@/design-system";
 import { IconBox } from "@/design-system/icons";
 
 function ThemePane({
@@ -41,7 +41,7 @@ const meta: Meta<typeof NoDeviceCallout> = {
     status: { type: "stable" },
     docs: {
       description: {
-        component: "Shown when the user has an active plan but has not added any devices yet. §4.9",
+        component: "Empty-home callout shown when the user has an active plan but has not added any devices yet.",
       },
     },
   },
@@ -56,18 +56,22 @@ export const Default: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Shown when user has an active plan but has not added any devices yet. §4.9",
+        story: "Primary empty state for an active subscription with zero issued devices.",
       },
     },
   },
   render: () => (
-    <WithThemes>
-      <NoDeviceCallout
-        title="No devices added"
-        subtitle="Add a device to generate your configuration."
-        onAddDevice={() => {}}
-      />
-    </WithThemes>
+    <StorySection title="Default" description="Dark and light themes for the empty-device callout.">
+      <StoryShowcase>
+        <WithThemes>
+          <NoDeviceCallout
+            title="No devices added"
+            subtitle="Add a device to generate your configuration."
+            onAddDevice={() => {}}
+          />
+        </WithThemes>
+      </StoryShowcase>
+    </StorySection>
   ),
 };
 
@@ -76,34 +80,38 @@ export const Variants: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Default copy, custom post-purchase copy, and narrow viewport behavior.",
+        story: "Default copy, post-purchase copy, and narrow viewport behavior.",
       },
     },
   },
   render: () => (
-    <>
-      <WithThemes>
-        <div className="nd-story-stack">
-          <NoDeviceCallout
-            title="No devices added"
-            subtitle="Add a device to generate your configuration."
-            onAddDevice={() => {}}
-          />
-          <NoDeviceCallout
-            title="Ready to connect"
-            subtitle="Your Pro plan is active. Add a device to get started."
-            onAddDevice={() => {}}
-          />
-        </div>
-      </WithThemes>
-      <ThemePane theme="dark" narrow>
-        <NoDeviceCallout
-          title="No devices added"
-          subtitle="Add a device to generate your configuration."
-          onAddDevice={() => {}}
-        />
-      </ThemePane>
-    </>
+    <StorySection title="Variants" description="Two copy positions plus a narrow layout check.">
+      <StoryShowcase>
+        <StoryStack>
+          <WithThemes>
+            <div className="nd-story-stack">
+              <NoDeviceCallout
+                title="No devices added"
+                subtitle="Add a device to generate your configuration."
+                onAddDevice={() => {}}
+              />
+              <NoDeviceCallout
+                title="Ready to connect"
+                subtitle="Your Pro plan is active. Add a device to get started."
+                onAddDevice={() => {}}
+              />
+            </div>
+          </WithThemes>
+          <ThemePane theme="dark" narrow>
+            <NoDeviceCallout
+              title="No devices added"
+              subtitle="Add a device to generate your configuration."
+              onAddDevice={() => {}}
+            />
+          </ThemePane>
+        </StoryStack>
+      </StoryShowcase>
+    </StorySection>
   ),
 };
 
@@ -112,34 +120,38 @@ export const InContext: Story = {
   parameters: {
     docs: {
       description: {
-        story: "NoDeviceCallout between PlanCard and action rows, as shown in the No Device state of the home screen.",
+        story: "The empty-device callout positioned between a plan card and supporting rows on the home screen.",
       },
     },
   },
   render: () => (
-    <WithThemes>
-      <div className="nd-story-stack">
-        <PlanCard
-          plan="Pro"
-          planSub="Annual"
-          status="active"
-          devices={0}
-          deviceLimit={5}
-          renewsLabel="Apr 1"
-        />
-        <NoDeviceCallout
-          title="No devices added"
-          subtitle="Add a device to generate your configuration."
-          onAddDevice={() => {}}
-        />
-        <CardRow>
-          <RowItem
-            icon={<IconBox size={15} strokeWidth={2} aria-hidden />}
-            label="Subscription"
-            subtitle="Pro annual · renews Apr 1"
-          />
-        </CardRow>
-      </div>
-    </WithThemes>
+    <StorySection title="In context" description="Home screen stack with plan, callout, and supporting row.">
+      <StoryShowcase>
+        <WithThemes>
+          <div className="nd-story-stack">
+            <PlanCard
+              plan="Pro"
+              planSub="Annual"
+              status="active"
+              devices={0}
+              deviceLimit={5}
+              renewsLabel="Apr 1"
+            />
+            <NoDeviceCallout
+              title="No devices added"
+              subtitle="Add a device to generate your configuration."
+              onAddDevice={() => {}}
+            />
+            <CardRow>
+              <RowItem
+                icon={<IconBox size={15} strokeWidth={2} aria-hidden />}
+                label="Subscription"
+                subtitle="Pro annual · renews Apr 1"
+              />
+            </CardRow>
+          </div>
+        </WithThemes>
+      </StoryShowcase>
+    </StorySection>
   ),
 };

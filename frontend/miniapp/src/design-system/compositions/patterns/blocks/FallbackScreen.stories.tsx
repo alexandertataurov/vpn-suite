@@ -11,7 +11,7 @@ const meta: Meta<typeof FallbackScreen> = {
     docs: {
       description: {
         component:
-          "Full-page fallback for load failures. Scenarios: retryable, non_retryable, auth_failure, timeout.",
+          "Full-page fallback for load failures. Scenarios: retryable, non-retryable, auth failure, and timeout.",
       },
     },
   },

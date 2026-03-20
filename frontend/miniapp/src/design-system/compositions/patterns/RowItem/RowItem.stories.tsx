@@ -45,7 +45,7 @@ const meta: Meta<typeof RowItem> = {
     status: { type: "stable" },
     docs: {
       description: {
-        component: "Settings row: icon + label/subtitle + right slot + chevron. Single horizontal layout.",
+        component: "Settings row with icon, label and subtitle, optional right slot, and optional chevron.",
       },
     },
   },
@@ -102,7 +102,7 @@ export const Default: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Label + subtitle + chevron. The standard settings row.",
+        story: "Label, subtitle, and chevron. The standard settings row.",
       },
     },
   },
@@ -177,7 +177,7 @@ export const InContext: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Standard grouped settings layout.",
+        story: "Standard grouped settings layout for profile and danger-zone sections.",
       },
     },
   },
@@ -207,7 +207,7 @@ export const KeyboardNav: Story = {
     docs: {
       description: {
         story:
-          "Tab to focus rows, Enter/Space to activate. Focus ring uses --color-accent. Tab through rows in this story to verify focus ring.",
+          "Tab to focus rows, Enter or Space to activate. Focus ring uses `--color-accent`.",
       },
     },
   },
@@ -232,7 +232,7 @@ export const Responsive: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Labels truncate at narrow widths. Subtitle truncates too.",
+        story: "Labels and subtitles truncate at narrow widths without breaking the row layout.",
       },
     },
   },

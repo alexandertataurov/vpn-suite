@@ -1,15 +1,17 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Text, Stack } from "../index";
+import { StorySection, StoryShowcase } from "@/design-system";
 
 const meta: Meta<typeof Text> = {
   title: "Primitives/Text",
   component: Text,
   parameters: {
     layout: "padded",
+    status: { type: "stable" },
     docs: {
       description: {
         component:
-          "Semantic text variants. Use body, body-sm, meta, caption for hierarchy.",
+          "Semantic text variants for body copy, compact text, metadata, and captions. Use the variant that matches the information hierarchy.",
       },
     },
   },
@@ -31,29 +33,29 @@ export const Default: Story = {
 
 export const Variants: Story = {
   render: () => (
-    <Stack gap="4">
-      <div>
-        <Text variant="body">Body — primary reading text</Text>
-      </div>
-      <div>
-        <Text variant="body-sm">Body small — secondary or compact</Text>
-      </div>
-      <div>
-        <Text variant="meta">Meta — labels, uppercase</Text>
-      </div>
-      <div>
-        <Text variant="caption">Caption — hints, tertiary</Text>
-      </div>
-    </Stack>
+    <StorySection title="Variants" description="Body, body-sm, meta, and caption are the only supported text tiers.">
+      <StoryShowcase>
+        <Stack gap="4">
+          <Text variant="body">Body - primary reading text</Text>
+          <Text variant="body-sm">Body small - secondary or compact</Text>
+          <Text variant="meta">Meta - labels, uppercase</Text>
+          <Text variant="caption">Caption - hints, tertiary</Text>
+        </Stack>
+      </StoryShowcase>
+    </StorySection>
   ),
 };
 
 export const AsElement: Story = {
   render: () => (
-    <Stack gap="2">
-      <Text as="p">As paragraph</Text>
-      <Text as="span">As span (inline)</Text>
-      <Text as="code">As code</Text>
-    </Stack>
+    <StorySection title="As element" description="Choose the semantic element without changing the visual variant.">
+      <StoryShowcase>
+        <Stack gap="2">
+          <Text as="p">As paragraph</Text>
+          <Text as="span">As span (inline)</Text>
+          <Text as="code">As code</Text>
+        </Stack>
+      </StoryShowcase>
+    </StorySection>
   ),
 };

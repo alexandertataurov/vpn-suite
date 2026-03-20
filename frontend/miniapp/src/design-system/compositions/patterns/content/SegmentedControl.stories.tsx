@@ -12,7 +12,7 @@ const meta: Meta<typeof SegmentedControl> = {
     docs: {
       description: {
         component:
-          "Legacy segmented control for content forms. Active plan-selection flows now use BillingPeriodToggle instead.",
+          "Legacy segmented control for content forms. Keep this only as a compatibility reference; new plan-selection flows should use `BillingPeriodToggle`.",
       },
     },
   },
@@ -42,7 +42,7 @@ export const Default: Story = {
 
 export const Variants: Story = {
   render: () => (
-    <StorySection title="Variants" description="With badge and selected state.">
+    <StorySection title="Variants" description="Selected and badge-enhanced states for the legacy control.">
       <StoryShowcase>
         <StoryStack>
           <SegmentedControl options={MONTHLY_ANNUAL} activeId="monthly" onSelect={() => {}} />

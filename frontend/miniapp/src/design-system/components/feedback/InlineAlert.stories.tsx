@@ -16,30 +16,8 @@ function ThemePane({
   children: React.ReactNode;
 }) {
   return (
-    <div
-      data-theme={theme}
-      style={{
-        background: theme === "dark" ? "#0f1117" : "#f2f2ef",
-        padding: 24,
-        borderRadius: 16,
-        flex: 1,
-        minWidth: 0,
-      }}
-    >
-      <p
-        style={{
-          fontSize: 10,
-          fontWeight: 600,
-          letterSpacing: "0.07em",
-          textTransform: "uppercase",
-          opacity: 0.4,
-          marginBottom: 16,
-          fontFamily: "Inter",
-          color: theme === "dark" ? "white" : "black",
-        }}
-      >
-        {theme}
-      </p>
+    <div data-theme={theme} className="story-theme-pane inline-alert-story-frame">
+      <p className="story-theme-pane-label">{theme}</p>
       {children}
     </div>
   );
@@ -47,7 +25,7 @@ function ThemePane({
 
 function WithThemes({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ display: "flex", gap: 16 }}>
+    <div className="story-themes-row">
       <ThemePane theme="dark">{children}</ThemePane>
       <ThemePane theme="light">{children}</ThemePane>
     </div>
@@ -64,7 +42,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "Inline feedback banner. Variants: info, warning, error, success. Uses semantic --alert-* tokens. Theme-aware via [data-theme].",
+          "Inline feedback banner for the miniapp. Use it for compact states that need immediate attention without interrupting the flow. Variants: info, warning, error, success.",
       },
     },
   },
@@ -123,7 +101,7 @@ export const Variants: Story = {
   render: () => (
     <StorySection
       title="Variants"
-      description="Four semantic variants. Background, border, label, and dot color all adapt."
+      description="Four semantic variants. Background, border, label, and dot color all adapt through tokens."
     >
       <StoryShowcase>
         <WithThemes>{variantsContent}</WithThemes>

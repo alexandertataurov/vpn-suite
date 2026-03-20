@@ -11,10 +11,10 @@ import {
 } from "@/storybook/page-contracts";
 
 const DOC_BODY = [
-  "**Onboarding** (`/onboarding`): stepped flow before the standard app shell (welcome → install → plan/device → VPN → confirm).",
-  "Matches `AppRoutes`: path `/onboarding` with `OnboardingPage` when bootstrap `phase !== \"app_ready\"` (sandbox forces `phase: \"onboarding\"`).",
-  "`OnboardingSandbox` sets **initialEntries** `['/onboarding']` and syncs **bootstrap `onboardingStep`** to the `step` prop so each story is a stable visual slice.",
-  "Use together with **Home** / **Devices** stories for post-onboarding states.",
+  "**Onboarding** (`/onboarding`) is the stepped pre-app flow: welcome, install, plan or device setup, VPN, and confirmation.",
+  "Matches `AppRoutes`: `/onboarding` with `OnboardingPage` whenever bootstrap `phase !== \"app_ready\"` (the sandbox forces `phase: \"onboarding\"`).",
+  "`OnboardingSandbox` sets `initialEntries: ['/onboarding']` and syncs bootstrap `onboardingStep` to the `step` prop so every story is a stable visual slice.",
+  "Use these stories alongside **Home** and **Devices** to validate the handoff after onboarding completes.",
 ].join("\n\n");
 
 const VIEW_NARROW = { viewport: { defaultViewport: "iphoneSE" as const } };
