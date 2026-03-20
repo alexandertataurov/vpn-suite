@@ -62,10 +62,10 @@
 }
 
 .compact-stepper__label {
-  font-size: var(--typo-body-sm-size, var(--font-size-sm));
+  font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   color: var(--color-text);
-  line-height: var(--line-height-title, 1.25);
+  line-height: var(--line-height-title);
   overflow-wrap: anywhere;
 }
 
@@ -74,7 +74,7 @@
 }
 
 .compact-stepper__description {
-  font-size: var(--typo-caption-size, var(--font-size-xs));
+  font-size: var(--font-size-xs);
   font-weight: var(--font-weight-normal);
   color: var(--color-text-muted);
   line-height: var(--line-height-body);

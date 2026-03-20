@@ -80,7 +80,7 @@
 
 .planName {
   font-family: var(--font-sans);
-  font-size: var(--amnezia-plan-name, var(--typo-h1-size));
+  font-size: var(--amnezia-plan-name, var(--font-size-lg));
   font-weight: var(--font-weight-bold);
   letter-spacing: var(--letter-spacing-tighter);
   line-height: var(--line-height-title);
@@ -175,7 +175,7 @@
   }
 
   .planName {
-    font-size: var(--amnezia-plan-name-sm, var(--typo-display-size));
+    font-size: var(--amnezia-plan-name-sm, var(--font-size-md));
     letter-spacing: var(--letter-spacing-tight);
   }
 

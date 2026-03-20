@@ -34,7 +34,7 @@
 }
 
 .troubleshooter-flow-card__eyebrow {
-  font-size: var(--amnezia-plan-eyebrow, var(--typo-meta-size));
+  font-size: var(--amnezia-plan-eyebrow, var(--font-size-xs));
   font-weight: var(--font-weight-semibold);
   letter-spacing: var(--letter-spacing-widest);
   text-transform: none;
@@ -48,7 +48,7 @@
 }
 
 .troubleshooter-flow-card__title {
-  font-size: var(--amnezia-hero-title, var(--typo-h3-size));
+  font-size: var(--amnezia-hero-title, var(--font-size-lg));
   font-weight: var(--font-weight-bold);
   color: var(--color-text);
   letter-spacing: var(--letter-spacing-tight);
@@ -57,7 +57,7 @@
 }
 
 .troubleshooter-flow-card__desc {
-  font-size: var(--amnezia-hero-desc, var(--typo-caption-size));
+  font-size: var(--amnezia-hero-desc, var(--font-size-xs));
   font-weight: var(--font-weight-normal);
   color: var(--color-text-muted);
   line-height: var(--line-height-snug);

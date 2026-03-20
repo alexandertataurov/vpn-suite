@@ -45,7 +45,7 @@
 .nd-title {
   margin: 0;
   font-family: var(--font-sans);
-  font-size: var(--typo-body-sm-size);
+  font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text);
   letter-spacing: var(--letter-spacing-heading, var(--letter-spacing-tight));

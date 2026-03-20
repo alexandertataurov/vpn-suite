@@ -1,5 +1,5 @@
 .device-hero-card .plan-name {
-  font-size: var(--typo-h1-size);
+  font-size: var(--font-size-lg);
   letter-spacing: var(--letter-spacing-tight);
 }
 
@@ -25,7 +25,7 @@
   padding: calc(var(--spacing-0-5) + var(--spacing-px)) calc(var(--spacing-2) + var(--spacing-px));
   border-radius: var(--radius-full);
   border: var(--border-width-hairline) solid transparent;
-  font-size: var(--typo-meta-size);
+  font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
   letter-spacing: var(--letter-spacing-widest);
   line-height: var(--line-height-label);
@@ -102,7 +102,7 @@
   max-width: 100%;
   margin-top: 0;
   color: var(--row-sub);
-  font-size: var(--typo-meta-size);
+  font-size: var(--font-size-xs);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -163,7 +163,7 @@
 
 .devices-setup-card__eyebrow {
   color: var(--color-text-tertiary);
-  font-size: var(--amnezia-plan-eyebrow, var(--typo-meta-size));
+  font-size: var(--amnezia-plan-eyebrow, var(--font-size-xs));
   font-weight: var(--font-weight-semibold);
   letter-spacing: var(--letter-spacing-widest);
   line-height: var(--line-height-label);
@@ -204,7 +204,7 @@
 @media (max-width: var(--vp-narrow)) {
   .device-hero-card .p-stat-val,
   .device-hero-card .plan-name {
-    font-size: var(--typo-h3-size);
+    font-size: var(--font-size-lg);
   }
 
   .device-hero-card .p-stat-label {
@@ -216,5 +216,5 @@
 .story-device-row-actions {
   display: flex;
   justify-content: flex-end;
-  min-width: 120px;
+  min-width: calc(var(--spacing-10) + var(--spacing-20)); /* 40px + 80px */
 }

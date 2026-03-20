@@ -39,7 +39,7 @@ export function NoDeviceCallout({
         onClick={handleAddDevice}
         disabled={!isInteractive}
       >
-        {ctaIcon ?? <IconPlus size={14} strokeWidth={2.5} aria-hidden />}
+        {ctaIcon ?? <IconPlus size={16} strokeWidth={2.5} aria-hidden />}
         <span>{ctaLabel}</span>
       </button>
     </div>
