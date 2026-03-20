@@ -28,6 +28,14 @@ export const Default: Story = {
     primaryAction: <Button variant="primary">Choose a Plan</Button>,
     secondaryAction: <Button variant="secondary">Learn more</Button>,
   },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Entry hero for users without a plan. Confirm that the primary plan-selection CTA is dominant and the secondary action remains supportive.",
+      },
+    },
+  },
   render: (args) => (
     <StoryShowcase>
       <NewUserHero {...args} />
@@ -37,6 +45,14 @@ export const Default: Story = {
 
 export const Variants: Story = {
   name: "Variants",
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Dual-action and single-action hero states for the no-plan entry flow. Use this to confirm the hero can scale down without losing the call to action.",
+      },
+    },
+  },
   render: () => (
     <StorySection title="Variants" description="Dual-action and single-action hero states for the no-plan entry flow.">
       <StoryShowcase>

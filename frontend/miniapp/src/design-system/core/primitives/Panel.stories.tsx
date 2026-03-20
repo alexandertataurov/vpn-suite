@@ -30,9 +30,25 @@ export const Default: Story = {
     variant: "surface",
     padding: "md",
   },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Default surface panel for grouped content with a stable tokenized background.",
+      },
+    },
+  },
 };
 
 export const Variants: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Surface and outline panels compared so the elevation choice is intentional.",
+      },
+    },
+  },
   render: () => (
     <StorySection title="Variants" description="Surface panels are for default elevation; outline panels are for lighter grouping.">
       <StoryShowcase>
@@ -50,6 +66,14 @@ export const Variants: Story = {
 };
 
 export const PaddingSizes: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Padding scale shown across panel sizes to confirm density on mobile and desktop.",
+      },
+    },
+  },
   render: () => (
     <StorySection title="Padding sizes" description="Spacing tokens keep panel density readable on mobile.">
       <StoryShowcase>

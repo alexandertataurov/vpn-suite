@@ -12,7 +12,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "Dropdown select with options. Supports label, error, loading, empty state. Uses design tokens.",
+          "Dropdown select with options. Supports label, error, loading, and empty states for list-based choices.",
       },
     },
   },
@@ -49,8 +49,16 @@ function SelectDemo() {
 }
 
 export const Default: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Interactive server selector using a real option list. This is the default select contract.",
+      },
+    },
+  },
   render: () => (
-    <StorySection title="Interactive" description="Select a server.">
+    <StorySection title="Interactive" description="Select a server from the option list.">
       <StoryShowcase>
         <SelectDemo />
       </StoryShowcase>
@@ -59,8 +67,16 @@ export const Default: Story = {
 };
 
 export const States: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Error, loading, empty, and disabled states shown together for quick contract review.",
+      },
+    },
+  },
   render: () => (
-    <StorySection title="States" description="Error, loading, empty, disabled.">
+    <StorySection title="States" description="Error, loading, empty, and disabled states.">
       <StoryShowcase>
         <StoryStack>
           <Select
@@ -99,8 +115,16 @@ export const States: Story = {
 };
 
 export const FormContext: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Select rendered alongside another field so spacing and label alignment can be reviewed together.",
+      },
+    },
+  },
   render: () => (
-    <StorySection title="In form context" description="With other fields.">
+    <StorySection title="In form context" description="With a text field above it.">
       <StoryShowcase>
         <StoryStack>
           <Input label="Email" placeholder="you@example.com" type="email" />

@@ -35,6 +35,14 @@ export const Default: Story = {
       </StoryShowcase>
     </StorySection>
   ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Default field wrapper with the shared label and input spacing already applied. Use it to confirm alignment before adding helper or validation text.",
+      },
+    },
+  },
 };
 
 export const States: Story = {
@@ -59,4 +67,12 @@ export const States: Story = {
       </StoryShowcase>
     </StorySection>
   ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Idle, error, and success field states shown in a single width. This keeps validation copy comparable and makes layout drift obvious.",
+      },
+    },
+  },
 };

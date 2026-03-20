@@ -9,6 +9,7 @@ const meta: Meta<typeof SelectionCard> = {
   component: SelectionCard,
   parameters: {
     layout: "padded",
+    status: { type: "stable" },
     docs: {
       description: {
         component:
@@ -29,6 +30,13 @@ export const Default: Story = {
     selected: false,
     onSelect: () => {},
   },
+  parameters: {
+    docs: {
+      description: {
+        story: "Default unselected state for a selectable location card.",
+      },
+    },
+  },
   render: (args) => (
     <StoryShowcase>
       <SelectionCard {...args} />
@@ -38,7 +46,7 @@ export const Default: Story = {
 
 export const Variants: Story = {
   render: () => (
-    <StorySection title="Variants" description="Available and selected states.">
+    <StorySection title="Variants" description="Available and selected states with badges.">
       <StoryShowcase>
         <StoryStack>
           <SelectionCard
@@ -62,7 +70,7 @@ export const Variants: Story = {
 
 export const WithMetadata: Story = {
   render: () => (
-    <StorySection title="With metadata" description="Extra content slot.">
+    <StorySection title="With metadata" description="Metadata slot for latency, load, or other supporting values.">
       <StoryShowcase>
         <SelectionCard
           title="Location US"

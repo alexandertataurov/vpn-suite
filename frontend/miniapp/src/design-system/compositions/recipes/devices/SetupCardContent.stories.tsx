@@ -10,7 +10,8 @@ const meta: Meta<typeof SetupCardContent> = {
     layout: "padded",
     docs: {
       description: {
-        component: "Devices setup card used for no-subscription, issue-device, and pending-confirmation states.",
+        component:
+          "Devices setup card used for no-subscription, issue-device, and pending-confirmation states.",
       },
     },
   },
@@ -27,6 +28,14 @@ export const Default: Story = {
     issueActionLabel: "Add device",
     onIssueDevice: () => {},
   },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Issue-device state with a clear primary action and the canonical CTA copy.",
+      },
+    },
+  },
   render: (args) => (
     <StoryShowcase>
       <SetupCardContent {...args} />
@@ -36,7 +45,10 @@ export const Default: Story = {
 
 export const Variants: Story = {
   render: () => (
-    <StorySection title="Variants" description="Subscription required, ready to add a device, and awaiting connection confirmation.">
+    <StorySection
+      title="Variants"
+      description="Subscription required, ready to add a device, and awaiting connection confirmation."
+    >
       <StoryShowcase>
         <StoryStack>
           <SetupCardContent step="subscription" />

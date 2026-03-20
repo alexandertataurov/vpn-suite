@@ -29,6 +29,14 @@ export const Default: Story = {
     planName: "PRO",
     onSettings: () => {},
   },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Default profile row for the home screen. Use it to confirm the avatar, plan chip, and settings action stay aligned at the top of the page.",
+      },
+    },
+  },
   render: (args) => (
     <StoryShowcase>
       <ProfileRow {...args} />
@@ -37,6 +45,14 @@ export const Default: Story = {
 };
 
 export const Variants: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Beta, active, expiring, and expired account states in one row pattern. Review how the row adapts as the subscription status changes.",
+      },
+    },
+  },
   render: () => (
     <StorySection title="Variants" description="Beta, active, expiring, and expired account states in one row pattern.">
       <StoryShowcase>

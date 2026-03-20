@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { SettingsAccountOverviewCard } from "./SettingsAccountOverviewCard";
 
@@ -6,7 +7,7 @@ function ThemePane({
   children,
 }: {
   theme: "dark" | "light";
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <div data-theme={theme} className="story-theme-pane story-theme-pane--account-card">
@@ -16,7 +17,7 @@ function ThemePane({
   );
 }
 
-function WithThemes({ children }: { children: React.ReactNode }) {
+function WithThemes({ children }: { children: ReactNode }) {
   return (
     <div className="story-themes-row">
       <ThemePane theme="dark">{children}</ThemePane>
@@ -34,7 +35,8 @@ const meta: Meta<typeof SettingsAccountOverviewCard> = {
     status: { type: "stable" },
     docs: {
       description: {
-        component: "Account overview card used at the top of settings, pairing identity details with renewal and device stats.",
+        component:
+          "Account overview card used at the top of settings, pairing identity details with renewal and device stats.",
       },
     },
   },
@@ -57,6 +59,14 @@ const activeArgs = {
 
 export const Default: Story = {
   args: activeArgs,
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Primary account summary card with the default active-plan presentation.",
+      },
+    },
+  },
   render: (args) => (
     <WithThemes>
       <SettingsAccountOverviewCard {...args} />

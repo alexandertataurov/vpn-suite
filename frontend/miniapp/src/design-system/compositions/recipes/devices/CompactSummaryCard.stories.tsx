@@ -11,7 +11,8 @@ const meta: Meta<typeof CompactSummaryCard> = {
     layout: "padded",
     docs: {
       description: {
-        component: "Compact card with eyebrow, title, stats, actions, footer.",
+        component:
+          "Compact summary card contract with eyebrow, title, stats, actions, and footer slots.",
       },
     },
   },
@@ -34,6 +35,14 @@ export const Default: Story = {
     stats: DEFAULT_STATS,
     actions: <Button variant="secondary" size="sm">Manage</Button>,
   },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Primary plan summary card with device and renewal stats plus a secondary action.",
+      },
+    },
+  },
   render: (args) => (
     <StoryShowcase>
       <CompactSummaryCard {...args} />
@@ -43,7 +52,10 @@ export const Default: Story = {
 
 export const Variants: Story = {
   render: () => (
-    <StorySection title="Variants" description="Minimal and full.">
+    <StorySection
+      title="Variants"
+      description="Minimal and fully populated summary card states."
+    >
       <StoryShowcase>
         <StoryStack>
           <CompactSummaryCard

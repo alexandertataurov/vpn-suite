@@ -38,6 +38,14 @@ export const Default: Story = {
       <SegmentedControl {...args} />
     </StoryShowcase>
   ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Legacy two-option segmented control in its default state. Keep this only as a compatibility reference while billing flows move to `BillingPeriodToggle`.",
+      },
+    },
+  },
 };
 
 export const Variants: Story = {
@@ -51,4 +59,12 @@ export const Variants: Story = {
       </StoryShowcase>
     </StorySection>
   ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Selected and badge-enhanced states for the legacy control. This is the quickest way to spot whether the active option and badge treatment still render correctly.",
+      },
+    },
+  },
 };

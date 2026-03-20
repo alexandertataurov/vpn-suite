@@ -28,6 +28,13 @@ const shadowKeys = Object.keys(SHADOW_TOKENS) as Array<keyof typeof SHADOW_TOKEN
 
 export const Scale: StoryObj = {
   name: "Scale",
+  parameters: {
+    docs: {
+      description: {
+        story: "Shadow scale for cards, panels, and overlays across both themes.",
+      },
+    },
+  },
   render: () => (
     <FoundationSection>
       <div>

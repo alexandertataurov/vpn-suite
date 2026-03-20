@@ -27,6 +27,14 @@ export const Default: Story = {
     edge: "e-a",
     latestDeviceName: "iPhone 15 Pro",
   },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Baseline connection-status summary for the confirmation route. Review the copy hierarchy and device naming before the user is marked connected.",
+      },
+    },
+  },
   render: (args) => (
     <StoryShowcase>
       <ConnectStatusSummaryCard {...args} />
@@ -35,6 +43,14 @@ export const Default: Story = {
 };
 
 export const Variants: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Warning, success, and error states side by side. Use this matrix to verify the tone changes with the connection outcome.",
+      },
+    },
+  },
   render: () => (
     <StorySection title="Variants" description="Warning, success, and error summary states.">
       <StoryShowcase>

@@ -11,7 +11,8 @@ const meta: Meta<typeof ProfileModal> = {
     layout: "padded",
     docs: {
       description: {
-        component: "Settings profile edit modal, kept in the recipe layer as the canonical visual contract.",
+        component:
+          "Settings profile edit modal kept in the recipe layer as the canonical visual contract.",
       },
     },
   },
@@ -74,6 +75,14 @@ function ModalWithState() {
 }
 
 export const Default: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Interactive open-state modal with name, email, and phone fields already filled in.",
+      },
+    },
+  },
   render: () => (
     <StoryShowcase>
       <ModalWithState />
@@ -83,7 +92,7 @@ export const Default: Story = {
 
 export const Variants: Story = {
   render: () => (
-    <StorySection title="Variants" description="Open and saving states.">
+    <StorySection title="Variants" description="Open and saving modal states.">
       <StoryShowcase>
         <StoryStack>
           <ProfileModal

@@ -49,7 +49,8 @@ const meta: Meta<typeof BillingPeriodToggle> = {
     status: { type: "stable" },
     docs: {
       description: {
-        component: "Billing period segmented control with a sliding thumb and optional annual discount badge.",
+        component:
+          "Billing period segmented control with a sliding thumb and optional annual discount badge. Use it as the canonical period selector for plan flows.",
       },
     },
   },
@@ -61,6 +62,14 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   name: "Default — Monthly selected",
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Monthly selected by default with the discount badge visible. This is the baseline plan selector state.",
+      },
+    },
+  },
   render: () => (
     <WithThemes>
       <InteractiveToggle initialValue="monthly" discount="20%" />
@@ -70,6 +79,14 @@ export const Default: Story = {
 
 export const Variants: Story = {
   name: "Variants",
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Monthly, annual, and no-discount variants shown together for quick comparison.",
+      },
+    },
+  },
   render: () => (
     <WithThemes>
       <StoryStack>
@@ -86,7 +103,8 @@ export const InContext: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Segmented control above plan selection cards.",
+        story:
+          "Placed above a plan card to show how the toggle reads inside the billing flow.",
       },
     },
   },

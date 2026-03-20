@@ -12,7 +12,8 @@ const meta: Meta<typeof ModernHeroCard> = {
     layout: "padded",
     docs: {
       description: {
-        component: "Hero card with icon, title, description, actions. Status: default, active, warning, danger.",
+        component:
+          "Hero card contract with icon, title, description, and actions. Status: default, active, warning, danger.",
       },
     },
   },
@@ -30,6 +31,14 @@ export const Default: Story = {
     status: "active",
     actions: <Button variant="primary">Connect</Button>,
   },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Connected-state hero with a clear primary action and the default layout used on the home surface.",
+      },
+    },
+  },
   render: (args) => (
     <StoryShowcase>
       <ModernHeroCard {...args} />
@@ -39,7 +48,7 @@ export const Default: Story = {
 
 export const Variants: Story = {
   render: () => (
-    <StorySection title="Variants" description="Status states.">
+    <StorySection title="Variants" description="Status states and card emphasis variations.">
       <StoryShowcase>
         <StoryGrid>
           <ModernHeroCard

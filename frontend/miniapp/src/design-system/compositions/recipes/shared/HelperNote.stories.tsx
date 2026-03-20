@@ -10,7 +10,8 @@ const meta: Meta<typeof HelperNote> = {
     layout: "padded",
     docs: {
       description: {
-        component: "Helper note with optional title. Tones: default, info, warning, danger.",
+        component:
+          "Helper note with optional title. Tones: default, info, warning, danger.",
       },
     },
   },
@@ -26,6 +27,13 @@ export const Default: Story = {
     children: "Use the Restore access page if you lost your config.",
     tone: "default",
   },
+  parameters: {
+    docs: {
+      description: {
+        story: "Default helper note for subtle guidance and inline context.",
+      },
+    },
+  },
   render: (args) => (
     <StoryShowcase>
       <HelperNote {...args} />
@@ -35,7 +43,7 @@ export const Default: Story = {
 
 export const Variants: Story = {
   render: () => (
-    <StorySection title="Variants" description="All tones.">
+    <StorySection title="Variants" description="All tones across guidance and warning levels.">
       <StoryShowcase>
         <StoryStack>
           <HelperNote tone="default">Default helper text.</HelperNote>

@@ -35,6 +35,14 @@ export const Default: Story = {
       <PillChip {...args} />
     </StoryShowcase>
   ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Default pill chip used for short profile metadata. Keep the label concise so the chip can sit beside avatars, buttons, or plan text without wrapping.",
+      },
+    },
+  },
 };
 
 export const Variants: Story = {
@@ -50,11 +58,19 @@ export const Variants: Story = {
       </StoryShowcase>
     </StorySection>
   ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Beta, active, expiring, and expired pill states shown together. Use this matrix to verify the semantic palette before placing the chip in a profile row.",
+      },
+    },
+  },
 };
 
 export const WithDimPart: Story = {
   render: () => (
-    <StorySection title="Bold · dim format" description="Use the separator to split primary and secondary label fragments.">
+    <StorySection title="Split label format" description="Use the separator to split primary and secondary label fragments.">
       <StoryShowcase>
         <Inline gap="2" wrap>
           <PillChip variant="expiring">Expiring · 14d</PillChip>
@@ -63,6 +79,14 @@ export const WithDimPart: Story = {
       </StoryShowcase>
     </StorySection>
   ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Split primary and secondary fragments inside one pill. This is the pattern for compact metadata like plan status plus remaining time.",
+      },
+    },
+  },
 };
 
 export const InContext: Story = {
@@ -80,4 +104,12 @@ export const InContext: Story = {
       </StoryShowcase>
     </StorySection>
   ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Pill chip shown in a profile row with avatar and trailing settings action. The layout checks whether the chip still reads clearly in a dense row.",
+      },
+    },
+  },
 };

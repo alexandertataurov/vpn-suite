@@ -8,6 +8,7 @@ const meta: Meta<typeof ToggleRow> = {
   component: ToggleRow,
   parameters: {
     layout: "padded",
+    status: { type: "stable" },
     docs: {
       description: {
         component:
@@ -28,6 +29,13 @@ export const Default: Story = {
     checked: true,
     onChange: () => {},
   },
+  parameters: {
+    docs: {
+      description: {
+        story: "Basic enabled toggle row with label and supporting text.",
+      },
+    },
+  },
   render: (args) => (
     <StoryShowcase>
       <ToggleRow {...args} />
@@ -37,7 +45,7 @@ export const Default: Story = {
 
 export const States: Story = {
   render: () => (
-    <StorySection title="States" description="On, off, disabled.">
+    <StorySection title="States" description="On, off, and disabled states with a reason string.">
       <StoryShowcase>
         <StoryStack>
           <ToggleRow name="Option A" checked={true} onChange={() => {}} />

@@ -30,9 +30,25 @@ export const Default: Story = {
     size: "md",
     padding: "md",
   },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Default width-constrained container for regular page content and centered layouts.",
+      },
+    },
+  },
 };
 
 export const Sizes: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Compare the size tokens to choose the right readable width without hardcoding max-width values.",
+      },
+    },
+  },
   render: () => (
     <StorySection title="Sizes" description="Use the size token to control readable content width.">
       <StoryShowcase>
@@ -53,6 +69,14 @@ export const Sizes: Story = {
 };
 
 export const PaddingVariants: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Padding variants that show how the container maintains rhythm at different densities.",
+      },
+    },
+  },
   render: () => (
     <StorySection title="Padding variants" description="Compact and standard padding tokens.">
       <StoryShowcase>

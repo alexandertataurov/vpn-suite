@@ -8,6 +8,7 @@ const meta: Meta<typeof ServerCard> = {
   component: ServerCard,
   parameters: {
     layout: "padded",
+    status: { type: "stable" },
     docs: {
       description: {
         component:
@@ -30,6 +31,13 @@ export const Default: Story = {
     isCurrent: false,
     onSelect: () => {},
   },
+  parameters: {
+    docs: {
+      description: {
+        story: "Default server card for a selectable destination.",
+      },
+    },
+  },
   render: (args) => (
     <StoryShowcase>
       <ServerCard {...args} />
@@ -39,7 +47,7 @@ export const Default: Story = {
 
 export const Variants: Story = {
   render: () => (
-    <StorySection title="Variants" description="Available, selected, and high-load states.">
+    <StorySection title="Variants" description="Available, selected, and high-load states for server selection.">
       <StoryShowcase>
         <StoryStack>
           <ServerCard

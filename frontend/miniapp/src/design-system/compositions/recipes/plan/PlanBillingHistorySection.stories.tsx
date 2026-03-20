@@ -57,6 +57,14 @@ export const Default: Story = {
     canExpand: true,
     onToggleExpanded: () => {},
   },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Collapsed billing-history section for the plan page. Check that the latest payments are readable before the user expands the full ledger.",
+      },
+    },
+  },
   render: (args) => (
     <StoryShowcase>
       <PlanBillingHistorySection {...args} />
@@ -65,6 +73,14 @@ export const Default: Story = {
 };
 
 export const Variants: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Collapsed, expanded, loading, and empty billing-history states in one matrix. Use it to verify the section stays legible across every state.",
+      },
+    },
+  },
   render: () => (
     <StorySection title="Variants" description="Collapsed, expanded, loading, and empty billing-history states in one matrix.">
       <StoryShowcase>

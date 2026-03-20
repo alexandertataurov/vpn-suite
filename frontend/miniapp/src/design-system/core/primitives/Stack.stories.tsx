@@ -38,9 +38,25 @@ export const Default: Story = {
     direction: "vertical",
     gap: "4",
   },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Default vertical stack for simple column layout with tokenized spacing.",
+      },
+    },
+  },
 };
 
 export const Gaps: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Gap tokens compared side by side to show the spacing scale in a real row layout.",
+      },
+    },
+  },
   render: () => (
     <StorySection title="Gaps" description="Gap tokens render consistently across layouts.">
       <StoryShowcase>
@@ -54,6 +70,14 @@ export const Gaps: Story = {
 };
 
 export const Directions: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Vertical and horizontal Stack usage with the same API, showing how the primitive flips direction without changing semantics.",
+      },
+    },
+  },
   render: () => (
     <StorySection title="Directions" description="Vertical and horizontal compositions use the same API.">
       <StoryShowcase>
@@ -67,6 +91,14 @@ export const Directions: Story = {
 };
 
 export const AlignJustify: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Alignment and justification example for keeping wrapper markup semantic while the layout stays flexible.",
+      },
+    },
+  },
   render: () => (
     <StorySection title="Alignment" description="Use justify and align to keep wrappers semantic.">
       <StoryShowcase>

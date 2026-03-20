@@ -27,6 +27,13 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: { initials: "JD", size: "md" },
+  parameters: {
+    docs: {
+      description: {
+        story: "Default avatar sizing for a profile row or header.",
+      },
+    },
+  },
   render: (args) => (
     <StoryShowcase>
       <Avatar {...args} />
@@ -36,7 +43,7 @@ export const Default: Story = {
 
 export const Sizes: Story = {
   render: () => (
-    <StorySection title="Sizes" description="sm, md.">
+    <StorySection title="Sizes" description="Small and medium sizes side by side.">
       <StoryShowcase>
         <Inline gap="2" align="center">
           <Avatar initials="AB" size="sm" />
@@ -49,7 +56,7 @@ export const Sizes: Story = {
 
 export const WithImage: Story = {
   render: () => (
-    <StorySection title="With image" description="Image fallback when src is provided.">
+    <StorySection title="With image" description="Image fallback stays available when a src is provided.">
       <StoryShowcase>
         <Avatar
           initials="JD"
@@ -63,7 +70,7 @@ export const WithImage: Story = {
 
 export const InContext: Story = {
   render: () => (
-    <StorySection title="In context" description="Profile row.">
+    <StorySection title="In context" description="Avatar paired with a display name in a profile row.">
       <StoryShowcase>
         <Inline gap="2" align="center">
           <Avatar initials="JD" size="md" />

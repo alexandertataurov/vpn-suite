@@ -92,6 +92,14 @@ const baseArgs = {
 
 export const Default: Story = {
   args: baseArgs,
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Plan-selection section in the subscribed annual state. Use this to verify the tier cards, selected plan, and billing toggle work together.",
+      },
+    },
+  },
   render: (args) => (
     <StoryShowcase>
       <PlanOptionsSection {...args} />
@@ -100,6 +108,14 @@ export const Default: Story = {
 };
 
 export const Variants: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Subscribed, renewal-prompt, and empty-catalog states in one view. Review how the section degrades when there are no visible tiers to choose from.",
+      },
+    },
+  },
   render: () => (
     <StorySection title="Variants" description="Subscribed annual selection, renewal prompt, and empty catalog states.">
       <StoryShowcase>

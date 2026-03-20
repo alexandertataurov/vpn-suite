@@ -46,6 +46,14 @@ export const Default: Story = {
       <StatusChip {...args} />
     </StoryShowcase>
   ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Default active status chip for subscriptions and connection states. Use it to confirm the baseline label weight and color before testing other variants.",
+      },
+    },
+  },
 };
 
 export const Variants: Story = {
@@ -67,6 +75,14 @@ export const Variants: Story = {
       </StoryShowcase>
     </StorySection>
   ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "All status variants for subscription and connection states. This is the comparison matrix for semantic color, border treatment, and copy density.",
+      },
+    },
+  },
 };
 
 export const InContext: Story = {
@@ -90,4 +106,12 @@ export const InContext: Story = {
       </StoryShowcase>
     </StorySection>
   ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Status chip placed inside plan and device summary cards. The goal is to verify that the chip stays readable when nested in a card title block.",
+      },
+    },
+  },
 };

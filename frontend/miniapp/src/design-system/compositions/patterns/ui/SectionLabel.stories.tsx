@@ -10,9 +10,10 @@ const meta = {
   component: SectionLabel,
   parameters: {
     layout: "padded",
+    status: { type: "stable" },
     docs: {
       description: {
-        component: "Section eyebrow label (e.g. YOUR PLAN, DEVICE MANAGEMENT).",
+        component: "Section eyebrow label for grouped content, such as YOUR PLAN or DEVICE MANAGEMENT.",
       },
     },
   },
@@ -24,6 +25,13 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: { label: "YOUR PLAN" },
+  parameters: {
+    docs: {
+      description: {
+        story: "Simple eyebrow label for a section header.",
+      },
+    },
+  },
   render: (args) => (
     <StoryShowcase>
       <SectionLabel {...args} />
@@ -33,7 +41,7 @@ export const Default: Story = {
 
 export const InContext: Story = {
   render: () => (
-    <StorySection title="In context" description="Above list.">
+    <StorySection title="In context" description="Placed above a list card to separate a section.">
       <StoryShowcase>
         <div className="story-stack">
           <SectionLabel label="DEVICE MANAGEMENT" />

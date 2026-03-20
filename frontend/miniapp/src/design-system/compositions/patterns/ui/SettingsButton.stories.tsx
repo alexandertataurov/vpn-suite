@@ -31,6 +31,14 @@ export const Default: Story = {
       <SettingsButton onClick={() => {}} />
     </StoryShowcase>
   ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Default circular settings action for secondary controls. Use it as the isolated contract before embedding it in a profile or row layout.",
+      },
+    },
+  },
 };
 
 export const InContext: Story = {
@@ -48,4 +56,12 @@ export const InContext: Story = {
       </StoryShowcase>
     </StorySection>
   ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Settings button inside a profile row with avatar and plan badge. This validates the trailing action slot and spacing in a realistic row composition.",
+      },
+    },
+  },
 };

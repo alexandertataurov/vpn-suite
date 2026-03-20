@@ -10,7 +10,8 @@ const meta: Meta<typeof SubscriptionCancellationModal> = {
     layout: "padded",
     docs: {
       description: {
-        component: "Cancellation retention flow used from the Settings page.",
+        component:
+          "Cancellation retention flow used from the Settings page.",
       },
     },
   },
@@ -45,6 +46,14 @@ export const Default: Story = {
     onCancelAtPeriodEnd: () => {},
     onCancelNow: () => {},
   },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Retention dialog in the initial selection state before the user chooses a cancellation reason.",
+      },
+    },
+  },
   render: (args) => (
     <StoryShowcase>
       <SubscriptionCancellationModal {...args} />
@@ -54,7 +63,10 @@ export const Default: Story = {
 
 export const Variants: Story = {
   render: () => (
-    <StorySection title="Variants" description="No reason selected, discount retention, and support retention states.">
+    <StorySection
+      title="Variants"
+      description="No reason selected, discount retention, and support retention states."
+    >
       <StoryShowcase>
         <StoryStack>
           <SubscriptionCancellationModal

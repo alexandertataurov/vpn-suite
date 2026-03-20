@@ -28,6 +28,14 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: { width: "120px", height: "24px" },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Default loading bar for brief waits. Keep the width and height close to the final content so the layout stays stable.",
+      },
+    },
+  },
   render: (args) => (
     <StoryShowcase>
       <Skeleton {...args} />
@@ -36,8 +44,16 @@ export const Default: Story = {
 };
 
 export const Variants: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Compare line, card, list, and shimmer placeholders to match the density of the content that is still loading.",
+      },
+    },
+  },
   render: () => (
-    <StorySection title="Variants" description="Line, card, list, and shimmer show different loading densities.">
+    <StorySection title="Variants" description="Match the loading shape to the final content density.">
       <StoryShowcase>
         <StoryStack>
           <Skeleton variant="line" />
@@ -50,8 +66,16 @@ export const Variants: Story = {
 };
 
 export const InContext: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Card-sized loading state inside a preview shell. Use it to verify that the eventual page will not jump when data arrives.",
+      },
+    },
+  },
   render: () => (
-    <StorySection title="In context" description="Card loading state. Preserve the final geometry so the page does not jump.">
+    <StorySection title="In context" description="Preserve final geometry while content resolves.">
       <StoryShowcase>
         <StoryPreviewCard>
           <SkeletonCard />
@@ -62,8 +86,16 @@ export const InContext: Story = {
 };
 
 export const ListLoading: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Three-row skeleton list for pending collections and feed-like views.",
+      },
+    },
+  },
   render: () => (
-    <StorySection title="List loading" description="SkeletonList with three rows.">
+    <StorySection title="List loading" description="Use the list variant when several rows are pending at once.">
       <StoryShowcase>
         <SkeletonList lines={3} />
       </StoryShowcase>

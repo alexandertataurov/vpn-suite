@@ -17,7 +17,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "Bottom sheet dialog. Always enters from bottom, has drag handle. Uses modal tokens.",
+          "Bottom sheet dialog for mobile-first flows. It enters from the bottom, includes a drag handle, and uses modal tokens for overlay and surface styling.",
       },
     },
   },
@@ -43,9 +43,14 @@ function ThemeWrapper({
   children: React.ReactNode;
 }) {
   useEffect(() => {
+    const previousTheme = document.documentElement.dataset.theme;
     document.documentElement.dataset.theme = theme;
     return () => {
-      document.documentElement.dataset.theme = "";
+      if (previousTheme == null) {
+        delete document.documentElement.dataset.theme;
+      } else {
+        document.documentElement.dataset.theme = previousTheme;
+      }
     };
   }, [theme]);
   return <>{children}</>;
@@ -69,6 +74,14 @@ function DefaultDemo() {
 }
 
 export const Default: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Default bottom sheet opened from a button. Use this to review the entry motion and close interaction.",
+      },
+    },
+  },
   render: (args) => (
     <ThemeWrapper theme={args.theme ?? "dark"}>
       <StorySection
@@ -103,6 +116,14 @@ function ConfirmDemo() {
 }
 
 export const Confirm: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Confirmation flow with primary and secondary actions. This is the common non-destructive sheet pattern.",
+      },
+    },
+  },
   render: (args) => (
     <ThemeWrapper theme={args.theme ?? "dark"}>
       <StorySection title="Confirm" description="Primary and secondary actions.">
@@ -140,6 +161,14 @@ function DangerDemo() {
 }
 
 export const Danger: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Destructive sheet with danger tone on the primary action. Use it to review the red-action contract.",
+      },
+    },
+  },
   render: (args) => (
     <ThemeWrapper theme={args.theme ?? "dark"}>
       <StorySection title="Danger" description="Destructive action with tone.">
@@ -151,6 +180,12 @@ export const Danger: Story = {
 
 export const MobileView: Story = {
   parameters: {
+    docs: {
+      description: {
+        story:
+          "The same confirmation flow on a narrow viewport. This guards against clipped headers or cramped actions.",
+      },
+    },
     viewport: { defaultViewport: "iphoneSE" },
   },
   render: (args) => (
@@ -189,6 +224,14 @@ function LongContentDemo() {
 }
 
 export const LongContent: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Long content with a sticky header and footer. Use it to verify the body scrolls while actions stay reachable.",
+      },
+    },
+  },
   render: (args) => (
     <ThemeWrapper theme={args.theme ?? "dark"}>
       <StorySection

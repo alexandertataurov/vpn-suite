@@ -10,7 +10,8 @@ const meta: Meta<typeof SupportSection> = {
     layout: "padded",
     docs: {
       description: {
-        component: "Support actions recipe used by Settings, with one canonical story file instead of wrapper-level duplication.",
+        component:
+          "Support actions recipe used by Settings, with one canonical story file instead of wrapper-level duplication.",
       },
     },
   },
@@ -35,6 +36,14 @@ const baseArgs = {
 
 export const Default: Story = {
   args: baseArgs,
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Support section with the setup guide, FAQ, and contact-support actions exposed together.",
+      },
+    },
+  },
   render: (args) => (
     <StoryShowcase>
       <SupportSection {...args} />
@@ -44,7 +53,10 @@ export const Default: Story = {
 
 export const Variants: Story = {
   render: () => (
-    <StorySection title="Variants" description="Default copy and a more urgent contact-support emphasis.">
+    <StorySection
+      title="Variants"
+      description="Default copy and a more urgent contact-support emphasis."
+    >
       <StoryShowcase>
         <StoryStack>
           <SupportSection {...baseArgs} />

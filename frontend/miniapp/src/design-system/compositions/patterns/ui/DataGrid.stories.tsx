@@ -8,10 +8,11 @@ const meta: Meta<typeof DataGrid> = {
   component: DataGrid,
   parameters: {
     layout: "padded",
+    status: { type: "stable" },
     docs: {
       description: {
         component:
-          "Key/value data grid. DataCell supports label, value, tone, loading, tooltip. Layouts: 2x2, 1xcol.",
+          "Key/value data grid. DataCell supports label, value, tone, loading, and tooltip states.",
       },
     },
   },
@@ -22,6 +23,13 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story: "Compact 2-column key/value summary for a connected device or server.",
+      },
+    },
+  },
   render: () => (
     <StoryShowcase>
       <DataGrid columns={2}>
@@ -36,7 +44,7 @@ export const Default: Story = {
 
 export const Variants: Story = {
   render: () => (
-    <StorySection title="Variants" description="Tones and layout.">
+    <StorySection title="Variants" description="Tones and one-column versus two-column layouts.">
       <StoryShowcase>
         <StoryStack>
           <DataGrid columns={2}>
@@ -57,7 +65,7 @@ export const Variants: Story = {
 
 export const Loading: Story = {
   render: () => (
-    <StorySection title="Loading" description="Indeterminate state.">
+    <StorySection title="Loading" description="Indeterminate cell state while values resolve.">
       <StoryShowcase>
         <DataGrid columns={2}>
           <DataCell label="Latency" value="" loading />

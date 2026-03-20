@@ -33,6 +33,14 @@ export const Default: Story = {
       <FallbackScreen {...args} />
     </StoryShowcase>
   ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Retryable fallback for fetch failures. Use it when the screen should recover in place instead of leaving the user at a dead end.",
+      },
+    },
+  },
 };
 
 export const Variants: Story = {
@@ -56,4 +64,12 @@ export const Variants: Story = {
       </StoryShowcase>
     </StorySection>
   ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Retryable and non-retryable fallback flows shown side by side. The comparison is useful when deciding whether the user should retry in place or contact support.",
+      },
+    },
+  },
 };

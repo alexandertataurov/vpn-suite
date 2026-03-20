@@ -8,10 +8,11 @@ const meta: Meta<typeof ActionCard> = {
   component: ActionCard,
   parameters: {
     layout: "padded",
+    status: { type: "stable" },
     docs: {
       description: {
         component:
-          "Action card for label+value pairs or title+description blocks. Clickable when onClick provided.",
+          "Action card for label/value pairs or title/description blocks. It becomes interactive when `onClick` is provided.",
       },
     },
   },
@@ -27,6 +28,13 @@ export const Default: Story = {
     value: "2 / 5",
     onClick: () => {},
   },
+  parameters: {
+    docs: {
+      description: {
+        story: "Compact summary action for a single metric and an affordance.",
+      },
+    },
+  },
   render: (args) => (
     <StoryShowcase>
       <ActionCard {...args} />
@@ -35,8 +43,9 @@ export const Default: Story = {
 };
 
 export const Variants: Story = {
+  name: "Variants",
   render: () => (
-    <StorySection title="Variants" description="Label+value and title+description.">
+    <StorySection title="Variants" description="Label/value and title/description layouts, plus the static variant.">
       <StoryShowcase>
         <StoryGrid>
           <ActionCard label="Devices" value="2 / 5" onClick={() => {}} />

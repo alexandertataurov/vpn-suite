@@ -11,7 +11,8 @@ const meta: Meta<typeof PageCardSection> = {
     layout: "padded",
     docs: {
       description: {
-        component: "Page section with MissionCard. Title, description, action, card tone.",
+        component:
+          "Page section with a mission-style card. Title, description, action, and card tone are all part of the contract.",
       },
     },
   },
@@ -27,6 +28,13 @@ export const Default: Story = {
     description: "Optional description",
     cardTone: "blue",
     children: <Text as="p">Card content goes here.</Text>,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: "Generic page-card section wrapper with text content and a single tone.",
+      },
+    },
   },
   render: (args) => (
     <StoryShowcase>

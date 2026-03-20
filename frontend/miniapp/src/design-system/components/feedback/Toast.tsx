@@ -54,6 +54,13 @@ const defaultDismissible: Record<ToastVariant, boolean> = {
   persistent: true,
 };
 
+const TOAST_LABELS: Record<ToastVariant, string> = {
+  success: "Success",
+  error: "Attention",
+  info: "Update",
+  persistent: "Pinned",
+};
+
 export interface ToastContainerProps {
   children: ReactNode;
   /** For Storybook: use static viewport so toasts appear in flow. */
@@ -223,12 +230,20 @@ export function Toast({
       )}
       data-stack-index={stackIndex}
       data-stack-count={stackCount}
+      data-dismissible={resolvedDismissible ? "true" : "false"}
+      data-persistent={variant === "persistent" ? "true" : "false"}
       role={variant === "error" ? "alert" : "status"}
       aria-live={variant === "error" ? "assertive" : "polite"}
     >
+      <span className="toast-rail" aria-hidden />
       <div className="toast-content">
-        <span className="toast-icon" aria-hidden />
-        <span className="toast-message">{message}</span>
+        <span className="toast-icon-shell" aria-hidden>
+          <span className="toast-icon" />
+        </span>
+        <div className="toast-copy">
+          <span className="toast-label">{TOAST_LABELS[variant]}</span>
+          <span className="toast-message">{message}</span>
+        </div>
       </div>
       {resolvedDismissible ? (
         <button

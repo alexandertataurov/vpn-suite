@@ -37,6 +37,13 @@ const manageDevicesRow = {
 
 export const Default: Story = {
   args: manageDevicesRow,
+  parameters: {
+    docs: {
+      description: {
+        story: "Default management row with icon, subtitle, and chevron affordance.",
+      },
+    },
+  },
   render: (args) => (
     <StoryShowcase>
       <ListCard className="home-card-row">
@@ -48,7 +55,7 @@ export const Default: Story = {
 
 export const Variants: Story = {
   render: () => (
-    <StorySection title="Variants" description="Default row, right-slot badge, and danger treatment.">
+    <StorySection title="Variants" description="Default row, grouped right slot, and danger treatment.">
       <StoryShowcase>
         <ListCard className="home-card-row">
           <ListRow
@@ -80,7 +87,7 @@ export const Variants: Story = {
 
 export const InContext: Story = {
   render: () => (
-    <StorySection title="In context" description="Multiple rows in ListCard.">
+    <StorySection title="In context" description="Multiple rows inside one ListCard section.">
       <StoryShowcase>
         <ListCard className="home-card-row">
           <ListRow {...manageDevicesRow} subtitle="2 of 5 devices" />

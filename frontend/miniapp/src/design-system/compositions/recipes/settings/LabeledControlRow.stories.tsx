@@ -11,7 +11,8 @@ const meta: Meta<typeof LabeledControlRow> = {
     layout: "padded",
     docs: {
       description: {
-        component: "Label + control row layout.",
+        component:
+          "Label-plus-control row contract used across settings sections.",
       },
     },
   },
@@ -26,6 +27,14 @@ export const Default: Story = {
     label: "Notifications",
     children: <Switch checked={true} onChange={() => {}} />,
   },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Canonical label and toggle pairing used for settings controls.",
+      },
+    },
+  },
   render: (args) => (
     <StoryShowcase>
       <LabeledControlRow {...args} />
@@ -35,7 +44,7 @@ export const Default: Story = {
 
 export const Variants: Story = {
   render: () => (
-    <StorySection title="Variants" description="With different controls.">
+    <StorySection title="Variants" description="Toggle and value-display control variants.">
       <StoryShowcase>
         <StoryStack>
           <LabeledControlRow label="Toggle">

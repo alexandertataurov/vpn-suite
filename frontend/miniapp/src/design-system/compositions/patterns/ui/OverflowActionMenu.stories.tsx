@@ -9,10 +9,11 @@ const meta: Meta<typeof OverflowActionMenu> = {
   component: OverflowActionMenu,
   parameters: {
     layout: "padded",
+    status: { type: "stable" },
     docs: {
       description: {
         component:
-          "Popover menu with overflow trigger (⋮). Supports navigation, callbacks, destructive items, dividers.",
+          "Popover menu with an overflow trigger (⋮). Supports navigation, callbacks, destructive items, and dividers.",
       },
     },
   },
@@ -39,6 +40,13 @@ export const Default: Story = {
   args: {
     items: DEFAULT_ITEMS,
   },
+  parameters: {
+    docs: {
+      description: {
+        story: "Default overflow menu with edit, share, and destructive actions.",
+      },
+    },
+  },
   render: (args) => (
     <StoryShowcase>
       <OverflowActionMenu {...args} />
@@ -48,7 +56,7 @@ export const Default: Story = {
 
 export const WithDividers: Story = {
   render: () => (
-    <StorySection title="With dividers" description=" dividerBefore for grouping.">
+    <StorySection title="With dividers" description="Use dividerBefore to separate grouped actions.">
       <StoryShowcase>
         <OverflowActionMenu
           items={[

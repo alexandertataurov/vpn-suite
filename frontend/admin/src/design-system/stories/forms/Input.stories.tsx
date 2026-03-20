@@ -11,7 +11,7 @@ const meta: Meta<typeof Input> = {
       description: {
         component: [
           "## Overview",
-          "Input is the single-line text primitive for form fields and search. It supports label, helper text, error state, and optional prefix/suffix. Use inside Field when you need consistent label and error wiring.",
+          "Input is the single-line text primitive for form fields and search. It supports label, helper text, error state, and optional prefix/suffix. Use it when a field needs clear affordance and consistent validation wiring.",
           "## When to use",
           "Single-line text: form fields, search. Always pair with label or aria-label.",
           "## When NOT to use",
@@ -107,11 +107,8 @@ export const Default: Story = {
   parameters: {
     docs: {
       description: {
-        story: [
-          "**What this story shows:** Labeled email input with placeholder.",
-          "**When you'd use this:** Login, settings, any single-line email field.",
-          "**Key props in use:** `label`, `placeholder`. **What to watch:** Always pair with label or aria-label. **Real product example:** Operator login or account email field.",
-        ].join("\n\n"),
+        story:
+          "Labeled email field with placeholder text. Use this as the default contract for single-line inputs that need explicit labeling and a clear empty state.",
       },
     },
   },
@@ -128,10 +125,8 @@ export const AllVariants: Story = {
   parameters: {
     docs: {
       description: {
-        story: [
-          "**What this story shows:** Text, email, and password types for semantic behavior.",
-          "**When you'd use this:** Choosing input type for forms. **Key props in use:** `type`. **What to watch:** Use type=email for email. **Real product example:** Login or device config form.",
-        ].join("\n\n"),
+        story:
+          "Text, email, and password types side by side. This is the quickest way to confirm the semantic input type before a form is wired up.",
       },
     },
   },
@@ -142,7 +137,8 @@ export const Playground: Story = {
   parameters: {
     docs: {
       description: {
-        story: "**What this story shows:** Interactive playground for Input. **When you'd use this:** Exploration only — not canonical UX. **Key props in use:** label, placeholder, error, disabled. **What to watch:** N/A. **Real product example:** N/A.",
+        story:
+          "Interactive playground for shape and state exploration. Use it for local experimentation, not as the canonical form pattern.",
       },
     },
     padding: 32,
@@ -160,10 +156,8 @@ export const AllStates: Story = {
   parameters: {
     docs: {
       description: {
-        story: [
-          "**What this story shows:** Default, error, and disabled states side by side.",
-          "**When you'd use this:** Validating form state UX. **Key props in use:** `error`, `disabled`. **What to watch:** Error must show a message. **Real product example:** Server name validation.",
-        ].join("\n\n"),
+        story:
+          "Default, error, and disabled states displayed together. Use this to validate the state ladder before it is reused in a form.",
       },
     },
   },
@@ -182,10 +176,8 @@ export const InContext: Story = {
   parameters: {
     docs: {
       description: {
-        story: [
-          "**What this story shows:** Input inside a form with description and save/cancel actions.",
-          "**When you'd use this:** Server or device config forms. **Key props in use:** `label`, `description`. **What to watch:** One primary action. **Real product example:** Add server or edit device form.",
-        ].join("\n\n"),
+        story:
+          "Input inside a realistic form row with helper text and actions. This shows how the field should read when it is part of a complete screen.",
       },
     },
   },
@@ -201,10 +193,8 @@ export const WithPrefixSuffix: Story = {
   parameters: {
     docs: {
       description: {
-        story: [
-          "**What this story shows:** Search input with prefix icon and port field with suffix unit.",
-          "**When you'd use this:** Search bars, numeric fields with units. **Key props in use:** `prefix`, `suffix`. **What to watch:** Prefix/suffix are decorative; label is required. **Real product example:** Fleet search, WireGuard port field.",
-        ].join("\n\n"),
+        story:
+          "Search and numeric variants with prefix and suffix affordances. Keep the adornments decorative and the label authoritative.",
       },
     },
   },
@@ -215,10 +205,8 @@ export const DarkModeVariant: Story = {
   parameters: {
     docs: {
       description: {
-        story: [
-          "**What this story shows:** Input in light and dark theme.",
-          "**When you'd use this:** Theme review. **Key props in use:** theme. **What to watch:** Contrast. **Real product example:** Operator dark UI.",
-        ].join("\n\n"),
+        story:
+          "The same input rendered in light and dark themes. Use this to catch contrast or border issues across themes.",
       },
     },
   },
@@ -229,10 +217,8 @@ export const ResponsiveLayout: Story = {
   parameters: {
     docs: {
       description: {
-        story: [
-          "**What this story shows:** Input at multiple breakpoints.",
-          "**When you'd use this:** Mobile/tablet forms. **Key props in use:** viewport. **What to watch:** Touch target and wrap. **Real product example:** Mobile fleet search.",
-        ].join("\n\n"),
+        story:
+          "The input across breakpoint widths. This guards against label wrap, cramped spacing, and broken touch targets.",
       },
     },
   },
@@ -249,10 +235,8 @@ export const EdgeCases: Story = {
   parameters: {
     docs: {
       description: {
-        story: [
-          "**What this story shows:** Long label wrap, error message, disabled with value.",
-          "**When you'd use this:** Edge case review. **Key props in use:** `error`, `disabled`. **What to watch:** Label wraps; error is visible. **Real product example:** Validation and disabled states.",
-        ].join("\n\n"),
+        story:
+          "Edge cases for long labels, error copy, and disabled fields with values. Use it to verify the field does not collapse under real copy.",
       },
     },
   },

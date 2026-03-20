@@ -36,9 +36,25 @@ export const Default: Story = {
     gap: "2",
     align: "center",
   },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Default inline row for compact metadata and small paired elements.",
+      },
+    },
+  },
 };
 
 export const ChipRow: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Wrapped chip row that stays readable on small screens and avoids overflow.",
+      },
+    },
+  },
   render: () => (
     <StorySection title="Chip row" description="Use wrap to keep short tokens readable on narrow screens.">
       <StoryShowcase>
@@ -65,6 +81,14 @@ export const ChipRow: Story = {
 };
 
 export const IconAndText: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Icon-plus-text alignment example for compact status or label rows.",
+      },
+    },
+  },
   render: () => (
     <StorySection title="Icon and text" description="Use Inline to align small icon and text combinations cleanly.">
       <StoryShowcase>

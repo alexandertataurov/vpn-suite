@@ -13,9 +13,11 @@ const meta: Meta = {
   title: "Foundations/Motion",
   parameters: {
     layout: "padded",
+    status: { type: "stable" },
     docs: {
       description: {
-        component: "Duration and easing tokens. Use --duration-*, --ease-*.",
+        component:
+          "Duration and easing tokens for the miniapp motion system. Use `--duration-*` and `--ease-*` so feedback, overlays, and transitions feel consistent.",
       },
     },
   },
@@ -25,6 +27,13 @@ export default meta;
 const motionKeys = Object.keys(MOTION_TOKENS) as Array<keyof typeof MOTION_TOKENS>;
 
 export const Tokens: StoryObj = {
+  parameters: {
+    docs: {
+      description: {
+        story: "Duration and easing tokens for dialogs, banners, and small feedback transitions.",
+      },
+    },
+  },
   render: () => (
     <FoundationSection>
       <div>
@@ -37,20 +46,20 @@ export const Tokens: StoryObj = {
               value={String(MOTION_TOKENS[key])}
             >
               <div
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  borderRadius: FOUNDATION.cardRadius,
-                  background: "var(--color-surface)",
-                  border: FOUNDATION.cardBorder,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontFamily: "var(--font-mono)",
-                  fontSize: 10,
-                  color: "var(--color-text)",
-                  padding: 8,
-                }}
+              style={{
+                width: "100%",
+                height: "100%",
+                borderRadius: FOUNDATION.cardRadius,
+                background: "var(--color-surface)",
+                border: FOUNDATION.cardBorder,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontFamily: "var(--font-mono)",
+                fontSize: "var(--typo-meta-size)",
+                color: "var(--color-text)",
+                padding: 8,
+              }}
               >
                 {String(MOTION_TOKENS[key])}
               </div>

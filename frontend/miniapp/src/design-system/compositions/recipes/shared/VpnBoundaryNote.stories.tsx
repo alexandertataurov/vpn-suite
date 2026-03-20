@@ -10,7 +10,8 @@ const meta: Meta<typeof VpnBoundaryNote> = {
     layout: "padded",
     docs: {
       description: {
-        component: "Canonical helper note for VPN-specific boundaries, setup hints, and warning states.",
+        component:
+          "Canonical helper note for VPN-specific boundaries, setup hints, and warning states.",
       },
     },
   },
@@ -24,6 +25,14 @@ export const Default: Story = {
   args: {
     messageKey: "common.vpn_boundary_note",
   },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Default boundary note used for user-facing setup constraints and VPN-specific caveats.",
+      },
+    },
+  },
   render: (args) => (
     <StoryShowcase>
       <VpnBoundaryNote {...args} />
@@ -33,7 +42,10 @@ export const Default: Story = {
 
 export const Variants: Story = {
   render: () => (
-    <StorySection title="Variants" description="Default helper note and warning-state setup note.">
+    <StorySection
+      title="Variants"
+      description="Default helper note and warning-state setup note."
+    >
       <StoryShowcase>
         <StoryStack>
           <VpnBoundaryNote messageKey="common.vpn_boundary_note" />

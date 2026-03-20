@@ -8,10 +8,11 @@ const meta: Meta<typeof SettingsCard> = {
   component: SettingsCard,
   parameters: {
     layout: "padded",
+    status: { type: "stable" },
     docs: {
       description: {
         component:
-          "Settings card with automatic dividers between rows. Use ToggleRow, SettingsButton, etc.",
+          "Settings card with automatic dividers between rows. Use it to group ToggleRow, SettingsButton, and related settings content.",
       },
     },
   },
@@ -22,6 +23,13 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story: "Standard settings block with two toggles and automatic separators.",
+      },
+    },
+  },
   render: () => (
     <StoryShowcase>
       <SettingsCard>
@@ -44,7 +52,7 @@ export const Default: Story = {
 
 export const WithDividers: Story = {
   render: () => (
-    <StorySection title="With dividers" description="Default divider behavior.">
+    <StorySection title="With dividers" description="Explicit divider mode for compact preference groups.">
       <StoryShowcase>
         <SettingsCard divider>
           <ToggleRow name="Option A" checked={true} onChange={() => {}} />

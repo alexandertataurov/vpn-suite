@@ -10,7 +10,8 @@ const meta: Meta<typeof FooterHelp> = {
     layout: "padded",
     docs: {
       description: {
-        component: "Footer help block — 'Having trouble? View setup guide'.",
+        component:
+          "Footer help block for setup assistance and troubleshooting entry points.",
       },
     },
   },
@@ -25,6 +26,14 @@ export const Default: Story = {
     note: "Having trouble?",
     linkLabel: "View setup guide",
     onLinkClick: () => {},
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Footer callout used to direct users into the setup guide from lower page surfaces.",
+      },
+    },
   },
   render: (args) => (
     <StoryShowcase>

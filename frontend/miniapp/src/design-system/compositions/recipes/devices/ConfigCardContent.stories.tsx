@@ -10,7 +10,8 @@ const meta: Meta<typeof ConfigCardContent> = {
     layout: "padded",
     docs: {
       description: {
-        component: "Configuration delivery card used after issuing a device, with ready and pending variants in one canonical recipe story.",
+        component:
+          "Configuration delivery card used after issuing a device, with ready and pending contract states.",
       },
     },
   },
@@ -37,6 +38,14 @@ export const Default: Story = {
     onCopy: async () => true,
     onDownload: () => {},
   },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Issued config state with copy and download affordances visible and ready to use.",
+      },
+    },
+  },
   render: (args) => (
     <StoryShowcase>
       <ConfigCardContent {...args} />
@@ -46,7 +55,10 @@ export const Default: Story = {
 
 export const Variants: Story = {
   render: () => (
-    <StorySection title="Variants" description="Ready config and not-yet-confirmed config issuance states.">
+    <StorySection
+      title="Variants"
+      description="Ready config and not-yet-confirmed issuance states."
+    >
       <StoryShowcase>
         <StoryStack>
           <ConfigCardContent

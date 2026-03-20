@@ -36,6 +36,14 @@ export const Default: Story = {
       <PageStateScreen {...args} />
     </StoryShowcase>
   ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Blocking page-state shell for auth and fatal conditions. Use it as the full-screen contract for states that must prevent the user from continuing.",
+      },
+    },
+  },
 };
 
 export const Variants: Story = {
@@ -62,4 +70,12 @@ export const Variants: Story = {
       </StoryShowcase>
     </StorySection>
   ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Attention and blocked page-state variants shown together. Use it to review the full-screen treatment before wiring auth or fatal-error branches.",
+      },
+    },
+  },
 };

@@ -34,6 +34,14 @@ export const Default: Story = {
     title: "Settings",
     onBack: () => {},
   },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Standard inner-page header with only a back action. Use it as the baseline for detail pages that need a compact title bar.",
+      },
+    },
+  },
   render: (args) => (
     <StoryShowcase>
       <PageHeader {...args} />
@@ -42,6 +50,14 @@ export const Default: Story = {
 };
 
 export const Variants: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Minimal, descriptive, and action-header states shown together. Review how the header scales when a right-side action is introduced.",
+      },
+    },
+  },
   render: () => (
     <StorySection title="Variants" description="Minimal, descriptive, and action-header states.">
       <StoryShowcase>

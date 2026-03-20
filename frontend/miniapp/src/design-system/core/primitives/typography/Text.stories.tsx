@@ -29,9 +29,25 @@ export const Default: Story = {
     children: "Body text — default variant",
     variant: "body",
   },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Default body copy for standard reading text.",
+      },
+    },
+  },
 };
 
 export const Variants: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Body, body-sm, meta, and caption shown together so the information hierarchy is easy to compare.",
+      },
+    },
+  },
   render: () => (
     <StorySection title="Variants" description="Body, body-sm, meta, and caption are the only supported text tiers.">
       <StoryShowcase>
@@ -47,6 +63,14 @@ export const Variants: Story = {
 };
 
 export const AsElement: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Change the semantic element without changing the visual text style.",
+      },
+    },
+  },
   render: () => (
     <StorySection title="As element" description="Choose the semantic element without changing the visual variant.">
       <StoryShowcase>

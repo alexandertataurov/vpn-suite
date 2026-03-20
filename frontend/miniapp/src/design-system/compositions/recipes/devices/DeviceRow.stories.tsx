@@ -10,7 +10,8 @@ const meta: Meta<typeof DeviceRow> = {
     layout: "padded",
     docs: {
       description: {
-        component: "Canonical device list row used on the Devices page, covering connected, pending, and revoked states without page-local copies.",
+        component:
+          "Canonical device list row used on the Devices page, covering connected, pending, and revoked states without page-local copies.",
       },
     },
   },
@@ -48,11 +49,22 @@ export const Default: Story = {
       </ListCard>
     </StoryShowcase>
   ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Connected device row with handshake recency and the normal list-row action layout.",
+      },
+    },
+  },
 };
 
 export const Variants: Story = {
   render: () => (
-    <StorySection title="Variants" description="Connected, configuration pending, and revoked device states.">
+    <StorySection
+      title="Variants"
+      description="Connected, configuration pending, and revoked device states."
+    >
       <StoryShowcase>
         <StoryStack>
           <ListCard>

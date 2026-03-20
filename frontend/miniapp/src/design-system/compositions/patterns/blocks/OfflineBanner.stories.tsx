@@ -34,4 +34,12 @@ export const Default: Story = {
       </StoryShowcase>
     </StorySection>
   ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Forced-visible connectivity warning for the top edge of the screen. Use it to verify banner copy, spacing, and fixed positioning while offline.",
+      },
+    },
+  },
 };

@@ -34,6 +34,14 @@ export const Default: Story = {
       <Badge {...args} />
     </StoryShowcase>
   ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Default compact badge state for short plan and capacity labels. Use it to check whether a label still fits before promoting it into a row or card.",
+      },
+    },
+  },
 };
 
 export const Variants: Story = {
@@ -49,6 +57,14 @@ export const Variants: Story = {
       </StoryShowcase>
     </StorySection>
   ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Warning, error, muted, and success badge variants shown together. This is the baseline matrix for status color and text weight.",
+      },
+    },
+  },
 };
 
 export const InContext: Story = {
@@ -63,4 +79,12 @@ export const InContext: Story = {
       </StoryShowcase>
     </StorySection>
   ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Badge used inline beside a settings row label and chevron. The goal is to confirm the badge holds its shape in a tight horizontal layout.",
+      },
+    },
+  },
 };

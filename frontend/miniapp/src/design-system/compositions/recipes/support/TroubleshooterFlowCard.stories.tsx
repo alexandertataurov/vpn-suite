@@ -4,8 +4,17 @@ import { TroubleshooterFlowCard } from "./TroubleshooterFlowCard";
 
 const meta: Meta<typeof TroubleshooterFlowCard> = {
   title: "Recipes/Support/TroubleshooterFlowCard",
+  tags: ["autodocs"],
   component: TroubleshooterFlowCard,
-  parameters: { layout: "padded" },
+  parameters: {
+    layout: "padded",
+    docs: {
+      description: {
+        component:
+          "Troubleshooter flow card for guided support steps and branching actions.",
+      },
+    },
+  },
 };
 
 export default meta;
@@ -21,11 +30,22 @@ export const Default: Story = {
     altAction: { label: "No, choose plan", onClick: () => {} },
     nextAction: { label: "Access is active", onClick: () => {} },
   },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "First-step troubleshooting card with a back-out action and a forward action.",
+      },
+    },
+  },
 };
 
 export const Variants: Story = {
   render: () => (
-    <StorySection title="Variants" description="Initial step and back-enabled follow-up step.">
+    <StorySection
+      title="Variants"
+      description="Initial step and back-enabled follow-up step."
+    >
       <StoryShowcase>
         <StoryStack>
           <TroubleshooterFlowCard

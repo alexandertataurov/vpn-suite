@@ -11,7 +11,7 @@ const meta: Meta<typeof PlanCard> = {
     docs: {
       description: {
         component:
-          "Plan card per amnezia spec §4.3. Status badge + stats strip. Borders only, no shadows. Uses design tokens.",
+          "Plan card contract per the miniapp spec: status badge, stats strip, border-only styling, and token-driven spacing.",
       },
     },
   },
@@ -33,6 +33,14 @@ export const Default: Story = {
     deviceLimit: 5,
     renewsLabel: "Apr 1",
   },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Active plan summary with the default stats strip and renewal date treatment.",
+      },
+    },
+  },
   render: (args) => (
     <StoryShowcase>
       <PlanCard {...args} />
@@ -42,7 +50,10 @@ export const Default: Story = {
 
 export const Variants: Story = {
   render: () => (
-    <StorySection title="Variants" description="Active, expiring, expired, and hero-stat variants in one canonical story.">
+    <StorySection
+      title="Variants"
+      description="Active, expiring, expired, and hero-stat variants in one canonical story."
+    >
       <StoryShowcase>
         <StoryStack>
           <PlanCard

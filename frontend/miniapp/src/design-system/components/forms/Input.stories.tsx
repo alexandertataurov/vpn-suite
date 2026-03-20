@@ -40,6 +40,14 @@ export const Default: Story = {
     placeholder: "you@example.com",
     type: "email",
   },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Baseline single-line input for a labeled field. This is the default contract for free-form text entry.",
+      },
+    },
+  },
   render: (args) => (
     <StoryShowcase>
       <Input {...args} />
@@ -48,6 +56,14 @@ export const Default: Story = {
 };
 
 export const WithDescription: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Helper text example for explaining constraints before the user types.",
+      },
+    },
+  },
   render: () => (
     <StorySection title="With helper text" description="Use helper text to explain constraints before the user types.">
       <StoryShowcase>
@@ -62,6 +78,14 @@ export const WithDescription: Story = {
 };
 
 export const ValidationStates: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Error and success states shown together so validation feedback stays consistent across forms.",
+      },
+    },
+  },
   render: () => (
     <StorySection title="Validation states" description="Show the error only when validation fails and the success state once a field is confirmed.">
       <StoryShowcase>
@@ -83,6 +107,14 @@ export const ValidationStates: Story = {
 };
 
 export const Disabled: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Disabled field example for read-only or unavailable input states.",
+      },
+    },
+  },
   render: () => (
     <StorySection title="Disabled" description="Use disabled for unavailable actions; keep the value visible.">
       <StoryShowcase>
@@ -93,6 +125,14 @@ export const Disabled: Story = {
 };
 
 export const FormContext: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Three-field form context that shows label rhythm, spacing, and focus order in a realistic stack.",
+      },
+    },
+  },
   render: () => (
     <StorySection title="In form context" description="Three-field form for realistic spacing and label rhythm.">
       <StoryShowcase>
@@ -107,6 +147,14 @@ export const FormContext: Story = {
 };
 
 export const ContentStress: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Stress test for long values and long placeholders so wrapping and truncation behavior stays predictable.",
+      },
+    },
+  },
   render: () => (
     <StorySection title="Content stress" description="Long values and long placeholders should not break the layout.">
       <StoryShowcase>

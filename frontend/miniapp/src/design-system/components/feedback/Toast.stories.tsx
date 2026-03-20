@@ -21,7 +21,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "Ephemeral notification. Variants: success, error, info, persistent. Uses design tokens.",
+          "Ephemeral notification for feedback after user actions. Variants: success, error, info, persistent.",
       },
     },
   },
@@ -49,6 +49,14 @@ function ToastDemo() {
 }
 
 export const Default: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Trigger toasts from a live button so the interaction matches production feedback flows.",
+      },
+    },
+  },
   render: () => (
     <StorySection title="Interactive" description="Click to trigger toasts.">
       <ToastDemo />
@@ -77,6 +85,14 @@ function ToastVariantsDemo() {
 }
 
 export const Variants: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Success, error, info, and persistent variants. Use this to verify the tone mapping and persistence behavior.",
+      },
+    },
+  },
   render: () => (
     <StorySection title="Variants" description="success, error, info, persistent.">
       <StoryShowcase>
@@ -87,6 +103,14 @@ export const Variants: Story = {
 };
 
 export const Stacking: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Multiple toasts fired in sequence to exercise stacking and timing under load.",
+      },
+    },
+  },
   render: () => (
     <StorySection title="Stacking" description="Trigger multiple toasts.">
       <StoryShowcase>

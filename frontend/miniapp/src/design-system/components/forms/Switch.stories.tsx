@@ -36,6 +36,14 @@ function SwitchDemo() {
 }
 
 export const Default: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Interactive standalone switch for a boolean setting. Use this when the control does not need a label row.",
+      },
+    },
+  },
   render: () => (
     <StorySection title="Interactive" description="Basic uncontrolled interaction with a label-only control.">
       <StoryShowcase>
@@ -46,6 +54,14 @@ export const Default: Story = {
 };
 
 export const States: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Off, on, and disabled states shown together for quick comparison.",
+      },
+    },
+  },
   render: () => (
     <StorySection title="States" description="Off, on, and disabled states shown together for comparison.">
       <StoryShowcase>

@@ -11,7 +11,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "Multi-line text input with optional label, description, error. Uses Field primitive and design tokens.",
+          "Multi-line text input with optional label, description, and error state. Use it when the user needs room for longer free-form text.",
       },
     },
   },
@@ -38,11 +38,27 @@ export const Default: Story = {
       <Textarea {...args} />
     </StoryShowcase>
   ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Default support message textarea with placeholder text. This is the baseline contract for multi-line entry.",
+      },
+    },
+  },
 };
 
 export const ValidationStates: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Error and success feedback shown side by side to confirm state handling.",
+      },
+    },
+  },
   render: () => (
-    <StorySection title="Validation states" description="Error and success feedback.">
+    <StorySection title="Validation states" description="Error and success feedback side by side.">
       <StoryShowcase>
         <StoryStack>
           <Textarea label="Feedback" placeholder="Your feedback" error="This field is required" />
@@ -54,8 +70,16 @@ export const ValidationStates: Story = {
 };
 
 export const ContentStress: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Long labels, long placeholders, and long values to verify wrap behavior under pressure.",
+      },
+    },
+  },
   render: () => (
-    <StorySection title="Content stress" description="Long text and placeholder.">
+    <StorySection title="Content stress" description="Long text and long placeholder content.">
       <StoryShowcase>
         <Textarea
           label="Description"

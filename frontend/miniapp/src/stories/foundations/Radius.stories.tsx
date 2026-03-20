@@ -16,7 +16,7 @@ const meta: Meta = {
     docs: {
       description: {
         component:
-          "Border radius tokens for surfaces, buttons, and overlays. Use `--radius-*` rather than hardcoded pixel values.",
+          "Border radius tokens for surfaces, buttons, cards, and overlays. Use `--radius-*` rather than hardcoded pixel values so shape stays consistent.",
       },
     },
   },
@@ -32,6 +32,13 @@ const RADIUS_EXTRA: Array<{ token: string; px: string }> = [
 
 export const Scale: StoryObj = {
   name: "Scale",
+  parameters: {
+    docs: {
+      description: {
+        story: "Radius scale used by cards, buttons, and elevated surfaces.",
+      },
+    },
+  },
   render: () => (
     <FoundationSection>
       <div>

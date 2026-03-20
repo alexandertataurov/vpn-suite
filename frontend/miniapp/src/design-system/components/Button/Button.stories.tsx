@@ -42,7 +42,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "Primary action control. Variants: primary, secondary, danger, external. Tones (primary only): default, success, warning, danger. Theme-aware via --btn-* tokens.",
+          "Primary action control. Variants: primary, secondary, danger, external. Tones (primary only): default, success, warning, danger. Use this as the canonical CTA primitive across the miniapp.",
       },
     },
   },
@@ -75,6 +75,14 @@ export const Default: Story = {
     size: "md",
     children: "Save changes",
   },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Single primary button with default sizing. Use this as the baseline contract for standalone CTAs.",
+      },
+    },
+  },
   render: (args) => (
     <StoryShowcase>
       <Button {...args} />
@@ -87,7 +95,8 @@ export const VariantHierarchy: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Use one primary CTA per screen.",
+        story:
+          "Primary, secondary, danger, and external buttons stacked by emphasis. This is the clearest reference for CTA hierarchy.",
       },
     },
   },
@@ -128,7 +137,7 @@ export const Tones: Story = {
     docs: {
       description: {
         story:
-          "Semantic tones for primary buttons. All use tinted backgrounds. Dark theme: Default = near-white, Success = green tint, Warning = amber tint, Danger = red tint. Light theme: Default = near-black, all tones = pale tinted bg. If Default appears blue in either theme, --btn-primary-bg token is not resolving — check [data-theme] selector scope.",
+          "Primary button tones in dark and light themes. Use this to verify the token-driven tint mapping rather than the control itself.",
       },
     },
   },
@@ -161,6 +170,14 @@ export const Tones: Story = {
 
 export const Sizes: Story = {
   name: "Sizes",
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Medium and small buttons shown side by side. This is the quick sizing reference for dense toolbars and compact forms.",
+      },
+    },
+  },
   render: () => (
     <StorySection title="Sizes">
       <StoryShowcase>
@@ -185,6 +202,14 @@ export const Sizes: Story = {
 
 export const WithIcons: Story = {
   name: "Icon combinations",
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Label-only, icon-leading, and icon-trailing combinations. The icon should support the label, not replace it.",
+      },
+    },
+  },
   render: () => (
     <StorySection title="Icon combinations">
       <StoryShowcase>
@@ -213,7 +238,8 @@ export const ButtonGroup: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Primary stacked above secondary. Standard pattern in the app.",
+        story:
+          "Primary button stacked above secondary button. This is the standard confirmation pattern for the app.",
       },
     },
   },
@@ -244,7 +270,7 @@ export const States: Story = {
     docs: {
       description: {
         story:
-          "Loading, disabled, active, success, error. Active uses :active styles (opacity 0.85, scale 0.99).",
+          "Loading, disabled, success, and error states for the button primitive. Use it to confirm the interaction ladder stays legible.",
       },
     },
   },
@@ -320,7 +346,8 @@ export const ThemeComparison: Story = {
   parameters: {
     docs: {
       description: {
-        story: "All variants in dark and light contexts simultaneously.",
+        story:
+          "All button variants rendered in both themes at once. This is the fastest way to compare token behavior across contexts.",
       },
     },
   },

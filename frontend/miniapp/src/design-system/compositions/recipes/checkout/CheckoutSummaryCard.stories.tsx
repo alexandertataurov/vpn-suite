@@ -27,6 +27,14 @@ export const Default: Story = {
     planDurationDays: 365,
     planDeviceLimit: 5,
   },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Pre-confirmation checkout summary for the selected plan. Use this to verify the price, duration, and device limit reads clearly before payment.",
+      },
+    },
+  },
   render: (args) => (
     <StoryShowcase>
       <CheckoutSummaryCard {...args} />
@@ -35,6 +43,14 @@ export const Default: Story = {
 };
 
 export const Variants: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Selection and confirmation states shown together. Review the handoff from plan choice to the final confirmation summary.",
+      },
+    },
+  },
   render: () => (
     <StorySection title="Variants" description="Selection summary and full confirmation summary.">
       <StoryShowcase>

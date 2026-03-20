@@ -12,7 +12,7 @@ import {
 } from "@/storybook/page-contracts";
 
 const DOC_BODY = [
-  "**Restore access** (`/restore-access`): grace / expired subscription recovery, support links, and sticky primary actions.",
+  "**Restore access** (`/restore-access`): grace/expired subscription recovery, support links, and sticky primary actions.",
   "**Scenario matrix** (from `useRestoreAccessPageModel` + page guards):",
   "| Initial state | Mock / trigger | UI branch |",
   "| --- | --- | --- |",
@@ -82,7 +82,7 @@ export const RestorableSubscription = scenarioStory(
 export const NotRestorableActiveUser = scenarioStory(
   "No expired subscription",
   readyScenario,
-  "`hasGraceOrExpired` false — `pageState` empty branch: info `InlineAlert` + Support / Devices links, no sticky renew bar.",
+  "`hasGraceOrExpired` false. Empty branch with info `InlineAlert`, Support/Devices links, and no sticky renew bar.",
 );
 
 export const SessionLoading = scenarioStory(
@@ -94,7 +94,7 @@ export const SessionLoading = scenarioStory(
 export const SessionMissing = scenarioStory(
   "Session missing",
   loggedOutScenario,
-  "Token absent — shared session-missing treatment.",
+  "Token absent. Uses the shared session-missing treatment.",
 );
 
 export const ViewportNarrow = scenarioStory(
@@ -107,13 +107,13 @@ export const ViewportNarrow = scenarioStory(
 export const ViewportWide = scenarioStory(
   "Viewport · wide",
   restoreScenario,
-  "Wide frame — two-column content and bottom bar width.",
+  "Wide frame with two-column content and bottom bar width.",
   VIEW_WIDE,
 );
 
 export const ViewportNarrowNotRestorable = scenarioStory(
   "Viewport · narrow (active user)",
   readyScenario,
-  "320px — non-restorable empty state: stacked buttons and footer help.",
+  "320px non-restorable empty state with stacked buttons and footer help.",
   VIEW_NARROW,
 );

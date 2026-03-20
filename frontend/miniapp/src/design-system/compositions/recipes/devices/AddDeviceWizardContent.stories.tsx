@@ -10,7 +10,8 @@ const meta: Meta<typeof AddDeviceWizardContent> = {
     layout: "padded",
     docs: {
       description: {
-        component: "Two-step add-device wizard content used in the Devices modal flow.",
+        component:
+          "Two-step add-device wizard contract used in the Devices modal flow.",
       },
     },
   },
@@ -51,6 +52,14 @@ export const Default: Story = {
     installSteps,
     storeLinks: links,
   },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Name entry step with install guidance below it. This is the canonical add-device onboarding shape.",
+      },
+    },
+  },
   render: (args) => (
     <StoryShowcase>
       <AddDeviceWizardContent {...args} />
@@ -60,7 +69,10 @@ export const Default: Story = {
 
 export const Variants: Story = {
   render: () => (
-    <StorySection title="Variants" description="Name entry and install guidance steps in one canonical wizard story.">
+    <StorySection
+      title="Variants"
+      description="Name entry and install guidance steps in one canonical wizard story."
+    >
       <StoryShowcase>
         <StoryStack>
           <AddDeviceWizardContent

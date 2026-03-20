@@ -11,7 +11,8 @@ const meta: Meta<typeof ProfileSection> = {
     layout: "padded",
     docs: {
       description: {
-        component: "Settings profile recipe with edit-profile and language rows, moved out of the app wrapper layer.",
+        component:
+          "Settings profile recipe with edit-profile and language rows, moved out of the app wrapper layer.",
       },
     },
   },
@@ -59,6 +60,14 @@ function ProfileSectionWithState({
 }
 
 export const Default: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Profile section in its normal collapsed state with language summary text visible.",
+      },
+    },
+  },
   render: () => (
     <StoryShowcase>
       <ProfileSectionWithState />

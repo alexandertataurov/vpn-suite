@@ -10,7 +10,8 @@ const meta: Meta<typeof PageHeaderBadge> = {
     layout: "padded",
     docs: {
       description: {
-        component: "Badge for page headers. Tones: neutral, info, success, warning, danger.",
+        component:
+          "Badge for page headers. Tones: neutral, info, success, warning, danger.",
       },
     },
   },
@@ -28,6 +29,13 @@ export const Default: Story = {
     label: "Active",
     tone: "success",
   },
+  parameters: {
+    docs: {
+      description: {
+        story: "Positive status badge as used in page headers and summary rows.",
+      },
+    },
+  },
   render: (args) => (
     <StoryShowcase>
       <PageHeaderBadge {...args} />
@@ -37,7 +45,7 @@ export const Default: Story = {
 
 export const Variants: Story = {
   render: () => (
-    <StorySection title="Variants" description="All tones.">
+    <StorySection title="Variants" description="All tones plus the pulsing alert variant.">
       <StoryShowcase>
         <StoryGrid>
           <PageHeaderBadge label="Neutral" tone="neutral" />

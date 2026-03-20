@@ -11,7 +11,8 @@ const meta: Meta<typeof LanguageMenuRow> = {
     layout: "padded",
     docs: {
       description: {
-        component: "Settings row with a language popover menu for auto, English, and Russian locale selection.",
+        component:
+          "Settings row with a language popover menu for auto, English, and Russian locale selection.",
       },
     },
   },
@@ -58,6 +59,14 @@ function InteractiveLanguageRow({
 }
 
 export const Default: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Collapsed language row showing the currently selected locale and the menu trigger.",
+      },
+    },
+  },
   render: () => (
     <StoryShowcase>
       <InteractiveLanguageRow />
@@ -67,7 +76,10 @@ export const Default: Story = {
 
 export const Variants: Story = {
   render: () => (
-    <StorySection title="Variants" description="Collapsed current-language row and open language picker state.">
+    <StorySection
+      title="Variants"
+      description="Collapsed current-language row and open language picker state."
+    >
       <StoryShowcase>
         <StoryStack>
           <InteractiveLanguageRow activeId="en" />

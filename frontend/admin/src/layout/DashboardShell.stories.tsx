@@ -7,6 +7,12 @@ const meta: Meta<typeof DashboardShell> = {
   component: DashboardShell,
   parameters: {
     layout: "fullscreen",
+    docs: {
+      description: {
+        component:
+          "Admin shell layout with a fixed navigation frame and routed content area. Use this story to review how the dashboard scaffold handles full-screen composition and page spacing.",
+      },
+    },
   },
 };
 
@@ -15,6 +21,14 @@ export default meta;
 type Story = StoryObj<typeof DashboardShell>;
 
 export const OverviewScaffold: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Overview-style content inside the dashboard shell. This is the baseline contract for routed admin pages.",
+      },
+    },
+  },
   render: () => (
     <MemoryRouter initialEntries={["/"]}>
       <Routes>
@@ -42,4 +56,3 @@ export const OverviewScaffold: Story = {
     </MemoryRouter>
   ),
 };
-

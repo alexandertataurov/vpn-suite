@@ -38,6 +38,13 @@ export default meta;
 
 export const Scale: StoryObj = {
   name: "Scale",
+  parameters: {
+    docs: {
+      description: {
+        story: "Font-size scale across display, headings, body, caption, and meta text.",
+      },
+    },
+  },
   render: () => (
     <FoundationSection>
       <div>
@@ -80,6 +87,13 @@ export const Sample: StoryObj<{ size: string; weight: number }> = {
     },
   },
   args: { size: "--typo-body-size", weight: 400 },
+  parameters: {
+    docs: {
+      description: {
+        story: "Interactive sample to compare size tokens and font weight combinations.",
+      },
+    },
+  },
   render: ({ size, weight }) => (
     <TypographySample token={size} weight={weight} />
   ),

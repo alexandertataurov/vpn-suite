@@ -29,9 +29,25 @@ export const Default: Story = {
     orientation: "horizontal",
     tone: "subtle",
   },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Baseline divider for section boundaries. The default is subtle and keeps visual separation quiet.",
+      },
+    },
+  },
 };
 
 export const Orientations: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Horizontal and vertical separators shown together so you can pick the correct axis for the layout.",
+      },
+    },
+  },
   render: () => (
     <StorySection title="Orientations" description="Horizontal separators split content; vertical separators keep dense rows legible.">
       <StoryShowcase>
@@ -45,6 +61,14 @@ export const Orientations: Story = {
 };
 
 export const Tones: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Subtle and default tones compared side by side to show how much separation each level adds.",
+      },
+    },
+  },
   render: () => (
     <StorySection title="Tones" description="Subtle dividers for nested structure; default dividers for stronger separation.">
       <StoryShowcase>

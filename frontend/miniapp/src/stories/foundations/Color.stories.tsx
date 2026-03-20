@@ -17,7 +17,7 @@ const meta: Meta = {
     docs: {
       description: {
         component:
-          "Semantic color tokens. Use these in product code; avoid raw hex/RGB.",
+          "Semantic color tokens for the miniapp theme. Use them for surfaces, text, borders, accent states, and semantic feedback instead of raw hex or RGB values.",
       },
     },
   },
@@ -101,6 +101,13 @@ const COLOR_GROUPS: Record<string, ColorItem[]> = {
 
 export const All: StoryObj = {
   name: "All tokens",
+  parameters: {
+    docs: {
+      description: {
+        story: "Grouped by surfaces, text, borders, accent, and semantic feedback.",
+      },
+    },
+  },
   render: () => (
     <FoundationSection>
       {Object.entries(COLOR_GROUPS).map(([name, items]) => (

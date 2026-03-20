@@ -28,9 +28,25 @@ export const Default: Story = {
     children: "Heading",
     level: 1,
   },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Default level-1 heading for page titles and top-level sections.",
+      },
+    },
+  },
 };
 
 export const Levels: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Levels 1 through 4 displayed together so you can check the heading scale quickly.",
+      },
+    },
+  },
   render: () => (
     <StorySection title="Levels" description="The same component maps to semantic levels 1 through 4.">
       <StoryShowcase>
@@ -46,6 +62,14 @@ export const Levels: Story = {
 };
 
 export const SemanticMapping: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Document-structure examples showing which heading level to use for page and section titles.",
+      },
+    },
+  },
   render: () => (
     <StorySection title="Semantic mapping" description="Choose the level that matches the document structure, not just the visual size.">
       <StoryShowcase>

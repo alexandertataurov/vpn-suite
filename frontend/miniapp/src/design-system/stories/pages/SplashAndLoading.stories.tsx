@@ -98,7 +98,7 @@ export const BootstrapLoading: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Fast path: steady loading without retry banner.",
+        story: "Fast path with steady loading and no retry banner.",
       },
     },
   },
@@ -119,7 +119,7 @@ export const BootstrapLoadingSlowNetwork: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Retry CTA visible — pair with telemetry stories in ops when changing timeouts.",
+        story: "Retry CTA visible. Pair with telemetry stories in ops when changing timeouts.",
       },
     },
   },
@@ -137,7 +137,7 @@ export const BrandSplash: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Logo / tagline beat — check both themes via Controls.",
+        story: "Logo and tagline splash screen. Check both themes via Controls.",
       },
     },
   },
@@ -159,7 +159,7 @@ export const BootstrapError: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Copy and actions for hard bootstrap failures — accessibility: focus management in real app.",
+        story: "Copy and actions for hard bootstrap failures. Accessibility: focus management in the real app.",
       },
     },
   },

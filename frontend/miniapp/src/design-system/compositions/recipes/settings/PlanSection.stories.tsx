@@ -43,6 +43,14 @@ export const Default: Story = {
     ...baseArgs,
     hasPlan: true,
   },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Settings plan-and-billing section for an active subscription. Review the plan, device, and auto-renew actions as a single grouped control surface.",
+      },
+    },
+  },
   render: (args) => (
     <StoryShowcase>
       <PlanSection {...args} />
@@ -51,6 +59,14 @@ export const Default: Story = {
 };
 
 export const Variants: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Active, no-plan, and disabled-auto-renew states shown together. Use this matrix to check the settings section remains coherent as subscription state changes.",
+      },
+    },
+  },
   render: () => (
     <StorySection title="Variants" description="Active subscription, no subscription, and disabled auto-renew states.">
       <StoryShowcase>

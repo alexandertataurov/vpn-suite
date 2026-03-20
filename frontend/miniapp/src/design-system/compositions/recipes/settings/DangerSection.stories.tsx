@@ -10,7 +10,8 @@ const meta: Meta<typeof DangerSection> = {
     layout: "padded",
     docs: {
       description: {
-        component: "Destructive actions recipe for Settings, covering device-dependent and loading variants in a single canonical file.",
+        component:
+          "Destructive actions recipe for Settings, covering device-dependent and loading states in one canonical file.",
       },
     },
   },
@@ -41,6 +42,14 @@ export const Default: Story = {
     ...baseArgs,
     hasActiveDevices: true,
   },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Danger zone with active devices present. This is the primary settings safety surface.",
+      },
+    },
+  },
   render: (args) => (
     <StoryShowcase>
       <DangerSection {...args} />
@@ -50,7 +59,10 @@ export const Default: Story = {
 
 export const Variants: Story = {
   render: () => (
-    <StorySection title="Variants" description="With devices, without devices, and loading states.">
+    <StorySection
+      title="Variants"
+      description="With devices, without devices, and loading states."
+    >
       <StoryShowcase>
         <StoryStack>
           <DangerSection {...baseArgs} hasActiveDevices />

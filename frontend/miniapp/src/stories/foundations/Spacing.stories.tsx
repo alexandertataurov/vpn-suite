@@ -22,7 +22,7 @@ const meta: Meta = {
     docs: {
       description: {
         component:
-          "Spacing scale for the 8px grid. Use `--spacing-*` or `--space-*` tokens so layout, padding, and gaps stay consistent across screens.",
+          "Spacing scale for the 8px grid. Use `--spacing-*` and `--space-*` tokens so layout, padding, and gaps stay consistent across screens.",
       },
     },
   },
@@ -31,6 +31,13 @@ export default meta;
 
 export const Scale: StoryObj = {
   name: "Scale",
+  parameters: {
+    docs: {
+      description: {
+        story: "Ascending spacing values for padding, gaps, and vertical rhythm.",
+      },
+    },
+  },
   render: () => (
     <FoundationSection>
       <div>

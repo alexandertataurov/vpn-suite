@@ -10,7 +10,8 @@ const meta: Meta<typeof AccountCancellationModal> = {
     layout: "padded",
     docs: {
       description: {
-        component: "Final account deletion confirmation flow used from Settings.",
+        component:
+          "Final account deletion confirmation flow used from Settings.",
       },
     },
   },
@@ -26,6 +27,14 @@ export const Default: Story = {
     onClose: () => {},
     onConfirm: async () => {},
     loading: false,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Destructive confirmation dialog in the idle state, with cancel and confirm actions visible.",
+      },
+    },
   },
   render: (args) => (
     <StoryShowcase>

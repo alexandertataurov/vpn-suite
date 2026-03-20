@@ -10,7 +10,8 @@ const meta: Meta<typeof CompactStepper> = {
     layout: "padded",
     docs: {
       description: {
-        component: "Compact stepper for onboarding/troubleshooter. States: complete, current, upcoming.",
+        component:
+          "Compact stepper for onboarding and troubleshooting flows. States: complete, current, upcoming.",
       },
     },
   },
@@ -30,6 +31,14 @@ export const Default: Story = {
   args: {
     items: STEPS,
   },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Three-step progression with one current step and supporting description text.",
+      },
+    },
+  },
   render: (args) => (
     <StoryShowcase>
       <CompactStepper {...args} />
@@ -39,7 +48,7 @@ export const Default: Story = {
 
 export const Variants: Story = {
   render: () => (
-    <StorySection title="Variants" description="All complete vs mixed.">
+    <StorySection title="Variants" description="All-complete and mixed progress states.">
       <StoryShowcase>
         <CompactStepper
           items={[

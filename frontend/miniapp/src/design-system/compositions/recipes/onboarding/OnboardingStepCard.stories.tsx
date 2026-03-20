@@ -10,7 +10,8 @@ const meta: Meta<typeof OnboardingStepCard> = {
     layout: "padded",
     docs: {
       description: {
-        component: "Step-driven onboarding card for intro, install, config, open-app, and confirm-connected flows.",
+        component:
+          "Step-driven onboarding card for intro, install, config, open-app, and confirm-connected flows.",
       },
     },
   },
@@ -39,6 +40,14 @@ export const Default: Story = {
     ...baseArgs,
     step: ONBOARDING_STEPS[0],
   },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Intro step before the user has installed the app or created a device.",
+      },
+    },
+  },
   render: (args) => (
     <StoryShowcase>
       <OnboardingStepCard {...args} />
@@ -48,7 +57,10 @@ export const Default: Story = {
 
 export const Variants: Story = {
   render: () => (
-    <StorySection title="Variants" description="Install, config-ready, and confirmed-activity onboarding states.">
+    <StorySection
+      title="Variants"
+      description="Install, config-ready, and confirmed-activity onboarding states."
+    >
       <StoryShowcase>
         <StoryStack>
           <OnboardingStepCard

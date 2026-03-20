@@ -65,6 +65,14 @@ export const Default: Story = {
     metrics: baseMetrics,
     action: renderAddDeviceAction(),
   },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Primary devices overview for the Devices page. Check that capacity, plan, and recent activity all read as a single control surface.",
+      },
+    },
+  },
   render: (args) => (
     <StoryShowcase>
       <DevicesSummaryCard {...args} />
@@ -73,6 +81,14 @@ export const Default: Story = {
 };
 
 export const Variants: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Healthy and near-capacity states shown together. Review the progression from normal usage to the point where an upgrade prompt becomes necessary.",
+      },
+    },
+  },
   render: () => (
     <StorySection title="Variants" description="Active subscription and near-limit device capacity states.">
       <StoryShowcase>

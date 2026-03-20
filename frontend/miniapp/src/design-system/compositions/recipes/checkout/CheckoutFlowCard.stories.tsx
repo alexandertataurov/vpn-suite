@@ -10,7 +10,8 @@ const meta: Meta<typeof CheckoutFlowCard> = {
     layout: "padded",
     docs: {
       description: {
-        component: "Checkout flow controls for promo validation, confirmation, payment waiting, and recovery states.",
+        component:
+          "Checkout flow contract for promo validation, confirmation, payment waiting, and recovery states.",
       },
     },
   },
@@ -49,6 +50,14 @@ export const Default: Story = {
     ...baseArgs,
     showConfirmation: false,
   },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Promo entry state before confirmation. Use this to verify validation, apply, and recovery affordances.",
+      },
+    },
+  },
   render: (args) => (
     <StoryShowcase>
       <CheckoutFlowCard {...args} />
@@ -58,7 +67,10 @@ export const Default: Story = {
 
 export const Variants: Story = {
   render: () => (
-    <StorySection title="Variants" description="Promo success, confirmation, waiting, and error recovery states.">
+    <StorySection
+      title="Variants"
+      description="Promo success, confirmation, waiting, and error recovery states."
+    >
       <StoryShowcase>
         <StoryStack>
           <CheckoutFlowCard

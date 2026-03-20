@@ -17,7 +17,7 @@ const meta: Meta = {
     docs: {
       description: {
         component:
-          "Responsive breakpoint tokens for the miniapp shell. Use `--breakpoint-*` or `--adaptive-bp-*` rather than hardcoding viewport cutoffs.",
+          "Responsive breakpoint tokens for the miniapp shell. Use `--breakpoint-*` and `--adaptive-bp-*` to keep viewport logic aligned with the design system.",
       },
     },
   },
@@ -27,6 +27,13 @@ export default meta;
 const bpKeys = Object.keys(BREAKPOINT_TOKENS) as Array<keyof typeof BREAKPOINT_TOKENS>;
 
 export const Tokens: StoryObj = {
+  parameters: {
+    docs: {
+      description: {
+        story: "Breakpoint tokens mirror the responsive shell thresholds used by the miniapp.",
+      },
+    },
+  },
   render: () => (
     <FoundationSection>
       <div>
@@ -62,7 +69,7 @@ function BreakpointSwatch({ value }: { value: string }) {
         alignItems: "center",
         justifyContent: "center",
         fontFamily: "var(--font-mono)",
-        fontSize: 10,
+        fontSize: "var(--typo-meta-size)",
         color: "var(--color-text)",
       }}
     >

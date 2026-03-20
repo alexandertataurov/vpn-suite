@@ -34,6 +34,14 @@ export const Default: Story = {
       <EmptyStateBlock {...args} />
     </StoryShowcase>
   ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Preset empty-state treatment for list views. Use this to review the icon, copy, and action spacing before wiring a real no-data branch.",
+      },
+    },
+  },
 };
 
 export const Variants: Story = {
@@ -55,4 +63,12 @@ export const Variants: Story = {
       </StoryShowcase>
     </StorySection>
   ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Preset empty states, retry states, and a custom branch shown together. Use this matrix to compare the layout before swapping in product copy.",
+      },
+    },
+  },
 };

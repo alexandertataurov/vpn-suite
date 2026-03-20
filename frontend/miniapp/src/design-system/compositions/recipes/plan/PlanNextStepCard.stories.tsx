@@ -33,6 +33,14 @@ export const Default: Story = {
     secondaryTo: "/plan",
     onPrimaryScrollAction: () => {},
   },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Primary next-step card for renewal flows. Review the alert copy and the action pairing that should move the user back into the plan journey.",
+      },
+    },
+  },
   render: (args) => (
     <StoryShowcase>
       <PlanNextStepCard {...args} />
@@ -41,6 +49,14 @@ export const Default: Story = {
 };
 
 export const Variants: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Scroll-action, upgrade, renewal, and payment-failure states shown together. Use the matrix to confirm the CTA changes with the user’s next task.",
+      },
+    },
+  },
   render: () => (
     <StorySection title="Variants" description="Scroll-action, warning, and error-state plan next-step flows.">
       <StoryShowcase>

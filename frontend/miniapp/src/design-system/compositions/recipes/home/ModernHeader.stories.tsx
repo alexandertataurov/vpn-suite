@@ -35,6 +35,14 @@ export const Default: Story = {
     pillChip: <PillChip variant="active">PRO</PillChip>,
     onSettingsClick: () => {},
   },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Home-header baseline with profile identity, subscription chip, and settings action. Use it to check the top-of-screen balance before adding page content underneath.",
+      },
+    },
+  },
   render: (args) => (
     <StoryShowcase>
       <ModernHeader {...args} />
@@ -43,6 +51,14 @@ export const Default: Story = {
 };
 
 export const Variants: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Profile, avatar-only, and inner-page header forms shown together. Review the spacing and action placement across all supported header modes.",
+      },
+    },
+  },
   render: () => (
     <StorySection title="Variants" description="Profile header, avatar-only header, and inner-page header states.">
       <StoryShowcase>

@@ -10,7 +10,8 @@ const meta: Meta<typeof ConnectStatusVerifyCard> = {
     layout: "padded",
     docs: {
       description: {
-        component: "Verification card for pending, confirmed, and app-open follow-up states on the connect-status route.",
+        component:
+          "Verification card contract for pending confirmation, route follow-up, and app-open follow-up states on the connect-status route.",
       },
     },
   },
@@ -28,6 +29,14 @@ export const Default: Story = {
     onConfirm: () => {},
     onOpenApp: () => {},
   },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Pending verification state with a confirm action. Use this to check the primary action, loading, and follow-up copy.",
+      },
+    },
+  },
   render: (args) => (
     <StoryShowcase>
       <ConnectStatusVerifyCard {...args} />
@@ -37,7 +46,10 @@ export const Default: Story = {
 
 export const Variants: Story = {
   render: () => (
-    <StorySection title="Variants" description="Pending confirm, route follow-up, and open-app follow-up.">
+    <StorySection
+      title="Variants"
+      description="Pending confirm, route follow-up, and open-app follow-up."
+    >
       <StoryShowcase>
         <StoryStack>
           <ConnectStatusVerifyCard
