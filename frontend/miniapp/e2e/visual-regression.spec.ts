@@ -248,6 +248,7 @@ async function mockApi(page: Page) {
           invite_goal: 4,
           invite_progress: 3,
           invite_remaining: 1,
+          pending_reward_days: 7,
         }),
       });
       return;

@@ -34,7 +34,8 @@ function shouldReduceMotion(): boolean {
 }
 
 export function PlanPage() {
-  const model = usePlanPageModel();
+  const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>("annual");
+  const model = usePlanPageModel(billingPeriod);
   const location = useLocation();
   const navigate = useNavigate();
   const fromOnboarding = (location.state as { fromOnboarding?: boolean } | null)?.fromOnboarding === true;
@@ -50,7 +51,6 @@ export function PlanPage() {
     renewalTargetTo,
     upgradeTargetTo,
     track,
-    tierPairs,
     visibleTierPairs,
     hasAnnualOptions,
     shouldShowPlanOptions,
@@ -64,7 +64,6 @@ export function PlanPage() {
   } = model;
   const showRenewOrUpgradeCta = (canShowRenew && showUpsellExpiry) || showUpsellTrialEnd;
 
-  const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>("annual");
   const [selectedTierKey, setSelectedTierKey] = useState<string>("");
   const [historyExpanded, setHistoryExpanded] = useState<boolean>(false);
 
@@ -75,14 +74,14 @@ export function PlanPage() {
   }, [billingPeriod, hasAnnualOptions]);
 
   useEffect(() => {
-    if (tierPairs.length === 0) {
+    if (visibleTierPairs.length === 0) {
       setSelectedTierKey("");
       return;
     }
-    if (selectedTierKey && tierPairs.some((tier) => tier.key === selectedTierKey)) return;
-    const currentTier = tierPairs.find((tier) => tier.isCurrent);
-    setSelectedTierKey(currentTier?.key ?? tierPairs[0]?.key ?? "");
-  }, [selectedTierKey, tierPairs]);
+    if (selectedTierKey && visibleTierPairs.some((tier) => tier.key === selectedTierKey)) return;
+    const currentTier = visibleTierPairs.find((tier) => tier.isCurrent);
+    setSelectedTierKey(currentTier?.key ?? visibleTierPairs[0]?.key ?? "");
+  }, [selectedTierKey, visibleTierPairs]);
 
   const visibleHistoryItems = historyExpanded ? billingHistoryItems : billingHistoryItems.slice(0, 3);
   const canExpandHistory = billingHistoryItems.length > 3;

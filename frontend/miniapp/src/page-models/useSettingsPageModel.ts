@@ -169,10 +169,11 @@ export function useSettingsPageModel() {
   const handleCancelAction = useCallback(
     (payload: Omit<CancelActionPayload, "reason_group" | "reason_code">) => {
       const trimmed = cancelFreeText.trim();
+      const useOtherText = cancelReason === "other";
       const mergedFreeText =
         payload.free_text !== undefined
           ? payload.free_text
-          : trimmed.length > 0
+          : useOtherText && trimmed.length > 0
             ? trimmed
             : undefined;
       cancelMutation.mutate({
@@ -478,6 +479,9 @@ export function useSettingsPageModel() {
     },
     setCancelReasonWithTrack: (id: CancelReasonGroup) => {
       setCancelReason(id);
+      if (id !== "other") {
+        setCancelFreeText("");
+      }
       track("cancel_reason_selected", { reason_group: id });
     },
     track,

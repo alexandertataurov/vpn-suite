@@ -7,6 +7,7 @@ const CORE_PAGES = [
   { path: "/", ctaLabel: /Manage Devices|Get Plan|Subscription/i },
   { path: "/plan", ctaLabel: /Renew plan|Upgrade Plan|Choose plan|Current Plan/i },
   { path: "/devices", ctaLabel: /Issue first device|Add device|Choose plan/i },
+  { path: "/referral", ctaLabel: /Share link|Copy link|Share/i },
   { path: "/support", ctaLabel: /Contact support/i },
   { path: "/settings", ctaLabel: /Invite friends|Billing details|Pause subscription|Resume subscription/i },
 ] as const;
@@ -170,6 +171,29 @@ async function mockApi(page: Page) {
         offer_discount: true,
         offer_downgrade: false,
         reason_group: null,
+      }),
+    });
+  });
+  await page.route("**/api/v1/webapp/referral/my-link", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ payload: "e2e-invite", bot_username: "vpn_suite_bot" }),
+    });
+  });
+  await page.route("**/api/v1/webapp/referral/stats", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        earned_days: 14,
+        total_referrals: 3,
+        pending_rewards: 1,
+        active_referrals: 2,
+        invite_goal: 4,
+        invite_progress: 2,
+        invite_remaining: 2,
+        pending_reward_days: 7,
       }),
     });
   });

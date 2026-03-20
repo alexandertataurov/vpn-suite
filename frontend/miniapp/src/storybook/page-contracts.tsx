@@ -282,6 +282,7 @@ const referralStatsActive = {
   invite_goal: 5,
   invite_progress: 3,
   invite_remaining: 2,
+  pending_reward_days: 7,
 };
 
 const subscriptionOffers = {

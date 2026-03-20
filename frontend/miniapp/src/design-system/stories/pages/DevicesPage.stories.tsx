@@ -42,10 +42,27 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+function devicesRoutes() {
+  return (
+    <>
+      <Route path="/devices" element={<DevicesPage />} />
+      <Route path="/devices/issue" element={<DevicesPage />} />
+    </>
+  );
+}
+
 function renderDevices(scenario: MockScenario) {
   return (
     <PageSandbox scenario={scenario} initialEntries={["/devices"]}>
-      <Route path="/devices" element={<DevicesPage />} />
+      {devicesRoutes()}
+    </PageSandbox>
+  );
+}
+
+function renderDevicesIssueDeepLink(scenario: MockScenario) {
+  return (
+    <PageSandbox scenario={scenario} initialEntries={["/devices/issue"]}>
+      {devicesRoutes()}
     </PageSandbox>
   );
 }
@@ -69,6 +86,19 @@ function scenarioStory(
     },
   };
 }
+
+export const DeepLinkIssuePath: Story = {
+  name: "Deep link — /devices/issue",
+  render: () => renderDevicesIssueDeepLink(readyScenario),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Matches `AppRoutes`: `/devices` and `/devices/issue` both render `DevicesPage`. On `/devices/issue`, the page auto-opens the add-device wizard when `canAddDevice` is true (same as production `useEffect` on `location.pathname`).",
+      },
+    },
+  },
+};
 
 export const ActiveDevices = scenarioStory(
   "Active devices",

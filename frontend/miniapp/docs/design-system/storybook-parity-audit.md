@@ -53,6 +53,25 @@ Browser evidence used for this audit:
 | Dead / stale Storybook helpers | `frontend/miniapp/src/storybook/index.ts:1-4`, `frontend/miniapp/src/storybook/wrappers.tsx:1-43`, `frontend/miniapp/src/design-system/stories/Layouts.stories.tsx:1093-1101` | `src/storybook/wrappers.tsx` exports wrapper helpers that are not imported anywhere, while `Layouts.stories.tsx` defines local `StoryGrid` and `StoryStack` duplicates instead. | Duplicate dead helper layers make Storybook ownership unclear and encourage more drift. | LOW | Remove the unused wrapper exports or converge all stories on one helper source. |
 | Dead / stale CSS | `frontend/miniapp/src/design-system/styles/shell/frame.css` | `.settings-top-grid`, `.settings-ops`, `.settings-profile-card`, `.settings-preferences-card`, `.settings-subscription-actions` removed (no JSX usage). Remaining candidates: `.device-menu-list`, `.device-menu-item*`, `.onboarding-intro`, `.onboarding-hero-card`. | Fossilized selectors increase cascade risk. | LOW | Verify remaining candidates, then delete if unused. |
 
+### Route vs Pages/Contracts stories
+
+| Route path | Page component | Story file |
+|------------|----------------|------------|
+| `/onboarding` | `OnboardingPage` | `OnboardingPage.stories.tsx` |
+| `/` | `HomePage` | `HomePage.stories.tsx` |
+| `/settings` | `SettingsPage` | `SettingsPage.stories.tsx` |
+| `/plan` | `PlanPage` | `PlanPage.stories.tsx` |
+| `/plan/checkout/:planId` | `CheckoutPage` | `CheckoutPage.stories.tsx` |
+| `/devices` | `DevicesPage` | `DevicesPage.stories.tsx` |
+| `/devices/issue` | `DevicesPage` | `DevicesPage.stories.tsx` |
+| `/support` | `SupportPage` | `SupportPage.stories.tsx` |
+| `/connect-status` | `ConnectStatusPage` | `ConnectStatusPage.stories.tsx` |
+| `/restore-access` | `RestoreAccessPage` | `RestoreAccessPage.stories.tsx` |
+| `/referral` | `ReferralPage` | `ReferralPage.stories.tsx` |
+| `/servers` | — | redirect only |
+| `/account/subscription` | — | redirect only |
+| `*` | — | catch-all |
+
 ## C. Drift Categories
 
 ### Runtime / environment mismatch

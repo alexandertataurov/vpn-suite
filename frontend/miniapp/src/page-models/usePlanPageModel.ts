@@ -23,6 +23,7 @@ import {
   tierSortRank,
   formatStars,
   periodLabelForHeroLocalized,
+  planItemForBillingPeriod,
   sanitizePlanDisplayName,
   toBillingHistoryView,
   clamp,
@@ -44,7 +45,7 @@ export type RecommendedRouteReason =
   | "connected_user"
   | "unknown";
 
-export function usePlanPageModel() {
+export function usePlanPageModel(billingPeriod: BillingPeriod) {
   const hasToken = !!useWebappToken();
   const queryClient = useQueryClient();
   const sessionQuery = useSession(hasToken);
@@ -115,11 +116,15 @@ export function usePlanPageModel() {
   }, [currentTierRank, isSubscribed, showCurrentTierForRenewal, tierPairs]);
   const shouldShowPlanOptions = !isSubscribed || showCurrentTierForRenewal || visibleTierPairs.length > 0;
 
+  const selectedTierPlan = visibleTierPairs[0]
+    ? planItemForBillingPeriod(visibleTierPairs[0], billingPeriod)
+    : undefined;
+
   const activeDeviceCount =
     sessionQuery.data?.devices?.filter((d: { revoked_at?: string | null }) => !d.revoked_at).length ?? 0;
   const planDeviceLimit = currentPlan?.device_limit ?? heroPlan?.device_limit ?? null;
   const deviceLimit = planDeviceLimit ?? primarySub?.device_limit ?? 0;
-  const heroDurationDays = heroPlan?.duration_days ?? 30;
+  const heroDurationDays = heroPlan?.duration_days ?? selectedTierPlan?.duration_days ?? 30;
   const isLifetimePlan =
     !!heroPlan &&
     (heroPlan.duration_days >= LIFETIME_DURATION_THRESHOLD ||
@@ -146,9 +151,6 @@ export function usePlanPageModel() {
     [isSubscribed, routeReason, recommendedRoute, locale],
   );
 
-  const selectedTierPlan = visibleTierPairs[0]
-    ? (visibleTierPairs[0].annual ?? visibleTierPairs[0].monthly)
-    : undefined;
   const heroPlanId = primarySub?.plan_id ?? selectedTierPlan?.id ?? null;
   const atDeviceLimit = deviceLimit > 0 && activeDeviceCount >= deviceLimit;
   const heroView = useMemo(
@@ -157,13 +159,12 @@ export function usePlanPageModel() {
         heroPlan?.name?.trim() ?? primarySub?.plan_id ?? t("plan.no_active_plan_label"),
         locale,
       ),
-      heroPlanPeriod: periodLabelForHeroLocalized(heroPlan?.duration_days ?? 30, locale),
+      heroPlanPeriod: periodLabelForHeroLocalized(heroDurationDays, locale),
       heroStars: heroPlan?.price_amount ?? selectedTierPlan?.price_amount ?? 0,
-      heroPeriodDetail: heroPlan
-        ? t("plan.hero_period_for_days", { days: heroPlan.duration_days })
-        : selectedTierPlan
-          ? t("plan.hero_period_for_days", { days: selectedTierPlan.duration_days })
-          : "",
+      heroPeriodDetail: (() => {
+        const days = heroPlan?.duration_days ?? selectedTierPlan?.duration_days;
+        return days != null ? t("plan.hero_period_for_days", { days }) : "";
+      })(),
       expiryText: primarySub?.valid_until
         ? formatDate(primarySub.valid_until, "en-US")
         : t("plan.no_active_subscription"),
@@ -198,6 +199,7 @@ export function usePlanPageModel() {
       heroPlan,
       primarySub,
       selectedTierPlan,
+      heroDurationDays,
       expiryPercent,
       subscriptionState,
       heroPlanId,

@@ -1,19 +1,6 @@
 import { BillingPeriodToggle, Button, EmptyStateBlock, PageSection, StarsAmount, StatusChip } from "@/design-system";
 import { useI18n } from "@/hooks";
-import { featuresFromPlan, tierFeatureToRow, type BillingPeriod } from "@/page-models";
-import type { TierFeature } from "@/page-models/plan-helpers";
-import type { PlanItem } from "@/api";
-
-interface TierPair {
-  key: string;
-  label: string;
-  description?: string | null;
-  isCurrent: boolean;
-  monthly?: PlanItem | null;
-  annual?: PlanItem | null;
-  /** Ignored for display; bullets come from `featuresFromPlan` for the active billing period. */
-  features?: TierFeature[];
-}
+import { featuresFromPlan, tierFeatureToRow, type BillingPeriod, type TierPair } from "@/page-models";
 
 export interface PlanOptionsSectionProps {
   isSubscribed: boolean;

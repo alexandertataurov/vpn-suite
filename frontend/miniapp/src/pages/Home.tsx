@@ -36,7 +36,7 @@ function InviteFriendsCard({ t }: { t: (k: string) => string }) {
         iconVariant="neutral"
         label={t("home.invite_friends_title")}
         subtitle={t("home.invite_friends_subtitle")}
-        onClick={() => navigate("/support")}
+        onClick={() => navigate("/referral")}
       />
     </CardRow>
   );

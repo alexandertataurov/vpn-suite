@@ -96,6 +96,7 @@ export function SupportPage() {
               variant="warning"
               label={t("support.faq_offline_title")}
               message={t("support.faq_offline_message")}
+              action={{ label: t("common.retry"), onClick: () => void model.refetchFaq() }}
             />
           ) : null}
           {/* Contact Support */}

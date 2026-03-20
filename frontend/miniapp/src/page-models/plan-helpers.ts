@@ -36,6 +36,14 @@ export interface TierPair {
   features?: TierFeature[];
 }
 
+/** Same SKU selection as the plan grid / checkout CTA for a billing-period toggle. */
+export function planItemForBillingPeriod(
+  pair: Pick<TierPair, "monthly" | "annual">,
+  billingPeriod: "monthly" | "annual",
+): PlanItem | undefined {
+  return billingPeriod === "annual" ? (pair.annual ?? pair.monthly) : (pair.monthly ?? pair.annual);
+}
+
 export function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }

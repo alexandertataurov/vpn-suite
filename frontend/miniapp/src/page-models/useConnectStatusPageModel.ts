@@ -15,7 +15,7 @@ import {
 export function useConnectStatusPageModel() {
   const queryClient = useQueryClient();
   const hasToken = !!useWebappToken();
-  const { data: session, isPending, isError, error, refetch } = useSession(hasToken);
+  const { data: session, isPending, isError, refetch } = useSession(hasToken);
   const { t } = useI18n();
 
   const activeDevices = getActiveDevices(session);
@@ -58,8 +58,7 @@ export function useConnectStatusPageModel() {
         ? {
             status: "error" as const,
             title: t("common.could_not_load_title"),
-            message:
-              error instanceof Error ? error.message : t("common.could_not_load_generic"),
+            message: t("common.could_not_load_generic"),
             onRetry: () => void refetch(),
           }
         : !session?.user

@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { WebAppSupportFaqResponse } from "@vpn-suite/shared";
 import { webappApi, useWebappToken } from "@/api/client";
 import { useSession, useTrackScreen, useTelemetry } from "@/hooks";
@@ -66,6 +66,10 @@ export function useSupportPageModel() {
     retry: 1,
   });
 
+  const refetchFaq = useCallback(() => {
+    void faqQuery.refetch();
+  }, [faqQuery]);
+
   const faqSource = useMemo(() => {
     const items = faqQuery.data?.items;
     if (items && items.length > 0) {
@@ -96,7 +100,10 @@ export function useSupportPageModel() {
             status: "error",
             title: t("common.could_not_load_title"),
             message: t("common.could_not_load_generic"),
-            onRetry: () => void refetch(),
+            onRetry: () => {
+              void refetch();
+              void faqQuery.refetch();
+            },
           }
         : { status: "ready" };
 
@@ -118,6 +125,7 @@ export function useSupportPageModel() {
     pageState,
     hero,
     faqItems,
+    refetchFaq,
     /** True when `/webapp/support/faq` failed; UI still shows `faqItems` from fallback keys. */
     faqOffline: hasToken && faqQuery.isError,
     currentStep: {
