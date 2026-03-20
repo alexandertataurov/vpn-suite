@@ -243,6 +243,61 @@ describe("HomePage", () => {
     expect(screen.getByText("Renew")).toBeInTheDocument();
   });
 
+  it("renders generating_config state with stable plan summary", () => {
+    mockModel = createBaseModel({
+      status: "generating_config",
+      data: {
+        status: "generating_config",
+        has_plan: true,
+        devices_used: 1,
+        device_limit: 5,
+        config_ready: false,
+        config_id: "device-1",
+        expires_at: "2030-05-01",
+        amnezia_vpn_key: null,
+      },
+      uiConfig: {
+        title: "Generating configuration",
+        description: "This usually takes a few seconds",
+        ctaLabel: "",
+        ctaDisabled: true,
+        ctaAction: vi.fn(),
+        showDevices: false,
+        showExpiry: false,
+      },
+      showDevices: false,
+      showExpiry: false,
+      devicesValue: "1 / 5",
+      expiryValue: "May 1, 2030",
+      pillChip: { variant: "active" as const, label: "PRO" },
+      showPlanHero: true,
+      showRenewalBanner: false,
+      showNoDeviceCallout: false,
+      planHeroData: {
+        eyebrow: "YOUR PLAN",
+        planName: "Pro",
+        subtitle: "5 devices · annual",
+        status: "active" as const,
+        stats: [
+          { label: "DEVICES", value: "1", dim: " / 5", tone: "default" as const },
+          { label: "Renews", value: "May 1, 2030", tone: "default" as const },
+          { label: "TRAFFIC", value: "∞", tone: "default" as const },
+        ],
+      },
+      subscriptionLabel: "Subscription",
+      subscriptionSubtitle: "Pro annual",
+      devicesSubtitle: "1 of 5 active",
+      daysLeft: 20,
+    });
+
+    renderWithProviders(<HomePage />);
+
+    expect(screen.getByText("Generating configuration")).toBeInTheDocument();
+    expect(screen.getByText("This usually takes a few seconds")).toBeInTheDocument();
+    expect(screen.getByText("Loading…")).toBeInTheDocument();
+    expect(screen.getByText("View setup guide")).toBeInTheDocument();
+  });
+
   it("renders support link in footer", () => {
     renderWithProviders(<HomePage />);
 

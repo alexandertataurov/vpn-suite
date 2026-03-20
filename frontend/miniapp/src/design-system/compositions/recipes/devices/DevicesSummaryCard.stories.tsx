@@ -11,7 +11,7 @@ const meta: Meta<typeof DevicesSummaryCard> = {
     layout: "padded",
     docs: {
       description: {
-        component: "Devices overview hero used on the Devices page, with plan, capacity, and recent-activity metrics.",
+        component: "Canonical devices summary card used on the Devices page for capacity, setup, and traffic metrics.",
       },
     },
   },
@@ -23,22 +23,22 @@ type Story = StoryObj<typeof meta>;
 
 const baseMetrics = [
   {
-    keyLabel: "Devices",
+    keyLabel: "Capacity",
     valueLabel: "2 / 5",
     percent: 40,
     tone: "healthy" as const,
     showProgress: true,
   },
   {
-    keyLabel: "Plan",
-    valueLabel: "Pro annual",
-    percent: 0,
-    tone: "neutral" as const,
-    showProgress: false,
+    keyLabel: "Setup",
+    valueLabel: "2 ready",
+    percent: 100,
+    tone: "healthy" as const,
+    showProgress: true,
   },
   {
-    keyLabel: "Last added",
-    valueLabel: "Today",
+    keyLabel: "Traffic",
+    valueLabel: "12.4 GB",
     percent: 0,
     tone: "neutral" as const,
     showProgress: false,
@@ -60,8 +60,8 @@ function renderAddDeviceAction() {
 
 export const Default: Story = {
   args: {
-    title: "Protected devices",
-    description: "Manage device access and configuration delivery.",
+    title: "Devices",
+    description: "2 / 5 active. Manage issued configs, setup confirmation, and device replacement.",
     metrics: baseMetrics,
     action: renderAddDeviceAction(),
   },
@@ -69,7 +69,7 @@ export const Default: Story = {
     docs: {
       description: {
         story:
-          "Primary devices overview for the Devices page. Check that capacity, plan, and recent activity all read as a single control surface.",
+          "Primary devices overview for the live page contract. Validate capacity, setup readiness, traffic, and the single primary add-device action.",
       },
     },
   },
@@ -85,7 +85,7 @@ export const Variants: Story = {
     docs: {
       description: {
         story:
-          "Healthy and near-capacity states shown together. Review the progression from normal usage to the point where an upgrade prompt becomes necessary.",
+          "Healthy and near-capacity states shown together. Review the same summary hierarchy the page model feeds into the Devices screen.",
       },
     },
   },
@@ -94,32 +94,32 @@ export const Variants: Story = {
       <StoryShowcase>
         <StoryStack>
           <DevicesSummaryCard
-            title="Protected devices"
-            description="Manage device access and configuration delivery."
+            title="Devices"
+            description="2 / 5 active. Manage issued configs, setup confirmation, and device replacement."
             metrics={baseMetrics}
             action={renderAddDeviceAction()}
           />
           <DevicesSummaryCard
-            title="Device limit approaching"
-            description="One slot left on your current plan."
+            title="Devices"
+            description="4 / 5 active. Import your config in AmneziaVPN, then return here if you want to confirm setup."
             metrics={[
               {
-                keyLabel: "Devices",
+                keyLabel: "Capacity",
                 valueLabel: "4 / 5",
                 percent: 80,
                 tone: "warning",
                 showProgress: true,
               },
               {
-                keyLabel: "Plan",
-                valueLabel: "Pro annual",
-                percent: 0,
-                tone: "neutral",
-                showProgress: false,
+                keyLabel: "Setup",
+                valueLabel: "1 pending",
+                percent: 75,
+                tone: "warning",
+                showProgress: true,
               },
               {
-                keyLabel: "Last handshake",
-                valueLabel: "2m ago",
+                keyLabel: "Traffic",
+                valueLabel: "27.8 GB",
                 percent: 0,
                 tone: "neutral",
                 showProgress: false,

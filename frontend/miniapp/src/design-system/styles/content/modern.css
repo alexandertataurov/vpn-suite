@@ -453,7 +453,7 @@
 .profile-row,
 .modern-profile-row {
   gap: var(--spacing-2);
-  margin-bottom: var(--amnezia-profile-margin-bottom, var(--spacing-5));
+  margin-bottom: var(--amnezia-profile-margin-bottom, var(--spacing-4));
 }
 
 .modern-profile-row .modern-avatar--profile {
@@ -1021,8 +1021,14 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
 
 /* Canonical home page nav cards — match screenshot layout */
 .home-card-row.modern-list {
-  margin: 0 0 var(--amnezia-card-gap, var(--miniapp-row-gap));
+  margin: 0;
   padding-bottom: 0;
+}
+
+.home-content-stack .new-user-hero,
+.home-content-stack .home-card-row.modern-list,
+.home-content-stack .nd-callout {
+  margin-bottom: 0;
 }
 
 .home-card-row .row-item {

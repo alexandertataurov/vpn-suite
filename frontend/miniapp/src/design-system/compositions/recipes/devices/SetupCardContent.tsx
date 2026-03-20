@@ -1,6 +1,7 @@
-import { Button } from "../../../components";
 import { InlineAlert } from "../../../components/feedback/InlineAlert";
 import { useI18n } from "@/hooks";
+import { MissionPrimaryButton } from "../../patterns";
+import { CompactSummaryCard } from "./CompactSummaryCard";
 import "./DeviceRecipes.css";
 
 export type SetupStep = "subscription" | "issue" | "pending";
@@ -40,33 +41,33 @@ export function SetupCardContent({
         ? t("devices.setup_flow_alert")
         : t("devices.setup_pending_note");
   const showIssueAction = step === "issue" && typeof onIssueDevice === "function";
+  const tone = step === "pending" ? "amber" : "blue";
 
   return (
-    <div className="devices-setup-card">
-      <span className="devices-setup-card__accent" aria-hidden />
-      <div className="devices-setup-card__inner">
-        <div className="devices-setup-card__eyebrow">{t("devices.section_setup_title")}</div>
-        <div>
-          <h3 className="devices-setup-card__title">{title}</h3>
-          <p className="devices-setup-card__desc">{body}</p>
-        </div>
-        <InlineAlert variant={step === "pending" ? "warning" : "info"} message={alertMessage} />
-        {showIssueAction ? (
-          <div className="devices-setup-card__actions">
-            <Button
-              type="button"
-              variant="primary"
-              fullWidth
-              status={isAddPending ? "loading" : "idle"}
-              statusText={t("devices.wizard_creating")}
-              disabled={!canAddDevice || isAddPending}
-              onClick={onIssueDevice}
-            >
-              {issueActionLabel ?? t("devices.add_new_device")}
-            </Button>
-          </div>
-        ) : null}
-      </div>
-    </div>
+    <CompactSummaryCard
+      className="devices-setup-card"
+      eyebrow={t("devices.section_setup_title")}
+      title={title}
+      subtitle={body}
+      tone={tone}
+      actions={showIssueAction ? (
+        <MissionPrimaryButton
+          status={isAddPending ? "loading" : "idle"}
+          statusText={t("devices.wizard_creating")}
+          disabled={!canAddDevice || isAddPending}
+          onClick={onIssueDevice}
+          fullWidth
+        >
+          {issueActionLabel ?? t("devices.add_new_device")}
+        </MissionPrimaryButton>
+      ) : undefined}
+      footer={(
+        <InlineAlert
+          variant={step === "pending" ? "warning" : "info"}
+          message={alertMessage}
+          compact
+        />
+      )}
+    />
   );
 }

@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { useNavigate } from "react-router-dom";
+import { useInRouterContext, useNavigate } from "react-router-dom";
 import { Popover } from "../../../components/feedback/Popover";
 import { Button } from "../../../components/Button";
 import { IconMoreVertical } from "../../../icons";
@@ -25,14 +25,14 @@ export interface OverflowActionMenuProps {
   onTriggerClick?: () => void;
 }
 
-export function OverflowActionMenu({
+function OverflowActionMenuInner({
   items,
   ariaLabel = "More actions",
   className = "",
   menuLabel,
   onTriggerClick,
-}: OverflowActionMenuProps) {
-  const navigate = useNavigate();
+  navigateTo,
+}: OverflowActionMenuProps & { navigateTo?: (to: string, state?: unknown) => void }) {
   const [open, setOpen] = useState(false);
 
   if (items.length === 0) return null;
@@ -42,8 +42,8 @@ export function OverflowActionMenu({
     if (item.onSelect) {
       item.onSelect();
     }
-    if (item.to) {
-      navigate(item.to, item.state !== undefined ? { state: item.state } : undefined);
+    if (item.to && navigateTo) {
+      navigateTo(item.to, item.state);
     }
     // Defer close so the action (e.g. open modal, trigger mutation) runs before unmount
     setTimeout(() => setOpen(false), 0);
@@ -106,5 +106,35 @@ export function OverflowActionMenu({
         ))}
       </ul>
     </Popover>
+  );
+}
+
+function OverflowActionMenuWithRouter(props: OverflowActionMenuProps) {
+  const navigate = useNavigate();
+
+  return (
+    <OverflowActionMenuInner
+      {...props}
+      navigateTo={(to, state) => navigate(to, state !== undefined ? { state } : undefined)}
+    />
+  );
+}
+
+export function OverflowActionMenu(props: OverflowActionMenuProps) {
+  const isInRouterContext = useInRouterContext();
+
+  if (isInRouterContext) {
+    return <OverflowActionMenuWithRouter {...props} />;
+  }
+
+  return (
+    <OverflowActionMenuInner
+      {...props}
+      navigateTo={(to) => {
+        if (typeof window !== "undefined") {
+          window.location.assign(to);
+        }
+      }}
+    />
   );
 }

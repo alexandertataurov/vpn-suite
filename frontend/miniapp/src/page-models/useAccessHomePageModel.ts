@@ -185,11 +185,11 @@ export function useAccessHomePageModel() {
   const showNewUserHero = status === "no_plan" || !hasPlan;
   const showPlanHero =
     hasPlan &&
-    status !== "generating_config" &&
     (status === "needs_device" ||
       status === "ready" ||
       status === "expired" ||
-      status === "device_limit");
+      status === "device_limit" ||
+      status === "generating_config");
 
   const renewsLabel = status === "expired" ? t("home.expired_label") : t("home.renews_label");
   const planName = sanitizePlanDisplayName(

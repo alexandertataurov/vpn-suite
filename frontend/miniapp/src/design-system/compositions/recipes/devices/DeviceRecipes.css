@@ -1,19 +1,134 @@
-.device-hero-card .plan-name {
-  font-size: var(--font-size-lg);
+.device-hero-card {
+  border-radius: calc(var(--radius-xl) + var(--spacing-0-5));
+  box-shadow: var(--shadow-sm);
+}
+
+.device-hero-card .modern-status-group {
+  align-items: flex-start;
+  gap: var(--spacing-3);
+}
+
+.device-hero-card .modern-pulse-indicator {
+  margin-top: calc(var(--spacing-0-5) + var(--spacing-px));
+}
+
+.device-hero-card .modern-status-text {
+  min-width: 0;
+}
+
+.device-hero-card .modern-header-label,
+.device-hero-card .modern-status-subtitle {
+  font-size: var(--font-size-xs);
+  line-height: 1.45;
+}
+
+.device-hero-card .modern-status-title {
+  font-size: clamp(var(--font-size-lg), 4vw, calc(var(--font-size-xl) - var(--spacing-0-5)));
+  line-height: 1.12;
   letter-spacing: var(--letter-spacing-tight);
 }
 
-.device-hero-card .status-chip {
+.device-hero-card .devices-summary-card__header-action {
   align-self: flex-start;
 }
 
-.device-row {
-  align-items: flex-start;
+.device-hero-card .devices-summary-card__header-action > * {
+  min-width: min(100%, 12rem);
 }
 
-.device-row .ri-body {
+.device-hero-card .modern-device-grid {
+  gap: var(--spacing-2);
+  margin-top: var(--spacing-1);
+}
+
+.device-hero-card .modern-device-metric {
+  min-height: 100%;
+  padding: var(--spacing-3);
+  border-radius: var(--radius-lg);
+  background: color-mix(in oklch, var(--color-surface) 84%, var(--color-accent) 16%);
+  border: var(--border-width-hairline) solid color-mix(in oklch, var(--color-accent) 10%, var(--color-border-subtle));
+}
+
+.device-hero-card .modern-device-metric .modern-metric-label {
+  margin-bottom: var(--spacing-0-5);
+}
+
+.device-hero-card .modern-device-metric .devices-summary-metric-value {
+  font-size: var(--font-size-md);
+  line-height: 1.2;
+}
+
+.device-row {
+  cursor: default;
+}
+
+.device-row .ri-label {
+  white-space: normal;
+  overflow: visible;
+}
+
+.device-row .ri-sub {
+  display: block;
+  white-space: normal;
+  -webkit-line-clamp: unset;
+  overflow: visible;
+  line-height: 1.45;
+}
+
+.device-row .ri-right {
+  align-items: center;
+  gap: var(--spacing-2);
+  max-width: none;
+}
+
+.device-row__topline {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  row-gap: var(--spacing-1);
+  flex-wrap: wrap;
   min-width: 0;
-  flex: 1;
+}
+
+.device-row__title-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.device-row__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-2);
+  min-width: 0;
+  margin-top: var(--spacing-1);
+}
+
+.device-platform-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: calc(var(--spacing-5) + var(--spacing-px));
+  padding: 0 var(--spacing-2);
+  border-radius: var(--radius-full);
+  background: var(--color-surface-2);
+  border: var(--border-width-hairline) solid var(--color-border-subtle);
+  color: var(--color-text-secondary, var(--color-text-muted));
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-label);
+  white-space: nowrap;
+}
+
+.device-inline-action.btn {
+  min-height: var(--height-btn-sm);
+  padding-inline: var(--spacing-3);
+  white-space: nowrap;
 }
 
 .device-chip {
@@ -76,16 +191,6 @@
   animation: device-chip-dot-pulse 2s ease-in-out infinite;
 }
 
-@media (max-width: var(--vp-narrow)) {
-  .device-row .ri-sub.device-meta {
-    white-space: normal;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .device-chip--imported .device-chip-dot,
   .device-chip--pending .device-chip-dot {
@@ -98,16 +203,14 @@
 }
 
 .device-meta,
-.device-row .ri-sub.device-meta {
-  max-width: 100%;
-  margin-top: 0;
+.device-row .device-meta {
+  flex: 1 1 12rem;
+  min-width: 0;
   color: var(--row-sub);
   font-size: var(--font-size-xs);
   line-height: var(--line-height-body, 1.4);
   letter-spacing: var(--letter-spacing-normal, 0);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
 }
 
 /* DevicesSummaryCard — metric typography primitives */
@@ -155,60 +258,8 @@
   height: var(--icon-size-sm);
 }
 
-.devices-setup-card {
-  display: flex;
-  border: var(--border-width-hairline) solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
-  overflow: hidden;
-}
-
-.devices-setup-card__accent {
-  width: calc(var(--spacing-0-5) + var(--spacing-px));
-  min-width: calc(var(--spacing-0-5) + var(--spacing-px));
-  background: color-mix(in oklch, var(--color-accent) 45%, transparent);
-  flex-shrink: 0;
-}
-
-.devices-setup-card__inner {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-3);
-  padding: var(--miniapp-data-cell-padding) var(--miniapp-card-padding);
-}
-
-.devices-setup-card__eyebrow {
-  color: var(--color-text-tertiary);
-  font-size: var(--amnezia-plan-eyebrow, var(--font-size-xs));
-  font-weight: var(--font-weight-semibold);
-  letter-spacing: var(--letter-spacing-widest);
-  line-height: var(--line-height-label);
-}
-
-.devices-setup-card__title {
-  margin: 0;
-  color: var(--color-text);
-  font-size: var(--typo-h3-size, 16px);
-  font-weight: var(--font-weight-bold);
-  letter-spacing: var(--letter-spacing-tight);
-  line-height: var(--line-height-title);
-}
-
-.devices-setup-card__desc {
-  margin: 0;
-  color: var(--color-text-muted);
-  font-size: var(--typo-caption-size, 14px);
-  line-height: var(--line-height-body);
-}
-
-.devices-setup-card__actions {
-  display: flex;
-}
-
-.devices-setup-card__actions > * {
-  width: 100%;
+.devices-setup-card .compact-summary-card__actions {
+  min-width: min(100%, 14rem);
 }
 
 .devices-config-actions {
@@ -217,30 +268,81 @@
 
 .devices-empty-card {
   margin-bottom: 0;
+  padding: var(--spacing-5) var(--spacing-4);
+  text-align: center;
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklch, var(--color-surface) 90%, var(--color-accent) 10%),
+    color-mix(in oklch, var(--color-surface) 96%, var(--color-surface-2) 4%)
+  );
+}
+
+.devices-empty-card .empty-state-block-icon {
+  margin-bottom: var(--spacing-2);
+}
+
+.devices-empty-card .empty-state-block-title {
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-tight);
+}
+
+.devices-empty-card .empty-state-block-message {
+  max-width: 30rem;
+  margin-inline: auto;
+  font-size: var(--font-size-sm);
+  line-height: 1.55;
 }
 
 @media (max-width: var(--vp-narrow)) {
-  .device-hero-card .p-stat-val,
-  .device-hero-card .plan-name {
-    font-size: var(--font-size-lg);
+  .device-hero-card .modern-status-group {
+    gap: var(--spacing-2);
   }
 
-  .device-hero-card .p-stat-label {
-    font-size: var(--font-size-xs);
+  .device-hero-card .devices-summary-card__header-action {
+    width: 100%;
   }
 
-  .devices-setup-card__title {
-    font-size: var(--typo-h4-size, var(--font-size-lg));
+  .device-hero-card .devices-summary-card__header-action > * {
+    width: 100%;
+    min-width: 0;
   }
 
-  .devices-setup-card__desc {
-    font-size: var(--typo-caption-size, var(--font-size-xs));
+  .device-hero-card .modern-device-grid {
+    grid-template-columns: 1fr;
   }
-}
 
-/* Storybook: DeviceRowActions showcase */
-.story-device-row-actions {
-  display: flex;
-  justify-content: flex-end;
-  min-width: calc(var(--spacing-10) + var(--spacing-20)); /* 40px + 80px */
+  .device-row,
+  .device-row .ri-right {
+    flex-direction: column;
+  }
+
+  .device-row__topline {
+    flex-wrap: wrap;
+  }
+
+  .device-row .ri-right {
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .device-menu-btn.btn {
+    align-self: flex-end;
+  }
+
+  .device-row__meta {
+    align-items: flex-start;
+  }
+
+  .device-meta {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .devices-setup-card .compact-summary-card__actions {
+    min-width: 0;
+  }
 }

@@ -56,7 +56,7 @@ export const Default: Story = {
     docs: {
       description: {
         story:
-          "Name entry step with install guidance below it. This is the canonical add-device onboarding shape.",
+          "Name-entry step only. Use this to validate the first step contract before the install guidance is shown.",
       },
     },
   },
@@ -71,7 +71,7 @@ export const Variants: Story = {
   render: () => (
     <StorySection
       title="Variants"
-      description="Name entry and install guidance steps in one canonical wizard story."
+      description="Separate name-entry and install-guidance steps in the same canonical wizard contract."
     >
       <StoryShowcase>
         <StoryStack>

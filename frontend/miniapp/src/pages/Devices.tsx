@@ -6,7 +6,7 @@ import {
   CardRow,
   ConfigCardContent,
   DeviceRow,
-  DeviceHeroCard,
+  EmptyStateBlock,
   FallbackScreen,
   FooterHelp,
   Skeleton,
@@ -24,6 +24,7 @@ import {
   usePrefersReducedMotion,
   Stack,
   SetupCardContent,
+  DevicesSummaryCard,
   getMotionDurationMs,
 } from "@/design-system";
 import { useTelegramMainButton } from "@/hooks";
@@ -191,235 +192,237 @@ export function DevicesPage() {
   return (
     <PageScaffold>
       <PageLayout scrollable={false}>
-      <PageHeader
-        title={model.header.title}
-        subtitle={model.header.subtitle}
-        onBack={() => navigate(-1)}
-        backAriaLabel={t("common.back_aria")}
-      />
-      {model.planRequiredAlert ? (
-        <InlineAlert
-          variant="warning"
-          label={model.planRequiredAlert.title}
-          message={model.planRequiredAlert.body}
-          className="devices-plan-required-alert"
-          action={{
-            label: model.planRequiredAlert.ctaLabel,
-            onClick: () => navigate(model.planRequiredAlert!.to),
-          }}
+        <PageHeader
+          title={model.header.title}
+          subtitle={model.header.subtitle}
+          onBack={() => navigate(-1)}
+          backAriaLabel={t("common.back_aria")}
         />
-      ) : null}
-
-      <DeviceHeroCard
-        devicesUsed={model.activeDevices.length}
-        devicesTotal={model.deviceLimit}
-        setupPending={model.pendingConnectionCount}
-        trafficUsed={model.trafficUsedLabel}
-      />
-
-      <Button
-        type="button"
-        variant="primary"
-        fullWidth
-        status={model.isAddPending ? "loading" : "idle"}
-        statusText={t("devices.wizard_creating")}
-        onClick={openAddWizard}
-        disabled={!model.canAddDevice || model.isAddPending}
-        aria-label={t("devices.add_new_device")}
-        startIcon={<IconPlus size={16} strokeWidth={2} aria-hidden />}
-      >
-        {t("devices.add_new_device")}
-      </Button>
-
-      <SectionLabel label={t("devices.section_devices_title")} />
-      <div id="devices-section">
-        {(model.isDeviceLimitError || model.showUpgradeCta) ? (
+        {model.planRequiredAlert ? (
           <InlineAlert
             variant="warning"
-            label={model.deviceLimitUpsellCopy?.title ?? t("devices.limit_reached_default_title")}
-            message={model.deviceLimitUpsellCopy?.body ?? t("devices.limit_reached_default_message")}
+            label={model.planRequiredAlert.title}
+            message={model.planRequiredAlert.body}
+            className="devices-plan-required-alert"
             action={{
-              label: model.deviceLimitUpsellCopy?.ctaLabel ?? t("devices.limit_reached_default_cta"),
-              onClick: () => {
-                navigate(model.upgradeTargetTo);
-                model.handleUpgradePlanClick();
-              },
+              label: model.planRequiredAlert.ctaLabel,
+              onClick: () => navigate(model.planRequiredAlert!.to),
             }}
-          />
-        ) : model.issueErrorMessage ? (
-          <InlineAlert
-            variant="error"
-            label={t("devices.issue_error_title")}
-            message={model.issueErrorMessage}
           />
         ) : null}
 
-        <CardRow className="devices-list-card">
-          {model.activeDevices.length === 0 ? (
-            <div className="card-row-empty devices-empty-card">
-              {t("devices.empty_title")}
-            </div>
-          ) : (
-            animatedDevices.map(({ device, phase }) => (
-              <div key={device.id} className="device-row-motion" data-phase={phase}>
-                <DeviceRow
-                  device={device}
-                  formatIssuedAt={model.formatIssuedAt}
-                  onConfirm={model.handleConfirmConnected}
-                  onReplace={model.handleReplaceDevice}
-                  onRevoke={model.setRevokeId}
-                  onRename={openRename}
-                  isConfirmingId={model.isConfirmingId}
-                  isReplacingId={model.isReplacingId}
-                />
-              </div>
-            ))
-          )}
-        </CardRow>
-      </div>
-
-      {model.hasSubscription && model.showSetupCard ? (
-        <div id="setup-section">
-          <SetupCardContent
-            step={model.setupStep}
-            onIssueDevice={openAddWizard}
-            canAddDevice={model.canAddDevice}
-            isAddPending={model.isAddPending}
-            issueActionLabel={model.issueActionLabel}
-          />
-        </div>
-      ) : null}
-
-      {model.issuedConfig ? (
-        <div ref={model.configSectionRef}>
-          <PageSection id="config-section">
-            <ConfigCardContent
-              configText={model.configText}
-              routeReason={model.routeReason}
-              peerCreated={model.issuedConfig.peer_created}
-              onCopy={model.handleCopyConfig}
-              onDownload={model.handleDownloadConfig}
-            />
-          </PageSection>
-        </div>
-      ) : null}
-
-      <ConfirmModal
-        isOpen={model.revokeId !== null}
-        onClose={() => !model.isRevoking && model.setRevokeId(null)}
-        onConfirm={model.handleConfirmRevoke}
-        title={t("devices.revoke_modal_title")}
-        message={t("devices.revoke_modal_message")}
-        confirmLabel={t("devices.revoke_modal_confirm")}
-        cancelLabel={t("devices.revoke_modal_cancel")}
-        variant="danger"
-        loading={model.isRevoking}
+      <DevicesSummaryCard
+        title={model.header.title}
+        description={model.summaryHero.subtitle ?? model.deviceSummary}
+        metrics={model.summaryHero.metrics}
+        action={(
+          <Button
+            type="button"
+            variant="primary"
+            fullWidth
+            status={model.isAddPending ? "loading" : "idle"}
+            statusText={t("devices.wizard_creating")}
+            onClick={openAddWizard}
+            disabled={!model.canAddDevice || model.isAddPending}
+            aria-label={t("devices.add_new_device")}
+            startIcon={<IconPlus size={16} strokeWidth={2} aria-hidden />}
+          >
+            {t("devices.add_new_device")}
+          </Button>
+        )}
       />
 
-      <Modal
-        isOpen={isAddWizardOpen}
-        onClose={closeAddWizard}
-        title={addWizardStep === "name" ? t("devices.wizard_title_name") : t("devices.wizard_title_install")}
-        subtitle={addWizardStep === "name" ? t("devices.wizard_description_name") : t("devices.wizard_description_install")}
-        variant="plain"
-        disableDismiss={model.isAddPending}
-        footer={
-          <>
-            <Button type="button" variant="secondary" size="sm" onClick={closeAddWizard} disabled={model.isAddPending}>
-              {t("devices.revoke_modal_cancel")}
-            </Button>
-            <Button
-              type="button"
-              variant="primary"
-              size="sm"
-              onClick={addWizardStep === "name" ? handleAddWizardNext : handleAddWizardConfirm}
-              status={model.isAddPending ? "loading" : "idle"}
-              statusText={t("devices.wizard_creating")}
-            >
-              {addWizardStep === "name" ? t("devices.wizard_continue") : t("devices.wizard_create")}
-            </Button>
-          </>
-        }
-      >
-        <AddDeviceWizardContent
-          step={addWizardStep}
-          nameSlot={
-            <Input
-              type="text"
-              label={t("devices.wizard_name_label")}
-              description={t("devices.wizard_name_hint")}
-              value={newDeviceName}
-              onChange={(e) => setNewDeviceName(e.target.value.slice(0, DEVICE_NAME_MAX_LENGTH))}
-              maxLength={DEVICE_NAME_MAX_LENGTH}
-              placeholder={t("devices.wizard_name_placeholder")}
-              aria-label={t("devices.wizard_name_label")}
+        {model.issuedConfig ? (
+          <div ref={model.configSectionRef}>
+            <PageSection id="config-section">
+              <ConfigCardContent
+                configText={model.configText}
+                routeReason={model.routeReason}
+                peerCreated={model.issuedConfig.peer_created}
+                onCopy={model.handleCopyConfig}
+                onDownload={model.handleDownloadConfig}
+              />
+            </PageSection>
+          </div>
+        ) : null}
+
+        <SectionLabel label={t("devices.section_devices_title")} />
+        <div id="devices-section">
+          {(model.isDeviceLimitError || model.showUpgradeCta) ? (
+            <InlineAlert
+              variant="warning"
+              label={model.deviceLimitUpsellCopy?.title ?? t("devices.limit_reached_default_title")}
+              message={model.deviceLimitUpsellCopy?.body ?? t("devices.limit_reached_default_message")}
+              action={{
+                label: model.deviceLimitUpsellCopy?.ctaLabel ?? t("devices.limit_reached_default_cta"),
+                onClick: () => {
+                  navigate(model.upgradeTargetTo);
+                  model.handleUpgradePlanClick();
+                },
+              }}
             />
-          }
-          installKicker={t("devices.wizard_install_kicker")}
-          installMessage={t("devices.wizard_install_body")}
-          installSteps={[
-            t("devices.wizard_install_step_download_app"),
-            t("devices.wizard_install_step_create_config"),
-            t("devices.wizard_install_step_import_config"),
-            t("devices.wizard_install_step_connect"),
-          ]}
-          storeLinks={
+          ) : model.issueErrorMessage ? (
+            <InlineAlert
+              variant="error"
+              label={t("devices.issue_error_title")}
+              message={model.issueErrorMessage}
+            />
+          ) : null}
+
+          <CardRow className="devices-list-card">
+            {model.activeDevices.length === 0 ? (
+              <EmptyStateBlock
+                className="devices-empty-card"
+                title={t("devices.empty_title")}
+                message={model.hasSubscription ? t("devices.empty_message_has_sub") : t("devices.empty_message_no_sub")}
+              />
+            ) : (
+              animatedDevices.map(({ device, phase }) => (
+                <div key={device.id} className="device-row-motion" data-phase={phase}>
+                  <DeviceRow
+                    device={device}
+                    formatIssuedAt={model.formatIssuedAt}
+                    onConfirm={model.handleConfirmConnected}
+                    onReplace={model.handleReplaceDevice}
+                    onRevoke={model.setRevokeId}
+                    onRename={openRename}
+                    isConfirmingId={model.isConfirmingId}
+                    isReplacingId={model.isReplacingId}
+                  />
+                </div>
+              ))
+            )}
+          </CardRow>
+        </div>
+
+        {model.hasSubscription && model.showSetupCard ? (
+          <div id="setup-section">
+            <SetupCardContent
+              step={model.setupStep}
+              onIssueDevice={openAddWizard}
+              canAddDevice={model.canAddDevice}
+              isAddPending={model.isAddPending}
+              issueActionLabel={model.issueActionLabel}
+            />
+          </div>
+        ) : null}
+
+        <ConfirmModal
+          isOpen={model.revokeId !== null}
+          onClose={() => !model.isRevoking && model.setRevokeId(null)}
+          onConfirm={model.handleConfirmRevoke}
+          title={t("devices.revoke_modal_title")}
+          message={t("devices.revoke_modal_message")}
+          confirmLabel={t("devices.revoke_modal_confirm")}
+          cancelLabel={t("devices.revoke_modal_cancel")}
+          variant="danger"
+          loading={model.isRevoking}
+        />
+
+        <Modal
+          isOpen={isAddWizardOpen}
+          onClose={closeAddWizard}
+          title={addWizardStep === "name" ? t("devices.wizard_title_name") : t("devices.wizard_title_install")}
+          subtitle={addWizardStep === "name" ? t("devices.wizard_description_name") : t("devices.wizard_description_install")}
+          variant="plain"
+          disableDismiss={model.isAddPending}
+          footer={
             <>
-              <Button variant="outline" size="sm" asChild>
-                <a href={AMNEZIA_VPN_IOS_URL} target="_blank" rel="noreferrer">
-                  {t("devices.wizard_install_ios")}
-                </a>
+              <Button type="button" variant="secondary" size="sm" onClick={closeAddWizard} disabled={model.isAddPending}>
+                {t("devices.revoke_modal_cancel")}
               </Button>
-              <Button variant="outline" size="sm" asChild>
-                <a href={AMNEZIA_VPN_ANDROID_URL} target="_blank" rel="noreferrer">
-                  {t("devices.wizard_install_android")}
-                </a>
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                onClick={addWizardStep === "name" ? handleAddWizardNext : handleAddWizardConfirm}
+                status={model.isAddPending ? "loading" : "idle"}
+                statusText={t("devices.wizard_creating")}
+              >
+                {addWizardStep === "name" ? t("devices.wizard_continue") : t("devices.wizard_create")}
               </Button>
             </>
           }
-        />
-      </Modal>
+        >
+          <AddDeviceWizardContent
+            step={addWizardStep}
+            nameSlot={
+              <Input
+                type="text"
+                label={t("devices.wizard_name_label")}
+                description={t("devices.wizard_name_hint")}
+                value={newDeviceName}
+                onChange={(e) => setNewDeviceName(e.target.value.slice(0, DEVICE_NAME_MAX_LENGTH))}
+                maxLength={DEVICE_NAME_MAX_LENGTH}
+                placeholder={t("devices.wizard_name_placeholder")}
+                aria-label={t("devices.wizard_name_label")}
+              />
+            }
+            installKicker={t("devices.wizard_install_kicker")}
+            installMessage={t("devices.wizard_install_body")}
+            installSteps={[
+              t("devices.wizard_install_step_download_app"),
+              t("devices.wizard_install_step_create_config"),
+              t("devices.wizard_install_step_import_config"),
+              t("devices.wizard_install_step_connect"),
+            ]}
+            storeLinks={
+              <>
+                <Button variant="outline" size="sm" asChild>
+                  <a href={AMNEZIA_VPN_IOS_URL} target="_blank" rel="noreferrer">
+                    {t("devices.wizard_install_ios")}
+                  </a>
+                </Button>
+                <Button variant="outline" size="sm" asChild>
+                  <a href={AMNEZIA_VPN_ANDROID_URL} target="_blank" rel="noreferrer">
+                    {t("devices.wizard_install_android")}
+                  </a>
+                </Button>
+              </>
+            }
+          />
+        </Modal>
 
-      <Modal
-        isOpen={renameDeviceId !== null}
-        onClose={closeRename}
-        title={t("devices.rename_modal_title")}
-        variant="plain"
-        footer={
-          <>
-            <Button type="button" variant="secondary" size="sm" onClick={closeRename}>
-              {t("devices.revoke_modal_cancel")}
-            </Button>
-            <Button
-              type="button"
-              variant="primary"
-              size="sm"
-              onClick={handleRenameSubmit}
-              status={model.isRenamePending ? "loading" : "idle"}
-              statusText={t("devices.menu_rename_device")}
-              disabled={model.isRenamePending}
-            >
-              {t("devices.menu_rename_device")}
-            </Button>
-          </>
-        }
-      >
-        <Input
-          type="text"
-          label={t("devices.rename_modal_placeholder")}
-          value={renameValue}
-          onChange={(e) => setRenameValue(e.target.value.slice(0, DEVICE_NAME_MAX_LENGTH))}
-          maxLength={DEVICE_NAME_MAX_LENGTH}
-          placeholder={renameDevice ? `Device #${renameDevice.id.slice(-6)}` : ""}
-          aria-label={t("devices.rename_modal_placeholder")}
-        />
-      </Modal>
+        <Modal
+          isOpen={renameDeviceId !== null}
+          onClose={closeRename}
+          title={t("devices.rename_modal_title")}
+          variant="plain"
+          footer={
+            <>
+              <Button type="button" variant="secondary" size="sm" onClick={closeRename}>
+                {t("devices.revoke_modal_cancel")}
+              </Button>
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                onClick={handleRenameSubmit}
+                status={model.isRenamePending ? "loading" : "idle"}
+                statusText={t("devices.menu_rename_device")}
+                disabled={model.isRenamePending}
+              >
+                {t("devices.menu_rename_device")}
+              </Button>
+            </>
+          }
+        >
+          <Input
+            type="text"
+            label={t("devices.rename_modal_placeholder")}
+            value={renameValue}
+            onChange={(e) => setRenameValue(e.target.value.slice(0, DEVICE_NAME_MAX_LENGTH))}
+            maxLength={DEVICE_NAME_MAX_LENGTH}
+            placeholder={renameDevice ? `Device #${renameDevice.id.slice(-6)}` : ""}
+            aria-label={t("devices.rename_modal_placeholder")}
+          />
+        </Modal>
 
-      <FooterHelp
-        note={t("footer.having_trouble")}
-        linkLabel={t("footer.view_setup_guide")}
-        onLinkClick={() => navigate("/support")}
-      />
+        <FooterHelp
+          note={t("footer.having_trouble")}
+          linkLabel={t("footer.view_setup_guide")}
+          onLinkClick={() => navigate("/support")}
+        />
       </PageLayout>
     </PageScaffold>
   );

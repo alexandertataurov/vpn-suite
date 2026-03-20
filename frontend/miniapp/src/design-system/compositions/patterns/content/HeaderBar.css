@@ -1,19 +1,21 @@
 /* HeaderBar — back button + title block + optional action */
 
 .header-bar {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: var(--miniapp-grid-gap);
-  padding: 0 0 var(--spacing-2);
+  gap: var(--spacing-2);
+  min-height: 48px;
+  padding: var(--spacing-0-5) 0 var(--spacing-2);
 }
 
 .header-bar__back {
-  width: calc(var(--spacing-8) + var(--spacing-0-5));
-  height: calc(var(--spacing-8) + var(--spacing-0-5));
-  min-width: calc(var(--spacing-8) + var(--spacing-0-5));
+  width: calc(var(--spacing-8) + var(--spacing-1));
+  height: calc(var(--spacing-8) + var(--spacing-1));
+  min-width: calc(var(--spacing-8) + var(--spacing-1));
   border-radius: var(--radius-full);
   background: var(--color-surface);
-  border: var(--border-width-hairline) solid var(--color-border);
+  border: var(--border-width-hairline) solid var(--color-border-subtle);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -47,17 +49,20 @@
 
 .header-bar__text {
   min-width: 0;
-  flex: 1;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--spacing-0-5);
 }
 
 .header-bar__title {
   font-family: var(--font-sans);
-  font-size: var(--amnezia-data-cell-lg);
-  font-weight: var(--font-weight-bold);
+  font-size: var(--amnezia-page-header-title, var(--amnezia-data-cell-lg));
+  font-weight: var(--font-weight-semibold);
   color: var(--color-text);
   letter-spacing: var(--letter-spacing-tight);
-  line-height: var(--line-height-title);
+  line-height: 1.15;
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -68,8 +73,8 @@
   font-size: var(--amnezia-plan-subtitle);
   font-weight: var(--font-weight-normal);
   color: var(--color-text-tertiary);
-  margin: var(--spacing-0-5) 0 0;
-  line-height: var(--line-height-body);
+  margin: 0;
+  line-height: 1.35;
   white-space: normal;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -80,4 +85,5 @@
 .header-bar__action {
   flex-shrink: 0;
   margin-left: auto;
+  align-self: center;
 }

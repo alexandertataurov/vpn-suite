@@ -2,6 +2,7 @@
   display: flex;
   align-items: center;
   gap: var(--miniapp-grid-gap, var(--spacing-3));
+  min-height: 56px;
   padding: var(--amnezia-row-pad-v, var(--spacing-3)) var(--amnezia-row-pad-h, var(--space-md));
   background: var(--row-bg, var(--color-surface));
   border-bottom: var(--border-width-hairline) solid var(--row-divider, var(--color-border-subtle));
@@ -111,7 +112,7 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: var(--space-xs);
+  gap: var(--spacing-0-5);
   justify-content: center;
 }
 
@@ -121,7 +122,7 @@
   font-weight: var(--font-weight-medium);
   color: var(--color-text);
   letter-spacing: var(--letter-spacing-tight, -0.025em);
-  line-height: var(--line-height-title, 1.2);
+  line-height: 1.15;
   opacity: 1 !important;
   white-space: nowrap;
   overflow: hidden;
@@ -137,7 +138,7 @@
   font-size: var(--amnezia-row-sub, var(--text-meta, var(--font-size-sm)));
   font-weight: var(--font-weight-normal);
   color: var(--color-text-muted);
-  line-height: var(--line-height-body, 1.4);
+  line-height: 1.35;
   white-space: normal;
   display: -webkit-box;
   -webkit-line-clamp: 1;
@@ -148,7 +149,7 @@
 .ri-right {
   display: flex;
   align-items: center;
-  gap: var(--space-sm, var(--spacing-2));
+  gap: var(--spacing-2);
   max-width: 40%;
   flex-shrink: 0;
 }

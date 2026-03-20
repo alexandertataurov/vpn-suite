@@ -15,6 +15,7 @@ export interface DeviceRowActionsProps {
   isConfirmingId: string | null;
   isReplacingId: string | null;
   className?: string;
+  hideConfirmAction?: boolean;
 }
 
 export function DeviceRowActions({
@@ -28,6 +29,7 @@ export function DeviceRowActions({
   isConfirmingId,
   isReplacingId,
   className,
+  hideConfirmAction = false,
 }: DeviceRowActionsProps) {
   const { impact } = useTelegramHaptics();
   const { t } = useI18n();
@@ -59,7 +61,7 @@ export function DeviceRowActions({
     });
   }
 
-  if (showConfirm) {
+  if (showConfirm && !hideConfirmAction) {
     menuItems.push({
       id: "confirm",
       label: isConfirmingId === deviceId ? t("devices.menu_confirming") : t("devices.menu_confirm_setup"),

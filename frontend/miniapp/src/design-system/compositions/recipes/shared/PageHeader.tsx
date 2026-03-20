@@ -7,10 +7,18 @@ export interface PageHeaderProps {
   onBack?: () => void;
   action?: ReactNode;
   backAriaLabel?: string;
+  className?: string;
 }
 
 /** Page header recipe. Uses HeaderBar pattern. */
-export function PageHeader({ title, subtitle, onBack, action, backAriaLabel = "Back" }: PageHeaderProps) {
+export function PageHeader({
+  title,
+  subtitle,
+  onBack,
+  action,
+  backAriaLabel = "Back",
+  className,
+}: PageHeaderProps) {
   return (
     <HeaderBar
       title={title}
@@ -18,6 +26,7 @@ export function PageHeader({ title, subtitle, onBack, action, backAriaLabel = "B
       onBack={onBack}
       action={action}
       backAriaLabel={backAriaLabel}
+      className={className}
       data-layer="PageHeader"
     />
   );

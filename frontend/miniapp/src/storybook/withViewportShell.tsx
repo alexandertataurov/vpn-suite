@@ -2,12 +2,17 @@ import type { ReactNode } from "react";
 import type { Decorator } from "@storybook/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { StackFlowLayout } from "@/app/ViewportLayout";
+import { ToastContainer } from "@/design-system";
 import { StorybookQueryClientProvider } from "./queryClient";
 
 export type ViewportShellVariant = "stack";
 
 export function ViewportShellProviders({ children }: { children: ReactNode }) {
-  return <StorybookQueryClientProvider>{children}</StorybookQueryClientProvider>;
+  return (
+    <StorybookQueryClientProvider>
+      <ToastContainer>{children}</ToastContainer>
+    </StorybookQueryClientProvider>
+  );
 }
 
 export function ViewportShellRoutes({

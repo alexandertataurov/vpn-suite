@@ -41,8 +41,6 @@ export { CompactSummaryCard } from "./devices/CompactSummaryCard";
 export type { CompactSummaryCardProps, CompactSummaryCardStat } from "./devices/CompactSummaryCard";
 export { DevicesSummaryCard } from "./devices/DevicesSummaryCard";
 export type { DevicesSummaryCardProps, DevicesSummaryMetric } from "./devices/DevicesSummaryCard";
-export { DeviceHeroCard } from "./devices/DeviceHeroCard";
-export type { DeviceHeroCardProps } from "./devices/DeviceHeroCard";
 export { AddDeviceWizardContent } from "./devices/AddDeviceWizardContent";
 export type {
   AddDeviceWizardContentProps,
