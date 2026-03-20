@@ -1,5 +1,6 @@
 import { CompactSummaryCard } from "@/design-system";
 import { useI18n } from "@/hooks";
+import "./ConnectStatusCards.css";
 
 export interface ConnectStatusSummaryCardProps {
   title: string;

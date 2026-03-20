@@ -1,5 +1,6 @@
 import { CompactSummaryCard, MissionPrimaryButton, MissionPrimaryLink, VpnBoundaryNote } from "@/design-system";
 import { useI18n } from "@/hooks";
+import "./ConnectStatusCards.css";
 
 export interface ConnectStatusVerifyCardProps {
   showConfirmAction: boolean;
@@ -24,6 +25,7 @@ export function ConnectStatusVerifyCard({
   return (
     <CompactSummaryCard
       as="section"
+      className="connect-status-verify-card"
       eyebrow={t("connect_status.verify_section_title")}
       title={showConfirmAction ? t("connect_status.summary_pending_title") : t("connect_status.summary_confirmed_title")}
       subtitle={t("connect_status.verify_section_description")}

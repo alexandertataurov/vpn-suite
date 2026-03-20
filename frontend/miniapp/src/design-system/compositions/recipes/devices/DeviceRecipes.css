@@ -103,9 +103,27 @@
   margin-top: 0;
   color: var(--row-sub);
   font-size: var(--font-size-xs);
+  line-height: var(--line-height-body, 1.4);
+  letter-spacing: var(--letter-spacing-normal, 0);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* DevicesSummaryCard — metric typography primitives */
+.modern-device-metric .modern-metric-label {
+  font: 600 var(--typo-meta-size) / 1.2 var(--font-mono);
+  letter-spacing: var(--letter-spacing-label, 0.08em);
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+
+.modern-device-metric .devices-summary-metric-value {
+  font: 650 var(--font-size-md) / var(--line-height-tight, 1.2) var(--font-mono);
+  letter-spacing: var(--letter-spacing-heading, -0.02em);
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+  min-width: 0;
 }
 
 .device-menu-btn.btn {

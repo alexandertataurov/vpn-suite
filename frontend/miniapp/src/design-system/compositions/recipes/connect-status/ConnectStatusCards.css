@@ -1,0 +1,89 @@
+/* Connect-status card typography overrides (scoped only to this feature) */
+
+.connect-status-summary-card .compact-summary-card__eyebrow,
+.connect-status-verify-card .compact-summary-card__eyebrow {
+  font-family: var(--font-sans);
+  font-size: var(--typo-meta-size, var(--font-size-xs));
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-widest);
+  text-transform: none;
+  color: var(--color-text-tertiary);
+  line-height: var(--line-height-label);
+  overflow-wrap: anywhere;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.connect-status-summary-card .compact-summary-card__title,
+.connect-status-verify-card .compact-summary-card__title {
+  font-family: var(--font-sans);
+  font-size: var(--typo-h4-size, var(--font-size-lg));
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-tight);
+  color: var(--color-text);
+  line-height: var(--line-height-title);
+  overflow-wrap: anywhere;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.connect-status-summary-card .compact-summary-card__subtitle,
+.connect-status-verify-card .compact-summary-card__subtitle {
+  font-family: var(--font-sans);
+  font-size: var(--typo-body-sm-size, var(--font-size-sm));
+  font-weight: var(--font-weight-normal);
+  color: var(--color-text-muted);
+  line-height: var(--line-height-body);
+  overflow-wrap: anywhere;
+
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+}
+
+.connect-status-summary-card .compact-summary-card__stat-label,
+.connect-status-verify-card .compact-summary-card__stat-label {
+  font-family: var(--font-mono);
+  font-size: var(--typo-meta-size, var(--font-size-xs));
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+  line-height: var(--line-height-label);
+  overflow-wrap: anywhere;
+}
+
+.connect-status-summary-card .compact-summary-card__stat-value,
+.connect-status-verify-card .compact-summary-card__stat-value {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-tight);
+  color: var(--color-text);
+  line-height: var(--line-height-title);
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: var(--vp-narrow)) {
+  .connect-status-summary-card .compact-summary-card__title,
+  .connect-status-verify-card .compact-summary-card__title {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    text-overflow: clip;
+  }
+
+  .connect-status-summary-card .compact-summary-card__subtitle,
+  .connect-status-verify-card .compact-summary-card__subtitle {
+    -webkit-line-clamp: 2;
+  }
+}
+
