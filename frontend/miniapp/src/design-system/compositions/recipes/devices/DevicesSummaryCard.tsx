@@ -3,6 +3,8 @@ import type { ReactNode } from "react";
 import { IconMonitor } from "@/design-system/icons";
 import { HeroCard } from "../../patterns";
 import { useI18n } from "@/hooks";
+import "./DevicesSummaryCard.css";
+import "./DeviceRecipes.css";
 
 export interface DevicesSummaryMetric {
   keyLabel: string;

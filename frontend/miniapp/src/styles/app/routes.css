@@ -329,29 +329,6 @@
   text-decoration: underline;
 }
 
-.devices-list-card .empty-state-block {
-  gap: var(--spacing-3);
-  padding: var(--spacing-4);
-}
-
-.devices-list-card .empty-state-block-icon {
-  width: var(--size-touch-target);
-  height: var(--size-touch-target);
-}
-
-.devices-list-card .empty-state-block-title {
-  font: 600 var(--typo-h4-size)/1.35 var(--font-sans);
-  text-transform: none;
-  letter-spacing: 0;
-  color: var(--color-text-muted);
-}
-
-.devices-list-card .empty-state-block-message {
-  font: 400 var(--font-size-sm)/1.5 var(--font-sans);
-  color: var(--color-text-tertiary);
-  max-width: 26ch;
-}
-
 /* Support page — amnezia-* tokens. Unique class + !important to override RowItem.css load order. */
 .support-contact-sub {
   font-size: var(--amnezia-row-sub, 11.5px) !important;
@@ -466,10 +443,6 @@
   .devices-summary-section .hero-card-actions .btn,
   .devices-summary-section .modern-hero-actions .btn {
     width: 100%;
-  }
-
-  .devices-list-card .empty-state-block {
-    padding: var(--spacing-3);
   }
 
   .devices-utility-card {

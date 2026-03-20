@@ -1,0 +1,93 @@
+.device-hero-card {
+  border-radius: calc(var(--radius-xl) + var(--spacing-0-5));
+  box-shadow: var(--shadow-sm);
+}
+
+.device-hero-card .modern-status-group {
+  align-items: flex-start;
+  gap: var(--spacing-3);
+}
+
+.device-hero-card .modern-pulse-indicator {
+  margin-top: calc(var(--spacing-0-5) + var(--spacing-px));
+}
+
+.device-hero-card .modern-status-text {
+  min-width: 0;
+}
+
+.device-hero-card .modern-header-label,
+.device-hero-card .modern-status-subtitle {
+  font-size: var(--font-size-xs);
+  line-height: 1.45;
+}
+
+.device-hero-card .modern-status-title {
+  font-size: clamp(var(--font-size-lg), 4vw, calc(var(--font-size-xl) - var(--spacing-0-5)));
+  line-height: 1.12;
+  letter-spacing: var(--letter-spacing-tight);
+}
+
+.device-hero-card .devices-summary-card__header-action {
+  align-self: flex-start;
+}
+
+.device-hero-card .devices-summary-card__header-action > * {
+  min-width: min(100%, 12rem);
+}
+
+.device-hero-card .modern-device-grid {
+  gap: var(--spacing-2);
+  margin-top: var(--spacing-1);
+}
+
+.device-hero-card .modern-device-metric {
+  min-height: 100%;
+  padding: var(--spacing-3);
+  border-radius: var(--radius-lg);
+  background: color-mix(in oklch, var(--color-surface) 84%, var(--color-accent) 16%);
+  border: var(--border-width-hairline) solid color-mix(in oklch, var(--color-accent) 10%, var(--color-border-subtle));
+}
+
+.device-hero-card .modern-device-metric .modern-metric-label {
+  margin-bottom: var(--spacing-0-5);
+}
+
+.modern-device-metric .modern-metric-label {
+  font: 600 var(--typo-meta-size) / 1.2 var(--font-mono);
+  letter-spacing: var(--letter-spacing-label, 0.08em);
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+
+.modern-device-metric .devices-summary-metric-value {
+  font: 650 var(--font-size-md) / var(--line-height-tight, 1.2) var(--font-mono);
+  letter-spacing: var(--letter-spacing-heading, -0.02em);
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+  min-width: 0;
+}
+
+.device-hero-card .modern-device-metric .devices-summary-metric-value {
+  font-size: var(--font-size-md);
+  line-height: 1.2;
+}
+
+@media (max-width: var(--vp-narrow)) {
+  .device-hero-card .modern-status-group {
+    gap: var(--spacing-2);
+  }
+
+  .device-hero-card .devices-summary-card__header-action {
+    width: 100%;
+  }
+
+  .device-hero-card .devices-summary-card__header-action > * {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .device-hero-card .modern-device-grid {
+    grid-template-columns: 1fr;
+  }
+}

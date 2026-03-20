@@ -26,6 +26,10 @@
   min-width: 0;
 }
 
+.compact-summary-card__actions .btn-row-auto {
+  width: 100%;
+}
+
 .compact-summary-card__title-row {
   display: flex;
   flex-wrap: wrap;
@@ -96,6 +100,10 @@
 @media (max-width: var(--vp-narrow)) {
   .compact-summary-card__actions {
     flex: 1 1 100%;
+  }
+
+  .compact-summary-card__actions .btn-row-auto {
+    width: 100%;
   }
 
   .compact-summary-card__actions :is(.btn, a.btn) {

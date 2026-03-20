@@ -1,4 +1,5 @@
 import { useI18n } from "@/hooks";
+import { StatusChip } from "../../patterns";
 
 export type DeviceStatusVariant = "imported" | "pending" | "inactive";
 
@@ -14,10 +15,15 @@ export function DeviceStatusChip({ status }: DeviceStatusChipProps) {
       : status === "pending"
         ? t("devices.device_chip_pending")
         : t("devices.device_chip_inactive");
+
+  const variant =
+    status === "imported"
+      ? "active"
+      : status === "pending"
+        ? "pending"
+        : "offline";
+
   return (
-    <span className={`device-chip device-chip--${status}`}>
-      <span className="device-chip-dot" aria-hidden />
-      <span>{label}</span>
-    </span>
+    <StatusChip variant={variant} label={label} />
   );
 }

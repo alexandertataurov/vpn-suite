@@ -52,7 +52,7 @@ export function ConfigCardContent({
       subtitle={message}
       tone="amber"
       actions={(
-        <ButtonRowAuto className="devices-config-actions">
+        <ButtonRowAuto>
           <MissionPrimaryButton
             status={copied ? "success" : "idle"}
             statusText={t("devices.toast_copied")}

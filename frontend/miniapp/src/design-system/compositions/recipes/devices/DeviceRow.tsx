@@ -76,7 +76,7 @@ export function DeviceRow({
 
   return (
     <RowItem
-      className={["device-row", className].filter(Boolean).join(" ")}
+      className={["device-row", "row-item--static", "row-item--rich-meta", "row-item--stacked-actions", className].filter(Boolean).join(" ")}
       icon={<IconMonitor size={15} strokeWidth={2} aria-hidden />}
       iconVariant="neutral"
       showChevron={false}
