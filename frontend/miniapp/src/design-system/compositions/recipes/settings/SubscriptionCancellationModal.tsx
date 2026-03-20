@@ -163,6 +163,7 @@ export function SubscriptionCancellationModal({
               iconTone="neutral"
               title={t("settings.cancel_pause_instead")}
               subtitle={t("settings.cancel_offer_pause_body")}
+              showChevron={false}
               onClick={() => !(isCancelling || !hasSelectedReason) && onPauseInstead()}
               aria-disabled={isCancelling || !hasSelectedReason}
             />
@@ -172,6 +173,7 @@ export function SubscriptionCancellationModal({
             iconTone="neutral"
             title={t("settings.cancel_at_period_end")}
             subtitle={t("settings.cancel_plan_description_generic")}
+            showChevron={false}
             onClick={() => !(isCancelling || !hasSelectedReason) && onCancelAtPeriodEnd()}
             aria-disabled={isCancelling || !hasSelectedReason}
           />
@@ -180,6 +182,7 @@ export function SubscriptionCancellationModal({
             iconVariant="danger"
             title={t("settings.cancel_now")}
             subtitle={t("settings.danger_warning")}
+            showChevron={false}
             onClick={() => !(isCancelling || !hasSelectedReason) && onCancelNow()}
             aria-disabled={isCancelling || !hasSelectedReason}
           />

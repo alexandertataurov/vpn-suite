@@ -43,6 +43,7 @@
 }
 
 .nd-title {
+  margin: 0;
   font-family: var(--font-sans);
   font-size: var(--typo-body-sm-size);
   font-weight: 600;

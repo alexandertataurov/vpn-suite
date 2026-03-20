@@ -66,6 +66,7 @@
   font-weight: var(--font-weight-medium);
   color: var(--color-text);
   line-height: var(--line-height-title, 1.25);
+  overflow-wrap: anywhere;
 }
 
 .compact-stepper__item[data-state="upcoming"] .compact-stepper__label {
@@ -77,6 +78,7 @@
   font-weight: var(--font-weight-normal);
   color: var(--color-text-muted);
   line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 
 @media (prefers-reduced-motion: reduce) {

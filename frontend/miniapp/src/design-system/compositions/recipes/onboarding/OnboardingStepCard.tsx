@@ -132,7 +132,7 @@ export function OnboardingStepCard({
             title={t("onboarding.config_step_install_title")}
             description={appAlreadyInstalled ? t("onboarding.install_copy_ready") : t("onboarding.config_step_install_body")}
             actions={
-              <div className="stack">
+              <Stack gap="3">
                 {!appAlreadyInstalled ? (
                   <>
                     <div className="ds-action-grid">
@@ -155,7 +155,7 @@ export function OnboardingStepCard({
                     {primaryLabel}
                   </Button>
                 )}
-              </div>
+              </Stack>
             }
           />
         );
@@ -198,7 +198,7 @@ export function OnboardingStepCard({
             title={t("onboarding.confirm_panel_title")}
             description={t("onboarding.step_confirm_body")}
             actions={
-              <div className="stack">
+              <Stack gap="3">
                 <Button variant="primary" tone="success" fullWidth size="lg" onClick={onPrimaryAction} disabled={isBusy} endIcon={<IconCheck size={20} />}>
                   {primaryLabel}
                 </Button>
@@ -209,7 +209,7 @@ export function OnboardingStepCard({
                 ) : (
                   <InlineAlert variant="info" label={t("onboarding.what_happens_next_title")} message={t("onboarding.what_happens_next_message")} />
                 )}
-              </div>
+              </Stack>
             }
           />
         );

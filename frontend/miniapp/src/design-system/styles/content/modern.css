@@ -245,7 +245,7 @@
 .modern-header-back-button {
   width: var(--size-touch-target, 44px);
   height: var(--size-touch-target, 44px);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   color: var(--color-text);
@@ -253,7 +253,11 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+  transition:
+    background var(--duration-fast, 150ms) var(--ease-standard, ease),
+    border-color var(--duration-fast, 150ms) var(--ease-standard, ease),
+    box-shadow var(--duration-fast, 150ms) var(--ease-standard, ease),
+    transform var(--duration-fast, 150ms) var(--ease-standard, ease);
   box-shadow: var(--shadow-sm);
   cursor: pointer;
   padding: 0;
@@ -263,6 +267,16 @@
 .modern-header-back-button:active {
   transform: scale(0.92);
   background: var(--color-surface-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modern-header-back-button {
+    transition: none;
+  }
+
+  .modern-header-back-button:active {
+    transform: none;
+  }
 }
 
 .modern-header-back-button:focus-visible {
@@ -300,6 +314,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--spacing-px);
+  min-width: 0;
 }
 
 .modern-header-title {
@@ -307,6 +322,10 @@
   font-weight: var(--font-weight-bold);
   letter-spacing: -0.02em;
   color: var(--color-text);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .modern-header-label {

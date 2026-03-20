@@ -138,6 +138,8 @@ export interface ListRowProps extends Omit<HTMLAttributes<HTMLDivElement>, "chil
   deviceType?: ListRowDeviceType;
   status?: DeviceStatus;
   lastActiveAt?: Date | null;
+  /** When false, hides trailing chevron (e.g. primary actions, not navigation). Default true. */
+  showChevron?: boolean;
 }
 
 /** Modern List Row. Uses RowItem for consistent settings row layout. */
@@ -153,6 +155,7 @@ export function ListRow({
   deviceType,
   status,
   lastActiveAt = null,
+  showChevron = true,
   className = "",
   ...props
 }: ListRowProps) {
@@ -180,6 +183,7 @@ export function ListRow({
       subtitle={resolvedSubtitle ?? undefined}
       subtitleClassName={subtitleMono ? "lr-mono" : undefined}
       right={rowRight}
+      showChevron={showChevron}
       className={className}
       {...props}
     />

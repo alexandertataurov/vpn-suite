@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { IconCheck, IconUsers } from "@/design-system/icons";
-import { InlineAlert, StatusChip } from "@/design-system";
+import { Button, InlineAlert, StatusChip } from "@/design-system";
 import { useI18n } from "@/hooks";
-import { Button } from "../../../components/Button";
 import { PageCardSection } from "../shared/PageCardSection";
 
 export interface ReferralShareCardProps {

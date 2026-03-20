@@ -76,6 +76,16 @@
   animation: device-chip-dot-pulse 2s ease-in-out infinite;
 }
 
+@media (max-width: var(--vp-narrow)) {
+  .device-row .ri-sub.device-meta {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .device-chip--imported .device-chip-dot,
   .device-chip--pending .device-chip-dot {
@@ -144,6 +154,7 @@
 
 .devices-setup-card__inner {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: var(--spacing-3);

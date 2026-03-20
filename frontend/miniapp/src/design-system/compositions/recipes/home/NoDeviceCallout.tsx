@@ -30,7 +30,7 @@ export function NoDeviceCallout({
         <IconMonitor size={20} strokeWidth={1.75} />
       </div>
       <div className="nd-body">
-        <div className="nd-title">{title}</div>
+        <h2 className="nd-title">{title}</h2>
         <div className="nd-sub">{subtitle}</div>
       </div>
       <button
@@ -39,7 +39,7 @@ export function NoDeviceCallout({
         onClick={handleAddDevice}
         disabled={!isInteractive}
       >
-        {ctaIcon ?? <IconPlus size={13} strokeWidth={2.5} aria-hidden />}
+        {ctaIcon ?? <IconPlus size={14} strokeWidth={2.5} aria-hidden />}
         <span>{ctaLabel}</span>
       </button>
     </div>

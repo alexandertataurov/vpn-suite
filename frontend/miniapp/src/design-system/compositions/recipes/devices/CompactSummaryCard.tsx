@@ -1,5 +1,6 @@
 import type { HTMLAttributes, ReactNode } from "react";
 import { MissionCard, type MissionTone } from "../../patterns";
+import "./CompactSummaryCard.css";
 
 export interface CompactSummaryCardStat {
   label: string;

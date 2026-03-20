@@ -11,8 +11,8 @@
 }
 
 .troubleshooter-flow-card__accent {
-  width: 3px;
-  min-width: 3px;
+  width: calc(var(--spacing-0-5) + var(--spacing-px));
+  min-width: calc(var(--spacing-0-5) + var(--spacing-px));
   background: color-mix(in oklch, var(--color-accent) 45%, transparent);
   flex-shrink: 0;
 }
@@ -30,6 +30,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--spacing-2);
+  min-width: 0;
 }
 
 .troubleshooter-flow-card__eyebrow {
@@ -39,6 +40,11 @@
   text-transform: none;
   color: var(--color-text-tertiary);
   line-height: var(--line-height-label);
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .troubleshooter-flow-card__title {
@@ -70,7 +76,7 @@
   flex: 1;
 }
 
-@media (min-width: 480px) {
+@media (min-width: var(--bp-sm)) {
   .troubleshooter-flow-card__actions {
     flex-direction: row;
   }
