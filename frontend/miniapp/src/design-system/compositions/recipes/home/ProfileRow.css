@@ -3,19 +3,23 @@
 .profile-row {
   display: flex;
   align-items: center;
-  gap: var(--spacing-2);
-  padding: 0 var(--spacing-4);
+  gap: var(--miniapp-grid-gap, var(--spacing-3));
+  padding: 0 var(--amnezia-row-pad-h, var(--space-md));
   margin: 0;
   flex: 1;
   min-width: 0;
+  box-sizing: border-box;
 }
 
 .profile-row .profile-row-name {
+  font-family: var(--font-sans);
   font-size: var(--amnezia-profile-name, var(--font-size-md));
   font-weight: var(--font-weight-semibold);
   color: var(--color-text);
-  letter-spacing: -0.3px;
+  letter-spacing: var(--letter-spacing-tight);
+  line-height: var(--line-height-title);
   flex: 1;
+  min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

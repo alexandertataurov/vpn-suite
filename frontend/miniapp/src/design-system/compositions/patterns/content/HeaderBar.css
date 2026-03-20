@@ -8,19 +8,21 @@
 }
 
 .header-bar__back {
-  width: 34px;
-  height: 34px;
-  min-width: 34px;
-  border-radius: 50%;
+  width: calc(var(--spacing-8) + var(--spacing-0-5));
+  height: calc(var(--spacing-8) + var(--spacing-0-5));
+  min-width: calc(var(--spacing-8) + var(--spacing-0-5));
+  border-radius: var(--radius-full);
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  border: var(--border-width-hairline) solid var(--color-border);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   color: var(--color-text-muted);
   flex-shrink: 0;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition:
+    background var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard);
   padding: 0;
 }
 
@@ -33,13 +35,13 @@
 }
 
 .header-bar__back:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
+  outline: var(--spacing-0-5) solid var(--color-accent);
+  outline-offset: var(--spacing-0-5);
 }
 
 .header-bar__back svg {
-  width: 14px;
-  height: 14px;
+  width: var(--spacing-btn-padding-x);
+  height: var(--spacing-btn-padding-x);
   pointer-events: none;
 }
 
@@ -51,11 +53,11 @@
 
 .header-bar__title {
   font-family: var(--font-sans);
-  font-size: 17px;
-  font-weight: 700;
+  font-size: var(--amnezia-data-cell-lg);
+  font-weight: var(--font-weight-bold);
   color: var(--color-text);
-  letter-spacing: -0.3px;
-  line-height: 1.2;
+  letter-spacing: var(--letter-spacing-tight);
+  line-height: var(--line-height-title);
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -63,11 +65,11 @@
 }
 
 .header-bar__subtitle {
-  font-size: 12.5px;
-  font-weight: 400;
+  font-size: var(--amnezia-plan-subtitle);
+  font-weight: var(--font-weight-normal);
   color: var(--color-text-tertiary);
   margin: var(--spacing-0-5) 0 0;
-  line-height: 1.45;
+  line-height: var(--line-height-body);
   white-space: normal;
   display: -webkit-box;
   -webkit-line-clamp: 2;

@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 set -euo pipefail
-set -a
-[[ -f "$ROOT/.env" ]] && source "$ROOT/.env"
-set +a
 
 DB_URL="${DATABASE_URL:-}"
+if [[ -z "$DB_URL" && -f "$ROOT/.env" ]]; then
+  DB_URL="$(sed -n 's/^DATABASE_URL=//p' "$ROOT/.env" | tail -n 1)"
+fi
+
 if [[ -z "$DB_URL" ]]; then
   echo "DATABASE_URL is not set" >&2
   exit 1

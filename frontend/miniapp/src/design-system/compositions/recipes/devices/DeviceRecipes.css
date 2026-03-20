@@ -1,5 +1,5 @@
 .device-hero-card .plan-name {
-  font-size: 24px;
+  font-size: var(--typo-h1-size);
   letter-spacing: -0.4px;
 }
 
@@ -19,13 +19,13 @@
 .device-chip {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: calc(var(--spacing-1) + var(--spacing-px));
   width: fit-content;
-  margin: 3px 0 4px;
-  padding: 3px 9px;
-  border-radius: 100px;
+  margin: calc(var(--spacing-0-5) + var(--spacing-px)) 0 var(--spacing-1);
+  padding: calc(var(--spacing-0-5) + var(--spacing-px)) calc(var(--spacing-2) + var(--spacing-px));
+  border-radius: var(--radius-full);
   border: 1px solid transparent;
-  font-size: 11px;
+  font-size: var(--typo-meta-size);
   font-weight: 600;
   letter-spacing: 0.1px;
   line-height: 1;
@@ -50,9 +50,9 @@
 }
 
 .device-chip-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
+  width: calc(var(--spacing-1) + var(--spacing-px));
+  height: calc(var(--spacing-1) + var(--spacing-px));
+  border-radius: var(--radius-full);
   flex-shrink: 0;
 }
 
@@ -72,23 +72,25 @@
 
 .device-meta,
 .device-row .ri-sub.device-meta {
-  max-width: calc(100vw - 140px);
+  max-width: calc(
+    100vw - var(--spacing-16) - var(--spacing-16) - var(--spacing-3)
+  );
   margin-top: 0;
   color: var(--row-sub);
-  font-size: 11px;
+  font-size: var(--typo-meta-size);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .device-menu-btn.btn {
-  width: 28px;
-  height: 28px;
-  min-width: 28px;
-  min-height: 28px;
+  width: var(--height-btn-sm);
+  height: var(--height-btn-sm);
+  min-width: var(--height-btn-sm);
+  min-height: var(--height-btn-sm);
   padding: 0;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--row-chev);
   flex-shrink: 0;
@@ -98,7 +100,7 @@
 .device-menu-btn.btn::before {
   content: "";
   position: absolute;
-  inset: -8px;
+  inset: calc(-1 * var(--spacing-2));
 }
 
 .device-menu-btn.btn:active {
@@ -106,21 +108,21 @@
 }
 
 .device-menu-btn.btn svg {
-  width: 16px;
-  height: 16px;
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
 }
 
 .devices-setup-card {
   display: flex;
   border: 1px solid var(--color-border);
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   background: var(--color-surface);
   overflow: hidden;
 }
 
 .devices-setup-card__accent {
-  width: 3px;
-  min-width: 3px;
+  width: calc(var(--spacing-0-5) + var(--spacing-px));
+  min-width: calc(var(--spacing-0-5) + var(--spacing-px));
   background: color-mix(in oklch, var(--color-accent) 45%, transparent);
   flex-shrink: 0;
 }
@@ -162,7 +164,7 @@
 @media (max-width: 360px) {
   .device-hero-card .p-stat-val,
   .device-hero-card .plan-name {
-    font-size: 16px;
+    font-size: var(--typo-h3-size);
   }
 
   .device-hero-card .p-stat-label {

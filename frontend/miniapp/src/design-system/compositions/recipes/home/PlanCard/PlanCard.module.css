@@ -5,7 +5,7 @@
   -webkit-font-smoothing: antialiased;
   background: var(--color-surface);
   border: 1px solid var(--color-border-subtle);
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
   transition:
     border-color var(--duration-micro, 0.14s) var(--ease-standard, ease),
@@ -15,18 +15,18 @@
 /* LED-style border — one constant line, cycles through colors */
 .ledWrapper {
   position: relative;
-  padding: 3px;
-  border-radius: 17px;
+  padding: calc(var(--spacing-0-5) + var(--spacing-px));
+  border-radius: calc(var(--radius-lg) + var(--spacing-0-5) + var(--spacing-px));
   overflow: hidden;
 }
 
 .ledWrapper::before {
   content: "";
   position: absolute;
-  inset: -3px;
+  inset: calc(-1 * (var(--spacing-0-5) + var(--spacing-px)));
   border-radius: inherit;
   border: 2px solid var(--color-accent);
-  box-shadow: 0 0 8px var(--color-accent);
+  box-shadow: 0 0 var(--blur-md) var(--color-accent);
   pointer-events: none;
   z-index: 0;
 }
@@ -34,7 +34,7 @@
 .ledWrapper .root {
   position: relative;
   z-index: 1;
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
 }
 
 /* Hero border — status-based colors, no animation */
@@ -78,7 +78,7 @@
 
 .planName {
   font-family: var(--font-sans);
-  font-size: 28px;
+  font-size: var(--amnezia-plan-name, var(--typo-h1-size));
   font-weight: 700;
   letter-spacing: -0.6px;
   line-height: 1;
@@ -102,13 +102,14 @@
 }
 
 .stat {
-  padding: 12px 18px 14px;
+  padding: var(--spacing-3) calc(var(--spacing-4) + var(--spacing-0-5))
+    calc(var(--spacing-3) + var(--spacing-0-5));
   border-left: 1px solid var(--divider);
 }
 
 .stat:first-child {
   border-left: none;
-  padding-left: 18px;
+  padding-left: calc(var(--spacing-4) + var(--spacing-0-5));
 }
 
 .statLabel {
@@ -148,7 +149,7 @@
 
 @media (max-width: var(--vp-narrow)) {
   .planName {
-    font-size: var(--amnezia-plan-name-sm, 24px);
+    font-size: var(--amnezia-plan-name-sm, var(--typo-display-size));
     letter-spacing: -0.4px;
   }
   .statValue {
