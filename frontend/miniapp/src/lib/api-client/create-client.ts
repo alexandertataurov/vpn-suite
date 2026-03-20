@@ -23,7 +23,8 @@ export interface ApiRequestLogInfo {
 }
 
 export interface ApiClientOptions {
-  baseUrl: string;
+  /** Static root or a function resolved on each request (correct `window.location.origin` in browser). */
+  baseUrl: string | (() => string);
   getToken?: () => string | null;
   onUnauthorized?: () => void | Promise<void>;
   /** Per-request timeout in ms. Default: 15 000. Set 0 to disable. */
@@ -124,7 +125,10 @@ function runRequestLog(
 
 export function createApiClient(options: ApiClientOptions): ApiClient {
   const { baseUrl, getToken, onUnauthorized, onRequestLog } = options;
-  const base = baseUrl.replace(/\/$/, "");
+  const resolvedBase = (): string => {
+    const raw = typeof baseUrl === "function" ? baseUrl() : baseUrl;
+    return raw.replace(/\/$/, "");
+  };
   const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
 
   async function request<T>(
@@ -133,7 +137,7 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
     retries = 0
   ): Promise<T> {
     const start = Date.now();
-    const url = path.startsWith("http") ? path : `${base}${path.startsWith("/") ? path : `/${path}`}`;
+    const url = path.startsWith("http") ? path : `${resolvedBase()}${path.startsWith("/") ? path : `/${path}`}`;
     const method = (init.method ?? "GET").toUpperCase();
     const headers = new Headers(init.headers);
     const hasBody = init.body != null;
@@ -237,7 +241,7 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
     retries = 0
   ): Promise<T> {
     const start = Date.now();
-    const url = path.startsWith("http") ? path : `${base}${path.startsWith("/") ? path : `/${path}`}`;
+    const url = path.startsWith("http") ? path : `${resolvedBase()}${path.startsWith("/") ? path : `/${path}`}`;
     const method = (init.method ?? "POST").toUpperCase();
     const headers = new Headers(init.headers);
     const hasBody = init.body != null;
@@ -331,7 +335,7 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
   }
 
   async function getBlob(path: string, init: RequestInit = {}, retries = 0): Promise<Blob> {
-    const url = path.startsWith("http") ? path : `${base}${path.startsWith("/") ? path : `/${path}`}`;
+    const url = path.startsWith("http") ? path : `${resolvedBase()}${path.startsWith("/") ? path : `/${path}`}`;
     const headers = new Headers(init.headers);
     const token = getToken?.() ?? null;
     if (token) headers.set("Authorization", `Bearer ${token}`);

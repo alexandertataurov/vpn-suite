@@ -9,6 +9,17 @@ function readEnv(key: string): string | undefined {
   return env?.[key];
 }
 
+/**
+ * Control-plane API root (e.g. `https://host/api/v1` or `/api/v1` in tests).
+ * Prefer `VITE_API_BASE_URL` when the mini app is hosted on a different origin than the API.
+ */
+export function getApiBaseUrl(): string {
+  const fromEnv = readEnv("VITE_API_BASE_URL");
+  if (fromEnv) return String(fromEnv).replace(/\/$/, "");
+  if (typeof window !== "undefined") return `${window.location.origin}/api/v1`;
+  return "/api/v1";
+}
+
 /** Bot @username without @. Used for referral links and support. Empty if not set. */
 export const telegramBotUsername: string = (readEnv("VITE_TELEGRAM_BOT_USERNAME") ?? "").trim();
 

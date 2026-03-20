@@ -15,6 +15,24 @@ describe("createApiClient", () => {
     vi.unstubAllGlobals();
   });
 
+  it("resolves callable baseUrl on each request", async () => {
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify({ n: 1 }), { status: 200, headers: { "Content-Type": "application/json" } }),
+    );
+    let host = "https://a.example.com";
+    const client = createApiClient({
+      baseUrl: () => `${host}/api/v1`,
+    });
+    await expect(client.get("/webapp/me")).resolves.toEqual({ n: 1 });
+    expect(fetchMock).toHaveBeenLastCalledWith("https://a.example.com/api/v1/webapp/me", expect.anything());
+    host = "https://b.example.com";
+    fetchMock.mockResolvedValueOnce(
+      new Response(JSON.stringify({ n: 2 }), { status: 200, headers: { "Content-Type": "application/json" } }),
+    );
+    await expect(client.get("/webapp/me")).resolves.toEqual({ n: 2 });
+    expect(fetchMock).toHaveBeenLastCalledWith("https://b.example.com/api/v1/webapp/me", expect.anything());
+  });
+
   it("adds auth and json headers for authenticated POST requests", async () => {
     fetchMock.mockResolvedValueOnce(
       new Response(JSON.stringify({ ok: true }), {

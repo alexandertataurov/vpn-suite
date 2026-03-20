@@ -1,6 +1,6 @@
 ---
 name: team-contract
-description: Общие правила взаимодействия субагентов: границы, handoff notes, формат инкрементов, definition of done. Используй в начале любой мульти-агентной задачи.
+description: "Общие правила взаимодействия субагентов: границы, handoff notes, формат инкрементов, definition of done. Используй в начале любой мульти-агентной задачи."
 ---
 
 # Team Contract

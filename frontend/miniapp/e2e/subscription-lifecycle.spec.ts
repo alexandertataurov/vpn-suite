@@ -15,7 +15,7 @@ test.describe("Miniapp Subscription Lifecycle", () => {
     await page.route("**/api/v1/webapp/telemetry", async (route) => {
       await route.fulfill({ status: 204, body: "" });
     });
-    await page.route("**/api/v1/health/ready", async (route) => {
+    await page.route("**/health/ready", async (route) => {
       await route.fulfill({
         status: 200,
         contentType: "application/json",

@@ -21,11 +21,18 @@ describe("api/client", () => {
     const mod = await import("./client");
 
     expect(createApiClientMock).toHaveBeenCalledTimes(1);
-    expect(getBaseUrlMock).toHaveBeenCalledTimes(1);
     expect(mod.webappApi).toEqual({ marker: "api" });
-    expect(createApiClientMock.mock.calls[0]?.[0]).toEqual(
+    const opts = createApiClientMock.mock.calls[0]?.[0] as {
+      baseUrl: () => string;
+      getToken: () => void;
+      onUnauthorized: () => void;
+    };
+    expect(opts.baseUrl).toEqual(expect.any(Function));
+    expect(getBaseUrlMock).not.toHaveBeenCalled();
+    expect(opts.baseUrl()).toBe("https://api.example.com");
+    expect(getBaseUrlMock).toHaveBeenCalledTimes(1);
+    expect(opts).toEqual(
       expect.objectContaining({
-        baseUrl: "https://api.example.com",
         getToken: expect.any(Function),
         onUnauthorized: expect.any(Function),
       }),

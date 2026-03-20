@@ -21,7 +21,7 @@ test.describe("Miniapp Onboarding", () => {
         await route.fulfill({ status: 204, body: "" });
         return;
       }
-      if (url.includes("/api/v1/health/ready")) {
+      if (url.includes("/health/ready")) {
         await route.fulfill({
           status: 200,
           contentType: "application/json",
@@ -116,7 +116,7 @@ test.describe("Miniapp Onboarding", () => {
         await route.fulfill({ status: 204, body: "" });
         return;
       }
-      if (url.includes("/api/v1/health/ready")) {
+      if (url.includes("/health/ready")) {
         await route.fulfill({
           status: 200,
           contentType: "application/json",

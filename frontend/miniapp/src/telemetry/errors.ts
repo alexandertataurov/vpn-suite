@@ -4,7 +4,7 @@
  */
 
 import { trackError } from "@vpn-suite/shared";
-import { getBaseUrl } from "@/lib/api-client";
+import { getApiBaseUrl } from "@/config/env";
 
 type FrontendErrorPayload = {
   message: string;
@@ -27,7 +27,7 @@ function safeString(value: unknown): string {
 }
 
 function getFrontendErrorUrl(): string {
-  const base = getBaseUrl().replace(/\/$/, "");
+  const base = getApiBaseUrl().replace(/\/$/, "");
   return `${base}/log/frontend-error`;
 }
 

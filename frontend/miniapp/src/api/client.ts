@@ -48,7 +48,7 @@ export function useWebappToken(): string | null {
 }
 
 export const webappApi = createApiClient({
-  baseUrl: getBaseUrl(),
+  baseUrl: getBaseUrl,
   getToken: () => token,
   onUnauthorized: () => {
     setWebappToken(null);

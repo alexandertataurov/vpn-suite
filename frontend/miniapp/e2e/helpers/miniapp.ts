@@ -453,6 +453,11 @@ export async function setupMiniappApi(
     const method = request.method();
     const postBody = request.postDataJSON?.();
 
+    if (path === "/health/ready") {
+      await fulfillJson(route, 200, { status: "ok" });
+      return;
+    }
+
     if (!path.startsWith("/api/v1/")) {
       await route.continue();
       return;
@@ -461,11 +466,6 @@ export async function setupMiniappApi(
     if (path === "/api/v1/webapp/telemetry" || path === "/api/v1/log/frontend-error") {
       requests.telemetry.push({ path, body: postBody ?? null });
       await route.fulfill({ status: 204, body: "" });
-      return;
-    }
-
-    if (path === "/api/v1/health/ready") {
-      await fulfillJson(route, 200, { status: "ok" });
       return;
     }
 

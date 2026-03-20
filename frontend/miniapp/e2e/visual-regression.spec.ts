@@ -39,15 +39,8 @@ async function mockApi(page: Page) {
       await route.fulfill({ status: 204, body: "" });
       return;
     }
-    if (url.includes("/api/v1/health/ready")) {
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({ status: "ok" }),
-      });
-      return;
-    }
-    if (url.includes("/api/health")) {
+    const path = new URL(url).pathname.replace(/\/$/, "");
+    if (path === "/health/ready" || path === "/health") {
       await route.fulfill({
         status: 200,
         contentType: "application/json",
