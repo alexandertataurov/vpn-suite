@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { IconCheck, IconUsers } from "@/design-system/icons";
-import { StatusChip } from "@/design-system";
+import { InlineAlert, StatusChip } from "@/design-system";
 import { useI18n } from "@/hooks";
 import { Button } from "../../../components/Button";
 import { PageCardSection } from "../shared/PageCardSection";
@@ -27,6 +27,7 @@ export function ReferralShareCard({
 }: ReferralShareCardProps) {
   const { t } = useI18n();
   const [copied, setCopied] = useState(false);
+  const [copyFailed, setCopyFailed] = useState(false);
 
   useEffect(() => {
     if (!copied) return;
@@ -34,12 +35,21 @@ export function ReferralShareCard({
     return () => window.clearTimeout(timeoutId);
   }, [copied]);
 
+  useEffect(() => {
+    if (!copyFailed) return;
+    const timeoutId = window.setTimeout(() => setCopyFailed(false), 4000);
+    return () => window.clearTimeout(timeoutId);
+  }, [copyFailed]);
+
   const handleCopy = async () => {
     if (!shareUrl || !isOnline) return;
     setCopied(false);
+    setCopyFailed(false);
     const didCopy = await onCopy();
     if (didCopy) {
       setCopied(true);
+    } else {
+      setCopyFailed(true);
     }
   };
 
@@ -118,6 +128,9 @@ export function ReferralShareCard({
             </Button>
           </div>
         </div>
+        {copyFailed ? (
+          <InlineAlert variant="error" label={t("referral.copy_failed_message")} />
+        ) : null}
         {!botUsername ? (
           <div className="referral-share-card__notice" role="status" aria-live="polite">
             <p className="referral-share-card__notice-title">

@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../../../components/Button";
 import { IconChevronLeft } from "../../../icons";
+import { useI18n } from "@/hooks";
 import { ProfileRow } from "./ProfileRow";
 import { SettingsButton } from "../../patterns";
 
@@ -21,7 +22,9 @@ export interface ModernHeaderProps {
   title?: string;
   /** Optional back button callback. If provided, shows a back chevron. */
   onBack?: () => void;
+  /** Back control accessible name (defaults to i18n `common.back_aria`). */
   backLabel?: string;
+  /** Settings control accessible name (defaults to i18n `common.settings_aria`). */
   settingsLabel?: string;
 }
 
@@ -46,10 +49,13 @@ export function ModernHeader({
   onSettingsClick,
   title,
   onBack,
-  backLabel = "Back",
-  settingsLabel = "Settings",
+  backLabel,
+  settingsLabel,
 }: ModernHeaderProps) {
+  const { t } = useI18n();
   const navigate = useNavigate();
+  const resolvedBackLabel = backLabel ?? t("common.back_aria");
+  const resolvedSettingsLabel = settingsLabel ?? t("common.settings_aria");
   const derivedInitials = avatarInitial ?? deriveInitials(displayName);
 
   const handleSettings = () => {
@@ -69,7 +75,7 @@ export function ModernHeader({
             size="icon"
             className="modern-header-back-button"
             onClick={onBack}
-            aria-label={backLabel}
+            aria-label={resolvedBackLabel}
           >
             <IconChevronLeft size={24} strokeWidth={2.4} />
           </Button>
@@ -105,7 +111,7 @@ export function ModernHeader({
         <SettingsButton
           onClick={handleSettings}
           className="settings-pill"
-          aria-label={settingsLabel}
+          aria-label={resolvedSettingsLabel}
         />
       ) : null}
     </div>

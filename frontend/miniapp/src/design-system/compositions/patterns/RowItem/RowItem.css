@@ -25,6 +25,18 @@
 .row-item:active {
   background: var(--row-active-bg, var(--color-surface-2));
 }
+
+.row-item--disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+@media (pointer: fine) {
+  .row-item--disabled:hover {
+    background: var(--row-bg, var(--color-surface));
+  }
+}
 /* Match .btn / DisclosureItem: ring only, no fill shift on focus */
 .row-item:focus-visible {
   outline: 2px solid var(--color-accent);

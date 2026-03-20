@@ -1,3 +1,4 @@
+import { useId } from "react";
 import type { WebAppSubscriptionOffersResponse } from "@vpn-suite/shared";
 import { Button, HelperNote, ListCard, ListRow, Modal } from "@/design-system";
 import { IconAlertTriangle, IconClock, IconPause } from "@/design-system/icons";
@@ -39,6 +40,7 @@ export function SubscriptionCancellationModal({
   onCancelFreeTextChange,
 }: SubscriptionCancellationModalProps) {
   const { t } = useI18n();
+  const cancelReasonLabelId = useId();
   const hasDiscountOffer = Boolean(offers?.offer_discount) || (offers?.discount_percent ?? 0) > 0;
   const canPauseInstead = Boolean(offers?.offer_pause ?? offers?.can_pause);
   const hasSelectedReason = cancelReason !== null;
@@ -103,11 +105,13 @@ export function SubscriptionCancellationModal({
     >
       <div className="cancel-flow-body">
         <div className="field-group">
-          <div className="field-label">{t("settings.cancel_reason_label")}</div>
+          <div className="field-label" id={cancelReasonLabelId}>
+            {t("settings.cancel_reason_label")}
+          </div>
           <div
             className="seg-toggle cancel-reason-selector"
-            role="tablist"
-            aria-label={t("settings.cancel_reason_label")}
+            role="radiogroup"
+            aria-labelledby={cancelReasonLabelId}
             data-selected={hasSelectedReason ? "true" : undefined}
           >
             {CANCEL_REASON_OPTIONS.map((optionId) => (
@@ -115,9 +119,10 @@ export function SubscriptionCancellationModal({
                 key={optionId}
                 type="button"
                 className={`seg-btn cancel-reason-tab ${cancelReason === optionId ? "on" : ""}`}
+                disabled={isCancelling}
                 onClick={() => onReasonSelect(optionId)}
-                role="tab"
-                aria-selected={cancelReason === optionId}
+                role="radio"
+                aria-checked={cancelReason === optionId}
               >
                 {t(`settings.cancel_reason_${optionId}`)}
               </button>
@@ -145,7 +150,6 @@ export function SubscriptionCancellationModal({
               value={cancelFreeText}
               disabled={isCancelling}
               autoComplete="off"
-              aria-label={t("settings.cancel_other_details_label")}
               placeholder={t("settings.cancel_other_placeholder")}
               onChange={(e) => onCancelFreeTextChange?.(e.target.value)}
             />

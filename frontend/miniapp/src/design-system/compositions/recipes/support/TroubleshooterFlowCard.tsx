@@ -1,5 +1,6 @@
 import { useId } from "react";
 import { Button, StatusChip } from "@/design-system";
+import { useI18n } from "@/hooks";
 import "./TroubleshooterFlowCard.css";
 
 export interface TroubleshooterFlowCardProps {
@@ -22,6 +23,7 @@ export function TroubleshooterFlowCard({
   backAction,
   nextAction,
 }: TroubleshooterFlowCardProps) {
+  const { t } = useI18n();
   const titleId = useId();
   const bodyId = useId();
   const stepLabelId = useId();
@@ -48,7 +50,11 @@ export function TroubleshooterFlowCard({
             {body}
           </p>
         </div>
-        <div className="troubleshooter-flow-card__actions" role="group" aria-label={`${title} actions`}>
+        <div
+          className="troubleshooter-flow-card__actions"
+          role="group"
+          aria-label={t("support.troubleshooter_actions_group", { title })}
+        >
           {altAction ? (
             <Button variant="secondary" fullWidth onClick={altAction.onClick}>
               {altAction.label}

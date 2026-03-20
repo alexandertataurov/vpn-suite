@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useId, useState, type ReactNode } from "react";
 import { IconPlus } from "@/design-system/icons";
 import "./DisclosureItem.css";
 
@@ -23,6 +23,8 @@ export function DisclosureItem({
   onToggle,
   className,
 }: DisclosureItemProps) {
+  const panelId = useId();
+  const triggerTextId = useId();
   const isControlled = isOpenProp !== undefined && onToggle !== undefined;
   const [internalOpen, setInternalOpen] = useState(defaultOpen);
   const isOpen = isControlled ? isOpenProp! : internalOpen;
@@ -35,13 +37,22 @@ export function DisclosureItem({
         className="disclosure-item__trigger"
         onClick={handleToggle}
         aria-expanded={isOpen}
+        aria-controls={panelId}
       >
-        <span className="disclosure-item__trigger-text">{trigger}</span>
+        <span id={triggerTextId} className="disclosure-item__trigger-text">
+          {trigger}
+        </span>
         <span className="disclosure-item__icon" aria-hidden="true">
           <IconPlus size={14} strokeWidth={1.75} />
         </span>
       </button>
-      <div className="disclosure-item__content" role="region" hidden={!isOpen}>
+      <div
+        id={panelId}
+        className="disclosure-item__content"
+        role="region"
+        aria-labelledby={triggerTextId}
+        hidden={!isOpen}
+      >
         <div className="disclosure-item__content-inner">{children}</div>
       </div>
     </div>

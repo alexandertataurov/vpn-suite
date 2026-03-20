@@ -53,7 +53,7 @@ export function ProfileRow({
       <Avatar initials={initials} size="md" />
       <span className="profile-row-name">{name}</span>
       {chip ? <span className="profile-row-chip">{chip}</span> : null}
-      <SettingsButton onClick={onSettings} aria-label="Settings" />
+      <SettingsButton onClick={onSettings} />
     </div>
   );
 }

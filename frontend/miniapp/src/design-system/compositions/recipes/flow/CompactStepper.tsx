@@ -1,4 +1,5 @@
 import type { HTMLAttributes } from "react";
+import "./CompactStepper.css";
 
 export interface CompactStepperItem {
   id: string;

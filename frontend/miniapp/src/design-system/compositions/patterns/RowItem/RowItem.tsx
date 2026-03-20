@@ -40,8 +40,12 @@ export function RowItem({
   onClick,
   ...props
 }: RowItemProps) {
+  const { "aria-disabled": ariaDisabledAttr, ...restProps } = props;
+  const ariaDisabled =
+    ariaDisabledAttr === true || ariaDisabledAttr === "true";
+
   const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    if (onClick == null) return;
+    if (ariaDisabled || onClick == null) return;
     if (e.key === "Enter" || e.key === " " || e.key === "Spacebar") {
       e.preventDefault();
       onClick(e as unknown as MouseEvent<HTMLDivElement>);
@@ -50,11 +54,23 @@ export function RowItem({
 
   const a11y =
     onClick != null
-      ? { role: "button" as const, tabIndex: 0, onClick, onKeyDown: handleKeyDown }
+      ? {
+          role: "button" as const,
+          tabIndex: ariaDisabled ? -1 : 0,
+          onClick: ariaDisabled ? undefined : onClick,
+          onKeyDown: ariaDisabled ? undefined : handleKeyDown,
+          "aria-disabled": ariaDisabled ? true : undefined,
+        }
       : {};
 
   return (
-    <div className={`row-item ${className}`.trim()} {...a11y} {...props}>
+    <div
+      className={[`row-item`, ariaDisabled && onClick != null ? "row-item--disabled" : "", className]
+        .filter(Boolean)
+        .join(" ")}
+      {...a11y}
+      {...restProps}
+    >
       <div className={`ri-icon ri-icon--${iconVariant}`}>{icon}</div>
       <div className="ri-body">
         <div className={`ri-label ${labelClassName ?? ""}`.trim()}>{label}</div>

@@ -8,7 +8,7 @@ import { Textarea } from "../forms/Textarea";
 import { usePrefersReducedMotion } from "@/design-system/hooks";
 import { getMotionDurationMs } from "@/design-system/core/tokens";
 import { decrementBlockingOverlayCount, incrementBlockingOverlayCount } from "@/design-system/utils/overlayStack";
-import { useTelegramHaptics } from "@/hooks";
+import { useI18n, useTelegramHaptics } from "@/hooks";
 import { IconX } from "@/design-system/icons";
 
 const FOCUSABLE =
@@ -77,6 +77,7 @@ export function Modal({
   const open = isOpenProp ?? false;
   const sub = subtitleProp;
 
+  const { t } = useI18n();
   const { selectionChanged } = useTelegramHaptics();
   const prefersReducedMotion = usePrefersReducedMotion();
   const exitDurationMs = getMotionDurationMs("enter", prefersReducedMotion);
@@ -210,7 +211,7 @@ export function Modal({
             type="button"
             className="modal-close"
             onClick={onClose}
-            aria-label="Close"
+            aria-label={t("common.close_aria")}
           >
             <IconX />
           </button>

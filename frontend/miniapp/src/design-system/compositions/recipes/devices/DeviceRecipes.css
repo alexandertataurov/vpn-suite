@@ -56,14 +56,31 @@
   flex-shrink: 0;
 }
 
+@keyframes device-chip-dot-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
 .device-chip--imported .device-chip-dot {
   background: var(--device-imported-dot);
-  animation: blink 2.5s ease-in-out infinite;
+  animation: device-chip-dot-pulse 2.5s ease-in-out infinite;
 }
 
 .device-chip--pending .device-chip-dot {
   background: var(--device-pending-dot);
-  animation: blink 2s ease-in-out infinite;
+  animation: device-chip-dot-pulse 2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .device-chip--imported .device-chip-dot,
+  .device-chip--pending .device-chip-dot {
+    animation: none;
+  }
 }
 
 .device-chip--inactive .device-chip-dot {
@@ -72,9 +89,7 @@
 
 .device-meta,
 .device-row .ri-sub.device-meta {
-  max-width: calc(
-    100vw - var(--spacing-16) - var(--spacing-16) - var(--spacing-3)
-  );
+  max-width: 100%;
   margin-top: 0;
   color: var(--row-sub);
   font-size: var(--typo-meta-size);
@@ -173,13 +188,13 @@
   margin-bottom: 0;
 }
 
-@media (max-width: 360px) {
+@media (max-width: var(--vp-narrow)) {
   .device-hero-card .p-stat-val,
   .device-hero-card .plan-name {
     font-size: var(--typo-h3-size);
   }
 
   .device-hero-card .p-stat-label {
-    font-size: 8.5px;
+    font-size: var(--font-size-xs);
   }
 }

@@ -131,7 +131,7 @@
   }
 }
 
-@media (max-width: 360px) {
+@media (max-width: var(--vp-narrow)) {
   .nd-callout {
     flex-wrap: wrap;
     align-items: flex-start;

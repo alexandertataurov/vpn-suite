@@ -1,0 +1,86 @@
+/**
+ * CompactStepper — vertical step list for onboarding / troubleshooting.
+ * Token-only; pairs with CompactStepper.tsx
+ */
+
+.compact-stepper {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.compact-stepper__item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--spacing-3);
+  align-items: flex-start;
+  padding: var(--spacing-3) 0;
+  border-bottom: var(--border-width-hairline) solid var(--color-border-subtle);
+}
+
+.compact-stepper__item:last-child {
+  border-bottom: none;
+}
+
+.compact-stepper__index {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(var(--spacing-6) + var(--spacing-1));
+  height: calc(var(--spacing-6) + var(--spacing-1));
+  min-width: calc(var(--spacing-6) + var(--spacing-1));
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1;
+  flex-shrink: 0;
+  border: var(--border-width-hairline) solid var(--color-border);
+  background: var(--color-surface-2);
+  color: var(--color-text-muted);
+}
+
+.compact-stepper__item[data-state="complete"] .compact-stepper__index {
+  background: color-mix(in oklch, var(--color-success) 12%, var(--color-surface-2));
+  border-color: color-mix(in oklch, var(--color-success) 35%, var(--color-border));
+  color: var(--color-success);
+}
+
+.compact-stepper__item[data-state="current"] .compact-stepper__index {
+  background: color-mix(in oklch, var(--color-accent) 14%, var(--color-surface-2));
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.compact-stepper__copy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.compact-stepper__label {
+  font-size: var(--typo-body-sm-size, var(--font-size-sm));
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+  line-height: var(--line-height-title, 1.25);
+}
+
+.compact-stepper__item[data-state="upcoming"] .compact-stepper__label {
+  color: var(--color-text-muted);
+}
+
+.compact-stepper__description {
+  font-size: var(--typo-caption-size, var(--font-size-xs));
+  font-weight: var(--font-weight-normal);
+  color: var(--color-text-muted);
+  line-height: 1.45;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .compact-stepper__item {
+    transition: none;
+  }
+}

@@ -141,7 +141,6 @@ export function PlanOptionsSection({
                       showRenewCta,
                     });
                   }}
-                  aria-label={`${selectLabel}, ${tier.label}`}
                 >
                   {selectLabel}
                 </Button>

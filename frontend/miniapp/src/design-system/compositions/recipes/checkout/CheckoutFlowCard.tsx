@@ -73,6 +73,8 @@ export function CheckoutFlowCard({
   onRetry,
 }: CheckoutFlowCardProps) {
   const { t } = useI18n();
+  const payBusy =
+    isCreatingInvoice || phase === "waiting" || phase === "creating_invoice";
 
   return (
     <Stack gap="4">
@@ -125,6 +127,9 @@ export function CheckoutFlowCard({
             </Stack>
           ) : null}
 
+          {!isOnline ? (
+            <InlineAlert variant="warning" label={t("common.status_offline")} message={t("checkout.offline_continue_hint")} />
+          ) : null}
           <Button onClick={onContinue} disabled={!planId || !hasToken || !isOnline} fullWidth>
             {t("checkout.continue_to_payment")}
           </Button>
@@ -143,17 +148,18 @@ export function CheckoutFlowCard({
             label={t("checkout.after_payment_title")}
             message={t("checkout.after_payment_message")}
           />
+          {!isOnline ? (
+            <InlineAlert variant="warning" label={t("common.status_offline")} message={t("checkout.offline_payment_hint")} />
+          ) : null}
           <StickyBottomBar>
             <Button
               onClick={onPay}
-              disabled={!planId || !hasToken || !isOnline || phase === "waiting" || phase === "creating_invoice"}
+              disabled={!planId || !hasToken || !isOnline || payBusy}
+              loading={payBusy}
+              loadingText={t("checkout.pay_preparing")}
               fullWidth
             >
-              {isCreatingInvoice
-                ? t("checkout.pay_preparing")
-                : isFreePlan
-                  ? t("checkout.pay_activate_plan")
-                  : t("checkout.pay_in_telegram")}
+              {isFreePlan ? t("checkout.pay_activate_plan") : t("checkout.pay_in_telegram")}
             </Button>
           </StickyBottomBar>
         </>
