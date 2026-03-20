@@ -13,9 +13,11 @@ const meta: Meta = {
   title: "Foundations/Shadows",
   parameters: {
     layout: "padded",
+    status: { type: "stable" },
     docs: {
       description: {
-        component: "Shadow tokens. Use --shadow-*.",
+        component:
+          "Elevation shadow tokens for cards, panels, and overlays. Use `--shadow-*` to keep depth consistent across light and dark surfaces.",
       },
     },
   },
@@ -33,16 +35,7 @@ export const Scale: StoryObj = {
         <TokenGrid>
           {shadowKeys.map((key) => (
             <TokenSlot key={key} label={SHADOW_TOKENS[key]}>
-              <div
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  borderRadius: FOUNDATION.cardRadius,
-                  background: "var(--color-surface)",
-                  border: FOUNDATION.cardBorder,
-                  boxShadow: `var(${SHADOW_TOKENS[key]})`,
-                }}
-              />
+              <ShadowSwatch token={SHADOW_TOKENS[key]} />
             </TokenSlot>
           ))}
         </TokenGrid>
@@ -50,3 +43,18 @@ export const Scale: StoryObj = {
     </FoundationSection>
   ),
 };
+
+function ShadowSwatch({ token }: { token: string }) {
+  return (
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        borderRadius: FOUNDATION.cardRadius,
+        background: "var(--color-surface)",
+        border: FOUNDATION.cardBorder,
+        boxShadow: `var(${token})`,
+      }}
+    />
+  );
+}

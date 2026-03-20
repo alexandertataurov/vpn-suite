@@ -25,10 +25,11 @@ const meta: Meta = {
   title: "Foundations/Typography",
   parameters: {
     layout: "padded",
+    status: { type: "stable" },
     docs: {
       description: {
         component:
-          "Typography scale. Use --typo-* tokens for font-size; avoid hardcoded px.",
+          "Typography scale and sample text for the miniapp design system. Use `--typo-*` tokens for font-size and keep line-height, weight, and family token-driven.",
       },
     },
   },
@@ -48,27 +49,7 @@ export const Scale: StoryObj = {
               label={token}
               value={resolveToken(token)}
             >
-              <div
-                style={{
-                  width: "100%",
-                  minHeight: 64,
-                  display: "flex",
-                  alignItems: "center",
-                  padding: 8,
-                }}
-              >
-                <p
-                  style={{
-                    fontFamily: "var(--font-sans)",
-                    fontSize: `var(${token})`,
-                    fontWeight: 400,
-                    color: "var(--color-text)",
-                    lineHeight: 1.4,
-                  }}
-                >
-                  The quick brown fox
-                </p>
-              </div>
+              <TypographySample token={token} />
             </TokenSlot>
           ))}
         </TokenGrid>
@@ -100,16 +81,39 @@ export const Sample: StoryObj<{ size: string; weight: number }> = {
   },
   args: { size: "--typo-body-size", weight: 400 },
   render: ({ size, weight }) => (
-    <p
-      style={{
-        fontFamily: "var(--font-sans)",
-        fontSize: `var(${size})`,
-        fontWeight: weight,
-        color: "var(--color-text)",
-        lineHeight: 1.4,
-      }}
-    >
-      The quick brown fox
-    </p>
+    <TypographySample token={size} weight={weight} />
   ),
 };
+
+function TypographySample({
+  token,
+  weight = 400,
+}: {
+  token: string;
+  weight?: number;
+}) {
+  return (
+    <div
+      style={{
+        width: "100%",
+        minHeight: 64,
+        display: "flex",
+        alignItems: "center",
+        padding: 8,
+      }}
+    >
+      <p
+        style={{
+          fontFamily: "var(--font-sans)",
+          fontSize: `var(${token})`,
+          fontWeight: weight,
+          color: "var(--color-text)",
+          lineHeight: 1.4,
+          margin: 0,
+        }}
+      >
+        The quick brown fox
+      </p>
+    </div>
+  );
+}

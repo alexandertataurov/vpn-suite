@@ -18,9 +18,11 @@ const meta: Meta = {
   title: "Foundations/Spacing",
   parameters: {
     layout: "padded",
+    status: { type: "stable" },
     docs: {
       description: {
-        component: "8px grid. Use --spacing-* or --space-* tokens.",
+        component:
+          "Spacing scale for the 8px grid. Use `--spacing-*` or `--space-*` tokens so layout, padding, and gaps stay consistent across screens.",
       },
     },
   },
@@ -39,26 +41,7 @@ export const Scale: StoryObj = {
             const value = resolveToken(token);
             return (
               <TokenSlot key={key} label={token} value={value}>
-                <div
-                  style={{
-                    width: "100%",
-                    height: FOUNDATION.cardSize,
-                    display: "flex",
-                    alignItems: "flex-end",
-                    justifyContent: "flex-start",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: `var(${token})`,
-                      minWidth: `var(${token})`,
-                      height: 8,
-                      background: "var(--color-accent)",
-                      opacity: 0.5,
-                      borderRadius: "var(--radius-sm)",
-                    }}
-                  />
-                </div>
+                <SpacingSwatch token={token} />
               </TokenSlot>
             );
           })}
@@ -67,3 +50,28 @@ export const Scale: StoryObj = {
     </FoundationSection>
   ),
 };
+
+function SpacingSwatch({ token }: { token: string }) {
+  return (
+    <div
+      style={{
+        width: "100%",
+        height: FOUNDATION.cardSize,
+        display: "flex",
+        alignItems: "flex-end",
+        justifyContent: "flex-start",
+      }}
+    >
+      <div
+        style={{
+          width: `var(${token})`,
+          minWidth: `var(${token})`,
+          height: 8,
+          background: "var(--color-accent)",
+          opacity: 0.5,
+          borderRadius: "var(--radius-sm)",
+        }}
+      />
+    </div>
+  );
+}

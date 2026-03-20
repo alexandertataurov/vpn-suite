@@ -15,7 +15,8 @@ const meta: Meta = {
     status: { type: "stable" },
     docs: {
       description: {
-        component: "Border radius tokens. Use --radius-*.",
+        component:
+          "Border radius tokens for surfaces, buttons, and overlays. Use `--radius-*` rather than hardcoded pixel values.",
       },
     },
   },
@@ -38,28 +39,12 @@ export const Scale: StoryObj = {
         <TokenGrid>
           {RADIUS_EXTRA.map(({ token, px }) => (
             <TokenSlot key={token} label={`${token} (${px})`}>
-              <div
-                style={{
-                  width: 64,
-                  height: 64,
-                  borderRadius: `var(${token})`,
-                  background: "var(--color-surface-2)",
-                  border: "1px solid var(--color-border)",
-                }}
-              />
+              <RadiusSwatch token={token} />
             </TokenSlot>
           ))}
           {radiusKeys.map((key) => (
             <TokenSlot key={key} label={RADIUS_TOKENS[key]}>
-              <div
-                style={{
-                  width: 64,
-                  height: 64,
-                  borderRadius: `var(${RADIUS_TOKENS[key]})`,
-                  background: "var(--color-surface-2)",
-                  border: "1px solid var(--color-border)",
-                }}
-              />
+              <RadiusSwatch token={RADIUS_TOKENS[key]} />
             </TokenSlot>
           ))}
         </TokenGrid>
@@ -67,3 +52,17 @@ export const Scale: StoryObj = {
     </FoundationSection>
   ),
 };
+
+function RadiusSwatch({ token }: { token: string }) {
+  return (
+    <div
+      style={{
+        width: 64,
+        height: 64,
+        borderRadius: `var(${token})`,
+        background: "var(--color-surface-2)",
+        border: "1px solid var(--color-border)",
+      }}
+    />
+  );
+}
