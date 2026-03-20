@@ -3263,17 +3263,19 @@ html[data-theme="consumer-dark"] .subscription-cancellation-modal {
   pointer-events: auto;
   position: relative;
   overflow: hidden;
-  min-height: 40px;
-  border-radius: 12px;
+  min-height: 52px;
+  border-radius: 16px;
   border: 1px solid color-mix(in oklch, var(--color-border) 84%, transparent);
-  background: color-mix(in oklch, var(--surface-glass, var(--color-surface)) 95%, transparent);
+  background:
+    linear-gradient(135deg, color-mix(in oklch, currentColor 10%, transparent), transparent 58%),
+    color-mix(in oklch, var(--surface-glass, var(--color-surface)) 95%, transparent);
   backdrop-filter: blur(calc(var(--blur-md) * 0.88)) saturate(1.005);
   -webkit-backdrop-filter: blur(calc(var(--blur-md) * 0.88)) saturate(1.005);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  padding: 9px 10px 9px 11px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  column-gap: 10px;
+  padding: 11px 12px 12px 0;
   box-shadow: 0 8px 18px color-mix(in oklch, var(--color-bg) 90%, transparent);
   --toast-stack-index-number: var(--toast-stack-index, 0);
   --toast-stack-shift: calc(var(--toast-stack-index-number) * -7px);
@@ -3314,74 +3316,117 @@ html[data-theme="consumer-dark"] .subscription-cancellation-modal {
   opacity: 1;
 }
 
+.toast-rail {
+  width: 3px;
+  align-self: stretch;
+  background: currentColor;
+  opacity: 0.86;
+}
+
 .toast-content {
   min-width: 0;
-  flex: 1 1 auto;
   display: flex;
+  align-items: start;
+  gap: 10px;
+}
+
+.toast-icon-shell {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  margin-top: 1px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in oklch, currentColor 14%, transparent);
+  background: color-mix(in oklch, currentColor 10%, transparent);
+  display: inline-flex;
   align-items: center;
-  gap: 7px;
+  justify-content: center;
 }
 
 .toast-icon {
   flex: 0 0 auto;
-  width: 5px;
-  height: 5px;
-  margin-top: 0;
+  width: 8px;
+  height: 8px;
   border-radius: 999px;
   background: currentColor;
-  box-shadow: 0 0 0 1.5px color-mix(in oklch, currentColor 8%, transparent);
-  opacity: 0.68;
+  box-shadow: 0 0 0 2px color-mix(in oklch, currentColor 8%, transparent);
+  opacity: 0.74;
   font-size: 0;
   line-height: 0;
+}
+
+.toast-copy {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.toast-label {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  min-height: 18px;
+  padding: 0 7px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklch, currentColor 16%, transparent);
+  background: color-mix(in oklch, currentColor 10%, transparent);
+  color: color-mix(in oklch, currentColor 72%, var(--color-text-muted) 28%);
+  font: 600 10px/1 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .toast-message {
   min-width: 0;
   color: color-mix(in oklch, var(--color-text) 84%, var(--color-text-tertiary) 16%);
-  font: 500 12px/1.32 var(--font-sans);
+  font: 500 13px/1.4 var(--font-sans);
   letter-spacing: -0.005em;
 }
 
 .toast-dismiss {
+  align-self: start;
   flex-shrink: 0;
-  width: 20px;
-  min-width: 20px;
-  height: 20px;
-  margin: 0 0 0 2px;
+  width: 22px;
+  min-width: 22px;
+  height: 22px;
+  margin: 0;
   padding: 0;
-  border: 1px solid transparent;
-  border-radius: 999px;
-  background: transparent;
+  border: 1px solid color-mix(in oklch, var(--color-border) 78%, transparent);
+  border-radius: 10px;
+  background: color-mix(in oklch, var(--color-surface-2) 54%, transparent);
   color: color-mix(in oklch, var(--color-text-tertiary) 82%, transparent);
   cursor: pointer;
   font-size: 12px;
   line-height: 1;
-  opacity: 0.72;
+  opacity: 0.82;
   transition:
     opacity 120ms var(--ease-out),
     color 120ms var(--ease-out),
     border-color 120ms var(--ease-out),
-    background 120ms var(--ease-out);
+    background 120ms var(--ease-out),
+    transform 120ms var(--ease-out);
 }
 
 .toast-dismiss:hover,
 .toast-dismiss:focus-visible {
   color: var(--color-text);
   opacity: 1;
-  border-color: color-mix(in oklch, var(--color-border) 76%, transparent);
-  background: color-mix(in oklch, var(--color-surface-2) 48%, transparent);
+  border-color: color-mix(in oklch, var(--color-border) 96%, transparent);
+  background: color-mix(in oklch, var(--color-surface-2) 84%, transparent);
+  transform: translateY(-1px);
 }
 
 .toast-progress {
   position: absolute;
-  left: 10px;
-  right: 10px;
-  bottom: 4px;
-  height: 1px;
+  left: 47px;
+  right: 12px;
+  bottom: 6px;
+  height: 2px;
   border-radius: 999px;
   overflow: hidden;
   background: color-mix(in oklch, currentColor 8%, transparent);
-  opacity: 0.56;
+  opacity: 0.68;
 }
 
 .toast-progress-bar {
@@ -5621,8 +5666,12 @@ html:not([data-theme="consumer-dark"]):not([data-theme="consumer-light"]) {
 .toast-story-static-stack {
   width: 100%;
   max-width: var(--vp-mobile);
-  display: flex;
-  flex-direction: column;
+  position: static;
+  left: auto;
+  right: auto;
+  top: auto;
+  bottom: auto;
+  display: grid;
   gap: 8px;
 }
 
@@ -5631,6 +5680,8 @@ html:not([data-theme="consumer-dark"]):not([data-theme="consumer-light"]) {
   left: auto;
   right: auto;
   top: auto;
+  bottom: auto;
+  width: 100%;
 }
 
 .toast-story-surface {
@@ -5741,14 +5792,32 @@ html:not([data-theme="consumer-dark"]):not([data-theme="consumer-light"]) {
 }
 
 .toast {
-  padding: 10px 12px;
-  border-radius: 14px;
+  min-height: 56px;
+  padding: 11px 12px 12px 0;
+  border-radius: 18px;
   box-shadow: 0 14px 28px -22px color-mix(in oklch, black 84%, transparent);
-  background: color-mix(in oklch, var(--color-surface) 94%, var(--color-surface-2) 6%);
+  background:
+    linear-gradient(135deg, color-mix(in oklch, currentColor 12%, transparent), transparent 58%),
+    color-mix(in oklch, var(--color-surface) 94%, var(--color-surface-2) 6%);
 }
 
 .toast-content {
-  gap: 8px;
+  gap: 10px;
+}
+
+.toast-icon-shell {
+  width: 26px;
+  height: 26px;
+  border-radius: 11px;
+}
+
+.toast-copy {
+  gap: 4px;
+}
+
+.toast-label {
+  min-height: 19px;
+  padding-inline: 8px;
 }
 
 .toast-icon {
@@ -5762,7 +5831,17 @@ html:not([data-theme="consumer-dark"]):not([data-theme="consumer-light"]) {
   line-height: 1.4;
 }
 
+.toast-dismiss {
+  width: 24px;
+  min-width: 24px;
+  height: 24px;
+}
+
 .toast-progress {
+  left: 51px;
+  right: 12px;
+  bottom: 7px;
+  height: 2px;
   opacity: 0.8;
 }
 
