@@ -725,6 +725,21 @@
   font: 600 var(--typo-meta-size)/1 var(--font-mono);
 }
 
+.referral-stat-line {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  line-height: 1.45;
+}
+
+.referral-share-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+  align-items: center;
+  justify-content: flex-end;
+}
+
 .referral-share-card__url {
   min-width: 0;
   overflow: hidden;

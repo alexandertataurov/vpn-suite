@@ -93,6 +93,8 @@ export type {
   WebAppPromoValidateResponse,
   WebAppReferralMyLinkResponse,
   WebAppReferralStatsResponse,
+  WebAppSupportFaqItem,
+  WebAppSupportFaqResponse,
   WebAppServerItem,
   WebAppServersResponse,
   WebAppSubscriptionOffersResponse,

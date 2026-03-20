@@ -168,13 +168,21 @@ export function useSettingsPageModel() {
 
   const handleCancelAction = useCallback(
     (payload: Omit<CancelActionPayload, "reason_group" | "reason_code">) => {
+      const trimmed = cancelFreeText.trim();
+      const mergedFreeText =
+        payload.free_text !== undefined
+          ? payload.free_text
+          : trimmed.length > 0
+            ? trimmed
+            : undefined;
       cancelMutation.mutate({
         reason_group: cancelReason ?? "not_needed",
         reason_code: cancelReason ?? "not_needed",
         ...payload,
+        free_text: mergedFreeText,
       });
     },
-    [cancelReason, cancelMutation],
+    [cancelReason, cancelMutation, cancelFreeText],
   );
 
   const revokeAllMutation = useMutation({

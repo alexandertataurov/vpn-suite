@@ -5,10 +5,25 @@ import { LayoutProvider } from "@/context/LayoutContext";
 import { ToastContainer } from "@/design-system";
 import { renderWithProviders } from "@/test/utils/render";
 
+const connectionBody =
+  "Start with Plan and confirm that your subscription is active. Then open Devices and make sure the current device still exists and the config was imported into AmneziaVPN without edits. If the app still does not connect, revoke that device, create a fresh config, import it again, and retry. If your access expired or the app shows no active entitlement, open Restore access before contacting support.";
+
 vi.mock("@/page-models", () => ({
   useSupportPageModel: () => ({
     header: { title: "Support" },
     pageState: { status: "ready" },
+    faqItems: [
+      { title: "VPN not connecting", body: connectionBody },
+      { title: "Setup", body: "Other FAQ body" },
+      { title: "Restore access", body: "Other FAQ body" },
+      { title: "Replace device or config", body: "Other FAQ body" },
+      { title: "Billing or plan", body: "Other FAQ body" },
+      { title: "Privacy and security", body: "Other FAQ body" },
+      { title: "When to contact support", body: "Other FAQ body" },
+      { title: "Slow or unstable connection", body: "Other FAQ body" },
+      { title: "Cancel or change plan", body: "Other FAQ body" },
+      { title: "What data we store", body: "Other FAQ body" },
+    ],
     hero: {
       eyebrow: "Support",
       title: "Help is always available",

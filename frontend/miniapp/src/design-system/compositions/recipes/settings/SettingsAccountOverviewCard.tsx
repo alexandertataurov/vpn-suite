@@ -10,7 +10,8 @@ export interface SettingsAccountOverviewCardProps {
   planStatus: PlanStatus;
   renewalDate: string;
   devicesUsed: number;
-  devicesTotal: number;
+  /** Device cap from subscription; omit when unknown (shows em dash). */
+  devicesTotal: number | null;
   onEdit?: () => void;
 }
 
@@ -77,7 +78,7 @@ export function SettingsAccountOverviewCard({
           <span className="ac-stat-label">Devices</span>
           <span className="ac-stat-value">
             {devicesUsed}
-            <span className="ac-stat-dim"> / {devicesTotal}</span>
+            <span className="ac-stat-dim"> / {devicesTotal ?? "—"}</span>
           </span>
         </div>
         <div className="ac-stat-sep" />

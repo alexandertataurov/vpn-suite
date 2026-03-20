@@ -92,6 +92,18 @@ async function mockApi(page: Page) {
       }),
     });
   });
+  await page.route("**/api/v1/webapp/support/faq", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        items: [
+          { title_key: "support.faq_item_connection_title", body_key: "support.faq_item_connection_body" },
+          { title_key: "support.faq_item_install_title", body_key: "support.faq_item_install_body" },
+        ],
+      }),
+    });
+  });
   await page.route("**/api/v1/webapp/payments/history", async (route) => {
     await route.fulfill({
       status: 200,

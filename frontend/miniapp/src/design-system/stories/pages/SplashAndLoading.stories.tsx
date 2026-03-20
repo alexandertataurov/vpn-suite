@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { useEffect } from "react";
+import { useEffect, type ReactNode } from "react";
 import { TelegramLoadingScreen } from "@/app/TelegramLoadingScreen";
 import {
   BootLoadingScreen,
@@ -9,27 +9,34 @@ import {
 import { StorySection } from "@/design-system";
 import { pageStoryParameters } from "@/storybook/page-contracts";
 
-const meta: Meta<{ theme: "dark" | "light" }> = {
+const DOC_BODY = [
+  "**Bootstrap surfaces** shown outside normal page routes: Telegram Suspense fallback, session load, brand splash, and fatal boot error.",
+  "`ThemeWrapper` toggles `data-theme` on `document.documentElement` for **`consumer-dark` / `consumer-light`** token layers — use Docs **Controls** to flip themes.",
+  "These are not `PageSandbox` routes; they validate early shell visuals in isolation.",
+].join("\n\n");
+
+const meta = {
   title: "Pages/Contracts/SplashAndLoading",
   tags: ["autodocs"],
   parameters: {
     ...pageStoryParameters,
     docs: {
       description: {
-        component:
-          "Splash and loading screens shown during app bootstrap. TelegramLoadingScreen: Suspense fallback. BootLoadingScreen: session/auth loading. BrandSplashScreen: welcome before onboarding. BootErrorScreen: startup error.",
+        component: DOC_BODY,
       },
     },
   },
   argTypes: {
     theme: {
       control: "inline-radio",
-      options: ["dark", "light"],
-      defaultValue: "dark",
+      options: ["dark", "light"] as const,
+      description: "Maps to data-theme consumer-dark vs consumer-light.",
     },
   },
-  args: { theme: "dark" },
-};
+  args: {
+    theme: "dark",
+  },
+} satisfies Meta<{ theme: "dark" | "light" }>;
 
 export default meta;
 
@@ -40,10 +47,13 @@ function ThemeWrapper({
   children,
 }: {
   theme: "dark" | "light";
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme === "light" ? "consumer-light" : "consumer-dark");
+    document.documentElement.setAttribute(
+      "data-theme",
+      theme === "light" ? "consumer-light" : "consumer-dark",
+    );
     return () => {
       document.documentElement.removeAttribute("data-theme");
     };
@@ -51,48 +61,90 @@ function ThemeWrapper({
   return <>{children}</>;
 }
 
-export const TelegramLoading: Story = {
+export const TelegramSuspenseFallback: Story = {
+  name: "Telegram · Suspense fallback",
   render: () => (
-    <StorySection title="Telegram loading" description="Suspense fallback, uses --tg-theme-* in Telegram.">
+    <StorySection
+      title="TelegramLoadingScreen"
+      description="Default Suspense boundary in the Telegram miniapp — uses Telegram theme CSS variables where available."
+    >
       <TelegramLoadingScreen />
     </StorySection>
   ),
+  parameters: {
+    docs: {
+      description: {
+        story: "Full-screen spinner / label shown while lazy chunks load.",
+      },
+    },
+  },
 };
 
-export const BootLoading: Story = {
+export const BootstrapLoading: Story = {
+  name: "Bootstrap · session loading",
   render: (args) => (
     <ThemeWrapper theme={args.theme ?? "dark"}>
-      <StorySection title="Bootstrap loading" description="Session/auth loading with skeleton.">
+      <StorySection
+        title="BootLoadingScreen"
+        description="Auth/session handshake — skeleton layout with optional slow-network retry."
+      >
         <BootLoadingScreen slowNetwork={false} onRetry={() => {}} />
       </StorySection>
     </ThemeWrapper>
   ),
+  parameters: {
+    docs: {
+      description: {
+        story: "Fast path: steady loading without retry banner.",
+      },
+    },
+  },
 };
 
-export const BootLoadingSlowNetwork: Story = {
+export const BootstrapLoadingSlowNetwork: Story = {
+  name: "Bootstrap · slow network",
   render: (args) => (
     <ThemeWrapper theme={args.theme ?? "dark"}>
-      <StorySection title="Bootstrap loading (slow)" description="Shows retry CTA when network is slow.">
+      <StorySection
+        title="BootLoadingScreen (slow)"
+        description="Surfaces retry when the client detects slow or stalled bootstrap."
+      >
         <BootLoadingScreen slowNetwork onRetry={() => {}} />
       </StorySection>
     </ThemeWrapper>
   ),
+  parameters: {
+    docs: {
+      description: {
+        story: "Retry CTA visible — pair with telemetry stories in ops when changing timeouts.",
+      },
+    },
+  },
 };
 
 export const BrandSplash: Story = {
+  name: "Brand splash",
   render: (args) => (
     <ThemeWrapper theme={args.theme ?? "dark"}>
-      <StorySection title="Brand splash" description="Welcome screen before onboarding.">
+      <StorySection title="BrandSplashScreen" description="Marketing splash before routed onboarding.">
         <BrandSplashScreen />
       </StorySection>
     </ThemeWrapper>
   ),
+  parameters: {
+    docs: {
+      description: {
+        story: "Logo / tagline beat — check both themes via Controls.",
+      },
+    },
+  },
 };
 
-export const BootError: Story = {
+export const BootstrapError: Story = {
+  name: "Bootstrap · fatal error",
   render: (args) => (
     <ThemeWrapper theme={args.theme ?? "dark"}>
-      <StorySection title="Startup error" description="Error screen with retry.">
+      <StorySection title="BootErrorScreen" description="Non-recoverable or repeated failure with explicit retry.">
         <BootErrorScreen
           title="Could not load session"
           message="Please try again."
@@ -101,4 +153,11 @@ export const BootError: Story = {
       </StorySection>
     </ThemeWrapper>
   ),
+  parameters: {
+    docs: {
+      description: {
+        story: "Copy and actions for hard bootstrap failures — accessibility: focus management in real app.",
+      },
+    },
+  },
 };

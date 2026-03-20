@@ -146,7 +146,7 @@ export function SettingsPage() {
           }
           renewalDate={model.accountRenewalValue ?? model.accountRenewalLabel ?? "—"}
           devicesUsed={model.activeDevices.length}
-          devicesTotal={model.activeSub?.device_limit ?? 5}
+          devicesTotal={model.activeSub?.device_limit ?? null}
           onEdit={() => navigate(model.planActionTo)}
         />
       </PageSection>
@@ -240,6 +240,8 @@ export function SettingsPage() {
         offers={model.offers}
         isCancelling={model.isCancelling}
         onReasonSelect={model.setCancelReasonWithTrack}
+        cancelFreeText={model.cancelFreeText}
+        onCancelFreeTextChange={model.setCancelFreeText}
         onPauseInstead={() => model.handleCancelAction({ pause_instead: true, offer_accepted: false })}
         onCancelAtPeriodEnd={() =>
           model.handleCancelAction({

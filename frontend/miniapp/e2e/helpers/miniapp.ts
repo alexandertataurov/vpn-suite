@@ -542,6 +542,16 @@ export async function setupMiniappApi(
       return;
     }
 
+    if (path === "/api/v1/webapp/support/faq" && method === "GET") {
+      await fulfillJson(route, 200, {
+        items: [
+          { title_key: "support.faq_item_connection_title", body_key: "support.faq_item_connection_body" },
+          { title_key: "support.faq_item_install_title", body_key: "support.faq_item_install_body" },
+        ],
+      });
+      return;
+    }
+
     if (path === "/api/v1/webapp/promo/validate" && method === "POST") {
       const reply = withStatus(nextReply(promoValidationReplies), {
         valid: true,

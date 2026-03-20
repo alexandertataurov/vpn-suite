@@ -167,6 +167,16 @@ export interface WebAppReferralStatsResponse {
   invite_remaining: number;
 }
 
+/** GET /webapp/support/faq — keys match miniapp i18n catalog. */
+export interface WebAppSupportFaqItem {
+  title_key: string;
+  body_key: string;
+}
+
+export interface WebAppSupportFaqResponse {
+  items: WebAppSupportFaqItem[];
+}
+
 export interface WebAppPromoValidateResponse {
   valid: boolean;
   type: string;

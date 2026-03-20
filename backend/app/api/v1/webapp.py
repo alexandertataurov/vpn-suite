@@ -1361,6 +1361,32 @@ async def webapp_list_plans(request: Request, db: AsyncSession = Depends(get_db)
     }
 
 
+# FAQ entries are i18n keys resolved by the Mini App; list order is API-owned.
+_WEBAPP_SUPPORT_FAQ_ITEMS: list[dict[str, str]] = [
+    {"title_key": "support.faq_item_connection_title", "body_key": "support.faq_item_connection_body"},
+    {"title_key": "support.faq_item_install_title", "body_key": "support.faq_item_install_body"},
+    {"title_key": "support.faq_item_restore_title", "body_key": "support.faq_item_restore_body"},
+    {"title_key": "support.faq_item_device_title", "body_key": "support.faq_item_device_body"},
+    {"title_key": "support.faq_item_billing_title", "body_key": "support.faq_item_billing_body"},
+    {"title_key": "support.faq_item_privacy_title", "body_key": "support.faq_item_privacy_body"},
+    {"title_key": "support.faq_item_support_title", "body_key": "support.faq_item_support_body"},
+    {"title_key": "support.faq_item_slow_title", "body_key": "support.faq_item_slow_body"},
+    {"title_key": "support.faq_item_cancel_title", "body_key": "support.faq_item_cancel_body"},
+    {"title_key": "support.faq_item_data_title", "body_key": "support.faq_item_data_body"},
+]
+
+
+@router.get("/support/faq")
+async def webapp_support_faq(request: Request) -> dict[str, list[dict[str, str]]]:
+    """Ordered FAQ entries for the Mini App (i18n keys; client translates). Bearer required."""
+    if not _get_tg_id_from_bearer(request):
+        raise HTTPException(
+            status_code=401,
+            detail={"code": "UNAUTHORIZED", "message": "Invalid session"},
+        )
+    return {"items": list(_WEBAPP_SUPPORT_FAQ_ITEMS)}
+
+
 class WebAppIssueDeviceResponse(BaseModel):
     device_id: str
     config: str | None

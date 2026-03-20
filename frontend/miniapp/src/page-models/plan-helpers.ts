@@ -17,8 +17,12 @@ export type UsageTone = "ok" | "warn" | "crit";
 export interface TierFeature {
   id: string;
   icon: "yes" | "no" | "amber";
-  text: string;
+  /** i18n key (passed to `t()`). Use `textPlain` for pre-localized API-backed copy. */
+  text?: string;
+  /** Already-localized label (skips `t()`). */
+  textPlain?: string;
   value?: string;
+  valuePlain?: string;
 }
 
 export interface TierPair {
@@ -72,36 +76,45 @@ export function tierSortRank(key: string): number {
   return 3;
 }
 
-export function featuresForTier(key: string): TierFeature[] {
-  if (key === "basic") {
+/** Feature rows derived only from plan fields returned by GET /webapp/plans (no static tier matrix). */
+export function featuresFromPlan(plan: PlanItem | undefined, locale: "en" | "ru"): TierFeature[] {
+  if (!plan) {
     return [
-      { id: "devices", icon: "yes", text: "plan.tier_feature_devices_label", value: "plan.tier_feature_basic_devices_value" },
-      { id: "network", icon: "yes", text: "plan.tier_feature_network_label", value: "plan.tier_feature_network_value" },
-      { id: "killswitch", icon: "no", text: "plan.tier_feature_controls_label" },
+      {
+        id: "choose",
+        icon: "yes",
+        text: "plan.features_pick_duration_below",
+      },
     ];
   }
-  if (key === "pro") {
-    return [
-      { id: "devices", icon: "yes", text: "plan.tier_feature_devices_label", value: "plan.tier_feature_pro_devices_value" },
-      { id: "network", icon: "yes", text: "plan.tier_feature_network_label", value: "plan.tier_feature_network_value" },
-      { id: "support", icon: "amber", text: "plan.tier_feature_support_label", value: "plan.tier_feature_support_value" },
-    ];
-  }
-  if (key === "team") {
-    return [
-      { id: "devices", icon: "yes", text: "plan.tier_feature_devices_label", value: "plan.tier_feature_team_devices_value" },
-      { id: "network", icon: "yes", text: "plan.tier_feature_network_label", value: "plan.tier_feature_network_value" },
-      { id: "support", icon: "amber", text: "plan.tier_feature_team_label", value: "plan.tier_feature_team_value" },
-    ];
-  }
+  const dl = plan.device_limit ?? 1;
+  const period = periodLabelForHeroLocalized(plan.duration_days, locale);
+  const stars = formatStars(plan.price_amount);
   return [
-    { id: "devices", icon: "yes", text: "plan.tier_feature_devices_label", value: "plan.tier_feature_flexible_devices_value" },
-    { id: "network", icon: "yes", text: "plan.tier_feature_network_label", value: "plan.tier_feature_network_value" },
+    {
+      id: "devices",
+      icon: "yes",
+      textPlain: translate(locale, "plan.feature_devices_included", { count: dl }),
+    },
+    {
+      id: "billing",
+      icon: "yes",
+      textPlain: translate(locale, "plan.feature_billing_cycle", { period }),
+    },
+    {
+      id: "price",
+      icon: "yes",
+      textPlain: translate(locale, "plan.feature_price_stars", { stars }),
+    },
   ];
 }
 
 /** Plans come from API in display_order; we preserve that when grouping. */
-export function buildTierPairs(plans: PlanItem[], currentPlanId: string | null): TierPair[] {
+export function buildTierPairs(
+  plans: PlanItem[],
+  currentPlanId: string | null,
+  locale: "en" | "ru" = "en",
+): TierPair[] {
   const grouped = new Map<string, TierPair>();
   const tierMinDisplayOrder = new Map<string, number>();
 
@@ -110,12 +123,12 @@ export function buildTierPairs(plans: PlanItem[], currentPlanId: string | null):
     const key = normalizeTierKey(fallbackName);
     const existing = grouped.get(key) ?? {
       key,
-      label: tierLabelForKey(key, fallbackName),
-      description: tierDescriptionForKey(key),
+      label: tierLabelForKey(key, fallbackName, locale),
+      description: tierDescriptionForKey(key, locale),
       monthly: undefined,
       annual: undefined,
       isCurrent: false,
-      features: featuresForTier(key),
+      features: [],
     };
 
     if (plan.duration_days > YEARLY_DURATION_THRESHOLD) {
@@ -134,6 +147,10 @@ export function buildTierPairs(plans: PlanItem[], currentPlanId: string | null):
     const order = plan.display_order ?? 999_999;
     const prev = tierMinDisplayOrder.get(key);
     tierMinDisplayOrder.set(key, prev == null ? order : Math.min(prev, order));
+  }
+
+  for (const pair of grouped.values()) {
+    pair.features = featuresFromPlan(pair.annual ?? pair.monthly, locale);
   }
 
   return Array.from(grouped.values()).sort((a, b) => {
@@ -310,7 +327,9 @@ export function tierFeatureToRow(feature: TierFeature) {
   return {
     icon: feature.icon,
     text: feature.text,
+    textPlain: feature.textPlain,
     value: feature.value,
+    valuePlain: feature.valuePlain,
   } as const;
 }
 

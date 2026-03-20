@@ -137,7 +137,8 @@ export function useReferralPageModel() {
   const inviteProgress = statsData?.invite_progress ?? 0;
   const inviteRemaining = statsData?.invite_remaining ?? Math.max(inviteGoal - inviteProgress, 0);
   const progressPercent = inviteGoal > 0 ? Math.min(100, Math.max(0, (inviteProgress / inviteGoal) * 100)) : 0;
-  const nextBonusDays = inviteGoal * 7;
+  /** From API when provided; avoids inventing per-invite day math on the client. */
+  const nextBonusDays = statsData?.pending_reward_days ?? null;
   const rewardBadge: StandardSectionBadge = {
     tone: "neutral",
     label: `${inviteProgress} / ${inviteGoal}`,

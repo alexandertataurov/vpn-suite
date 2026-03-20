@@ -1,9 +1,25 @@
-import { useEffect, useState } from "react";
-import { useWebappToken } from "@/api/client";
+import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import type { WebAppSupportFaqResponse } from "@vpn-suite/shared";
+import { webappApi, useWebappToken } from "@/api/client";
 import { useSession, useTrackScreen, useTelemetry } from "@/hooks";
 import type { StandardPageHeader, StandardPageState } from "./types";
 import { getActiveSubscription } from "./helpers";
 import { useI18n } from "@/hooks";
+import { webappQueryKeys } from "@/lib";
+
+const FALLBACK_SUPPORT_FAQ_KEYS: ReadonlyArray<{ title_key: string; body_key: string }> = [
+  { title_key: "support.faq_item_connection_title", body_key: "support.faq_item_connection_body" },
+  { title_key: "support.faq_item_install_title", body_key: "support.faq_item_install_body" },
+  { title_key: "support.faq_item_restore_title", body_key: "support.faq_item_restore_body" },
+  { title_key: "support.faq_item_device_title", body_key: "support.faq_item_device_body" },
+  { title_key: "support.faq_item_billing_title", body_key: "support.faq_item_billing_body" },
+  { title_key: "support.faq_item_privacy_title", body_key: "support.faq_item_privacy_body" },
+  { title_key: "support.faq_item_support_title", body_key: "support.faq_item_support_body" },
+  { title_key: "support.faq_item_slow_title", body_key: "support.faq_item_slow_body" },
+  { title_key: "support.faq_item_cancel_title", body_key: "support.faq_item_cancel_body" },
+  { title_key: "support.faq_item_data_title", body_key: "support.faq_item_data_body" },
+] as const;
 
 const TROUBLESHOOTER_STEPS = [
   {
@@ -42,22 +58,45 @@ export function useSupportPageModel() {
   const totalSteps = TROUBLESHOOTER_STEPS.length;
   const { t } = useI18n();
 
+  const faqQuery = useQuery<WebAppSupportFaqResponse>({
+    queryKey: [...webappQueryKeys.supportFaq()],
+    queryFn: () => webappApi.get<WebAppSupportFaqResponse>("/webapp/support/faq"),
+    enabled: hasToken,
+    retry: 1,
+  });
+
+  const faqSource = useMemo(() => {
+    const items = faqQuery.data?.items;
+    if (items && items.length > 0) {
+      return items;
+    }
+    return [...FALLBACK_SUPPORT_FAQ_KEYS];
+  }, [faqQuery.data?.items]);
+
+  const faqItems = useMemo(
+    () => faqSource.map((item) => ({ title: t(item.title_key), body: t(item.body_key) })),
+    [faqSource, t],
+  );
+
   const header: StandardPageHeader = {
     title: t("support.header_title"),
     subtitle: t("support.header_subtitle"),
   };
 
+  const faqBlocking =
+    hasToken && !faqQuery.isFetched && (faqQuery.isPending || faqQuery.isFetching);
+
   const pageState: StandardPageState = !hasToken
     ? { status: "empty", title: t("common.session_missing_title") }
-    : isLoading
+    : isLoading || faqBlocking
       ? { status: "loading" }
       : error
-      ? {
-          status: "error",
-          title: t("common.could_not_load_title"),
-          message: t("common.could_not_load_generic"),
-          onRetry: () => void refetch(),
-        }
+        ? {
+            status: "error",
+            title: t("common.could_not_load_title"),
+            message: t("common.could_not_load_generic"),
+            onRetry: () => void refetch(),
+          }
         : { status: "ready" };
 
   const hero = {
@@ -77,6 +116,7 @@ export function useSupportPageModel() {
     header,
     pageState,
     hero,
+    faqItems,
     currentStep: {
       title: t(TROUBLESHOOTER_STEPS[step]?.titleKey ?? TROUBLESHOOTER_STEPS[0].titleKey),
       body: t(TROUBLESHOOTER_STEPS[step]?.bodyKey ?? TROUBLESHOOTER_STEPS[0].bodyKey),

@@ -3,6 +3,7 @@ import { Route } from "react-router-dom";
 import { expect, userEvent, within } from "storybook/test";
 import { SupportPage } from "@/pages/Support";
 import {
+  type MockScenario,
   failureScenario,
   loadingSessionScenario,
   loggedOutScenario,
@@ -11,34 +12,47 @@ import {
   readyScenario,
 } from "@/storybook/page-contracts";
 
-const meta: Meta = {
+const DOC_BODY = [
+  "**Support** (`/support`): contact status, quick links, troubleshooter, and FAQ accordion.",
+  "Mocks come from `page-contracts` (`supportFaq`, session, etc.) inside **PageSandbox**.",
+  "FAQ interaction story asserts `aria-expanded` after toggle for a11y regression.",
+].join("\n\n");
+
+const VIEW_NARROW = { viewport: { defaultViewport: "iphoneSE" as const } };
+const VIEW_WIDE = { viewport: { defaultViewport: "adminDesktop" as const } };
+
+const meta = {
   title: "Pages/Contracts/Support",
   tags: ["autodocs"],
   parameters: {
     ...pageStoryParameters,
     docs: {
       description: {
-        component: "Support route with support status, quick paths, the troubleshooting flow, and the FAQ list from the miniapp.",
+        component: DOC_BODY,
       },
     },
   },
-};
+} satisfies Meta;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const HelpCenter: Story = {
-  name: "Help center",
-  render: () => (
-    <PageSandbox scenario={readyScenario} initialEntries={["/support"]}>
+function renderSupport(scenario: MockScenario) {
+  return (
+    <PageSandbox scenario={scenario} initialEntries={["/support"]}>
       <Route path="/support" element={<SupportPage />} />
     </PageSandbox>
-  ),
+  );
+}
+
+export const HelpCenter: Story = {
+  name: "Help center",
+  render: () => renderSupport(readyScenario),
   parameters: {
     docs: {
       description: {
-        story: "Full support page with contact status, quick paths, troubleshooting steps, and FAQ.",
+        story: "Full page: hero, quick paths, troubleshooter card, FAQ list.",
       },
     },
   },
@@ -46,31 +60,23 @@ export const HelpCenter: Story = {
 
 export const Loading: Story = {
   name: "Support loading",
-  render: () => (
-    <PageSandbox scenario={loadingSessionScenario} initialEntries={["/support"]}>
-      <Route path="/support" element={<SupportPage />} />
-    </PageSandbox>
-  ),
+  render: () => renderSupport(loadingSessionScenario),
   parameters: {
     docs: {
       description: {
-        story: "Skeleton state while support page data and session state load.",
+        story: "Skeletons while FAQ and user/session endpoints resolve.",
       },
     },
   },
 };
 
-export const Error: Story = {
+export const LoadError: Story = {
   name: "Could not load support",
-  render: () => (
-    <PageSandbox scenario={failureScenario} initialEntries={["/support"]}>
-      <Route path="/support" element={<SupportPage />} />
-    </PageSandbox>
-  ),
+  render: () => renderSupport(failureScenario),
   parameters: {
     docs: {
       description: {
-        story: "Fallback error state when the support route cannot load.",
+        story: "Error surface with retry for failed bootstrap.",
       },
     },
   },
@@ -78,27 +84,19 @@ export const Error: Story = {
 
 export const SessionMissing: Story = {
   name: "Session missing",
-  render: () => (
-    <PageSandbox scenario={loggedOutScenario} initialEntries={["/support"]}>
-      <Route path="/support" element={<SupportPage />} />
-    </PageSandbox>
-  ),
+  render: () => renderSupport(loggedOutScenario),
   parameters: {
     docs: {
       description: {
-        story: "No active miniapp session. The route resolves to the session-missing state.",
+        story: "Logged-out / no token — `SessionMissing` path.",
       },
     },
   },
 };
 
-export const FaqExpanded: Story = {
-  name: "FAQ expanded",
-  render: () => (
-    <PageSandbox scenario={readyScenario} initialEntries={["/support"]}>
-      <Route path="/support" element={<SupportPage />} />
-    </PageSandbox>
-  ),
+export const InteractiveFaqExpand: Story = {
+  name: "Interactive · FAQ expanded",
+  render: () => renderSupport(readyScenario),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const faqButton = await canvas.findByRole("button", { name: "VPN not connecting" });
@@ -108,7 +106,33 @@ export const FaqExpanded: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Interactive: expand the VPN not connecting FAQ item inside the actual Support route.",
+        story: "Opens a disclosure and verifies expanded state for screen readers.",
+      },
+    },
+  },
+};
+
+export const ViewportNarrow: Story = {
+  name: "Viewport · narrow",
+  render: () => renderSupport(readyScenario),
+  parameters: {
+    ...VIEW_NARROW,
+    docs: {
+      description: {
+        story: "320px — accordion hit targets and stacked sections.",
+      },
+    },
+  },
+};
+
+export const ViewportWide: Story = {
+  name: "Viewport · wide",
+  render: () => renderSupport(readyScenario),
+  parameters: {
+    ...VIEW_WIDE,
+    docs: {
+      description: {
+        story: "Wide canvas — content max-width and section rhythm.",
       },
     },
   },

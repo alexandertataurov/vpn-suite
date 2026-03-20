@@ -3060,6 +3060,23 @@ html:not([data-theme="consumer-light"]) .miniapp-popover-panel {
   gap: 14px;
 }
 
+.cancel-free-text-field .cancel-free-text-input {
+  width: 100%;
+  min-height: 72px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in oklch, var(--color-text) 10%, transparent);
+  background: transparent;
+  color: var(--color-text);
+  font: 400 14px/1.4 var(--font-sans);
+  resize: vertical;
+}
+
+.cancel-free-text-field .cancel-free-text-input:focus-visible {
+  outline: 2px solid color-mix(in oklch, var(--color-accent) 35%, transparent);
+  outline-offset: 1px;
+}
+
 .cancel-reason-selector {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

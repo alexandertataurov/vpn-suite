@@ -1,95 +1,135 @@
 import type { Meta, StoryObj } from "@storybook/react";
+import { Route } from "react-router-dom";
+import { OnboardingPage } from "@/pages/Onboarding";
 import {
+  type MockScenario,
   emptyDevicesScenario,
   noPlanScenario,
   OnboardingSandbox,
   pageStoryParameters,
   readyScenario,
 } from "@/storybook/page-contracts";
-import { Route } from "react-router-dom";
-import { OnboardingPage } from "@/pages/Onboarding";
 
-const meta: Meta = {
+const DOC_BODY = [
+  "**Onboarding** (`/onboarding`): stepped flow before the standard app shell (welcome → install → plan/device → VPN → confirm).",
+  "`OnboardingSandbox` pins the **visual step index** while still using real responses from `MockScenario` (e.g. `noPlanScenario` for choose-plan).",
+  "Use together with **Home** / **Devices** stories for post-onboarding states.",
+].join("\n\n");
+
+const VIEW_NARROW = { viewport: { defaultViewport: "iphoneSE" as const } };
+
+const meta = {
   title: "Pages/Contracts/Onboarding",
   tags: ["autodocs"],
   parameters: {
     ...pageStoryParameters,
     docs: {
       description: {
-        component: "Miniapp onboarding flow shown before the normal app-ready shell. Covers intro, app install, choose plan, add device, open VPN, and confirm connection.",
+        component: DOC_BODY,
       },
     },
   },
-};
+} satisfies Meta;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Intro: Story = {
-  name: "Welcome",
-  render: () => (
-    <OnboardingSandbox scenario={readyScenario} initialEntries={["/onboarding"]} step={0}>
-      <Route path="/onboarding" element={<OnboardingPage />} />
-    </OnboardingSandbox>
-  ),
+type SandboxProps = {
+  scenario: MockScenario;
+  step: number;
+  initialEntries?: string[];
 };
 
-export const InstallApp: Story = {
-  name: "Install AmneziaVPN",
-  render: () => (
-    <OnboardingSandbox scenario={readyScenario} initialEntries={["/onboarding"]} step={1}>
+function renderOnboarding({ scenario, step, initialEntries = ["/onboarding"] }: SandboxProps) {
+  return (
+    <OnboardingSandbox scenario={scenario} initialEntries={initialEntries} step={step}>
       <Route path="/onboarding" element={<OnboardingPage />} />
     </OnboardingSandbox>
-  ),
-};
+  );
+}
 
-export const ChoosePlan: Story = {
-  name: "Choose plan",
-  render: () => (
-    <OnboardingSandbox scenario={noPlanScenario} initialEntries={["/onboarding"]} step={2}>
-      <Route path="/onboarding" element={<OnboardingPage />} />
-    </OnboardingSandbox>
-  ),
+export const StepWelcome: Story = {
+  name: "Step 0 · Welcome",
+  render: () => renderOnboarding({ scenario: readyScenario, step: 0 }),
   parameters: {
     docs: {
       description: {
-        story: "Get-config step when the user has not purchased a plan yet.",
+        story: "Intro hero and first CTA — no subscription assumptions yet.",
       },
     },
   },
 };
 
-export const AddFirstDevice: Story = {
-  name: "Add first device",
-  render: () => (
-    <OnboardingSandbox scenario={emptyDevicesScenario} initialEntries={["/onboarding"]} step={2}>
-      <Route path="/onboarding" element={<OnboardingPage />} />
-    </OnboardingSandbox>
-  ),
+export const StepInstallApp: Story = {
+  name: "Step 1 · Install AmneziaVPN",
+  render: () => renderOnboarding({ scenario: readyScenario, step: 1 }),
   parameters: {
     docs: {
       description: {
-        story: "Get-config step when the user has a plan but no issued device yet.",
+        story: "Client install guidance and store/deep-link copy.",
       },
     },
   },
 };
 
-export const OpenVpn: Story = {
-  name: "Open VPN app",
-  render: () => (
-    <OnboardingSandbox scenario={readyScenario} initialEntries={["/onboarding"]} step={3}>
-      <Route path="/onboarding" element={<OnboardingPage />} />
-    </OnboardingSandbox>
-  ),
+export const StepChoosePlan: Story = {
+  name: "Step 2 · Choose plan (no subscription)",
+  render: () => renderOnboarding({ scenario: noPlanScenario, step: 2 }),
+  parameters: {
+    docs: {
+      description: {
+        story: "User has **no plan** — onboarding surfaces catalog / CTA toward purchase.",
+      },
+    },
+  },
 };
 
-export const ConfirmConnection: Story = {
-  name: "Confirm connection",
-  render: () => (
-    <OnboardingSandbox scenario={readyScenario} initialEntries={["/onboarding"]} step={4}>
-      <Route path="/onboarding" element={<OnboardingPage />} />
-    </OnboardingSandbox>
-  ),
+export const StepAddFirstDevice: Story = {
+  name: "Step 2 · Add first device (has plan)",
+  render: () => renderOnboarding({ scenario: emptyDevicesScenario, step: 2 }),
+  parameters: {
+    docs: {
+      description: {
+        story: "Subscribed but **no devices** — issuance / setup instructions in onboarding skin.",
+      },
+    },
+  },
+};
+
+export const StepOpenVpn: Story = {
+  name: "Step 3 · Open VPN app",
+  render: () => renderOnboarding({ scenario: readyScenario, step: 3 }),
+  parameters: {
+    docs: {
+      description: {
+        story: "Connect-out — deep link and reminder to open AmneziaVPN.",
+      },
+    },
+  },
+};
+
+export const StepConfirmConnection: Story = {
+  name: "Step 4 · Confirm connection",
+  render: () => renderOnboarding({ scenario: readyScenario, step: 4 }),
+  parameters: {
+    docs: {
+      description: {
+        story: "Handshake confirmation — ties into connect-status semantics after success.",
+      },
+    },
+  },
+};
+
+export const ViewportNarrowWelcome: Story = {
+  name: "Viewport · narrow (welcome)",
+  render: () => renderOnboarding({ scenario: readyScenario, step: 0 }),
+  parameters: {
+    ...VIEW_NARROW,
+    docs: {
+      description: {
+        story: "320px — stepper and hero density on smallest phone preset.",
+      },
+    },
+  },
 };

@@ -9,6 +9,9 @@ export interface ReferralShareCardProps {
   shareUrl: string;
   isOnline: boolean;
   onCopy: () => Promise<boolean> | boolean;
+  /** Native share (Web Share API); shown when provided and the browser supports `navigator.share`. */
+  onNativeShare?: () => void | Promise<void>;
+  nativeShareLabel?: string;
   variant?: "default" | "compact";
 }
 
@@ -17,6 +20,8 @@ export function ReferralShareCard({
   shareUrl,
   isOnline,
   onCopy,
+  onNativeShare,
+  nativeShareLabel,
   variant = "default",
 }: ReferralShareCardProps) {
   const { t } = useI18n();
@@ -36,6 +41,9 @@ export function ReferralShareCard({
       setCopied(true);
     }
   };
+
+  const canNativeShare =
+    typeof navigator !== "undefined" && typeof navigator.share === "function";
 
   const isCompact = variant === "compact";
   const title = isCompact
@@ -76,18 +84,33 @@ export function ReferralShareCard({
               {shareUrl || t("referral.share_url_unavailable_placeholder")}
             </code>
           </div>
-          <Button
-            variant="secondary"
-            size="sm"
-            status={copied ? "success" : "idle"}
-            statusText={t("referral.copy_link_copied_button")}
-            onClick={() => void handleCopy()}
-            disabled={!shareUrl || !isOnline}
-            aria-label={t("referral.copy_link_button")}
-            className="referral-share-card__copy-button"
-          >
-            {t("referral.copy_link_compact_button")}
-          </Button>
+          <div className="referral-share-card__actions">
+            {onNativeShare && canNativeShare ? (
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                onClick={() => void onNativeShare()}
+                disabled={!shareUrl || !isOnline}
+                aria-label={nativeShareLabel ?? t("referral.share_native_button")}
+                className="referral-share-card__share-button"
+              >
+                {nativeShareLabel ?? t("referral.share_native_button")}
+              </Button>
+            ) : null}
+            <Button
+              variant="secondary"
+              size="sm"
+              status={copied ? "success" : "idle"}
+              statusText={t("referral.copy_link_copied_button")}
+              onClick={() => void handleCopy()}
+              disabled={!shareUrl || !isOnline}
+              aria-label={t("referral.copy_link_button")}
+              className="referral-share-card__copy-button"
+            >
+              {t("referral.copy_link_compact_button")}
+            </Button>
+          </div>
         </div>
         {!botUsername ? (
           <div className="referral-share-card__notice" role="status" aria-live="polite">

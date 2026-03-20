@@ -84,6 +84,19 @@ async function mockApi(page: Page) {
       });
       return;
     }
+    if (url.includes("/api/v1/webapp/support/faq")) {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          items: [
+            { title_key: "support.faq_item_connection_title", body_key: "support.faq_item_connection_body" },
+            { title_key: "support.faq_item_install_title", body_key: "support.faq_item_install_body" },
+          ],
+        }),
+      });
+      return;
+    }
     if (url.includes("/api/v1/webapp/plans")) {
       await route.fulfill({
         status: 200,

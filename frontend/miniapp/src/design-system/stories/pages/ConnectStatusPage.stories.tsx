@@ -3,13 +3,23 @@ import { Route } from "react-router-dom";
 import { ConnectStatusPage } from "@/pages/ConnectStatus";
 import {
   emptyDevicesScenario,
+  failureScenario,
   loggedOutScenario,
+  loadingSessionScenario,
   noPlanScenario,
   PageSandbox,
   pageStoryParameters,
   readyScenario,
   type MockScenario,
 } from "@/storybook/page-contracts";
+
+const DOC_BODY = [
+  "**Connect status** (`/connect-status`): latest device delivery, confirm-connected flow, and reminders.",
+  "Uses `useConnectStatusPageModel` — cover **loading**, **error**, empty session, and happy-path device states.",
+  "`pendingConfirmationScenario` is story-local to force an unconfirmed latest device without changing shared contracts.",
+].join("\n\n");
+
+const VIEW_NARROW = { viewport: { defaultViewport: "iphoneSE" as const } };
 
 const pendingConfirmationScenario: MockScenario = {
   ...readyScenario,
@@ -44,24 +54,24 @@ const pendingConfirmationScenario: MockScenario = {
   },
 };
 
-const meta: Meta = {
+const meta = {
   title: "Pages/Contracts/Connect Status",
   tags: ["autodocs"],
   parameters: {
     ...pageStoryParameters,
     docs: {
       description: {
-        component: "Connection status route showing the latest setup state, confirm action, and next-step guidance for the active device.",
+        component: DOC_BODY,
       },
     },
   },
-};
+} satisfies Meta;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-function renderConnectStatusPage(scenario: MockScenario) {
+function renderConnect(scenario: MockScenario) {
   return (
     <PageSandbox scenario={scenario} initialEntries={["/connect-status"]}>
       <Route path="/connect-status" element={<ConnectStatusPage />} />
@@ -69,50 +79,71 @@ function renderConnectStatusPage(scenario: MockScenario) {
   );
 }
 
-function createConnectStatusStory(
+function scenarioStory(
   name: string,
   scenario: MockScenario,
-  description: string,
+  storyDescription: string,
+  extra?: Story["parameters"],
 ): Story {
   return {
     name,
-    render: () => renderConnectStatusPage(scenario),
+    render: () => renderConnect(scenario),
     parameters: {
+      ...extra,
       docs: {
         description: {
-          story: description,
+          story: storyDescription,
         },
       },
     },
   };
 }
 
-export const Confirmed = createConnectStatusStory(
+export const ConnectedConfirmed = scenarioStory(
   "Connected and confirmed",
   readyScenario,
-  "Latest device is already confirmed, so the route shows the confirmed summary and a follow-up action instead of the confirm CTA.",
+  "Latest device already confirmed — summary + follow-up, confirm CTA hidden.",
 );
 
-export const PendingConfirmation = createConnectStatusStory(
+export const PendingConfirmation = scenarioStory(
   "Pending confirmation",
   pendingConfirmationScenario,
-  "Latest device has not been confirmed yet, so the route keeps the confirmation CTA visible.",
+  "Config issued but not confirmed — primary confirmation CTA visible.",
 );
 
-export const NoDevice = createConnectStatusStory(
+export const NoDevicesYet = scenarioStory(
   "No devices yet",
   emptyDevicesScenario,
-  "Subscribed user without issued devices. The route redirects the user back toward Devices setup.",
+  "Subscribed without devices — model routes user back toward device setup.",
 );
 
-export const NoPlan = createConnectStatusStory(
+export const NoActivePlan = scenarioStory(
   "No active plan",
   noPlanScenario,
-  "No active subscription. The route shows the no-plan summary and points back to plan selection.",
+  "No subscription — plan-oriented empty state.",
 );
 
-export const SessionMissing = createConnectStatusStory(
+export const SessionMissing = scenarioStory(
   "Session missing",
   loggedOutScenario,
-  "No active miniapp session. The route resolves to the session-missing state.",
+  "Empty token — `SessionMissing` instead of scaffold content.",
+);
+
+export const Loading = scenarioStory(
+  "Connect status loading",
+  loadingSessionScenario,
+  "Header + skeleton cards while session and device context load.",
+);
+
+export const LoadError = scenarioStory(
+  "Could not load connect status",
+  failureScenario,
+  "`FallbackScreen` with retry when bootstrap or access fails.",
+);
+
+export const ViewportNarrow = scenarioStory(
+  "Viewport · narrow",
+  readyScenario,
+  "320px — verify card stacks and primary actions.",
+  VIEW_NARROW,
 );

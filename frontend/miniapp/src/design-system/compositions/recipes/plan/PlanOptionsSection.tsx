@@ -127,10 +127,11 @@ export function PlanOptionsSection({
                 <ul className="modern-plan-features">
                   {tier.features.map((feature) => {
                     const row = tierFeatureToRow(feature);
-                    const text = t(row.text as string);
-                    const value = row.value != null ? t(row.value as string) : undefined;
+                    const text = row.textPlain ?? t(row.text as string);
+                    const value =
+                      row.valuePlain ?? (row.value != null ? t(row.value as string) : undefined);
                     return (
-                      <li key={`${tier.key}-${String(row.text)}`} className="modern-plan-feature">
+                      <li key={`${tier.key}-${row.textPlain ?? row.text ?? "row"}`} className="modern-plan-feature">
                         <span className="modern-plan-feature-label">{text}</span>
                         {value ? <span className="modern-plan-feature-value">{value}</span> : null}
                       </li>

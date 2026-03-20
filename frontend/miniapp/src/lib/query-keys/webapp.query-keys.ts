@@ -14,5 +14,6 @@ export const webappQueryKeys = {
   paymentsHistory: (limit: number) => [...webappQueryKeys.paymentsHistoryRoot(), limit] as const,
   referralLink: () => [...webappQueryKeys.all, "referral", "link"] as const,
   referralStats: () => [...webappQueryKeys.all, "referral", "stats"] as const,
+  supportFaq: () => [...webappQueryKeys.all, "support", "faq"] as const,
 };
 

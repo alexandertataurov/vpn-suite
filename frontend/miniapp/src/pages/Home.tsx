@@ -49,7 +49,10 @@ export function HomePage() {
   const hasToken = !!useWebappToken();
   const session = useSession(hasToken).data;
   const profileName = (session?.user?.display_name ?? "").trim() || t("home.guest_name");
-  const profileInitial = profileName.charAt(0).toUpperCase() || "G";
+  const profileInitial =
+    (session?.user?.display_name ?? "").trim().length > 0
+      ? profileName.charAt(0).toUpperCase()
+      : t("home.guest_initial").charAt(0).toUpperCase();
   const profilePhotoUrl = (session?.user?.photo_url ?? "").trim() || undefined;
 
   if (model.pageState.status === "empty") {
@@ -192,7 +195,10 @@ export function HomePage() {
                           {model.daysLeft != null &&
                           model.daysLeft > 0 &&
                           model.daysLeft <= 14 ? (
-                            <Badge label={`${model.daysLeft}d left`} variant="warning" />
+                            <Badge
+                              label={t("home.badge_days_left", { count: model.daysLeft })}
+                              variant="warning"
+                            />
                           ) : null}
                           {status === "expired" ? <Badge label={t("home.badge_renew")} variant="error" /> : null}
                         </>

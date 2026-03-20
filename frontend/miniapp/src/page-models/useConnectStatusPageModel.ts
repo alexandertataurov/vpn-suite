@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { webappApi } from "@/api/client";
+import { useWebappToken, webappApi } from "@/api/client";
 import { useTrackScreen, useTelemetry, useSession } from "@/hooks";
 import { useI18n } from "@/hooks";
 import { webappQueryKeys } from "@/lib";
@@ -14,7 +14,8 @@ import {
 
 export function useConnectStatusPageModel() {
   const queryClient = useQueryClient();
-  const { data: session } = useSession(true);
+  const hasToken = !!useWebappToken();
+  const { data: session, isPending, isError, error, refetch } = useSession(hasToken);
   const { t } = useI18n();
 
   const activeDevices = getActiveDevices(session);
@@ -49,9 +50,21 @@ export function useConnectStatusPageModel() {
     }
   }, [latestDevice, confirmMutation]);
 
-  const pageState = !session?.user
+  const pageState = !hasToken
     ? { status: "empty" as const }
-    : { status: "ready" as const };
+    : isPending
+      ? { status: "loading" as const }
+      : isError
+        ? {
+            status: "error" as const,
+            title: t("common.could_not_load_title"),
+            message:
+              error instanceof Error ? error.message : t("common.could_not_load_generic"),
+            onRetry: () => void refetch(),
+          }
+        : !session?.user
+          ? { status: "empty" as const }
+          : { status: "ready" as const };
 
   const summary = !activeSub
     ? {

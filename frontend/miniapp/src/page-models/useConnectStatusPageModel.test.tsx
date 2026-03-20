@@ -46,6 +46,10 @@ describe("useConnectStatusPageModel", () => {
         subscriptions: [],
         devices: [],
       },
+      isPending: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
     });
 
     const { result } = renderHook(() => useConnectStatusPageModel(), { wrapper });
@@ -63,6 +67,10 @@ describe("useConnectStatusPageModel", () => {
         subscriptions: [{ id: "sub-1", plan_id: "plan-basic", status: "active" }],
         devices: [{ id: "dev-1", device_name: "iPhone", status: "idle" }],
       },
+      isPending: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
     });
     mockPost.mockResolvedValue({ status: "ok" });
 
@@ -86,6 +94,10 @@ describe("useConnectStatusPageModel", () => {
         devices: [{ id: "dev-1", device_name: "iPhone", status: "connected" }],
         latest_device_delivery: { amnezia_vpn_key: "vpn://payload" },
       },
+      isPending: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
     });
 
     const { result } = renderHook(() => useConnectStatusPageModel(), { wrapper });
@@ -112,6 +124,10 @@ describe("useConnectStatusPageModel", () => {
           telemetry_updated_at: "2026-03-10T00:00:20Z",
         },
       },
+      isPending: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
     });
 
     const { result } = renderHook(() => useConnectStatusPageModel(), { wrapper });

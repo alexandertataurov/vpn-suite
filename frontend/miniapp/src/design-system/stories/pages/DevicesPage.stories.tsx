@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Route } from "react-router-dom";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 import { DevicesPage } from "@/pages/Devices";
 import {
   type MockScenario,
@@ -13,24 +14,33 @@ import {
   readyScenario,
 } from "@/storybook/page-contracts";
 
-const meta: Meta = {
+const DOC_BODY = [
+  "**Devices** (`/devices`): device list, add-device wizard, limits, and setup/config cards.",
+  "State matrix + **interaction** + **viewport** stories live in this file (legacy split `Devices Interactions` removed).",
+  "Wizard `play` targets stable accessible names from production copy.",
+].join("\n\n");
+
+const VIEW_NARROW = { viewport: { defaultViewport: "iphoneSE" as const } };
+const VIEW_WIDE = { viewport: { defaultViewport: "adminDesktop" as const } };
+
+const meta = {
   title: "Pages/Contracts/Devices",
   tags: ["autodocs"],
   parameters: {
     ...pageStoryParameters,
     docs: {
       description: {
-        component: "Device management route under the production-like shell, including empty, at-limit, no-plan, loading, and error states.",
+        component: DOC_BODY,
       },
     },
   },
-};
+} satisfies Meta;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-function renderDevicesPage(scenario: MockScenario) {
+function renderDevices(scenario: MockScenario) {
   return (
     <PageSandbox scenario={scenario} initialEntries={["/devices"]}>
       <Route path="/devices" element={<DevicesPage />} />
@@ -38,52 +48,94 @@ function renderDevicesPage(scenario: MockScenario) {
   );
 }
 
-function createDevicesStory(name: string, scenario: MockScenario, description: string): Story {
+function scenarioStory(
+  name: string,
+  scenario: MockScenario,
+  storyDescription: string,
+  extra?: Story["parameters"],
+): Story {
   return {
     name,
-    render: () => renderDevicesPage(scenario),
+    render: () => renderDevices(scenario),
     parameters: {
+      ...extra,
       docs: {
         description: {
-          story: description,
+          story: storyDescription,
         },
       },
     },
   };
 }
 
-export const ActiveDevices = createDevicesStory(
+export const ActiveDevices = scenarioStory(
   "Active devices",
   readyScenario,
-  "Devices route with the current device list, summary card, and setup/config sections.",
+  "Populated list, summary, and per-device actions.",
 );
 
-export const Empty = createDevicesStory(
+export const EmptyDeviceList = scenarioStory(
   "No devices yet",
   emptyDevicesScenario,
-  "Subscribed user with no active devices yet. The route shows the empty-device list state and setup guidance.",
+  "Subscribed user awaiting first issuance — empty list + setup guidance.",
 );
 
-export const LimitReached = createDevicesStory(
+export const DeviceLimitReached = scenarioStory(
   "Device limit reached",
   limitReachedScenario,
-  "All device slots are used. The route shows the upgrade warning and existing devices.",
+  "Slots full — upgrade nudge with existing rows still visible.",
 );
 
-export const NoPlan = createDevicesStory(
+export const PlanRequired = scenarioStory(
   "Plan required",
   noPlanScenario,
-  "No active subscription. The route highlights the plan-required warning before any device actions.",
+  "No subscription — gating copy before add-device actions.",
 );
 
-export const Loading = createDevicesStory(
+export const Loading = scenarioStory(
   "Devices loading",
   loadingSessionScenario,
-  "Loading state while device, access, and summary data are resolving.",
+  "Skeleton state for list + summary while queries resolve.",
 );
 
-export const Error = createDevicesStory(
+export const LoadError = scenarioStory(
   "Could not load devices",
   failureScenario,
-  "Fallback error state when the Devices route cannot load.",
+  "Error screen and retry wiring.",
 );
+
+export const ViewportNarrow = scenarioStory(
+  "Viewport · narrow",
+  readyScenario,
+  "320px — list density and floating actions.",
+  VIEW_NARROW,
+);
+
+export const ViewportWide = scenarioStory(
+  "Viewport · wide",
+  readyScenario,
+  "Wide layout — cards and device table spacing.",
+  VIEW_WIDE,
+);
+
+export const InteractiveAddDeviceWizard: Story = {
+  name: "Interactive · add device wizard",
+  render: () => renderDevices(readyScenario),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const previewDocument = canvasElement.ownerDocument;
+    const addDeviceButton = await canvas.findByRole("button", { name: "Add new device" });
+    await userEvent.click(addDeviceButton);
+    await waitFor(() => {
+      expect(previewDocument.querySelector('[role="dialog"]')).not.toBeNull();
+      expect(previewDocument.querySelector('input[aria-label="Device name"]')).not.toBeNull();
+    });
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: "Opens wizard dialog and lands on the device name field (dialog + labelled input).",
+      },
+    },
+  },
+};

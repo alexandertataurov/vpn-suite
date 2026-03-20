@@ -26,6 +26,8 @@ vi.mock("@/hooks/useI18n", () => ({
         "settings.cancel_offer_price_body":
           "Your next renewal will be discounted if you keep your subscription active.",
         "settings.cancel_downgrade_hint": "Switch to a cheaper plan",
+        "settings.cancel_other_details_label": "Tell us more",
+        "settings.cancel_other_placeholder": "Details",
       };
 
       return copy[key] ?? key;
@@ -123,5 +125,29 @@ describe("SubscriptionCancellationModal", () => {
     );
 
     expect(screen.queryByText(/save 20%/i)).toBeNull();
+  });
+
+  it("shows optional details when Other is selected", () => {
+    const onFree = vi.fn();
+
+    render(
+      <SubscriptionCancellationModal
+        isOpen={true}
+        onClose={() => undefined}
+        cancelReason="other"
+        offers={undefined}
+        isCancelling={false}
+        onReasonSelect={() => undefined}
+        onPauseInstead={() => undefined}
+        onCancelAtPeriodEnd={() => undefined}
+        onCancelNow={() => undefined}
+        cancelFreeText=""
+        onCancelFreeTextChange={onFree}
+      />,
+    );
+
+    const field = screen.getByPlaceholderText("Details");
+    fireEvent.change(field, { target: { value: "Too slow in my region" } });
+    expect(onFree).toHaveBeenCalledWith("Too slow in my region");
   });
 });

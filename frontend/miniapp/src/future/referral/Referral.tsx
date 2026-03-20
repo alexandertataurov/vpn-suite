@@ -4,6 +4,7 @@ import {
   FallbackScreen,
   Skeleton,
   InlineAlert,
+  PageCardSection,
   PageScaffold,
   PageHeader,
   ReferralShareCard,
@@ -64,11 +65,27 @@ export function ReferralPage() {
           />
         </Stack>
       ) : null}
+      {model.statsData != null ? (
+        <PageCardSection title={t("referral.stats_section_title")} cardTone="blue">
+          <Stack gap="3">
+            <p className="referral-stat-line">{t("referral.stats_total", { count: model.totalReferrals })}</p>
+            <p className="referral-stat-line">{t("referral.stats_active", { count: model.activeReferrals })}</p>
+            <p className="referral-stat-line">{t("referral.stats_pending", { count: model.pendingRewards })}</p>
+            <p className="referral-stat-line">{t("referral.stats_earned_days", { count: model.earnedDays })}</p>
+            {model.nextBonusDays != null ? (
+              <p className="referral-stat-line">
+                {t("referral.stats_next_bonus", { count: model.nextBonusDays })}
+              </p>
+            ) : null}
+          </Stack>
+        </PageCardSection>
+      ) : null}
       <ReferralShareCard
         botUsername={model.botUsername}
         shareUrl={model.shareUrl}
         isOnline={model.isOnline}
         onCopy={model.copyToClipboard}
+        onNativeShare={() => void model.handleShare()}
       />
     </PageScaffold>
   );

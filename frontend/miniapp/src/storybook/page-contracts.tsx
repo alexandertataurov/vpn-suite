@@ -16,6 +16,7 @@ export type MockEndpoint =
   | "billingHistory"
   | "referralLink"
   | "referralStats"
+  | "supportFaq"
   | "subscriptionOffers"
   | "promoValidate"
   | "createInvoice"
@@ -661,6 +662,7 @@ function resolveEndpoint(url: string, method: string): MockEndpoint | null {
   if (method === "GET" && url.includes("/webapp/payments/history")) return "billingHistory";
   if (method === "GET" && url.includes("/webapp/referral/my-link")) return "referralLink";
   if (method === "GET" && url.includes("/webapp/referral/stats")) return "referralStats";
+  if (method === "GET" && url.includes("/webapp/support/faq")) return "supportFaq";
   if (method === "GET" && url.includes("/webapp/subscription/offers")) return "subscriptionOffers";
   if (method === "POST" && url.includes("/webapp/promo/validate")) return "promoValidate";
   if (method === "POST" && url.includes("/webapp/payments/create-invoice")) return "createInvoice";
@@ -696,6 +698,19 @@ function defaultResponse(endpoint: MockEndpoint): unknown {
       return referralLink;
     case "referralStats":
       return referralStatsActive;
+    case "supportFaq":
+      return {
+        items: [
+          {
+            title_key: "support.faq_item_connection_title",
+            body_key: "support.faq_item_connection_body",
+          },
+          {
+            title_key: "support.faq_item_install_title",
+            body_key: "support.faq_item_install_body",
+          },
+        ],
+      };
     case "subscriptionOffers":
       return subscriptionOffers;
     case "promoValidate":

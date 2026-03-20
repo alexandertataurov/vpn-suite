@@ -14,6 +14,8 @@ export interface SubscriptionCancellationModalProps {
   onPauseInstead: () => void;
   onCancelAtPeriodEnd: () => void;
   onCancelNow: () => void;
+  cancelFreeText?: string;
+  onCancelFreeTextChange?: (value: string) => void;
 }
 
 const CANCEL_REASON_OPTIONS: CancelReasonGroup[] = [
@@ -33,6 +35,8 @@ export function SubscriptionCancellationModal({
   onPauseInstead,
   onCancelAtPeriodEnd,
   onCancelNow,
+  cancelFreeText = "",
+  onCancelFreeTextChange,
 }: SubscriptionCancellationModalProps) {
   const { t } = useI18n();
   const hasDiscountOffer = Boolean(offers?.offer_discount) || (offers?.discount_percent ?? 0) > 0;
@@ -125,6 +129,24 @@ export function SubscriptionCancellationModal({
 
         {offers?.offer_downgrade && cancelReason === "price" ? (
           <HelperNote>{t("settings.cancel_downgrade_hint")}</HelperNote>
+        ) : null}
+
+        {hasSelectedReason && cancelReason === "other" ? (
+          <div className="field-group cancel-free-text-field">
+            <label className="field-label" htmlFor="cancel-free-text">
+              {t("settings.cancel_other_details_label")}
+            </label>
+            <textarea
+              id="cancel-free-text"
+              className="cancel-free-text-input"
+              rows={3}
+              value={cancelFreeText}
+              disabled={isCancelling}
+              autoComplete="off"
+              placeholder={t("settings.cancel_other_placeholder")}
+              onChange={(e) => onCancelFreeTextChange?.(e.target.value)}
+            />
+          </div>
         ) : null}
 
         <ListCard className="settings-list-card cancel-flow-actions-card">

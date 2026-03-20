@@ -98,8 +98,8 @@ export function usePlanPageModel() {
   const planMap = useMemo(() => new Map(plans.map((p) => [p.id, p])), [plans]);
   const heroPlan = primarySub ? planMap.get(primarySub.plan_id) : undefined;
   const tierPairs = useMemo(
-    () => buildTierPairs(plans, primarySub?.plan_id ?? null),
-    [plans, primarySub?.plan_id],
+    () => buildTierPairs(plans, primarySub?.plan_id ?? null, locale),
+    [plans, primarySub?.plan_id, locale],
   );
   const hasAnnualOptions = tierPairs.some((tier) => tier.annual != null);
   const currentTier = tierPairs.find((tier) => tier.isCurrent) ?? null;

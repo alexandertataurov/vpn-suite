@@ -38,19 +38,6 @@ export function SupportPage() {
   const { openLink } = useOpenLink();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
-  const faqItems = [
-    { title: t("support.faq_item_connection_title"), body: t("support.faq_item_connection_body") },
-    { title: t("support.faq_item_install_title"), body: t("support.faq_item_install_body") },
-    { title: t("support.faq_item_restore_title"), body: t("support.faq_item_restore_body") },
-    { title: t("support.faq_item_device_title"), body: t("support.faq_item_device_body") },
-    { title: t("support.faq_item_billing_title"), body: t("support.faq_item_billing_body") },
-    { title: t("support.faq_item_privacy_title"), body: t("support.faq_item_privacy_body") },
-    { title: t("support.faq_item_support_title"), body: t("support.faq_item_support_body") },
-    { title: t("support.faq_item_slow_title"), body: t("support.faq_item_slow_body") },
-    { title: t("support.faq_item_cancel_title"), body: t("support.faq_item_cancel_body") },
-    { title: t("support.faq_item_data_title"), body: t("support.faq_item_data_body") },
-  ];
-
   const openTelegramSupport = () => {
     if (supportHref) openLink(supportHref);
   };
@@ -187,7 +174,7 @@ export function SupportPage() {
           <SectionLabel label={t("support.faq_title")} />
           <p className="section-desc">{t("support.faq_description")}</p>
           <div className="faq-list">
-            {faqItems.map((item, index) => (
+            {model.faqItems.map((item, index) => (
               <FaqDisclosureItem
                 key={index}
                 question={item.title}

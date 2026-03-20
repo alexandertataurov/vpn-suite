@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { Route } from "react-router-dom";
 import { RestoreAccessPage } from "@/pages/RestoreAccess";
 import {
+  type MockScenario,
   loadingSessionScenario,
   loggedOutScenario,
   PageSandbox,
@@ -10,83 +11,94 @@ import {
   restoreScenario,
 } from "@/storybook/page-contracts";
 
-const meta: Meta = {
+const DOC_BODY = [
+  "**Restore access** (`/restore-access`): grace / expired subscription recovery, support links, and sticky primary actions.",
+  "`restoreScenario` aliases the expired mock from contracts — keep in sync when backend shapes change.",
+  "Includes session edge cases (loading, logged-out) for parity with `RestoreAccessPage` guards.",
+].join("\n\n");
+
+const VIEW_NARROW = { viewport: { defaultViewport: "iphoneSE" as const } };
+const VIEW_WIDE = { viewport: { defaultViewport: "adminDesktop" as const } };
+
+const meta = {
   title: "Pages/Contracts/RestoreAccess",
   tags: ["autodocs"],
   parameters: {
     ...pageStoryParameters,
     docs: {
       description: {
-        component: "Restore Access route used when a subscription has expired or entered grace. Covers restorable, non-restorable, loading, and session-missing states.",
+        component: DOC_BODY,
       },
     },
   },
-};
+} satisfies Meta;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Restorable: Story = {
-  name: "Restore access",
-  render: () => (
-    <PageSandbox scenario={restoreScenario} initialEntries={["/restore-access"]}>
+function renderRestore(scenario: MockScenario) {
+  return (
+    <PageSandbox scenario={scenario} initialEntries={["/restore-access"]}>
       <Route path="/restore-access" element={<RestoreAccessPage />} />
     </PageSandbox>
-  ),
-  parameters: {
-    docs: {
-      description: {
-        story: "Expired or grace-period subscription with the restore action available in the sticky bottom bar.",
-      },
-    },
-  },
-};
+  );
+}
 
-export const NotRestorable: Story = {
-  name: "No expired subscription",
-  render: () => (
-    <PageSandbox scenario={readyScenario} initialEntries={["/restore-access"]}>
-      <Route path="/restore-access" element={<RestoreAccessPage />} />
-    </PageSandbox>
-  ),
-  parameters: {
-    docs: {
-      description: {
-        story: "Signed-in user without an expired/grace subscription. Inline support and devices actions are shown instead.",
+function scenarioStory(
+  name: string,
+  scenario: MockScenario,
+  storyDescription: string,
+  extra?: Story["parameters"],
+): Story {
+  return {
+    name,
+    render: () => renderRestore(scenario),
+    parameters: {
+      ...extra,
+      docs: {
+        description: {
+          story: storyDescription,
+        },
       },
     },
-  },
-};
+  };
+}
 
-export const LoadingSession: Story = {
-  name: "Session loading",
-  render: () => (
-    <PageSandbox scenario={loadingSessionScenario} initialEntries={["/restore-access"]}>
-      <Route path="/restore-access" element={<RestoreAccessPage />} />
-    </PageSandbox>
-  ),
-  parameters: {
-    docs: {
-      description: {
-        story: "Route shell visible while the session is still loading before restore eligibility is known.",
-      },
-    },
-  },
-};
+export const RestorableSubscription = scenarioStory(
+  "Restore access (grace / expired)",
+  restoreScenario,
+  "Eligible renewal: hero, benefits recap, and sticky **Restore** CTA.",
+);
 
-export const SessionMissing: Story = {
-  name: "Session missing",
-  render: () => (
-    <PageSandbox scenario={loggedOutScenario} initialEntries={["/restore-access"]}>
-      <Route path="/restore-access" element={<RestoreAccessPage />} />
-    </PageSandbox>
-  ),
-  parameters: {
-    docs: {
-      description: {
-        story: "No session token. The route resolves to the same session-missing screen as the app.",
-      },
-    },
-  },
-};
+export const NotRestorableActiveUser = scenarioStory(
+  "No expired subscription",
+  readyScenario,
+  "Active account landed on route — inline guidance toward support or devices instead of paywall restore.",
+);
+
+export const SessionLoading = scenarioStory(
+  "Session loading",
+  loadingSessionScenario,
+  "Shell visible while eligibility and profile are still resolving.",
+);
+
+export const SessionMissing = scenarioStory(
+  "Session missing",
+  loggedOutScenario,
+  "Token absent — shared session-missing treatment.",
+);
+
+export const ViewportNarrow = scenarioStory(
+  "Viewport · narrow",
+  restoreScenario,
+  "320px sticky bar and typography checks.",
+  VIEW_NARROW,
+);
+
+export const ViewportWide = scenarioStory(
+  "Viewport · wide",
+  restoreScenario,
+  "Wide frame — two-column content and bottom bar width.",
+  VIEW_WIDE,
+);
