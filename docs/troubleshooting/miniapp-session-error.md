@@ -39,8 +39,8 @@ So **any** non-timeout failure of POST `/webapp/auth` (503, 401, network, CORS, 
    - Config field is `telegram_bot_token` in `backend/app/core/config.py` (env: `TELEGRAM_BOT_TOKEN`).
 
 2. **API reachability**
-   - Miniapp uses `getBaseUrl()` → `VITE_API_BASE_URL` if set at build time, else `${window.location.origin}/api/v1`.
-   - If the miniapp is served from a different origin than the API, build with correct `VITE_API_BASE_URL` (e.g. `https://vpn.vega.llc/api/v1`).
+   - Miniapp resolves the API root via `getApiBaseUrl()` in `frontend/miniapp/src/config/env.ts` (`VITE_API_BASE_URL` if set, else `${window.location.origin}/api/v1`). `getBaseUrl()` in the API client layer is the same value.
+   - If the miniapp is served from a different origin than the API, build with `VITE_API_BASE_URL` including **`/api/v1`** (e.g. `https://vpn.example.com/api/v1`).
    - Check browser DevTools → Network: does POST to `/api/v1/webapp/auth` hit the right host? Status code? Response body?
 
 3. **CORS**

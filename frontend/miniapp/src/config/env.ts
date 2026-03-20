@@ -10,8 +10,14 @@ function readEnv(key: string): string | undefined {
 }
 
 /**
- * Control-plane API root (e.g. `https://host/api/v1` or `/api/v1` in tests).
- * Prefer `VITE_API_BASE_URL` when the mini app is hosted on a different origin than the API.
+ * Control-plane API root. Must include the `/api/v1` suffix (e.g. `https://host/api/v1`).
+ *
+ * - If `VITE_API_BASE_URL` is set: used as-is (trailing slash stripped). Wrong suffix
+ *   (e.g. origin only) breaks `/webapp/*` and `/log/*` paths.
+ * - In the browser with no env var: `${window.location.origin}/api/v1` — same origin as the
+ *   page; use `VITE_API_BASE_URL` when the API lives on another host.
+ * - Local `pnpm dev` (miniapp): Vite proxies `/api` → `localhost:8000`, so same-origin
+ *   `/api/v1/...` reaches the API without setting this var.
  */
 export function getApiBaseUrl(): string {
   const fromEnv = readEnv("VITE_API_BASE_URL");

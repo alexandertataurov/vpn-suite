@@ -98,6 +98,8 @@
 
 Режим: frontend локально, API = beta VPS.
 
+### Admin (`dev:admin`, порт 5174)
+
 - [ ] `VITE_API_BASE_URL=https://BETA_DOMAIN/api/v1` задан
 - [ ] `cd frontend && VITE_API_BASE_URL=... pnpm dev:admin` — стартует
 - [ ] CORS на beta: `CORS_ALLOW_ORIGINS` включает `http://localhost:5174`
@@ -106,6 +108,13 @@
 - [ ] Нет CORS errors в console
 - [ ] Контракты: поля API совпадают с ожиданиями UI (нет 400/422 из-за схемы)
 - [ ] UI корректно отображает staging data
+
+### Telegram Mini App (`frontend/miniapp`, порт 5175, `base: /webapp/`)
+
+- [ ] Тот же `VITE_API_BASE_URL=https://BETA_DOMAIN/api/v1`, если грузишь Vite с другого origin, чем API
+- [ ] `cd frontend/miniapp && VITE_API_BASE_URL=... pnpm dev` — стартует; без переменной dev использует proxy `/api` → `localhost:8000`
+- [ ] CORS: `CORS_ALLOW_ORIGINS` включает `http://localhost:5175` (и прод-домен WebApp, если отличается)
+- [ ] В Network виден `POST /api/v1/webapp/auth` на ожидаемый хост
 
 ---
 

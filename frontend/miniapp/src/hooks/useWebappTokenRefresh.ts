@@ -12,7 +12,7 @@ export interface UseWebappTokenRefreshOptions {
 
 /**
  * Proactively refresh webapp session before expiry. Runs when we have token and initData.
- * Uses postUnauthenticated (no Bearer) so refresh works even near expiry.
+ * Uses {@link postAuth} (unauthenticated POST to `/webapp/auth`) so refresh works near expiry.
  */
 export function useWebappTokenRefresh(
   initData: string,
