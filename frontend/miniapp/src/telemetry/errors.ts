@@ -32,6 +32,25 @@ function getFrontendErrorUrl(): string {
 
 async function postFrontendError(payload: FrontendErrorPayload): Promise<void> {
   try {
+    // The backend protects `/api/v1/*` with a strict per-IP rate limiter.
+    // Frontend error loops can otherwise spam this telemetry endpoint and trigger
+    // 429s that degrade all API traffic for the same client IP.
+    const now = Date.now();
+    const throttleKey = `${payload.route ?? "unknown"}|${payload.message}`;
+    const lastByKey = lastPostAtByKey.get(throttleKey);
+    if (lastByKey != null && now - lastByKey < POST_KEY_COOLDOWN_MS) return;
+
+    // Global (per tab) cap to avoid unbounded bursts when error messages vary.
+    postTimestamps = postTimestamps.filter((t) => now - t < POST_WINDOW_MS);
+    if (postTimestamps.length >= POST_CAP_PER_WINDOW) return;
+
+    postTimestamps.push(now);
+    lastPostAtByKey.set(throttleKey, now);
+    if (lastPostAtByKey.size > POST_KEY_MAX) {
+      // Keep memory bounded in long-running sessions.
+      lastPostAtByKey.clear();
+    }
+
     await fetch(getFrontendErrorUrl(), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -42,6 +61,14 @@ async function postFrontendError(payload: FrontendErrorPayload): Promise<void> {
     /* ignore */
   }
 }
+
+const POST_WINDOW_MS = 60_000;
+const POST_CAP_PER_WINDOW = 10;
+const POST_KEY_COOLDOWN_MS = 10_000;
+const POST_KEY_MAX = 200;
+
+let postTimestamps: number[] = [];
+const lastPostAtByKey = new Map<string, number>();
 
 /**
  * Single entry for error reporting. Normalizes, then forwards to backend, PostHog, and Sentry.
