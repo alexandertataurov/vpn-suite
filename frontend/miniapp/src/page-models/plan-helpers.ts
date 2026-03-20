@@ -32,7 +32,8 @@ export interface TierPair {
   monthly?: PlanItem;
   annual?: PlanItem;
   isCurrent: boolean;
-  features: TierFeature[];
+  /** @deprecated Feature rows are derived in the plan grid from the selected billing period + plan. */
+  features?: TierFeature[];
 }
 
 export function clamp(value: number, min: number, max: number): number {
@@ -128,7 +129,6 @@ export function buildTierPairs(
       monthly: undefined,
       annual: undefined,
       isCurrent: false,
-      features: [],
     };
 
     if (plan.duration_days > YEARLY_DURATION_THRESHOLD) {
@@ -147,10 +147,6 @@ export function buildTierPairs(
     const order = plan.display_order ?? 999_999;
     const prev = tierMinDisplayOrder.get(key);
     tierMinDisplayOrder.set(key, prev == null ? order : Math.min(prev, order));
-  }
-
-  for (const pair of grouped.values()) {
-    pair.features = featuresFromPlan(pair.annual ?? pair.monthly, locale);
   }
 
   return Array.from(grouped.values()).sort((a, b) => {

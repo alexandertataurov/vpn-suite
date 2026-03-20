@@ -41,6 +41,7 @@ vi.mock("@/page-models", () => ({
       backLabel: "Back",
     },
     currentStepAltLabel: "No, choose plan",
+    faqOffline: false,
     nextStep: vi.fn(),
     previousStep: undefined,
   }),

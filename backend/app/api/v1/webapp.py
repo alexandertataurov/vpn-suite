@@ -1362,6 +1362,7 @@ async def webapp_list_plans(request: Request, db: AsyncSession = Depends(get_db)
 
 
 # FAQ entries are i18n keys resolved by the Mini App; list order is API-owned.
+# Keep in sync with `frontend/miniapp/src/page-models/useSupportPageModel.ts` → `FALLBACK_SUPPORT_FAQ_KEYS`.
 _WEBAPP_SUPPORT_FAQ_ITEMS: list[dict[str, str]] = [
     {"title_key": "support.faq_item_connection_title", "body_key": "support.faq_item_connection_body"},
     {"title_key": "support.faq_item_install_title", "body_key": "support.faq_item_install_body"},

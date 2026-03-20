@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { StorySection, StoryShowcase, StoryStack } from "@/design-system";
+import type { PlanItem } from "@/api";
 import { PlanOptionsSection } from "./PlanOptionsSection";
 
 const meta: Meta<typeof PlanOptionsSection> = {
@@ -20,30 +21,58 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+const starterMonthly: PlanItem = {
+  id: "starter_monthly",
+  name: "Starter",
+  duration_days: 30,
+  device_limit: 1,
+  price_amount: 300,
+  price_currency: "XTR",
+};
+
+const starterAnnual: PlanItem = {
+  id: "starter_annual",
+  name: "Starter",
+  duration_days: 365,
+  device_limit: 2,
+  price_amount: 2400,
+  price_currency: "XTR",
+};
+
+const proMonthly: PlanItem = {
+  id: "pro_monthly",
+  name: "Pro",
+  duration_days: 30,
+  device_limit: 5,
+  price_amount: 500,
+  price_currency: "XTR",
+};
+
+const proAnnual: PlanItem = {
+  id: "pro_annual",
+  name: "Pro",
+  duration_days: 365,
+  device_limit: 10,
+  price_amount: 4800,
+  price_currency: "XTR",
+};
+
 const tierPairs = [
   {
     key: "starter",
     label: "Starter",
     description: "For one device",
     isCurrent: false,
-    monthly: { id: "starter_monthly", duration_days: 30, price_amount: 300 },
-    annual: { id: "starter_annual", duration_days: 365, price_amount: 2400 },
-    features: [
-      { kind: "device_limit", value: 1 },
-      { kind: "protocol", value: "amneziawg" },
-    ],
+    monthly: starterMonthly,
+    annual: starterAnnual,
   },
   {
     key: "pro",
     label: "Pro",
     description: "For all your devices",
     isCurrent: true,
-    monthly: { id: "pro_monthly", duration_days: 30, price_amount: 500 },
-    annual: { id: "pro_annual", duration_days: 365, price_amount: 4800 },
-    features: [
-      { kind: "device_limit", value: 5 },
-      { kind: "support", value: "priority" },
-    ],
+    monthly: proMonthly,
+    annual: proAnnual,
   },
 ];
 

@@ -1,22 +1,18 @@
 import { BillingPeriodToggle, Button, EmptyStateBlock, PageSection, StarsAmount, StatusChip } from "@/design-system";
 import { useI18n } from "@/hooks";
-import { tierFeatureToRow, type BillingPeriod } from "@/page-models";
+import { featuresFromPlan, tierFeatureToRow, type BillingPeriod } from "@/page-models";
 import type { TierFeature } from "@/page-models/plan-helpers";
-
-interface TierPriceOption {
-  id: string;
-  duration_days: number;
-  price_amount: number;
-}
+import type { PlanItem } from "@/api";
 
 interface TierPair {
   key: string;
   label: string;
   description?: string | null;
   isCurrent: boolean;
-  monthly?: TierPriceOption | null;
-  annual?: TierPriceOption | null;
-  features: TierFeature[];
+  monthly?: PlanItem | null;
+  annual?: PlanItem | null;
+  /** Ignored for display; bullets come from `featuresFromPlan` for the active billing period. */
+  features?: TierFeature[];
 }
 
 export interface PlanOptionsSectionProps {
@@ -52,7 +48,7 @@ export function PlanOptionsSection({
   onTierFocus,
   onTierSelect,
 }: PlanOptionsSectionProps) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   return (
     <PageSection
@@ -88,6 +84,7 @@ export function PlanOptionsSection({
         <div id="availablePlans" className="modern-plan-grid">
           {visibleTierPairs.map((tier) => {
             const displayed = billingPeriod === "annual" ? (tier.annual ?? tier.monthly) : (tier.monthly ?? tier.annual);
+            const tierFeatures = featuresFromPlan(displayed ?? undefined, locale);
             const currentForPeriod = !!displayed && displayed.id === primaryPlanId;
             const isCurrentAndNeedsRenewal = currentForPeriod && (subscriptionState === "expiring" || subscriptionState === "expired");
             const showRenewCta = isCurrentAndNeedsRenewal && showRenewOrUpgradeCta;
@@ -125,7 +122,7 @@ export function PlanOptionsSection({
                 </div>
 
                 <ul className="modern-plan-features">
-                  {tier.features.map((feature) => {
+                  {tierFeatures.map((feature) => {
                     const row = tierFeatureToRow(feature);
                     const text = row.textPlain ?? t(row.text as string);
                     const value =

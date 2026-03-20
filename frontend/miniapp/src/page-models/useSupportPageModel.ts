@@ -8,6 +8,7 @@ import { getActiveSubscription } from "./helpers";
 import { useI18n } from "@/hooks";
 import { webappQueryKeys } from "@/lib";
 
+/** Keep keys and order aligned with `backend/app/api/v1/webapp.py` → `_WEBAPP_SUPPORT_FAQ_ITEMS`. */
 const FALLBACK_SUPPORT_FAQ_KEYS: ReadonlyArray<{ title_key: string; body_key: string }> = [
   { title_key: "support.faq_item_connection_title", body_key: "support.faq_item_connection_body" },
   { title_key: "support.faq_item_install_title", body_key: "support.faq_item_install_body" },
@@ -117,6 +118,8 @@ export function useSupportPageModel() {
     pageState,
     hero,
     faqItems,
+    /** True when `/webapp/support/faq` failed; UI still shows `faqItems` from fallback keys. */
+    faqOffline: hasToken && faqQuery.isError,
     currentStep: {
       title: t(TROUBLESHOOTER_STEPS[step]?.titleKey ?? TROUBLESHOOTER_STEPS[0].titleKey),
       body: t(TROUBLESHOOTER_STEPS[step]?.bodyKey ?? TROUBLESHOOTER_STEPS[0].bodyKey),

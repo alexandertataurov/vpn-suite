@@ -782,6 +782,9 @@ const messages: MessageTable = {
     "support.recovery_devices_description": "Issue, replace, or revoke device configs.",
     "support.faq_title": "FAQ",
     "support.faq_description": "Open one answer at a time.",
+    "support.faq_offline_title": "FAQ list from cache",
+    "support.faq_offline_message":
+      "We could not refresh the FAQ from the server. Showing saved topics — pull to retry or open support if something is missing.",
     "support.faq_item_connection_title": "VPN not connecting",
     "support.faq_item_connection_body":
       "Start with Plan and confirm that your subscription is active. Then open Devices and make sure the current device still exists and the config was imported into AmneziaVPN without edits. If the app still does not connect, revoke that device, create a fresh config, import it again, and retry. If your access expired or the app shows no active entitlement, open Restore access before contacting support.",
@@ -1808,6 +1811,9 @@ const messages: MessageTable = {
     "support.recovery_devices_description": "Создание, замена и отзыв конфигов устройств.",
     "support.faq_title": "Частые вопросы",
     "support.faq_description": "Открывайте по одному ответу.",
+    "support.faq_offline_title": "FAQ из кэша",
+    "support.faq_offline_message":
+      "Не удалось обновить FAQ с сервера. Показываем сохранённые темы — обновите страницу или откройте поддержку, если чего-то не хватает.",
     "support.faq_item_connection_title": "VPN не подключается",
     "support.faq_item_connection_body":
       "Сначала откройте «Тариф» и убедитесь, что подписка активна. Затем перейдите в «Устройства» и проверьте, что нужное устройство существует, а конфиг был импортирован в AmneziaVPN без изменений. Если соединение всё равно не устанавливается, отзовите это устройство, создайте новый конфиг, импортируйте его заново и повторите попытку. Если доступ истёк или приложение показывает отсутствие активного доступа, сначала откройте «Восстановить доступ».",

@@ -7,7 +7,11 @@ import {
   emptyDevicesScenario,
   expiredScenario,
   expiringNoDevicesScenario,
+  expiringSoonScenario,
+  limitReachedScenario,
   loadingSessionScenario,
+  loggedOutScenario,
+  longNameScenario,
   noPlanScenario,
   PageSandbox,
   pageStoryParameters,
@@ -15,10 +19,31 @@ import {
   trialScenario,
 } from "@/storybook/page-contracts";
 
+/** Access payload aligned with `limitReachedScenario` me session (3/3 devices). */
+const accessDeviceLimitFull: Record<string, unknown> = {
+  status: "device_limit",
+  has_plan: true,
+  devices_used: 3,
+  device_limit: 3,
+  config_ready: true,
+  config_id: "dev-1",
+  expires_at: "2026-03-24T12:00:00Z",
+  amnezia_vpn_key: "vpn://storybook-amnezia-key",
+};
+
+const deviceLimitHomeScenario: MockScenario = {
+  ...limitReachedScenario,
+  responses: {
+    ...limitReachedScenario.responses,
+    access: accessDeviceLimitFull,
+  },
+};
+
 const DOC_BODY = [
-  "Production **Home** route (`/`) inside `PageSandbox`: React Query, bootstrap context, and MSW-style mock responses match the miniapp shell.",
-  "Use these stories for visual regression, copy review, and accessibility checks across subscription and device states.",
-  "Scenarios are defined in `@/storybook/page-contracts` so API shapes stay aligned with shared `webapp` types.",
+  "**Audience:** design and QA reviewing the production **Home** route (`/`) in isolation.",
+  "**What is mocked:** `window.fetch` for webapp endpoints (`me`, `access`, `plans`, …), JWT via `setWebappToken`, plus `PageSandbox` providers matching the miniapp shell.",
+  "**Scenarios:** named presets in [`page-contracts.tsx`](../../storybook/page-contracts.tsx) (`readyScenario`, `trialScenario`, `noPlanScenario`, `emptyDevicesScenario`, `expiringNoDevicesScenario`, `expiredScenario`, `loadingSessionScenario`, `accessErrorScenario`, `loggedOutScenario`, `expiringSoonScenario`, `longNameScenario`, `limitReachedScenario` + local `deviceLimitHomeScenario` for coherent `access`).",
+  "Default viewport is **iphone14** via `pageStoryParameters`; stories prefixed **Viewport ·** override to narrow (`iphoneSE`) or wide (`adminDesktop`).",
 ].join("\n\n");
 
 const VIEW_NARROW = { viewport: { defaultViewport: "iphoneSE" as const } };
@@ -120,7 +145,31 @@ export const Loading = scenarioStory(
 export const LoadError = scenarioStory(
   "Could not load home",
   accessErrorScenario,
-  "Fallback when session bootstrap fails; exercise retry and error copy.",
+  "Fallback when the **access** request fails; exercise retry and error copy.",
+);
+
+export const SessionMissing = scenarioStory(
+  "Session missing",
+  loggedOutScenario,
+  "No webapp token — same **SessionMissing** branch as production.",
+);
+
+export const RenewalWindowNonTrial = scenarioStory(
+  "Renewal window (non-trial)",
+  expiringSoonScenario,
+  "Active (non-trial) subscription with **valid_until** inside the renewal-warning window — pill, banner, and subscription row copy.",
+);
+
+export const LongDisplayName = scenarioStory(
+  "Long display name",
+  longNameScenario,
+  "**ModernHeader** avatar and name truncation with an exaggerated `display_name` / email from `me`.",
+);
+
+export const DeviceSlotLimit = scenarioStory(
+  "Device slot limit",
+  deviceLimitHomeScenario,
+  "**access.status** `device_limit` with `me` at max devices — full badge, device-limit copy, and manage-devices CTA.",
 );
 
 /** Responsive: primary happy path at key widths. */

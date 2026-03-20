@@ -91,6 +91,13 @@ export function SupportPage() {
           backAriaLabel={t("common.back_aria")}
         />
         <Stack gap="2">
+          {model.faqOffline ? (
+            <InlineAlert
+              variant="warning"
+              label={t("support.faq_offline_title")}
+              message={t("support.faq_offline_message")}
+            />
+          ) : null}
           {/* Contact Support */}
           <SectionLabel label={t("support.contact_card_title")} />
           <CardRow className="support-contact-card">
