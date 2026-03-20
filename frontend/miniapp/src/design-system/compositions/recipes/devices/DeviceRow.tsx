@@ -46,12 +46,13 @@ export function DeviceRow({
   isConfirmingId,
   isReplacingId,
 }: DeviceRowProps) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const dateLocale = locale === "ru" ? "ru-RU" : "en-US";
   const status = normalizeDeviceStatus(device.status);
   const metaParts: string[] = [];
 
   if (device.last_seen_handshake_at) {
-    metaParts.push(t("devices.meta_last_activity", { date: formatDate(device.last_seen_handshake_at, "en-US") }));
+    metaParts.push(t("devices.meta_last_activity", { date: formatDate(device.last_seen_handshake_at, dateLocale) }));
   }
 
   metaParts.push(t("devices.meta_issued", { date: formatIssuedAt(device.issued_at) }));

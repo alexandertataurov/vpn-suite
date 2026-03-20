@@ -26,7 +26,7 @@ export function DeviceHeroCard({
     },
     {
       label: t("devices.hero_stat_setup"),
-      value: setupPending > 0 ? t("devices.hero_status_pending", { count: setupPending }) : t("devices.hero_setup_done"),
+      value: setupPending > 0 ? String(setupPending) : t("devices.hero_setup_done"),
       tone: setupPending > 0 ? "expiring" : "default",
     },
     {

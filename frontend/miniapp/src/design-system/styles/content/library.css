@@ -1763,18 +1763,10 @@
   border-color: color-mix(in oklch, var(--color-border) 82%, var(--color-text) 18%);
 }
 
-.plan-billing-page .plan-billing-page__period-toggle .seg-btn {
-  min-width: 78px;
-  padding: 6px 10px;
-  border-radius: 8px;
-  font-size: var(--typo-meta-size);
-  letter-spacing: 0.04em;
-}
-
-.plan-billing-page .plan-billing-page__period-toggle .seg-btn.on {
-  background: color-mix(in oklch, var(--color-surface) 88%, var(--color-surface-2) 12%);
-  border-color: color-mix(in oklch, var(--color-border-strong) 74%, var(--blue-b) 26%);
-  box-shadow: none;
+/* Period toggle uses BillingPeriodToggle (seg-track / seg-option). See BillingPeriodToggle.css. */
+.plan-billing-page .plan-billing-page__period-toggle .seg-track {
+  width: 100%;
+  max-width: 100%;
 }
 
 .plan-billing-page__history-actions {
@@ -1783,11 +1775,11 @@
   margin-top: 2px;
 }
 
-.plan-billing-page .billing-history-list-card .settings-action-row {
+.plan-billing-page .billing-history-list-card .row-item {
   min-height: 58px;
 }
 
-.plan-billing-page .billing-history-list-card .settings-action-row__value {
+.plan-billing-page .billing-history-list-card .settings-action-value {
   font-size: var(--typo-body-sm-size);
 }
 
@@ -1879,7 +1871,7 @@
 .checkout-page .state-alert-message,
 .plan-billing-page .page-placeholder-message,
 .plan-billing-page .billing-history-empty,
-.plan-billing-page .list-row .lr-sub {
+.plan-billing-page .billing-history-list-card .row-item .ri-sub {
   max-width: 34ch;
 }
 

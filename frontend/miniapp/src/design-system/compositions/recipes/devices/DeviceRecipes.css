@@ -209,3 +209,10 @@
     font-size: var(--font-size-xs);
   }
 }
+
+/* Storybook: DeviceRowActions showcase */
+.story-device-row-actions {
+  display: flex;
+  justify-content: flex-end;
+  min-width: 120px;
+}

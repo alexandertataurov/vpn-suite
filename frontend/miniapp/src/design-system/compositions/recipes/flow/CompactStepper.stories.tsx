@@ -48,13 +48,20 @@ export const Default: Story = {
 
 export const Variants: Story = {
   render: () => (
-    <StorySection title="Variants" description="All-complete and mixed progress states.">
+    <StorySection title="Variants" description="All-complete vs default three-step flow.">
       <StoryShowcase>
         <CompactStepper
           items={[
-            { id: "1", label: "Step 1", state: "complete" },
-            { id: "2", label: "Step 2", state: "complete" },
-            { id: "3", label: "Step 3", state: "current" },
+            { id: "a1", label: "Step 1", state: "complete" },
+            { id: "a2", label: "Step 2", state: "complete" },
+            { id: "a3", label: "Step 3", state: "complete" },
+          ]}
+        />
+        <CompactStepper
+          items={[
+            { id: "b1", label: "Check access", state: "complete" },
+            { id: "b2", label: "Verify device", description: "In progress", state: "current" },
+            { id: "b3", label: "Refresh config", state: "upcoming" },
           ]}
         />
       </StoryShowcase>
