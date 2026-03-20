@@ -4,8 +4,8 @@
   position: fixed;
   inset: 0;
   background: var(--modal-overlay);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(var(--blur-sm));
+  -webkit-backdrop-filter: blur(var(--blur-sm));
   z-index: var(--z-modal);
   display: flex;
   align-items: center;
@@ -26,8 +26,8 @@
 
 .modal {
   background: var(--modal-bg);
-  border: 1px solid var(--modal-border);
-  border-radius: 14px;
+  border: var(--spacing-px) solid var(--modal-border);
+  border-radius: var(--r);
   box-shadow: var(--modal-shadow);
   width: 100%;
   max-width: var(--bp-sm);
@@ -61,7 +61,7 @@
   justify-content: space-between;
   gap: var(--spacing-3);
   padding: var(--miniapp-hero-padding) var(--miniapp-hero-padding) var(--miniapp-data-cell-padding);
-  border-bottom: 1px solid var(--modal-header-border);
+  border-bottom: var(--spacing-px) solid var(--modal-header-border);
   flex-shrink: 0;
 }
 
@@ -98,9 +98,9 @@
 
 /* ── Close button ── */
 .modal-close {
-  width: 32px;
-  height: 32px;
-  min-width: 32px;
+  width: var(--spacing-8);
+  height: var(--spacing-8);
+  min-width: var(--spacing-8);
   min-height: unset;
   border-radius: 50%;
   border: none;
@@ -110,10 +110,12 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  margin-top: -4px;
-  margin-right: -4px;
+  margin-top: calc(-1 * var(--spacing-1));
+  margin-right: calc(-1 * var(--spacing-1));
   flex-shrink: 0;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition:
+    background var(--duration-fast) ease,
+    color var(--duration-fast) ease;
   padding: 0;
 }
 
@@ -127,13 +129,13 @@
 }
 
 .modal-close:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
+  outline: var(--spacing-0-5) solid var(--color-accent);
+  outline-offset: var(--spacing-0-5);
 }
 
 .modal-close svg {
-  width: 14px;
-  height: 14px;
+  width: var(--font-size-md);
+  height: var(--font-size-md);
   pointer-events: none;
 }
 
@@ -154,12 +156,12 @@
 }
 
 .modal-content::-webkit-scrollbar {
-  width: 4px;
+  width: var(--spacing-1);
 }
 
 .modal-content::-webkit-scrollbar-thumb {
   background: var(--modal-border);
-  border-radius: 2px;
+  border-radius: var(--spacing-0-5);
 }
 
 .modal-content p {
@@ -182,7 +184,7 @@
   justify-content: flex-end;
   gap: var(--spacing-2);
   padding: var(--spacing-3) var(--miniapp-hero-padding) var(--miniapp-hero-padding);
-  border-top: 1px solid var(--modal-footer-border);
+  border-top: var(--spacing-px) solid var(--modal-footer-border);
   flex-shrink: 0;
 }
 
@@ -212,7 +214,7 @@
     max-width: 100%;
     width: 100%;
     max-height: 92vh;
-    border-radius: 14px 14px 0 0;
+    border-radius: var(--r) var(--r) 0 0;
     animation: modal-in-mobile 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
@@ -250,6 +252,6 @@
   }
 
   .modal {
-    border-radius: 14px;
+    border-radius: var(--r);
   }
 }

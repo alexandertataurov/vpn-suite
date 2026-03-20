@@ -1,12 +1,12 @@
 .row-item {
   display: flex;
   align-items: center;
-  gap: 13px;
-  padding: 13px 16px;
+  gap: var(--miniapp-grid-gap, var(--spacing-3));
+  padding: var(--amnezia-row-pad-v, var(--spacing-3)) var(--amnezia-row-pad-h, var(--space-md));
   background: var(--row-bg, var(--color-surface));
-  border-bottom: 1px solid var(--row-divider, var(--color-border-subtle));
+  border-bottom: var(--border-width-hairline) solid var(--row-divider, var(--color-border-subtle));
   cursor: pointer;
-  transition: background 0.12s ease;
+  transition: background var(--duration-fast, 150ms) var(--ease-standard, ease);
   box-sizing: border-box;
   width: 100%;
   -webkit-tap-highlight-color: transparent;
@@ -25,19 +25,19 @@
 .row-item:active {
   background: var(--row-active-bg, var(--color-surface-2));
 }
+/* Match .btn / DisclosureItem: ring only, no fill shift on focus */
 .row-item:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
-  background: var(--row-hover-bg, var(--color-surface-2));
 }
 
 .ri-icon {
-  width: 36px;
-  height: 36px;
-  min-width: 36px;
-  border-radius: var(--r-sm, 10px);
+  width: var(--height-btn-md, 36px);
+  height: var(--height-btn-md, 36px);
+  min-width: var(--height-btn-md, 36px);
+  border-radius: var(--radius-md, var(--r-sm, 10px));
   background: var(--row-icon-bg, var(--color-surface-2));
-  border: 1px solid var(--row-icon-border, var(--color-border-subtle));
+  border: var(--border-width-hairline) solid var(--row-icon-border, var(--color-border-subtle));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -98,16 +98,18 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 0;
+  align-items: stretch;
+  gap: var(--space-xs);
+  justify-content: center;
 }
 
 .ri-label {
   font-family: var(--font-sans);
-  font-size: var(--amnezia-row-label, var(--font-size-sm));
+  font-size: var(--amnezia-row-label, var(--text-small, var(--font-size-sm)));
   font-weight: var(--font-weight-medium);
   color: var(--color-text);
-  letter-spacing: -0.2px;
-  line-height: 1.2;
+  letter-spacing: var(--letter-spacing-tight, -0.025em);
+  line-height: var(--line-height-title, 1.2);
   opacity: 1 !important;
   white-space: nowrap;
   overflow: hidden;
@@ -120,11 +122,10 @@
 
 .ri-sub {
   font-family: var(--font-sans);
-  font-size: var(--amnezia-row-sub, var(--font-size-sm));
+  font-size: var(--amnezia-row-sub, var(--text-meta, var(--font-size-sm)));
   font-weight: var(--font-weight-normal);
   color: var(--color-text-muted);
-  line-height: 1.4;
-  margin-top: var(--spacing-0-5);
+  line-height: var(--line-height-body, 1.4);
   white-space: normal;
   display: -webkit-box;
   -webkit-line-clamp: 1;
@@ -135,7 +136,7 @@
 .ri-right {
   display: flex;
   align-items: center;
-  gap: var(--spacing-2);
+  gap: var(--space-sm, var(--spacing-2));
   max-width: 40%;
   flex-shrink: 0;
 }
@@ -153,10 +154,10 @@
 
 .card-row {
   background: var(--card-row-bg, var(--color-surface));
-  border: 1px solid var(--card-row-border, var(--color-border));
-  border-radius: 14px;
+  border: var(--border-width-hairline) solid var(--card-row-border, var(--color-border));
+  border-radius: var(--radius-lg, 14px);
   overflow: hidden;
-  margin-bottom: var(--spacing-2);
+  margin-bottom: var(--space-sm, var(--spacing-2));
   width: 100%;
   box-sizing: border-box;
 }
@@ -170,8 +171,8 @@
 }
 
 .card-row-empty {
-  padding: var(--spacing-5) var(--spacing-4);
-  font-size: var(--typo-body-sm-size, var(--font-size-sm));
+  padding: var(--space-card, var(--spacing-5)) var(--space-md, var(--spacing-4));
+  font-size: var(--typo-body-sm-size, var(--text-small, var(--font-size-sm)));
   color: var(--color-text-muted);
   text-align: center;
 }
@@ -186,13 +187,10 @@
   border: none;
 }
 .ri-skeleton-icon .ri-skeleton-block {
-  border-radius: 10px;
-}
-.ri-skeleton-sub {
-  margin-top: var(--spacing-1);
+  border-radius: var(--radius-md, var(--r-sm, 10px));
 }
 .ri-skeleton-chev {
-  border-radius: 2px;
+  border-radius: var(--radius-2, 2px);
 }
 
 @media (min-width: var(--bp-md)) {

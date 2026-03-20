@@ -121,15 +121,29 @@
   border-color: var(--color-border);
 }
 
-/* ---- SectionLabel (eyebrow) ---- */
-.section-label {
+/* ---- Section eyebrow + section subtitle (Support, Plan hero, SectionLabel) ---- */
+.section-label,
+.plan-hero-eyebrow {
   font-size: var(--amnezia-plan-eyebrow, var(--typo-meta-size));
   font-weight: var(--font-weight-medium);
   letter-spacing: 0.6px;
   text-transform: uppercase;
   color: var(--color-text-tertiary);
+}
+
+.section-label {
   margin-bottom: var(--spacing-2);
   margin-top: var(--spacing-6);
+  padding: 0 var(--spacing-1);
+}
+
+/* Paragraph under SectionLabel — same horizontal rhythm as .section-label */
+.section-desc {
+  font-size: var(--amnezia-hero-desc, var(--typo-caption-size));
+  font-weight: var(--font-weight-normal);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  margin: 0 0 var(--spacing-3);
   padding: 0 var(--spacing-1);
 }
 
@@ -708,14 +722,6 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-0-5);
-}
-
-.plan-hero-eyebrow {
-  font-size: var(--amnezia-plan-eyebrow, var(--font-size-xs));
-  font-weight: var(--font-weight-medium);
-  letter-spacing: 0.6px;
-  text-transform: uppercase;
-  color: var(--color-text-tertiary);
 }
 
 .plan-hero-name,

@@ -1,13 +1,5 @@
 /* Page shell base patterns moved to patterns.css */
-/* Reusable section description */
-.section-desc {
-  font-size: var(--amnezia-hero-desc, var(--typo-caption-size));
-  font-weight: 400;
-  color: var(--color-text-tertiary);
-  line-height: 1.5;
-  margin: 0 0 var(--spacing-3);
-  padding: 0 var(--spacing-0-5);
-}
+/* .section-desc + .section-label: design-system/styles/content/modern.css */
 
 .page-shell--default {
   gap: var(--miniapp-page-gap, var(--spacing-5));
