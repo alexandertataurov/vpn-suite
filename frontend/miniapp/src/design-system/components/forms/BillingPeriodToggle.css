@@ -1,11 +1,12 @@
 .seg-track {
+  --seg-pad: calc(var(--spacing-0-5) + var(--spacing-px));
   position: relative;
   display: grid;
   grid-template-columns: 1fr 1fr;
   background: var(--seg-track-bg);
   border: var(--spacing-px) solid var(--seg-track-border);
   border-radius: var(--radius-full);
-  padding: 3px;
+  padding: var(--seg-pad);
   gap: 0;
   width: 100%;
   max-width: 100%;
@@ -14,10 +15,10 @@
 
 .seg-thumb {
   position: absolute;
-  top: 3px;
-  left: 3px;
-  width: calc(50% - 3px);
-  bottom: 3px;
+  top: var(--seg-pad);
+  left: var(--seg-pad);
+  width: calc(50% - var(--seg-pad));
+  bottom: var(--seg-pad);
   background: var(--seg-thumb-bg);
   border: var(--spacing-px) solid var(--seg-thumb-border);
   border-radius: var(--radius-full);
@@ -38,12 +39,12 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
+  gap: var(--seg-pad);
   padding: var(--spacing-2) var(--spacing-3);
   min-height: var(--height-btn-lg);
   border: none;
   background: transparent;
-  border-radius: var(--r-sm);
+  border-radius: var(--radius-md, var(--r-sm, 10px));
   cursor: pointer;
   transition: none;
   -webkit-tap-highlight-color: transparent;
@@ -62,8 +63,8 @@
 
 .seg-label {
   font-size: var(--font-size-sm);
-  font-weight: 600;
-  letter-spacing: -0.1px;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-tight, -0.025em);
   color: var(--seg-label-inactive);
   transition: color var(--duration-enter) ease;
   line-height: 1;
@@ -75,8 +76,8 @@
 
 .seg-save-badge {
   font-size: var(--typo-meta-size);
-  font-weight: 600;
-  letter-spacing: 0.1px;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-normal);
   padding: var(--spacing-0-5) var(--spacing-2);
   border-radius: var(--radius-full);
   border: var(--spacing-px) solid var(--seg-save-border);
