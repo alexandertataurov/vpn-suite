@@ -12,7 +12,8 @@ import {
 
 const DOC_BODY = [
   "**Onboarding** (`/onboarding`): stepped flow before the standard app shell (welcome → install → plan/device → VPN → confirm).",
-  "`OnboardingSandbox` pins the **visual step index** while still using real responses from `MockScenario` (e.g. `noPlanScenario` for choose-plan).",
+  "Matches `AppRoutes`: path `/onboarding` with `OnboardingPage` when bootstrap `phase !== \"app_ready\"` (sandbox forces `phase: \"onboarding\"`).",
+  "`OnboardingSandbox` sets **initialEntries** `['/onboarding']` and syncs **bootstrap `onboardingStep`** to the `step` prop so each story is a stable visual slice.",
   "Use together with **Home** / **Devices** stories for post-onboarding states.",
 ].join("\n\n");
 
@@ -129,6 +130,19 @@ export const ViewportNarrowWelcome: Story = {
     docs: {
       description: {
         story: "320px — stepper and hero density on smallest phone preset.",
+      },
+    },
+  },
+};
+
+export const ViewportNarrowChoosePlan: Story = {
+  name: "Viewport · narrow (choose plan)",
+  render: () => renderOnboarding({ scenario: noPlanScenario, step: 2 }),
+  parameters: {
+    ...VIEW_NARROW,
+    docs: {
+      description: {
+        story: "320px — catalog / plan CTAs at step 2 with **no subscription** (`noPlanScenario`).",
       },
     },
   },

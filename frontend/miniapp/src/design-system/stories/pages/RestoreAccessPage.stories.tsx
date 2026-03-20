@@ -13,8 +13,16 @@ import {
 
 const DOC_BODY = [
   "**Restore access** (`/restore-access`): grace / expired subscription recovery, support links, and sticky primary actions.",
-  "`restoreScenario` aliases the expired mock from contracts — keep in sync when backend shapes change.",
-  "Includes session edge cases (loading, logged-out) for parity with `RestoreAccessPage` guards.",
+  "**Scenario matrix** (from `useRestoreAccessPageModel` + page guards):",
+  "| Initial state | Mock / trigger | UI branch |",
+  "| --- | --- | --- |",
+  "| No token | `loggedOutScenario` | `SessionMissing` |",
+  "| Session loading | `loadingSessionScenario` | Header + loading `ActionCard` |",
+  "| Logged-in, no grace/expired sub | `readyScenario` | Inline “no expired” + support / devices |",
+  "| Grace or expired sub | `restoreScenario` | Renew hero + sticky **Restore** |",
+  "| Restore in flight | *(user clicks Restore)* | `pageState.loading` card |",
+  "| Restore API error | *(failed POST after click)* | `pageState.error` + retry |",
+  "`restoreScenario` aliases `expiredScenario` from contracts — keep in sync when backend shapes change.",
 ].join("\n\n");
 
 const VIEW_NARROW = { viewport: { defaultViewport: "iphoneSE" as const } };
@@ -74,7 +82,7 @@ export const RestorableSubscription = scenarioStory(
 export const NotRestorableActiveUser = scenarioStory(
   "No expired subscription",
   readyScenario,
-  "Active account landed on route — inline guidance toward support or devices instead of paywall restore.",
+  "`hasGraceOrExpired` false — `pageState` empty branch: info `InlineAlert` + Support / Devices links, no sticky renew bar.",
 );
 
 export const SessionLoading = scenarioStory(
@@ -101,4 +109,11 @@ export const ViewportWide = scenarioStory(
   restoreScenario,
   "Wide frame — two-column content and bottom bar width.",
   VIEW_WIDE,
+);
+
+export const ViewportNarrowNotRestorable = scenarioStory(
+  "Viewport · narrow (active user)",
+  readyScenario,
+  "320px — non-restorable empty state: stacked buttons and footer help.",
+  VIEW_NARROW,
 );

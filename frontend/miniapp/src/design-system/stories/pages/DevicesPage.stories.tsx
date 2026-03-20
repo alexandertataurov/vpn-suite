@@ -8,6 +8,7 @@ import {
   failureScenario,
   limitReachedScenario,
   loadingSessionScenario,
+  loggedOutScenario,
   noPlanScenario,
   PageSandbox,
   pageStoryParameters,
@@ -15,9 +16,10 @@ import {
 } from "@/storybook/page-contracts";
 
 const DOC_BODY = [
-  "**Devices** (`/devices`): device list, add-device wizard, limits, and setup/config cards.",
-  "State matrix + **interaction** + **viewport** stories live in this file (legacy split `Devices Interactions` removed).",
-  "Wizard `play` targets stable accessible names from production copy.",
+  "**Devices** (`/devices`): hero metrics, device list with overflow actions, add-device wizard, setup card, and config delivery.",
+  "**Scenarios** (from `page-contracts`): ready · empty devices · limit reached · no plan · loading (`me` pending) · load error (`me` 500) · session missing (no token).",
+  "**Interactions**: primary CTA opens the wizard; first row **Device actions → Rename** opens the rename modal (stable English `devices.*` strings).",
+  "Viewport stories use `iphoneSE` / `adminDesktop` to catch layout regressions.",
 ].join("\n\n");
 
 const VIEW_NARROW = { viewport: { defaultViewport: "iphoneSE" as const } };
@@ -104,6 +106,12 @@ export const LoadError = scenarioStory(
   "Error screen and retry wiring.",
 );
 
+export const SessionMissing = scenarioStory(
+  "Session missing",
+  loggedOutScenario,
+  "`SessionMissing` when there is no webapp token — matches `useDevicesPageModel` empty state.",
+);
+
 export const ViewportNarrow = scenarioStory(
   "Viewport · narrow",
   readyScenario,
@@ -134,7 +142,40 @@ export const InteractiveAddDeviceWizard: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Opens wizard dialog and lands on the device name field (dialog + labelled input).",
+        story:
+          "Clicks the full-width **Add new device** button (`devices.add_new_device`), then asserts a `dialog` and the name `input` (`devices.wizard_name_label` → aria-label **Device name**).",
+      },
+    },
+  },
+};
+
+export const InteractiveOpenRenameFromRowMenu: Story = {
+  name: "Interactive · rename from row menu",
+  render: () => renderDevices(readyScenario),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const previewDocument = canvasElement.ownerDocument;
+    const actionTriggers = await canvas.findAllByRole("button", { name: "Device actions" });
+    const firstRowMenu = actionTriggers[0];
+    if (!firstRowMenu) {
+      throw new Error("Expected at least one device row with an overflow trigger.");
+    }
+    await userEvent.click(firstRowMenu);
+    const renameItem = await canvas.findByRole("menuitem", { name: "Rename" });
+    await userEvent.click(renameItem);
+    await waitFor(() => {
+      const dialog = previewDocument.querySelector('[role="dialog"]');
+      expect(dialog).not.toBeNull();
+      expect(
+        previewDocument.querySelector('input[aria-label="Device name"]'),
+      ).not.toBeNull();
+    });
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Opens the first row’s overflow menu (`devices.menu_trigger_aria` → **Device actions**), selects **Rename** (`devices.menu_rename_device`), and asserts the rename modal dialog plus the name field (`devices.rename_modal_placeholder` → aria-label **Device name**).",
       },
     },
   },

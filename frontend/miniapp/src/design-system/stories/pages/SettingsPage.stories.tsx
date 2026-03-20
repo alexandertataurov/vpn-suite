@@ -20,9 +20,10 @@ import {
 } from "@/storybook/page-contracts";
 
 const DOC_BODY = [
-  "**Settings** (`/settings`): account overview, profile, language, plan, support links, and destructive flows.",
-  "Combines the previous **state matrix** and **interactions** files — all variants and plays live here.",
-  "URL-driven modal state uses `?modal=profile` like production deep links.",
+  "**Settings** (`/settings`): account overview, profile + locale (`ProfileSection` / `LanguageMenuRow`), plan & billing (`PlanSection`), help links, logout/delete.",
+  "**Scenarios**: active subscription · loading · `me` error · logged out · no plan · expired · expiring · trial · empty devices · device limit · long profile text · deep link `?modal=profile`.",
+  "**Interactions** use `getByRole('button', …)` so they track `ListRow`/`RowItem` semantics (`settings.edit_profile_title`, `settings.language_label`, `settings.cancel_plan_title`).",
+  "Cancellation opens `SubscriptionCancellationModal`; profile opens `ProfileModal` or URL `modal=profile`.",
 ].join("\n\n");
 
 const VIEW_NARROW = { viewport: { defaultViewport: "iphoneSE" as const } };
@@ -168,11 +169,7 @@ export const InteractiveOpenProfileModal: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const previewDocument = canvasElement.ownerDocument;
-    const editProfileLabel = await canvas.findByText("Edit profile");
-    const editProfile = editProfileLabel.closest('[role="button"]');
-    if (!editProfile) {
-      throw new Error('Could not find button container for "Edit profile".');
-    }
+    const editProfile = await canvas.findByRole("button", { name: "Edit profile" });
     await userEvent.click(editProfile);
     await waitFor(() => {
       expect(previewDocument.querySelector('[role="dialog"]')).not.toBeNull();
@@ -181,7 +178,8 @@ export const InteractiveOpenProfileModal: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Tap **Edit profile** and assert dialog mount.",
+        story:
+          "Activates the profile `ListRow` via accessible name **Edit profile** (`settings.edit_profile_title` / `settings.profile_menu_edit`) and asserts a `dialog` (`ProfileModal`).",
       },
     },
   },
@@ -193,11 +191,7 @@ export const InteractiveOpenLanguageMenu: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const previewDocument = canvasElement.ownerDocument;
-    const languageLabel = await canvas.findByText("Language");
-    const languageRow = languageLabel.closest('[role="button"]');
-    if (!languageRow) {
-      throw new Error('Could not find button container for "Language".');
-    }
+    const languageRow = await canvas.findByRole("button", { name: "Language" });
     await userEvent.click(languageRow);
     await waitFor(() => {
       expect(previewDocument.querySelector('[role="menu"]')).not.toBeNull();
@@ -206,7 +200,8 @@ export const InteractiveOpenLanguageMenu: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Tap **Language** and assert menu role appears.",
+        story:
+          "Opens the language row (`settings.language_label`) and asserts a `menu` (`LanguageMenuRow` popover, `settings.language_aria` on the panel).",
       },
     },
   },
@@ -218,11 +213,7 @@ export const InteractiveOpenCancelFlow: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const previewDocument = canvasElement.ownerDocument;
-    const cancelPlanLabel = await canvas.findByText("Cancel plan");
-    const cancelPlan = cancelPlanLabel.closest('[role="button"]');
-    if (!cancelPlan) {
-      throw new Error('Could not find button container for "Cancel plan".');
-    }
+    const cancelPlan = await canvas.findByRole("button", { name: "Cancel plan" });
     await userEvent.click(cancelPlan);
     await waitFor(() => {
       expect(previewDocument.querySelector('[role="dialog"]')).not.toBeNull();
@@ -231,7 +222,8 @@ export const InteractiveOpenCancelFlow: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Tap **Cancel plan** — cancellation modal opens.",
+        story:
+          "Activates **Cancel plan** (`settings.cancel_plan_title` on `PlanSection`) and asserts `SubscriptionCancellationModal` mounts (`role=\"dialog\"`).",
       },
     },
   },

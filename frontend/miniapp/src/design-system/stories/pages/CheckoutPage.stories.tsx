@@ -13,13 +13,21 @@ import {
 
 const CHECKOUT_PATH = "/plan/checkout/pro-monthly";
 
+/** Plans fetch failure — matches checkout model `plansError` branch (not exported as a named contract). */
+const plansLoadErrorScenario = {
+  ...readyScenario,
+  statuses: { plans: 500 },
+} satisfies MockScenario;
+
 const DOC_BODY = [
-  "**Checkout** (`/plan/checkout/:planId`): review, promo entry, and handoff to Telegram pay.",
-  "Stories use `PageSandbox` with a concrete `pro-monthly` plan id unless noted (e.g. missing plan).",
-  "Interaction stories assert DOM transitions with `storybook/test` — run in CI via the Storybook test runner when enabled.",
+  "**Audience:** design and QA for **Checkout** (`/plan/checkout/:planId`): review step, confirmation step, promos, and error branches.",
+  "**What is mocked:** token + `plans` (and default handlers for promo/invoice paths); `PageSandbox` mirrors miniapp routing and layout.",
+  "**Scenarios:** [`page-contracts.tsx`](../../../storybook/page-contracts.tsx) — `readyScenario`, `loadingCheckoutScenario`, `loggedOutScenario`; plus invalid `planId` route and a local **plans** 500 preset for load failure.",
+  "Default **iphone14**; **Viewport ·** stories add `iphoneSE` / `adminDesktop` where layout density matters.",
 ].join("\n\n");
 
 const VIEW_NARROW = { viewport: { defaultViewport: "iphoneSE" as const } };
+const VIEW_WIDE = { viewport: { defaultViewport: "adminDesktop" as const } };
 
 const meta = {
   title: "Pages/Contracts/Checkout",
@@ -65,7 +73,9 @@ export const ConfirmationStep: Story = {
     const canvas = within(canvasElement);
     const continueButton = await canvas.findByRole("button", { name: "Continue" });
     await userEvent.click(continueButton);
-    await expect(canvas.getByRole("button", { name: "Pay in Telegram" })).toBeInTheDocument();
+    expect(
+      await canvas.findByRole("button", { name: "Pay in Telegram" }),
+    ).toBeInTheDocument();
   },
   parameters: {
     docs: {
@@ -112,6 +122,18 @@ export const SessionMissing: Story = {
   },
 };
 
+export const PlansLoadError: Story = {
+  name: "Could not load plans",
+  render: () => renderCheckout(CHECKOUT_PATH, plansLoadErrorScenario),
+  parameters: {
+    docs: {
+      description: {
+        story: "**plans** returns 5xx — `FallbackScreen` with retry wired to `refetchPlans` (distinct from unknown plan id).",
+      },
+    },
+  },
+};
+
 export const ViewportNarrow: Story = {
   name: "Viewport · narrow",
   render: () => renderCheckout(CHECKOUT_PATH, readyScenario),
@@ -119,7 +141,20 @@ export const ViewportNarrow: Story = {
     ...VIEW_NARROW,
     docs: {
       description: {
-        story: "320px — summary stack and primary buttons.",
+        story: "320px (`iphoneSE`) — stacked summary, promo, and primary actions.",
+      },
+    },
+  },
+};
+
+export const ViewportWide: Story = {
+  name: "Viewport · wide",
+  render: () => renderCheckout(CHECKOUT_PATH, readyScenario),
+  parameters: {
+    ...VIEW_WIDE,
+    docs: {
+      description: {
+        story: "Desktop-width frame — section width, header, and card gutters at `adminDesktop`.",
       },
     },
   },

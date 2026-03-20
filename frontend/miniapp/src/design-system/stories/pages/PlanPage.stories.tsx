@@ -5,7 +5,10 @@ import {
   type MockScenario,
   expiredScenario,
   failureScenario,
+  limitReachedScenario,
   loadingCheckoutScenario,
+  loadingSessionScenario,
+  loggedOutScenario,
   noPlanScenario,
   PageSandbox,
   pageStoryParameters,
@@ -14,9 +17,10 @@ import {
 } from "@/storybook/page-contracts";
 
 const DOC_BODY = [
-  "**Plan & billing** route (`/plan`): current plan, renewal actions, plan picker, billing history, and next-step cards.",
-  "Rendered through `PageSandbox` with the same providers as the miniapp so components behave like production (including sticky layout and scroll regions).",
-  "Pair with **Checkout** stories for the `/plan/checkout/:planId` continuation.",
+  "**Audience:** design and QA validating **Plan & billing** (`/plan`): hero, tier picker, billing history, next-step cards, and error/empty paths.",
+  "**What is mocked:** webapp `me`, `plans`, and `billingHistory` (and defaults for other intercepted endpoints) inside `PageSandbox`.",
+  "**Scenarios:** [`page-contracts.tsx`](../../../storybook/page-contracts.tsx) — `readyScenario`, `noPlanScenario`, `trialScenario`, `expiredScenario`, `loadingCheckoutScenario` (plans pending), `loadingSessionScenario` (session pending), `failureScenario` (`me` error), `loggedOutScenario`, `limitReachedScenario` (device cap / upgrade affordances).",
+  "Default viewport **iphone14**; **Viewport ·** stories stress `iphoneSE` vs `adminDesktop`. Continuation flow: **Pages/Contracts/Checkout**.",
 ].join("\n\n");
 
 const VIEW_NARROW = { viewport: { defaultViewport: "iphoneSE" as const } };
@@ -91,16 +95,34 @@ export const SubscriptionExpired = scenarioStory(
   "Expired state: messaging aimed at reactivation or restore flows.",
 );
 
-export const Loading = scenarioStory(
-  "Plan & billing loading",
+export const LoadingPlans = scenarioStory(
+  "Loading · plans",
   loadingCheckoutScenario,
-  "Skeletons while plan list and session hydrate.",
+  "Plans query hangs — skeleton while the catalog is still resolving (`loading: [\"plans\"]`).",
+);
+
+export const LoadingSession = scenarioStory(
+  "Loading · session",
+  loadingSessionScenario,
+  "`me` (and `access`) pending — full-page loading until session endpoints resolve.",
 );
 
 export const LoadError = scenarioStory(
   "Could not load plan & billing",
   failureScenario,
-  "Error surface with retry — matches `FallbackScreen` wiring in the page model.",
+  "Session (`me`) error — `FallbackScreen` with retry (invalidates me, plans, billing history).",
+);
+
+export const SessionMissing = scenarioStory(
+  "Session missing",
+  loggedOutScenario,
+  "No token — **SessionMissing**; no plan chrome.",
+);
+
+export const DeviceLimit = scenarioStory(
+  "Device limit",
+  limitReachedScenario,
+  "Active sub with **devices.length** at plan limit — hero devices label and upgrade-oriented CTAs where the model applies.",
 );
 
 export const ViewportNarrow = scenarioStory(

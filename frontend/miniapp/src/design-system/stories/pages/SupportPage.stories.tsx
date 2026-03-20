@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Route } from "react-router-dom";
-import { expect, userEvent, within } from "storybook/test";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 import { SupportPage } from "@/pages/Support";
 import {
   type MockScenario,
@@ -12,10 +12,16 @@ import {
   readyScenario,
 } from "@/storybook/page-contracts";
 
+/** Session OK but `/webapp/support/faq` fails — page stays ready with FAQ fallback + offline banner (`faqOffline`). */
+const supportFaqEndpointErrorScenario = {
+  ...readyScenario,
+  statuses: { supportFaq: 500 },
+} satisfies MockScenario;
+
 const DOC_BODY = [
-  "**Support** (`/support`): contact status, quick links, troubleshooter, and FAQ accordion.",
-  "Mocks come from `page-contracts` (`supportFaq`, session, etc.) inside **PageSandbox**.",
-  "FAQ interaction story asserts `aria-expanded` after toggle for a11y regression.",
+  "**Support** (`/support`): contact card, quick paths, stepped troubleshooter (`TroubleshooterFlowCard`), and FAQ disclosures (`FaqDisclosureItem`).",
+  "**States**: ready · `me`+`access` loading (skeleton) · `me` error · logged out · **FAQ endpoint error** (inline scenario: `supportFaq` 500, copy from i18n fallbacks).",
+  "FAQ button label matches **`support.faq_item_connection_title`** (EN: **VPN not connecting**). Troubleshooter primary action on step 1 is **`support.troubleshooter_step_access_next`** (EN: **Access is active**).",
 ].join("\n\n");
 
 const VIEW_NARROW = { viewport: { defaultViewport: "iphoneSE" as const } };
@@ -94,6 +100,19 @@ export const SessionMissing: Story = {
   },
 };
 
+export const FaqEndpointOffline: Story = {
+  name: "FAQ endpoint offline",
+  render: () => renderSupport(supportFaqEndpointErrorScenario),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "`GET /webapp/support/faq` returns 500 while `me` succeeds — UI keeps FAQ items from static keys and shows the offline warning (`support.faq_offline_*`).",
+      },
+    },
+  },
+};
+
 export const InteractiveFaqExpand: Story = {
   name: "Interactive · FAQ expanded",
   render: () => renderSupport(readyScenario),
@@ -106,7 +125,32 @@ export const InteractiveFaqExpand: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Opens a disclosure and verifies expanded state for screen readers.",
+        story:
+          "Toggles the first FAQ row; the visible question is **`support.faq_item_connection_title`** (EN **VPN not connecting**). Asserts `aria-expanded=\"true\"` after click.",
+      },
+    },
+  },
+};
+
+export const InteractiveTroubleshooterNextStep: Story = {
+  name: "Interactive · troubleshooter next step",
+  render: () => renderSupport(readyScenario),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByRole("heading", { level: 3, name: "Check access status" });
+    const next = await canvas.findByRole("button", { name: "Access is active" });
+    await userEvent.click(next);
+    await waitFor(() => {
+      expect(
+        canvas.getByRole("heading", { level: 3, name: "Check device config" }),
+      ).toBeInTheDocument();
+    });
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "From step 1, presses the primary **Access is active** control (`support.troubleshooter_step_access_next`) and expects the step-2 title **Check device config** (`support.troubleshooter_step_device_title`) as an `h3`.",
       },
     },
   },

@@ -11,7 +11,8 @@ import { pageStoryParameters } from "@/storybook/page-contracts";
 
 const DOC_BODY = [
   "**Bootstrap surfaces** shown outside normal page routes: Telegram Suspense fallback, session load, brand splash, and fatal boot error.",
-  "`ThemeWrapper` toggles `data-theme` on `document.documentElement` for **`consumer-dark` / `consumer-light`** token layers — use Docs **Controls** to flip themes.",
+  "**Controls · `theme`**: applies only to stories wrapped in `ThemeWrapper` (bootstrap screens). **Telegram · Suspense fallback** uses Telegram host CSS variables — flip theme in the Telegram client, not Storybook Controls.",
+  "`ThemeWrapper` sets `data-theme` to `consumer-dark` or `consumer-light` on `document.documentElement` and **removes** `data-theme` on unmount so the canvas does not leak theme into unrelated stories.",
   "These are not `PageSandbox` routes; they validate early shell visuals in isolation.",
 ].join("\n\n");
 
@@ -30,7 +31,8 @@ const meta = {
     theme: {
       control: "inline-radio",
       options: ["dark", "light"] as const,
-      description: "Maps to data-theme consumer-dark vs consumer-light.",
+      description:
+        "Maps to `data-theme`: `consumer-dark` | `consumer-light` on `document.documentElement`. Ignored by **Telegram · Suspense fallback** (no `ThemeWrapper`).",
     },
   },
   args: {
@@ -42,6 +44,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+/** Sets consumer theme tokens for bootstrap-only stories; clears on unmount to avoid polluting other docs/canvas stories. */
 function ThemeWrapper({
   theme,
   children,
@@ -50,10 +53,8 @@ function ThemeWrapper({
   children: ReactNode;
 }) {
   useEffect(() => {
-    document.documentElement.setAttribute(
-      "data-theme",
-      theme === "light" ? "consumer-light" : "consumer-dark",
-    );
+    const value = theme === "light" ? "consumer-light" : "consumer-dark";
+    document.documentElement.setAttribute("data-theme", value);
     return () => {
       document.documentElement.removeAttribute("data-theme");
     };
@@ -72,9 +73,11 @@ export const TelegramSuspenseFallback: Story = {
     </StorySection>
   ),
   parameters: {
+    controls: { disable: true },
     docs: {
       description: {
-        story: "Full-screen spinner / label shown while lazy chunks load.",
+        story:
+          "Full-screen spinner / label while lazy chunks load. **No `theme` arg** — not wrapped in `ThemeWrapper`; use the Telegram client theme to preview light/dark.",
       },
     },
   },

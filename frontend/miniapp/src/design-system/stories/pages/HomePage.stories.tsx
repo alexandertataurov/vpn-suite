@@ -42,7 +42,7 @@ const deviceLimitHomeScenario: MockScenario = {
 const DOC_BODY = [
   "**Audience:** design and QA reviewing the production **Home** route (`/`) in isolation.",
   "**What is mocked:** `window.fetch` for webapp endpoints (`me`, `access`, `plans`, …), JWT via `setWebappToken`, plus `PageSandbox` providers matching the miniapp shell.",
-  "**Scenarios:** named presets in [`page-contracts.tsx`](../../storybook/page-contracts.tsx) (`readyScenario`, `trialScenario`, `noPlanScenario`, `emptyDevicesScenario`, `expiringNoDevicesScenario`, `expiredScenario`, `loadingSessionScenario`, `accessErrorScenario`, `loggedOutScenario`, `expiringSoonScenario`, `longNameScenario`, `limitReachedScenario` + local `deviceLimitHomeScenario` for coherent `access`).",
+  "**Scenarios:** named presets in [`page-contracts.tsx`](../../../storybook/page-contracts.tsx) (`readyScenario`, `trialScenario`, `noPlanScenario`, `emptyDevicesScenario`, `expiringNoDevicesScenario`, `expiredScenario`, `loadingSessionScenario`, `accessErrorScenario`, `loggedOutScenario`, `expiringSoonScenario`, `longNameScenario`, `limitReachedScenario` + local `deviceLimitHomeScenario` for coherent `access`).",
   "Default viewport is **iphone14** via `pageStoryParameters`; stories prefixed **Viewport ·** override to narrow (`iphoneSE`) or wide (`adminDesktop`).",
 ].join("\n\n");
 
