@@ -50,6 +50,7 @@ const TROUBLESHOOTER_STEPS = [
 ] as const;
 
 export function useSupportPageModel() {
+  const queryClient = useQueryClient();
   const hasToken = !!useWebappToken();
   const { data, isLoading, error, refetch } = useSession(hasToken);
   const activeSub = getActiveSubscription(data);
@@ -67,8 +68,8 @@ export function useSupportPageModel() {
   });
 
   const refetchFaq = useCallback(() => {
-    void faqQuery.refetch();
-  }, [faqQuery]);
+    void queryClient.refetchQueries({ queryKey: [...webappQueryKeys.supportFaq()] });
+  }, [queryClient]);
 
   const faqSource = useMemo(() => {
     const items = faqQuery.data?.items;
@@ -102,7 +103,7 @@ export function useSupportPageModel() {
             message: t("common.could_not_load_generic"),
             onRetry: () => {
               void refetch();
-              void faqQuery.refetch();
+              void queryClient.refetchQueries({ queryKey: [...webappQueryKeys.supportFaq()] });
             },
           }
         : { status: "ready" };
