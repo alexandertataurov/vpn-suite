@@ -27,8 +27,7 @@ function safeString(value: unknown): string {
 }
 
 function getFrontendErrorUrl(): string {
-  const base = getApiBaseUrl().replace(/\/$/, "");
-  return `${base}/log/frontend-error`;
+  return `${getApiBaseUrl()}/log/frontend-error`;
 }
 
 async function postFrontendError(payload: FrontendErrorPayload): Promise<void> {

@@ -453,7 +453,7 @@ export async function setupMiniappApi(
     const method = request.method();
     const postBody = request.postDataJSON?.();
 
-    if (path === "/health/ready") {
+    if (path === "/health/ready" || path === "/health") {
       await fulfillJson(route, 200, { status: "ok" });
       return;
     }

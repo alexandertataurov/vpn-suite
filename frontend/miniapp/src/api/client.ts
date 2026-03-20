@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from "react";
-import { createApiClient, getBaseUrl } from "@/lib/api-client";
+import { getApiBaseUrl } from "@/config/env";
+import { createApiClient } from "@/lib/api-client";
 
 /** Single source of truth: in-memory only. Never logged or sent to telemetry. */
 let token: string | null = null;
@@ -48,7 +49,7 @@ export function useWebappToken(): string | null {
 }
 
 export const webappApi = createApiClient({
-  baseUrl: getBaseUrl,
+  baseUrl: getApiBaseUrl,
   getToken: () => token,
   onUnauthorized: () => {
     setWebappToken(null);

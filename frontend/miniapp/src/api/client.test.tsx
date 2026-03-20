@@ -2,18 +2,21 @@ import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const createApiClientMock = vi.fn();
-const getBaseUrlMock = vi.fn(() => "https://api.example.com");
+const getApiBaseUrlMock = vi.fn(() => "https://api.example.com");
+
+vi.mock("@/config/env", () => ({
+  getApiBaseUrl: () => getApiBaseUrlMock(),
+}));
 
 vi.mock("@/lib/api-client", () => ({
   createApiClient: (...args: unknown[]) => createApiClientMock(...args),
-  getBaseUrl: () => getBaseUrlMock(),
 }));
 
 describe("api/client", () => {
   beforeEach(() => {
     vi.resetModules();
     createApiClientMock.mockReset();
-    getBaseUrlMock.mockClear();
+    getApiBaseUrlMock.mockClear();
     createApiClientMock.mockReturnValue({ marker: "api" });
   });
 
@@ -28,9 +31,9 @@ describe("api/client", () => {
       onUnauthorized: () => void;
     };
     expect(opts.baseUrl).toEqual(expect.any(Function));
-    expect(getBaseUrlMock).not.toHaveBeenCalled();
+    expect(getApiBaseUrlMock).not.toHaveBeenCalled();
     expect(opts.baseUrl()).toBe("https://api.example.com");
-    expect(getBaseUrlMock).toHaveBeenCalledTimes(1);
+    expect(getApiBaseUrlMock).toHaveBeenCalledTimes(1);
     expect(opts).toEqual(
       expect.objectContaining({
         getToken: expect.any(Function),
