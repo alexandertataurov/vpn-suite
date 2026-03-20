@@ -210,6 +210,14 @@
   .device-hero-card .p-stat-label {
     font-size: var(--font-size-xs);
   }
+
+  .devices-setup-card__title {
+    font-size: var(--typo-h4-size, var(--font-size-lg));
+  }
+
+  .devices-setup-card__desc {
+    font-size: var(--typo-caption-size, var(--font-size-xs));
+  }
 }
 
 /* Storybook: DeviceRowActions showcase */

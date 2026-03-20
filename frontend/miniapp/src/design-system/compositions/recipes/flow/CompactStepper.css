@@ -86,3 +86,19 @@
     transition: none;
   }
 }
+
+@media (max-width: var(--vp-narrow)) {
+  .compact-stepper__label {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .compact-stepper__description {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}

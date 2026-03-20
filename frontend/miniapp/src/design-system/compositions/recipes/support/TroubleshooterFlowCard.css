@@ -54,6 +54,7 @@
   letter-spacing: var(--letter-spacing-tight);
   line-height: var(--line-height-title);
   margin: 0;
+  overflow-wrap: anywhere;
 }
 
 .troubleshooter-flow-card__desc {
@@ -62,6 +63,7 @@
   color: var(--color-text-muted);
   line-height: var(--line-height-snug);
   margin: 0;
+  overflow-wrap: anywhere;
 }
 
 .troubleshooter-flow-card__actions {
@@ -85,5 +87,9 @@
 @media (max-width: var(--vp-narrow)) {
   .troubleshooter-flow-card__inner {
     padding: var(--miniapp-data-cell-padding) var(--miniapp-card-padding-tight);
+  }
+
+  .troubleshooter-flow-card__title {
+    font-size: var(--amnezia-hero-title-sm, var(--font-size-md));
   }
 }

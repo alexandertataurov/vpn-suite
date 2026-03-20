@@ -32,3 +32,9 @@
 .profile-row .settings-button {
   flex-shrink: 0;
 }
+
+@media (max-width: var(--vp-narrow)) {
+  .profile-row .profile-row-name {
+    font-size: var(--amnezia-profile-name-sm, var(--font-size-sm));
+  }
+}

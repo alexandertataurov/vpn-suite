@@ -53,6 +53,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  overflow-wrap: anywhere;
 }
 
 .nd-sub {
@@ -144,6 +145,11 @@
 
   .nd-title {
     white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    text-overflow: clip; /* avoid ellipsis artifacts with multi-line clamp */
+    overflow: hidden;
   }
 
   .nd-cta {
