@@ -1,5 +1,5 @@
 import { IconFileText, IconTelegramStar } from "@/design-system/icons";
-import { ListCard, ListRow, MissionSecondaryLink, PageSection } from "@/design-system";
+import { ListCard, ListRow, MissionSecondaryButton, PageSection } from "@/design-system";
 import { useI18n } from "@/hooks";
 
 export interface PlanBillingHistoryItem {
@@ -33,7 +33,7 @@ export function PlanBillingHistorySection({
       title={t("plan.payment_history_title")}
       className="plan-billing-page__secondary-section"
     >
-      <ListCard className="settings-list-card billing-history-list-card">
+      <ListCard id="billing-history-list" className="settings-list-card billing-history-list-card">
         {loading ? (
           <>
             <ListRow
@@ -80,15 +80,14 @@ export function PlanBillingHistorySection({
       </ListCard>
       {canExpand ? (
         <div className="plan-billing-page__history-actions">
-          <MissionSecondaryLink
-            to="#"
-            onClick={(event) => {
-              event.preventDefault();
-              onToggleExpanded();
-            }}
+          <MissionSecondaryButton
+            type="button"
+            aria-expanded={expanded}
+            aria-controls="billing-history-list"
+            onClick={onToggleExpanded}
           >
             {expanded ? t("plan.payment_history_show_recent") : t("plan.payment_history_view_all")}
-          </MissionSecondaryLink>
+          </MissionSecondaryButton>
         </div>
       ) : null}
     </PageSection>

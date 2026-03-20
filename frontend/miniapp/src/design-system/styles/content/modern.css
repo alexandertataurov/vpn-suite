@@ -1110,12 +1110,15 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  gap: var(--spacing-3);
 }
 
 .modern-plan-title-group {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-1);
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .modern-plan-title {
@@ -1128,9 +1131,29 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
 }
 
 .modern-plan-price {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.modern-plan-price .stars-amount {
+  align-items: center;
+}
+
+.modern-plan-price .stars-amount-value {
   font-size: var(--text-title-md, 20px);
   font-weight: var(--font-weight-bold);
   color: var(--color-accent);
+}
+
+.modern-plan-price-period {
+  font: 600 var(--typo-meta-size) / 1.2 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
 }
 
 .modern-plan-features {
@@ -1156,6 +1179,17 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
 .modern-plan-feature-value {
   color: var(--color-text);
   font-weight: var(--font-weight-semibold);
+}
+
+@media (max-width: var(--vp-compact)) {
+  .modern-plan-header {
+    flex-direction: column;
+  }
+
+  .modern-plan-price {
+    align-items: flex-start;
+    text-align: left;
+  }
 }
 
 /* ---- Device Metrics --------------------------------- */

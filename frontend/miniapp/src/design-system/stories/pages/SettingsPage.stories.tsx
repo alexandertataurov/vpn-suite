@@ -23,7 +23,7 @@ const DOC_BODY = [
   "**Settings** (`/settings`) covers the account overview, profile and locale controls, plan and billing, help links, and destructive actions.",
   "**Scenarios** cover active subscription, loading, `me` error, logged out, no plan, expired, expiring, trial, empty devices, device limit, long profile text, and deep link `?modal=profile`.",
   "**Interactions** use `getByRole('button', …)` so they stay aligned with `ListRow` / `RowItem` semantics (`settings.edit_profile_title`, `settings.language_label`, `settings.cancel_plan_title`).",
-  "Cancellation opens `SubscriptionCancellationModal`; profile opens `ProfileModal` or the `modal=profile` URL state.",
+  "Cancellation opens `SubscriptionCancellationModal`; delete account opens `AccountCancellationModal`; profile opens `ProfileModal` or the `modal=profile` URL state.",
 ].join("\n\n");
 
 const VIEW_NARROW = { viewport: { defaultViewport: "iphoneSE" as const } };
@@ -224,6 +224,35 @@ export const InteractiveOpenCancelFlow: Story = {
       description: {
         story:
           "Activates **Cancel plan** (`settings.cancel_plan_title` on `PlanSection`) and asserts `SubscriptionCancellationModal` mounts (`role=\"dialog\"`).",
+      },
+    },
+  },
+};
+
+export const InteractiveOpenDeleteAccountFlow: Story = {
+  name: "Interactive · delete account flow",
+  render: () => renderSettings(readyScenario),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const previewDocument = canvasElement.ownerDocument;
+    const deleteAccount = await canvas.findByRole("button", { name: "Delete account" });
+    await userEvent.click(deleteAccount);
+
+    const dialog = await canvas.findByRole("dialog", { name: "Delete account?" });
+    const dialogScope = within(dialog);
+    const tokenInput = await dialogScope.findByLabelText("Type DELETE to confirm");
+    await userEvent.type(tokenInput, "DELETE");
+    await userEvent.click(await dialogScope.findByRole("button", { name: "Delete account" }));
+
+    await waitFor(() => {
+      expect(previewDocument.querySelector('[role="dialog"]')).toBeNull();
+    });
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Opens the account deletion confirm modal, enters the required `DELETE` token, and verifies the dialog closes after confirmation.",
       },
     },
   },

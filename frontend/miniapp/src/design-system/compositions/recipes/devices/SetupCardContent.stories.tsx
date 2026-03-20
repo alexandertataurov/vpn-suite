@@ -32,7 +32,7 @@ export const Default: Story = {
     docs: {
       description: {
         story:
-          "Issue-device state with a clear primary action and the canonical CTA copy.",
+          "Issue-device state with a clear primary action, alert copy, and the canonical CTA copy.",
       },
     },
   },
@@ -55,6 +55,13 @@ export const Variants: Story = {
           <SetupCardContent
             step="issue"
             canAddDevice
+            issueActionLabel="Add device"
+            onIssueDevice={() => {}}
+          />
+          <SetupCardContent
+            step="issue"
+            canAddDevice={false}
+            isAddPending
             issueActionLabel="Add device"
             onIssueDevice={() => {}}
           />

@@ -69,6 +69,52 @@ export const Variants: Story = {
           />
           <OnboardingStepCard
             {...baseArgs}
+            step={ONBOARDING_STEPS[1]}
+            appAlreadyInstalled
+          />
+          <OnboardingStepCard
+            {...baseArgs}
+            step={ONBOARDING_STEPS[2]}
+            hasActivePlan
+          />
+          <OnboardingStepCard
+            {...baseArgs}
+            step={ONBOARDING_STEPS[4]}
+            hasActivePlan
+            hasActiveDevice
+            hasDetectedActivity
+            detectedIp="203.0.113.8"
+          />
+        </StoryStack>
+      </StoryShowcase>
+    </StorySection>
+  ),
+};
+
+export const FlowSequence: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "A compact sequence of the most common onboarding waypoints. Use this to check how the guidance and primary CTA evolve as the user moves from install to confirmation.",
+      },
+    },
+  },
+  render: () => (
+    <StorySection title="Flow sequence" description="Install, config, and confirm waypoints shown together.">
+      <StoryShowcase>
+        <StoryStack>
+          <OnboardingStepCard
+            {...baseArgs}
+            step={ONBOARDING_STEPS[0]}
+          />
+          <OnboardingStepCard
+            {...baseArgs}
+            step={ONBOARDING_STEPS[1]}
+            appAlreadyInstalled
+          />
+          <OnboardingStepCard
+            {...baseArgs}
             step={ONBOARDING_STEPS[2]}
             hasActivePlan
           />

@@ -7,6 +7,7 @@ import {
   TokenGrid,
   TokenSlot,
   resolveToken,
+  FoundationTypographyPreview,
 } from "./foundationShared";
 
 const TYPO_SIZE_TOKENS = [
@@ -106,28 +107,5 @@ function TypographySample({
   token: string;
   weight?: number;
 }) {
-  return (
-    <div
-      style={{
-        width: "100%",
-        minHeight: 64,
-        display: "flex",
-        alignItems: "center",
-        padding: 8,
-      }}
-    >
-      <p
-        style={{
-          fontFamily: "var(--font-sans)",
-          fontSize: `var(${token})`,
-          fontWeight: weight,
-          color: "var(--color-text)",
-          lineHeight: 1.4,
-          margin: 0,
-        }}
-      >
-        The quick brown fox
-      </p>
-    </div>
-  );
+  return <FoundationTypographyPreview token={token} weight={weight} />;
 }

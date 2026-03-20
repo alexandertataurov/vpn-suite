@@ -1,4 +1,5 @@
 import { Button, Input, Modal } from "@/design-system";
+import "./ProfileModal.css";
 
 export interface ProfileModalProps {
   isOpen: boolean;
@@ -80,30 +81,34 @@ export function ProfileModal({
     >
       <div className="settings-profile-modal__body">
         <p className="settings-profile-modal__hint">{hintText}</p>
-        <Input
-          type="text"
-          label={nameLabel}
-          value={nameValue}
-          onChange={(event) => onNameChange(event.target.value)}
-          placeholder={namePlaceholder}
-          autoComplete="name"
-        />
-        <Input
-          type="email"
-          label={emailLabel}
-          value={emailValue}
-          onChange={(event) => onEmailChange(event.target.value)}
-          placeholder={emailPlaceholder}
-          autoComplete="email"
-        />
-        <Input
-          type="tel"
-          label={phoneLabel}
-          value={phoneValue}
-          onChange={(event) => onPhoneChange(event.target.value)}
-          placeholder={phonePlaceholder}
-          autoComplete="tel"
-        />
+        <div className="settings-profile-modal__fields">
+          <Input
+            type="text"
+            label={nameLabel}
+            value={nameValue}
+            onChange={(event) => onNameChange(event.target.value)}
+            placeholder={namePlaceholder}
+            autoComplete="name"
+          />
+          <Input
+            type="email"
+            label={emailLabel}
+            value={emailValue}
+            onChange={(event) => onEmailChange(event.target.value)}
+            placeholder={emailPlaceholder}
+            autoComplete="email"
+          />
+          <div className="settings-profile-modal__field settings-profile-modal__field--full">
+            <Input
+              type="tel"
+              label={phoneLabel}
+              value={phoneValue}
+              onChange={(event) => onPhoneChange(event.target.value)}
+              placeholder={phonePlaceholder}
+              autoComplete="tel"
+            />
+          </div>
+        </div>
       </div>
     </Modal>
   );

@@ -11,7 +11,7 @@ const meta: Meta<typeof PlanNextStepCard> = {
     status: { type: "stable" },
     docs: {
       description: {
-        component: "Plan-page next-step card pairing helper text with primary and optional secondary actions.",
+        component: "Plan-page next-step card pairing helper text with primary and optional secondary actions, using an auto-width secondary action so the primary CTA stays dominant.",
       },
     },
   },
@@ -53,7 +53,7 @@ export const Variants: Story = {
     docs: {
       description: {
         story:
-          "Scroll-action, upgrade, renewal, and payment-failure states shown together. Use the matrix to confirm the CTA changes with the user’s next task.",
+          "Scroll-action, upgrade, renewal, and payment-failure states shown together. Use the matrix to confirm the primary CTA stays dominant while the secondary action stays compact.",
       },
     },
   },

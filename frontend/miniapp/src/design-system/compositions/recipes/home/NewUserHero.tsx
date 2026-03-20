@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { ButtonRowAuto } from "@/design-system";
 import { Button } from "../../../components/Button";
 import { IconShield } from "../../../icons";
 import { ModernHeroCard } from "./ModernHeroCard";
@@ -32,22 +33,31 @@ export function NewUserHero({
   viewGuideLabel = "View guide",
   className,
 }: NewUserHeroProps) {
-  const actions = (
-    <>
-      {primaryAction ??
-        (onChoosePlan != null ? (
-          <Button variant="primary" fullWidth className="new-user-hero-cta" onClick={onChoosePlan}>
-            {choosePlanLabel}
-          </Button>
-        ) : null)}
-      {secondaryAction ??
-        (onViewGuide != null ? (
-          <Button variant="secondary" fullWidth className="new-user-hero-cta" onClick={onViewGuide}>
-            {viewGuideLabel}
-          </Button>
-        ) : null)}
-    </>
-  );
+  const primary = primaryAction ??
+    (onChoosePlan != null ? (
+      <Button variant="primary" fullWidth className="new-user-hero-cta" onClick={onChoosePlan}>
+        {choosePlanLabel}
+      </Button>
+    ) : null);
+  const secondary = secondaryAction ??
+    (onViewGuide != null ? (
+      <Button variant="secondary" className="new-user-hero-cta" onClick={onViewGuide}>
+        {viewGuideLabel}
+      </Button>
+    ) : null);
+
+  const actions =
+    primary != null && secondary != null ? (
+      <ButtonRowAuto>
+        {primary}
+        {secondary}
+      </ButtonRowAuto>
+    ) : (
+      <>
+        {primary}
+        {secondary}
+      </>
+    );
 
   return (
     <ModernHeroCard

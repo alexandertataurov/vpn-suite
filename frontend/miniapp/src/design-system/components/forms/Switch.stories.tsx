@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { useState } from "react";
+import { useArgs } from "storybook/preview-api";
 import { Switch } from "./Switch";
 import { StorySection, StoryShowcase } from "@/design-system";
 import { Inline } from "@/design-system/core/primitives";
@@ -8,6 +8,10 @@ const meta = {
   title: "Components/Switch",
   tags: ["autodocs"],
   component: Switch,
+  args: {
+    checked: false,
+    "aria-label": "Toggle setting",
+  },
   parameters: {
     layout: "padded",
     status: { type: "stable" },
@@ -19,8 +23,11 @@ const meta = {
     },
   },
   argTypes: {
-    checked: { control: "boolean" },
-    disabled: { control: "boolean" },
+    checked: { control: "boolean", table: { category: "State" } },
+    disabled: { control: "boolean", table: { category: "State" } },
+    "aria-label": {
+      table: { disable: true },
+    },
   },
 } satisfies Meta<typeof Switch>;
 
@@ -28,26 +35,19 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-function SwitchDemo() {
-  const [checked, setChecked] = useState(false);
-  return (
-    <Switch checked={checked} onCheckedChange={setChecked} aria-label="Toggle" />
-  );
-}
-
 export const Default: Story = {
   parameters: {
     docs: {
       description: {
         story:
-          "Interactive standalone switch for a boolean setting. Use this when the control does not need a label row.",
+          "Baseline standalone switch for a boolean setting. Use the interactive story below when you want to review live state transitions.",
       },
     },
   },
-  render: () => (
-    <StorySection title="Interactive" description="Basic uncontrolled interaction with a label-only control.">
+  render: (args) => (
+    <StorySection title="Default" description="Baseline standalone switch for boolean settings without a surrounding row.">
       <StoryShowcase>
-        <SwitchDemo />
+        <Switch checked={args.checked} onCheckedChange={() => {}} aria-label={args["aria-label"] ?? "Toggle setting"} />
       </StoryShowcase>
     </StorySection>
   ),
@@ -82,4 +82,29 @@ export const States: Story = {
       </StoryShowcase>
     </StorySection>
   ),
+};
+
+export const Interactive: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Simple interaction scenario for checking state transitions when the switch is used on its own rather than inside a labeled settings row.",
+      },
+    },
+  },
+  render: function InteractiveStory(args) {
+    const [{ checked }, updateArgs] = useArgs();
+    return (
+      <StorySection title="Interactive" description="Toggle the switch to review motion and state transitions.">
+        <StoryShowcase>
+          <Switch
+            checked={checked}
+            onCheckedChange={(nextChecked) => updateArgs({ checked: nextChecked })}
+            aria-label={args["aria-label"] ?? "Toggle"}
+          />
+        </StoryShowcase>
+      </StorySection>
+    );
+  },
 };

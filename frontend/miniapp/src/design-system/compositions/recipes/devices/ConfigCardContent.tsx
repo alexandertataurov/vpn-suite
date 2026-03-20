@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
-import { Button } from "../../../components";
 import { IconDownload } from "@/design-system/icons";
 import { useI18n } from "@/hooks";
-import { MissionPrimaryButton } from "../../patterns";
+import { ButtonRowAuto, MissionPrimaryButton, MissionSecondaryButton } from "../../patterns";
 import { CompactSummaryCard } from "./CompactSummaryCard";
 import { VpnBoundaryNote } from "../shared/VpnBoundaryNote";
 
@@ -53,20 +52,24 @@ export function ConfigCardContent({
       subtitle={message}
       tone="amber"
       actions={(
-        <>
+        <ButtonRowAuto className="devices-config-actions">
           <MissionPrimaryButton
             status={copied ? "success" : "idle"}
             statusText={t("devices.toast_copied")}
+            successText={t("devices.toast_copied")}
             onClick={() => void handleCopy()}
             className="miniapp-compact-action"
           >
             {t("devices.copy_config_action")}
           </MissionPrimaryButton>
-          <Button type="button" variant="ghost" size="sm" onClick={onDownload}>
-            <IconDownload size={14} strokeWidth={1.8} />
-            <span>{t("devices.download_config_action")}</span>
-          </Button>
-        </>
+          <MissionSecondaryButton
+            onClick={onDownload}
+            className="miniapp-compact-action miniapp-compact-action--secondary"
+            startIcon={<IconDownload size={14} strokeWidth={1.8} aria-hidden />}
+          >
+            {t("devices.download_config_action")}
+          </MissionSecondaryButton>
+        </ButtonRowAuto>
       )}
     >
       {!peerCreated ? (

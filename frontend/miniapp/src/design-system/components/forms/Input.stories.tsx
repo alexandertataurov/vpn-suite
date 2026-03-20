@@ -10,6 +10,11 @@ const meta = {
   title: "Components/Input",
   tags: ["autodocs", "contract-test"],
   component: Input,
+  args: {
+    label: "Email",
+    placeholder: "you@example.com",
+    type: "email",
+  },
   parameters: {
     layout: "padded",
     status: { type: "stable" },
@@ -21,12 +26,14 @@ const meta = {
     },
   },
   argTypes: {
-    type: { control: "select", options: ["text", "email", "password"] },
-    label: { control: "text" },
-    placeholder: { control: "text" },
-    error: { control: "text" },
-    success: { control: "text" },
-    disabled: { control: "boolean" },
+    type: { control: "select", options: ["text", "email", "password"], table: { category: "Behavior" } },
+    label: { control: "text", table: { category: "Content" } },
+    placeholder: { control: "text", table: { category: "Content" } },
+    description: { control: "text", table: { category: "Content" } },
+    required: { control: "boolean", table: { category: "State" } },
+    error: { control: "text", table: { category: "State" } },
+    success: { control: "text", table: { category: "State" } },
+    disabled: { control: "boolean", table: { category: "State" } },
   },
 } satisfies Meta<typeof Input>;
 
@@ -35,11 +42,6 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: {
-    label: "Email",
-    placeholder: "you@example.com",
-    type: "email",
-  },
   parameters: {
     docs: {
       description: {
@@ -49,9 +51,11 @@ export const Default: Story = {
     },
   },
   render: (args) => (
-    <StoryShowcase>
-      <Input {...args} />
-    </StoryShowcase>
+    <StorySection title="Default" description="Baseline single-line input for labeled text entry.">
+      <StoryShowcase>
+        <Input {...args} />
+      </StoryShowcase>
+    </StorySection>
   ),
 };
 

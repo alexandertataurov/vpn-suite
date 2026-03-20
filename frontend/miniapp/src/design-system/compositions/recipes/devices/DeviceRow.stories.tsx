@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { ListCard, StorySection, StoryShowcase, StoryStack } from "@/design-system";
+import { expect, userEvent, within } from "storybook/test";
 import { DeviceRow } from "./DeviceRow";
 
 const meta: Meta<typeof DeviceRow> = {
@@ -103,4 +104,38 @@ export const Variants: Story = {
       </StoryShowcase>
     </StorySection>
   ),
+};
+
+export const InteractiveMenuContext: Story = {
+  name: "Interactive · contextual menu label",
+  render: (args) => (
+    <StoryShowcase>
+      <ListCard>
+        <DeviceRow {...args} />
+      </ListCard>
+    </StoryShowcase>
+  ),
+  args: {
+    ...baseArgs,
+    device: {
+      id: "peer_iphone_01",
+      device_name: "iPhone 15 Pro",
+      status: "connected",
+      issued_at: "2026-03-01T10:00:00Z",
+      last_seen_handshake_at: "2026-03-19T10:30:00Z",
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(await canvas.findByRole("button", { name: "Device actions" }));
+    expect(await canvas.findByText("iPhone 15 Pro · Imported")).toBeInTheDocument();
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Menu label now carries the device name plus current status so the action menu is easier to orient on dense device lists.",
+      },
+    },
+  },
 };

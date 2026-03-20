@@ -11,7 +11,7 @@ const meta: Meta<typeof PlanBillingHistorySection> = {
     status: { type: "stable" },
     docs: {
       description: {
-        component: "Billing-history section used on the plan page, including empty, loading, and expandable states.",
+        component: "Billing-history section used on the plan page, including empty, loading, expandable states, and a real button-style expand toggle.",
       },
     },
   },
@@ -77,7 +77,7 @@ export const Variants: Story = {
     docs: {
       description: {
         story:
-          "Collapsed, expanded, loading, and empty billing-history states in one matrix. Use it to verify the section stays legible across every state.",
+          "Collapsed, expanded, loading, and empty billing-history states in one matrix. Use it to verify the section stays legible and that the expand toggle behaves like an in-place button.",
       },
     },
   },

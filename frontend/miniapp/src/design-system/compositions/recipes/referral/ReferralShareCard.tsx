@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { IconCheck, IconUsers } from "@/design-system/icons";
+import { StatusChip } from "@/design-system";
 import { useI18n } from "@/hooks";
 import { Button } from "../../../components/Button";
 import { PageCardSection } from "../shared/PageCardSection";
@@ -44,6 +45,7 @@ export function ReferralShareCard({
 
   const canNativeShare =
     typeof navigator !== "undefined" && typeof navigator.share === "function";
+  const isAvailable = Boolean(shareUrl && isOnline);
 
   const isCompact = variant === "compact";
   const title = isCompact
@@ -52,6 +54,9 @@ export function ReferralShareCard({
   const description = isCompact
     ? t("referral.share_compact_message")
     : t("referral.read_only_beta_message");
+  const availabilityLabel = isAvailable
+    ? t("referral.share_link_ready_label")
+    : t("referral.share_link_unavailable_label");
 
   return (
     <PageCardSection
@@ -79,6 +84,7 @@ export function ReferralShareCard({
               {botUsername ? (
                 <span className="referral-share-card__handle">@{botUsername}</span>
               ) : null}
+              <StatusChip variant={isAvailable ? "active" : "offline"} label={availabilityLabel} />
             </div>
             <code className="referral-share-card__url" title={shareUrl || undefined}>
               {shareUrl || t("referral.share_url_unavailable_placeholder")}

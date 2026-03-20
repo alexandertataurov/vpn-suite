@@ -21,6 +21,19 @@ export interface ModernHeaderProps {
   title?: string;
   /** Optional back button callback. If provided, shows a back chevron. */
   onBack?: () => void;
+  backLabel?: string;
+  settingsLabel?: string;
+}
+
+function deriveInitials(name?: string): string {
+  const trimmed = name?.trim();
+  if (!trimmed) return "";
+  return trimmed
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0] ?? "")
+    .join("")
+    .toUpperCase();
 }
 
 export function ModernHeader({
@@ -33,8 +46,11 @@ export function ModernHeader({
   onSettingsClick,
   title,
   onBack,
+  backLabel = "Back",
+  settingsLabel = "Settings",
 }: ModernHeaderProps) {
   const navigate = useNavigate();
+  const derivedInitials = avatarInitial ?? deriveInitials(displayName);
 
   const handleSettings = () => {
     if (onSettingsClick) {
@@ -53,7 +69,7 @@ export function ModernHeader({
             size="icon"
             className="modern-header-back-button"
             onClick={onBack}
-            aria-label="Back"
+            aria-label={backLabel}
           >
             <IconChevronLeft size={24} strokeWidth={2.4} />
           </Button>
@@ -62,7 +78,7 @@ export function ModernHeader({
         {displayName && pillChip ? (
           <ProfileRow
             name={displayName}
-            initials={avatarInitial ?? displayName.slice(0, 2).toUpperCase()}
+            initials={avatarInitial ?? derivedInitials}
             status="active"
             chip={pillChip}
             onSettings={handleSettings}
@@ -70,7 +86,7 @@ export function ModernHeader({
         ) : displayName ? (
           <div className="modern-profile-block">
             <div className="modern-avatar">
-              {avatarUrl ? <img src={avatarUrl} alt="" /> : <span>{avatarInitial}</span>}
+              {avatarUrl ? <img src={avatarUrl} alt="" /> : <span>{derivedInitials}</span>}
             </div>
             <div className="modern-profile-info">
               <span className="modern-header-title">{displayName}</span>
@@ -89,7 +105,7 @@ export function ModernHeader({
         <SettingsButton
           onClick={handleSettings}
           className="settings-pill"
-          aria-label="Settings"
+          aria-label={settingsLabel}
         />
       ) : null}
     </div>

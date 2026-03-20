@@ -10,7 +10,7 @@ const meta: Meta<typeof CheckoutSummaryCard> = {
     layout: "padded",
     docs: {
       description: {
-        component: "Checkout summary grid used before and after plan confirmation.",
+        component: "Checkout summary grid used before and after plan confirmation, with the confirmed state collapsed to a single-column stack for readability.",
       },
     },
   },
@@ -47,7 +47,7 @@ export const Variants: Story = {
     docs: {
       description: {
         story:
-          "Selection and confirmation states shown together. Review the handoff from plan choice to the final confirmation summary.",
+          "Selection and confirmation states shown together. Review the handoff from plan choice to the final confirmation summary, including the one-column confirmation layout.",
       },
     },
   },

@@ -55,7 +55,7 @@ export const Variants: Story = {
     docs: {
       description: {
         story:
-          "Profile, avatar-only, and inner-page header forms shown together. Review the spacing and action placement across all supported header modes.",
+          "Profile, avatar-only, derived-initials, and inner-page header forms shown together. Review the spacing and action placement across all supported header modes.",
       },
     },
   },
@@ -73,6 +73,11 @@ export const Variants: Story = {
             displayName="Alex"
             avatarInitial="AL"
             subtitle="Manage your subscription"
+            onSettingsClick={() => {}}
+          />
+          <ModernHeader
+            displayName="Alexandra Morgan"
+            subtitle="Pro Monthly"
             onSettingsClick={() => {}}
           />
           <ModernHeader

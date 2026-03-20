@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { useState } from "react";
+import { useArgs } from "storybook/preview-api";
 import { Checkbox } from "./Checkbox";
 import { StorySection, StoryShowcase, StoryStack } from "@/design-system";
 
@@ -7,8 +7,13 @@ const meta = {
   title: "Components/Checkbox",
   tags: ["autodocs"],
   component: Checkbox,
+  args: {
+    label: "Accept terms and conditions",
+    checked: false,
+  },
   parameters: {
     layout: "padded",
+    status: { type: "stable" },
     docs: {
       description: {
         component:
@@ -17,9 +22,13 @@ const meta = {
     },
   },
   argTypes: {
-    checked: { control: "boolean" },
-    disabled: { control: "boolean" },
-    required: { control: "boolean" },
+    label: { control: "text", table: { category: "Content" } },
+    description: { control: "text", table: { category: "Content" } },
+    checked: { control: "boolean", table: { category: "State" } },
+    disabled: { control: "boolean", table: { category: "State" } },
+    required: { control: "boolean", table: { category: "State" } },
+    error: { control: "text", table: { category: "State" } },
+    success: { control: "text", table: { category: "State" } },
   },
 } satisfies Meta<typeof Checkbox>;
 
@@ -28,7 +37,6 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: { label: "Accept terms and conditions", checked: false },
   parameters: {
     docs: {
       description: {
@@ -38,9 +46,11 @@ export const Default: Story = {
     },
   },
   render: (args) => (
-    <StoryShowcase>
-      <Checkbox {...args} />
-    </StoryShowcase>
+    <StorySection title="Default" description="Baseline checkbox for explicit consent and opt-in choices.">
+      <StoryShowcase>
+        <Checkbox {...args} />
+      </StoryShowcase>
+    </StorySection>
   ),
 };
 
@@ -90,16 +100,17 @@ export const States: Story = {
   ),
 };
 
-export const Controlled: Story = {
-  render: function ControlledStory() {
-    const [checked, setChecked] = useState(false);
+export const Interactive: Story = {
+  render: function InteractiveStory(args) {
+    const [{ checked }, updateArgs] = useArgs();
     return (
       <StorySection title="Interactive" description="Toggle the checkbox to confirm controlled state updates.">
         <StoryShowcase>
           <Checkbox
-            label="I agree to the terms"
+            {...args}
+            label={args.label ?? "I agree to the terms"}
             checked={checked}
-            onChange={(e) => setChecked(e.target.checked)}
+            onChange={(e) => updateArgs({ checked: e.target.checked })}
           />
         </StoryShowcase>
       </StorySection>

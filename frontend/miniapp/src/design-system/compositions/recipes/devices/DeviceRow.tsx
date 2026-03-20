@@ -72,6 +72,7 @@ export function DeviceRow({
       <div className="ri-right">
         <DeviceRowActions
           deviceId={device.id}
+          subjectLabel={title}
           deviceStatus={status}
           onConfirm={onConfirm}
           onReplace={onReplace}

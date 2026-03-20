@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { Button, StatusChip } from "@/design-system";
 import "./TroubleshooterFlowCard.css";
 
@@ -21,19 +22,33 @@ export function TroubleshooterFlowCard({
   backAction,
   nextAction,
 }: TroubleshooterFlowCardProps) {
+  const titleId = useId();
+  const bodyId = useId();
+  const stepLabelId = useId();
+
   return (
-    <div className="troubleshooter-flow-card">
+    <article
+      className="troubleshooter-flow-card"
+      aria-labelledby={titleId}
+      aria-describedby={`${stepLabelId} ${bodyId}`}
+    >
       <span className="troubleshooter-flow-card__accent" aria-hidden />
       <div className="troubleshooter-flow-card__inner">
         <div className="troubleshooter-flow-card__header">
           <div className="troubleshooter-flow-card__eyebrow-row">
-            <span className="troubleshooter-flow-card__eyebrow">{eyebrow}</span>
+            <span id={stepLabelId} className="troubleshooter-flow-card__eyebrow">
+              {eyebrow}
+            </span>
             <StatusChip variant="active" label={stepLabel} />
           </div>
-          <h3 className="troubleshooter-flow-card__title">{title}</h3>
-          <p className="troubleshooter-flow-card__desc">{body}</p>
+          <h3 id={titleId} className="troubleshooter-flow-card__title">
+            {title}
+          </h3>
+          <p id={bodyId} className="troubleshooter-flow-card__desc">
+            {body}
+          </p>
         </div>
-        <div className="troubleshooter-flow-card__actions">
+        <div className="troubleshooter-flow-card__actions" role="group" aria-label={`${title} actions`}>
           {altAction ? (
             <Button variant="secondary" fullWidth onClick={altAction.onClick}>
               {altAction.label}
@@ -49,6 +64,6 @@ export function TroubleshooterFlowCard({
           </Button>
         </div>
       </div>
-    </div>
+    </article>
   );
 }

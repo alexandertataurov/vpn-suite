@@ -36,25 +36,8 @@ export function SettingsAccountOverviewCard({
   devicesTotal,
   onEdit,
 }: SettingsAccountOverviewCardProps) {
-  const handleClick = onEdit ? () => onEdit() : undefined;
-
-  return (
-    <div
-      className={`account-card${onEdit ? "" : " account-card--readonly"}`}
-      onClick={handleClick}
-      role={onEdit ? "button" : undefined}
-      tabIndex={onEdit ? 0 : undefined}
-      onKeyDown={
-        onEdit
-          ? (event) => {
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                onEdit();
-              }
-            }
-          : undefined
-      }
-    >
+  const content = (
+    <>
       <div className="ac-identity">
         <Avatar initials={initials} size="lg" />
         <div className="ac-identity-text">
@@ -106,6 +89,16 @@ export function SettingsAccountOverviewCard({
           </svg>
         </div>
       ) : null}
-    </div>
+    </>
   );
+
+  if (onEdit) {
+    return (
+      <button className="account-card account-card--actionable" type="button" onClick={onEdit}>
+        {content}
+      </button>
+    );
+  }
+
+  return <div className="account-card account-card--readonly">{content}</div>;
 }

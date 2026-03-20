@@ -6,6 +6,7 @@ import { useI18n } from "@/hooks";
 
 export interface DeviceRowActionsProps {
   deviceId: string;
+  subjectLabel?: string;
   deviceStatus: "connected" | "idle" | "config_pending" | "revoked";
   onConfirm: (id: string) => void;
   onReplace: (id: string) => void;
@@ -18,6 +19,7 @@ export interface DeviceRowActionsProps {
 
 export function DeviceRowActions({
   deviceId,
+  subjectLabel,
   deviceStatus,
   onConfirm,
   onReplace,
@@ -39,6 +41,7 @@ export function DeviceRowActions({
         : t("devices.menu_status_revoked");
 
   const menuItems: OverflowActionMenuItem[] = [];
+  const menuLabel = subjectLabel ? `${subjectLabel} · ${statusLabel}` : statusLabel;
 
   if (onRename) {
     menuItems.push({
@@ -110,7 +113,7 @@ export function DeviceRowActions({
     <OverflowActionMenu
       ariaLabel={t("devices.menu_trigger_aria")}
       className={className}
-      menuLabel={statusLabel}
+      menuLabel={menuLabel}
       onTriggerClick={() => impact("light")}
       items={menuItems}
     />

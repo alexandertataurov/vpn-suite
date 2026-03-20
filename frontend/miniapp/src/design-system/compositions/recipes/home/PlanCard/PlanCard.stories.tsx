@@ -11,7 +11,7 @@ const meta: Meta<typeof PlanCard> = {
     docs: {
       description: {
         component:
-          "Plan card contract per the miniapp spec: status badge, stats strip, border-only styling, and token-driven spacing.",
+          "Plan card contract per the miniapp spec: status badge, stats strip, border-only styling, token-driven spacing, and narrow-screen stat stacking.",
       },
     },
   },
@@ -106,6 +106,33 @@ export const HeroVariant: Story = {
     planSub: "5 devices · annual",
     status: "active",
     stats: HERO_STATS,
+  },
+  render: (args) => (
+    <StoryShowcase>
+      <PlanCard {...args} />
+    </StoryShowcase>
+  ),
+};
+
+export const Responsive: Story = {
+  name: "Viewport · narrow",
+  args: {
+    plan: "Pro Annual",
+    planSub: "5 devices · expiring tomorrow",
+    status: "expiring",
+    devices: 5,
+    deviceLimit: 5,
+    renewsLabel: "Renews tomorrow",
+    traffic: "1.8 TB",
+  },
+  parameters: {
+    viewport: { defaultViewport: "iphoneSE" as const },
+    docs: {
+      description: {
+        story:
+          "320px layout: the stats strip stacks vertically so renewal and traffic details stay readable instead of compressing into three cramped columns.",
+      },
+    },
   },
   render: (args) => (
     <StoryShowcase>

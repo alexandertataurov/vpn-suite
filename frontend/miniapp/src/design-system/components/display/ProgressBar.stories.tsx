@@ -42,6 +42,13 @@ const meta = {
   title: "Components/ProgressBar",
   tags: ["autodocs"],
   component: ProgressBar,
+  args: {
+    value: 65,
+    label: "Devices used",
+    unit: "%",
+    layout: "stacked",
+    size: "primary",
+  },
   parameters: {
     layout: "padded",
     status: { type: "stable" },
@@ -53,15 +60,43 @@ const meta = {
     },
   },
   argTypes: {
-    value: { control: { type: "range", min: 0, max: 100 } },
-    layout: { control: "select", options: ["stacked", "inline", "split"] },
-    size: { control: "select", options: ["primary", "secondary", "connection"] },
+    value: { control: { type: "range", min: 0, max: 100 }, table: { category: "State" } },
+    label: { control: "text", table: { category: "Content" } },
+    unit: { control: "text", table: { category: "Content" } },
+    layout: { control: "select", options: ["stacked", "inline", "split"], table: { category: "Layout" } },
+    size: { control: "select", options: ["primary", "secondary", "connection"], table: { category: "Appearance" } },
+    annotation: { control: "text", table: { category: "Content" } },
+    annotationVariant: { control: "select", options: ["success", "warning", "error", "muted"], table: { category: "Appearance" } },
+    indeterminate: { control: "boolean", table: { category: "State" } },
+    showValue: { control: "boolean", table: { category: "Behavior" } },
   },
 } satisfies Meta<typeof ProgressBar>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Baseline progress indicator for a labeled metric. Use the controls here to verify value, layout, size, and annotation behavior before reviewing the scenario stories below.",
+      },
+    },
+  },
+  render: (args) => (
+    <StorySection title="Default" description="Single progress bar with live controls for value, layout, and size.">
+      <StoryShowcase>
+        <WithThemes>
+          <MobileFrame>
+            <ProgressBar {...args} />
+          </MobileFrame>
+        </WithThemes>
+      </StoryShowcase>
+    </StorySection>
+  ),
+};
 
 const thresholdsContent = (
   <StoryStack className="story-stack story-stack--gap-20">

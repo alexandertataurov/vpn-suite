@@ -19,7 +19,12 @@ export function CompactStepper({
   return (
     <ol className={["compact-stepper", className].filter(Boolean).join(" ")} {...props}>
       {items.map((item, index) => (
-        <li key={item.id} className="compact-stepper__item" data-state={item.state}>
+        <li
+          key={item.id}
+          className="compact-stepper__item"
+          data-state={item.state}
+          aria-current={item.state === "current" ? "step" : undefined}
+        >
           <span className="compact-stepper__index" aria-hidden>
             {item.state === "complete" ? "✓" : index + 1}
           </span>

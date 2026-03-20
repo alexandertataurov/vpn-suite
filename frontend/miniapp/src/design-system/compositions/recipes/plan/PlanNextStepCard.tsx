@@ -1,5 +1,5 @@
 import {
-  ButtonRow,
+  ButtonRowAuto,
   CompactSummaryCard,
   HelperNote,
   MissionPrimaryButton,
@@ -45,7 +45,7 @@ export function PlanNextStepCard({
       <HelperNote tone={alertTone === "error" ? "danger" : alertTone === "warning" ? "warning" : "info"}>
         {alertMessage}
       </HelperNote>
-      <ButtonRow>
+      <ButtonRowAuto>
         {primaryTo ? (
           <MissionPrimaryLink to={primaryTo}>{primaryLabel}</MissionPrimaryLink>
         ) : (
@@ -58,7 +58,7 @@ export function PlanNextStepCard({
             {secondaryLabel}
           </MissionSecondaryLink>
         ) : null}
-      </ButtonRow>
+      </ButtonRowAuto>
     </CompactSummaryCard>
   );
 }

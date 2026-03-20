@@ -50,7 +50,7 @@ export const Default: Story = {
     docs: {
       description: {
         story:
-          "Retention dialog in the initial selection state before the user chooses a cancellation reason.",
+          "Retention dialog in the initial selection state before the user chooses a cancellation reason. The warning note now appears before the action list so the destructive impact is visible early.",
       },
     },
   },
@@ -65,7 +65,7 @@ export const Variants: Story = {
   render: () => (
     <StorySection
       title="Variants"
-      description="No reason selected, discount retention, and support retention states."
+      description="No reason selected, discount retention, support retention, and early warning states."
     >
       <StoryShowcase>
         <StoryStack>

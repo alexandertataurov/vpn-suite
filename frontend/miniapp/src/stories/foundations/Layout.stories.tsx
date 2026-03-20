@@ -6,7 +6,7 @@ import {
   GroupLabel,
   TokenGrid,
   TokenSlot,
-  FOUNDATION,
+  FoundationCodePreview,
 } from "./foundationShared";
 
 const meta: Meta = {
@@ -58,22 +58,8 @@ export const Tokens: StoryObj = {
 
 function BreakpointSwatch({ value }: { value: string }) {
   return (
-    <div
-      style={{
-        width: "100%",
-        height: "100%",
-        borderRadius: FOUNDATION.cardRadius,
-        background: "var(--color-surface)",
-        border: FOUNDATION.cardBorder,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontFamily: "var(--font-mono)",
-        fontSize: "var(--typo-meta-size)",
-        color: "var(--color-text)",
-      }}
-    >
+    <FoundationCodePreview minHeight={64}>
       {value}
-    </div>
+    </FoundationCodePreview>
   );
 }

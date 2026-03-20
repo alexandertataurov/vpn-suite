@@ -1,7 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { useEffect, useState } from "react";
+import { expect, screen, userEvent, waitFor, within } from "storybook/test";
 import { Modal } from "./Modal";
 import { Button } from "@/design-system";
+import { StorySection, StoryShowcase } from "@/design-system";
 
 const LOREM =
   "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.";
@@ -21,14 +23,13 @@ const meta = {
     },
   },
   argTypes: {
-    variant: { control: "select", options: ["plain", "confirm", "danger"] },
+    variant: { control: "select", options: ["plain", "confirm", "danger"], table: { category: "Appearance" } },
     theme: {
       control: "inline-radio",
       options: ["dark", "light"],
-      defaultValue: "dark",
+      table: { disable: true },
     },
   },
-  args: { theme: "dark" },
 } satisfies Meta<typeof Modal>;
 
 export default meta;
@@ -40,15 +41,68 @@ export const Default: Story = {
     docs: {
       description: {
         story:
-          "Open the modal from a button and verify the content stays aligned in both theme modes.",
+          "Always-open inline baseline for reviewing header, body, and action layout before moving to the trigger-based interaction stories below.",
       },
     },
   },
   render: (args) => (
-    <ThemeWrapper theme={args.theme ?? "dark"}>
-      <DefaultDemo />
+    <ThemeWrapper theme="dark">
+      <StorySection title="Default" description="Always-open inline baseline for the modal content and footer contract.">
+        <StoryShowcase>
+          <Modal
+            isOpen
+            onClose={() => {}}
+            inline
+            title="Default modal"
+            subtitle="Use this baseline to review spacing, title hierarchy, and footer actions."
+            variant={args.variant}
+            actions={{
+              primary: { label: "Confirm", onClick: () => {} },
+              secondary: { label: "Cancel", onClick: () => {} },
+            }}
+          >
+            This is the baseline modal layout shown inline so the structure is visible without opening an overlay.
+          </Modal>
+        </StoryShowcase>
+      </StorySection>
     </ThemeWrapper>
   ),
+};
+
+export const Interaction: Story = {
+  name: "Trigger flow",
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Trigger-based overlay scenario with a small interaction contract for opening and closing the modal.",
+      },
+    },
+  },
+  render: () => (
+    <ThemeWrapper theme="dark">
+      <StorySection title="Trigger flow" description="Open and dismiss the overlay modal from a local trigger.">
+        <StoryShowcase>
+          <DefaultDemo />
+        </StoryShowcase>
+      </StorySection>
+    </ThemeWrapper>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.click(canvas.getByRole("button", { name: "Open modal" }));
+
+    await expect(await screen.findByRole("dialog")).toBeInTheDocument();
+    await expect(screen.getByRole("heading", { name: "Default modal" })).toBeInTheDocument();
+    await expect(screen.getByText("This is the default modal.")).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Close" }));
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+  },
 };
 
 function DefaultDemo() {
@@ -80,9 +134,13 @@ export const WithDescription: Story = {
       },
     },
   },
-  render: (args) => (
-    <ThemeWrapper theme={args.theme ?? "dark"}>
-      <WithDescriptionDemo />
+  render: () => (
+    <ThemeWrapper theme="dark">
+      <StorySection title="With description" description="Subtitle text adds context for confirm flows without changing the action hierarchy.">
+        <StoryShowcase>
+          <WithDescriptionDemo />
+        </StoryShowcase>
+      </StorySection>
     </ThemeWrapper>
   ),
 };
@@ -118,11 +176,13 @@ export const Inline: Story = {
       },
     },
   },
-  render: (args) => (
-    <ThemeWrapper theme={args.theme ?? "dark"}>
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-        <InlineDemo />
-      </div>
+  render: () => (
+    <ThemeWrapper theme="dark">
+      <StorySection title="Inline" description="Inline preview in document flow without the overlay portal.">
+        <StoryShowcase>
+          <InlineDemo />
+        </StoryShowcase>
+      </StorySection>
     </ThemeWrapper>
   ),
 };
@@ -153,9 +213,15 @@ function ThemeWrapper({
   children: React.ReactNode;
 }) {
   useEffect(() => {
-    document.documentElement.dataset.theme = theme;
+    const root = document.documentElement;
+    const previousTheme = root.dataset.theme;
+    root.dataset.theme = theme;
     return () => {
-      document.documentElement.dataset.theme = "dark";
+      if (previousTheme == null) {
+        delete root.dataset.theme;
+      } else {
+        root.dataset.theme = previousTheme;
+      }
     };
   }, [theme]);
   return <>{children}</>;
@@ -171,11 +237,13 @@ export const Variants: Story = {
       },
     },
   },
-  render: (args) => (
-    <ThemeWrapper theme={args.theme ?? "dark"}>
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-        <VariantsDemo />
-      </div>
+  render: () => (
+    <ThemeWrapper theme="dark">
+      <StorySection title="Variants" description="Compare plain, confirm, and danger modal actions and copy hierarchy.">
+        <StoryShowcase>
+          <VariantsDemo />
+        </StoryShowcase>
+      </StorySection>
     </ThemeWrapper>
   ),
 };
@@ -247,9 +315,13 @@ export const Loading: Story = {
       },
     },
   },
-  render: (args) => (
-    <ThemeWrapper theme={args.theme ?? "dark"}>
-      <LoadingDemo />
+  render: () => (
+    <ThemeWrapper theme="dark">
+      <StorySection title="Loading state" description="Primary action loading while the modal remains open.">
+        <StoryShowcase>
+          <LoadingDemo />
+        </StoryShowcase>
+      </StorySection>
     </ThemeWrapper>
   ),
 };
@@ -284,9 +356,13 @@ export const LongContent: Story = {
       },
     },
   },
-  render: (args) => (
-    <ThemeWrapper theme={args.theme ?? "dark"}>
-      <LongContentDemo />
+  render: () => (
+    <ThemeWrapper theme="dark">
+      <StorySection title="Long content" description="Scrollable content with persistent header and footer actions.">
+        <StoryShowcase>
+          <LongContentDemo />
+        </StoryShowcase>
+      </StorySection>
     </ThemeWrapper>
   ),
 };
@@ -324,9 +400,13 @@ export const MobileView: Story = {
       },
     },
   },
-  render: (args) => (
-    <ThemeWrapper theme={args.theme ?? "dark"}>
-      <MobileViewDemo />
+  render: () => (
+    <ThemeWrapper theme="dark">
+      <StorySection title="Mobile layout" description="Confirm flow on a narrow viewport.">
+        <StoryShowcase>
+          <MobileViewDemo />
+        </StoryShowcase>
+      </StorySection>
     </ThemeWrapper>
   ),
 };

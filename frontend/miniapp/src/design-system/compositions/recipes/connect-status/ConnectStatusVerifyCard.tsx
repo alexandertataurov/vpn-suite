@@ -23,10 +23,12 @@ export function ConnectStatusVerifyCard({
 
   return (
     <CompactSummaryCard
+      as="section"
       eyebrow={t("connect_status.verify_section_title")}
       title={showConfirmAction ? t("connect_status.summary_pending_title") : t("connect_status.summary_confirmed_title")}
       subtitle={t("connect_status.verify_section_description")}
       tone={showConfirmAction ? "amber" : "green"}
+      aria-busy={isConfirming}
       actions={
         showConfirmAction ? (
           <MissionPrimaryButton

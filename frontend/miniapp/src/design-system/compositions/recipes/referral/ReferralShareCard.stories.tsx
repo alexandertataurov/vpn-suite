@@ -24,7 +24,7 @@ export const Default: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Default share card for a live referral link.",
+        story: "Default share card for a live referral link with ready-state badge and copy action.",
       },
     },
   },
@@ -36,6 +36,29 @@ export const Default: Story = {
           shareUrl="https://t.me/vpn_suite_bot?start=ref_123"
           isOnline={true}
           onCopy={() => Promise.resolve(true)}
+        />
+      </StoryShowcase>
+    </StorySection>
+  ),
+};
+
+export const Offline: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Offline share card with a live URL but disabled actions. The availability chip makes the blocked state obvious before the user tries to copy.",
+      },
+    },
+  },
+  render: () => (
+    <StorySection title="Offline" description="Live URL present, but the share actions are disabled.">
+      <StoryShowcase>
+        <ReferralShareCard
+          botUsername="vpn_suite_bot"
+          shareUrl="https://t.me/vpn_suite_bot?start=ref_123"
+          isOnline={false}
+          onCopy={() => Promise.resolve(false)}
         />
       </StoryShowcase>
     </StorySection>
@@ -56,12 +79,12 @@ export const Variants: Story = {
           <ReferralShareCard
             botUsername="vpn_suite_bot"
             shareUrl="https://t.me/vpn_suite_bot?start=ref_123"
-            isOnline={true}
+            isOnline={false}
             variant="compact"
             onCopy={() => Promise.resolve(true)}
           />
           <ReferralShareCard
-            botUsername=""
+            botUsername="vpn_suite_bot"
             shareUrl=""
             isOnline={false}
             onCopy={() => Promise.resolve(false)}

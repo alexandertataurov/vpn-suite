@@ -1,7 +1,8 @@
-import { useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import type { Meta, StoryObj } from "@storybook/react";
-import { BillingPeriodToggle, type BillingPeriodValue } from "./BillingPeriodToggle";
-import { CardRow, RowItem, SectionLabel, StoryStack } from "@/design-system";
+import { useArgs } from "storybook/preview-api";
+import { BillingPeriodToggle } from "./BillingPeriodToggle";
+import { CardRow, RowItem, SectionLabel, StorySection, StoryShowcase, StoryStack } from "@/design-system";
 import { IconShield } from "@/design-system/icons";
 import "@/styles/app/routes.css";
 
@@ -29,21 +30,14 @@ function WithThemes({ children }: { children: ReactNode }) {
   );
 }
 
-function InteractiveToggle({
-  initialValue = "monthly",
-  discount,
-}: {
-  initialValue?: BillingPeriodValue;
-  discount?: string;
-}) {
-  const [value, setValue] = useState<BillingPeriodValue>(initialValue);
-  return <BillingPeriodToggle value={value} onChange={setValue} discount={discount} />;
-}
-
 const meta: Meta<typeof BillingPeriodToggle> = {
   title: "Components/BillingPeriodToggle",
   tags: ["autodocs"],
   component: BillingPeriodToggle,
+  args: {
+    value: "monthly",
+    discount: "20%",
+  },
   parameters: {
     layout: "padded",
     status: { type: "stable" },
@@ -54,6 +48,20 @@ const meta: Meta<typeof BillingPeriodToggle> = {
       },
     },
   },
+  argTypes: {
+    value: {
+      control: "inline-radio",
+      options: ["monthly", "annual"],
+      table: { category: "State" },
+    },
+    discount: {
+      control: "text",
+      table: { category: "Content" },
+    },
+    onChange: {
+      table: { category: "Behavior" },
+    },
+  },
 };
 
 export default meta;
@@ -61,7 +69,6 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  name: "Default — Monthly selected",
   parameters: {
     docs: {
       description: {
@@ -70,15 +77,18 @@ export const Default: Story = {
       },
     },
   },
-  render: () => (
-    <WithThemes>
-      <InteractiveToggle initialValue="monthly" discount="20%" />
-    </WithThemes>
+  render: (args) => (
+    <StorySection title="Default" description="Baseline billing-period selector with the annual discount badge visible.">
+      <StoryShowcase>
+        <WithThemes>
+          <BillingPeriodToggle {...args} onChange={() => {}} />
+        </WithThemes>
+      </StoryShowcase>
+    </StorySection>
   ),
 };
 
 export const Variants: Story = {
-  name: "Variants",
   parameters: {
     docs: {
       description: {
@@ -88,18 +98,22 @@ export const Variants: Story = {
     },
   },
   render: () => (
-    <WithThemes>
-      <StoryStack>
-        <InteractiveToggle initialValue="monthly" discount="20%" />
-        <InteractiveToggle initialValue="annual" discount="20%" />
-        <InteractiveToggle initialValue="monthly" />
-      </StoryStack>
-    </WithThemes>
+    <StorySection title="Variants" description="Monthly, annual, and no-discount states for quick comparison.">
+      <StoryShowcase>
+        <WithThemes>
+          <StoryStack>
+            <BillingPeriodToggle value="monthly" onChange={() => {}} discount="20%" />
+            <BillingPeriodToggle value="annual" onChange={() => {}} discount="20%" />
+            <BillingPeriodToggle value="monthly" onChange={() => {}} />
+          </StoryStack>
+        </WithThemes>
+      </StoryShowcase>
+    </StorySection>
   ),
 };
 
 export const InContext: Story = {
-  name: "In context — Plan & Billing page",
+  name: "In context",
   parameters: {
     docs: {
       description: {
@@ -109,20 +123,52 @@ export const InContext: Story = {
     },
   },
   render: () => (
-    <WithThemes>
-      <StoryStack>
-        <SectionLabel label="Change Plan" />
-        <p className="section-desc">Switch plans or pick a renewal period.</p>
-        <InteractiveToggle initialValue="annual" discount="20%" />
-        <CardRow>
-          <RowItem
-            icon={<IconShield size={15} strokeWidth={2} aria-hidden />}
-            iconVariant="blue"
-            label="Pro · Current plan"
-            subtitle="3 device slots · AmneziaWG · Priority support"
-          />
-        </CardRow>
-      </StoryStack>
-    </WithThemes>
+    <StorySection title="In context" description="Placed above a plan card as it appears in the billing flow.">
+      <StoryShowcase>
+        <WithThemes>
+          <StoryStack>
+            <SectionLabel label="Change Plan" />
+            <p className="section-desc">Switch plans or pick a renewal period.</p>
+            <BillingPeriodToggle value="annual" onChange={() => {}} discount="20%" />
+            <CardRow>
+              <RowItem
+                icon={<IconShield size={15} strokeWidth={2} aria-hidden />}
+                iconVariant="blue"
+                label="Pro · Current plan"
+                subtitle="3 device slots · AmneziaWG · Priority support"
+              />
+            </CardRow>
+          </StoryStack>
+        </WithThemes>
+      </StoryShowcase>
+    </StorySection>
   ),
+};
+
+export const Interactive: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Interactive period selector wired through Storybook args so the selected state stays in sync with the controls panel.",
+      },
+    },
+  },
+  render: function InteractiveStory(args) {
+    const [{ value }, updateArgs] = useArgs();
+
+    return (
+      <StorySection title="Interactive" description="Switch between monthly and annual while keeping Storybook controls in sync.">
+        <StoryShowcase>
+          <WithThemes>
+            <BillingPeriodToggle
+              {...args}
+              value={value ?? args.value}
+              onChange={(nextValue) => updateArgs({ value: nextValue })}
+            />
+          </WithThemes>
+        </StoryShowcase>
+      </StorySection>
+    );
+  },
 };

@@ -79,3 +79,26 @@ export const Variants: Story = {
     </StorySection>
   ),
 };
+
+export const LongLabels: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Stress test for long page titles, subtitles, and a right-side action. Use it to verify that the chrome stays readable before the content below it gets dense.",
+      },
+    },
+  },
+  render: () => (
+    <StorySection title="Long labels" description="Long title, subtitle, and action spacing under tighter layout pressure.">
+      <StoryShowcase>
+        <PageHeader
+          title="Plan, billing, device access, and subscription recovery"
+          subtitle="Manage renewal timing, review payment history, and get back online without losing context."
+          onBack={() => {}}
+          action={<SettingsButton onClick={() => {}} />}
+        />
+      </StoryShowcase>
+    </StorySection>
+  ),
+};

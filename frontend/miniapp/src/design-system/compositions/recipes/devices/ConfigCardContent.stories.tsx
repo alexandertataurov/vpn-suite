@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { StorySection, StoryShowcase, StoryStack } from "@/design-system";
+import { expect, userEvent, within } from "storybook/test";
 import { ConfigCardContent } from "./ConfigCardContent";
 
 const meta: Meta<typeof ConfigCardContent> = {
@@ -11,7 +12,7 @@ const meta: Meta<typeof ConfigCardContent> = {
     docs: {
       description: {
         component:
-          "Configuration delivery card used after issuing a device, with ready and pending contract states.",
+          "Configuration delivery card used after issuing a device, with ready and pending contract states and a primary copy action.",
       },
     },
   },
@@ -43,6 +44,35 @@ export const Default: Story = {
       description: {
         story:
           "Issued config state with copy and download affordances visible and ready to use.",
+      },
+    },
+  },
+  render: (args) => (
+    <StoryShowcase>
+      <ConfigCardContent {...args} />
+    </StoryShowcase>
+  ),
+};
+
+export const InteractiveCopyConfig: Story = {
+  name: "Interactive · copy config",
+  args: {
+    configText,
+    routeReason: "device_ready",
+    peerCreated: true,
+    onCopy: async () => true,
+    onDownload: () => {},
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(await canvas.findByRole("button", { name: "Copy config" }));
+    expect(await canvas.findByText("Copied")).toBeInTheDocument();
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Copies the config and verifies the transient success state so the primary action remains testable.",
       },
     },
   },

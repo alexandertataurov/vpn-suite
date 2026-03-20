@@ -36,6 +36,11 @@ const meta = {
   title: "Components/InlineAlert",
   tags: ["autodocs"],
   component: InlineAlert,
+  args: {
+    variant: "info",
+    label: "Info",
+    message: "Your connection is secure.",
+  },
   parameters: {
     layout: "padded",
     status: { type: "stable" },
@@ -47,7 +52,13 @@ const meta = {
     },
   },
   argTypes: {
-    variant: { control: "select", options: ["info", "warning", "error", "success"] },
+    variant: { control: "select", options: ["info", "warning", "error", "success"], table: { category: "Appearance" } },
+    label: { control: "text", table: { category: "Content" } },
+    message: { control: "text", table: { category: "Content" } },
+    compact: { control: "boolean", table: { category: "Layout" } },
+    iconMode: { control: "select", options: ["dot", "icon"], table: { category: "Appearance" } },
+    action: { table: { disable: true } },
+    onDismiss: { table: { disable: true } },
   },
 } satisfies Meta<typeof InlineAlert>;
 
@@ -56,11 +67,21 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: {
-    variant: "info",
-    label: "Info",
-    message: "Your connection is secure.",
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Baseline inline alert contract. Use the controls here to review variant, label, and message before moving to the richer state and in-context examples.",
+      },
+    },
   },
+  render: (args) => (
+    <StorySection title="Default" description="Baseline inline alert for compact, non-blocking page feedback.">
+      <StoryShowcase>
+        <InlineAlert {...args} />
+      </StoryShowcase>
+    </StorySection>
+  ),
 };
 
 const variantsContent = (

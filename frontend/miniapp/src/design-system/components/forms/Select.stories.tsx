@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { useState } from "react";
+import { useArgs } from "storybook/preview-api";
 import { Select } from "./Select";
 import { Input, StorySection, StoryShowcase, StoryStack } from "@/design-system";
 
@@ -7,8 +7,14 @@ const meta = {
   title: "Components/Select",
   tags: ["autodocs"],
   component: Select,
+  args: {
+    label: "Server",
+    placeholder: "Choose server",
+    value: "amsterdam",
+  },
   parameters: {
     layout: "padded",
+    status: { type: "stable" },
     docs: {
       description: {
         component:
@@ -17,10 +23,20 @@ const meta = {
     },
   },
   argTypes: {
-    label: { control: "text" },
-    placeholder: { control: "text" },
-    loading: { control: "boolean" },
-    disabled: { control: "boolean" },
+    label: { control: "text", table: { category: "Content" } },
+    placeholder: { control: "text", table: { category: "Content" } },
+    value: {
+      control: "select",
+      options: ["", "amsterdam", "frankfurt", "paris", "london"],
+      table: { category: "State" },
+    },
+    description: { control: "text", table: { category: "Content" } },
+    error: { control: "text", table: { category: "State" } },
+    success: { control: "text", table: { category: "State" } },
+    loading: { control: "boolean", table: { category: "State" } },
+    disabled: { control: "boolean", table: { category: "State" } },
+    loadingLabel: { control: "text", table: { category: "Content" } },
+    emptyLabel: { control: "text", table: { category: "Content" } },
   },
 } satisfies Meta<typeof Select>;
 
@@ -35,32 +51,24 @@ const SERVER_OPTIONS = [
   { value: "london", label: "London" },
 ];
 
-function SelectDemo() {
-  const [value, setValue] = useState("amsterdam");
-  return (
-    <Select
-      options={SERVER_OPTIONS}
-      value={value}
-      onChange={setValue}
-      label="Server"
-      placeholder="Choose server"
-    />
-  );
-}
-
 export const Default: Story = {
+  args: {
+    label: "Server",
+    placeholder: "Choose server",
+    value: "amsterdam",
+  },
   parameters: {
     docs: {
       description: {
         story:
-          "Interactive server selector using a real option list. This is the default select contract.",
+          "Baseline select contract with a populated option list. Use the controls here to review label, placeholder, selected value, and helper states.",
       },
     },
   },
-  render: () => (
-    <StorySection title="Interactive" description="Select a server from the option list.">
+  render: (args) => (
+    <StorySection title="Default" description="Baseline select contract with a populated option list.">
       <StoryShowcase>
-        <SelectDemo />
+        <Select {...args} options={SERVER_OPTIONS} onChange={() => {}} />
       </StoryShowcase>
     </StorySection>
   ),
@@ -139,4 +147,30 @@ export const FormContext: Story = {
       </StoryShowcase>
     </StorySection>
   ),
+};
+
+export const Interactive: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Interactive selector scenario for checking menu behavior and selected-value rendering against a real option list.",
+      },
+    },
+  },
+  render: function InteractiveStory(args) {
+    const [{ value }, updateArgs] = useArgs();
+    return (
+      <StorySection title="Interactive" description="Open the menu and switch between real server options.">
+        <StoryShowcase>
+          <Select
+            {...args}
+            options={SERVER_OPTIONS}
+            value={typeof value === "string" ? value : ""}
+            onChange={(nextValue) => updateArgs({ value: nextValue })}
+          />
+        </StoryShowcase>
+      </StorySection>
+    );
+  },
 };

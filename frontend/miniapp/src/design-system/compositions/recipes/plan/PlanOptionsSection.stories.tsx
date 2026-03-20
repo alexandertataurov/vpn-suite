@@ -11,7 +11,7 @@ const meta: Meta<typeof PlanOptionsSection> = {
     layout: "padded",
     docs: {
       description: {
-        component: "Plan-selection section with billing-period toggle, tier cards, and empty-state handling.",
+        component: "Plan-selection section with billing-period toggle, tier cards, price hierarchy, and empty-state handling.",
       },
     },
   },
@@ -112,7 +112,7 @@ export const Variants: Story = {
     docs: {
       description: {
         story:
-          "Subscribed, renewal-prompt, and empty-catalog states in one view. Review how the section degrades when there are no visible tiers to choose from.",
+          "Subscribed, renewal-prompt, and empty-catalog states in one view. Review how the price block and CTA label stay legible as the section degrades when there are no visible tiers to choose from.",
       },
     },
   },

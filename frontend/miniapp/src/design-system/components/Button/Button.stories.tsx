@@ -37,12 +37,18 @@ const meta = {
   title: "Components/Button",
   tags: ["autodocs", "contract-test"],
   component: Button,
+  args: {
+    variant: "primary",
+    size: "md",
+    children: "Save changes",
+  },
   parameters: {
     layout: "padded",
+    status: { type: "stable" },
     docs: {
       description: {
         component:
-          "Primary action control. Variants: primary, secondary, danger, external. Tones (primary only): default, success, warning, danger. Use this as the canonical CTA primitive across the miniapp.",
+          "Primary action control for the miniapp. Variants: primary, secondary, danger, external. Tones apply to primary buttons only: default, success, warning, danger.",
       },
     },
   },
@@ -54,14 +60,16 @@ const meta = {
     ),
   ],
   argTypes: {
+    children: { control: "text", table: { category: "Content" } },
     variant: {
       control: "select",
       options: ["primary", "secondary", "danger", "external"],
+      table: { category: "Appearance" },
     },
-    size: { control: "select", options: ["sm", "md"] },
-    tone: { control: "select", options: ["default", "success", "warning", "danger"] },
-    loading: { control: "boolean" },
-    fullWidth: { control: "boolean" },
+    size: { control: "select", options: ["sm", "md"], table: { category: "Appearance" } },
+    tone: { control: "select", options: ["default", "success", "warning", "danger"], table: { category: "Appearance" } },
+    loading: { control: "boolean", table: { category: "State" } },
+    fullWidth: { control: "boolean", table: { category: "Layout" } },
   },
 } satisfies Meta<typeof Button>;
 
@@ -70,11 +78,6 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: {
-    variant: "primary",
-    size: "md",
-    children: "Save changes",
-  },
   parameters: {
     docs: {
       description: {
@@ -84,9 +87,11 @@ export const Default: Story = {
     },
   },
   render: (args) => (
-    <StoryShowcase>
-      <Button {...args} />
-    </StoryShowcase>
+    <StorySection title="Default" description="Baseline standalone button contract for primary actions.">
+      <StoryShowcase>
+        <Button {...args} />
+      </StoryShowcase>
+    </StorySection>
   ),
 };
 
@@ -107,7 +112,7 @@ export const VariantHierarchy: Story = {
     >
       <StoryShowcase>
         <WithThemes>
-          <div style={{ width: 390, display: "flex", flexDirection: "column", gap: 8 }}>
+          <div className="layout-story-column layout-story-column--medium">
             <Button variant="primary" fullWidth>
               Save changes
             </Button>
@@ -132,7 +137,7 @@ export const VariantHierarchy: Story = {
 };
 
 export const Tones: Story = {
-  name: "Primary tones",
+  name: "Tones",
   parameters: {
     docs: {
       description: {
@@ -148,7 +153,7 @@ export const Tones: Story = {
     >
       <StoryShowcase>
         <WithThemes>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, maxWidth: 320 }}>
+          <div className="layout-story-column layout-story-column--narrow">
             <Button variant="primary" tone="default" fullWidth>
               Save changes
             </Button>
@@ -181,7 +186,7 @@ export const Sizes: Story = {
   render: () => (
     <StorySection title="Sizes">
       <StoryShowcase>
-        <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "center" }}>
+        <div className="layout-story-inline layout-story-inline--center">
           <Button variant="primary" size="md">
             Primary md
           </Button>
@@ -201,7 +206,7 @@ export const Sizes: Story = {
 };
 
 export const WithIcons: Story = {
-  name: "Icon combinations",
+  name: "Icons",
   parameters: {
     docs: {
       description: {
@@ -213,7 +218,7 @@ export const WithIcons: Story = {
   render: () => (
     <StorySection title="Icon combinations">
       <StoryShowcase>
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+        <div className="layout-story-inline">
           <Button variant="primary">Label only</Button>
           <Button
             variant="primary"
@@ -250,7 +255,7 @@ export const ButtonGroup: Story = {
     >
       <StoryShowcase>
         <WithThemes>
-          <div style={{ width: 390, display: "flex", flexDirection: "column", gap: 8 }}>
+          <div className="layout-story-column layout-story-column--medium">
             <Button variant="primary" fullWidth>
               Choose a Plan →
             </Button>
@@ -341,52 +346,6 @@ export const States: Story = {
   },
 };
 
-export const ThemeComparison: Story = {
-  name: "Theme comparison",
-  parameters: {
-    docs: {
-      description: {
-        story:
-          "All button variants rendered in both themes at once. This is the fastest way to compare token behavior across contexts.",
-      },
-    },
-  },
-  render: () => (
-    <StorySection
-      title="Theme comparison"
-      description="All variants in dark and light contexts simultaneously."
-    >
-      <StoryShowcase>
-        <WithThemes>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, maxWidth: 320 }}>
-            <Button variant="primary" fullWidth>
-              Primary
-            </Button>
-            <Button variant="secondary" fullWidth>
-              Secondary
-            </Button>
-            <Button variant="danger" fullWidth>
-              Danger
-            </Button>
-            <Button variant="external" fullWidth>
-              External
-            </Button>
-            <Button variant="primary" tone="success" fullWidth>
-              Success
-            </Button>
-            <Button variant="primary" tone="warning" fullWidth>
-              Warning
-            </Button>
-            <Button variant="primary" tone="danger" fullWidth>
-              Danger tone
-            </Button>
-          </div>
-        </WithThemes>
-      </StoryShowcase>
-    </StorySection>
-  ),
-};
-
 export const ResponsiveGroup: Story = {
   name: "Responsive group",
   parameters: {
@@ -412,6 +371,52 @@ export const ResponsiveGroup: Story = {
             Cancel
           </Button>
         </ButtonGroupComponent>
+      </StoryShowcase>
+    </StorySection>
+  ),
+};
+
+export const ThemeComparison: Story = {
+  name: "Theme comparison",
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "All button variants rendered in both themes at once. This is the fastest way to compare token behavior across contexts.",
+      },
+    },
+  },
+  render: () => (
+    <StorySection
+      title="Theme comparison"
+      description="All variants in dark and light contexts simultaneously."
+    >
+      <StoryShowcase>
+        <WithThemes>
+          <div className="layout-story-column layout-story-column--narrow">
+            <Button variant="primary" fullWidth>
+              Primary
+            </Button>
+            <Button variant="secondary" fullWidth>
+              Secondary
+            </Button>
+            <Button variant="danger" fullWidth>
+              Danger
+            </Button>
+            <Button variant="external" fullWidth>
+              External
+            </Button>
+            <Button variant="primary" tone="success" fullWidth>
+              Success
+            </Button>
+            <Button variant="primary" tone="warning" fullWidth>
+              Warning
+            </Button>
+            <Button variant="primary" tone="danger" fullWidth>
+              Danger tone
+            </Button>
+          </div>
+        </WithThemes>
       </StoryShowcase>
     </StorySection>
   ),

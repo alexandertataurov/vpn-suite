@@ -7,6 +7,10 @@ const meta = {
   title: "Components/Skeleton",
   tags: ["autodocs"],
   component: Skeleton,
+  args: {
+    width: "120px",
+    height: "24px",
+  },
   parameters: {
     layout: "padded",
     status: { type: "stable" },
@@ -18,7 +22,9 @@ const meta = {
     },
   },
   argTypes: {
-    variant: { control: "select", options: ["default", "line", "card", "list", "shimmer"] },
+    variant: { control: "select", options: ["default", "line", "card", "list", "shimmer"], table: { category: "Appearance" } },
+    width: { control: "text", table: { category: "Layout" } },
+    height: { control: "text", table: { category: "Layout" } },
   },
 } satisfies Meta<typeof Skeleton>;
 
@@ -27,19 +33,22 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: { width: "120px", height: "24px" },
   parameters: {
     docs: {
       description: {
         story:
-          "Default loading bar for brief waits. Keep the width and height close to the final content so the layout stays stable.",
+          "Representative loading card for compact content blocks. Use this as the baseline contract, then move to the variant stories for line and list-specific placeholders.",
       },
     },
   },
-  render: (args) => (
-    <StoryShowcase>
-      <Skeleton {...args} />
-    </StoryShowcase>
+  render: () => (
+    <StorySection title="Default" description="Representative loading card that preserves final layout while content resolves.">
+      <StoryShowcase>
+        <StoryPreviewCard>
+          <SkeletonCard />
+        </StoryPreviewCard>
+      </StoryShowcase>
+    </StorySection>
   ),
 };
 
@@ -58,6 +67,8 @@ export const Variants: Story = {
         <StoryStack>
           <Skeleton variant="line" />
           <Skeleton variant="card" width="100%" height="80px" />
+          <SkeletonCard />
+          <SkeletonList lines={3} />
           <Skeleton variant="shimmer" width="120px" height="24px" />
         </StoryStack>
       </StoryShowcase>

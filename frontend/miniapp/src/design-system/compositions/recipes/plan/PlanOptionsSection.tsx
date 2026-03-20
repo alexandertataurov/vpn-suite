@@ -36,6 +36,8 @@ export function PlanOptionsSection({
   onTierSelect,
 }: PlanOptionsSectionProps) {
   const { t, locale } = useI18n();
+  const billingPeriodLabel =
+    billingPeriod === "annual" ? t("plan.billing_annual_compact") : t("plan.billing_monthly_compact");
 
   return (
     <PageSection
@@ -104,6 +106,7 @@ export function PlanOptionsSection({
                   {displayed ? (
                     <div className="modern-plan-price">
                       <StarsAmount value={displayed.price_amount} />
+                      <span className="modern-plan-price-period">{billingPeriodLabel}</span>
                     </div>
                   ) : null}
                 </div>

@@ -11,7 +11,7 @@ const meta: Meta<typeof NewUserHero> = {
     docs: {
       description: {
         component:
-          "New-user hero used when the user has not bought a plan yet. Centered card layout with primary and secondary actions.",
+          "New-user hero used when the user has not bought a plan yet. Centered card layout with primary and secondary actions that balance into a button row when both are present.",
       },
     },
   },
@@ -32,7 +32,7 @@ export const Default: Story = {
     docs: {
       description: {
         story:
-          "Entry hero for users without a plan. Confirm that the primary plan-selection CTA is dominant and the secondary action remains supportive.",
+          "Entry hero for users without a plan. Confirm that the primary plan-selection CTA is dominant and the secondary action stays visually paired instead of feeling detached.",
       },
     },
   },
@@ -49,7 +49,7 @@ export const Variants: Story = {
     docs: {
       description: {
         story:
-          "Dual-action and single-action hero states for the no-plan entry flow. Use this to confirm the hero can scale down without losing the call to action.",
+          "Dual-action and single-action hero states for the no-plan entry flow. Use this to confirm the hero can scale down without losing CTA balance.",
       },
     },
   },

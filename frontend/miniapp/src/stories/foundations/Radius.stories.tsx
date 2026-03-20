@@ -6,6 +6,7 @@ import {
   GroupLabel,
   TokenGrid,
   TokenSlot,
+  FoundationSquarePreview,
 } from "./foundationShared";
 
 const meta: Meta = {
@@ -62,10 +63,8 @@ export const Scale: StoryObj = {
 
 function RadiusSwatch({ token }: { token: string }) {
   return (
-    <div
+    <FoundationSquarePreview
       style={{
-        width: 64,
-        height: 64,
         borderRadius: `var(${token})`,
         background: "var(--color-surface-2)",
         border: "1px solid var(--color-border)",

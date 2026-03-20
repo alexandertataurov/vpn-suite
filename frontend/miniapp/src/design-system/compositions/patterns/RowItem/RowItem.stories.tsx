@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import {
   IconBox,
   IconGlobe,
@@ -240,17 +240,20 @@ export const Responsive: Story = {
     const [width, setWidth] = useState(390);
     return (
       <WithThemes>
-        <div style={{ width: "100%", maxWidth: 390 }}>
+        <div
+          className="layout-story-column layout-story-column--medium"
+          style={{ "--layout-story-row-width": `${width}px` } as CSSProperties}
+        >
           <input
             type="range"
             min={240}
             max={390}
             value={width}
             onChange={(e) => setWidth(Number(e.target.value))}
-            style={{ marginBottom: 12, width: "100%" }}
+            className="layout-story-slider"
             aria-label="Width in pixels"
           />
-          <CardRow style={{ width, overflow: "hidden" }}>
+          <CardRow className="layout-story-row-frame">
             <RowItem
               icon={<IconSettings size={15} strokeWidth={2} />}
               label="Manage email, password and account preferences"

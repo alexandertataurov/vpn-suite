@@ -22,6 +22,8 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+const VIEW_WIDE = { viewport: { defaultViewport: "adminDesktop" as const } };
+
 const profileModalBaseProps = {
   onClose: () => {},
   title: "Edit profile",
@@ -108,5 +110,23 @@ export const Variants: Story = {
         </StoryStack>
       </StoryShowcase>
     </StorySection>
+  ),
+};
+
+export const Responsive: Story = {
+  name: "Responsive",
+  parameters: {
+    ...VIEW_WIDE,
+    docs: {
+      description: {
+        story:
+          "Desktop canvas that shows the denser two-column layout for name and email while keeping phone full width.",
+      },
+    },
+  },
+  render: () => (
+    <StoryShowcase>
+      <ProfileModal {...profileModalBaseProps} isOpen isSaving={false} />
+    </StoryShowcase>
   ),
 };

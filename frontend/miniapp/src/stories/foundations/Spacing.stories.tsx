@@ -6,8 +6,8 @@ import {
   GroupLabel,
   TokenGrid,
   TokenSlot,
-  FOUNDATION,
   resolveToken,
+  FoundationBarPreview,
 } from "./foundationShared";
 
 const SPACING_ORDER: Array<keyof typeof SPACING_TOKENS> = [
@@ -59,26 +59,5 @@ export const Scale: StoryObj = {
 };
 
 function SpacingSwatch({ token }: { token: string }) {
-  return (
-    <div
-      style={{
-        width: "100%",
-        height: FOUNDATION.cardSize,
-        display: "flex",
-        alignItems: "flex-end",
-        justifyContent: "flex-start",
-      }}
-    >
-      <div
-        style={{
-          width: `var(${token})`,
-          minWidth: `var(${token})`,
-          height: 8,
-          background: "var(--color-accent)",
-          opacity: 0.5,
-          borderRadius: "var(--radius-sm)",
-        }}
-      />
-    </div>
-  );
+  return <FoundationBarPreview token={token} />;
 }

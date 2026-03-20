@@ -15,9 +15,10 @@ export function CheckoutSummaryCard({
   planDeviceLimit,
 }: CheckoutSummaryCardProps) {
   const { t } = useI18n();
+  const gridColumns = showConfirmation ? 1 : 2;
 
   return (
-    <DataGrid columns={2}>
+    <DataGrid columns={gridColumns}>
       <DataCell label={t("checkout.grid_key_plan")} value={planDisplayName} cellType="plan" />
       {showConfirmation ? (
         <>

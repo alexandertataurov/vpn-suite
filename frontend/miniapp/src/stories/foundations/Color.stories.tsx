@@ -5,7 +5,7 @@ import {
   GroupLabel,
   TokenGrid,
   TokenSlot,
-  FOUNDATION,
+  FoundationColorPreview,
   resolveToken,
 } from "./foundationShared";
 
@@ -28,7 +28,6 @@ type ColorItem = { token: string; usage: string };
 
 function ColorSwatch({ token, usage }: ColorItem) {
   const value = resolveToken(token);
-  const isLight = token.includes("on-accent") || token.includes("overlay");
 
   return (
     <TokenSlot
@@ -36,25 +35,7 @@ function ColorSwatch({ token, usage }: ColorItem) {
       value={value}
       usage={usage}
     >
-      <div
-        title={value}
-        style={{
-          width: FOUNDATION.cardSize,
-          height: FOUNDATION.cardSize,
-          borderRadius: FOUNDATION.cardRadius,
-          background: `var(${token})`,
-          backgroundImage: isLight
-            ? `linear-gradient(45deg, #ddd 25%, transparent 25%),
-               linear-gradient(-45deg, #ddd 25%, transparent 25%),
-               linear-gradient(45deg, transparent 75%, #ddd 75%),
-               linear-gradient(-45deg, transparent 75%, #ddd 75%),
-               var(${token})`
-            : undefined,
-          backgroundSize: isLight ? "8px 8px, 8px 8px, 8px 8px, 8px 8px, 100%" : undefined,
-          backgroundPosition: isLight ? "0 0, 0 4px, 4px -4px, -4px 0px, 0 0" : undefined,
-          border: FOUNDATION.cardBorder,
-        }}
-      />
+      <FoundationColorPreview token={token} />
     </TokenSlot>
   );
 }

@@ -6,8 +6,13 @@ const meta = {
   title: "Components/Textarea",
   tags: ["autodocs"],
   component: Textarea,
+  args: {
+    label: "Support message",
+    placeholder: "Describe your issue…",
+  },
   parameters: {
     layout: "padded",
+    status: { type: "stable" },
     docs: {
       description: {
         component:
@@ -16,11 +21,13 @@ const meta = {
     },
   },
   argTypes: {
-    label: { control: "text" },
-    placeholder: { control: "text" },
-    error: { control: "text" },
-    success: { control: "text" },
-    disabled: { control: "boolean" },
+    label: { control: "text", table: { category: "Content" } },
+    placeholder: { control: "text", table: { category: "Content" } },
+    description: { control: "text", table: { category: "Content" } },
+    required: { control: "boolean", table: { category: "State" } },
+    error: { control: "text", table: { category: "State" } },
+    success: { control: "text", table: { category: "State" } },
+    disabled: { control: "boolean", table: { category: "State" } },
   },
 } satisfies Meta<typeof Textarea>;
 
@@ -29,14 +36,12 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: {
-    label: "Support message",
-    placeholder: "Describe your issue…",
-  },
   render: (args) => (
-    <StoryShowcase>
-      <Textarea {...args} />
-    </StoryShowcase>
+    <StorySection title="Default" description="Baseline multi-line field for longer free-form entry.">
+      <StoryShowcase>
+        <Textarea {...args} />
+      </StoryShowcase>
+    </StorySection>
   ),
   parameters: {
     docs: {
@@ -64,6 +69,28 @@ export const ValidationStates: Story = {
           <Textarea label="Feedback" placeholder="Your feedback" error="This field is required" />
           <Textarea label="Notes" value="Saved successfully" success="Saved" />
         </StoryStack>
+      </StoryShowcase>
+    </StorySection>
+  ),
+};
+
+export const Disabled: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Disabled textarea with a visible value for read-only or temporarily unavailable multi-line input.",
+      },
+    },
+  },
+  render: () => (
+    <StorySection title="Disabled" description="Use disabled when the field content must remain visible but not editable.">
+      <StoryShowcase>
+        <Textarea
+          label="Support notes"
+          value="This conversation is locked while the request is being processed."
+          disabled
+        />
       </StoryShowcase>
     </StorySection>
   ),

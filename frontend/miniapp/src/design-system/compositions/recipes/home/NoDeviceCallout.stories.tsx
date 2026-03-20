@@ -80,12 +80,12 @@ export const Variants: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Default copy, post-purchase copy, and narrow viewport behavior.",
+        story: "Default copy, post-purchase copy, disabled-CTA fallback, and narrow viewport behavior.",
       },
     },
   },
   render: () => (
-    <StorySection title="Variants" description="Two copy positions plus a narrow layout check.">
+    <StorySection title="Variants" description="Two copy positions, a disabled CTA fallback, and a narrow layout check.">
       <StoryShowcase>
         <StoryStack>
           <WithThemes>
@@ -99,6 +99,10 @@ export const Variants: Story = {
                 title="Ready to connect"
                 subtitle="Your Pro plan is active. Add a device to get started."
                 onAddDevice={() => {}}
+              />
+              <NoDeviceCallout
+                title="No action wired"
+                subtitle="The button is disabled when no add-device handler is available."
               />
             </div>
           </WithThemes>

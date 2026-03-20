@@ -16,9 +16,9 @@ import {
 } from "@/storybook/page-contracts";
 
 const DOC_BODY = [
-  "**Devices** (`/devices`) covers the device hero metrics, list actions, add-device wizard, setup card, and config delivery flow.",
+  "**Devices** (`/devices`) covers the device hero metrics, list actions, add-device wizard, setup card, config delivery flow, and revoke confirmation.",
   "**Scenarios** (from `page-contracts`) cover ready, empty devices, limit reached, no plan, loading (`me` pending), load error (`me` 500), and session missing.",
-  "**Interactions**: the primary CTA opens the wizard; the first row `Device actions → Rename` opens the rename modal with stable English `devices.*` strings.",
+  "**Interactions**: the primary CTA opens the wizard; the first row `Device actions → Rename` opens the rename modal; `Device actions → Remove device` opens the revoke confirm modal; config delivery appears after issuing a device and exposes copy/download actions.",
   "Viewport stories use `iphoneSE` and `adminDesktop` to catch layout regressions.",
 ].join("\n\n");
 
@@ -65,6 +65,25 @@ function renderDevicesIssueDeepLink(scenario: MockScenario) {
       {devicesRoutes()}
     </PageSandbox>
   );
+}
+
+const issueConfigDeliveryScenario: MockScenario = {
+  ...readyScenario,
+  responses: {
+    ...readyScenario.responses,
+    me: {
+      ...((readyScenario.responses?.me ?? {}) as Record<string, unknown>),
+      config_awg:
+        "[Interface]\nPrivateKey = storybook-private-key\nAddress = 10.0.0.2/32\n\n[Peer]\nPublicKey = storybook-peer\nEndpoint = vpn.example.com:51820\nAllowedIPs = 0.0.0.0/0",
+      config_wg: "[Interface]\nPrivateKey = storybook-private-key\nAddress = 10.0.0.2/32",
+      peer_created: true,
+      device_id: "dev-storybook-config",
+    },
+  },
+};
+
+function renderConfigDeliveryDevices() {
+  return renderDevices(issueConfigDeliveryScenario);
 }
 
 function scenarioStory(
@@ -179,6 +198,43 @@ export const InteractiveAddDeviceWizard: Story = {
   },
 };
 
+export const InteractiveConfigDelivery: Story = {
+  name: "Interactive · config delivery",
+  render: () => renderConfigDeliveryDevices(),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const previewDocument = canvasElement.ownerDocument;
+
+    const addDeviceButton = await canvas.findByRole("button", { name: "Add new device" });
+    await userEvent.click(addDeviceButton);
+
+    const deviceName = await canvas.findByLabelText("Device name");
+    await userEvent.type(deviceName, "Work Laptop");
+
+    await userEvent.click(canvas.getByRole("button", { name: "Continue" }));
+    await userEvent.click(await canvas.findByRole("button", { name: "Create device" }));
+
+    await waitFor(() => {
+      expect(canvas.getByRole("button", { name: "Copy config" })).toBeInTheDocument();
+      expect(canvas.getByRole("button", { name: "Download" })).toBeInTheDocument();
+    });
+
+    const rawConfigSummary = await canvas.findByText("View raw config");
+    await userEvent.click(rawConfigSummary);
+    await waitFor(() => {
+      expect(previewDocument.querySelector("pre.config-pre")).toHaveTextContent("storybook-private-key");
+    });
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Completes the add-device wizard against a config-delivery fixture, then verifies the issued config card exposes copy/download actions and raw config content.",
+      },
+    },
+  },
+};
+
 export const InteractiveOpenRenameFromRowMenu: Story = {
   name: "Interactive · rename from row menu",
   render: () => renderDevices(readyScenario),
@@ -206,6 +262,40 @@ export const InteractiveOpenRenameFromRowMenu: Story = {
       description: {
         story:
           "Opens the first row’s overflow menu (`devices.menu_trigger_aria` → **Device actions**), selects **Rename** (`devices.menu_rename_device`), and asserts the rename modal dialog plus the name field (`devices.rename_modal_placeholder` → aria-label **Device name**).",
+      },
+    },
+  },
+};
+
+export const InteractiveOpenRevokeFromRowMenu: Story = {
+  name: "Interactive · revoke from row menu",
+  render: () => renderDevices(readyScenario),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const previewDocument = canvasElement.ownerDocument;
+    const actionTriggers = await canvas.findAllByRole("button", { name: "Device actions" });
+    const firstRowMenu = actionTriggers[0];
+    if (!firstRowMenu) {
+      throw new Error("Expected at least one device row with an overflow trigger.");
+    }
+
+    await userEvent.click(firstRowMenu);
+    const revokeItem = await canvas.findByRole("menuitem", { name: "Remove device" });
+    await userEvent.click(revokeItem);
+
+    const dialog = await canvas.findByRole("dialog", { name: "Revoke device?" });
+    const dialogScope = within(dialog);
+    await userEvent.click(await dialogScope.findByRole("button", { name: "Revoke device" }));
+
+    await waitFor(() => {
+      expect(previewDocument.querySelector('[role="dialog"]')).toBeNull();
+    });
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Opens the first row overflow menu, selects **Remove device**, and confirms the danger dialog closes after the revoke action.",
       },
     },
   },

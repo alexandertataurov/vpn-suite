@@ -6,7 +6,7 @@ import {
   GroupLabel,
   TokenGrid,
   TokenSlot,
-  FOUNDATION,
+  FoundationCodePreview,
 } from "./foundationShared";
 
 const meta: Meta = {
@@ -45,24 +45,9 @@ export const Tokens: StoryObj = {
               label={key}
               value={String(MOTION_TOKENS[key])}
             >
-              <div
-              style={{
-                width: "100%",
-                height: "100%",
-                borderRadius: FOUNDATION.cardRadius,
-                background: "var(--color-surface)",
-                border: FOUNDATION.cardBorder,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontFamily: "var(--font-mono)",
-                fontSize: "var(--typo-meta-size)",
-                color: "var(--color-text)",
-                padding: 8,
-              }}
-              >
+              <FoundationCodePreview minHeight={64}>
                 {String(MOTION_TOKENS[key])}
-              </div>
+              </FoundationCodePreview>
             </TokenSlot>
           ))}
         </TokenGrid>

@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type { Meta, StoryObj } from "@storybook/react";
+import { expect, userEvent, within } from "storybook/test";
 import { SettingsAccountOverviewCard } from "./SettingsAccountOverviewCard";
 
 function ThemePane({
@@ -59,11 +60,18 @@ const activeArgs = {
 
 export const Default: Story = {
   args: activeArgs,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const card = await canvas.findByRole("button", { name: /Alex Morgan/i });
+    await userEvent.tab();
+    expect(card).toHaveFocus();
+    expect(card).toHaveAttribute("type", "button");
+  },
   parameters: {
     docs: {
       description: {
         story:
-          "Primary account summary card with the default active-plan presentation.",
+          "Primary account summary card with the default active-plan presentation. The editable variant is now a real button, so keyboard users can focus and activate it directly.",
       },
     },
   },

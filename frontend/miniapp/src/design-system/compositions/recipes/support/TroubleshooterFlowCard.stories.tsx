@@ -34,7 +34,7 @@ export const Default: Story = {
     docs: {
       description: {
         story:
-          "First-step troubleshooting card with a back-out action and a forward action.",
+          "First-step troubleshooting card with a back-out action and a forward action. On mobile, the primary next action stays last in the visual stack instead of jumping to the top.",
       },
     },
   },

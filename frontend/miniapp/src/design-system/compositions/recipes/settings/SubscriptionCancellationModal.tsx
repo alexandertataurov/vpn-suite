@@ -127,6 +127,8 @@ export function SubscriptionCancellationModal({
 
         {retentionContent}
 
+        <HelperNote tone="warning">{t("settings.danger_warning")}</HelperNote>
+
         {offers?.offer_downgrade && cancelReason === "price" ? (
           <HelperNote>{t("settings.cancel_downgrade_hint")}</HelperNote>
         ) : null}
@@ -143,6 +145,7 @@ export function SubscriptionCancellationModal({
               value={cancelFreeText}
               disabled={isCancelling}
               autoComplete="off"
+              aria-label={t("settings.cancel_other_details_label")}
               placeholder={t("settings.cancel_other_placeholder")}
               onChange={(e) => onCancelFreeTextChange?.(e.target.value)}
             />

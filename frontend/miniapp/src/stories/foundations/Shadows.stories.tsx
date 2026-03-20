@@ -6,7 +6,7 @@ import {
   GroupLabel,
   TokenGrid,
   TokenSlot,
-  FOUNDATION,
+  FoundationSquarePreview,
 } from "./foundationShared";
 
 const meta: Meta = {
@@ -52,16 +52,5 @@ export const Scale: StoryObj = {
 };
 
 function ShadowSwatch({ token }: { token: string }) {
-  return (
-    <div
-      style={{
-        width: "100%",
-        height: "100%",
-        borderRadius: FOUNDATION.cardRadius,
-        background: "var(--color-surface)",
-        border: FOUNDATION.cardBorder,
-        boxShadow: `var(${token})`,
-      }}
-    />
-  );
+  return <FoundationSquarePreview style={{ boxShadow: `var(${token})` }} />;
 }

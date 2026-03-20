@@ -15,13 +15,14 @@ export interface NoDeviceCalloutProps {
 export function NoDeviceCallout({
   title = "No devices added",
   subtitle = "Add a device to generate your configuration.",
-  ctaLabel = "Add Device",
+  ctaLabel = "Add device",
   onCtaClick,
   onAddDevice,
   ctaIcon,
   className,
 }: NoDeviceCalloutProps) {
   const handleAddDevice = onAddDevice ?? onCtaClick;
+  const isInteractive = typeof handleAddDevice === "function";
 
   return (
     <div className={["nd-callout", className].filter(Boolean).join(" ")} data-layer="NoDeviceCallout">
@@ -32,7 +33,12 @@ export function NoDeviceCallout({
         <div className="nd-title">{title}</div>
         <div className="nd-sub">{subtitle}</div>
       </div>
-      <button type="button" className="nd-cta" onClick={handleAddDevice}>
+      <button
+        type="button"
+        className="nd-cta"
+        onClick={handleAddDevice}
+        disabled={!isInteractive}
+      >
         {ctaIcon ?? <IconPlus size={13} strokeWidth={2.5} aria-hidden />}
         <span>{ctaLabel}</span>
       </button>

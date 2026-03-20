@@ -35,7 +35,7 @@ export const Default: Story = {
     docs: {
       description: {
         story:
-          "Three-step progression with one current step and supporting description text.",
+          "Three-step progression with one current step and supporting description text. The active step is announced as `aria-current=\"step\"`.",
       },
     },
   },

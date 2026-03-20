@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Route } from "react-router-dom";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 import { RestoreAccessPage } from "@/pages/RestoreAccess";
 import {
   type MockScenario,
@@ -19,7 +20,7 @@ const DOC_BODY = [
   "| No token | `loggedOutScenario` | `SessionMissing` |",
   "| Session loading | `loadingSessionScenario` | Header + loading `ActionCard` |",
   "| Logged-in, no grace/expired sub | `readyScenario` | Inline “no expired” + support / devices |",
-  "| Grace or expired sub | `restoreScenario` | Renew hero + sticky **Restore** |",
+  "| Grace or expired sub | `restoreScenario` | Renew hero + sticky **Restore access** |",
   "| Restore in flight | *(user clicks Restore)* | `pageState.loading` card |",
   "| Restore API error | *(failed POST after click)* | `pageState.error` + retry |",
   "`restoreScenario` aliases `expiredScenario` from contracts — keep in sync when backend shapes change.",
@@ -96,6 +97,64 @@ export const SessionMissing = scenarioStory(
   loggedOutScenario,
   "Token absent. Uses the shared session-missing treatment.",
 );
+
+const restoreLoadingScenario: MockScenario = {
+  ...restoreScenario,
+  loading: ["subscriptionOffers"],
+};
+
+const restoreErrorScenario: MockScenario = {
+  ...restoreScenario,
+  statuses: {
+    subscriptionOffers: 500,
+  },
+};
+
+export const RestoreInFlight: Story = {
+  name: "Restore in flight",
+  render: () => renderRestore(restoreLoadingScenario),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const restoreButton = await canvas.findByRole("button", { name: "Restore access" });
+    await userEvent.click(restoreButton);
+    await waitFor(() => {
+      expect(canvas.getByText("Restoring…")).toBeInTheDocument();
+      expect(
+        canvas.queryByRole("button", { name: "Restore access" }),
+      ).not.toBeInTheDocument();
+    });
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Click **Restore access** and keep the mutation pending so the page flips to the loading `ActionCard` branch.",
+      },
+    },
+  },
+};
+
+export const RestoreError: Story = {
+  name: "Restore error",
+  render: () => renderRestore(restoreErrorScenario),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const restoreButton = await canvas.findByRole("button", { name: "Restore access" });
+    await userEvent.click(restoreButton);
+    await waitFor(() => {
+      expect(canvas.getByText("Could not load")).toBeInTheDocument();
+      expect(canvas.getByText("Mocked error")).toBeInTheDocument();
+    });
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Click **Restore access** with a mocked `subscriptionOffers` 500 response so the page enters the error branch with retry.",
+      },
+    },
+  },
+};
 
 export const ViewportNarrow = scenarioStory(
   "Viewport · narrow",

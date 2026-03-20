@@ -44,6 +44,24 @@ export const Default: Story = {
   ),
 };
 
+export const Confirming: Story = {
+  args: {
+    showConfirmAction: true,
+    isConfirming: true,
+    primaryAction: null,
+    onConfirm: () => {},
+    onOpenApp: () => {},
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Confirming state with the summary card marked busy while the primary action is disabled.",
+      },
+    },
+  },
+};
+
 export const Variants: Story = {
   render: () => (
     <StorySection

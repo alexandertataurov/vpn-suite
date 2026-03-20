@@ -157,6 +157,18 @@
   line-height: 1.55;
 }
 
+.devices-setup-card__actions {
+  display: flex;
+}
+
+.devices-setup-card__actions > * {
+  width: 100%;
+}
+
+.devices-config-actions {
+  width: 100%;
+}
+
 .devices-empty-card {
   margin-bottom: 0;
 }
