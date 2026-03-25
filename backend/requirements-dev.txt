@@ -273,10 +273,6 @@ pyotp==2.9.0
     # via -r requirements.txt
 pyparsing==3.3.2
     # via pip-requirements-parser
-pypng==0.20220715.0
-    # via
-    #   -r requirements.txt
-    #   qrcode
 pytest==8.4.2
     # via
     #   -r requirements-dev.in
@@ -298,7 +294,7 @@ pyyaml==6.0.3
     #   -r requirements-dev.in
     #   -r requirements.txt
     #   uvicorn
-qrcode[pil]==7.4.2
+qrcode[pil]==8.2
     # via -r requirements.txt
 redis==5.3.1
     # via -r requirements.txt
@@ -321,8 +317,6 @@ six==1.17.0
     # via
     #   -r requirements.txt
     #   ecdsa
-    #   html5lib
-
 sortedcontainers==2.4.0
     # via cyclonedx-python-lib
 sqlalchemy[asyncio]==2.0.46
@@ -362,7 +356,6 @@ typing-extensions==4.15.0
     #   opentelemetry-semantic-conventions
     #   pydantic
     #   pydantic-core
-    #   qrcode
     #   sqlalchemy
     #   starlette
     #   typing-inspection
