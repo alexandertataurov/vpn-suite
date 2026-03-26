@@ -38,6 +38,7 @@ from aiogram.types import MenuButtonWebApp, WebAppInfo as MenuWebAppInfo
 from utils.config_validator import validate_config
 from middleware.logging import LoggingMiddleware
 from api_client import init_api
+from handlers.donation import router as donation_router
 from handlers.payment import router as payment_router
 from handlers.start import router as start_router
 from otel_tracing import setup_otel_tracing
@@ -191,11 +192,13 @@ async def run_bot():
 
     dp.include_router(payment_router)
     dp.include_router(start_router)
+    dp.include_router(donation_router)
     dp.include_router(errors_router)
+    allowed_updates = ["message", "callback_query"]
     if BOT_WEBHOOK_URL:
         await bot.set_webhook(
             f"{BOT_WEBHOOK_URL.rstrip('/')}{BOT_WEBHOOK_PATH}",
-            allowed_updates=["message"],
+            allowed_updates=allowed_updates,
         )
         _log.info("webhook_mode", url=f"{BOT_WEBHOOK_URL}{BOT_WEBHOOK_PATH}")
         app = _make_app(tracing_enabled, webhook_path=BOT_WEBHOOK_PATH, dp=dp, bot=bot)
@@ -206,7 +209,7 @@ async def run_bot():
         await dp.start_polling(
             bot,
             polling_timeout=BOT_POLLING_TIMEOUT,
-            allowed_updates=["message"],
+            allowed_updates=allowed_updates,
             tasks_concurrency_limit=BOT_TASKS_CONCURRENCY_LIMIT,
         )
 

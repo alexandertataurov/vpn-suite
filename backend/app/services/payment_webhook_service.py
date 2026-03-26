@@ -271,7 +271,9 @@ async def complete_pending_payment_by_bot(
         )
     )
     await session.flush()
-    await _apply_payment_success_effects(session, payment)
+    payload = payment.webhook_payload or {}
+    if str(payload.get("kind") or "").strip().lower() != "donation":
+        await _apply_payment_success_effects(session, payment)
     return True
 
 

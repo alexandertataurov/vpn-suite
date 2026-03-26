@@ -166,6 +166,22 @@ const ITEMS: SidebarItem[] = [
       </svg>
     ),
   },
+  {
+    to: "/news",
+    label: "News",
+    section: "Config",
+    icon: (
+      <svg
+        viewBox="0 0 14 14"
+        aria-hidden="true"
+      >
+        <rect x="2" y="2" width="10" height="10" rx=".6" />
+        <line x1="4" y1="5" x2="10" y2="5" />
+        <line x1="4" y1="7" x2="9" y2="7" />
+        <line x1="4" y1="9" x2="8" y2="9" />
+      </svg>
+    ),
+  },
 ];
 
 export const SIDEBAR_NAV_ID = "dashboard-sidebar-nav";

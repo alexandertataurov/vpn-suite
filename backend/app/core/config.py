@@ -80,6 +80,8 @@ class Settings(BaseSettings):
     telegram_bot_token: str = ""
     # Telegram Bot @username without @ (for referral links). Set TELEGRAM_BOT_USERNAME or VITE_TELEGRAM_BOT_USERNAME.
     telegram_bot_username: str = ""
+    # Admin News broadcasts (Redis-queued). Messages per second limit (global).
+    news_broadcast_qps: float = 20.0
     # WebApp session: JWT lifetime (seconds) for miniapp Bearer token.
     webapp_session_expire_seconds: int = 3600
     # S8-4: background limits check → auto-block when traffic exceeds server limit (interval sec; 0 = disabled)

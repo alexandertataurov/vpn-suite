@@ -29,6 +29,7 @@ from app.schemas.bot import (
     BotRevokeDeviceRequest,
     ChurnSurveyRequest,
     ChurnSurveyResponse,
+    CreateDonationInvoiceRequest,
     CreateInvoiceRequest,
     CreateInvoiceResponse,
     CreateOrGetSubscriptionRequest,
@@ -305,6 +306,92 @@ async def create_invoice(
         server_id=server.id,
         subscription_id=sub.id,
         free_activation=is_free,
+    )
+
+
+@router.post("/payments/telegram_stars/create-donation-invoice", response_model=CreateInvoiceResponse)
+async def create_donation_invoice(
+    request: Request,
+    body: CreateDonationInvoiceRequest,
+    db: AsyncSession = Depends(get_db),
+    principal=Depends(get_admin_or_bot_only),
+    idempotency_key: str | None = Header(None, alias="Idempotency-Key"),
+):
+    """Create a pending donation payment (Stars) for an existing subscription. Bot only."""
+    _require_bot(principal)
+    star_count = int(body.star_count or 0)
+    if star_count <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"code": "BAD_REQUEST", "message": "star_count must be > 0"},
+        )
+    user_result = await db.execute(select(User).where(User.tg_id == body.tg_id))
+    user = user_result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"code": "USER_NOT_FOUND", "message": "User not found"},
+        )
+    sub = None
+    if body.subscription_id:
+        sub_result = await db.execute(
+            select(Subscription).where(
+                Subscription.id == body.subscription_id,
+                Subscription.user_id == user.id,
+            )
+        )
+        sub = sub_result.scalar_one_or_none()
+    if not sub:
+        sub_result = await db.execute(
+            select(Subscription)
+            .where(Subscription.user_id == user.id)
+            .order_by(Subscription.created_at.desc())
+            .limit(1)
+        )
+        sub = sub_result.scalar_one_or_none()
+    if not sub:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"code": "SUBSCRIPTION_NOT_FOUND", "message": "No subscription found for user"},
+        )
+    external_id = (
+        f"bot:telegram_stars:donation:{user.id}:{sub.id}:{idempotency_key or request.state.request_id or 'none'}"
+    )
+    payment = Payment(
+        user_id=user.id,
+        subscription_id=sub.id,
+        provider="telegram_stars",
+        status="pending",
+        amount=star_count,
+        currency="XTR",
+        external_id=external_id,
+        webhook_payload={"kind": "donation", "star_count": star_count},
+    )
+    db.add(payment)
+    try:
+        await db.flush()
+        await db.commit()
+        await db.refresh(payment)
+        await db.refresh(sub)
+    except IntegrityError:
+        await db.rollback()
+        existing = (
+            await db.execute(select(Payment).where(Payment.external_id == external_id))
+        ).scalar_one_or_none()
+        if not existing:
+            raise
+        payment = existing
+    return CreateInvoiceResponse(
+        invoice_id=payment.id,
+        payment_id=payment.id,
+        title="Donation",
+        description="Support the project",
+        currency="XTR",
+        star_count=star_count,
+        payload=payment.id,
+        server_id="",
+        subscription_id=sub.id,
+        free_activation=False,
     )
 
 

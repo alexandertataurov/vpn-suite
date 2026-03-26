@@ -199,6 +199,13 @@ TEXTS = {
         "➡️ Open Connect menu": "➡️ Открыть меню подключения",
         "install_hint_open_connect": "Нажмите кнопку ниже, затем в главном меню выберите Подключить, чтобы получить конфиг.",
         "install_hint_open_connect_short": "Откройте меню Подключить ниже, чтобы получить конфиг.",
+
+        # Donation flow
+        "donate_offer_text": "Поддержите проект донатом через Telegram Stars. Выберите сумму:",
+        "donate_custom_btn": "Другая сумма",
+        "donate_custom_prompt": "Введите сумму в ⭐ (числом):",
+        "donate_custom_invalid": "Введите корректное число ⭐ (например 150).",
+        "donate_error": "Не получилось создать платёж. Попробуйте ещё раз чуть позже.",
     },
     "en": {
         "welcome": "Welcome! Open the app to manage your VPN.",
@@ -353,6 +360,13 @@ TEXTS = {
 
         "install_hint_open_connect": "Use the button below, then choose Connect in the main menu to get your config.",
         "install_hint_open_connect_short": "Open the Connect menu below to get your config.",
+
+        # Donation flow
+        "donate_offer_text": "Support the project via Telegram Stars. Choose an amount:",
+        "donate_custom_btn": "Custom amount",
+        "donate_custom_prompt": "Enter Stars amount (number):",
+        "donate_custom_invalid": "Enter a valid Stars number (e.g. 150).",
+        "donate_error": "Couldn't create payment. Please try again in a moment.",
     },
 }
 

@@ -20,6 +20,7 @@ from app.core.health_check_task import run_health_check_loop
 from app.core.limits_check_task import run_limits_check_loop
 from app.core.logging_config import configure_logging, extra_for_event, set_log_context
 from app.core.node_scan_task import run_node_scan_loop, run_node_scan_once
+from app.core.news_broadcast_task import run_news_broadcast_loop
 from app.core.onboarding_abandonment_task import run_onboarding_abandonment_loop
 from app.core.redaction import redact_for_log
 from app.core.redis_client import check_redis, close_redis, init_redis
@@ -85,6 +86,17 @@ async def _run_worker_loops() -> None:
     reminder_task = None
     if getattr(settings, "telegram_bot_token", None):
         reminder_task = asyncio.create_task(run_subscription_reminder_loop())
+
+    news_broadcast_task = asyncio.create_task(run_news_broadcast_loop())
+    _log.info("news_broadcast_task_spawned", extra=extra_for_event(event="worker.news_broadcast.spawned"))
+    def _log_task_result(t: asyncio.Task) -> None:  # noqa: ANN001
+        try:
+            exc = t.exception()
+        except asyncio.CancelledError:
+            return
+        if exc is not None:
+            _log.error("news_broadcast_task_crashed: %s", exc, exc_info=True)
+    news_broadcast_task.add_done_callback(_log_task_result)
     grace_task = (
         asyncio.create_task(run_grace_on_expiry_loop())
         if getattr(settings, "grace_window_hours", 0) > 0
@@ -145,6 +157,7 @@ async def _run_worker_loops() -> None:
             live_metrics_task,
             grace_task,
             onboarding_abandonment_task,
+            news_broadcast_task,
         ):
             if t is not None:
                 t.cancel()
@@ -167,6 +180,7 @@ async def _run_worker_loops() -> None:
             live_metrics_task,
             admin_control_center_task,
             onboarding_abandonment_task,
+            news_broadcast_task,
         ):
             if t is None:
                 continue

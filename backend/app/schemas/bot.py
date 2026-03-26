@@ -32,6 +32,12 @@ class CreateInvoiceRequest(BaseModel):
     promo_code: str | None = None
 
 
+class CreateDonationInvoiceRequest(BaseModel):
+    tg_id: int
+    star_count: int
+    subscription_id: str | None = None
+
+
 class CreateInvoiceResponse(BaseModel):
     invoice_id: str
     payment_id: str

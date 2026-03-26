@@ -18,6 +18,7 @@ const ROUTE_TITLES: Record<string, string> = {
   "/revenue": "Revenue",
   "/billing": "Billing",
   "/audit": "Audit",
+  "/news": "News",
   "/settings": "Settings",
   "/styleguide": "Styleguide",
 };
@@ -47,6 +48,7 @@ const AutomationPage = lazy(() => import("@/features/automation/AutomationPage")
 const RevenuePage = lazy(() => import("@/features/revenue/RevenuePage").then((m) => ({ default: m.RevenuePage })));
 const BillingPage = lazy(() => import("@/features/billing/BillingPage").then((m) => ({ default: m.BillingPage })));
 const AuditPage = lazy(() => import("@/features/audit/AuditPage").then((m) => ({ default: m.AuditPage })));
+const NewsPage = lazy(() => import("@/features/news/NewsPage").then((m) => ({ default: m.NewsPage })));
 const SettingsPage = lazy(() => import("@/features/settings/SettingsPage").then((m) => ({ default: m.SettingsPage })));
 const StyleguidePage = lazy(() => import("@/features/styleguide/StyleguidePage").then((m) => ({ default: m.StyleguidePage })));
 
@@ -76,6 +78,7 @@ export function AppRouter() {
           <Route path="revenue" element={<RevenuePage />} />
           <Route path="billing" element={<BillingPage />} />
           <Route path="audit" element={<AuditPage />} />
+          <Route path="news" element={<NewsPage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="styleguide" element={<StyleguidePage />} />
           <Route path="control-plane" element={<Navigate to="/automation" replace />} />

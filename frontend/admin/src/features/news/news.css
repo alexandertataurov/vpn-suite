@@ -1,0 +1,14 @@
+.news-page__actions {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.news-page__id {
+  opacity: 0.7;
+}
+
+.news-page__status {
+  margin-top: var(--space-3);
+}
+
