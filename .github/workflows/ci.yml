@@ -108,7 +108,7 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
       - name: Build admin-api image (with layer cache)
         uses: docker/build-push-action@v5
         with:
@@ -129,7 +129,7 @@ jobs:
       security-events: write
     steps:
       - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
       - name: Build admin-api for scan
         env:
           PUBLIC_DOMAIN: ci.invalid
