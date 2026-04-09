@@ -102,13 +102,14 @@ VITE_ANALYTICS_ENABLED=0
 
 Использование: `cp .env.example .env` и переопределить нужные переменные, или `set -a && source .env.local && set +a` перед `docker compose`.
 
-### .env.beta-preview (frontend vs beta API)
+### apps/admin-web/.env.local (frontend vs beta API)
 
-Шаблон: `.env.beta-preview.example`. Копировать в `apps/admin-web/.env.local`:
+Если нужен локальный запуск admin-web против beta API, создать `apps/admin-web/.env.local` вручную:
 
 ```bash
-cp .env.beta-preview.example apps/admin-web/.env.local
-# Отредактировать VITE_API_BASE_URL
+cat > apps/admin-web/.env.local <<'EOF'
+VITE_API_BASE_URL=https://vpn.example.com/api/v1
+EOF
 pnpm dev:admin
 ```
 

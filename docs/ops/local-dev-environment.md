@@ -255,29 +255,7 @@ git status && git diff --stat && git log -3 --oneline
 ### Рекомендации
 
 - Открывать весь repo (корень `vpn-suite`), не отдельные папки.
-- Исключить из index/watch тяжёлые директории.
-
-### .cursorignore (создать в корне)
-
-```
-node_modules/
-**/node_modules/
-**/dist/
-**/build/
-**/.next/
-**/storybook-static/
-**/coverage/
-**/htmlcov/
-**/.pytest_cache/
-**/.mypy_cache/
-**/playwright-report/
-**/test-results/
-**/.venv/
-**/venv/
-backups/
-*.log
-.git/
-```
+- Исключить из index/watch тяжёлые директории через локальные настройки редактора, а не через файлы, которые живут в репозитории.
 
 ### VS Code settings (опционально)
 
