@@ -6,13 +6,13 @@ Use this summary for targeted polish prompts (UI visuals, spacing, animations, r
 
 ## 1. App overview
 
-### Admin (`apps/admin-web/`)
+### Admin (`frontend/admin/`)
 - **Purpose:** Operator-grade SaaS for VPN fleet, users, devices, billing, telemetry, automation.
 - **Main flows:** Login → Dashboard (overview, strips, cluster matrix, server table) → Servers / Users / Devices / Telemetry / Automation / Revenue / Billing / Audit / Settings. Deep flows: Server detail (drawer/tabs), User detail, Device issue/config, Control plane, Payments monitor, Styleguide (dev).
 - **Entry:** `src/App.tsx` (lazy routes, `AdminLayout`, `ProtectedRoute`, `ErrorBoundary`). Layout: `AdminLayout.tsx` → `AppShell`, `MissionBar`, `NavRail`/sidebar, `PageContent`, `CommandPalette`.
 - **Key pages:** `Dashboard`, `Telemetry`, `Servers`, `Users`, `UserDetail`, `Devices`, `Billing`, `Revenue`, `ControlPlane`, `Audit`, `Settings`, `Styleguide`, plus Revenue/Risk/Ops (SubscriptionsHealth, PaymentsMonitor, Referrals, AbuseRisk, RetentionAutomation, PricingEngine, PromoCampaigns, ChurnPrediction, DevOps, CohortAnalytics).
 
-### Miniapp (`apps/miniapp/`)
+### Miniapp (`frontend/miniapp/`)
 - **Purpose:** Consumer Telegram Mini App — VPN subscription, plan selection, checkout (Telegram Stars), devices, referral, support, settings.
 - **Main flows:** Bootstrap (auth + session + onboarding) → Home → Plan → Checkout or trial → Devices (get config) → Support / Referral / Settings. Stack flows: Onboarding, Checkout, Server selection, Referral (full-page scroll).
 - **Entry:** `src/App.tsx` → `BootstrapController`, `TabbedShellLayout` (tabs) / `StackFlowLayout` (stack), lazy page routes. Layouts: `MiniappLayout.tsx` (header + main + bottom nav), `StackFlowLayout` (single scroll).
@@ -128,4 +128,4 @@ Use this summary for targeted polish prompts (UI visuals, spacing, animations, r
 
 ---
 
-*Reference: `apps/admin-web/`, `apps/miniapp/`, `docs/frontend/` (adaptive-ui, ui-techspec), `docs/ops/release-checklist.md`, `docs/frontend/design/UI-ALIGNMENT-DECISION-LOG.md`.*
+*Reference: `frontend/admin/`, `frontend/miniapp/`, `docs/frontend/` (adaptive-ui, ui-techspec, cleanup-audit), `docs/ops/release-checklist.md`, `docs/frontend/design/UI-ALIGNMENT-DECISION-LOG.md`.*

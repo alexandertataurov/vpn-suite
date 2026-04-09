@@ -15,7 +15,7 @@ jobs:
       pull-requests: read
     defaults:
       run:
-        working-directory: apps/admin-api
+        working-directory: backend
 
     services:
       postgres:
@@ -61,7 +61,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: pip-${{ runner.os }}-${{ hashFiles('apps/admin-api/requirements*.txt') }}
+          key: pip-${{ runner.os }}-${{ hashFiles('backend/requirements*.txt') }}
 
       - name: Install dependencies
         run: |
@@ -112,8 +112,8 @@ jobs:
       - name: Build admin-api image (with layer cache)
         uses: docker/build-push-action@v5
         with:
-          context: ./apps/admin-api
-          file: ./apps/admin-api/Dockerfile
+          context: ./backend
+          file: ./backend/Dockerfile
           push: false
           load: true
           tags: vpn-suite-admin-api:local
@@ -138,7 +138,7 @@ jobs:
           docker buildx create --use --driver docker-container || true  # reuse existing builder if present
           docker buildx build --load \
             --cache-from type=gha --cache-to type=gha,mode=max \
-            -f apps/admin-api/Dockerfile -t vpn-suite-admin-api ./apps/admin-api
+            -f backend/Dockerfile -t vpn-suite-admin-api ./backend
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@0.34.2
         with:
@@ -168,24 +168,31 @@ jobs:
           cache: "pnpm"
 
       - name: Install frontend deps
+        working-directory: frontend
         run: pnpm install --frozen-lockfile
 
       - name: pnpm audit
+        working-directory: frontend
         run: pnpm audit --audit-level=high
 
       - name: Lint
+        working-directory: frontend
         run: pnpm run lint
 
       - name: Typecheck
+        working-directory: frontend
         run: pnpm run typecheck
 
       - name: Design system check (miniapp)
+        working-directory: frontend
         run: pnpm run guardrails
 
       - name: Unit tests (shared)
+        working-directory: frontend
         run: pnpm test -- --run
 
       - name: Production build (admin + miniapp)
+        working-directory: frontend
         env:
           VITE_SENTRY_RELEASE: ${{ github.sha }}
           VITE_SENTRY_ENV: ci
@@ -206,7 +213,7 @@ jobs:
         with:
           environment: ci
           version: ${{ github.sha }}
-          sourcemaps: apps/admin-web/dist
+          sourcemaps: frontend/admin/dist
           url_prefix: "~/admin"
           set_commits: "skip"
 
@@ -220,36 +227,35 @@ jobs:
         with:
           environment: ci
           version: ${{ github.sha }}
-          sourcemaps: apps/miniapp/dist
+          sourcemaps: frontend/miniapp/dist
           url_prefix: "~/webapp"
           set_commits: "skip"
 
       - name: Record bundle size (baseline)
         run: |
           set -euo pipefail
-          mkdir -p reports/ci
-          du -sb apps/admin-web/dist | tee reports/ci/dist-size-admin.txt
-          du -sb apps/miniapp/dist | tee reports/ci/dist-size-miniapp.txt
-          echo "Bundle size (admin): $(cat reports/ci/dist-size-admin.txt)"
-          echo "Bundle size (miniapp): $(cat reports/ci/dist-size-miniapp.txt)"
+          du -sb frontend/admin/dist | tee frontend/dist-size-admin.txt
+          du -sb frontend/miniapp/dist | tee frontend/dist-size-miniapp.txt
+          echo "Bundle size (admin): $(cat frontend/dist-size-admin.txt)"
+          echo "Bundle size (miniapp): $(cat frontend/dist-size-miniapp.txt)"
 
       - name: Upload bundle size artifact
         uses: actions/upload-artifact@v4
         with:
           name: frontend-dist-size
           path: |
-            reports/ci/dist-size-admin.txt
-            reports/ci/dist-size-miniapp.txt
+            frontend/dist-size-admin.txt
+            frontend/dist-size-miniapp.txt
 
       - name: Install Chromium (Playwright)
-        working-directory: apps/admin-web
+        working-directory: frontend/admin
         run: pnpm exec playwright install chromium --with-deps
 
       - name: Serve admin for Lighthouse
         run: |
           set -euo pipefail
           mkdir -p .serve/admin
-          cp -r apps/admin-web/dist/* .serve/admin/
+          cp -r frontend/admin/dist/* .serve/admin/
           npx serve -s .serve -l 4173 &
           for i in $(seq 1 15); do curl -sf http://127.0.0.1:4173/admin/ > /dev/null && break; sleep 1; done
           curl -sf http://127.0.0.1:4173/admin/ > /dev/null || { echo "Serve did not become ready"; exit 1; }
@@ -258,10 +264,10 @@ jobs:
         run: |
           CHROME_PATH=$(find $HOME/.cache/ms-playwright -name chrome -path '*/chrome-linux/chrome' 2>/dev/null | head -1)
           echo "CHROME_PATH=$CHROME_PATH"
-          npx lighthouse http://127.0.0.1:4173/admin/ --only-categories=accessibility --output=json --output-path=apps/admin-web/lighthouse-a11y.json --chrome-flags="--headless --no-sandbox --disable-gpu" --quiet
+          npx lighthouse http://127.0.0.1:4173/admin/ --only-categories=accessibility --output=json --output-path=frontend/admin/lighthouse-a11y.json --chrome-flags="--headless --no-sandbox --disable-gpu" --quiet
           node -e "
             const fs = require('fs');
-            const p = 'apps/admin-web/lighthouse-a11y.json';
+            const p = 'frontend/admin/lighthouse-a11y.json';
             if (!fs.existsSync(p)) { console.error('Lighthouse report not found'); process.exit(1); }
             const j = JSON.parse(fs.readFileSync(p, 'utf8'));
             const s = j.categories?.accessibility?.score;
@@ -293,10 +299,10 @@ jobs:
         run: pnpm --filter admin run storybook:guardrails
 
       - name: Script preflight
-        run: chmod +x tools/quality/check-tokens.sh
+        run: chmod +x scripts/check-tokens.sh
 
       - name: Token compliance (no raw hex)
-        run: bash tools/quality/check-tokens.sh
+        run: bash scripts/check-tokens.sh
 
   secret-scan:
     runs-on: ubuntu-latest
@@ -362,10 +368,10 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: pip-${{ runner.os }}-${{ hashFiles('apps/admin-api/requirements*.txt') }}
+          key: pip-${{ runner.os }}-${{ hashFiles('backend/requirements*.txt') }}
 
       - name: Backend deps and migrate
-        working-directory: apps/admin-api
+        working-directory: backend
         run: |
           set -euo pipefail
           python -m pip install --upgrade pip
@@ -373,11 +379,11 @@ jobs:
           python -m alembic upgrade head
 
       - name: Seed admin
-        working-directory: apps/admin-api
+        working-directory: backend
         run: python scripts/seed_admin.py
 
       - name: Start API
-        working-directory: apps/admin-api
+        working-directory: backend
         run: uvicorn app.main:app --host 0.0.0.0 --port 8000 &
         env:
           DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/vpn_admin
@@ -412,7 +418,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Install Playwright browsers
-        working-directory: apps/admin-web
+        working-directory: frontend/admin
         run: pnpm exec playwright install chromium --with-deps
 
       - name: Start admin dev server
@@ -457,7 +463,7 @@ jobs:
       contents: read
     defaults:
       run:
-        working-directory: apps/telegram-bot
+        working-directory: bot
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
@@ -468,7 +474,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: pip-bot-${{ runner.os }}-${{ hashFiles('apps/telegram-bot/requirements*.txt') }}
+          key: pip-bot-${{ runner.os }}-${{ hashFiles('bot/requirements*.txt') }}
       - name: Install dependencies
         run: |
           set -euo pipefail
