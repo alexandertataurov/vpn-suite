@@ -10,9 +10,9 @@ Precise map of the repository structure, entry points, and responsibilities.
 | File / Dir           | Purpose                                                                                                                                                                                                               |
 | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `manage.sh`          | Ops CLI: `up-core`, `up-api`, `up-monitoring`, `down-core`, `bootstrap`, `up-agent`, `migrate`, `seed*`, `check`, `verify`, `smoke-staging`, `config`, `config-validate`, `build*`, `backup-db`, `restore-db`, `node-*`, `server:verify`, `server:sync`, `server:reconcile`, `device:reissue`, `support-bundle`, `ps`, `logs`. See README.md and [docs/ops/runbook.md](ops/runbook.md). |
-| `docker-compose.yml` | Services: admin-api, reverse-proxy, postgres, redis, telegram-vpn-bot; profile `monitoring`: prometheus, cadvisor, node-exporter, loki, promtail, grafana                                                             |
+| `infra/compose/docker-compose.yml` | Services: admin-api, reverse-proxy, postgres, redis, telegram-vpn-bot; profile `monitoring`: prometheus, cadvisor, node-exporter, loki, promtail, grafana                                                             |
 | `.env.example`       | Env template; copy to `.env` (single source of truth); manage.sh uses `.env` unless `ENV_FILE` set                                                                                                                    |
-| `AGENTS.MD`          | Architecture, constraints, API contract, AmneziaWG/WireGuard control channel                                                                                                                                          |
+| `AGENTS.md`          | Architecture, constraints, API contract, AmneziaWG/WireGuard control channel                                                                                                                                          |
 | `README.md`          | Quick start, key commands, stack summary                                                                                                                                                                              |
 
 
@@ -20,12 +20,12 @@ Precise map of the repository structure, entry points, and responsibilities.
 
 | Service | Path | Language | Purpose |
 |---------|------|----------|---------|
-| admin-api | backend/ | Python 3.12 / FastAPI | Control-plane REST API, auth, device issue/revoke, telemetry, payments |
-| admin-frontend | frontend/admin/ | TypeScript / React / Vite | Admin SPA — devices, servers, users, telemetry, billing |
-| miniapp | frontend/miniapp/ | TypeScript / React | Telegram Mini App — subscription & device management |
-| telegram-vpn-bot | bot/ | Python / aiogram 3 | Telegram bot — user self-service, webhooks |
-| node-agent | node-agent/ | Python 3.12 | WireGuard/AmneziaWG node reconciler |
-| reverse-proxy | docker/reverse-proxy/ | Caddy | TLS termination, static frontends, mTLS for agent |
+| admin-api | apps/admin-api/ | Python 3.12 / FastAPI | Control-plane REST API, auth, device issue/revoke, telemetry, payments |
+| admin-frontend | apps/admin-web/ | TypeScript / React / Vite | Admin SPA — devices, servers, users, telemetry, billing |
+| miniapp | apps/miniapp/ | TypeScript / React | Telegram Mini App — subscription & device management |
+| telegram-vpn-bot | apps/telegram-bot/ | Python / aiogram 3 | Telegram bot — user self-service, webhooks |
+| node-agent | apps/node-agent/ | Python 3.12 | WireGuard/AmneziaWG node reconciler |
+| reverse-proxy | infra/proxy/reverse-proxy/ | Caddy | TLS termination, static frontends, mTLS for agent |
 
 ### 1.3 Operations (agent-only ownership, key verification, support)
 
@@ -36,7 +36,7 @@ Precise map of the repository structure, entry points, and responsibilities.
 
 ---
 
-## 2. Backend (`backend/`)
+## 2. Backend (`apps/admin-api/`)
 
 **Entry:** `app/main.py` — FastAPI app, lifespan (redis, node runtime, background loops), routers mounted under `/api/v1` (except webhooks).
 
@@ -158,7 +158,7 @@ Pydantic schemas for API: `auth`, `user`, `server`, `server_ip`, `device`, `plan
 
 `alembic/` — `versions/` contains 001–028 (roles, servers, users, plans, subscriptions, devices, referrals, funnel, health, control_plane, docker_alerts, snapshots, sync_jobs, server_ips, audit, etc.).
 
-### 2.7 Scripts (`backend/scripts/`)
+### 2.7 Scripts (`apps/admin-api/scripts/`)
 
 
 | Script                    | Role                      |
@@ -180,7 +180,7 @@ Pydantic schemas for API: `auth`, `user`, `server`, `server_ip`, `device`, `plan
 
 ## 3. Frontend
 
-### 3.1 Shared (`frontend/shared/`)
+### 3.1 Shared (`apps/shared-web/`)
 
 - **Types:** `admin-api.ts`, `api-error.ts`, `webapp.ts`, `index.ts`
 - **API client:** `api-client/create-client.ts`, `get-base-url.ts`
@@ -189,7 +189,7 @@ Pydantic schemas for API: `auth`, `user`, `server`, `server_ip`, `device`, `plan
 - **Styles:** `layout.css`, `utilities.css`
 - **Build:** `scripts/build-tokens.js`
 
-### 3.2 Admin app (`frontend/admin/`)
+### 3.2 Admin app (`apps/admin-web/`)
 
 - **Entry:** `main.tsx` → `App.tsx` (basename `/admin`)
 - **Routes:** `/login`; under layout: `/` (Dashboard), `/telemetry`, `/automation` (Control Plane), `/servers`, `/servers/new`, `/servers/:id`, `/servers/:id/edit`, `/users`, `/users/:id`, `/billing` (tabs: subscriptions, payments), `/subscriptions`→`/billing?tab=subscriptions`, `/payments`→`/billing?tab=payments`, `/devices`, `/audit`, `/settings`, `/styleguide`
@@ -202,7 +202,7 @@ Pydantic schemas for API: `auth`, `user`, `server`, `server_ip`, `device`, `plan
 - **Store:** `authStore.ts`
 - **E2E:** `e2e/` — specs (e.g. `release-smoke.spec.ts`, `servers-users.spec.ts`), `helpers.ts`
 
-### 3.3 Miniapp (`frontend/miniapp/`)
+### 3.3 Miniapp (`apps/miniapp/`)
 
 - **Entry:** `main.tsx` → `App.tsx` (basename `/webapp`)
 - **Routes:** `/` (Home), `/devices`, `/profile`, `/help` (under MiniappLayout); `/plans`, `/checkout/:planId`, `/referral`
@@ -215,12 +215,12 @@ Pydantic schemas for API: `auth`, `user`, `server`, `server_ip`, `device`, `plan
 
 ### 3.4 Build
 
-- Root `frontend/package.json` — workspace (admin, miniapp, shared); scripts: lint, typecheck, test, build, test:e2e
+- Root `package.json` — frontend workspace (admin, miniapp, shared); scripts: lint, typecheck, test, build, test:e2e
 - Admin/miniapp: Vite 6, React 18, TypeScript, TanStack Query 5
 
 ---
 
-## 4. Bot (`bot/`)
+## 4. Bot (`apps/telegram-bot/`)
 
 - **Entry:** `main.py` — aiogram app, /healthz on 8090, PANEL_URL → admin-api
 - **Config:** `config.py`
@@ -234,7 +234,7 @@ Pydantic schemas for API: `auth`, `user`, `server`, `server_ip`, `device`, `plan
 
 ---
 
-## 5. Node-agent (`node-agent/`)
+## 5. Node-agent (`apps/node-agent/`)
 
 - **Entry:** `agent.py` — heartbeat/registration to admin-api (agent mode; no docker exec from control-plane)
 - **Build:** `Dockerfile`, `requirements.txt`
@@ -268,21 +268,17 @@ Pydantic schemas for API: `auth`, `user`, `server`, `server_ip`, `device`, `plan
 | `staging_full_validation.sh`                         | E2E staging                                                                                                   |
 | `staging_ha_failover_smoke.sh`                       | HA smoke                                                                                                      |
 | `backup-postgres-redis.sh`                           | Backup DB/Redis                                                                                               |
-| `pre_release_validation.sh`                          | Pre-release                                                                                                   |
 | `release_api_happy_path.sh`                          | API happy path                                                                                                |
 | `zero_failure_audit.sh`, `zero_failure_api_audit.py` | Audits                                                                                                        |
-| `capture_baseline.sh`                                | Baseline                                                                                                      |
-| `check-agent-status.sh`                              | Agent status                                                                                                  |
 | `optimize-resources.sh`                              | Resource tuning                                                                                               |
 | `kill-amnezia-wg-no-peers.sh`                        | Cleanup                                                                                                       |
-| `cleanup-amneziawg.sh`                               | Cleanup                                                                                                       |
-| `remove-nginx-vpn-vega.sh`                           | Nginx cleanup                                                                                                 |
+| `run_vpn_test_stand_full.sh`, `vpn_connectivity_check.sh` | VPN config/connectivity validation                                                                          |
 | `lib/env.sh`                                         | Env helpers                                                                                                   |
 
 
 ---
 
-## 8. Ops (`ops/`)
+## 8. Infra Ops (`infra/`)
 
 
 | Path                                            | Role                 |
@@ -336,4 +332,3 @@ Pydantic schemas for API: `auth`, `user`, `server`, `server_ip`, `device`, `plan
 - **Admin UI** → Admin API (auth, cluster, servers, users, devices, subscriptions, payments, audit, telemetry).
 - **Miniapp** → Admin API (webapp endpoints: plans, checkout, devices, profile, referral).
 - **Control plane** → Docker: `docker exec <amnezia-awg*> wg show` / `wg set`; or node-agent heartbeat when in agent mode. Postgres = source of truth; reconciliation loop keeps runtime and DB in sync.
-

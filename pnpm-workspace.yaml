@@ -1,0 +1,7 @@
+packages:
+  - apps/admin-web
+  - apps/miniapp
+  - apps/shared-web
+onlyBuiltDependencies:
+  - core-js
+  - protobufjs

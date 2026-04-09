@@ -1,0 +1,33 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Introduction/Contribution Rules" />
+
+## Storybook taxonomy (naming rules)
+
+- Major sections must use one of the allowed roots: `Foundations`, `Primitives`, `Components`, `Patterns`, `Layouts`, `Recipes`, `Pages`, `States`.
+- Story titles must be explicit and human-readable (always prefer `Components/Button` over vague titles).
+- If you add a `Pages/*` story, keep it under `Pages/Contracts/*` or `Pages/Sandbox/*`.
+
+## State coverage expectations
+
+For important UI components, include at minimum:
+
+- Recommended/default story
+- Variants (at least the primary “appearance” variants)
+- Loading/disabled/error states when relevant
+- One showcase story designed to be walked through live
+- One interaction story using `play()` when the behavior has user-visible outcomes
+
+## MDX vs Autodocs
+
+- `Foundations` is MDX-first: curated pages with hero, rationale, live showcase, token inventory, rules, and applied examples.
+- `Components` are Autodocs-enhanced: keep metadata high-quality and add curated docs sections where needed.
+- If a page needs a “mini landing page” layout or do/don’t guidance, use MDX.
+
+## Governance checks
+
+Before you rely on your changes for CI/stakeholder demos, run:
+
+- `pnpm --filter miniapp storybook:taxonomy`
+- `pnpm --filter miniapp storybook:contract`
+

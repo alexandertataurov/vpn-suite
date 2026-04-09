@@ -1,0 +1,26 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@/design-system/patterns/FallbackScreen": [
+        "./src/design-system/compositions/patterns/FallbackScreen.tsx"
+      ],
+      "@vpn-suite/shared": ["../shared-web/src/index.ts"],
+      "@shared/*": ["../shared-web/src/*"],
+      "@/lib": ["./src/lib"],
+      "@/lib/*": ["./src/lib/*"],
+      "@ds": ["./src/design-system/index.ts"],
+      "@ds/core": ["./src/design-system/core/index.ts"],
+      "@ds/components": ["./src/design-system/components/index.ts"],
+      "@ds/compositions": ["./src/design-system/compositions/index.ts"]
+    }
+  },
+  "references": [{ "path": "../shared-web" }],
+  "include": ["src/**/*"],
+  "exclude": ["src/**/*.stories.tsx", "src/**/*.stories.ts", "src/**/*.test.tsx", "src/**/*.test.ts", "src/storybook", "src/design-system/ui/__tests__", "src/future/useBetaHomePageModel"]
+}

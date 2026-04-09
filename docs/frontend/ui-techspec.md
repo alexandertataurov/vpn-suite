@@ -293,7 +293,7 @@
 --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
 ```
 
-> **Note:** Use design tokens from `frontend/admin/src/design-system/tokens.css` (admin) or miniapp theme; avoid hardcoded values in components.
+> **Note:** Use design tokens from `apps/admin-web/src/design-system/tokens/tokens.css` (admin) or miniapp theme; avoid hardcoded values in components.
 
 ### Transitions
 

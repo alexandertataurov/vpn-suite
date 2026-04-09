@@ -11,7 +11,7 @@ Evidence-based findings, detection queries, and latency bottlenecks (2026-02-26)
 | L3 | Full table scan on reconciliation per cycle | reconciliation_engine.py | Only reconcile if updated_at > last_sync_time |
 | L4 | Single uvicorn worker | Dockerfile | Add WEB_CONCURRENCY support |
 | L5 | Node telemetry fan-out blocking /telemetry/snapshot | telemetry_snapshot_aggregator.py | Background poll + Redis cache |
-| L6 | Network check on every heartbeat (agent) | node-agent/agent.py | Cache sysctl/iptables 60s |
+| L6 | Network check on every heartbeat (agent) | apps/node-agent/agent.py | Cache sysctl/iptables 60s |
 | L7 | Devices.tsx full DOM render | Devices.tsx | Add @tanstack/react-virtual |
 | L8 | admin_rotate_peer re-fetches server/profile | admin_issue_service.py | Helper + local caching |
 | L9 | /health/ready instantiates heavy topology | main.py | Cache get_topology() in readiness |
@@ -78,7 +78,7 @@ When monitoring profile is up (Loki + Prometheus):
 2. **Auth spike:** Check `auth_failures_total`; review rate limit and Redis.
 3. **Bot errors:** Check `bot_requests_total{status_class=~"5xx|error"}`; bot logs and admin-api health.
 4. **Node-agent down:** When profile agent: check `up{job="node-agent"}`, agent logs, network to admin-api.
-5. **Loki re-ingest:** promtail positions file and backoff configured; see config/monitoring/promtail-config.yml.
+5. **Loki re-ingest:** promtail positions file and backoff configured; see infra/monitoring/config/promtail-config.yml.
 6. **SSE context canceled:** Caddy logs "context canceled" on /api/v1/servers/stream when client disconnects (navigate away, tab close). Expected; no fix needed.
 7. **External metrics 502:** Upstream `/experimental/server/metrics` returns 400 when metrics not supported. Fixed: API returns empty metrics (200) for 400/404/501.
 8. **Control-plane anomaly/security 409:** In agent mode, these endpoints return 409 (AGENT_MODE_UNSUPPORTED). Fixed: frontend stops retry/refetch on 409 and shows "N/A (agent mode)".

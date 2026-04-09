@@ -125,6 +125,7 @@ Full list: [docs/ops/required-secrets.md](docs/ops/required-secrets.md).
 - **OpenAPI:** `openapi/openapi.yaml` (generate with `./manage.sh openapi`)
 - **API overview and auth:** [docs/api/overview.md](docs/api/overview.md)
 - **Domain model:** [docs/api/domain-model.md](docs/api/domain-model.md)
+- **Current architecture and backlog program:** [docs/specs/as-built-architecture.md](docs/specs/as-built-architecture.md), [docs/specs/target-architecture.md](docs/specs/target-architecture.md), [docs/backlog/spec-delivery-program.md](docs/backlog/spec-delivery-program.md)
 - **Doc index:** [docs/README.md](docs/README.md) — guides (ops, observability, development), runbook, local dev, codebase map
 - **Miniapp Storybook contract:** [docs/storybook-ai-contract.md](docs/storybook-ai-contract.md), [docs/ai-ui-workflow.md](docs/ai-ui-workflow.md), and [docs/frontend/storybook/README.md](docs/frontend/storybook/README.md)
 
@@ -134,12 +135,12 @@ Full list: [docs/ops/required-secrets.md](docs/ops/required-secrets.md).
 
 | Path | Purpose |
 |------|---------|
-| `backend/` | FastAPI control-plane API, auth, device issue, telemetry, payments |
-| `frontend/admin/` | Admin SPA (devices, servers, users, telemetry, billing) |
-| `frontend/miniapp/` | Telegram Mini App (Plan, Settings, Support, Server selection) |
-| `frontend/shared/` | Shared frontend types and utilities |
-| `bot/` | Telegram bot (aiogram) |
-| `node-agent/` | AmneziaWG node reconciler |
+| `apps/admin-api/` | FastAPI control-plane API, auth, device issue, telemetry, payments |
+| `apps/admin-web/` | Admin SPA (devices, servers, users, telemetry, billing) |
+| `apps/miniapp/` | Telegram Mini App (Plan, Settings, Support, Server selection) |
+| `apps/shared-web/` | Shared frontend types and utilities |
+| `apps/telegram-bot/` | Telegram bot (aiogram) |
+| `apps/node-agent/` | AmneziaWG node reconciler |
 | `manage.sh` | Ops CLI; see [Usage](#usage) |
 | `docs/` | Guides, runbook, API, specs |
 
@@ -163,7 +164,7 @@ Detailed map: [docs/codebase-map.md](docs/codebase-map.md).
 
 [CONTRIBUTING.md](CONTRIBUTING.md) — design-system contract (tokens, components, Storybook), PR checklist, guardrails.
 
-For agents and automation: [AGENTS.MD](AGENTS.MD).
+For agents and automation: [AGENTS.md](AGENTS.md).
 
 ### Storybook contract commands
 

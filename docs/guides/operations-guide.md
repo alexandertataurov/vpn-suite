@@ -11,10 +11,10 @@ Consolidated ops reference for VPN Suite control plane and AmneziaWG nodes.
 | ----------------------------------------------------- | -------------------------------------------------------------------------------------- |
 | Start core stack                                      | `./manage.sh up-core`                                                                  |
 | Agent mode bootstrap                                  | `./manage.sh bootstrap` or [agent-mode-one-server.md](../ops/agent-mode-one-server.md) |
-| Prod bootstrap                                        | `./ops/bootstrap-prod.sh`                                                              |
+| Prod bootstrap                                        | `./infra/scripts/ops/bootstrap-prod.sh`                                                |
 | Backup DB                                             | `./manage.sh backup-db`                                                                |
 | Restore DB                                            | `./manage.sh restore-db --force <dump>`                                                |
-| Rotate agent token                                    | `./ops/rotate-agent-token.sh`                                                          |
+| Rotate agent token                                    | `./infra/scripts/ops/rotate-agent-token.sh`                                            |
 | First install (Ubuntu LTS, single-node control plane) | [ops/install-ubuntu-lts.md](../ops/install-ubuntu-lts.md)                              |
 
 
@@ -125,4 +125,3 @@ Owner is the operator running the control plane unless noted otherwise.
    - Manual check:
      - GitHub Issues templates/labels in place.
      - Telegram operator channel (and optional support chat) created, with links documented in `README.md` and marketing docs.
-

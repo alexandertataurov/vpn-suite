@@ -1,16 +1,16 @@
 # admin-api — Observability
 
 **Service:** Control-plane API (FastAPI)  
-**Path:** [`backend/`](../../backend)  
+**Path:** [`apps/admin-api/`](../../apps/admin-api)  
 **Port:** 8000  
 
 ## Metrics
 
 | Endpoint | Format | Source |
 |----------|--------|--------|
-| `GET /metrics` | Prometheus | [`main.py`](../../backend/app/main.py) L251, `prometheus_client.REGISTRY` |
+| `GET /metrics` | Prometheus | [`main.py`](../../apps/admin-api/app/main.py) L251, `prometheus_client.REGISTRY` |
 
-**Key metrics:** `http_requests_total`, `http_request_duration_seconds`, `vpn_nodes_total`, `vpn_cluster_health_score`, `auth_failures_total` (see [`core/metrics.py`](../../backend/app/core/metrics.py)).
+**Key metrics:** `http_requests_total`, `http_request_duration_seconds`, `vpn_nodes_total`, `vpn_cluster_health_score`, `auth_failures_total` (see [`metrics.py`](../../apps/admin-api/app/core/metrics.py)).
 
 ## Health
 
@@ -19,7 +19,7 @@
 
 ## Logs
 
-JSON, `request_id`, `trace_id` (from [`logging_config.py`](../../backend/app/core/logging_config.py)).
+JSON, `request_id`, `trace_id` (from [`logging_config.py`](../../apps/admin-api/app/core/logging_config.py)).
 
 ## Tracing
 

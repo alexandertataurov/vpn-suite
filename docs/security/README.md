@@ -31,10 +31,10 @@ See [../ops/network-segmentation-map.md](../ops/network-segmentation-map.md) for
 
 | Task | Command |
 |------|---------|
-| Harden secrets | `./ops/harden-secrets.sh` |
-| Block metadata endpoints | `./ops/block-metadata-endpoints.sh` |
-| Rotate agent token | `./ops/rotate-agent-token.sh` |
-| Remove UFW 8000 | `./ops/ufw-remove-8000.sh` |
-| Setup fail2ban | `./ops/setup-fail2ban.sh` |
-| Apply sysctl tuning | `sysctl -p ops/sysctl-hardening.conf` |
-| Agent mTLS PKI | `./ops/pki/agent-mtls.sh` |
+| Harden secrets | `./infra/scripts/ops/harden-secrets.sh` |
+| Block metadata endpoints | `./infra/scripts/ops/block-metadata-endpoints.sh` |
+| Rotate agent token | `./infra/scripts/ops/rotate-agent-token.sh` |
+| Remove UFW 8000 | `./infra/scripts/ops/ufw-remove-8000.sh` |
+| Setup fail2ban | `./infra/scripts/ops/setup-fail2ban.sh` |
+| Apply sysctl tuning | `sysctl -p infra/scripts/ops/sysctl-hardening.conf` |
+| Agent mTLS PKI | `./infra/scripts/pki/agent-mtls.sh` |

@@ -9,9 +9,9 @@
 
 | Day | Task | Owner |
 |-----|------|-------|
-| 1 | Run `./ops/harden-secrets.sh`; verify .env secrets (SECRET_KEY, REDIS_URL, confirm tokens) | Ops |
-| 1 | Run `./ops/ufw-remove-8000.sh`; run `./ops/block-metadata-endpoints.sh` | Ops |
-| 2 | Apply `ops/sysctl-hardening.conf`; run `./ops/setup-fail2ban.sh` | Ops |
+| 1 | Run `./infra/scripts/ops/harden-secrets.sh`; verify .env secrets (SECRET_KEY, REDIS_URL, confirm tokens) | Ops |
+| 1 | Run `./infra/scripts/ops/ufw-remove-8000.sh`; run `./infra/scripts/ops/block-metadata-endpoints.sh` | Ops |
+| 2 | Apply `infra/scripts/ops/sysctl-hardening.conf`; run `./infra/scripts/ops/setup-fail2ban.sh` | Ops |
 | 2 | Restart Caddy for new headers: `docker compose restart reverse-proxy` | Ops |
 | 3 | Set ENVIRONMENT=production; validate no default credentials; smoke test | Ops |
 | 4 | Tighten AGENT_ALLOW_CIDRS if agent IPs known | Ops |

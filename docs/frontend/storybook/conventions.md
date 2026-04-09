@@ -30,5 +30,5 @@ See [structure.md](structure.md) for full IA.
 ## Code and data
 
 - **argTypes:** description, control, table (type, defaultValue, category), options for enums (Layer 6).
-- **Data:** Use `frontend/admin/.storybook/data` for shared fixtures; avoid heavy inline data in stories.
+- **Data:** Use `apps/admin-web/.storybook/data` for shared fixtures; avoid heavy inline data in stories.
 - No undocumented components; consistent naming (Layer 5).

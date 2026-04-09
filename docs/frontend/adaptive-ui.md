@@ -87,5 +87,5 @@ Semantic tokens in `tokens.css`; see [design/design-system.md](design/design-sys
 
 ## Tests and a11y
 
-- **Playwright:** `frontend/admin/e2e/adaptive-ui.spec.ts` — viewports 360, 640, 1024, 1440; no horizontal scroll; sidebar overlay at XS, persistent at MD; Servers cards at XS; skip link.
+- **Playwright:** `apps/admin-web/e2e/adaptive-ui.spec.ts` — viewports 360, 640, 1024, 1440; no horizontal scroll; sidebar overlay at XS, persistent at MD; Servers cards at XS; skip link.
 - **A11y:** Keyboard nav, `:focus-visible`, ARIA landmarks, 44px min touch targets on XS/SM. See [adaptive-ui-test-plan.md](adaptive-ui-test-plan.md).

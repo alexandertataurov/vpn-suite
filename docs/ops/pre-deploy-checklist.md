@@ -11,7 +11,7 @@
 - [ ] `git diff` — нет `.env`, `secrets/`, `*.pem`, паролей, токенов
 - [ ] `.gitignore` покрывает `node_modules/`, `dist/`, `.venv/`, `snapshots/`, `backups/`
 - [ ] Миграции: если менял модели — `alembic revision` создан, `upgrade head` проходит
-- [ ] `backend/alembic/versions/` — нет конфликтующих head
+- [ ] `apps/admin-api/alembic/versions/` — нет конфликтующих head
 - [ ] Конфиги: `./manage.sh config-validate` — OK
 - [ ] Нет `console.log`, `print(debug)`, `# TODO` без issue
 - [ ] `./manage.sh check` — ruff, pytest, frontend lint/typecheck/test/build
@@ -26,8 +26,8 @@
 - [ ] Postgres: `docker compose exec postgres pg_isready -U postgres` → OK
 - [ ] Redis: `docker compose exec redis redis-cli ping` → PONG
 - [ ] Логи: `docker compose logs admin-api --tail 50` — нет traceback, критичных ERROR
-- [ ] `cd frontend && pnpm dev:admin` — dev server стартует
-- [ ] `cd frontend && pnpm build:admin` — сборка без ошибок
+- [ ] `pnpm dev:admin` — dev server стартует
+- [ ] `pnpm build:admin` — сборка без ошибок
 - [ ] Admin UI: http://localhost:5174/admin/ — открывается
 - [ ] Логин: POST `/api/v1/auth/login` с ADMIN_EMAIL/ADMIN_PASSWORD → 200 + token
 
@@ -101,7 +101,7 @@
 ### Admin (`dev:admin`, порт 5174)
 
 - [ ] `VITE_API_BASE_URL=https://BETA_DOMAIN/api/v1` задан
-- [ ] `cd frontend && VITE_API_BASE_URL=... pnpm dev:admin` — стартует
+- [ ] `VITE_API_BASE_URL=... pnpm dev:admin` — стартует
 - [ ] CORS на beta: `CORS_ALLOW_ORIGINS` включает `http://localhost:5174`
 - [ ] Login → 200, token получен
 - [ ] Dashboard загружает данные с beta
@@ -109,10 +109,10 @@
 - [ ] Контракты: поля API совпадают с ожиданиями UI (нет 400/422 из-за схемы)
 - [ ] UI корректно отображает staging data
 
-### Telegram Mini App (`frontend/miniapp`, порт 5175, `base: /webapp/`)
+### Telegram Mini App (`apps/miniapp`, порт 5175, `base: /webapp/`)
 
 - [ ] Тот же `VITE_API_BASE_URL=https://BETA_DOMAIN/api/v1`, если грузишь Vite с другого origin, чем API
-- [ ] `cd frontend/miniapp && VITE_API_BASE_URL=... pnpm dev` — стартует; без переменной dev использует proxy `/api` → `localhost:8000`
+- [ ] `VITE_API_BASE_URL=... pnpm --filter miniapp dev` — стартует; без переменной dev использует proxy `/api` → `localhost:8000`
 - [ ] CORS: `CORS_ALLOW_ORIGINS` включает `http://localhost:5175` (и прод-домен WebApp, если отличается)
 - [ ] В Network виден `POST /api/v1/webapp/auth` на ожидаемый хост
 
@@ -142,7 +142,7 @@
 
 ```bash
 ./manage.sh pre-deploy-smoke
-# или: bash scripts/pre_deploy_smoke.sh 2min
+# или: bash infra/scripts/runtime/pre_deploy_smoke.sh 2min
 # Пропустить check: PRE_DEPLOY_SKIP_CHECK=1 ./manage.sh pre-deploy-smoke
 ```
 
@@ -150,7 +150,7 @@
 
 ```bash
 ./manage.sh pre-deploy-verify
-# или: bash scripts/pre_deploy_smoke.sh 10min
+# или: bash infra/scripts/runtime/pre_deploy_smoke.sh 10min
 ```
 
 ### Full beta verification
@@ -171,4 +171,4 @@
 | Core up | `./manage.sh up-core` |
 | Health | `curl -sf http://127.0.0.1:8000/health` |
 | Config | `./manage.sh config-validate` |
-| Frontend build | `cd frontend && pnpm build:admin` |
+| Frontend build | `pnpm build:admin` |

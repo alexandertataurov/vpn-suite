@@ -74,10 +74,10 @@ Admin Dashboard **must not** scrape Prometheus from the browser. Backend exposes
 
 | Endpoint (conceptual)                  | Purpose                                                          | Backend                                                               |
 | -------------------------------------- | ---------------------------------------------------------------- | --------------------------------------------------------------------- |
-| `GET /api/v1/overview/health-snapshot` | Telemetry freshness, incidents                                   | `[overview.py](../../backend/app/api/v1/overview.py)`                 |
+| `GET /api/v1/overview/health-snapshot` | Telemetry freshness, incidents                                   | `[overview.py](../../apps/admin-api/app/api/v1/overview.py)`                 |
 | `GET /api/v1/overview/operator`        | Aggregated KPIs                                                  | PrometheusQueryService                                                |
 | `GET /api/v1/_debug/metrics-targets`   | Scrape targets status                                            | PrometheusQueryService                                                |
-| `GET /api/v1/telemetry/docker/`*       | Container metrics, logs (when `DOCKER_TELEMETRY_HOSTS_JSON` set) | `[telemetry_docker.py](../../backend/app/api/v1/telemetry_docker.py)` |
+| `GET /api/v1/telemetry/docker/`*       | Container metrics, logs (when `DOCKER_TELEMETRY_HOSTS_JSON` set) | `[telemetry_docker.py](../../apps/admin-api/app/api/v1/telemetry_docker.py)` |
 
 
 **Implemented (Phase 3):**
@@ -119,7 +119,7 @@ So we **cannot** derive a true "total bytes over 365 days" from raw `wireguard_r
 3. **Long-term store** — VictoriaMetrics or Mimir with 365d retention; both handle counter resets in `increase()` and `rate()`.
 4. **Aggregate per peer over time** — For "total bytes per peer over 365 days", sum `increase(wireguard_received_bytes[1d])` over non-overlapping 1d windows (VictoriaMetrics `running_sum` or recording rules). Restarts create gaps; treat as "total since last reset" for the affected window.
 
-**wg-exporter:** Exposes counters as `# TYPE wireguard_received_bytes counter` / `wireguard_sent_bytes counter` ([`wg_exporter.py`](../../monitoring/wg-exporter/wg_exporter.py)). Do **not** change to gauge — counters allow correct `rate()`/`increase()` semantics.
+**wg-exporter:** Exposes counters as `# TYPE wireguard_received_bytes counter` / `wireguard_sent_bytes counter` ([`wg_exporter.py`](../../infra/monitoring/services/wg-exporter/wg_exporter.py)). Do **not** change to gauge — counters allow correct `rate()`/`increase()` semantics.
 
 **Implementation:** For 365d metrics retention, set Prometheus `--storage.tsdb.retention.time=365d` and VictoriaMetrics `-retentionPeriod=365d` in the monitoring profile. For Loki: `retention_period: 8760h` (365 days) in config. For Tempo: `compactor.compaction.block_retention: 8760h`.
 
@@ -148,7 +148,7 @@ So we **cannot** derive a true "total bytes over 365 days" from raw `wireguard_r
 
 | Component                              | Auth                         | Exposure                                                                              |
 | -------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------- |
-| Prometheus                             | None (internal network)      | Binds 127.0.0.1:19090 on host (`[docker-compose.yml](../../docker-compose.yml)` L224) |
+| Prometheus                             | None (internal network)      | Binds 127.0.0.1:19090 on host (`[docker-compose.yml](../../infra/compose/docker-compose.yml)` L224) |
 | Loki                                   | None                         | 127.0.0.1:3100                                                                        |
 | Grafana                                | `GF_SECURITY_ADMIN_PASSWORD` | 127.0.0.1:3000                                                                        |
 | OTEL Collector                          | None for OTLP (internal)     | Listen on container network only                                                      |

@@ -45,7 +45,7 @@ Use `TableCell`, `CellText`, `CellNumber`, `CellActions`, and column flags to ac
   - `CellNumber` for numeric alignment
   - `CellActions` for actions columns
 
-If additional composition is needed, add small helpers close to the table primitives (e.g. `frontend/admin/src/design-system/primitives/Table.tsx`) or as feature-local render helpers.
+If additional composition is needed, add small helpers close to the table primitives (e.g. `apps/admin-web/src/design-system/primitives/Table.tsx`) or as feature-local render helpers.
 
 ## Empty / Loading / Pagination
 

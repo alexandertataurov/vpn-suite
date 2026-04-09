@@ -28,7 +28,7 @@ After rotating keys, config download can fail or VPN may not connect until confi
 ```
 
 **Per device (Admin or API):**  
-Admin → Devices → device → Reissue, or `./scripts/call_admin_api.sh reissue <device_id>`.
+Admin → Devices → device → Reissue, or `./infra/scripts/runtime/call_admin_api.sh reissue <device_id>`.
 
 ## After running the fix
 

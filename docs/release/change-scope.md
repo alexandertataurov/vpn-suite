@@ -25,7 +25,7 @@
 - Net: +291 lines
 
 **Uncommitted (as of audit):**
-- Modified: `.env.example`, `README.md`, `docker-compose.observability.yml`, `docs/*`, `frontend/admin/tailwind.config.ts`, `ops/discovery/run_loop.py`, `docs/security/*`
+- Modified: `.env.example`, `README.md`, `infra/compose/docker-compose.observability.yml`, `docs/*`, legacy `frontend/admin/tailwind.config.ts` path (now `apps/admin-web/tailwind.config.ts`), `infra/discovery/runtime/run_loop.py`, `docs/security/*`
 - Deleted: `docs/observability/system-map.md`, `docs/security/hardening-action-plan.md`, `docs/security/hardening-checklist.md`
 - Untracked: `docs/guides/`, `docs/observability/archive-pipeline.md`, `docs/security/README.md`, `docs/security/hardening.md`, `docs/specs/README.md`, `scripts/archive-loki-to-s3.sh`
 
@@ -40,8 +40,8 @@
 | Change | Files | Risk |
 |--------|-------|------|
 | Outline integration removed (unsupported) | `outline.py` (D), `outline_client.py` (D), schema (D), tests (D). Outline is off by default; use AmneziaWG + node-agent only. | **High** — Breaking if clients depended on Outline API |
-| Analytics API added | `backend/app/api/v1/analytics.py` (new) — `/analytics/telemetry/services`, `/analytics/metrics/kpis` | Low — additive |
-| OpenTelemetry tracing | `backend/app/core/otel_tracing.py` (new), `main.py`, `config.py` | Low — opt-in via `OTEL_TRACES_ENDPOINT` |
+| Analytics API added | `apps/admin-api/app/api/v1/analytics.py` (new) — `/analytics/telemetry/services`, `/analytics/metrics/kpis` | Low — additive |
+| OpenTelemetry tracing | `apps/admin-api/app/core/otel_tracing.py` (new), `main.py`, `config.py` | Low — opt-in via `OTEL_TRACES_ENDPOINT` |
 | Overview / operator dashboard | `overview.py`, `operator_dashboard_service.py`, `servers_telemetry.py` | Medium — core dashboard data path |
 | Schema / models | `server.py` (schemas/models), `device.py` — Outline fields removed | High — DB migrations |
 | Dependencies | `requirements.in`, `requirements.txt` — OTEL, outline-related removed | Medium — build/test impact |
@@ -61,7 +61,7 @@
 
 | Change | Files | Risk |
 |--------|-------|------|
-| Docker compose | `docker-compose.yml`, `docker-compose.observability.yml` — inventory removed, OTEL env | Medium — service topology |
+| Docker compose | `infra/compose/docker-compose.yml`, `infra/compose/docker-compose.observability.yml` — inventory removed, OTEL env | Medium — service topology |
 | Caddy | `Caddyfile` — Outline routes removed | Low |
 | Prometheus | `prometheus.yml` — relabel_configs, wg-exporter | Low |
 | Loki | `loki-config.yml` — retention 365d | Low |

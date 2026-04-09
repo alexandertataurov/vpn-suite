@@ -153,7 +153,7 @@ ADMIN_PASSWORD=admin-password-12
 ### Не поднимать по умолчанию
 
 - `./manage.sh up-monitoring` — Prometheus, Grafana, Loki и т.д.
-- `docker-compose.audit.yml` — audit stack
+- `infra/compose/docker-compose.audit.yml` — audit stack
 - `./manage.sh up-agent` — node-agent (нужен DOCKER_GID, agent certs)
 
 ### Остановка
@@ -177,10 +177,10 @@ ADMIN_PASSWORD=admin-password-12
 
 | Действие | Команда |
 |----------|---------|
-| Рабочая папка | `backend/` |
+| Рабочая папка | `apps/admin-api/` |
 | Запуск | Core stack (`./manage.sh up-core`), API на 127.0.0.1:8000 |
-| Dev без Docker | `cd backend && .venv/bin/uvicorn app.main:app --reload` (нужны postgres, redis) |
-| Тесты | `cd backend && .venv/bin/python -m pytest tests/ -v` |
+| Dev без Docker | `cd apps/admin-api && .venv/bin/uvicorn app.main:app --reload` (нужны postgres, redis) |
+| Тесты | `cd apps/admin-api && .venv/bin/python -m pytest tests/ -v` |
 | Venv | `./manage.sh setup-backend-venv` |
 
 Не поднимать: monitoring, audit, node-agent (если не нужен).
@@ -189,24 +189,24 @@ ADMIN_PASSWORD=admin-password-12
 
 | Действие | Команда |
 |----------|---------|
-| Рабочая папка | `frontend/admin/` |
-| Dev server | `cd frontend && pnpm dev:admin` |
+| Рабочая папка | `apps/admin-web/` |
+| Dev server | `pnpm dev:admin` |
 | Зависимости | Core (admin-api, reverse-proxy) |
-| Сборка | `cd frontend && pnpm build:admin` |
+| Сборка | `pnpm build:admin` |
 
 ### Frontend (miniapp)
 
 | Действие | Команда |
 |----------|---------|
-| Рабочая папка | `frontend/miniapp/` |
-| Dev server | `cd frontend && pnpm dev:miniapp` |
-| Сборка | `cd frontend && pnpm build:miniapp` |
+| Рабочая папка | `apps/miniapp/` |
+| Dev server | `pnpm dev:miniapp` |
+| Сборка | `pnpm build:miniapp` |
 
 ### Bot
 
 | Действие | Команда |
 |----------|---------|
-| Рабочая папка | `bot/` |
+| Рабочая папка | `apps/telegram-bot/` |
 | Запуск | Входит в `up-core` (telegram-vpn-bot) |
 | Пересборка | `./manage.sh build-bot` |
 
@@ -214,7 +214,7 @@ ADMIN_PASSWORD=admin-password-12
 
 | Действие | Команда |
 |----------|---------|
-| Рабочая папка | `node-agent/` |
+| Рабочая папка | `apps/node-agent/` |
 | Запуск | `./manage.sh up-agent` (только при необходимости) |
 | Требования | DOCKER_GID, agent certs, core up |
 
@@ -312,11 +312,11 @@ backups/
 
 ```bash
 # Backend
-cd backend && .venv/bin/python -m pytest tests/unit -v
+cd apps/admin-api && .venv/bin/python -m pytest tests/unit -v
 
 # Frontend
-cd frontend && pnpm --filter admin test
-cd frontend && pnpm --filter miniapp test
+pnpm --filter admin test
+pnpm --filter miniapp test
 ```
 
 ### Не запускать по умолчанию
@@ -329,9 +329,9 @@ cd frontend && pnpm --filter miniapp test
 
 ```bash
 ./manage.sh up-core
-cd frontend && pnpm dev:admin &
+pnpm dev:admin &
 # В другом терминале:
-cd frontend/admin && npx playwright test
+cd apps/admin-web && pnpm exec playwright test
 ```
 
 ---
@@ -372,6 +372,6 @@ cd frontend/admin && npx playwright test
 | Остановить core | `./manage.sh down-core` |
 | Проверка качества | `./manage.sh check` |
 | Полная проверка | `./manage.sh verify` |
-| Admin dev | `cd frontend && pnpm dev:admin` |
-| Miniapp dev | `cd frontend && pnpm dev:miniapp` |
-| Backend тесты | `cd backend && .venv/bin/python -m pytest tests/ -v` |
+| Admin dev | `pnpm dev:admin` |
+| Miniapp dev | `pnpm dev:miniapp` |
+| Backend тесты | `cd apps/admin-api && .venv/bin/python -m pytest tests/ -v` |

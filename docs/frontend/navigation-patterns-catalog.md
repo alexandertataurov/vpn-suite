@@ -1,6 +1,6 @@
 # Navigation patterns — catalog
 
-All navigation-related components, Storybook stories, and app pages in the project. Paths below are relative to `frontend/admin/` unless noted.
+All navigation-related components, Storybook stories, and app pages in the project. Paths below are relative to `apps/admin-web/` unless noted.
 
 ---
 

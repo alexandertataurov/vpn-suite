@@ -31,12 +31,12 @@
 | # | Task | Status | Notes |
 |---|------|--------|-------|
 | 2.1.1 | Add `service.name`, `env`, `node_id` to Prometheus relabel_configs | Done | service_name, node_id, env in prometheus.yml |
-| 2.1.2 | wg-exporter: add `node_id`, `server_id` labels (from env) | Done | [wg_exporter.py](../../monitoring/wg-exporter/wg_exporter.py) NODE_ID, SERVER_ID |
+| 2.1.2 | wg-exporter: add `node_id`, `server_id` labels (from env) | Done | [wg_exporter.py](../../infra/monitoring/services/wg-exporter/wg_exporter.py) NODE_ID, SERVER_ID |
 | 2.1.3 | wg-exporter: expose per-peer `endpoint`, `allowed_ips` (optional) | Todo | Parse full dump |
 | 2.1.4 | admin-api: add `version` label to /metrics | Done | vpn_suite_info{version=API_VERSION} |
 | 2.1.5 | Add RED metrics to any HTTP service missing them | Todo | bot, node-agent |
 | 2.1.6 | Instrument admin-api with OpenTelemetry (OTLP traces) | Done | otel_tracing.py, OTEL_TRACES_ENDPOINT |
-| 2.1.7 | Instrument telegram-vpn-bot with OpenTelemetry | Done | bot/otel_tracing.py |
+| 2.1.7 | Instrument telegram-vpn-bot with OpenTelemetry | Done | apps/telegram-bot/otel_tracing.py |
 | 2.1.8 | Add Caddy metrics (or Caddy Prometheus plugin) | Todo | Gap #5; optional |
 | 2.1.9 | postgres-exporter (optional) | Todo | Gap; low priority |
 | 2.1.10 | redis-exporter (optional) | Todo | Gap; low priority |
@@ -45,8 +45,8 @@
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 2.2.1 | OTEL Collector config | Done | `config/monitoring/otel-collector/config.yaml` |
-| 2.2.2 | Tempo config | Done | `config/monitoring/tempo/tempo.yaml` |
+| 2.2.1 | OTEL Collector config | Done | `infra/monitoring/config/otel-collector/config.yaml` |
+| 2.2.2 | Tempo config | Done | `infra/monitoring/config/tempo/tempo.yaml` |
 | 2.2.3 | Grafana Tempo datasource | Done | `grafana/provisioning/datasources/` |
 | 2.2.4 | Wire OTEL Collector to admin-api OTLP endpoint | Done | Set via `OTEL_TRACES_ENDPOINT` in observability compose |
 | 2.2.5 | Validate trace flow end-to-end | Done | admin-api → otel-collector → tempo → Grafana |
@@ -56,11 +56,11 @@
 | # | Task | Status | Notes |
 |---|------|--------|-------|
 | 2.3.1 | Prometheus: set `--storage.tsdb.retention.time=365d` | Done | docker-compose |
-| 2.3.2 | Loki: set `retention_period: 8760h` (365d) | Done | [loki-config.yml](../../config/monitoring/loki-config.yml) |
-| 2.3.3 | Tempo: set `block_retention: 8760h` | Done | [tempo.yaml](../../config/monitoring/tempo/tempo.yaml) |
+| 2.3.2 | Loki: set `retention_period: 8760h` (365d) | Done | [loki-config.yml](../../infra/monitoring/config/loki-config.yml) |
+| 2.3.3 | Tempo: set `block_retention: 8760h` | Done | [tempo.yaml](../../infra/monitoring/config/tempo/tempo.yaml) |
 | 2.3.4 | Add VictoriaMetrics (or Mimir) for 365d + counter-reset handling | Done | VictoriaMetrics in compose + Prometheus remote_write |
 | 2.3.5 | Archive pipeline: export >365d to S3/GCS | Todo | Cron job or compactor |
-| 2.3.6 | Recording rules for rx/tx `increase()` over 1d windows | Done | [recording_rules.yml](../../config/monitoring/recording_rules.yml) |
+| 2.3.6 | Recording rules for rx/tx `increase()` over 1d windows | Done | [recording_rules.yml](../../infra/monitoring/config/recording_rules.yml) |
 
 ### 2.4 Compose & manage.sh
 
@@ -84,12 +84,12 @@
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 3.1 | GET /api/v1/analytics/telemetry/services | Done | [analytics.py](../../backend/app/api/v1/analytics.py) |
+| 3.1 | GET /api/v1/analytics/telemetry/services | Done | [analytics.py](../../apps/admin-api/app/api/v1/analytics.py) |
 | 3.2 | Caching for heavy Prometheus queries (30s TTL) | Done | analytics.py |
 | 3.3 | Graceful degradation when Prometheus down | Done | analytics.py |
 | 3.4 | GET /api/v1/analytics/metrics/kpis | Done | Request rate, error rate, latency |
 | 3.5 | Wire Admin UI to /analytics/telemetry/services | Done | Show per-service up/down, last scrape |
-| 3.6 | UI: explicit "metrics unavailable" when degraded | Done | [overview.py](../../backend/app/api/v1/overview.py) |
+| 3.6 | UI: explicit "metrics unavailable" when degraded | Done | [overview.py](../../apps/admin-api/app/api/v1/overview.py) |
 | 3.7 | Add Grafana scrape-status dashboard panel | Done | vpn-overview: Scrape targets up/down |
 | 3.8 | OpenAPI/TS types for analytics endpoints | Todo | [analytics-api.md](analytics-api.md) |
 | 3.9 | Expose /_debug/metrics-targets in Admin UI (optional) | Done | Telemetry page link |
@@ -101,7 +101,7 @@
 | # | Task | Status | Notes |
 |---|------|--------|-------|
 | 4.1 | Legacy removal plan | Done | [legacy-removal-plan.md](legacy-removal-plan.md) |
-| 4.2 | Remove inventory service (after parity verified) | Done | docker-compose.observability.yml |
+| 4.2 | Remove inventory service (after parity verified) | Done | infra/compose/docker-compose.observability.yml |
 | 4.3 | Remove or implement correlation_engine | Done | mapping.json removed |
 | 4.4 | Remove INVENTORY_DISABLED env var | Done | generate_inventory.py no longer checks it |
 | 4.5 | Consolidate/supersede obsolete observability docs | Partial | system-map.md removed; others as needed |

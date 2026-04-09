@@ -1,14 +1,14 @@
 # wg-exporter — Observability
 
 **Service:** WireGuard/AmneziaWG metrics exporter  
-**Path:** [`monitoring/wg-exporter/`](../../monitoring/wg-exporter)  
+**Path:** [`infra/monitoring/services/wg-exporter/`](../../infra/monitoring/services/wg-exporter)  
 **Port:** 9586  
 
 ## Metrics
 
 | Endpoint | Format | Source |
 |----------|--------|--------|
-| `GET /metrics` | Prometheus | [`wg_exporter.py`](../../monitoring/wg-exporter/wg_exporter.py) L104 |
+| `GET /metrics` | Prometheus | [`wg_exporter.py`](../../infra/monitoring/services/wg-exporter/wg_exporter.py) L104 |
 
 **Data source:** `docker exec <WG_CONTAINER> wg show <WG_INTERFACE> dump`.
 

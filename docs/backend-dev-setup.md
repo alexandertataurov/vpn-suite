@@ -10,7 +10,7 @@ Run backend tests and the API locally without Docker.
 ## 1. Venv and dependencies
 
 ```bash
-cd backend
+cd apps/admin-api
 
 # Option A: venv + pip
 python3 -m venv .venv
@@ -54,7 +54,7 @@ python3 -m pytest tests/ -v
 One-liner from repo root (with postgres/redis up):
 
 ```bash
-cd backend && NODE_MODE=mock TELEGRAM_STARS_WEBHOOK_SECRET="" pytest tests/ -v
+cd apps/admin-api && NODE_MODE=mock TELEGRAM_STARS_WEBHOOK_SECRET="" pytest tests/ -v
 ```
 
-See also: `scripts/quality_gate.sh`, `scripts/verify.sh`.
+See also: `tools/quality/quality_gate.sh`, `tools/quality/verify.sh`.

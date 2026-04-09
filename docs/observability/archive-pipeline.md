@@ -107,13 +107,13 @@ For local/prod ops, you can run one-shot archive jobs (requires AWS creds + buck
 cd /opt/vpn-suite
 
 # Metrics (Prometheus TSDB blocks) → S3
-docker compose -f docker-compose.yml -f docker-compose.observability.yml --profile archive run --rm prometheus-archive
+docker compose -f infra/compose/docker-compose.yml -f infra/compose/docker-compose.observability.yml --profile archive run --rm prometheus-archive
 
 # Logs (Loki chunks) → S3
-docker compose -f docker-compose.yml -f docker-compose.observability.yml --profile archive run --rm loki-archive
+docker compose -f infra/compose/docker-compose.yml -f infra/compose/docker-compose.observability.yml --profile archive run --rm loki-archive
 
 # Traces (Tempo blocks) → S3
-docker compose -f docker-compose.yml -f docker-compose.observability.yml --profile archive run --rm tempo-archive
+docker compose -f infra/compose/docker-compose.yml -f infra/compose/docker-compose.observability.yml --profile archive run --rm tempo-archive
 ```
 
 ### 6.2 Cron (optional)

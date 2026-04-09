@@ -1,0 +1,58 @@
+{
+  "name": "vpn-suite-frontend",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/admin-web",
+    "apps/miniapp",
+    "apps/shared-web"
+  ],
+  "scripts": {
+    "dev:admin": "pnpm --filter admin dev",
+    "dev:miniapp": "pnpm --filter miniapp dev",
+    "build:shared": "pnpm --filter @vpn-suite/shared build",
+    "build:admin": "NODE_OPTIONS='--max-old-space-size=4096' pnpm --filter admin build",
+    "build:miniapp": "NODE_OPTIONS='--max-old-space-size=4096' pnpm --filter miniapp build",
+    "build": "pnpm run build:shared && pnpm run build:admin && pnpm run build:miniapp",
+    "lint": "pnpm --filter admin lint && pnpm --filter miniapp lint",
+    "typecheck": "pnpm --filter admin typecheck && pnpm --filter miniapp typecheck && pnpm --filter @vpn-suite/shared typecheck",
+    "test": "pnpm --filter admin test && pnpm --filter miniapp test",
+    "test:all": "pnpm --filter admin test && pnpm --filter miniapp test:all",
+    "test:coverage": "pnpm --filter admin test:coverage && pnpm --filter miniapp test:coverage",
+    "test:e2e": "pnpm --filter admin test:e2e",
+    "test:e2e:ci": "pnpm --filter admin test:e2e:dev",
+    "test:e2e:miniapp": "pnpm --filter miniapp test:e2e",
+    "test:e2e:ui": "pnpm --filter admin test:e2e:ui",
+    "e2e:admin": "pnpm --filter admin test:e2e",
+    "e2e:miniapp": "pnpm --filter miniapp test:e2e",
+    "ci": "pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run build",
+    "guardrails": "pnpm --filter miniapp design:check",
+    "storybook": "pnpm --filter admin storybook",
+    "storybook:admin": "pnpm --filter admin storybook",
+    "storybook:miniapp": "pnpm --filter miniapp storybook",
+    "build-storybook:miniapp": "pnpm --filter miniapp build-storybook",
+    "storybook:contract:miniapp": "pnpm --filter miniapp storybook:contract",
+    "test-storybook:miniapp": "pnpm --filter miniapp test-storybook",
+    "test-storybook:official:miniapp": "pnpm --filter miniapp test-storybook:official",
+    "storybook:ci:miniapp": "pnpm --filter miniapp storybook:ci"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.15.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "typescript-eslint": "^8.15.0",
+    "@storybook/addon-links": "^10.2.17",
+    "@storybook/react": "^10.2.17",
+    "@storybook/react-vite": "^10.2.17",
+    "storybook": "^10.2.17",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "tailwind-merge": "^3.5.0",
+    "typescript": "~5.9.3"
+  },
+  "overrides": {
+    "@types/react": "18.3.28",
+    "@types/react-dom": "18.3.7"
+  },
+  "dependencies": {}
+}

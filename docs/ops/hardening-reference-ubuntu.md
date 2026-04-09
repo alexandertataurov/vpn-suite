@@ -33,7 +33,7 @@ cd /opt/vpn-suite
 ls -l .env secrets/
 
 # 2) Lock down file permissions
-./ops/harden-secrets.sh
+./infra/scripts/ops/harden-secrets.sh
 ```
 
 Checklist (control-plane host):
@@ -58,10 +58,10 @@ From [Hardening Guide — Network](../security/hardening.md#2-network):
 cd /opt/vpn-suite
 
 # 1) Remove legacy 8000 exposure, if any
-sudo ./ops/ufw-remove-8000.sh
+sudo ./infra/scripts/ops/ufw-remove-8000.sh
 
 # 2) Block cloud metadata endpoints (IMDS) from containers and host
-sudo ./ops/block-metadata-endpoints.sh
+sudo ./infra/scripts/ops/block-metadata-endpoints.sh
 ```
 
 Then, enforce a minimal UFW policy (adapt if you use a different firewall):
@@ -105,10 +105,10 @@ From [Hardening Guide — Host OS](../security/hardening.md#3-host-os):
 cd /opt/vpn-suite
 
 # 1) nf_conntrack & kernel tuning
-sudo sysctl -p ops/sysctl-hardening.conf
+sudo sysctl -p infra/scripts/ops/sysctl-hardening.conf
 
 # 2) Install and configure fail2ban for sshd
-sudo ./ops/setup-fail2ban.sh
+sudo ./infra/scripts/ops/setup-fail2ban.sh
 ```
 
 Manual SSH hygiene (edit `/etc/ssh/sshd_config` and restart sshd):
@@ -134,7 +134,7 @@ Validation:
 
 - SSH key-only login works from your admin workstation(s).
 - Fail2ban is active: `sudo systemctl status fail2ban`.
-- `sysctl -a | grep nf_conntrack` reflects values from `ops/sysctl-hardening.conf`.
+- `sysctl -a | grep nf_conntrack` reflects values from `infra/scripts/ops/sysctl-hardening.conf`.
 
 ---
 
@@ -173,7 +173,7 @@ Smoke checklist:
 **When provisioning a new Ubuntu LTS control-plane host:**
 
 1. Install Docker + docker compose plugin, clone repo to `/opt/vpn-suite`.
-2. Configure `.env` and secrets per [required-secrets.md](required-secrets.md), then run `./ops/harden-secrets.sh`.
+2. Configure `.env` and secrets per [required-secrets.md](required-secrets.md), then run `./infra/scripts/ops/harden-secrets.sh`.
 3. Apply UFW + metadata blocking as above.
 4. Apply host hardening (sysctl, fail2ban, SSH key-only).
 5. Deploy stack via `./manage.sh verify` → `./manage.sh up-core` → `./manage.sh migrate` → `./manage.sh seed`.
@@ -184,4 +184,3 @@ Smoke checklist:
    - Document the exact rollback path for this host: which git tag/commit to roll back to, which backup file to restore, and how to re-verify (`./manage.sh verify`, health endpoints, Admin UI login, at least one test device).
 
 ✨ **Stretch goal:** capture these steps (including backup/restore screenshots and exact CIDRs) in your internal runbook, and rehearse them on a staging host before applying to production.
-

@@ -8,7 +8,7 @@ Production security checklist, ops scripts, and deployment validation.
 
 | Check | Status | Action |
 |-------|--------|--------|
-| secrets/ and .env chmod 600 | Done | `./ops/harden-secrets.sh` |
+| secrets/ and .env chmod 600 | Done | `./infra/scripts/ops/harden-secrets.sh` |
 | SECRET_KEY ≥ 32 chars, non-default | — | Set in .env |
 | ADMIN_PASSWORD strong | — | Set on seed |
 | BAN_CONFIRM_TOKEN, BLOCK_CONFIRM_TOKEN, RESTART_CONFIRM_TOKEN, REVOKE_CONFIRM_TOKEN | — | Non-default per env |
@@ -27,9 +27,9 @@ Production security checklist, ops scripts, and deployment validation.
 | HSTS on public endpoints | Done | Caddy |
 | Bot 8090 bind 127.0.0.1 | Done | docker-compose |
 | Monitoring ports localhost | Done | Prometheus, Grafana, cAdvisor, node-exporter |
-| Remove UFW allow 8000 | — | `./ops/ufw-remove-8000.sh` |
-| Block metadata endpoints | — | `./ops/block-metadata-endpoints.sh` |
-| Agent mTLS boundary | Done | Caddy :8443; ops/pki/agent-mtls.sh |
+| Remove UFW allow 8000 | — | `./infra/scripts/ops/ufw-remove-8000.sh` |
+| Block metadata endpoints | — | `./infra/scripts/ops/block-metadata-endpoints.sh` |
+| Agent mTLS boundary | Done | Caddy :8443; infra/scripts/pki/agent-mtls.sh |
 
 ---
 
@@ -37,10 +37,10 @@ Production security checklist, ops scripts, and deployment validation.
 
 | Check | Action |
 |-------|--------|
-| fail2ban for sshd | `./ops/setup-fail2ban.sh` |
+| fail2ban for sshd | `./infra/scripts/ops/setup-fail2ban.sh` |
 | SSH key-only; disable root login | PermitRootLogin no |
 | Unattended security updates | Enable |
-| nf_conntrack tuning | `sysctl -p ops/sysctl-hardening.conf` |
+| nf_conntrack tuning | `sysctl -p infra/scripts/ops/sysctl-hardening.conf` |
 
 ---
 
@@ -50,7 +50,7 @@ Production security checklist, ops scripts, and deployment validation.
 |-------|--------|
 | Trivy image scan in CI | Done |
 | cAdvisor internal only | 127.0.0.1:8080 |
-| awg_private_key chmod 600 | `./ops/harden-secrets.sh` |
+| awg_private_key chmod 600 | `./infra/scripts/ops/harden-secrets.sh` |
 
 ---
 
@@ -58,13 +58,13 @@ Production security checklist, ops scripts, and deployment validation.
 
 | Script | Purpose |
 |--------|---------|
-| `./ops/harden-secrets.sh` | chmod 600 secrets/, .env |
-| `./ops/ufw-remove-8000.sh` | Remove UFW allow 8000 |
-| `./ops/block-metadata-endpoints.sh` | Block 169.254.169.254, 169.254.170.2 |
-| `./ops/setup-fail2ban.sh` | fail2ban for sshd |
-| `./ops/sysctl-hardening.conf` | nf_conntrack, kernel tuning |
-| `./ops/rotate-agent-token.sh` | Rotate AGENT_SHARED_TOKEN |
-| `./ops/pki/agent-mtls.sh` | Agent mTLS PKI |
+| `./infra/scripts/ops/harden-secrets.sh` | chmod 600 secrets/, .env |
+| `./infra/scripts/ops/ufw-remove-8000.sh` | Remove UFW allow 8000 |
+| `./infra/scripts/ops/block-metadata-endpoints.sh` | Block 169.254.169.254, 169.254.170.2 |
+| `./infra/scripts/ops/setup-fail2ban.sh` | fail2ban for sshd |
+| `./infra/scripts/ops/sysctl-hardening.conf` | nf_conntrack, kernel tuning |
+| `./infra/scripts/ops/rotate-agent-token.sh` | Rotate AGENT_SHARED_TOKEN |
+| `./infra/scripts/pki/agent-mtls.sh` | Agent mTLS PKI |
 
 ---
 
@@ -82,11 +82,11 @@ Production security checklist, ops scripts, and deployment validation.
 
 1. ENVIRONMENT=production
 2. All secret validations pass
-3. `./ops/harden-secrets.sh`
-4. `./ops/ufw-remove-8000.sh`
-5. `./ops/block-metadata-endpoints.sh`
-6. Optional: `sysctl -p ops/sysctl-hardening.conf`
-7. Optional: `./ops/setup-fail2ban.sh`
+3. `./infra/scripts/ops/harden-secrets.sh`
+4. `./infra/scripts/ops/ufw-remove-8000.sh`
+5. `./infra/scripts/ops/block-metadata-endpoints.sh`
+6. Optional: `sysctl -p infra/scripts/ops/sysctl-hardening.conf`
+7. Optional: `./infra/scripts/ops/setup-fail2ban.sh`
 
 ---
 

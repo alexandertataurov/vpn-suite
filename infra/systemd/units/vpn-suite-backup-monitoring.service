@@ -1,0 +1,10 @@
+[Unit]
+Description=VPN Suite - monitoring config backup
+Wants=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/vpn-suite
+Environment=ENV_FILE=/opt/vpn-suite/.env
+ExecStart=/opt/vpn-suite/infra/scripts/ops/backup_monitoring.sh

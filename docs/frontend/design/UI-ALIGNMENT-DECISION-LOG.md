@@ -21,6 +21,6 @@ Single-page record of decisions for frontend UI/design alignment across admin an
 
 ## Deprecation policy
 
-- **Legacy tokens/aliases**: Kept in `tokens.css` as aliases during migration only; do not add new usages. Remove aliases when no grep hits remain in `frontend/` (admin, miniapp, shared).
+- **Legacy tokens/aliases**: Kept in `tokens.css` as aliases during migration only; do not add new usages. Remove aliases when no grep hits remain across `apps/admin-web`, `apps/miniapp`, and `apps/shared-web`.
 - **Deprecated CSS classes** (e.g. `ref-action-btn`, `dashboard-muted`): Document in [ui-guide.md](ui-guide.md) under "Don't"; replace with shared components or token-based classes. No deadline; remove when the last usage is migrated.
 - **New code**: must not introduce legacy tokens or deprecated classes.

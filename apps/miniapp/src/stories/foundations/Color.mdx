@@ -1,0 +1,75 @@
+import { Meta, Canvas, Story } from "@storybook/addon-docs/blocks";
+import { FoundationHeader, FoundationLinks, DoDont } from "./components";
+import * as ColorStories from "./Color.stories";
+
+<Meta of={ColorStories} />
+
+<FoundationHeader
+  title="Color"
+  description="Semantic color tokens for hierarchy, state, and meaning across themes."
+  status="Stable"
+/>
+
+<FoundationLinks tokens="src/design-system/styles/tokens/" />
+
+## Overview
+
+Color communicates hierarchy, action, feedback, and state. Always use semantic tokens — never raw hex or palette values — so components stay consistent across themes and surfaces.
+
+## Token gallery
+
+<Canvas>
+  <Story id="foundations-color--all" />
+</Canvas>
+
+Use the **Tokens** toolbar switch to toggle between semantic tokens and underlying primitives.
+
+## Usage
+
+<Canvas>
+  <Story id="foundations-color--showcase" />
+</Canvas>
+
+### Rules
+
+- Use semantic tokens (`var(--color-*)`) in all product code
+- Never use raw hex values in components
+- Interactive elements must define hover, active, and disabled color states
+- All text/background pairs must meet WCAG AA contrast requirements
+
+### Do / Don't
+
+<DoDont
+  do={<span>Use <code>--color-success-bg</code> + <code>--color-success-text</code> together for positive feedback states</span>}
+  dont={<span>Use a raw hex green for "looks good" without checking contrast or semantic meaning</span>}
+/>
+
+## Playground
+
+<Canvas>
+  <Story id="foundations-color--playground" />
+</Canvas>
+
+Use the **Theme**, **Contrast**, and **Tokens** toolbar controls to inspect resolved CSS values across light and dark foundations.
+
+## Implementation
+
+**Token aliases** — `--color-bg`, `--color-surface`, `--color-accent`, and related tokens are defined in `src/design-system/styles/tokens/`.
+
+**Theming** — apply `data-theme="consumer-light"` or `data-theme="consumer-dark"` on a root element. Token values resolve automatically from `theme/consumer.css`.
+
+**Usage in CSS** — always use `var(--color-*)`. Hardcoded hex bypasses theming and breaks dark mode.
+
+## Accessibility
+
+**Contrast** — text/background pairs must meet WCAG AA: 4.5:1 for body text, 3:1 for large text (18px+ or 14px+ bold).
+
+**Non-color indicators** — never rely on color alone to convey status. Pair with an icon, label, or pattern.
+
+**Focus** — use `--color-focus-ring` for focus outlines. Do not suppress or override the default ring without a visible replacement.
+
+## Related
+
+- [Foundations / Accessibility](#)
+- [Components / Button](#)
+- [Components / Alert](#)

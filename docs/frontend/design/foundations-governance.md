@@ -4,10 +4,10 @@ Design system token usage rules and enforcement. All contributors must follow th
 
 ## Source of truth
 
-- **Admin:** `frontend/admin/src/design-system/tokens.css`
-- **Miniapp base:** `frontend/miniapp/src/design-system/styles/tokens/base.css`
-- **Miniapp consumer theme:** `frontend/miniapp/src/design-system/styles/theme/consumer.css`
-- **Miniapp theme aliases:** `frontend/miniapp/src/design-system/styles/theme/telegram.css`
+- **Admin:** `apps/admin-web/src/design-system/tokens/tokens.css`
+- **Miniapp base:** `apps/miniapp/src/design-system/styles/tokens/base.css`
+- **Miniapp consumer theme:** `apps/miniapp/src/design-system/styles/theme/consumer.css`
+- **Miniapp theme aliases:** `apps/miniapp/src/design-system/styles/theme/telegram.css`
 
 These files define the canonical design tokens and aliases. All other layers consume them.
 

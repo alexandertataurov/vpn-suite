@@ -125,4 +125,4 @@ curl -s http://localhost:8090/healthz
 curl -s http://localhost:19093/-/ready
 ```
 
-**Expected:** 200. Default config uses a no-op receiver; configure `config/monitoring/alertmanager.yml` for notifications.
+**Expected:** 200. Default config uses a no-op receiver; configure `infra/monitoring/config/alertmanager.yml` for notifications.

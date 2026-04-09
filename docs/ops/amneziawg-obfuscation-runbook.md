@@ -88,5 +88,5 @@ Use AmneziaWG obfuscation (Jc, Jmin, Jmax, S1–H4) where WireGuard is blocked o
 ## References
 
 - **Config Generation Contract**: [config-generation-contract.md](../specs/config-generation-contract.md) — canonical builder, required fields, verified AWG keys.
-- `backend/app/services/issue_service.py` (issue_device: runtime obfuscation merge for user-issued configs).
-- `backend/app/services/node_runtime_docker.py` (get_obfuscation_from_node), `backend/app/core/amnezia_config.py` (get_obfuscation_params, build_amnezia_client_config).
+- `apps/admin-api/app/services/issue_service.py` (issue_device: runtime obfuscation merge for user-issued configs).
+- `apps/admin-api/app/services/node_runtime_docker.py` (get_obfuscation_from_node), `apps/admin-api/app/core/amnezia_config.py` (get_obfuscation_params, build_amnezia_client_config).

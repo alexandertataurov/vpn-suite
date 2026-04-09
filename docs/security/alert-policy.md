@@ -1,6 +1,6 @@
 # Alert Policy
 
-Thresholds, severities, and runbook links. Rules: `config/monitoring/alert_rules.yml`.
+Thresholds, severities, and runbook links. Rules: `infra/monitoring/config/alert_rules.yml`.
 
 ---
 

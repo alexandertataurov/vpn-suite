@@ -5,9 +5,9 @@
 
 ## Admin design-system primitives (current)
 
-**Current source of truth:** `frontend/admin/src/design-system/primitives/` and `frontend/admin/src/design-system/tokens/tokens.css`.
+**Current source of truth:** `apps/admin-web/src/design-system/primitives/` and `apps/admin-web/src/design-system/tokens/tokens.css`.
 
-**Note:** This inventory was originally written against a `frontend/shared/src/ui/` package; that layout is no longer present in the working tree.
+**Note:** This inventory was originally written against a legacy `frontend/shared/src/ui/` package; that layout is no longer present in the working tree.
 
 | Component | File | Type | Variants | Inline Styles | Arbitrary Tailwind | Refactored |
 |-----------|------|------|----------|---------------|--------------------|------------|

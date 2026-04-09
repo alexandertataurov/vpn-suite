@@ -13,7 +13,7 @@ Referral code is resolved in a **priority chain** so it survives router replace,
 
 On every successful read from (1)–(3), the value is written to sessionStorage. After a **terminal** attach outcome (`attached`, `already_attached`, `invalid_ref`, `self_referral_blocked`), the client clears pending ref so the same ref is not retried.
 
-- Implementation: [frontend/miniapp/src/lib/referralCapture.ts](../frontend/miniapp/src/lib/referralCapture.ts), [frontend/miniapp/src/hooks/useReferralAttach.ts](../frontend/miniapp/src/hooks/useReferralAttach.ts)
+- Implementation: [apps/miniapp/src/lib/referralCapture.ts](../apps/miniapp/src/lib/referralCapture.ts), [apps/miniapp/src/hooks/useReferralAttach.ts](../apps/miniapp/src/hooks/useReferralAttach.ts)
 - Attach is called **once per session** (after auth token is available); idempotency is guaranteed by the backend.
 
 ## API contract: POST /webapp/referral/attach

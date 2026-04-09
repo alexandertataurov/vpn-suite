@@ -1,7 +1,0 @@
-packages:
-  - admin
-  - miniapp
-  - shared
-onlyBuiltDependencies:
-  - core-js
-  - protobufjs

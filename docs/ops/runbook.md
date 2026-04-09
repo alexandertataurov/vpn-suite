@@ -5,7 +5,7 @@
 ## Env & secrets
 
 - **Config:** repo-root `.env` (chmod 600). mTLS: `secrets/agent_ca.pem`, `secrets/pki/agent_ca.key`. Node: `amnezia-awg2/secrets/node.env` (0600).
-- **Bootstrap:** `cd /opt/vpn-suite && ./ops/bootstrap-prod.sh` (creates agent CA, prod .env, node client cert)
+- **Bootstrap:** `cd /opt/vpn-suite && ./infra/scripts/ops/bootstrap-prod.sh` (creates agent CA, prod .env, node client cert)
 
 ## Start/stop
 
@@ -19,14 +19,14 @@ Node (per server): `cd /opt/amnezia/amnezia-awg2 && ./manage.sh up|down`
 ## Agent (mTLS + allowlist)
 
 - Agent API: `https://$PUBLIC_DOMAIN:8443/api/v1/agent/*`. Caddy enforces mTLS. Set `AGENT_ALLOW_CIDRS` in `.env` if needed.
-- **Rotate agent token:** `./ops/rotate-agent-token.sh` then `./manage.sh up-core` and restart node-agent.
+- **Rotate agent token:** `./infra/scripts/ops/rotate-agent-token.sh` then `./manage.sh up-core` and restart node-agent.
 
 ## Backups
 
 - **Postgres:** `./manage.sh backup-db` → `backups/postgres/pgdump_*.dump`. Restore: `./manage.sh restore-db --force backups/postgres/pgdump_<ts>.dump` (run on staging first).
 - **Safeguards:** See [postgres-safeguards.md](postgres-safeguards.md) — never run `docker compose down -v`; `rebuild-restart` and `down-core` auto-backup unless `BACKUP_SKIP=1`.
 - **Redis:** `docker compose exec redis redis-cli BGSAVE`; copy volume or `dump.rdb`. Restore: stop admin-api/redis, replace data, start.
-- **Schedule:** use `ops/systemd/vpn-suite-backup-db.timer`.
+- **Schedule:** use `infra/systemd/units/vpn-suite-backup-db.timer`.
 
 ## Troubleshooting
 
@@ -48,10 +48,10 @@ Node (per server): `cd /opt/amnezia/amnezia-awg2 && ./manage.sh up|down`
 
 **One network / client cannot reach dashboard (others can):** Server-side: `sudo ufw status` (80/443 allow Anywhere); `docker compose exec redis redis-cli KEYS "ratelimit:*"` (if client IP appears and is high, rate limit may be hitting — keys expire in 60s window); `docker compose logs reverse-proxy --since 30m` and `docker compose logs admin-api --since 30m` for 502/403/429 from that IP. No IP blocklist in Caddy or app. Client-side: from a device on that network run `curl -v https://vpn.vega.llc/admin` and `nslookup vpn.vega.llc` (or `dig vpn.vega.llc`); try mobile data vs Wi‑Fi to isolate ISP/router; check router firewall or parental controls.
 
-**VPN no traffic (handshake OK):** [no-traffic-troubleshooting.md](no-traffic-troubleshooting.md) § Deep debug (AmneziaWG in Docker) — classification, diagnostics (wg show, NAT, Docker network mode, MTU), request-3-things for remote support, minimal fix plan. **NAT:** Run `sudo ./ops/amnezia-nat-setup.sh` on the VPN host to add MASQUERADE for tunnel subnets.
+**VPN no traffic (handshake OK):** [no-traffic-troubleshooting.md](no-traffic-troubleshooting.md) § Deep debug (AmneziaWG in Docker) — classification, diagnostics (wg show, NAT, Docker network mode, MTU), request-3-things for remote support, minimal fix plan. **NAT:** Run `sudo ./infra/scripts/ops/amnezia-nat-setup.sh` on the VPN host to add MASQUERADE for tunnel subnets.
 
 **DNS / ERR_NAME_NOT_RESOLVED triage (P0):**
-- Run `./ops/dns_synthetic_check.sh vpn.vega.llc 185.139.228.171`.
+- Run `./infra/scripts/ops/dns_synthetic_check.sh vpn.vega.llc 185.139.228.171`.
 - Verify resolver answers manually:
   - `dig @1.1.1.1 vpn.vega.llc A`
   - `dig @8.8.8.8 vpn.vega.llc A`

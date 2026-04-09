@@ -9,6 +9,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### Added
 
+- Documentation program for the next 1-2 releases: repo-aligned as-built and target architecture specs, as-built API and DB schema specs, supported operating modes, action/reconciliation/agent/placement/config-delivery specs, and a tracked spec-delivery backlog program.
 - Admin Servers operator console (snapshot sync): server state from AmneziaWG nodes as source of truth; manual `POST /servers/:id/sync`, auto-sync loop, snapshot (CPU/RAM, peers, IP pool); telemetry columns and Sync button; Prometheus metrics and config (SERVER_SYNC_*).
 - Admin Servers Operator Console: issue config from chosen server, one-time download/QR by token; rotate and revoke peers; audit with request_id; idempotency and rate limiting; Prometheus metrics and alert rules.
 - Promo/referral services and miniapp promo flows.

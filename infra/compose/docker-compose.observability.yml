@@ -1,0 +1,190 @@
+x-service-default: &service_default
+  restart: unless-stopped
+  labels:
+    - "com.centurylinklabs.watchtower.enable=false"
+
+x-resource-tiny: &resource_tiny
+  cpus: "${CPU_TINY:-0.1}"
+  mem_limit: "${MEM_TINY:-64m}"
+
+x-resource-small: &resource_small
+  cpus: "${CPU_SMALL:-0.2}"
+  mem_limit: "${MEM_SMALL:-128m}"
+
+x-resource-medium: &resource_medium
+  cpus: "${CPU_MEDIUM:-0.5}"
+  mem_limit: "${MEM_MEDIUM:-512m}"
+
+services:
+  admin-api:
+    environment:
+      - OTEL_TRACES_ENDPOINT=otel-collector:4317
+      - WEB_CONCURRENCY=1
+
+  telegram-vpn-bot:
+    environment:
+      - OTEL_TRACES_ENDPOINT=otel-collector:4317
+
+  discovery-runner:
+    <<: [*service_default, *resource_small]
+    build:
+      context: ../discovery/runtime
+      dockerfile: Dockerfile
+    env_file:
+      - ${ENV_FILE:-.env}
+    environment:
+      - DISCOVERY_INTERVAL_SECONDS=60
+      - DISCOVERY_OUT_DIR=/work
+      - DISCOVERY_TARGET_TTL_SECONDS=180
+      - DISCOVERY_REMOTE_WG_EXPORTERS=${DISCOVERY_REMOTE_WG_EXPORTERS:-}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /etc/vpn-suite/node-id:/etc/vpn-suite/node-id:rw
+      - ../monitoring/config/discovery:/work
+    healthcheck:
+      test: ["CMD-SHELL", "test -s /work/targets.json"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - vpn-suite-app
+    profiles:
+      - monitoring
+
+  grafana:
+    depends_on:
+      - tempo
+      - victoria-metrics
+
+  victoria-metrics:
+    <<: [*service_default, *resource_medium]
+    image: ${VICTORIA_METRICS_IMAGE:?set VICTORIA_METRICS_IMAGE}
+    command:
+      - "-retentionPeriod=90d"
+      - "-storageDataPath=/storage"
+    volumes:
+      - victoria_metrics_data:/storage
+    ports:
+      - "127.0.0.1:8428:8428"
+    networks:
+      - vpn-suite-app
+    profiles:
+      - monitoring
+
+  prometheus:
+    networks:
+      - vpn-suite-app
+    ports:
+      - "127.0.0.1:${PROMETHEUS_HOST_PORT:-19090}:9090"
+    depends_on:
+      admin-api:
+        condition: service_healthy
+      discovery-runner:
+        condition: service_healthy
+    volumes:
+      - ../monitoring/config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ../monitoring/config/alert_rules.yml:/etc/prometheus/alert_rules.yml:ro
+      - ../monitoring/config/discovery:/etc/prometheus/file_sd:ro
+      - ../monitoring/config/alerts:/etc/prometheus/alerts:ro
+      - ../monitoring/config/recording_rules.yml:/etc/prometheus/recording_rules.yml:ro
+      - prometheus_data:/prometheus
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    profiles:
+      - monitoring
+
+  wg-exporter:
+    <<: [*service_default, *resource_small]
+    build:
+      context: ../monitoring/services/wg-exporter
+      dockerfile: Dockerfile
+    environment:
+      - WG_CONTAINER=${WG_CONTAINER:-amnezia-awg}
+      - WG_INTERFACE=${WG_INTERFACE:-awg0}
+      - WG_EXPORTER_PORT=9586
+      - NODE_ID=${NODE_ID:-}
+      - SERVER_ID=${SERVER_ID:-}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+      - "127.0.0.1:9586:9586"
+    networks:
+      - vpn-suite-app
+    profiles:
+      - monitoring
+
+  tempo:
+    <<: [*service_default, *resource_medium]
+    image: ${TEMPO_IMAGE:?set TEMPO_IMAGE}
+    command: ["-config.file=/etc/tempo/tempo.yaml"]
+    volumes:
+      - ../monitoring/config/tempo/tempo.yaml:/etc/tempo/tempo.yaml:ro
+      - tempo_data:/var/tempo
+    ports:
+      - "127.0.0.1:3200:3200"
+    networks:
+      - vpn-suite-app
+    profiles:
+      - monitoring
+
+  otel-collector:
+    <<: [*service_default, *resource_medium]
+    image: ${OTEL_COLLECTOR_IMAGE:?set OTEL_COLLECTOR_IMAGE}
+    command: ["--config=/etc/otel-collector/config.yaml"]
+    volumes:
+      - ../monitoring/config/otel-collector/config.yaml:/etc/otel-collector/config.yaml:ro
+    ports:
+      - "127.0.0.1:4317:4317"
+      - "127.0.0.1:4318:4318"
+    depends_on:
+      - tempo
+      - victoria-metrics
+    networks:
+      - vpn-suite-app
+    profiles:
+      - monitoring
+
+  prometheus-archive:
+    <<: [*resource_small]
+    image: ${AWS_CLI_IMAGE:?set AWS_CLI_IMAGE}
+    env_file:
+      - ${ENV_FILE:-.env}
+    command: ["sh", "-c", "/scripts/archive-prometheus-to-s3.sh"]
+    volumes:
+      - ../../infra/scripts/runtime:/scripts:ro
+      - prometheus_data:/prometheus:ro
+    profiles:
+      - archive
+
+  loki-archive:
+    <<: [*resource_small]
+    image: ${AWS_CLI_IMAGE:?set AWS_CLI_IMAGE}
+    env_file:
+      - ${ENV_FILE:-.env}
+    command: ["sh", "-c", "/scripts/archive-loki-to-s3.sh"]
+    volumes:
+      - ../../infra/scripts/runtime:/scripts:ro
+      - loki_data:/tmp/loki:ro
+    profiles:
+      - archive
+
+  tempo-archive:
+    <<: [*resource_small]
+    image: ${AWS_CLI_IMAGE:?set AWS_CLI_IMAGE}
+    env_file:
+      - ${ENV_FILE:-.env}
+    command: ["sh", "-c", "/scripts/archive-tempo-to-s3.sh"]
+    volumes:
+      - ../../infra/scripts/runtime:/scripts:ro
+      - tempo_data:/var/tempo:ro
+    profiles:
+      - archive
+
+volumes:
+  tempo_data:
+  prometheus_data:
+  loki_data:
+  victoria_metrics_data:

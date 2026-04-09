@@ -21,7 +21,7 @@
 
 | Type | Files |
 |------|-------|
-| Modified | .env.example, README.md, docker-compose.observability.yml, docs/*, tailwind.config.ts, run_loop.py |
+| Modified | .env.example, README.md, infra/compose/docker-compose.observability.yml, docs/*, tailwind.config.ts, run_loop.py |
 | Deleted | docs/observability/system-map.md, docs/security/hardening-action-plan.md, hardening-checklist.md |
 | Untracked | docs/guides/, docs/observability/archive-pipeline.md, docs/security/README.md, docs/security/hardening.md, docs/specs/README.md, scripts/archive-loki-to-s3.sh |
 

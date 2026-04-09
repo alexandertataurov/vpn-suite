@@ -50,8 +50,8 @@ jobs:
         run: |
           set -euo pipefail
           chmod +x manage.sh
-          chmod +x scripts/staging_full_validation.sh
-          chmod +x scripts/staging_ha_failover_smoke.sh
+          chmod +x infra/scripts/runtime/staging_full_validation.sh
+          chmod +x infra/scripts/runtime/staging_ha_failover_smoke.sh
 
       - name: Docker preflight
         env:

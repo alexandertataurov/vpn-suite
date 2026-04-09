@@ -3,11 +3,11 @@ name: UI Contract
 on:
   pull_request:
     paths:
-      - "frontend/miniapp/src/**"
-      - "frontend/miniapp/.storybook/**"
-      - "frontend/miniapp/package.json"
-      - "frontend/package.json"
-      - "frontend/pnpm-lock.yaml"
+      - "apps/miniapp/src/**"
+      - "apps/miniapp/.storybook/**"
+      - "apps/miniapp/package.json"
+      - "package.json"
+      - "pnpm-lock.yaml"
       - ".github/workflows/ui-contract.yml"
       - ".github/pull_request_template.md"
       - "docs/storybook-ai-contract.md"
@@ -17,9 +17,6 @@ on:
 jobs:
   storybook:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: frontend
     steps:
       - uses: actions/checkout@v4
 
@@ -58,9 +55,6 @@ jobs:
   chromatic:
     needs: storybook
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: frontend
     steps:
       - uses: actions/checkout@v4
 

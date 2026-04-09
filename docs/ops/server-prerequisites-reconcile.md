@@ -20,7 +20,7 @@ Before issuing configs or expecting handshake/traffic, ensure the VPN server (e.
 
 - Reply traffic from VPN clients must be NAT’d to the egress interface so it can reach the internet.
 - The amnezia-awg2 **entrypoint** adds iptables rules when `AWG_NAT=1`: PostUp adds MASQUERADE for the tunnel subnet on `AWG_EGRESS_IFACE` (e.g. `eth0`), and FORWARD rules for the tunnel interface.
-- If the container runs without these (e.g. host network or custom networking), ensure equivalent NAT and FORWARD rules exist on the host. See [amnezia-nat-setup.sh](../../ops/amnezia-nat-setup.sh) for a host-level script.
+- If the container runs without these (e.g. host network or custom networking), ensure equivalent NAT and FORWARD rules exist on the host. See [amnezia-nat-setup.sh](../../infra/scripts/ops/amnezia-nat-setup.sh) for a host-level script.
 
 ### 4. Reply routes
 

@@ -22,7 +22,7 @@ Structured JSON (structlog). Events: `user_action`, `action_completed`, `action_
 
 ## Release checklist
 
-**Pre:** BOT_TOKEN, BOT_USERNAME, SUPPORT_HANDLE, PANEL_URL, BOT_API_KEY in .env. Tests: `pytest bot/tests`. Lint: ruff. Commands in BotFather. /start, /status, /devices, add device, payment, referral tested. Back/Home on all keyboards. No secrets in logs.
+**Pre:** BOT_TOKEN, BOT_USERNAME, SUPPORT_HANDLE, PANEL_URL, BOT_API_KEY in .env. Tests: `pytest apps/telegram-bot/tests`. Lint: ruff. Commands in BotFather. /start, /status, /devices, add device, payment, referral tested. Back/Home on all keyboards. No secrets in logs.
 
 **Deploy:** Staging first → smoke → production → monitor ~1h.
 

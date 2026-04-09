@@ -31,7 +31,8 @@ elif command -v wg-quick &>/dev/null && [[ "$EUID" -eq 0 ]]; then
 elif command -v wg-quick &>/dev/null; then
   sudo "$ROOT/scripts/vpn_connectivity_check.sh" "$PLAIN_WG_CONFIG"
 else
-  "$ROOT/scripts/run_vpn_connectivity_docker.sh" "$PLAIN_WG_CONFIG" || true
+  echo "ERROR: connectivity check requires either ${OUT_DIR}/server_private.key or wg-quick on the host" >&2
+  exit 1
 fi
 
 echo "OK: Full test passed (all 3 configs issued + connectivity run)"

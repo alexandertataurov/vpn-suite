@@ -10,8 +10,8 @@ Distributed tracing across Bot to Backend to Payment to Provisioning.
 
 ## Implementation
 
-1. admin-api: app.core.otel_tracing.setup_otel_tracing(app, endpoint). Set OTEL_TRACES_ENDPOINT=otel-collector:4317 in docker-compose.observability.yml.
-2. telegram-vpn-bot: bot/otel_tracing.setup_otel_tracing(OTEL_TRACES_ENDPOINT). When calling admin-api, propagate current span context via traceparent header.
+1. admin-api: `apps/admin-api/app/core/otel_tracing.py` sets up tracing for the FastAPI app. Set `OTEL_TRACES_ENDPOINT=otel-collector:4317` in `infra/compose/docker-compose.observability.yml`.
+2. telegram-vpn-bot: `apps/telegram-bot/otel_tracing.py` sets up tracing with `OTEL_TRACES_ENDPOINT`. When calling admin-api, propagate current span context via `traceparent` header.
 3. Manual spans: Add spans for payment webhook, provisioning, slow DB queries using tracer.start_as_current_span.
 
 ## Trace ID

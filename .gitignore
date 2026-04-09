@@ -12,7 +12,7 @@ downloads/
 eggs/
 .eggs/
 lib/
-!frontend/miniapp/src/lib/
+!apps/miniapp/src/lib/
 lib64/
 parts/
 sdist/
@@ -23,10 +23,11 @@ wheels/
 *.egg
 
 # Deprecated: foundation/ merged into foundations/
-frontend/miniapp/src/stories/foundation/
+apps/miniapp/src/stories/foundation/
 
 # Node / frontend artifacts (global)
 **/node_modules/
+!apps/node_modules
 **/storybook-static/
 **/node_modules.bak_*
 **/dist/
@@ -59,7 +60,7 @@ snapshots/
 
 # Validation / CI artifacts
 pre_release_validation_report.txt
-frontend/admin/lighthouse-a11y.json
+apps/admin-web/lighthouse-a11y.json
 
 # Testing / coverage
 .coverage
@@ -67,8 +68,8 @@ frontend/admin/lighthouse-a11y.json
 htmlcov/
 .tox/
 .nox/
-frontend/**/playwright-report/
-frontend/**/test-results/
+apps/**/playwright-report/
+apps/**/test-results/
 
 # mypy
 .mypy_cache/
@@ -78,9 +79,9 @@ frontend/**/test-results/
 
 # Docker
 *.log
-frontend/**/node_modules/
-frontend/**/dist/
-frontend/**/.next/
+apps/**/node_modules/
+apps/**/dist/
+apps/**/.next/
 reports/
 
 # pnpm store (local)
@@ -109,4 +110,8 @@ config/monitoring/discovery/.targets_state.json
 .playwright-cli/
 
 # Storybook/Vitest cache
-frontend/miniapp/.cache/
+apps/miniapp/.cache/
+
+
+#Ignore vscode AI rules
+.github/instructions/codacy.instructions.md

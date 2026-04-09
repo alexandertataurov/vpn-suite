@@ -1,0 +1,28 @@
+.devices-empty-card {
+  margin-bottom: 0;
+  padding: var(--spacing-5) var(--spacing-4);
+  text-align: center;
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklch, var(--color-surface) 90%, var(--color-accent) 10%),
+    color-mix(in oklch, var(--color-surface) 96%, var(--color-surface-2) 4%)
+  );
+}
+
+.devices-empty-card .empty-state-block-icon {
+  margin-bottom: var(--spacing-2);
+}
+
+.devices-empty-card .empty-state-block-title {
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-tight);
+}
+
+.devices-empty-card .empty-state-block-message {
+  max-width: 30rem;
+  margin-inline: auto;
+  font-size: var(--font-size-sm);
+  line-height: 1.55;
+}

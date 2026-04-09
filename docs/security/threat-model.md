@@ -135,5 +135,5 @@ flowchart TB
 
 ## 4. Residual Risks
 
-- **Fail2ban**: SSH brute-force risk until `./ops/setup-fail2ban.sh` is run in production.
+- **Fail2ban**: SSH brute-force risk until `./infra/scripts/ops/setup-fail2ban.sh` is run in production.
 - **Backup encryption**: pg_dump and Redis dumps stored unencrypted — consider GPG or cloud KMS.

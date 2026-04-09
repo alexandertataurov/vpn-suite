@@ -18,7 +18,7 @@ When changing UI, always follow this order:
    - visual impact
 
 Miniapp-specific rules:
-- Use `frontend/miniapp/src/storybook/fixtures/**` and `frontend/miniapp/src/storybook/factories/**` for story data.
-- Use `frontend/miniapp/src/storybook/decorators/withMiniAppShell.tsx` for Telegram-safe viewport framing instead of ad hoc wrappers.
-- Treat Storybook stories as the contract before touching `frontend/miniapp/src/pages/**`.
+- Use `apps/miniapp/src/storybook/fixtures/**` and `apps/miniapp/src/storybook/factories/**` for story data.
+- Use `apps/miniapp/src/storybook/decorators/withMiniAppShell.tsx` for Telegram-safe viewport framing instead of ad hoc wrappers.
+- Treat Storybook stories as the contract before touching `apps/miniapp/src/pages/**`.
 - Use `pnpm run test-storybook:miniapp` as the required Storybook contract gate. Use `pnpm run test-storybook:official:miniapp` only as a compatibility probe until the standalone runner issue is resolved.

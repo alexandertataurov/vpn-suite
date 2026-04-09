@@ -8,7 +8,7 @@ Generated from implementation audit. Order: bugs first, then high-value features
 
 | ID | Item | Location | Notes |
 |----|------|----------|--------|
-| B1 | ~~Fix list_abuse_signals: remove undefined count_q reference~~ | `backend/app/api/v1/admin_abuse.py` | Done: line 53 referenced count_q; removed. |
+| B1 | ~~Fix list_abuse_signals: remove undefined count_q reference~~ | `apps/admin-api/app/api/v1/admin_abuse.py` | Done: line 53 referenced count_q; removed. |
 
 ---
 

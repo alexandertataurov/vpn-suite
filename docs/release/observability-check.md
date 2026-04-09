@@ -30,7 +30,7 @@
 | telegram-vpn-bot | file_sd | service_name, node_id |
 | wg-exporter | file_sd | service_name, node_id |
 
-**Discovery:** `ops/discovery/run_loop.py` → writes targets.json. Supports `DISCOVERY_REMOTE_WG_EXPORTERS` for multi-host wg-exporter.
+**Discovery:** `infra/discovery/runtime/run_loop.py` → writes targets.json. Supports `DISCOVERY_REMOTE_WG_EXPORTERS` for multi-host wg-exporter.
 
 ### 2.2 Admin API → Prometheus
 
@@ -48,7 +48,7 @@
 
 ## 4. Traces
 
-- **OTEL_TRACES_ENDPOINT:** Opt-in (e.g. `otel-collector:4317` in docker-compose.observability.yml).
+- **OTEL_TRACES_ENDPOINT:** Opt-in (e.g. `otel-collector:4317` in `infra/compose/docker-compose.observability.yml`).
 - **Instrumented:** admin-api, telegram-vpn-bot.
 - **Tempo:** OTLP receiver (grpc 4317, http 4318), block retention 365d.
 

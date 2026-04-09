@@ -1,0 +1,9 @@
+.devices-setup-card .compact-summary-card__actions {
+  min-width: min(100%, 14rem);
+}
+
+@media (max-width: var(--vp-narrow)) {
+  .devices-setup-card .compact-summary-card__actions {
+    min-width: 0;
+  }
+}

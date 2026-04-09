@@ -43,8 +43,8 @@
 
 ```bash
 ./manage.sh up-core
-./scripts/refresh-local-from-vps.sh   # если нужны свежие данные
-cd frontend && pnpm dev:admin         # или dev:miniapp
+./infra/scripts/runtime/refresh-local-from-vps.sh   # если нужны свежие данные
+pnpm dev:admin         # или dev:miniapp
 # Admin: http://localhost:5174/admin/
 # API proxy: /api → localhost:8000 (vite proxy)
 ```
@@ -56,7 +56,7 @@ cd frontend && pnpm dev:admin         # или dev:miniapp
 **Когда:** проверка UI против live beta (данные, интеграции), без деплоя frontend.
 
 ```bash
-cd frontend && VITE_API_BASE_URL=https://YOUR_BETA_DOMAIN/api/v1 pnpm dev:admin
+VITE_API_BASE_URL=https://YOUR_BETA_DOMAIN/api/v1 pnpm dev:admin
 # Admin: http://localhost:5174/admin/
 # API: запросы идут на beta
 ```
@@ -104,15 +104,15 @@ VITE_ANALYTICS_ENABLED=0
 
 ### .env.beta-preview (frontend vs beta API)
 
-Шаблон: `frontend/.env.beta-preview.example`. Копировать в `frontend/admin/.env.local`:
+Шаблон: `.env.beta-preview.example`. Копировать в `apps/admin-web/.env.local`:
 
 ```bash
-cp frontend/.env.beta-preview.example frontend/admin/.env.local
+cp .env.beta-preview.example apps/admin-web/.env.local
 # Отредактировать VITE_API_BASE_URL
-cd frontend && pnpm dev:admin
+pnpm dev:admin
 ```
 
-Или через скрипт: `BETA_API_URL=https://vpn.example.com/api/v1 ./scripts/dev-admin-beta.sh`
+Или через скрипт: `BETA_API_URL=https://vpn.example.com/api/v1 ./infra/scripts/runtime/dev-admin-beta.sh`
 
 ### Переключение API Base URL
 
@@ -128,10 +128,10 @@ cd frontend && pnpm dev:admin
 | Шаг | Команда |
 |-----|---------|
 | Dump на VPS | `ssh deploy@VPS "cd /opt/vpn-suite && ./manage.sh backup-db"` |
-| Download | `./scripts/dump-db-from-vps.sh` |
-| Restore | `./scripts/restore-db-local.sh` |
-| Sanitize | `./scripts/sanitize-local-db.sh` |
-| Full refresh | `./scripts/refresh-local-from-vps.sh` |
+| Download | `./infra/scripts/runtime/dump-db-from-vps.sh` |
+| Restore | `./infra/scripts/runtime/restore-db-local.sh` |
+| Sanitize | `./infra/scripts/runtime/sanitize-local-db.sh` |
+| Full refresh | `./infra/scripts/runtime/refresh-local-from-vps.sh` |
 
 Подробнее: [local-first-data-sync.md](local-first-data-sync.md)
 
@@ -144,21 +144,21 @@ cd frontend && pnpm dev:admin
 ```bash
 # --- Local Full-Stack ---
 ./manage.sh up-core
-./scripts/refresh-local-from-vps.sh   # опционально
-cd frontend && pnpm dev:admin
+./infra/scripts/runtime/refresh-local-from-vps.sh   # опционально
+pnpm dev:admin
 # Admin: http://localhost:5174/admin/
 
 # --- Frontend vs Beta API ---
-cd frontend && VITE_API_BASE_URL=https://vpn.example.com/api/v1 pnpm dev:admin
+VITE_API_BASE_URL=https://vpn.example.com/api/v1 pnpm dev:admin
 
 # --- Dump / Restore / Sanitize ---
-VPS_HOST=deploy@vpn.example.com ./scripts/dump-db-from-vps.sh
+VPS_HOST=deploy@vpn.example.com ./infra/scripts/runtime/dump-db-from-vps.sh
 ./manage.sh up-core
-./scripts/restore-db-local.sh
-./scripts/sanitize-local-db.sh
+./infra/scripts/runtime/restore-db-local.sh
+./infra/scripts/runtime/sanitize-local-db.sh
 
 # --- Backend only (без Docker) ---
-cd backend && .venv/bin/uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+cd apps/admin-api && .venv/bin/uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 # Требует: postgres, redis (./manage.sh up-core для них)
 ```
 
@@ -166,8 +166,8 @@ cd backend && .venv/bin/uvicorn app.main:app --reload --host 127.0.0.1 --port 80
 
 | Скрипт | Назначение |
 |--------|------------|
-| `scripts/dev-admin-local.sh` | Запуск admin dev (local API) |
-| `scripts/dev-admin-beta.sh` | Запуск admin dev (beta API) |
+| `infra/scripts/runtime/dev-admin-local.sh` | Запуск admin dev (local API) |
+| `infra/scripts/runtime/dev-admin-beta.sh` | Запуск admin dev (beta API) |
 
 ---
 
@@ -176,8 +176,8 @@ cd backend && .venv/bin/uvicorn app.main:app --reload --host 127.0.0.1 --port 80
 ### Daily Local Dev
 
 1. `./manage.sh up-core`
-2. При необходимости: `./scripts/refresh-local-from-vps.sh`
-3. `cd frontend && pnpm dev:admin` (или `dev:miniapp`)
+2. При необходимости: `./infra/scripts/runtime/refresh-local-from-vps.sh`
+3. `pnpm dev:admin` (или `dev:miniapp`)
 4. Разработка, тесты, `./manage.sh check`
 
 ### Pre-Push Interface Testing

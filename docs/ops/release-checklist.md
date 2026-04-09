@@ -7,9 +7,9 @@
 
 ## 1. Код и тесты
 
-- [ ] `cd backend && ruff check .` — без ошибок
-- [ ] `cd backend && ruff format --check .` — без изменений
-- [ ] `cd backend && pytest tests/ -v` — все проходят (e2e/webhook без DB могут быть skipped)
+- [ ] `cd apps/admin-api && ruff check .` — без ошибок
+- [ ] `cd apps/admin-api && ruff format --check .` — без изменений
+- [ ] `cd apps/admin-api && pytest tests/ -v` — все проходят (e2e/webhook без DB могут быть skipped)
 - [ ] Нет секретов в коде; пароли/ключи только в `.env` (redaction в логах)
 
 ## 2. Среда и секреты (production)
@@ -31,7 +31,7 @@
 - [ ] `BOT_USERNAME` задан (без @) — иначе реферальные ссылки не работают
 - [ ] `SUPPORT_HANDLE` задан для бота
 - [ ] Webhook: `BOT_WEBHOOK_URL` и `BOT_WEBHOOK_PATH` заданы при использовании webhook‑режима
-- [ ] Команды бота синхронизированы при старте (`set_my_commands`); при необходимости обновить список в `bot/commands.py`
+- [ ] Команды бота синхронизированы при старте (`set_my_commands`); при необходимости обновить список в `apps/telegram-bot/commands.py`
 
 ## 3. Инфраструктура
 
@@ -74,7 +74,7 @@
 
 ## 7. Фронтенд (Admin + Miniapp)
 
-- [ ] `cd frontend && pnpm run build` — admin и miniapp собираются без ошибок
+- [ ] `pnpm run build` — admin и miniapp собираются без ошибок
 - [ ] Админка: Overview (Dashboard) загружает данные с `GET /api/v1/overview` (Bearer)
 - [ ] Админка: User detail — вкладка Devices, кнопка «Issue device»
 - [ ] Miniapp: нижние табы Status | Devices | Profile | Help

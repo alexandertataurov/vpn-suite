@@ -42,7 +42,7 @@
 |-----------|-------------|-----------------|
 | **GlobalDataIndicator** | `GET /overview/health-snapshot` | Badge: "Fresh" / "Stale" / "Error"; shows "Metrics unavailable" when `metrics_freshness` indicates degraded/missing. Tooltip: "Prometheus/metrics unavailable or degraded". |
 
-**Location:** [AdminLayout.tsx](../../frontend/admin/src/layouts/AdminLayout.tsx) — header area.
+**Location:** [AdminLayout.tsx](../../apps/admin-web/src/layout/DashboardShell.tsx) — header area.
 
 ### 2.2 Telemetry page (`/telemetry`)
 
@@ -131,9 +131,9 @@ When TELEMETRY_PROMETHEUS_URL unset:
 
 | Area | Files |
 |------|-------|
-| Backend analytics | [backend/app/api/v1/analytics.py](../../backend/app/api/v1/analytics.py) |
-| Backend overview | [backend/app/api/v1/overview.py](../../backend/app/api/v1/overview.py) |
-| Frontend Telemetry page | [frontend/admin/src/features/telemetry/TelemetryPage.tsx](../../frontend/admin/src/features/telemetry/TelemetryPage.tsx) |
-| Frontend API client | [frontend/admin/src/core/api/client.ts](../../frontend/admin/src/core/api/client.ts) |
-| Frontend query helper | [frontend/admin/src/core/api/useApiQuery.ts](../../frontend/admin/src/core/api/useApiQuery.ts) |
+| Backend analytics | [analytics.py](../../apps/admin-api/app/api/v1/analytics.py) |
+| Backend overview | [overview.py](../../apps/admin-api/app/api/v1/overview.py) |
+| Frontend Telemetry page | [TelemetryPage.tsx](../../apps/admin-web/src/features/telemetry/TelemetryPage.tsx) |
+| Frontend API client | [client.ts](../../apps/admin-web/src/core/api/client.ts) |
+| Frontend query helper | [useApiQuery.ts](../../apps/admin-web/src/hooks/api/useApiQuery.ts) |
 | Observability stack | [docs/release/observability-check.md](../release/observability-check.md) |

@@ -8,7 +8,7 @@
 - [ ] Relevant tests passed locally/CI
 - [ ] No breaking API/UI behavior introduced
 
-## Miniapp (if frontend/miniapp changed)
+## Miniapp (if apps/miniapp changed)
 
 - [ ] No inline `style` prop; use tokenized CSS / design-system classes
 - [ ] UI imports from `@/design-system` only (no direct `design-system/ui` or primitives paths)

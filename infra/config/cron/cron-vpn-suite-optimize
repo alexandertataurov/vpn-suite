@@ -1,0 +1,4 @@
+# Run resource optimization weekly (Sun 03:00). Install: sudo cp infra/config/cron/cron-vpn-suite-optimize /etc/cron.d/vpn-suite-optimize
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+0 3 * * 0 root /opt/vpn-suite/scripts/optimize-resources.sh >> /var/log/vpn-suite-optimize.log 2>&1

@@ -16,17 +16,17 @@
 
 ### 1.1 vpn-suite services
 
-Sources: [`docker-compose.yml`](../../docker-compose.yml), [`docker-compose.observability.yml`](../../docker-compose.observability.yml), [`prometheus.yml`](../../config/monitoring/prometheus.yml), [`manage.sh`](../../manage.sh) L45–62.
+Sources: [`docker-compose.yml`](../../infra/compose/docker-compose.yml), [`docker-compose.observability.yml`](../../infra/compose/docker-compose.observability.yml), [`prometheus.yml`](../../infra/monitoring/config/prometheus.yml), [`manage.sh`](../../manage.sh) L45–62.
 
 | Service | Path | Lang/Runtime | Ports | Health | Metrics | Logs | Tracing | Profile |
 |---------|------|--------------|-------|--------|---------|------|---------|---------|
-| **admin-api** | backend/ | Python 3.12, FastAPI | 127.0.0.1:8000 | `GET /health`, `/health/ready` (L71–75) | `GET /metrics` prometheus_client (L251) | JSON + request_id | OTEL optional (`OTEL_TRACES_ENDPOINT`); otherwise trace_id=request_id | core |
-| **reverse-proxy** | docker/reverse-proxy/ | Caddy | 80, 443, 8443 | curl `/health` → admin-api (L108–109) | None | Caddy stdout | None | core |
+| **admin-api** | apps/admin-api/ | Python 3.12, FastAPI | 127.0.0.1:8000 | `GET /health`, `/health/ready` (L71–75) | `GET /metrics` prometheus_client (L251) | JSON + request_id | OTEL optional (`OTEL_TRACES_ENDPOINT`); otherwise trace_id=request_id | core |
+| **reverse-proxy** | infra/proxy/reverse-proxy/ | Caddy | 80, 443, 8443 | curl `/health` → admin-api (L108–109) | None | Caddy stdout | None | core |
 | **postgres** | — | Postgres image | internal | pg_isready (L159) | None | Container only | None | core |
 | **redis** | — | Redis image | internal | redis-cli ping (L176) | None | Container only | None | core |
-| **telegram-vpn-bot** | bot/ | Python, aiohttp | 127.0.0.1:8090 | `/healthz` (L207) | `GET /metrics` bot_requests_total (L80–81) | structlog JSON | OTEL optional (`OTEL_TRACES_ENDPOINT`) | core |
-| **admin-ip-watcher** | scripts/ | docker:24-cli | — | File-based (L138) | None | stdout | None | core |
-| **node-agent** | node-agent/ | Python | 9105 | `/healthz` (L777–806) | `GET /metrics` (L777) | minimal stdout | None | agent |
+| **telegram-vpn-bot** | apps/telegram-bot/ | Python, aiohttp | 127.0.0.1:8090 | `/healthz` (L207) | `GET /metrics` bot_requests_total (L80–81) | structlog JSON | OTEL optional (`OTEL_TRACES_ENDPOINT`) | core |
+| **admin-ip-watcher** | infra/scripts/runtime/ | docker:24-cli | — | File-based (L138) | None | stdout | None | core |
+| **node-agent** | apps/node-agent/ | Python | 9105 | `/healthz` (L777–806) | `GET /metrics` (L777) | minimal stdout | None | agent |
 | **prometheus** | — | prom/prometheus | 127.0.0.1:19090→9090 | — | self | — | None | monitoring |
 | **alertmanager** | — | prom/alertmanager | 127.0.0.1:19093→9093 | — | — | — | None | monitoring |
 | **victoria-metrics** | — | victoriametrics/victoria-metrics | 127.0.0.1:8428 | — | remote_write target | — | None | monitoring |
@@ -35,16 +35,16 @@ Sources: [`docker-compose.yml`](../../docker-compose.yml), [`docker-compose.obse
 | **loki** | — | grafana/loki | 127.0.0.1:3100 | — | — | filesystem storage | None | monitoring |
 | **promtail** | — | grafana/promtail | 9080 | — | — | Docker logs → Loki | None | monitoring |
 | **grafana** | — | grafana/grafana | 127.0.0.1:3000 | — | — | — | None | monitoring |
-| **discovery-runner** | ops/discovery/ | Python | — | — | — | stdout | None | monitoring (observability compose) |
-| **wg-exporter** | monitoring/wg-exporter/ | Python | 9586 | — | `GET /metrics` (L104) | — | None | monitoring (observability compose) |
+| **discovery-runner** | infra/discovery/runtime/ | Python | — | — | — | stdout | None | monitoring (observability compose) |
+| **wg-exporter** | infra/monitoring/services/wg-exporter/ | Python | 9586 | — | `GET /metrics` (L104) | — | None | monitoring (observability compose) |
 
 **File references:**
-- Health: [`docker-compose.yml`](../../docker-compose.yml) L71–75, L108–109, L159, L176, L207
-- admin-api metrics: [`backend/app/main.py`](../../backend/app/main.py) L251
-- Bot metrics: [`bot/main.py`](../../bot/main.py) L80–81
-- Node-agent metrics/health: [`node-agent/agent.py`](../../node-agent/agent.py) L777, L777–806
-- Prometheus scrape jobs: [`config/monitoring/prometheus.yml`](../../config/monitoring/prometheus.yml) L12–70
-- Logging: [`backend/app/core/logging_config.py`](../../backend/app/core/logging_config.py)
+- Health: [`docker-compose.yml`](../../infra/compose/docker-compose.yml) L71–75, L108–109, L159, L176, L207
+- admin-api metrics: [`main.py`](../../apps/admin-api/app/main.py) L251
+- Bot metrics: [`main.py`](../../apps/telegram-bot/main.py) L80–81
+- Node-agent metrics/health: [`agent.py`](../../apps/node-agent/agent.py) L777, L777–806
+- Prometheus scrape jobs: [`prometheus.yml`](../../infra/monitoring/config/prometheus.yml) L12–70
+- Logging: [`logging_config.py`](../../apps/admin-api/app/core/logging_config.py)
 
 ### 1.2 amnezia-awg2 — VPN server (critical)
 
@@ -53,7 +53,7 @@ Sources: [`docker-compose.yml`](../../docker-compose.yml), [`docker-compose.obse
 | Component | Metrics source | Current state |
 |-----------|----------------|---------------|
 | **amnezia-awg** container | No native `/metrics` | Health: `/opt/amnezia/amnezia-awg2/docker-compose.yml` L44–49 `awg show <iface>` probe |
-| **wg-exporter** (host) | `docker exec <container> wg show <iface> dump` | [`wg_exporter.py`](../../monitoring/wg-exporter/wg_exporter.py) exposes Prometheus metrics |
+| **wg-exporter** (host) | `docker exec <container> wg show <iface> dump` | [`wg_exporter.py`](../../infra/monitoring/services/wg-exporter/wg_exporter.py) exposes Prometheus metrics |
 | **awg show dump** format | Context7: amnezia-vpn/amneziawg-tools | Tab-separated: peer-pubkey, handshake, rx, tx, listen-port, etc. |
 
 **Metrics wg-exporter exposes:**
@@ -102,10 +102,10 @@ TRACES:
 ```
 
 **Configs:**
-- Prometheus targets: [`config/monitoring/prometheus.yml`](../../config/monitoring/prometheus.yml) L12–70 (file_sd)
-- Targets generation: [`ops/discovery/__main__.py`](../../ops/discovery/__main__.py) L63–128
-- Loki ingest: [`config/monitoring/promtail-config.yml`](../../config/monitoring/promtail-config.yml) L20–26
-- Grafana datasources: [`config/monitoring/grafana/provisioning/datasources/default.yml`](../../config/monitoring/grafana/provisioning/datasources/default.yml)
+- Prometheus targets: [`prometheus.yml`](../../infra/monitoring/config/prometheus.yml) L12–70 (file_sd)
+- Targets generation: [`__main__.py`](../../infra/discovery/runtime/__main__.py) L63–128
+- Loki ingest: [`promtail-config.yml`](../../infra/monitoring/config/promtail-config.yml) L20–26
+- Grafana datasources: [`default.yml`](../../infra/monitoring/config/grafana/provisioning/datasources/default.yml)
 
 ---
 
@@ -124,7 +124,7 @@ Applications (admin-api, bot) → Prometheus and optional OTLP → OTEL Collecto
 cd /opt/vpn-suite && docker compose ps
 
 # With observability compose
-docker compose -f docker-compose.yml -f docker-compose.observability.yml --profile monitoring ps
+docker compose -f infra/compose/docker-compose.yml -f infra/compose/docker-compose.observability.yml --profile monitoring ps
 
 # Metrics endpoints (when up)
 curl -s http://localhost:8000/metrics | head -20

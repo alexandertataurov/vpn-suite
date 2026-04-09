@@ -4,7 +4,7 @@ Test plan and accessibility checklist for the admin adaptive/responsive UI. See 
 
 ## Playwright viewport tests
 
-See `frontend/admin/e2e/adaptive-ui.spec.ts`.
+See `apps/admin-web/e2e/adaptive-ui.spec.ts`.
 
 | Viewport | Width | Checks |
 |----------|-------|--------|

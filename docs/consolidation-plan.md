@@ -27,7 +27,7 @@ Master index: [docs/README.md](README.md) — links to guides + full doc tree.
 |------|-------|--------|
 | PROMPT.md | Multi-agent workflow | **Keep** (Cursor prompt) |
 | README.md | Quick start | **Keep** |
-| AGENTS.MD | Codex/agent instructions | **Keep** |
+| AGENTS.md | Codex/agent instructions | **Keep** |
 | CHANGELOG.md | Version history | **Keep** |
 | RUNBOOK.md | Observability runbook | → docs/observability/runbook-observability.md |
 | VALIDATION.md | Observability validation | → docs/observability/validation.md |
@@ -43,15 +43,14 @@ Master index: [docs/README.md](README.md) — links to guides + full doc tree.
 
 ### 1.2 docs/ (primary)
 - README.md — index
-- api/audit/ — API audit, API-AUDIT.md
 - observability/ (10 files)
 - Specs, guides, runbooks, checklists — **keep structure**
 
-### 1.3 frontend/shared/docs/ (~35 files)
+### 1.3 legacy frontend/shared/docs/ (~35 files, historical reference)
 - Design system, Storybook, component audits, migration plans
-- **Action:** Keep; add docs/README.md link to `frontend/shared/docs/README.md` index
+- **Action:** Completed via consolidation into `docs/frontend/`; do not recreate `frontend/shared/docs/`
 
-### 1.4 ops/discovery/
+### 1.4 infra/discovery/runtime/
 - DATA_CONTRACT.md — discovery inventory contract
 - VALIDATION.md — discovery validation
 - **Action:** Keep (discovery-specific); rename if needed to avoid confusion with root DATA_CONTRACT
@@ -189,7 +188,6 @@ docs/
 - docs/README.md — docs index
 - docs/backlog/backlog.md — backlog
 - docs/backlog/execution-roadmap.md — 4-week hardening
-- docs/api/audit/API-AUDIT.md — API audit and backlog items
 - docs/frontend/audits/admin-ui-gap-analysis.md — UI gaps
 - docs/security/hardening.md — security checklist
 - docs/audits/release-readiness-report.md — scores, open risks

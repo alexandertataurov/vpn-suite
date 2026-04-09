@@ -25,9 +25,9 @@
 ## Retention
 
 - Prometheus/VictoriaMetrics: 15–90d (configurable).
-- Loki: per `config/monitoring/loki-config.yml`.
+- Loki: per `infra/monitoring/config/loki-config.yml`.
 - PostHog: per PostHog project settings (cloud) or self-host config.
-- Tempo: per `config/monitoring/tempo/tempo.yaml`.
+- Tempo: per `infra/monitoring/config/tempo/tempo.yaml`.
 
 ## Opt-out
 

@@ -15,9 +15,11 @@ Single source for VPN Suite frontend: apps, design system, components, tables, t
 | **Storybook** | [storybook/](storybook/) |
 | **Adaptive UI** | [adaptive-ui.md](adaptive-ui.md) · [adaptive-ui-test-plan.md](adaptive-ui-test-plan.md) |
 | **Miniapp layout** | [miniapp-layout-architecture.md](miniapp-layout-architecture.md) |
+| **Miniapp app overview** | [miniapp-app.md](miniapp-app.md) |
+| **Miniapp design system** | [miniapp-design-system-overview.md](miniapp-design-system-overview.md) · [miniapp-design-system/](miniapp-design-system/) |
+| **Admin design system** | [admin-design-system/README.md](admin-design-system/README.md) |
 | **Navigation catalog** | [navigation-patterns-catalog.md](navigation-patterns-catalog.md) |
 | **UI tech spec** | [ui-techspec.md](ui-techspec.md) |
-| **Cleanup audit (historical)** | [cleanup-audit.md](cleanup-audit.md) |
 
 ---
 
@@ -27,9 +29,9 @@ Single source for VPN Suite frontend: apps, design system, components, tables, t
 
 | App | Base path | Port | Entry |
 |-----|-----------|------|-------|
-| admin | `/admin/` | 5174 | `frontend/admin/src/main.tsx` |
-| miniapp | `/webapp/` | 5175 | `frontend/miniapp/src/main.tsx` |
-| shared | — | — | `frontend/shared/` (design system, API client, types) |
+| admin | `/admin/` | 5174 | `apps/admin-web/src/main.tsx` |
+| miniapp | `/webapp/` | 5175 | `apps/miniapp/src/main.tsx` |
+| shared | — | — | `apps/shared-web/` (design system, API client, types) |
 
 ### Admin Routes
 
@@ -87,6 +89,15 @@ Single source for VPN Suite frontend: apps, design system, components, tables, t
 | [ui-guide.md](design/ui-guide.md) | Component usage, patterns, don'ts |
 | [amnezia-miniapp-design-guidelines.md](design/amnezia-miniapp-design-guidelines.md) | Miniapp design guidelines |
 
+### Design system deep dives
+
+| Doc | Purpose |
+|-----|---------|
+| [admin-design-system/README.md](admin-design-system/README.md) | Migrated admin design-system docs, QA checklists, and accessibility notes |
+| [miniapp-app.md](miniapp-app.md) | Miniapp app entrypoint, Storybook contract, run commands |
+| [miniapp-design-system-overview.md](miniapp-design-system-overview.md) | Miniapp design-system overview and doc map |
+| [miniapp-design-system/README.md](miniapp-design-system/README.md) | Canonical miniapp design-system guide |
+
 
 ### [components/](components/) — Component inventory
 
@@ -101,7 +112,6 @@ Single source for VPN Suite frontend: apps, design system, components, tables, t
 | [tables-guide.md](tables/tables-guide.md) | **Primary guide** — Table, TableContainer, TableSkeleton, column API |
 | [arch-table-system.md](tables/arch-table-system.md) | Architecture, goals, canonical components |
 | [table-styles-guide.md](tables/table-styles-guide.md) | CSS classes, deprecated patterns |
-| [table-unification-audit.md](tables/table-unification-audit.md) | Route-by-route table inventory |
 | [table-qa-checklist.md](tables/table-qa-checklist.md) | QA checklist for tables |
 | [migration-plan.md](tables/migration-plan.md) | Migration phases for table unification |
 
@@ -120,20 +130,7 @@ Single source for VPN Suite frontend: apps, design system, components, tables, t
 | [structure.md](storybook/structure.md) | IA, sidebar hierarchy |
 | [conventions.md](storybook/conventions.md) | Story conventions |
 | [guardrails.md](storybook/guardrails.md) | Guardrails, checks |
-| [audit.md](storybook/audit.md) | Storybook audit |
-
-### [audits/](audits/) — Planning & audits
-
-| Doc | Purpose |
-|-----|---------|
-| [admin-ui-gap-analysis.md](audits/admin-ui-gap-analysis.md) | Admin routes, primitives, gaps, migration plan |
-| [frontend-file-manifest.md](audits/frontend-file-manifest.md) | File manifest, risk, coverage |
-| [ui-inconsistencies.md](audits/ui-inconsistencies.md) | UI inconsistency notes |
-
----
 
 ## Related
 
 - **Codebase map:** [docs/codebase-map.md](../codebase-map.md) §3 Frontend
-- **Frontend audits:** [docs/audits/](../audits/) (frontend-audit-expanded, tables-audit)
-- **File manifest:** [audits/frontend-file-manifest.md](audits/frontend-file-manifest.md)

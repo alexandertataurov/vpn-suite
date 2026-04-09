@@ -49,8 +49,8 @@
   │  scp deploy@vps:...     │
   │  ──────────────────────>│  snapshots/
   │                         │
-  │                         │  ./scripts/restore-db-local.sh
-  │                         │  ./scripts/sanitize-local-db.sh
+  │                         │  ./infra/scripts/runtime/restore-db-local.sh
+  │                         │  ./infra/scripts/runtime/sanitize-local-db.sh
   │                         │  ./manage.sh up-core
 ```
 
@@ -165,7 +165,7 @@ scp deploy@VPS_HOST:/opt/vpn-suite/backups/postgres/pgdump_*.dump ./snapshots/
 ./manage.sh restore-db --force snapshots/pgdump_20250317T120000Z.dump
 
 # 4. Санитизация (см. скрипт ниже)
-./scripts/sanitize-local-db.sh
+./infra/scripts/runtime/sanitize-local-db.sh
 
 # 5. Перезапустить admin-api чтобы применить local .env
 docker compose restart admin-api
@@ -175,15 +175,15 @@ docker compose restart admin-api
 
 | Скрипт | Назначение |
 |--------|------------|
-| `scripts/dump-db-from-vps.sh` | Dump на VPS + scp в `snapshots/` |
-| `scripts/restore-db-local.sh` | Restore dump в локальный postgres |
-| `scripts/sanitize-local-db.sh` | Сброс admin password, очистка TOTP |
-| `scripts/refresh-local-from-vps.sh` | Полный цикл: dump → download → restore → sanitize |
+| `infra/scripts/runtime/dump-db-from-vps.sh` | Dump на VPS + scp в `snapshots/` |
+| `infra/scripts/runtime/restore-db-local.sh` | Restore dump в локальный postgres |
+| `infra/scripts/runtime/sanitize-local-db.sh` | Сброс admin password, очистка TOTP |
+| `infra/scripts/runtime/refresh-local-from-vps.sh` | Полный цикл: dump → download → restore → sanitize |
 
 ```bash
 # Пример
 export VPS_HOST=deploy@vpn.example.com
-./scripts/refresh-local-from-vps.sh
+./infra/scripts/runtime/refresh-local-from-vps.sh
 ```
 
 ---
@@ -194,15 +194,15 @@ export VPS_HOST=deploy@vpn.example.com
 
 1. **Утро / начало работы**
    - `./manage.sh up-core`
-   - При необходимости: `./scripts/refresh-local-from-vps.sh`
+   - При необходимости: `./infra/scripts/runtime/refresh-local-from-vps.sh`
 
 2. **Разработка**
    - Редактирование кода локально
-   - Тесты: `./manage.sh check`, `cd backend && pytest tests/`
+   - Тесты: `./manage.sh check`, `cd apps/admin-api && pytest tests/`
    - Ручная проверка в браузере: `http://localhost/admin`
 
 3. **Refresh данных** (по необходимости)
-   - Когда нужны свежие данные с beta: `./scripts/refresh-local-from-vps.sh`
+   - Когда нужны свежие данные с beta: `./infra/scripts/runtime/refresh-local-from-vps.sh`
 
 4. **Перед commit**
    - `git status && git diff --stat`

@@ -10,8 +10,8 @@
 
 ## Audits to run
 
-- **Lighthouse:** `npm run preview` then `npm run perf:lighthouse`; open `docs/frontend/lighthouse-report.html`. Target: performance ≥ 90, accessibility ≥ 90. See [performance-audit.md](./performance-audit.md).
-- **React Profiler:** Record key flows (navigate overview → servers → back); confirm only active nav item and route content re-render. See performance-audit.md for applied optimizations (TelemetryProvider value memo, NavRailItem memo, stable callbacks on Overview).
+- **Lighthouse:** `npm run preview` then `npm run perf:lighthouse`; open `docs/frontend/lighthouse-report.html`. Target: performance ≥ 90, accessibility ≥ 90.
+- **React Profiler:** Record key flows (navigate overview → servers → back); confirm only active nav item and route content re-render.
 - **Bundle size:** `npm run build`; vendor ~205 kB raw (~66 kB gzip). Keep vendor under ~250 kB; use manualChunks for ECharts when added.
 - **Memory:** Verify no leaks: unmount pages, clear subscriptions and query cache where appropriate; telemetry cleanup on unmount.
 

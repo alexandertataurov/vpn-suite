@@ -6,7 +6,7 @@ Define how AmneziaWG (AWG) telemetry is exposed in the observability layer.
 ## Entities
 
 ### 1) Server (AWG control-plane)
-- Source: Postgres `servers` table (`backend/app/models/server.py`).
+- Source: Postgres `servers` table (`apps/admin-api/app/models/server.py`).
 - Primary ID: `servers.id` (string, 32 chars).
 - Key fields:
   - `name`, `region`, `api_endpoint`, `vpn_endpoint`, `public_key`, `status`, `health_score`, `max_connections`.

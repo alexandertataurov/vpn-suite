@@ -110,7 +110,7 @@ Use this section when handshake may exist but **no traffic** flows, especially w
 | ⚠ Traffic on tunnel but no internet exit | NAT / forwarding on host. |
 | ❌ AllowedIPs mismatch | Server peer must have client `/32` (see [§1. Server peer AllowedIPs](#1-server-peer-allowedips-most-likely-cause)). |
 | ❌ NAT missing | MASQUERADE rule on host. |
-| ❌ Reply route missing | Host must route client subnet (e.g. `10.8.1.0/24`) via `awg0` so replies reach the client. AmneziaWG entrypoint adds this in PostUp when `AWG_NAT=1`; else run `ip route add 10.8.1.0/24 dev awg0` (or use [amnezia-nat-setup.sh](../../ops/amnezia-nat-setup.sh)). The admin-api now ensures this route on add_peer and reconcile. |
+| ❌ Reply route missing | Host must route client subnet (e.g. `10.8.1.0/24`) via `awg0` so replies reach the client. AmneziaWG entrypoint adds this in PostUp when `AWG_NAT=1`; else run `ip route add 10.8.1.0/24 dev awg0` (or use [amnezia-nat-setup.sh](../../infra/scripts/ops/amnezia-nat-setup.sh)). The admin-api now ensures this route on add_peer and reconcile. |
 | ❌ Route OK but still failing | If `ip route get 10.8.1.2` shows `dev awg0` but client has no traffic: **Endpoint** in the issued config must be the **public** IP:port (e.g. `185.139.228.171:45790`). Set **server.vpn_endpoint** in Admin → Servers, or set **VPN_DEFAULT_HOST** in `.env` to the public IP; re-issue the config and re-download. Use the AmneziaWG client (obfuscation) with that config. |
 | ❌ MTU fragmentation | Full tunnel + obfuscation often needs lower MTU (e.g. 1280). |
 | ❌ Docker network isolation | Bridge can break forwarding; host network preferred. |
@@ -222,7 +222,7 @@ When someone else is debugging (e.g. you are support), ask for **exactly these t
 
 1. Consider moving the container to **host** network (if it is currently bridge and NAT is correct).
 2. **Add NAT on host** (required for client traffic to reach the internet):  
-   Run `sudo ./ops/amnezia-nat-setup.sh` (or pass the outbound interface, e.g. `eth0`). This adds MASQUERADE for `10.8.1.0/24` and `10.66.66.0/24`. Or manually:  
+   Run `sudo ./infra/scripts/ops/amnezia-nat-setup.sh` (or pass the outbound interface, e.g. `eth0`). This adds MASQUERADE for `10.8.1.0/24` and `10.66.66.0/24`. Or manually:  
    `iptables -t nat -A POSTROUTING -s 10.8.1.0/24 -o <main_interface> -j MASQUERADE` (and same for `10.66.66.0/24` if your AmneziaWG interface uses that subnet).
 3. Fix server-side allowed-ips per peer:  
    `wg set <iface> peer <client_pubkey> allowed-ips 10.8.1.x/32` (see [§1](#1-server-peer-allowedips-most-likely-cause)). Or use Admin → Devices → Sync peer for the device.

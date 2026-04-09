@@ -255,7 +255,7 @@ flowchart TB
 
 ## 6. Spec alignment
 
-**Source of truth:** [vpn-suite-specs/docs/product/VPN-SUITE-BUSINESS-LOGIC-USERFLOWS-SPEC-V2.md](../vpn-suite-specs/docs/product/VPN-SUITE-BUSINESS-LOGIC-USERFLOWS-SPEC-V2.md) and [GROWTH-MONETIZATION-SPEC.md](../vpn-suite-specs/docs/product/GROWTH-MONETIZATION-SPEC.md).
+**Source of truth:** [VPN-SUITE-BUSINESS-LOGIC-USERFLOWS-SPEC-V2.md](spec-pack/product/VPN-SUITE-BUSINESS-LOGIC-USERFLOWS-SPEC-V2.md) and [GROWTH-MONETIZATION-SPEC.md](spec-pack/product/GROWTH-MONETIZATION-SPEC.md).
 
 ### §16 Acceptance checklist
 
@@ -276,7 +276,7 @@ Spec §8.3: "issue first device immediately". Implemented via **routing**: after
 
 ### Backfill and ops
 
-- **Subscription state backfill:** `python -m scripts.backfill_subscription_state` (from `backend/`).
+- **Subscription state backfill:** `python -m scripts.backfill_subscription_state` (from `apps/admin-api/`).
 - **Admin:** Billing → Subscription records show subscription_status, access_status, grace; Set/Clear grace; Entitlement events and Cancellation reasons tabs.
 
 ---
@@ -284,9 +284,9 @@ Spec §8.3: "issue first device immediately". Implemented via **routing**: after
 ## 7. References
 
 - [Referral pipeline (production)](referral-pipeline.md) — Capture cascade, attach API contract, backend rules, observability
-- [backend/app/api/v1/webapp.py](../backend/app/api/v1/webapp.py) — WebApp auth, me, onboarding, plans, devices, payments, servers, referral, subscription, trial
-- [backend/app/services/payment_webhook_service.py](../backend/app/services/payment_webhook_service.py) — Payment completion, referral reward, promo redemption
-- [bot/handlers/start.py](../bot/handlers/start.py), [bot/handlers/payment.py](../bot/handlers/payment.py) — Bot /start and successful_payment
+- [webapp.py](../apps/admin-api/app/api/v1/webapp.py) — WebApp auth, me, onboarding, plans, devices, payments, servers, referral, subscription, trial
+- [payment_webhook_service.py](../apps/admin-api/app/services/payment_webhook_service.py) — Payment completion, referral reward, promo redemption
+- [start.py](../apps/telegram-bot/handlers/start.py), [payment.py](../apps/telegram-bot/handlers/payment.py) — Bot /start and successful_payment
 - [docs/revenue-engine-funnel.md](revenue-engine-funnel.md) — Funnel flow and copy
 - [docs/MINIAPP_SPEC.md](MINIAPP_SPEC.md) — Mini App screens, data flow, telemetry
 - [docs/ADMIN-PAGE-MAP.md](ADMIN-PAGE-MAP.md) — Admin routes, layout, API list

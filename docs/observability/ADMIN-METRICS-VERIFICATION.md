@@ -8,13 +8,13 @@ Run the verification script (requires admin JWT or login credentials):
 
 ```bash
 # With login (default: admin@example.com / admin)
-BASE_URL=http://127.0.0.1:8000 ./scripts/verify-admin-metrics.sh
+BASE_URL=http://127.0.0.1:8000 ./infra/scripts/runtime/verify-admin-metrics.sh
 
 # With existing JWT
-TOKEN=<jwt> BASE_URL=https://vpn.vega.llc ./scripts/verify-admin-metrics.sh
+TOKEN=<jwt> BASE_URL=https://vpn.vega.llc ./infra/scripts/runtime/verify-admin-metrics.sh
 
 # With custom credentials
-ADMIN_EMAIL=... ADMIN_PASSWORD=... BASE_URL=https://vpn.vega.llc ./scripts/verify-admin-metrics.sh
+ADMIN_EMAIL=... ADMIN_PASSWORD=... BASE_URL=https://vpn.vega.llc ./infra/scripts/runtime/verify-admin-metrics.sh
 ```
 
 The script asserts:

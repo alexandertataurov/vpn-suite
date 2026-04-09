@@ -1,0 +1,20 @@
+/**
+ * High contrast overrides for foundations presentation.
+ * Gate via `html[data-contrast="high"]` (set by Storybook toolbar globals).
+ */
+
+html[data-contrast="high"] {
+  /* Make secondary/tertiary text match primary for legibility. */
+  --color-text-muted: var(--color-text);
+  --color-text-tertiary: var(--color-text-muted);
+
+  /* Increase border clarity. */
+  --color-border-subtle: var(--color-border);
+  --color-border-med: var(--color-border);
+
+  /* Surface dividers should be easier to perceive. */
+  --divider: color-mix(in oklab, var(--color-border) 70%, transparent);
+  --surface-border: var(--color-border);
+  --surface-border-emphasis: var(--color-border-strong);
+}
+

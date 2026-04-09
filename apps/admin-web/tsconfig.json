@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@vpn-suite/shared": ["../shared-web/src/index.ts"],
+      "@shared/*": ["../shared-web/src/*"]
+    }
+  },
+  "references": [{ "path": "../shared-web" }],
+  "include": ["src/**/*"],
+  "exclude": ["src/**/*.stories.tsx", "src/**/*.stories.ts", "src/design-system/storybook", "src/design-system/stories/__tests__", "src/**/*.test.tsx", "src/**/*.test.ts"]
+}

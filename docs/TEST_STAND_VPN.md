@@ -36,7 +36,7 @@ TEST_STAND_LOG=/tmp/vpn_debug.log ./manage.sh test-stand
 From backend with project deps installed (e.g. `pip install -r requirements.txt` or use project venv):
 
 ```bash
-cd backend
+cd apps/admin-api
 python scripts/test_stand_vpn_config.py
 ```
 
@@ -52,7 +52,7 @@ Exit code: `0` if all checks pass, `1` otherwise.
 From backend:
 
 ```bash
-cd backend
+cd apps/admin-api
 pytest tests/test_stand_vpn_connection.py -v -s --log-cli-level=DEBUG
 ```
 

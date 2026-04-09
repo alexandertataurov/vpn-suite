@@ -2,7 +2,7 @@
 
 ## Where it comes from
 
-- **UI:** `BootstrapController` shows `BootErrorScreen` when bootstrap phase is `startup_error` (`frontend/miniapp/src/bootstrap/BootstrapController.tsx`, `useBootstrapMachine.ts`).
+- **UI:** `BootstrapController` shows `BootErrorScreen` when bootstrap phase is `startup_error` (`apps/miniapp/src/bootstrap/BootstrapController.tsx`, `useBootstrapMachine.ts`).
 - **Trigger:** The message **"Session error"** + **"Session could not be started. Please try again."** is set when **POST `/api/v1/webapp/auth`** fails (non-timeout) in the `telegram_ready` → `authenticating` step.
 
 So the failure is in **webapp auth** (exchanging Telegram `init_data` for a session token).
@@ -15,7 +15,7 @@ So the failure is in **webapp auth** (exchanging Telegram `init_data` for a sess
 | Invalid/expired initData | **401** | `validate_telegram_init_data()` fails → "Invalid or expired initData" |
 | User id missing in initData | **401** | "User id missing" |
 
-`validate_telegram_init_data()` in `backend/app/core/security.py` returns `None` when:
+`validate_telegram_init_data()` in `apps/admin-api/app/core/security.py` returns `None` when:
 
 - `init_data` or `bot_token` is empty
 - No `hash` in query string
@@ -36,10 +36,10 @@ So **any** non-timeout failure of POST `/webapp/auth` (503, 401, network, CORS, 
 
 1. **Backend config**
    - Ensure `TELEGRAM_BOT_TOKEN` is set in the environment used by the API (e.g. `.env` or compose).  
-   - Config field is `telegram_bot_token` in `backend/app/core/config.py` (env: `TELEGRAM_BOT_TOKEN`).
+   - Config field is `telegram_bot_token` in `apps/admin-api/app/core/config.py` (env: `TELEGRAM_BOT_TOKEN`).
 
 2. **API reachability**
-   - Miniapp resolves the API root via `getApiBaseUrl()` in `frontend/miniapp/src/config/env.ts` (`VITE_API_BASE_URL` if set, else `${window.location.origin}/api/v1`). `getBaseUrl()` in the API client layer is the same value.
+   - Miniapp resolves the API root via `getApiBaseUrl()` in `apps/miniapp/src/config/env.ts` (`VITE_API_BASE_URL` if set, else `${window.location.origin}/api/v1`). `getBaseUrl()` in the API client layer is the same value.
    - If the miniapp is served from a different origin than the API, build with `VITE_API_BASE_URL` including **`/api/v1`** (e.g. `https://vpn.example.com/api/v1`).
    - Check browser DevTools → Network: does POST to `/api/v1/webapp/auth` hit the right host? Status code? Response body?
 

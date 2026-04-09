@@ -47,8 +47,8 @@ So "Config not found" is **only** 404 (id not in DB). The 503 (peer not applied)
 
 ## Fix applied
 
-1. **Backend** ([`backend/app/api/v1/devices.py`](../backend/app/api/v1/devices.py)): After successful `POST /devices/{id}/reissue`, call `invalidate_devices_summary_cache()` and `invalidate_devices_list_cache()`. So the next list request after reissue hits the DB and returns the new `issued_configs` with new IDs.
-2. **Error message** ([`backend/app/api/v1/admin_configs.py`](../backend/app/api/v1/admin_configs.py)): 404 message updated to: *"Refresh the device page and use the latest config link, or reissue the config."*
+1. **Backend** ([`devices.py`](../../apps/admin-api/app/api/v1/devices.py)): After successful `POST /devices/{id}/reissue`, call `invalidate_devices_summary_cache()` and `invalidate_devices_list_cache()`. So the next list request after reissue hits the DB and returns the new `issued_configs` with new IDs.
+2. **Error message** ([`admin_configs.py`](../../apps/admin-api/app/api/v1/admin_configs.py)): 404 message updated to: *"Refresh the device page and use the latest config link, or reissue the config."*
 
 ---
 

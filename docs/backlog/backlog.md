@@ -1,5 +1,10 @@
 # Backlog & Planning
 
+## Current execution program
+
+- Spec-driven backlog for the next 1-2 releases: [spec-delivery-program.md](spec-delivery-program.md)
+- Supporting spec set: `docs/specs/*.md`, `docs/api/as-built-api-spec.md`, `docs/api/db-schema-spec.md`, `docs/ops/supported-operating-modes.md`
+
 ## Control-plane status
 
 **Done (Phases 1–13):** Data layer, automation APIs, telemetry/business/security metrics, Admin UI control-plane module, validation, automation worker, rebalance execution, QoS/enterprise pinning, per-plan bandwidth, geo placement, event stream, topology graph, ML anomaly scoring.
@@ -10,7 +15,7 @@
 
 ## Audit-derived items (2026-02)
 
-### API (P1 — from docs/api/audit/API-AUDIT.md)
+### API (P1)
 
 | ID | Item | Priority |
 |----|------|----------|

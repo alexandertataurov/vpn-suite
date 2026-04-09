@@ -1,16 +1,16 @@
 # telegram-vpn-bot — Observability
 
 **Service:** Telegram bot + WebApp  
-**Path:** [`bot/`](../../bot)  
+**Path:** [`apps/telegram-bot/`](../../apps/telegram-bot)  
 **Port:** 8090  
 
 ## Metrics
 
 | Endpoint | Format | Source |
 |----------|--------|--------|
-| `GET /metrics` | Prometheus | [`main.py`](../../bot/main.py) L80–81 |
+| `GET /metrics` | Prometheus | [`main.py`](../../apps/telegram-bot/main.py) L80–81 |
 
-**Key metrics:** `bot_requests_total{status_class}` ([`metrics.py`](../../bot/metrics.py)).
+**Key metrics:** `bot_requests_total{status_class}` ([`metrics.py`](../../apps/telegram-bot/metrics.py)).
 
 ## Health
 

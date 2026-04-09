@@ -41,7 +41,7 @@ For unstable regions, use a restrictive connection profile:
   - Server profile: set `disable_ipv6_on_unstable_route=true`.
   - Resulting client config: `AllowedIPs = 0.0.0.0/0` (no `::/0`).
 - Lower MTU:
-  - Use the `mtu_probe` helper (`backend/scripts/mtu_probe.py`) to find a safe MTU and store it in the server profile.
+  - Use the `mtu_probe` helper (`apps/admin-api/scripts/mtu_probe.py`) to find a safe MTU and store it in the server profile.
 - Keepalive:
   - Client keepalive fixed to 10 seconds; server peer keepalive ~15 seconds.
 
@@ -88,4 +88,3 @@ Suggested Prometheus rules:
   - `vpn_peer_last_handshake_age_seconds{device_id=...,server_id=...} > 60`.
 
 These signals, combined with logs (`event="handshake_seen"`, `event="no_handshake_marked"`), provide a full picture of tunnel health.
-

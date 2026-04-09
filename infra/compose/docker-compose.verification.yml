@@ -1,0 +1,8 @@
+# Local verification: expose admin-api on 8000 (no reverse-proxy required).
+# Usage: ENV_FILE=.env PUBLIC_DOMAIN=localhost GRAFANA_ADMIN_PASSWORD=admin \
+#   docker compose -f infra/compose/docker-compose.yml -f infra/compose/docker-compose.verification.yml up -d postgres redis admin-api
+
+services:
+  admin-api:
+    ports:
+      - "127.0.0.1:8000:8000"

@@ -1,29 +1,29 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- `backend/`: FastAPI control plane, Alembic migrations, and Python tests in `backend/tests/`.
-- `frontend/`: pnpm workspace with `admin/`, `miniapp/`, and shared UI/code in `shared/`.
-- `bot/`: Telegram bot service with its own `tests/` and dependency set.
-- `node-agent/`: host-side agent for node/runtime integration.
-- `config/`, `docker/`, and `docker-compose*.yml`: deployment, proxy, Redis, and observability config.
+- `apps/admin-api/`: FastAPI control plane, Alembic migrations, and Python tests in `apps/admin-api/tests/`.
+- repo root: pnpm workspace root for `apps/admin-web/`, `apps/miniapp/`, and `apps/shared-web/`.
+- `apps/telegram-bot/`: Telegram bot service with its own `tests/` and dependency set.
+- `apps/node-agent/`: host-side agent for node/runtime integration.
+- `infra/`: compose files, proxy, Redis, monitoring, discovery, and operational config.
 - `docs/` stores design, API, ops, and release notes; update docs when behavior or workflows change.
 
 ## Build, Test, and Development Commands
 - `./manage.sh up-core`: start Postgres, Redis, admin API, worker, reverse proxy, and bot.
 - `./manage.sh up-monitoring`: bring up Prometheus, Grafana, Loki, and related monitoring services.
 - `./manage.sh build` or `./manage.sh build-all`: build the main API image or all service images.
-- `cd backend && pytest`: run backend tests.
-- `cd bot && pytest`: run bot tests.
-- `cd frontend && pnpm run lint && pnpm run typecheck && pnpm run test`: validate both frontend apps.
+- `cd apps/admin-api && pytest`: run backend tests.
+- `cd apps/telegram-bot && pytest`: run bot tests.
+- `pnpm run lint && pnpm run typecheck && pnpm run test`: validate both frontend apps from repo root.
 
 ## Coding Style & Naming Conventions
-- Python targets 3.12 with Ruff and MyPy configured in `backend/pyproject.toml`; keep line length to `100`.
+- Python targets 3.12 with Ruff and MyPy configured in `apps/admin-api/pyproject.toml`; keep line length to `100`.
 - Use `snake_case` for Python modules/functions, `PascalCase` for React components, and `test_*.py` for pytest files.
-- Follow existing frontend workspace patterns: shared logic in `frontend/shared`, app-specific UI in each app.
+- Follow existing frontend workspace patterns: shared logic in `apps/shared-web`, app-specific UI in each app.
 - For Mini App UI, avoid inline styles and hardcoded colors; use tokenized design-system layers described in `CONTRIBUTING.md`.
 
 ## Testing Guidelines
-- Backend and bot use `pytest`; prefer targeted runs such as `pytest backend/tests/test_control_plane_api.py` before broader suites.
+- Backend and bot use `pytest`; prefer targeted runs such as `pytest apps/admin-api/tests/test_control_plane_api.py` before broader suites.
 - Frontend checks include lint, typecheck, unit tests, coverage (`pnpm run test:coverage`), and e2e/Storybook flows when UI changes.
 - Add or update tests with every behavior change, especially around control-plane logic, device issuance, and design-system components.
 

@@ -148,7 +148,7 @@ Use `.storybook/utils/storyTypes.ts` for the shared `ArgCategory` type if you wa
 
 ## Data
 
-- **Shared story data:** Prefer `frontend/admin/.storybook/data` — use `types.ts` for interfaces and `index.ts` (and generators) for seeded data. Import from `../../../../.storybook/data` or `../../../.storybook/data` depending on depth.
+- **Shared story data:** Prefer `apps/admin-web/.storybook/data` — use `types.ts` for interfaces and `index.ts` (and generators) for seeded data. Import from `../../../../.storybook/data` or `../../../.storybook/data` depending on depth.
 - **No inline heavy data:** Move repeated arrays/objects (e.g. error scenarios, table rows, activity data) into `.storybook/data` and import them.
 
 ---

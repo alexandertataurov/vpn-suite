@@ -1,0 +1,22 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Introduction/Overview" />
+
+## What you are looking at
+
+This Storybook is a presentation-grade design system documentation environment, not a component dump.
+
+The goal is to make tokens, rules, and “how to use” guidance discoverable so teams can adopt the UI with confidence.
+
+## How to use
+
+1. Start with `Foundations` to understand the token system and governance rules.
+2. Use `Patterns` and `Components` to see how foundations translate into real UI.
+3. For stakeholder walkthroughs, prefer showcase stories: they include applied examples and stable interactions.
+
+## Where the sources of truth live
+
+- Tokens: `src/design-system/core/tokens` and `src/design-system/styles/`
+- Story governance checks: `storybook:taxonomy` and `storybook:contract` in the miniapp package
+- UI framing: `src/storybook/StorybookMiniappShell.tsx`
+

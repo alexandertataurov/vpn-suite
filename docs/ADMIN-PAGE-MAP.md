@@ -2,6 +2,8 @@
 
 **Full technical map:** CSS, UI, layout, functions, API calls, callbacks, components, state, and keyboard behavior.
 
+Canonical code root for the admin app is now `apps/admin-web/`. Older `frontend/admin/` references below are legacy compatibility paths and should be read as `apps/admin-web/` unless noted otherwise.
+
 ---
 
 ## 0. Live UI snapshot (Dashboard tab)
@@ -21,12 +23,12 @@ Captured from browser at `https://vpn.vega.llc/admin` (authenticated).
 
 | Item | Value |
 |------|--------|
-| **Entry file** | `frontend/admin/src/main.tsx` |
+| **Entry file** | `apps/admin-web/src/main.tsx` |
 | **Root element** | `document.getElementById("root")` |
 | **Router** | `react-router-dom` `BrowserRouter` with `basename="/admin"` |
 | **Base path** | `/admin` (overridable via `VITE_ADMIN_BASE` in .env) |
 
-**Config module:** `frontend/admin/src/config.ts`  
+**Config module:** legacy path reference; current bootstrap and routing live under `apps/admin-web/src/main.tsx` and `apps/admin-web/src/App.tsx`.  
 - `ADMIN_BASE`: `import.meta.env.VITE_ADMIN_BASE` or `"/admin"`. Used for redirects (e.g. logout → `${ADMIN_BASE}/login`).
 
 ### 1.2 Provider tree (order)
@@ -49,7 +51,7 @@ Captured from browser at `https://vpn.vega.llc/admin` (authenticated).
 
 ### 1.4 API base URL
 
-**Source:** `frontend/admin/src/shared/constants.ts` (`getBaseUrl()`)  
+**Source:** `apps/admin-web/src/shared/constants.ts` (`getBaseUrl()`)  
 - If `import.meta.env.VITE_API_BASE_URL` is set: use it (trailing slash stripped).
 - Else in browser: `window.location.origin + '/api/v1'`.
 - Else (e.g. SSR): `"/api/v1"`.
@@ -58,7 +60,7 @@ Captured from browser at `https://vpn.vega.llc/admin` (authenticated).
 
 ## 2. Routes (App.tsx)
 
-**File:** `frontend/admin/src/App.tsx`
+**File:** `apps/admin-web/src/App.tsx`
 
 ### 2.1 Route table
 
@@ -87,7 +89,7 @@ Captured from browser at `https://vpn.vega.llc/admin` (authenticated).
 ### 2.2 Layout and protection
 
 - **Protected shell:** All routes under path `/` use `ProtectedRoute` → `AdminLayout` → `<Outlet />`.
-- **ProtectedRoute** (`frontend/admin/src/components/ProtectedRoute.tsx`): reads `useAuthStore((s) => s.accessToken)`. If no token → `<Navigate to="/login" state={{ from: location }} replace />`.
+- **ProtectedRoute** (`apps/admin-web/src/core/auth/Guard.tsx`): reads `useAuthStore((s) => s.accessToken)`. If no token → `<Navigate to="/login" state={{ from: location }} replace />`.
 - **Suspense fallback:** `<div className="admin-loading"><Skeleton height={24} /></div>`.
 - **Global wrappers:** `ErrorBoundary` (outer), `ToastContainer`, `TelemetryPageViewTracker`, then `Suspense` + `Routes`.
 
@@ -95,7 +97,7 @@ Captured from browser at `https://vpn.vega.llc/admin` (authenticated).
 
 ## 3. Layout (AdminLayout) — detailed
 
-**File:** `frontend/admin/src/layouts/AdminLayout.tsx`
+**File:** `apps/admin-web/src/layout/DashboardShell.tsx`
 
 ### 3.1 Shell structure and data attribute
 
@@ -198,7 +200,7 @@ Captured from browser at `https://vpn.vega.llc/admin` (authenticated).
 
 ### 4.1 Entry and imports (admin.css)
 
-**File:** `frontend/admin/src/admin.css`
+**File:** `apps/admin-web/src/admin.css`
 
 ```css
 @import "./styles/admin-animations.css";
@@ -291,7 +293,7 @@ Used across layout and operator CSS (from shared/theme or local):
 
 ## 5. API client — full detail
 
-**File:** `frontend/admin/src/core/api/client.ts` (moved from `frontend/admin/src/api/client.ts`)
+**File:** `apps/admin-web/src/core/api/client.ts` (moved from legacy `frontend/admin/src/api/client.ts`)
 
 ### 5.1 Creation
 
@@ -318,7 +320,7 @@ Used across layout and operator CSS (from shared/theme or local):
 
 ### 5.4 Shared createApiClient (summary)
 
-**File:** `frontend/admin/src/core/api/client.ts`  
+**File:** `apps/admin-web/src/core/api/client.ts`  
 - Builds URL from base + path; adds `Content-Type: application/json`; adds `Authorization: Bearer ${token}` when getToken returns non-null.
 - Timeout via AbortController (composed with optional caller signal); on timeout throws ApiError TIMEOUT; on network error throws NETWORK_UNREACHABLE.
 - On 401 calls `onUnauthorized()` then throws UNAUTHORIZED.
@@ -583,7 +585,7 @@ Billing page has four tabs: **Plans**, **Subscription records**, **Payments**, *
 
 **Current status:** there is **no** central `query-keys.ts` in the admin app. Query keys are **inline arrays** passed to `useApiQuery`.
 
-**Helper:** `frontend/admin/src/core/api/useApiQuery.ts`
+**Helper:** `apps/admin-web/src/hooks/api/useApiQuery.ts`
 
 Examples (current):
 
@@ -598,7 +600,7 @@ Examples (current):
 
 ## 8. Auth and session — full flow
 
-**File:** `frontend/admin/src/store/authStore.ts`
+**File:** `apps/admin-web/src/core/auth/store.ts`
 
 - **Storage keys:** `vpn_admin_access`, `vpn_admin_refresh` (sessionStorage).
 - **State:** `accessToken`, `refreshToken` (Zustand). Initial state from `getStored()` (both keys must exist).
@@ -614,7 +616,7 @@ Examples (current):
 
 ### 9.1 CommandPalette
 
-**File:** `frontend/admin/src/components/CommandPalette.tsx`
+**File:** `apps/admin-web/src/design-system/primitives/CommandPalette.tsx`
 
 - **Props:** `open`, `onClose`, `items: CommandItem[]` where `CommandItem = { id, label, keywords?, onSelect }`.
 - **Filter:** `matchQuery(query, label, keywords)` — trim, lower; match if full text includes query or every word in query is in text.
@@ -625,7 +627,7 @@ Examples (current):
 
 ### 9.2 LiveStatusBlock
 
-**File:** `frontend/admin/src/components/operator/LiveStatusBlock.tsx`
+**File:** current operator status surfaces live under `apps/admin-web/src/layout/` and overview/dashboard feature modules.
 
 - **Props:** `last_updated: string`, `freshness: "fresh"|"degraded"|"stale"|"unknown"`, `onRefresh: () => void`.
 - **State:** `spinning` (true on refresh, false on animation end).
@@ -636,14 +638,14 @@ Examples (current):
 
 ### 9.3 TopStatusBar
 
-**File:** `frontend/admin/src/components/operator/TopStatusBar/TopStatusBar.tsx`
+**File:** `apps/admin-web/src/layout/DashboardStatusBar.tsx`
 
 - **Props:** `data: OperatorHealthStrip` (api_status, prometheus_status, online_nodes, total_nodes, active_sessions, peers_active, total_throughput_bps, avg_latency_ms, error_rate_pct).
 - **Markup:** `.operator-health-strip.operator-top-bar-health` with three blocks: core (API, Prom, Nodes online/total), activity (Sessions, Peers, Throughput), performance (Latency, Error %). Each cell: `.operator-topbar-cell` with label and value; value classes include `operator-topbar-value--ok|down|degraded|unknown`. Core block gets `operator-health-block--down` when api_status === "down". Throughput formatted with `formatBytes`.
 
 ### 9.4 TelemetryContext
 
-**File:** `frontend/admin/src/context/TelemetryContext.tsx`
+**File:** `apps/admin-web/src/core/telemetry/provider.tsx`
 
 - **Provider:** Exposes `refetchOperatorDashboard` (refetch OPERATOR_DASHBOARD_KEY) and `refetchAllTelemetry` (refetch TELEMETRY_REFETCH_KEYS + refreshRegisteredResources).
 - **TELEMETRY_REFETCH_KEYS:** OPERATOR_DASHBOARD_KEY, TELEMETRY_SNAPSHOT_KEY, TELEMETRY_TOPOLOGY_KEY, DOCKER_TELEMETRY_KEY, ANALYTICS_*, SERVERS_LIST_KEY.
@@ -651,7 +653,7 @@ Examples (current):
 
 ### 9.5 Dashboard page (high level)
 
-**File:** `frontend/admin/src/features/overview/OverviewPage.tsx` (previously `frontend/admin/src/pages/Dashboard.tsx`)
+**File:** `apps/admin-web/src/features/overview/OverviewPage.tsx` (previously legacy `frontend/admin/src/pages/Dashboard.tsx`)
 
 - **Layout:** `dashboard ref-page dashboard--${settings.density}` (data-testid="dashboard-page"). PageHeader with icon LayoutGrid, title "Dashboard", and actions: Servers (Link), Audit (Link), Telemetry (Link), Resync (ConfirmModal), RefreshButton.
 - **handleRefresh:** Refetches OPERATOR_DASHBOARD_KEY, PEERS_LIST_KEY, CONNECTION_NODES_KEY, AUDIT_KEY, SERVERS_LIST_DASHBOARD_KEY and refreshRegisteredResources; tracks user_action dashboard_refresh; throws if any cache/result error.
@@ -671,9 +673,9 @@ Examples (current):
 
 ## 11. Build and environment
 
-- **Vite:** `frontend/admin/vite.config.ts` — `base: "/admin/"`.
+- **Vite:** `apps/admin-web/vite.config.ts` — `base: "/admin/"`.
 - **Env:** `VITE_API_BASE_URL`, `VITE_ADMIN_BASE` (optional).
-- **E2E (Playwright):** baseURL default `http://127.0.0.1:4174/admin/`; auth helpers (e.g. in `frontend/admin/e2e/helpers.ts`) set sessionStorage `vpn_admin_access` and `vpn_admin_refresh` after login and wait for URL `/admin/?`.
+- **E2E (Playwright):** baseURL default `http://127.0.0.1:4174/admin/`; auth helpers (e.g. in `apps/admin-web/e2e/helpers.ts`) set sessionStorage `vpn_admin_access` and `vpn_admin_refresh` after login and wait for URL `/admin/?`.
 
 ---
 

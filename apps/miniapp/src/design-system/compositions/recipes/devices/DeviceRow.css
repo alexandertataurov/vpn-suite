@@ -1,0 +1,105 @@
+.device-row__topline {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  row-gap: var(--spacing-1);
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.device-row__title-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.device-row__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-2);
+  min-width: 0;
+  margin-top: var(--spacing-1);
+}
+
+.device-platform-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: calc(var(--spacing-5) + var(--spacing-px));
+  padding: 0 var(--spacing-2);
+  border-radius: var(--radius-full);
+  background: var(--color-surface-2);
+  border: var(--border-width-hairline) solid var(--color-border-subtle);
+  color: var(--color-text-secondary, var(--color-text-muted));
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-label);
+  white-space: nowrap;
+}
+
+.device-inline-action.btn {
+  min-height: var(--height-btn-sm);
+  padding-inline: var(--spacing-3);
+  white-space: nowrap;
+}
+
+.device-meta {
+  flex: 1 1 12rem;
+  min-width: 0;
+  color: var(--row-sub);
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-body, 1.4);
+  letter-spacing: var(--letter-spacing-normal, 0);
+  white-space: normal;
+}
+
+.device-menu-btn.btn {
+  width: var(--height-btn-sm);
+  height: var(--height-btn-sm);
+  min-width: var(--height-btn-sm);
+  min-height: var(--height-btn-sm);
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--row-chev);
+  flex-shrink: 0;
+  position: relative;
+}
+
+.device-menu-btn.btn::before {
+  content: "";
+  position: absolute;
+  inset: calc(-1 * var(--spacing-2));
+}
+
+.device-menu-btn.btn:active {
+  background: var(--row-active-bg);
+}
+
+.device-menu-btn.btn svg {
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
+}
+
+@media (max-width: var(--vp-narrow)) {
+  .device-menu-btn.btn {
+    align-self: flex-end;
+  }
+
+  .device-row__meta {
+    align-items: flex-start;
+  }
+
+  .device-meta {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}

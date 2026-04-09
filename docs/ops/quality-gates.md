@@ -14,7 +14,7 @@ Runs (in order): backend ruff check + format, alembic upgrade/downgrade/check, b
 
 Backend:
 ```bash
-cd backend
+cd apps/admin-api
 ruff check .
 ruff format --check .
 pytest -v
@@ -26,7 +26,6 @@ python -m alembic check
 
 Frontend:
 ```bash
-cd frontend
 pnpm install --frozen-lockfile
 pnpm run lint
 npm test -- --run

@@ -1,6 +1,6 @@
 # Domain model
 
-Tables and relationships (SQLAlchemy models in `backend/app/models/`). Migrations in `backend/alembic/versions/`.
+Tables and relationships (SQLAlchemy models in `apps/admin-api/app/models/`). Migrations in `apps/admin-api/alembic/versions/`.
 
 ## ER (summary)
 

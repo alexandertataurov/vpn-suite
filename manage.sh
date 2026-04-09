@@ -15,7 +15,7 @@ die() { log ERROR "$1"; exit 1; }
 usage() {
   cat >&2 <<'USAGE'
 Usage: ./manage.sh <cmd>
-See README.md for: up-core, down-core, up-monitoring, bootstrap, rebuild-restart, restart-admin, build-all, migrate, seed*, node-*, restore-devices-from-peers, server:verify, server:sync, server:reconcile, server:drift, device:reissue, support-bundle, setup-backend-venv, check, verify, pre-deploy-smoke, pre-deploy-verify, smoke-staging, config, config-validate, build, build-admin, build-webapp, backup-db, backup-monitoring, restore-db, openapi, ps, logs.
+See README.md for: up-core, down-core, up-monitoring, bootstrap, rebuild-restart, restart-admin, build-all, migrate, seed*, node-*, restore-devices-from-peers, server:verify, server:sync, server:reconcile, server:drift, device:reissue, support-bundle, setup-backend-venv, check, verify, docs-check, pre-deploy-smoke, pre-deploy-verify, smoke-staging, config, config-validate, build, build-admin, build-webapp, backup-db, backup-monitoring, restore-db, openapi, ps, logs.
 STRICT=1 makes optional failures fatal.
 USAGE
 }
@@ -60,17 +60,17 @@ _subsystem_summary() {
 ENV_FILE="${ENV_FILE:-.env}"
 [[ -f "$ENV_FILE" ]] || die "ENV_FILE not found: $ENV_FILE"
 
-# Pass ENV_FILE into Compose interpolation (used by docker-compose.yml env_file anchors).
+# Pass ENV_FILE into Compose interpolation (used by infra/compose/docker-compose.yml env_file anchors).
 # Auto-detect DOCKER_GID for node-agent socket access if unset.
 if [[ -z "${DOCKER_GID:-}" ]]; then
   _gid="$(getent group docker 2>/dev/null | cut -d: -f3 || true)"
   [[ -n "${_gid:-}" ]] && export DOCKER_GID="$_gid"
 fi
 
-DC=(env ENV_FILE="$ENV_FILE" docker compose --env-file "$ENV_FILE" --profile docker-telemetry)
-DC_OBS=(env ENV_FILE="$ENV_FILE" docker compose -f docker-compose.yml -f docker-compose.observability.yml --env-file "$ENV_FILE" --profile docker-telemetry)
+DC=(env ENV_FILE="$ENV_FILE" docker compose -f infra/compose/docker-compose.yml --env-file "$ENV_FILE" --profile docker-telemetry)
+DC_OBS=(env ENV_FILE="$ENV_FILE" docker compose -f infra/compose/docker-compose.yml -f infra/compose/docker-compose.observability.yml --env-file "$ENV_FILE" --profile docker-telemetry)
 AUDIT_PROJECT="${AUDIT_PROJECT:-vpn-suite-audit}"
-DC_AUDIT=(docker compose -p "$AUDIT_PROJECT" -f docker-compose.audit.yml --env-file "$ENV_FILE")
+DC_AUDIT=(docker compose -p "$AUDIT_PROJECT" -f infra/compose/docker-compose.audit.yml --env-file "$ENV_FILE")
 MONITORING_SERVICES=(victoria-metrics prometheus alertmanager cadvisor node-exporter loki promtail grafana discovery-runner wg-exporter tempo otel-collector)
 
 _safe_disk_cleanup() {
@@ -86,7 +86,7 @@ _backup_postgres_before_risky() {
     return 0
   fi
   log INFO "Running backup-db before risky operation..."
-  _optional "backup-db" bash ops/db_dump.sh
+  _optional "backup-db" bash infra/scripts/ops/db_dump.sh
 }
 
 run_seeds() {
@@ -127,7 +127,7 @@ case "$cmd" in
   restart-admin)
     # Safe: rebuild admin UI + admin-api + reverse-proxy only. Never touches postgres or down.
     _safe_disk_cleanup
-    (cd frontend && npm run build:admin)
+    npm run build:admin
     "${DC[@]}" build admin-api
     "${DC[@]}" up -d --force-recreate admin-api reverse-proxy
     log INFO "Admin API and reverse-proxy restarted. DB unchanged."
@@ -143,7 +143,7 @@ case "$cmd" in
     "${DC[@]}" run --rm admin-api python -m alembic upgrade head
     run_seeds
     "${DC[@]}" up -d admin-api admin-worker
-    bash scripts/update_admin_api_ip.sh
+    bash infra/scripts/runtime/update_admin_api_ip.sh
     "${DC[@]}" up -d reverse-proxy telegram-vpn-bot
     _optional "audit" "${DC_AUDIT[@]}" down --remove-orphans
     _optional "audit" "${DC_AUDIT[@]}" up -d postgres redis
@@ -166,7 +166,7 @@ case "$cmd" in
     "${DC[@]}" run --rm admin-api python -m alembic upgrade head
     run_seeds
     "${DC[@]}" up -d admin-api admin-worker
-    bash scripts/update_admin_api_ip.sh
+    bash infra/scripts/runtime/update_admin_api_ip.sh
     "${DC[@]}" up -d reverse-proxy telegram-vpn-bot
     ;;
   up-monitoring)
@@ -245,22 +245,22 @@ case "$cmd" in
     log INFO "Set in your node-agent env: SERVER_ID=$SERVER_ID"
     ;;
   up-agent)
-    # Start node-agent (profile: agent). Requires: client certs (run scripts/generate-agent-client-cert.sh), core stack up, AmneziaWG container.
+    # Start node-agent (profile: agent). Requires: client certs (run infra/scripts/pki/generate-agent-client-cert.sh), core stack up, AmneziaWG container.
     # DOCKER_GID auto-detected from host if not set so agent can access /var/run/docker.sock.
     "${DC[@]}" --profile agent up -d --build node-agent
     ;;
   bootstrap)
     FAILED_SUBSYSTEMS=()
     ROOT="$(cd "$(dirname "$0")" && pwd)"
-    if [[ ! -f "$ROOT/secrets/agent_client_cert.pem" ]] && [[ -f "$ROOT/scripts/generate-agent-client-cert.sh" ]]; then
-      log INFO "Agent client certs missing; running scripts/generate-agent-client-cert.sh ..."
-      bash "$ROOT/scripts/generate-agent-client-cert.sh" || { die "Fix certs (need secrets/agent_ca.pem and key) then re-run bootstrap."; }
+    if [[ ! -f "$ROOT/secrets/agent_client_cert.pem" ]] && [[ -f "$ROOT/infra/scripts/pki/generate-agent-client-cert.sh" ]]; then
+      log INFO "Agent client certs missing; running infra/scripts/pki/generate-agent-client-cert.sh ..."
+      bash "$ROOT/infra/scripts/pki/generate-agent-client-cert.sh" || { die "Fix certs (need secrets/agent_ca.pem and key) then re-run bootstrap."; }
     fi
     log INFO "Bringing up core stack..."
     "${DC[@]}" up -d postgres redis
     "${DC[@]}" run --rm admin-api python -m alembic upgrade head
     run_seeds
-    bash scripts/update_admin_api_ip.sh
+    bash infra/scripts/runtime/update_admin_api_ip.sh
     "${DC[@]}" up -d admin-api reverse-proxy telegram-vpn-bot
     log INFO "Seeding agent server (id=${AGENT_SERVER_ID:-vpn-node-1})..."
     "${DC[@]}" run --rm -e PYTHONPATH=/app -e AGENT_SERVER_ID="${AGENT_SERVER_ID:-vpn-node-1}" admin-api python scripts/seed_agent_server.py
@@ -272,30 +272,33 @@ case "$cmd" in
     "${DC[@]}" run --rm admin-api python scripts/seed_system_operator.py
     ;;
   openapi)
-    (cd backend && python3 scripts/export_openapi.py)
+    (cd apps/admin-api && python3 scripts/export_openapi.py)
+    ;;
+  docs-check)
+    python3 tools/quality/validate_docs.py
     ;;
   backup-db)
-    bash ops/db_dump.sh
+    bash infra/scripts/ops/db_dump.sh
     ;;
   backup-monitoring)
-    bash ops/backup_monitoring.sh
+    bash infra/scripts/ops/backup_monitoring.sh
     ;;
   restore-db)
     shift
-    bash ops/db_restore.sh "$@"
+    bash infra/scripts/ops/db_restore.sh "$@"
     ;;
   build-admin)
-    (cd frontend && npm run build:admin)
+    npm run build:admin
     ;;
   build-webapp)
     # Do not "source" env files directly: values may contain spaces.
     source scripts/lib/env.sh
     resolve_env_file
     load_env_file "$ENV_FILE"
-    (cd frontend && npm run build:miniapp)
+    npm run build:miniapp
     ;;
   build-storybook)
-    (cd frontend/shared && npm run build-storybook)
+    (cd apps/admin-web && npm run build-storybook)
     ;;
   node-sync)
     run_node_ops sync
@@ -327,7 +330,7 @@ case "$cmd" in
     run_node_ops public-key "$2" "${3:-}"
     ;;
   restore-devices-from-peers)
-    "${DC[@]}" run --rm -e PYTHONPATH=/app -v "$(pwd)/backend:/app:ro" admin-api python scripts/restore_devices_from_peers.py "${@:2}"
+    "${DC[@]}" run --rm -e PYTHONPATH=/app -v "$(pwd)/apps/admin-api:/app:ro" admin-api python scripts/restore_devices_from_peers.py "${@:2}"
     ;;
   fix-server-public-key)
     # Sync servers so DB gets correct Server.public_key from node; optional reissue all devices on a server.
@@ -339,33 +342,33 @@ case "$cmd" in
   install-nat-service)
     # Install systemd unit so NAT (10.8.1.0/24, 10.66.66.0/24) is applied after reboot.
     SVC=amnezia-nat-setup.service
-    if [[ ! -f "ops/systemd/$SVC" ]]; then
-      die "ops/systemd/$SVC not found."
+    if [[ ! -f "infra/systemd/units/$SVC" ]]; then
+      die "infra/systemd/units/$SVC not found."
     fi
-    sudo cp "ops/systemd/$SVC" /etc/systemd/system/ &&
+    sudo cp "infra/systemd/units/$SVC" /etc/systemd/system/ &&
       sudo systemctl daemon-reload &&
       sudo systemctl enable "$SVC" &&
       log INFO "Enabled $SVC. Run: sudo systemctl start $SVC  # apply NAT now"
     ;;
   pre-deploy-smoke)
     # 2-minute smoke (check, health, login). See docs/ops/pre-deploy-checklist.md
-    bash scripts/pre_deploy_smoke.sh 2min
+    bash infra/scripts/runtime/pre_deploy_smoke.sh 2min
     ;;
   pre-deploy-verify)
     # 10-minute pre-release (verify, up-core, health, build, API smoke).
-    bash scripts/pre_deploy_smoke.sh 10min
+    bash infra/scripts/runtime/pre_deploy_smoke.sh 10min
     ;;
   smoke-staging)
     # Full staging validation (tests + build + e2e + authenticated API smoke).
-    bash scripts/staging_full_validation.sh
+    bash infra/scripts/runtime/staging_full_validation.sh
     ;;
   smoke-ha)
     # HA/failover smoke only (expects FAILOVER_NODE + ALT_NODE containers on the host).
-    bash scripts/staging_ha_failover_smoke.sh
+    bash infra/scripts/runtime/staging_ha_failover_smoke.sh
     ;;
   smoke-staging-ha)
     # Full validation + HA/failover smoke.
-    RUN_HA_FAILOVER_SMOKE=1 bash scripts/staging_full_validation.sh
+    RUN_HA_FAILOVER_SMOKE=1 bash infra/scripts/runtime/staging_full_validation.sh
     ;;
   test-stand)
     # VPN connection config test stand (debug logs). Optional: TEST_STAND_LOG=path, TEST_STAND_ISSUE=1 (issue check, needs DB).
@@ -396,10 +399,10 @@ case "$cmd" in
     log INFO "Sanity check OK: control-plane configuration is consistent."
     ;;
   setup-backend-venv)
-    # Bootstrap pip in backend .venv and install deps (use when .venv has no pip / pytest).
-    cd backend
+    # Bootstrap pip in apps/admin-api .venv and install deps (use when .venv has no pip / pytest).
+    cd apps/admin-api
     if [[ ! -x .venv/bin/python ]]; then
-      die "No backend/.venv found. Create it first: python -m venv backend/.venv"
+      die "No apps/admin-api/.venv found. Create it first: python -m venv apps/admin-api/.venv"
     fi
     if .venv/bin/python -c "import pytest" 2>/dev/null; then
       log INFO "Backend venv already has pytest. Nothing to do."
@@ -412,16 +415,16 @@ case "$cmd" in
     log INFO "Backend venv ready. Run ./manage.sh check to validate."
     ;;
   check)
-    # Quick quality gate: ruff, pytest, frontend lint/typecheck/test/build (no migrate; use verify for full).
-    bash scripts/quality_gate.sh
+    # Quick quality gate: docs, ruff, pytest, frontend lint/typecheck/test/build (no migrate; use verify for full).
+    bash tools/quality/quality_gate.sh
     ;;
   verify)
-    # Full quality gate: lint, typecheck, unit tests, build, migrate integrity, config-validate (no API/E2E; use smoke-staging for full).
-    bash scripts/verify.sh
+    # Full quality gate: docs, lint, typecheck, unit tests, build, migrate integrity, config-validate (no API/E2E; use smoke-staging for full).
+    bash tools/quality/verify.sh
     ;;
   support-bundle)
     # Bounded logs, Redis agent keys, manifest. Optional: --output DIR.
-    bash scripts/support_bundle.sh "${@:2}"
+    bash infra/scripts/runtime/support_bundle.sh "${@:2}"
     ;;
   server:verify)
     [[ -z "${2:-}" ]] && { log ERROR "Usage: $0 server:verify <server_id>"; exit 1; }
@@ -437,7 +440,7 @@ case "$cmd" in
     resolve_env_file
     load_env_file "$ENV_FILE"
     if [[ "${NODE_DISCOVERY:-}" == "agent" ]]; then
-      bash "$(dirname "$0")/scripts/call_admin_api.sh" create_action "$2" "apply_peers"
+      bash "$(dirname "$0")/infra/scripts/runtime/call_admin_api.sh" create_action "$2" "apply_peers"
       exit 0
     fi
     run_node_ops reconcile "$2" ${3:+$3}
@@ -455,7 +458,7 @@ case "$cmd" in
     ;;
   device:reissue)
     [[ -z "${2:-}" ]] && { log ERROR "Usage: $0 device:reissue <device_id> (requires API_TOKEN or ADMIN_EMAIL/ADMIN_PASSWORD; blocks if server key unverified)"; exit 1; }
-    bash "$(dirname "$0")/scripts/call_admin_api.sh" reissue "$2"
+    bash "$(dirname "$0")/infra/scripts/runtime/call_admin_api.sh" reissue "$2"
     ;;
   *)
     usage

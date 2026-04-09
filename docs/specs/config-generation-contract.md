@@ -1,6 +1,6 @@
 # Config Generation Contract
 
-All WireGuard / AmneziaWG `.conf` emission MUST go through the canonical builder in `backend/app/core/config_builder.py`. No exceptions.
+All WireGuard / AmneziaWG `.conf` emission MUST go through the canonical builder in `apps/admin-api/app/core/config_builder.py`. No exceptions.
 
 ## Profiles
 
@@ -56,9 +56,9 @@ Config generation **rejects** (ValueError) if any is missing or invalid:
 
 ## Call Sites
 
-- `backend/app/core/amnezia_config.py` — `build_amnezia_client_config`, `build_standard_wg_client_config`
-- `backend/app/services/issue_service.py` — bot/webapp flow
-- `backend/app/services/admin_issue_service.py` — admin issue/rotate
+- `apps/admin-api/app/core/amnezia_config.py` — `build_amnezia_client_config`, `build_standard_wg_client_config`
+- `apps/admin-api/app/services/issue_service.py` — bot/webapp flow
+- `apps/admin-api/app/services/admin_issue_service.py` — admin issue/rotate
 
 ## Migration Notes
 

@@ -2,6 +2,8 @@
 
 **Start here:** [Guides](guides/README.md) (consolidated by role) · [Quick reference](#quick-reference)
 
+Archive policy: active operator/developer docs live in the main tree below. Historical one-off material should be deleted once it no longer serves an active operator or developer workflow.
+
 ---
 
 ## Consolidated guides (by persona)
@@ -18,10 +20,12 @@
 
 | Need | Doc |
 |------|-----|
-| API, auth, endpoints | [api/overview.md](api/overview.md) · OpenAPI: `openapi/openapi.yaml` |
-| Domain model | [api/domain-model.md](api/domain-model.md) |
+| API, auth, endpoints | [api/overview.md](api/overview.md) · [api/as-built-api-spec.md](api/as-built-api-spec.md) · OpenAPI: `openapi/openapi.yaml` |
+| Domain model | [api/domain-model.md](api/domain-model.md) · [api/db-schema-spec.md](api/db-schema-spec.md) |
+| Spec pack | [spec-pack/README.md](spec-pack/README.md) |
 | Secrets / env | [ops/required-secrets.md](ops/required-secrets.md) |
 | Runbook (prod, backups, agent) | [ops/runbook.md](ops/runbook.md) |
+| Supported operating modes | [ops/supported-operating-modes.md](ops/supported-operating-modes.md) |
 | Release & quality gates | [ops/release-checklist.md](ops/release-checklist.md) · [ops/quality-gates.md](ops/quality-gates.md) · [security/hardening.md](security/hardening.md) |
 | Production hardening (Ubuntu LTS reference) | [ops/hardening-reference-ubuntu.md](ops/hardening-reference-ubuntu.md) |
 | Codebase layout | [codebase-map.md](codebase-map.md) |
@@ -41,7 +45,10 @@
 | Typography | [frontend/design/typography-tokens.md](frontend/design/typography-tokens.md) |
 | Miniapp design guidelines | [frontend/design/amnezia-miniapp-design-guidelines.md](frontend/design/amnezia-miniapp-design-guidelines.md) |
 | Specs index | [specs/README.md](specs/README.md) |
+| As-built + target architecture | [specs/as-built-architecture.md](specs/as-built-architecture.md) · [specs/target-architecture.md](specs/target-architecture.md) |
 | Control-plane | [specs/ultra-spec-control-plane.md](specs/ultra-spec-control-plane.md) |
+| Orchestration and reconciliation | [specs/action-orchestration-spec.md](specs/action-orchestration-spec.md) · [specs/reconciliation-spec.md](specs/reconciliation-spec.md) |
+| Agent, placement, config delivery | [specs/agent-protocol-spec.md](specs/agent-protocol-spec.md) · [specs/placement-failover-spec.md](specs/placement-failover-spec.md) · [specs/config-delivery-spec.md](specs/config-delivery-spec.md) |
 | Telemetry | [specs/telemetry-spec.md](specs/telemetry-spec.md) |
 | Operator Dashboard | [specs/operator-dashboard-spec.md](specs/operator-dashboard-spec.md) |
 | Operator UI | [specs/operator-ui-spec.md](specs/operator-ui-spec.md) |
@@ -61,6 +68,7 @@
 |-------|-----|
 | **Consolidation & unimplemented tasks** | [consolidation-plan.md](consolidation-plan.md) |
 | Backlog, PR plan, cleanup, target structure | [backlog/backlog.md](backlog/backlog.md) |
+| Spec execution program (next 1-2 releases) | [backlog/spec-delivery-program.md](backlog/spec-delivery-program.md) |
 | API PR roadmap | [backlog/backlog.md](backlog/backlog.md) |
 | Hardening (2–4 weeks) | [backlog/execution-roadmap.md](backlog/execution-roadmap.md) |
 
@@ -84,12 +92,10 @@
 | Referral pipeline (attach API, capture) | [referral-pipeline.md](referral-pipeline.md) |
 | Telegram Mini App guidelines | [TELEGRAM-MINIAPP-GUIDELINES.md](TELEGRAM-MINIAPP-GUIDELINES.md) |
 
-## Audits & security
+## Security
 
 | Topic | Doc |
 |-------|-----|
-| Audits (logs, perf, security, UI, release readiness) | [audits/](audits/) |
-| Frontend telemetry audit | [audits/telemetry-audit.md](audits/telemetry-audit.md) |
 | Hardening | [security/hardening.md](security/hardening.md) |
 | Threat model | [security/threat-model.md](security/threat-model.md) |
 | Infrastructure map | [ops/infrastructure-map.md](ops/infrastructure-map.md) |
@@ -99,11 +105,13 @@
 | Topic | Doc |
 |-------|-----|
 | **Index** (apps, routes, design, tables, testing) | [frontend/README.md](frontend/README.md) |
+| Miniapp app + design-system docs | [frontend/miniapp-app.md](frontend/miniapp-app.md) · [frontend/miniapp-design-system-overview.md](frontend/miniapp-design-system-overview.md) |
+| Admin design-system docs | [frontend/admin-design-system/README.md](frontend/admin-design-system/README.md) |
 | Design system, typography, UI guide | [frontend/design/](frontend/design/) |
 | Admin design tokens | [frontend/design-tokens.md](frontend/design-tokens.md) |
 | Table guides, QA, migration | [frontend/tables/](frontend/tables/) |
 | Storybook | [frontend/storybook/](frontend/storybook/) |
-| Performance (Lighthouse, bundle) | [frontend/performance-audit.md](frontend/performance-audit.md) |
+| Performance (Lighthouse, bundle) | [frontend/performance-report.md](frontend/performance-report.md) |
 
 ## Ops (runbooks, troubleshooting)
 
@@ -112,6 +120,7 @@
 | Topic | Doc |
 |-------|-----|
 | Runbook, agent mode, AmneziaWG, no-traffic troubleshooting | [ops/](ops/) |
+| Discovery contract and validation | [ops/discovery-data-contract.md](ops/discovery-data-contract.md) · [ops/discovery-validation.md](ops/discovery-validation.md) |
 | Deploy setup (GitHub Secrets) | [DEPLOY_SETUP.md](DEPLOY_SETUP.md) |
 | Pre-deploy checklist & smoke test | [ops/pre-deploy-checklist.md](ops/pre-deploy-checklist.md) |
 | Config not working | [ops/config-not-working-checklist.md](ops/config-not-working-checklist.md) |
@@ -138,9 +147,4 @@
 ## Reference
 
 - [api/reference.md](api/reference.md) — API reference links  
-- [audits/analytics.md](audits/analytics.md) — funnel events  
-- [audits/baseline.md](audits/baseline.md) — perf baseline capture (admin)  
-
-## Maintenance
-
-- [DOCUMENTATION-OVERHAUL-2026-03.md](DOCUMENTATION-OVERHAUL-2026-03.md) — doc overhaul (audit, deletion/merge logs, gap report)
+- [spec-pack/README.md](spec-pack/README.md) — migrated product/spec pack

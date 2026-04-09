@@ -16,7 +16,7 @@ curl -s 'http://127.0.0.1:19090/api/v1/query?query=up{job="admin-api"}' | jq '.d
 Prometheus must be on `vpn-suite-app` to reach `admin-api:8000`. If degraded after restart, recreate Prometheus:
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.observability.yml --profile monitoring up -d prometheus --force-recreate
+docker compose -f infra/compose/docker-compose.yml -f infra/compose/docker-compose.observability.yml --profile monitoring up -d prometheus --force-recreate
 ./manage.sh up-monitoring   # Or start full monitoring stack
 ```
 

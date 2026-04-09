@@ -17,7 +17,7 @@
 | F841 (unused var) | 3 | `node_runtime_docker.py` (env, labels, network_mode) |
 | UP037/UP038 | 5 | `node_runtime_docker.py`, `operator_dashboard_service.py` |
 
-**Fix:** `cd backend && ruff check . --fix && ruff format .` (19 auto-fixable; some require manual edits).
+**Fix:** `cd apps/admin-api && ruff check . --fix && ruff format .` (19 auto-fixable; some require manual edits).
 
 ### Backend (ruff format)
 

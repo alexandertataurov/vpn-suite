@@ -1,0 +1,5 @@
+# Throttled RAM pressure relief (pagecache only). Every 30 min.
+# Install: sudo cp infra/config/cron/cron-vpn-suite-ram-sweeper /etc/cron.d/vpn-suite-ram-sweeper
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+*/30 * * * * root LOG_FILE=/var/log/vpn-suite-ram-sweeper.log /opt/vpn-suite/infra/scripts/ops/ram-sweeper.sh >/dev/null 2>&1

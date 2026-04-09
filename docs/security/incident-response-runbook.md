@@ -95,8 +95,8 @@
 |------|--------|
 | Detection | Users report disconnects; health checks fail; NodeMemoryPressure / NodeSwapHeavy alerts |
 | Isolate | Identify cause: memory/swap pressure, nf_conntrack full, or runaway process |
-| Recover | `./ops/restart-core-stack.sh` or `./manage.sh down-core && ./manage.sh up-core`; if host-level, reboot |
-| Prevention | Apply `ops/sysctl-hardening.conf`; add RAM; enable NodeMemoryPressure/NodeSwapHeavy; container memory limits |
+| Recover | `./infra/scripts/ops/restart-core-stack.sh` or `./manage.sh down-core && ./manage.sh up-core`; if host-level, reboot |
+| Prevention | Apply `infra/scripts/ops/sysctl-hardening.conf`; add RAM; enable NodeMemoryPressure/NodeSwapHeavy; container memory limits |
 
 ---
 
@@ -124,8 +124,8 @@
 
 | Asset | Command / Procedure |
 |-------|---------------------|
-| AGENT_SHARED_TOKEN | `./ops/rotate-agent-token.sh` |
+| AGENT_SHARED_TOKEN | `./infra/scripts/ops/rotate-agent-token.sh` |
 | SECRET_KEY | Set in .env; restart admin-api |
 | Redis password | Set REDIS_PASSWORD; update REDIS_URL; restart stack |
 | Postgres password | Change in DB; update DATABASE_URL; restart |
-| Agent certs | `./ops/pki/agent-mtls.sh init-ca`; `issue-client <server_id> <out_dir>`; distribute to nodes |
+| Agent certs | `./infra/scripts/pki/agent-mtls.sh init-ca`; `issue-client <server_id> <out_dir>`; distribute to nodes |

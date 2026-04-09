@@ -9,6 +9,6 @@ updates:
     schedule:
       interval: "weekly"
   - package-ecosystem: "pip"
-    directory: "/backend"
+    directory: "/apps/admin-api"
     schedule:
       interval: "weekly"

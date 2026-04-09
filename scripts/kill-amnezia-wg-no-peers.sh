@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Stop amnezia-awg* containers that have zero WireGuard peers.
 # Run on host: ./scripts/kill-amnezia-wg-no-peers.sh
+# Legacy root helper retained until it is moved under infra/scripts/ops.
 set -e
 
 for c in $(docker ps --format '{{.Names}}' | grep -E '^amnezia-awg'); do

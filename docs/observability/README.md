@@ -45,7 +45,7 @@ Index of observability documentation for vpn-suite. For up-to-date external refe
 
 ## Folder structure
 
-Key paths: `config/monitoring/prometheus.yml`, `alert_rules.yml`, `discovery/` (targets.json), `loki-config.yml`, `promtail-config.yml`, `tempo/`, `otel-collector/config.yaml`, `grafana/provisioning/` and `grafana/dashboards/`. Application metrics: `backend/app/core/metrics.py`, `bot/metrics.py`, `monitoring/wg-exporter/wg_exporter.py`. Discovery: `ops/discovery/`. See [current-state.md](current-state.md) for full inventory.
+Key paths: `infra/monitoring/config/prometheus.yml`, `alert_rules.yml`, `infra/discovery/runtime/` (targets.json), `loki-config.yml`, `promtail-config.yml`, `tempo/`, `otel-collector/config.yaml`, `grafana/provisioning/` and `grafana/dashboards/`. Application metrics: `apps/admin-api/app/core/metrics.py`, `apps/telegram-bot/metrics.py`, `infra/monitoring/services/wg-exporter/wg_exporter.py`. Discovery: `infra/discovery/runtime/`. See [current-state.md](current-state.md) for full inventory.
 
 ## Live observability (SSE, real-time)
 

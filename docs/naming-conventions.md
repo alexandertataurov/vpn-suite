@@ -2,10 +2,12 @@
 
 All markdown files in `docs/` use **kebab-case** for consistency and URL-friendliness. Keep all product docs under `docs/` (e.g. frontend docs in `docs/frontend/`), not in app trees like `frontend/docs/`.
 
+Active docs belong in canonical topic directories such as `docs/api/`, `docs/ops/`, `docs/frontend/`, and `docs/security/`. Delete superseded one-off material instead of creating long-lived holding areas.
+
 | Pattern | Example |
 |---------|---------|
 | Specs | `operator-dashboard-spec.md`, `operator-ui-spec.md` |
-| Audits | `admin-servers-audit.md`, `cleanup-audit.md` (exception: `API-AUDIT.md`) |
+| Reviews / assessments | `admin-servers-review.md`, `frontend-cleanup-notes.md` |
 | Runbooks | `amneziawg-obfuscation-runbook.md`, `incident-response-runbook.md` |
 | Contracts | `config-generation-contract.md` |
 | Guides | `agent-mode-one-server.md`, `operations-guide.md` |

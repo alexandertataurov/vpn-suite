@@ -11,7 +11,9 @@ Codebase layout, API, quality gates, and release flow.
 | Codebase structure | [codebase-map.md](../codebase-map.md) |
 | API overview | [api/overview.md](../api/overview.md) |
 | Domain model | [api/domain-model.md](../api/domain-model.md) |
+| Spec pack | [spec-pack/README.md](../spec-pack/README.md) |
 | Quality gate | `./manage.sh verify` |
+| Docs validation | `./manage.sh docs-check` |
 | Full smoke | `./manage.sh smoke-staging` |
 
 ---
@@ -32,7 +34,7 @@ Codebase layout, API, quality gates, and release flow.
 - **Overview & endpoints:** [api/overview.md](../api/overview.md)
 - **Domain model:** [api/domain-model.md](../api/domain-model.md)
 - **OpenAPI:** `./manage.sh openapi` → `openapi/openapi.yaml`
-- **API audit:** [api/audit/API-AUDIT.md](../api/audit/API-AUDIT.md)
+- **API consistency backlog:** [api/inconsistencies.md](../api/inconsistencies.md)
 
 ---
 

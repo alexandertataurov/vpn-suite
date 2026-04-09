@@ -40,7 +40,7 @@
 
 ### 8. Тесты
 - [x] Добавлены тесты: nav:home, nav pay_methods, fallback, render_menu, act:faq, cmd_status/support с клавиатурой.
-- [x] Запуск: `docker build -f bot/Dockerfile.test -t vpn-bot-test . && docker run --rm vpn-bot-test` (из корня репо).
+- [x] Запуск: `docker build -f apps/telegram-bot/Dockerfile.test -t vpn-bot-test . && docker run --rm vpn-bot-test` (из корня репо).
 
 ---
 

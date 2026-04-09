@@ -16,9 +16,9 @@
 
 ## CI
 
-- `npm run storybook:check -w shared` — Validates stories exist for required components.
-- `npm run build-storybook -w shared` — Builds Storybook for production.
+- `pnpm --filter admin run storybook:guardrails` — Validates Storybook guardrails for the admin-owned Storybook surface.
+- `pnpm --filter admin run build-storybook` — Builds Storybook for production.
 
 ## Scripts
 
-- `storybook:check` — Node script in `frontend/shared/scripts/storybook-check.mjs`.
+- `storybook:guardrails` — Node script in `apps/admin-web/scripts/storybook-guardrails.mjs`.

@@ -44,7 +44,7 @@
 | REVOKE_CONFIRM_TOKEN | 16 |
 | AGENT_SHARED_TOKEN | 32 (when NODE_MODE=agent or NODE_DISCOVERY=agent) |
 
-## Required for Observability Compose (docker-compose.observability.yml)
+## Required for Observability Compose (`infra/compose/docker-compose.observability.yml`)
 
 | Variable | Purpose |
 |----------|---------|
@@ -69,6 +69,6 @@ If the miniapp shows "Referral links are unavailable: bot username is not config
 
 1. **Env:** Ensure `.env` has `VITE_TELEGRAM_BOT_USERNAME=YourBot` (no `@`).
 2. **Backend:** Recreate the container so it gets env: `docker compose up -d --force-recreate admin-api`.
-3. **Miniapp build:** Rebuild from repo root so build-time env is set: `cd frontend && pnpm run build:miniapp`.
+3. **Miniapp build:** Rebuild from repo root so build-time env is set: `pnpm run build:miniapp`.
 4. **Check backend:** `curl -s http://localhost:8000/health` (or your API origin) and confirm `referral_configured: true`.
 5. **Stale cache:** Hard-refresh the miniapp or clear site data; the page will also refetch the referral link once when it sees empty bot username (cache bust).

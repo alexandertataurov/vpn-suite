@@ -70,7 +70,7 @@ Block outbound to cloud metadata endpoints (prevents SSRF / instance credential 
 169.254.170.2 (AWS ECS)
 ```
 
-**Implementation:** Run `./ops/block-metadata-endpoints.sh`
+**Implementation:** Run `./infra/scripts/ops/block-metadata-endpoints.sh`
 
 ---
 
