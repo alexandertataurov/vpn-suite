@@ -12,7 +12,7 @@
 - `./manage.sh up-core`: start Postgres, Redis, admin API, worker, reverse proxy, and bot.
 - `./manage.sh up-monitoring`: bring up Prometheus, Grafana, Loki, and related monitoring services.
 - `./manage.sh build` or `./manage.sh build-all`: build the main API image or all service images.
-- `cd apps/admin-api && pytest`: run backend tests.
+- `cd apps/admin-api && .venv/bin/python -m pytest`: run backend tests.
 - `cd apps/telegram-bot && pytest`: run bot tests.
 - `pnpm run lint && pnpm run typecheck && pnpm run test`: validate both frontend apps from repo root.
 
@@ -23,7 +23,7 @@
 - For Mini App UI, avoid inline styles and hardcoded colors; use tokenized design-system layers described in `CONTRIBUTING.md`.
 
 ## Testing Guidelines
-- Backend and bot use `pytest`; prefer targeted runs such as `pytest apps/admin-api/tests/test_control_plane_api.py` before broader suites.
+- Backend and bot use `pytest`; for admin-api, prefer the project venv interpreter, for example `cd apps/admin-api && .venv/bin/python -m pytest tests/test_control_plane_api.py`.
 - Frontend checks include lint, typecheck, unit tests, coverage (`pnpm run test:coverage`), and e2e/Storybook flows when UI changes.
 - Add or update tests with every behavior change, especially around control-plane logic, device issuance, and design-system components.
 
@@ -44,6 +44,10 @@
 
 ## MCP TOOLS
 Always use: **filesystem**, **memory**, **sequential-thinking**, **context7**. Prefer these over shell for file ops, reasoning, and up-to-date library docs. Use context7 for API/docs lookups.
+
+## PYTHON EXECUTION
+- For `apps/admin-api`, use the project virtualenv interpreter when it exists: `apps/admin-api/.venv/bin/python -m ...`.
+- Prefer `.venv/bin/python -m pytest`, `.venv/bin/python -m alembic`, `.venv/bin/python -m ruff`, and similar forms over bare `python` or `pytest`.
 
 ## ROLE
 You are a Senior Distributed Systems Engineer AI.

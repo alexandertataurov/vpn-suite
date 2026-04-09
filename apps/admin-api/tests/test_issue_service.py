@@ -10,7 +10,8 @@ from unittest.mock import AsyncMock
 import pytest
 
 from app.core.database import async_session_factory, check_db
-from app.models import Plan, Server, Subscription, User
+from app.models import Device, Plan, Server, Subscription, User
+from app.schemas.node import ClusterTopology, NodeMetadata
 from app.services.issue_service import issue_device
 from app.services.server_live_key_service import LiveKeyResult
 
@@ -56,6 +57,59 @@ async def _create_issue_device_fixture():
 
         await db.commit()
         return user.id, sub.id, server.id
+
+
+async def _create_relay_issue_device_fixture():
+    now = datetime.now(timezone.utc)
+    async with async_session_factory() as db:
+        user = User(tg_id=int(uuid.uuid4().int % 10_000_000_000), is_banned=False)
+        db.add(user)
+        await db.flush()
+
+        plan = Plan(
+            name=f"plan-{uuid.uuid4().hex[:8]}",
+            duration_days=30,
+            price_currency="XTR",
+            price_amount=Decimal("100.00"),
+        )
+        db.add(plan)
+        await db.flush()
+
+        sub = Subscription(
+            user_id=user.id,
+            plan_id=plan.id,
+            valid_from=now,
+            valid_until=now + timedelta(days=30),
+            device_limit=5,
+            status="active",
+        )
+        db.add(sub)
+        await db.flush()
+
+        relay = Server(
+            name="relay-node",
+            region="test",
+            api_endpoint="docker://relay-node",
+            public_key="xTIBA5rboUvnH4htodjb6e697QjLERt1NAB4mZqp8Dg=",
+            is_active=True,
+            vpn_endpoint="relay.example.com:51820",
+            kind="legacy_wg_relay",
+        )
+        upstream = Server(
+            name="awg-node",
+            region="test",
+            api_endpoint="docker://amnezia-awg",
+            public_key="xTIBA5rboUvnH4htodjb6e697QjLERt1NAB4mZqp8Dg=",
+            is_active=True,
+            vpn_endpoint="vpn.example.com:47604",
+            kind="awg_node",
+        )
+        db.add(relay)
+        db.add(upstream)
+        await db.flush()
+
+        await db.commit()
+        return user.id, sub.id, relay.id, upstream.id
 
 
 def _mock_live_key(
@@ -160,3 +214,69 @@ async def test_issue_device_uses_profile_defaults_when_runtime_raises(monkeypatc
     assert "[Interface]" in result.config_awg
     assert "[Peer]" in result.config_awg
     assert "S1 = 0" not in result.config_awg
+
+
+@pytest.mark.asyncio
+async def test_issue_device_legacy_relay_mode_persists_two_leg_metadata(monkeypatch):
+    if not await check_db():
+        pytest.skip("DB not available (requires Postgres)")
+    monkeypatch.setattr("app.services.issue_service.settings.node_mode", "mock")
+    monkeypatch.setattr(
+        "app.services.issue_service.live_key_fetch",
+        AsyncMock(side_effect=lambda sid, *_args, **_kwargs: _mock_live_key(sid)),
+    )
+
+    user_id, sub_id, relay_id, upstream_id = await _create_relay_issue_device_fixture()
+
+    async def _get_topology():
+        now = datetime.now(timezone.utc)
+        return ClusterTopology(
+            timestamp=now,
+            nodes=[
+                NodeMetadata(
+                    node_id=relay_id,
+                    container_name="relay-node",
+                    kind="legacy_wg_relay",
+                    peer_count=1,
+                    max_peers=100,
+                    status="healthy",
+                    health_score=0.95,
+                ),
+                NodeMetadata(
+                    node_id=upstream_id,
+                    container_name="awg-node",
+                    kind="awg_node",
+                    peer_count=1,
+                    max_peers=100,
+                    status="healthy",
+                    health_score=0.98,
+                ),
+            ],
+            total_capacity=200,
+            current_load=2,
+            load_factor=0.01,
+            health_score=0.96,
+            topology_version=1,
+        )
+
+    async with async_session_factory() as session:
+        result = await issue_device(
+            session,
+            user_id=user_id,
+            subscription_id=sub_id,
+            delivery_mode="legacy_wg_via_relay",
+            get_topology=_get_topology,
+        )
+        await session.commit()
+        await session.refresh(result.device)
+
+        stored = await session.get(Device, result.device.id)
+
+    assert stored is not None
+    assert stored.server_id == relay_id
+    assert stored.delivery_mode == "legacy_wg_via_relay"
+    assert stored.client_facing_server_id == relay_id
+    assert stored.upstream_server_id == upstream_id
+    assert "relay.example.com:51820" in result.config_wg
+    assert result.config_awg == result.config_wg
+    assert result.config_wg_obf == result.config_wg

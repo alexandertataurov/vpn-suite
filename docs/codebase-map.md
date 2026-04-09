@@ -272,7 +272,7 @@ Pydantic schemas for API: `auth`, `user`, `server`, `server_ip`, `device`, `plan
 | `zero_failure_audit.sh`, `zero_failure_api_audit.py` | Audits                                                                                                        |
 | `optimize-resources.sh`                              | Resource tuning                                                                                               |
 | `kill-amnezia-wg-no-peers.sh`                        | Cleanup                                                                                                       |
-| `run_vpn_test_stand_full.sh`, `vpn_connectivity_check.sh` | VPN config/connectivity validation                                                                          |
+| `apps/admin-api/scripts/test_stand_vpn_config.py` | VPN config validation                                                                                               |
 | `lib/env.sh`                                         | Env helpers                                                                                                   |
 
 

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useApi } from "@/core/api/context";
 import { useApiQuery } from "@/hooks/api/useApiQuery";
@@ -68,6 +68,9 @@ interface UserDeviceListItem {
   id: string;
   subscription_id: string;
   server_id: string;
+  delivery_mode: "awg_native" | "wireguard_universal" | "legacy_wg_via_relay" | null;
+  client_facing_server_id: string | null;
+  upstream_server_id: string | null;
   device_name: string | null;
   public_key: string;
   allowed_ips: string | null;
@@ -87,10 +90,24 @@ interface UserDeviceListOut {
   total: number;
 }
 
+interface IssueServerListItem {
+  id: string;
+  is_active: boolean;
+  kind?: "awg_node" | "legacy_wg_relay";
+}
+
+interface IssueServerListOut {
+  items: IssueServerListItem[];
+  total: number;
+}
+
 interface IssueResponse {
   device_id: string;
   issued_at: string;
   server_id: string;
+  delivery_mode: "awg_native" | "wireguard_universal" | "legacy_wg_via_relay" | null;
+  client_facing_server_id: string | null;
+  upstream_server_id: string | null;
   subscription_id: string;
   node_mode: string;
   peer_created: boolean;
@@ -98,6 +115,22 @@ interface IssueResponse {
   config_awg: string | null;
   config_wg_obf: string | null;
   config_wg: string | null;
+}
+
+type DeliveryMode = "awg_native" | "wireguard_universal" | "legacy_wg_via_relay";
+
+function formatDeliveryMode(mode: DeliveryMode | null | undefined): string {
+  if (mode === "legacy_wg_via_relay") return "Legacy WG via relay";
+  if (mode === "wireguard_universal") return "Plain WG";
+  return "AmneziaWG";
+}
+
+function getIssuedConfigText(issue: IssueResponse | null): string | null {
+  if (!issue) return null;
+  if (issue.delivery_mode === "legacy_wg_via_relay" || issue.delivery_mode === "wireguard_universal") {
+    return issue.config_wg ?? issue.config ?? null;
+  }
+  return issue.config_awg ?? issue.config ?? issue.config_wg ?? null;
 }
 
 function formatRelative(iso: string | null): string {
@@ -188,6 +221,12 @@ export function UsersPage() {
     { enabled: !!selectedUserId, retry: 0, staleTime: 10_000 }
   );
 
+  const { data: issueServers } = useApiQuery<IssueServerListOut>(
+    ["users-issue-servers", "active"],
+    "/servers?limit=200&offset=0&is_active=true",
+    { enabled: !!selectedUserId, retry: 0, staleTime: 30_000 }
+  );
+
   const invalidateUsers = useCallback(() => {
     void queryClient.invalidateQueries({ queryKey: [...userKeys.lists()] });
     if (selectedUserId) void queryClient.invalidateQueries({ queryKey: [...userKeys.detail(selectedUserId)] });
@@ -215,7 +254,16 @@ export function UsersPage() {
     setSelectedUserId(null);
     setActionError(null);
     setIssueOk(null);
+    setIssueSubId("");
+    setIssueServerId("");
+    setIssueDeviceName("");
+    setIssueDeliveryMode("awg_native");
   }, []);
+
+  useEffect(() => {
+    if (!userDetail) return;
+    setIssueSubId((current) => current || userDetail.subscriptions[0]?.id || "");
+  }, [userDetail]);
 
   const rows = useMemo(() => {
     const items = userList?.items ?? [];
@@ -307,6 +355,15 @@ export function UsersPage() {
   const [issueSubId, setIssueSubId] = useState("");
   const [issueServerId, setIssueServerId] = useState("");
   const [issueDeviceName, setIssueDeviceName] = useState("");
+  const [issueDeliveryMode, setIssueDeliveryMode] = useState<DeliveryMode>("awg_native");
+
+  const hasLegacyRelay = useMemo(
+    () => (issueServers?.items ?? []).some((server) => server.is_active && server.kind === "legacy_wg_relay"),
+    [issueServers?.items]
+  );
+  const legacyRelayUnavailableReason = hasLegacyRelay
+    ? null
+    : "Legacy WG via relay is unavailable: no active relay servers are configured in Servers.";
 
   const handleIssueDevice = useCallback(() => {
     if (!userDetail) return;
@@ -316,17 +373,46 @@ export function UsersPage() {
       setActionError("Subscription id is required to issue a device");
       return;
     }
+    if (issueDeliveryMode === "legacy_wg_via_relay" && !hasLegacyRelay) {
+      setActionError(legacyRelayUnavailableReason);
+      return;
+    }
     runAction(async () => {
       const res = await api.post<IssueResponse>(`/users/${userDetail.id}/devices/issue`, {
         subscription_id: subId,
         server_id: issueServerId.trim() || null,
         device_name: issueDeviceName.trim() || null,
+        delivery_mode: issueDeliveryMode,
       });
       setIssueOk(res);
       void queryClient.invalidateQueries({ queryKey: [...deviceKeys.lists()] });
       void queryClient.invalidateQueries({ queryKey: [...deviceKeys.summary()] });
     });
-  }, [api, issueDeviceName, issueServerId, issueSubId, queryClient, runAction, userDetail]);
+  }, [
+    api,
+    hasLegacyRelay,
+    issueDeliveryMode,
+    issueDeviceName,
+    issueServerId,
+    issueSubId,
+    legacyRelayUnavailableReason,
+    queryClient,
+    runAction,
+    userDetail,
+  ]);
+
+  const handleCopyIssuedConfig = useCallback(async () => {
+    const text = getIssuedConfigText(issueOk);
+    if (!text) {
+      setActionError("Issued response did not include a config payload");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      setActionError("Failed to copy config to clipboard");
+    }
+  }, [issueOk]);
 
   const total = userList?.total ?? 0;
   const canPrev = offset > 0;
@@ -639,6 +725,25 @@ export function UsersPage() {
                     Device name (optional)
                     <Input value={issueDeviceName} onChange={(e) => setIssueDeviceName(e.target.value)} placeholder="e.g. iphone" />
                   </label>
+                  <label className="users-page__filter">
+                    Delivery mode
+                    <select
+                      className="input users-page__select"
+                      value={issueDeliveryMode}
+                      onChange={(e) => setIssueDeliveryMode(e.target.value as DeliveryMode)}
+                    >
+                      <option value="awg_native">AmneziaWG</option>
+                      <option value="wireguard_universal">Plain WireGuard</option>
+                      <option value="legacy_wg_via_relay" disabled={!hasLegacyRelay}>
+                        Legacy WG via relay
+                      </option>
+                    </select>
+                    {!hasLegacyRelay && (
+                      <MetaText className="users-page__muted">
+                        {legacyRelayUnavailableReason}
+                      </MetaText>
+                    )}
+                  </label>
                   <div className="users-page__filter-actions">
                     <Button type="button" onClick={handleIssueDevice} disabled={actionPending}>
                       Issue
@@ -646,9 +751,37 @@ export function UsersPage() {
                   </div>
                 </div>
                 {issueOk && (
-                  <p className="users-page__muted">
-                    Issued device <strong>{issueOk.device_id}</strong> ({formatRelative(issueOk.issued_at)}). See it in Devices.
-                  </p>
+                  <div className="users-page__issue-result">
+                    <p className="users-page__muted">
+                      Issued device <strong>{issueOk.device_id}</strong> ({formatRelative(issueOk.issued_at)}).
+                    </p>
+                    <dl className="users-page__detail-dl users-page__detail-dl--tg">
+                      <dt>Mode</dt>
+                      <dd>{formatDeliveryMode(issueOk.delivery_mode)}</dd>
+                      <dt>Server</dt>
+                      <dd>{issueOk.server_id}</dd>
+                      <dt>Client-facing</dt>
+                      <dd>{issueOk.client_facing_server_id ?? "—"}</dd>
+                      <dt>Upstream</dt>
+                      <dd>{issueOk.upstream_server_id ?? "—"}</dd>
+                    </dl>
+                    <div className="users-page__filter-actions users-page__filter-actions--full">
+                      <Button type="button" variant="default" onClick={() => void handleCopyIssuedConfig()}>
+                        Copy issued config
+                      </Button>
+                    </div>
+                    {getIssuedConfigText(issueOk) && (
+                      <label className="users-page__filter users-page__filter--full">
+                        Config preview
+                        <textarea
+                          className="input users-page__textarea"
+                          readOnly
+                          value={getIssuedConfigText(issueOk) ?? ""}
+                          rows={10}
+                        />
+                      </label>
+                    )}
+                  </div>
                 )}
 
                 <CardTitle as="h3" className="users-page__section-title">
@@ -662,6 +795,7 @@ export function UsersPage() {
                     columns={[
                       { key: "device", header: "Device" },
                       { key: "server_id", header: "Server" },
+                      { key: "delivery_mode", header: "Mode" },
                       { key: "status", header: "Status" },
                       { key: "issued_at", header: "Issued" },
                       { key: "apply_status", header: "Apply" },
@@ -670,6 +804,7 @@ export function UsersPage() {
                       id: d.id,
                       device: d.device_name || d.id,
                       server_id: d.server_id,
+                      delivery_mode: formatDeliveryMode(d.delivery_mode),
                       status: d.revoked_at ? "revoked" : d.suspended_at ? "suspended" : "active",
                       issued_at: formatRelative(d.issued_at),
                       apply_status: d.apply_status ?? "—",

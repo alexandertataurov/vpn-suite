@@ -32,6 +32,7 @@ class WgPeerCreateBody(BaseModel):
     subscription_id: str
     device_name: str | None = None
     server_id: str | None = None
+    delivery_mode: str | None = None
 
 
 @router.post("/peer", response_model=IssueResponse, status_code=status.HTTP_201_CREATED)
@@ -43,7 +44,7 @@ async def create_wg_peer(
 ):
     """Provision a VPN peer (spec: POST /wg/peer). Delegates to issue_service with load-balance when server_id omitted."""
     get_topology = None
-    if body.server_id is None:
+    if body.server_id is None or body.delivery_mode == "legacy_wg_via_relay":
         adapter = request.app.state.node_runtime_adapter
         engine = TopologyEngine(adapter)
         get_topology = engine.get_topology
@@ -55,6 +56,7 @@ async def create_wg_peer(
             subscription_id=body.subscription_id,
             server_id=body.server_id,
             device_name=body.device_name,
+            delivery_mode=body.delivery_mode,
             get_topology=get_topology,
             runtime_adapter=runtime_adapter,
         )
@@ -100,6 +102,9 @@ async def create_wg_peer(
         config_wg_obf=out.config_wg_obf,
         config_wg=out.config_wg,
         server_id=out.device.server_id,
+        delivery_mode=out.device.delivery_mode,
+        client_facing_server_id=out.device.client_facing_server_id,
+        upstream_server_id=out.device.upstream_server_id,
         subscription_id=out.device.subscription_id,
         node_mode=settings.node_mode,
         peer_created=out.peer_created,

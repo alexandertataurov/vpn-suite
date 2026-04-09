@@ -75,6 +75,7 @@ class TopologyEngine:
                                 name=node.container_name,
                                 region="docker",
                                 api_endpoint=api_endpoint,
+                                kind="awg_node",
                                 vpn_endpoint=vpn_endpoint,
                                 public_key=node.public_key or None,
                                 status=node.status or "unknown",
@@ -90,6 +91,7 @@ class TopologyEngine:
                         node.max_peers = server.max_connections
                     else:
                         server.max_connections = node.max_peers
+                    node.kind = getattr(server, "kind", "awg_node") or "awg_node"
                     server.name = node.container_name
                     server.api_endpoint = api_endpoint
                     if vpn_endpoint:

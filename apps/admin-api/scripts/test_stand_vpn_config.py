@@ -121,8 +121,8 @@ def _validate_issued_config(cfg: str, name: str, endpoint: str) -> list[str]:
 
 async def _run_issue_check(
     settings: Settings,
-) -> tuple[bool, list[str], dict[str, str] | None, str | None]:
-    """Issue a device via issue_service; validate all 3 config types. Uses a generated server keypair so connectivity test can run a local WG server. Returns (ok, errors, {awg, wg_obf, wg} or None, server_private_key_b64 or None)."""
+) -> tuple[bool, list[str], dict[str, str] | None]:
+    """Issue a device via issue_service and validate all 3 config types."""
     errors: list[str] = []
     try:
         from app.core.database import async_session_factory, check_db
@@ -130,10 +130,10 @@ async def _run_issue_check(
         from app.services.issue_service import issue_device
     except ImportError as e:
         errors.append(f"issue check imports: {e}")
-        return False, errors, None, None
+        return False, errors, None
     if not await check_db():
         errors.append("DB unreachable (skip --issue or start postgres)")
-        return False, errors, None, None
+        return False, errors, None
     from unittest.mock import patch
 
     now = datetime.now(timezone.utc)
@@ -192,7 +192,6 @@ async def _run_issue_check(
         len(errors) == 0,
         errors,
         configs if not errors else None,
-        server_priv if not errors else None,
     )
 
 
@@ -235,14 +234,14 @@ def main() -> int:
         LOG.info(
             "Running issue check (server issues all 3 config types: AmneziaWG, WG+obfuscation, Plain WG)..."
         )
-        issue_ok, issue_errs, configs, server_priv = asyncio.run(_run_issue_check(settings))
+        issue_ok, issue_errs, configs = asyncio.run(_run_issue_check(settings))
         if not issue_ok:
             for e in issue_errs:
                 LOG.error("Issue check failed: %s", e)
             LOG.info("Result: FAIL (issue check)")
             return 1
         LOG.info("Issue check OK (AmneziaWG, WG+obf, Plain WG all valid)")
-        if args.output_dir and configs and server_priv:
+        if args.output_dir and configs:
             out_dir = Path(args.output_dir)
             out_dir.mkdir(parents=True, exist_ok=True)
             for name, path in (
@@ -253,9 +252,6 @@ def main() -> int:
                 p = out_dir / path
                 p.write_text(configs[name], encoding="utf-8")
                 LOG.info("Wrote %s to %s", name, p)
-            (out_dir / "server_private.key").write_text(server_priv.strip(), encoding="utf-8")
-            LOG.info("Wrote server_private.key (for local connectivity test)")
-            LOG.info("Run scripts/run_vpn_connectivity_local.sh to confirm handshake and traffic")
 
     LOG.info("Result: OK (all VPN config checks passed)")
     return 0

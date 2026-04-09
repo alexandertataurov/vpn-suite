@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field, field_validator
 from app.schemas.base import OrmSchema
 
 ServerStatusEnum = Literal["online", "offline", "degraded", "unknown"]
+DeliveryMode = Literal["awg_native", "wireguard_universal", "legacy_wg_via_relay"]
 
 
 def normalize_server_status(raw: str | None) -> ServerStatusEnum:
@@ -72,6 +73,7 @@ class ServerCreate(BaseModel):
     name: str
     region: str
     api_endpoint: str
+    kind: str = "awg_node"
     vpn_endpoint: str | None = None  # VPN host:port e.g. vpn.example.com:47604
     public_key: str | None = None
     preshared_key: str | None = None
@@ -115,11 +117,20 @@ class ServerCreate(BaseModel):
     def vpn_endpoint_format(cls, v: str | None) -> str | None:
         return _validate_vpn_endpoint(v)
 
+    @field_validator("kind")
+    @classmethod
+    def validate_kind(cls, v: str) -> str:
+        value = (v or "").strip()
+        if value not in {"awg_node", "legacy_wg_relay"}:
+            raise ValueError("kind must be awg_node or legacy_wg_relay")
+        return value
+
 
 class ServerUpdate(BaseModel):
     name: str | None = None
     region: str | None = None
     api_endpoint: str | None = None
+    kind: str | None = None
     vpn_endpoint: str | None = None
     public_key: str | None = None
     preshared_key: str | None = None
@@ -150,6 +161,16 @@ class ServerUpdate(BaseModel):
     def vpn_endpoint_format(cls, v: str | None) -> str | None:
         return _validate_vpn_endpoint(v)
 
+    @field_validator("kind")
+    @classmethod
+    def validate_kind(cls, v: str | None) -> str | None:
+        if v is None:
+            return None
+        value = v.strip()
+        if value not in {"awg_node", "legacy_wg_relay"}:
+            raise ValueError("kind must be awg_node or legacy_wg_relay")
+        return value
+
     is_active: bool | None = None
     auto_sync_enabled: bool | None = None
     auto_sync_interval_sec: int | None = None
@@ -160,6 +181,7 @@ class ServerOut(OrmSchema):
     name: str
     region: str
     api_endpoint: str
+    kind: str = "awg_node"
     vpn_endpoint: str | None
     public_key: str | None
     preshared_key: str | None = None
@@ -365,6 +387,7 @@ class AdminIssuePeerRequest(BaseModel):
     expires_in_days: int | None = None
     client_request_id: str | None = None  # idempotency
     client_endpoint: str | None = None  # host:port override when server.vpn_endpoint unset
+    delivery_mode: DeliveryMode | None = None
 
 
 class ConfigEntryOut(BaseModel):
@@ -379,6 +402,9 @@ class ConfigEntryOut(BaseModel):
 class AdminIssuePeerPeerOut(BaseModel):
     id: str
     server_id: str
+    delivery_mode: DeliveryMode | None = None
+    client_facing_server_id: str | None = None
+    upstream_server_id: str | None = None
     device_name: str | None
     public_key: str
     issued_at: datetime

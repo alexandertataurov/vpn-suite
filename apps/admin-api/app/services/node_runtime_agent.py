@@ -74,6 +74,7 @@ class AgentNodeRuntimeAdapter(NodeRuntimeAdapter):
                 NodeMetadata(
                     node_id=s.id,
                     container_name=str(hb.get("container_name") or s.name),
+                    kind=getattr(s, "kind", "awg_node") or "awg_node",
                     container_id=str(hb.get("container_id") or ""),
                     host_id=str(hb.get("host_id") or None) if hb else None,
                     classification=hb.get("classification") if hb else None,
@@ -143,6 +144,7 @@ class AgentNodeRuntimeAdapter(NodeRuntimeAdapter):
         return NodeMetadata(
             node_id=s.id,
             container_name=str(hb.get("container_name") or s.name) if hb else s.name,
+            kind=getattr(s, "kind", "awg_node") or "awg_node",
             container_id=str(hb.get("container_id") or "") if hb else "",
             host_id=str(hb.get("host_id") or None) if hb else None,
             classification=hb.get("classification") if hb else None,

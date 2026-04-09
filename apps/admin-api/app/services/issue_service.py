@@ -25,7 +25,11 @@ from app.core.redaction import redact_for_log
 from app.models import Device, Plan, ProfileIssue, Server, ServerProfile, Subscription, User
 from app.services.address_allocator import allocate_address_for_device
 from app.services.admin_issue_service import _ensure_device_peer_on_node
-from app.services.load_balancer import select_node as load_balancer_select_node
+from app.services.load_balancer import (
+    KIND_LEGACY_WG_RELAY,
+    select_node as load_balancer_select_node,
+    select_relay_and_upstream,
+)
 from app.services.node_endpoint_utils import get_endpoint_from_runtime, is_endpoint_private
 from app.services.node_runtime import NodeRuntimeAdapter, PeerConfigLike
 from app.services.server_live_key_service import _heartbeat_container_id, live_key_fetch
@@ -44,9 +48,49 @@ class IssueResult(NamedTuple):
 
 _config_log = logging.getLogger("app.config")
 
+DELIVERY_MODE_AWG_NATIVE = "awg_native"
+DELIVERY_MODE_WIREGUARD_UNIVERSAL = "wireguard_universal"
+DELIVERY_MODE_LEGACY_WG_VIA_RELAY = "legacy_wg_via_relay"
+PLAIN_WG_DELIVERY_MODES = {
+    DELIVERY_MODE_WIREGUARD_UNIVERSAL,
+    DELIVERY_MODE_LEGACY_WG_VIA_RELAY,
+}
+
 
 def _config_hash(public_key: str, private_key: str) -> str:
     return hashlib.sha256(f"{public_key}:{private_key}".encode()).hexdigest()[:64]
+
+
+async def _resolve_issue_servers(
+    session: AsyncSession,
+    *,
+    server_id: str | None,
+    delivery_mode: str,
+    get_topology=None,
+) -> tuple[str, str | None]:
+    if delivery_mode != DELIVERY_MODE_LEGACY_WG_VIA_RELAY:
+        if server_id is None:
+            raise ValueError("server_required")
+        return server_id, None
+    if get_topology is None:
+        raise ValueError("topology_required")
+    if server_id is None:
+        relay_node, upstream_node = await select_relay_and_upstream(get_topology)
+        return relay_node.node_id, upstream_node.node_id
+    server_result = await session.execute(
+        select(Server).where(Server.id == server_id, Server.is_active.is_(True))
+    )
+    relay_server = server_result.scalar_one_or_none()
+    if not relay_server:
+        raise ValueError("server_not_available")
+    if getattr(relay_server, "kind", None) != KIND_LEGACY_WG_RELAY:
+        raise ValueError("legacy_relay_required")
+    upstream_node = await load_balancer_select_node(
+        get_topology, client_ip=None, required_capabilities=None
+    )
+    if upstream_node is None:
+        raise ValueError("upstream_server_required")
+    return server_id, upstream_node.node_id
 
 
 async def issue_device(
@@ -56,6 +100,7 @@ async def issue_device(
     subscription_id: str,
     server_id: str | None = None,
     device_name: str | None = None,
+    delivery_mode: str | None = None,
     get_topology=None,
     runtime_adapter: NodeRuntimeAdapter | None = None,
 ) -> IssueResult:
@@ -107,8 +152,17 @@ async def issue_device(
         sub.device_limit = effective_device_limit
     if count >= effective_device_limit:
         raise ValueError("device_limit_exceeded")
+    resolved_delivery_mode = delivery_mode or DELIVERY_MODE_AWG_NATIVE
     resolved_server_id = server_id
-    if resolved_server_id is None and get_topology is not None:
+    upstream_server_id = None
+    if resolved_delivery_mode == DELIVERY_MODE_LEGACY_WG_VIA_RELAY:
+        resolved_server_id, upstream_server_id = await _resolve_issue_servers(
+            session,
+            server_id=server_id,
+            delivery_mode=resolved_delivery_mode,
+            get_topology=get_topology,
+        )
+    elif resolved_server_id is None and get_topology is not None:
         node = await load_balancer_select_node(
             get_topology, client_ip=None, required_capabilities=None
         )
@@ -171,9 +225,15 @@ async def issue_device(
         except Exception:
             pass
     params_no_h = await request_params_with_server_h(session, server, request_params)
-    obfuscation = get_obfuscation_params(params_no_h)
+    obfuscation = (
+        {} if resolved_delivery_mode in PLAIN_WG_DELIVERY_MODES else get_obfuscation_params(params_no_h)
+    )
     # Reverse sync: issued configs use H1–H4 from AmneziaWG server when available (docker exec or agent heartbeat).
-    if runtime_adapter is not None and hasattr(runtime_adapter, "get_obfuscation_from_node"):
+    if (
+        resolved_delivery_mode not in PLAIN_WG_DELIVERY_MODES
+        and runtime_adapter is not None
+        and hasattr(runtime_adapter, "get_obfuscation_from_node")
+    ):
         try:
             runtime_obf = await runtime_adapter.get_obfuscation_from_node(resolved_server_id)
         except Exception:
@@ -286,6 +346,9 @@ async def issue_device(
         user_id=user_id,
         subscription_id=subscription_id,
         server_id=resolved_server_id,
+        delivery_mode=resolved_delivery_mode,
+        client_facing_server_id=resolved_server_id,
+        upstream_server_id=upstream_server_id,
         device_name=device_name,
         public_key=public_key_b64,
         allowed_ips=allowed_ips_val,
@@ -404,6 +467,9 @@ async def issue_device(
             preshared_key=preshared_key,
             persistent_keepalive=client_keepalive,
         )
+        if resolved_delivery_mode in PLAIN_WG_DELIVERY_MODES:
+            config_awg = config_wg
+            config_wg_obf = config_wg
         _config_log.info(
             "configs generated",
             extra={

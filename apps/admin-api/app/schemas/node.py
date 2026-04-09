@@ -25,6 +25,7 @@ class NodeMetadata(BaseModel):
 
     node_id: str
     container_name: str  # or origin identifier for HTTP nodes
+    kind: str = "awg_node"
     container_id: str = ""  # empty for HTTP nodes
     host_id: str | None = None
     classification: dict | None = None

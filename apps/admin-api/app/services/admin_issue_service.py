@@ -30,6 +30,11 @@ from app.core.redaction import redact_for_log
 from app.models import Device, Plan, ProfileIssue, Server, ServerProfile, Subscription, User
 from app.services.address_allocator import allocate_address_for_device
 from app.services.issued_config_service import persist_issued_configs_with_tokens
+from app.services.load_balancer import (
+    KIND_LEGACY_WG_RELAY,
+    select_node as load_balancer_select_node,
+    select_relay_and_upstream,
+)
 from app.services.node_endpoint_utils import get_endpoint_from_runtime, is_endpoint_private
 from app.services.node_runtime import NodeRuntimeAdapter, PeerConfigLike
 from app.services.server_live_key_service import (
@@ -42,6 +47,13 @@ from app.services.subscription_state import entitled_active_where, is_entitled_a
 # tg_id for system operator (standalone peers)
 SYSTEM_TG_ID = 0
 DOWNLOAD_TOKEN_TTL_DAYS = 1
+DELIVERY_MODE_AWG_NATIVE = "awg_native"
+DELIVERY_MODE_WIREGUARD_UNIVERSAL = "wireguard_universal"
+DELIVERY_MODE_LEGACY_WG_VIA_RELAY = "legacy_wg_via_relay"
+PLAIN_WG_DELIVERY_MODES = {
+    DELIVERY_MODE_WIREGUARD_UNIVERSAL,
+    DELIVERY_MODE_LEGACY_WG_VIA_RELAY,
+}
 
 
 class ConfigEntry(NamedTuple):
@@ -122,17 +134,34 @@ async def admin_issue_peer(
     device_name: str | None = None,
     expires_in_days: int | None = None,
     client_endpoint: str | None = None,
+    delivery_mode: str | None = None,
     issued_by_admin_id: str | None = None,
     runtime_adapter: NodeRuntimeAdapter | None = None,
+    get_topology=None,
     base_config_url: str = "/api/v1/admin/configs",
 ) -> AdminIssueResult:
     """Create device on chosen server; issue both AmneziaWG and standard WG configs."""
+    resolved_delivery_mode = delivery_mode or DELIVERY_MODE_AWG_NATIVE
     server_result = await session.execute(
         select(Server).where(Server.id == server_id, Server.is_active.is_(True))
     )
     server = server_result.scalar_one_or_none()
     if not server:
         raise ValueError("server_not_available")
+    upstream_server_id: str | None = None
+    if resolved_delivery_mode == DELIVERY_MODE_LEGACY_WG_VIA_RELAY:
+        if getattr(server, "kind", None) != KIND_LEGACY_WG_RELAY:
+            raise ValueError("legacy_relay_required")
+        if get_topology is None:
+            raise ValueError("topology_required")
+        relay_node, upstream_node = await select_relay_and_upstream(get_topology)
+        if relay_node.node_id != server_id:
+            upstream_node = await load_balancer_select_node(
+                get_topology, client_ip=None, required_capabilities=None
+            )
+        if upstream_node is None:
+            raise ValueError("upstream_server_required")
+        upstream_server_id = upstream_node.node_id
     if getattr(server, "is_draining", False):
         raise ValueError("server_draining")
     fallback = _heartbeat_container_id(getattr(server, "api_endpoint", None), server_id)
@@ -280,8 +309,14 @@ async def admin_issue_peer(
     now = datetime.now(timezone.utc)
 
     params_no_h = await request_params_with_server_h(session, server, request_params)
-    obfuscation = get_obfuscation_params(params_no_h)
-    if runtime_adapter is not None and hasattr(runtime_adapter, "get_obfuscation_from_node"):
+    obfuscation = (
+        {} if resolved_delivery_mode in PLAIN_WG_DELIVERY_MODES else get_obfuscation_params(params_no_h)
+    )
+    if (
+        resolved_delivery_mode not in PLAIN_WG_DELIVERY_MODES
+        and runtime_adapter is not None
+        and hasattr(runtime_adapter, "get_obfuscation_from_node")
+    ):
         try:
             runtime_obf = await runtime_adapter.get_obfuscation_from_node(server_id)
         except Exception:
@@ -376,6 +411,9 @@ async def admin_issue_peer(
             preshared_key=preshared_key,
             persistent_keepalive=client_keepalive,
         )
+        if resolved_delivery_mode in PLAIN_WG_DELIVERY_MODES:
+            config_awg_snippet = config_wg_snippet
+            config_wg_obf_snippet = config_wg_snippet
         _config_log.info(
             "configs generated",
             extra={
@@ -401,7 +439,11 @@ async def admin_issue_peer(
 
     config_awg_snippet = sanitize_awg_conf(config_awg_snippet)
     awg_profile = _select_awg_profile(obfuscation)
-    protocol_version = "awg_20" if awg_profile == ConfigProfile.awg_2_0_asc else "awg_legacy"
+    protocol_version = (
+        "wireguard_universal"
+        if resolved_delivery_mode in PLAIN_WG_DELIVERY_MODES
+        else ("awg_20" if awg_profile == ConfigProfile.awg_2_0_asc else "awg_legacy")
+    )
     obfuscation_profile_json: str | None = None
     if obfuscation:
         obfuscation_profile_json = json.dumps(
@@ -413,6 +455,9 @@ async def admin_issue_peer(
         user_id=user_id,
         subscription_id=subscription_id,
         server_id=server_id,
+        delivery_mode=resolved_delivery_mode,
+        client_facing_server_id=server_id,
+        upstream_server_id=upstream_server_id,
         device_name=device_name,
         public_key=public_key_b64,
         allowed_ips=allowed_ips_val,

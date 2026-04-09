@@ -42,6 +42,7 @@ from app.schemas.server import (
 from app.services.admin_issue_service import admin_issue_peer, admin_rotate_peer
 from app.services.server_health_service import sync_peers_after_restart
 from app.services.server_live_key_service import ServerNotSyncedError
+from app.services.topology_engine import TopologyEngine
 
 router = APIRouter(prefix="/servers", tags=["servers"])
 logger = logging.getLogger(__name__)
@@ -244,6 +245,9 @@ async def create_server_peer(
                             peer=AdminIssuePeerPeerOut(
                                 id=dev.id,
                                 server_id=dev.server_id,
+                                delivery_mode=dev.delivery_mode,
+                                client_facing_server_id=dev.client_facing_server_id,
+                                upstream_server_id=dev.upstream_server_id,
                                 device_name=dev.device_name,
                                 public_key=dev.public_key,
                                 issued_at=dev.issued_at,
@@ -276,8 +280,10 @@ async def create_server_peer(
             device_name=body.label,
             expires_in_days=body.expires_in_days,
             client_endpoint=body.client_endpoint,
+            delivery_mode=body.delivery_mode,
             issued_by_admin_id=admin_id,
             runtime_adapter=request.app.state.node_runtime_adapter,
+            get_topology=TopologyEngine(request.app.state.node_runtime_adapter).get_topology,
             base_config_url=base_config_url,
         )
         admin_issue_total.labels(status="success").inc()
@@ -348,6 +354,9 @@ async def create_server_peer(
         peer=AdminIssuePeerPeerOut(
             id=out.device.id,
             server_id=out.device.server_id,
+            delivery_mode=out.device.delivery_mode,
+            client_facing_server_id=out.device.client_facing_server_id,
+            upstream_server_id=out.device.upstream_server_id,
             device_name=out.device.device_name,
             public_key=out.device.public_key,
             issued_at=out.device.issued_at,

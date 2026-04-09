@@ -16,6 +16,9 @@ WEIGHTS = {
     "latency": settings.load_balancer_weight_latency,
 }
 
+KIND_AWG_NODE = "awg_node"
+KIND_LEGACY_WG_RELAY = "legacy_wg_relay"
+
 
 def _capacity_score(node: NodeMetadata) -> float:
     """Absolute available capacity used by Ultra Spec weighted scheduling."""
@@ -44,6 +47,39 @@ def calculate_node_score(
     return (cap * WEIGHTS["capacity"]) + health - latency_penalty
 
 
+def _base_candidates(
+    nodes: list[NodeMetadata],
+    *,
+    required_capabilities: list[str] | None = None,
+    allowed_kinds: set[str] | None = None,
+) -> list[NodeMetadata]:
+    degraded_min_score = 0.5
+    candidates = [
+        n
+        for n in nodes
+        if n.status in ("healthy", "degraded", "unknown")
+        and (n.health_score or 0) >= degraded_min_score
+        and n.peer_count < n.max_peers
+        and not n.is_draining
+        and (allowed_kinds is None or (getattr(n, "kind", KIND_AWG_NODE) in allowed_kinds))
+    ]
+    if required_capabilities:
+        candidates = [
+            n for n in candidates if all((n.capabilities or {}).get(c) for c in required_capabilities)
+        ]
+    healthy_candidates = [n for n in candidates if (n.health_score or 0) >= 0.9]
+    return healthy_candidates or candidates
+
+
+def _pick_best(candidates: list[NodeMetadata], client_ip: str | None = None) -> NodeMetadata | None:
+    if not candidates:
+        return None
+    return cast(
+        NodeMetadata,
+        max(candidates, key=lambda n: (calculate_node_score(n, client_ip), n.node_id)),
+    )
+
+
 async def select_node(
     get_topology: Any,
     client_ip: str | None = None,
@@ -54,30 +90,53 @@ async def select_node(
     required_capabilities: filter by node.capabilities (optional).
     """
     topology = await get_topology()
-    nodes = topology.nodes
-    # Filter: healthy/degraded, has capacity, not draining.
-    degraded_min_score = 0.5
-    candidates = [
-        n
-        for n in nodes
-        if n.status in ("healthy", "degraded", "unknown")
-        and (n.health_score or 0) >= degraded_min_score
-        and n.peer_count < n.max_peers
-        and not n.is_draining
-    ]
-    if required_capabilities:
-        candidates = [
-            n for n in candidates if all(n.capabilities.get(c) for c in required_capabilities)
-        ]
-    healthy_candidates = [n for n in candidates if (n.health_score or 0) >= 0.9]
-    if healthy_candidates:
-        candidates = healthy_candidates
-    if not candidates:
-        _log.warning("Load balancer: no suitable node (candidates=%d)", len(nodes))
-        raise LoadBalancerError("No suitable node available for peer placement")
-    # Score and pick best; tie-break by node_id for stability
-    best = max(
-        candidates,
-        key=lambda n: (calculate_node_score(n, client_ip), n.node_id),
+    candidates = _base_candidates(
+        topology.nodes,
+        required_capabilities=required_capabilities,
+        allowed_kinds={KIND_AWG_NODE},
     )
-    return cast(NodeMetadata, best)
+    if not candidates:
+        _log.warning("Load balancer: no suitable node (candidates=%d)", len(topology.nodes))
+        raise LoadBalancerError("No suitable node available for peer placement")
+    return _pick_best(candidates, client_ip)
+
+
+async def select_legacy_relay(
+    get_topology: Any,
+    client_ip: str | None = None,
+    required_capabilities: list[str] | None = None,
+) -> NodeMetadata | None:
+    topology = await get_topology()
+    candidates = _base_candidates(
+        topology.nodes,
+        required_capabilities=required_capabilities,
+        allowed_kinds={KIND_LEGACY_WG_RELAY},
+    )
+    if not candidates:
+        _log.warning("Load balancer: no suitable relay (candidates=%d)", len(topology.nodes))
+        raise LoadBalancerError("No suitable relay available for peer placement")
+    return _pick_best(candidates, client_ip)
+
+
+async def select_relay_and_upstream(
+    get_topology: Any,
+    client_ip: str | None = None,
+    relay_required_capabilities: list[str] | None = None,
+    upstream_required_capabilities: list[str] | None = None,
+) -> tuple[NodeMetadata, NodeMetadata]:
+    topology = await get_topology()
+    relays = _base_candidates(
+        topology.nodes,
+        required_capabilities=relay_required_capabilities,
+        allowed_kinds={KIND_LEGACY_WG_RELAY},
+    )
+    upstreams = _base_candidates(
+        topology.nodes,
+        required_capabilities=upstream_required_capabilities,
+        allowed_kinds={KIND_AWG_NODE},
+    )
+    relay = _pick_best(relays, client_ip)
+    upstream = _pick_best(upstreams, client_ip)
+    if relay is None or upstream is None:
+        raise LoadBalancerError("No suitable relay/upstream pair available for peer placement")
+    return relay, upstream

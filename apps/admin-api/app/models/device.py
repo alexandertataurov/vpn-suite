@@ -23,6 +23,13 @@ class Device(Base, TimestampMixin):
     server_id: Mapped[str] = mapped_column(
         String(32), ForeignKey("servers.id", ondelete="RESTRICT"), nullable=False
     )
+    delivery_mode: Mapped[str] = mapped_column(String(32), nullable=False, default="awg_native")
+    client_facing_server_id: Mapped[str | None] = mapped_column(
+        String(32), ForeignKey("servers.id", ondelete="RESTRICT"), nullable=True
+    )
+    upstream_server_id: Mapped[str | None] = mapped_column(
+        String(32), ForeignKey("servers.id", ondelete="RESTRICT"), nullable=True
+    )
     device_name: Mapped[str | None] = mapped_column(String(128), nullable=True)
     platform: Mapped[str | None] = mapped_column(String(32), nullable=True)
     public_key: Mapped[str] = mapped_column(String(128), nullable=False)
@@ -72,6 +79,12 @@ class Device(Base, TimestampMixin):
     )
     server: Mapped["Server"] = relationship(
         "Server", back_populates="devices", foreign_keys=[server_id]
+    )
+    client_facing_server: Mapped["Server | None"] = relationship(
+        "Server", foreign_keys=[client_facing_server_id]
+    )
+    upstream_server: Mapped["Server | None"] = relationship(
+        "Server", foreign_keys=[upstream_server_id]
     )
     profile_issues: Mapped[list["ProfileIssue"]] = relationship(
         "ProfileIssue", back_populates="device", cascade="all, delete-orphan"

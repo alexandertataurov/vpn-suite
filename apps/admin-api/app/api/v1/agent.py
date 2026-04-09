@@ -102,13 +102,37 @@ def _heartbeat_public_key(payload: AgentHeartbeatIn) -> str | None:
     return pk if len(pk) >= 43 else None
 
 
+def _server_kind_from_heartbeat(payload: AgentHeartbeatIn) -> str:
+    """Infer server kind from heartbeat metadata.
+
+    Relay containers are operationally named with a relay marker so they can be
+    auto-registered as client-facing legacy relays instead of regular AWG nodes.
+    """
+    marker_fields = (
+        (payload.server_id or "").strip().lower(),
+        (payload.container_name or "").strip().lower(),
+    )
+    if any("relay" in field for field in marker_fields if field):
+        return "legacy_wg_relay"
+    return "awg_node"
+
+
 async def _ensure_server_from_heartbeat(db: AsyncSession, payload: AgentHeartbeatIn) -> None:
     """Ensure a Server row exists for this server_id; create from heartbeat if missing."""
     sid = (payload.server_id or "")[:32]
     if not sid:
         return
     r = await db.execute(select(Server).where(Server.id == sid))
-    if r.scalar_one_or_none():
+    existing = r.scalar_one_or_none()
+    inferred_kind = _server_kind_from_heartbeat(payload)
+    if existing:
+        if getattr(existing, "kind", None) != inferred_kind:
+            existing.kind = inferred_kind
+            try:
+                await db.commit()
+            except Exception:
+                await db.rollback()
+                raise
         return
     name = (payload.container_name or sid).strip()
     if name == "(no container)":
@@ -126,6 +150,7 @@ async def _ensure_server_from_heartbeat(db: AsyncSession, payload: AgentHeartbea
         name=name,
         region="docker",
         api_endpoint=api_endpoint[:512],
+        kind=inferred_kind,
         status=payload.status or "unknown",
         is_active=True,
         public_key=pk,

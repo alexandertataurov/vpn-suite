@@ -35,9 +35,25 @@ async function parseResponse<T>(res: Response): Promise<T> {
         parsed.correlationId ?? responseCorrelationId
       );
     }
+    const detailMessage =
+      typeof data === "object" && data !== null && "detail" in data
+        ? (() => {
+            const detail = (data as { detail?: unknown }).detail;
+            if (typeof detail === "string" && detail.trim()) return detail;
+            if (
+              typeof detail === "object" &&
+              detail !== null &&
+              "message" in detail &&
+              typeof (detail as { message?: unknown }).message === "string"
+            ) {
+              return (detail as { message: string }).message;
+            }
+            return null;
+          })()
+        : null;
     throw new ApiError(
       "HTTP_ERROR",
-      (data as { error?: { message?: string } })?.error?.message ?? res.statusText,
+      detailMessage ?? (data as { error?: { message?: string } })?.error?.message ?? res.statusText,
       res.status,
       responseCorrelationId ? { correlation_id: responseCorrelationId } : undefined,
       responseRequestId,

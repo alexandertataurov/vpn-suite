@@ -10,6 +10,7 @@ from app.schemas.base import OrmSchema, StrictSchema
 ReconciliationStatus = Literal["ok", "needs_reconcile", "broken"]
 NodeHealthStatus = Literal["online", "offline", "unknown"]
 ConfigStateStatus = Literal["issued", "used", "pending"]
+DeliveryMode = Literal["awg_native", "wireguard_universal", "legacy_wg_via_relay"]
 
 
 class IssuedConfigOut(OrmSchema):
@@ -27,6 +28,7 @@ class IssueRequest(BaseModel):
     subscription_id: str
     server_id: str | None = None  # omit for load-balanced selection
     device_name: str | None = None
+    delivery_mode: DeliveryMode | None = None
 
 
 class IssueResponse(StrictSchema):
@@ -37,6 +39,9 @@ class IssueResponse(StrictSchema):
     config_wg_obf: str | None = None
     config_wg: str | None = None
     server_id: str
+    delivery_mode: DeliveryMode | None = None
+    client_facing_server_id: str | None = None
+    upstream_server_id: str | None = None
     subscription_id: str
     node_mode: str = "mock"  # "mock" | "real"; when mock, peer not created on node
     peer_created: bool = False  # True when peer was created on VPN node (NODE_MODE=real)
@@ -73,6 +78,9 @@ class DeviceOut(OrmSchema):
     user_id: int
     subscription_id: str
     server_id: str
+    delivery_mode: str | None = None
+    client_facing_server_id: str | None = None
+    upstream_server_id: str | None = None
     device_name: str | None
     public_key: str
     allowed_ips: str | None = None
@@ -102,6 +110,9 @@ class DeviceListItemOut(OrmSchema):
     user_id: int
     subscription_id: str
     server_id: str
+    delivery_mode: str | None = None
+    client_facing_server_id: str | None = None
+    upstream_server_id: str | None = None
     device_name: str | None
     public_key: str
     allowed_ips: str | None = None

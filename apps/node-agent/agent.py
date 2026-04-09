@@ -1338,6 +1338,7 @@ def main() -> int:
     last_actions_poll = 0.0
     actions_poll_interval = float(os.getenv("ACTIONS_POLL_INTERVAL_SECONDS", "10"))
     desired_peers: list[dict[str, Any]] = []
+    desired_peers_by_sid: dict[str, list[dict[str, Any]]] = {}
 
     while not stop.is_set():
         cid = str(uuid.uuid4())
@@ -1504,38 +1505,91 @@ def main() -> int:
 
             primary_sid = _server_id_from_container(primary_container.name)
             desired_state_sid = server_id if server_id else primary_sid
-            if now - last_desired >= desired_interval:
-                ds = _desired_state(session, desired_state_sid, cid)
-                peers = ds.get("peers") or []
-                if not isinstance(peers, list):
-                    peers = []
-                desired_peers = [p for p in peers if isinstance(p, dict)]
-                METRIC_PEERS_DESIRED.set(len(desired_peers))
-                last_desired = now
-                _log("desired_state", correlation_id=cid, peers=len(desired_peers), revision=ds.get("revision"))
-                # Sync obfuscation_full from admin (S1,S2,Jc,Jmin,Jmax,H1–H4) to node env so issued configs match
-                obf_full = ds.get("obfuscation_full") if isinstance(ds.get("obfuscation_full"), dict) else None
-                env_path = os.environ.get("AMNEZIA_NODE_ENV_PATH", "").strip()
-                if obf_full and env_path and rt.ok:
-                    _apply_obfuscation_full_to_env(
-                        env_path=env_path,
-                        obf=obf_full,
-                        container_id=primary_container.container_id,
-                        docker_timeout=docker_timeout,
-                        correlation_id=cid,
-                    )
-
-            if rt.ok and (last_reconcile == 0.0 or now - last_reconcile >= reconcile_interval):
-                with METRIC_RECONCILE_DURATION.time():
-                    added, removed, updated = _reconcile(
-                        container=primary_container.container_id,
+            runtime_states: dict[str, RuntimeState] = {primary_sid: rt}
+            containers_by_sid: dict[str, ContainerCandidate] = {primary_sid: primary_container}
+            need_all_states = (
+                len(containers) > 1
+                and (
+                    now - last_desired >= desired_interval
+                    or last_reconcile == 0.0
+                    or now - last_reconcile >= reconcile_interval
+                )
+            )
+            if need_all_states:
+                for container in containers:
+                    sid = _server_id_from_container(container.name)
+                    if sid in runtime_states:
+                        continue
+                    rt_other = _runtime_state(
+                        container=container.container_id,
+                        display_name=container.name,
                         iface=iface,
-                        desired=desired_peers,
-                        runtime=rt.peers,
                         docker_timeout=docker_timeout,
-                        max_mutations=max_mutations,
-                        read_only=read_only_mode,
+                        active_age_sec=active_age_sec,
                     )
+                    runtime_states[sid] = rt_other
+                    containers_by_sid[sid] = container
+            if now - last_desired >= desired_interval:
+                total_desired_peers = 0
+                for sid, rt_state in runtime_states.items():
+                    ds = _desired_state(session, sid, cid)
+                    peers = ds.get("peers") or []
+                    if not isinstance(peers, list):
+                        peers = []
+                    desired_for_sid = [p for p in peers if isinstance(p, dict)]
+                    desired_peers_by_sid[sid] = desired_for_sid
+                    total_desired_peers += len(desired_for_sid)
+                    if sid == desired_state_sid:
+                        desired_peers = desired_for_sid
+                    _log(
+                        "desired_state",
+                        correlation_id=cid,
+                        server_id=sid,
+                        peers=len(desired_for_sid),
+                        revision=ds.get("revision"),
+                    )
+                    if sid != desired_state_sid:
+                        continue
+                    # Sync obfuscation_full from admin (S1,S2,Jc,Jmin,Jmax,H1–H4) to node env so issued configs match
+                    obf_full = (
+                        ds.get("obfuscation_full")
+                        if isinstance(ds.get("obfuscation_full"), dict)
+                        else None
+                    )
+                    env_path = os.environ.get("AMNEZIA_NODE_ENV_PATH", "").strip()
+                    if obf_full and env_path and rt_state.ok:
+                        _apply_obfuscation_full_to_env(
+                            env_path=env_path,
+                            obf=obf_full,
+                            container_id=primary_container.container_id,
+                            docker_timeout=docker_timeout,
+                            correlation_id=cid,
+                        )
+                METRIC_PEERS_DESIRED.set(total_desired_peers)
+                last_desired = now
+
+            if last_reconcile == 0.0 or now - last_reconcile >= reconcile_interval:
+                with METRIC_RECONCILE_DURATION.time():
+                    added = removed = updated = 0
+                    for sid, rt_state in runtime_states.items():
+                        if not rt_state.ok:
+                            continue
+                        container = containers_by_sid.get(sid)
+                        if container is None:
+                            continue
+                        desired_for_sid = desired_peers_by_sid.get(sid, [])
+                        add_count, remove_count, update_count = _reconcile(
+                            container=container.container_id,
+                            iface=iface,
+                            desired=desired_for_sid,
+                            runtime=rt_state.peers,
+                            docker_timeout=docker_timeout,
+                            max_mutations=max_mutations,
+                            read_only=read_only_mode,
+                        )
+                        added += add_count
+                        removed += remove_count
+                        updated += update_count
                 last_reconcile = now
                 if added or removed or updated:
                     _log("reconcile", correlation_id=cid, added=added, removed=removed, updated=updated)
@@ -1631,7 +1685,7 @@ def main() -> int:
                 STATE.last_err = None
                 STATE.last_container = primary_container.name
                 STATE.last_runtime_peers = len(rt.peers)
-                STATE.last_desired_peers = len(desired_peers)
+                STATE.last_desired_peers = sum(len(peers) for peers in desired_peers_by_sid.values())
             METRIC_LAST_SUCCESS_TS.set(time.time())
 
         except Exception as exc:

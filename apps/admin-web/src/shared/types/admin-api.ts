@@ -266,6 +266,7 @@ export interface ServerOut {
   name?: string;
   region: string | null;
   api_endpoint: string;
+  kind?: "awg_node" | "legacy_wg_relay";
   vpn_endpoint?: string | null;
   public_key?: string | null;
   preshared_key?: string | null;
@@ -362,6 +363,7 @@ export interface AdminIssuePeerRequest {
   client_request_id?: string | null;
   /** host:port override when server.vpn_endpoint unset */
   client_endpoint?: string | null;
+  delivery_mode?: "awg_native" | "wireguard_universal" | "legacy_wg_via_relay" | null;
 }
 
 export interface ConfigEntryOut {
@@ -378,6 +380,9 @@ export interface AwgDownloadLinkResponse {
 export interface AdminIssuePeerPeerOut {
   id: string;
   server_id: string;
+  delivery_mode?: "awg_native" | "wireguard_universal" | "legacy_wg_via_relay" | null;
+  client_facing_server_id?: string | null;
+  upstream_server_id?: string | null;
   device_name: string | null;
   public_key: string;
   issued_at: string;
@@ -701,6 +706,9 @@ export interface DeviceOut {
   user_id: number;
   subscription_id: string;
   server_id: string;
+  delivery_mode?: "awg_native" | "wireguard_universal" | "legacy_wg_via_relay" | null;
+  client_facing_server_id?: string | null;
+  upstream_server_id?: string | null;
   device_name: string | null;
   public_key: string;
   allowed_ips?: string | null;
@@ -754,8 +762,9 @@ export interface DeviceSummaryOut {
 
 export interface IssueRequest {
   subscription_id: string;
-  server_id: string;
+  server_id?: string | null;
   device_name?: string | null;
+  delivery_mode?: "awg_native" | "wireguard_universal" | "legacy_wg_via_relay" | null;
 }
 
 export interface IssueResponse {
@@ -766,6 +775,9 @@ export interface IssueResponse {
   config_wg_obf?: string | null;
   config_wg?: string | null;
   server_id: string;
+  delivery_mode?: "awg_native" | "wireguard_universal" | "legacy_wg_via_relay" | null;
+  client_facing_server_id?: string | null;
+  upstream_server_id?: string | null;
   subscription_id: string;
   /** "mock" | "real"; when mock, peer not created on VPN node */
   node_mode: string;

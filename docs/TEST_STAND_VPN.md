@@ -4,18 +4,9 @@
 
 Validates VPN-related settings and config builder; emits **debug logs** for troubleshooting.
 
-## Full test (get config + handshake + traffic)
+## Scope
 
-From repo root, one command does both steps and **confirms handshake and traffic** using a local WG server (no real VPN node needed):
-
-```bash
-./scripts/run_vpn_test_stand_full.sh
-```
-
-- **Step 1:** Issue all 3 configs in container; write to `.tmp-vpn-test-stand/` (issued_awg.conf, issued_wg_obf.conf, issued_wg.conf, **server_private.key**).
-- **Step 2:** `run_vpn_connectivity_local.sh` starts a local WG server container with that key, adds the issued client as peer, starts a client container with the plain WG config (endpoint = server container). Result: **handshake confirmed** and **curl ifconfig.me** succeeds (traffic via VPN).
-
-If `server_private.key` is missing (old run), the script falls back to host `wg-quick` or Docker remote connectivity (handshake may fail if peer is not on the real server).
+The test stand validates config generation and can write issued configs to `.tmp-vpn-test-stand/` for inspection. It no longer provisions or runs a local plain WireGuard server from this repo.
 
 ## Run (recommended: via manage.sh)
 
@@ -82,26 +73,7 @@ The server issues three configs; the test stand validates and can write all of t
 | **WG+obfuscation** | `issued_wg_obf.conf` | WG with obfuscation params (Jc, S1, S2, …) |
 | **Plain WG**    | `issued_wg.conf`  | Standard WireGuard (`wg-quick`)    |
 
-Only **Plain WG** can be used with `wg-quick` for the connectivity script. AmneziaWG and WG+obf require an AmneziaWG-capable client for a real tunnel test.
-
-## Connectivity (internet via VPN)
-
-To verify that a client **connects to the internet via VPN** using an issued config:
-
-1. Issue a config (admin UI or API) and save the `.conf` content to a file.
-2. On a host with WireGuard installed, run (as root):
-
-```bash
-sudo ./scripts/vpn_connectivity_check.sh /path/to/client.conf
-```
-
-Optional: set `EXPECTED_EXIT_IP` to the VPN server’s public IP to assert traffic exits via VPN:
-
-```bash
-sudo EXPECTED_EXIT_IP=185.139.228.171 ./scripts/vpn_connectivity_check.sh /path/to/client.conf
-```
-
-Requires: `wireguard-tools`, `curl`, root.
+Only **Plain WG** can be used with `wg-quick` outside this repo. AmneziaWG and WG+obf require an AmneziaWG-capable client for a real tunnel test.
 
 ## What is checked
 

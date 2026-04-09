@@ -17,6 +17,7 @@ class Server(Base, TimestampMixin):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     region: Mapped[str] = mapped_column(String(64), nullable=False)
     api_endpoint: Mapped[str] = mapped_column(String(512), nullable=False)
+    kind: Mapped[str] = mapped_column(String(32), default="awg_node", nullable=False)
     vpn_endpoint: Mapped[str | None] = mapped_column(
         String(256), nullable=True
     )  # VPN host:port e.g. vpn.example.com:47604
@@ -61,6 +62,12 @@ class Server(Base, TimestampMixin):
     )
     devices: Mapped[list["Device"]] = relationship(
         "Device", back_populates="server", foreign_keys="Device.server_id"
+    )
+    client_facing_devices: Mapped[list["Device"]] = relationship(
+        "Device", foreign_keys="Device.client_facing_server_id"
+    )
+    upstream_devices: Mapped[list["Device"]] = relationship(
+        "Device", foreign_keys="Device.upstream_server_id"
     )
     health_logs: Mapped[list["ServerHealthLog"]] = relationship(
         "ServerHealthLog", back_populates="server"
