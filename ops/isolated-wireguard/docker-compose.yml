@@ -1,0 +1,53 @@
+services:
+  isolated-wireguard:
+    container_name: ${WG_CONTAINER_NAME:-isolated-wireguard}
+    build:
+      context: .
+    image: ${WG_IMAGE:-isolated-wireguard:local}
+    network_mode: "host"
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /run
+    environment:
+      - WG_INTERFACE=${WG_INTERFACE:-wgiso0}
+      - WG_LISTEN_PORT=${WG_LISTEN_PORT:-45820}
+      - WG_ADDRESS=${WG_ADDRESS:?set WG_ADDRESS}
+      - WG_PRIVATE_KEY_FILE=/run/secrets/server_private_key
+      - WG_CLIENT_PUBLIC_KEY_FILE=/run/secrets/client_public_key
+      - WG_PRESHARED_KEY_FILE=/run/secrets/preshared_key
+      - WG_CLIENT_ALLOWED_IPS=${WG_CLIENT_ALLOWED_IPS:?set WG_CLIENT_ALLOWED_IPS}
+      - WG_EGRESS_IFACE=${WG_EGRESS_IFACE:-eth0}
+      - WG_TUNNEL_CLIENT_SUBNET=${WG_TUNNEL_CLIENT_SUBNET:?set WG_TUNNEL_CLIENT_SUBNET}
+      - WG_MTU=${WG_MTU:-1420}
+      - WG_NAT=${WG_NAT:-1}
+    entrypoint: ["/opt/isolated-wireguard/entrypoint.sh"]
+    volumes:
+      - ./entrypoint.sh:/opt/isolated-wireguard/entrypoint.sh:ro
+    secrets:
+      - server_private_key
+      - client_public_key
+      - preshared_key
+    healthcheck:
+      test: ["CMD-SHELL", "wg show ${WG_INTERFACE:-wgiso0} >/dev/null 2>&1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+
+secrets:
+  server_private_key:
+    file: ./secrets/server_private_key
+  client_public_key:
+    file: ./secrets/client_public_key
+  preshared_key:
+    file: ./secrets/preshared_key
