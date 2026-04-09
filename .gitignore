@@ -103,7 +103,7 @@ Thumbs.db
 output/
 
 # Discovery runtime state
-config/monitoring/discovery/.targets_state.json
+infra/monitoring/config/discovery/.targets_state.json
 .cursor/mcp.json
 
 # Playwright CLI artifacts
