@@ -48,20 +48,26 @@ def iter_missing_links() -> list[str]:
     return errors
 
 
-def iter_legacy_dir_errors() -> list[str]:
+DISALLOWED_ACTIVE_DIRS = [
+    Path("docs/audit"),
+    Path("docs/design"),
+]
+
+
+def iter_disallowed_dir_errors() -> list[str]:
     errors: list[str] = []
-    for rel_path in LEGACY_ACTIVE_DIRS:
+    for rel_path in DISALLOWED_ACTIVE_DIRS:
         path = ROOT / rel_path
         if path.exists() and any(path.iterdir()):
             errors.append(
-                f"legacy active docs namespace still populated: {rel_path} "
+                f"disallowed docs namespace still populated: {rel_path} "
                 f"(move contents under canonical docs/ paths)"
             )
     return errors
 
 
 def main() -> int:
-    errors = [*iter_missing_links(), *iter_legacy_dir_errors()]
+    errors = [*iter_missing_links(), *iter_disallowed_dir_errors()]
     if errors:
         print("Documentation validation failed:", file=sys.stderr)
         for error in errors:

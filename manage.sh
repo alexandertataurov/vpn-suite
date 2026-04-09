@@ -56,7 +56,6 @@ _subsystem_summary() {
   fi
 }
 
-# Outline: not used by default. Any Outline compose/services must be gated by FEATURE_OUTLINE_LEGACY=1 (default off).
 ENV_FILE="${ENV_FILE:-.env}"
 [[ -f "$ENV_FILE" ]] || die "ENV_FILE not found: $ENV_FILE"
 
