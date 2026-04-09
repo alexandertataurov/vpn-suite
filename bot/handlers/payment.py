@@ -2,7 +2,7 @@
 
 from aiogram import F, Router
 from aiogram.enums import ContentType
-from aiogram.types import Message
+from aiogram.types import Message, PreCheckoutQuery
 
 from api_client import confirm_telegram_stars_payment
 from metrics import record_payment_confirm, record_payment_success
@@ -62,3 +62,9 @@ async def on_successful_payment(message: Message):
         err_key = result.error or "error_api"
         text = get_error_message(err_key, _locale(message))
         await message.answer(text, parse_mode=None)
+
+
+@router.pre_checkout_query()
+async def on_pre_checkout_query(query: PreCheckoutQuery) -> None:
+    # Telegram requires answering within 10 seconds, otherwise the payment UI may hang.
+    await query.answer(ok=True)

@@ -194,7 +194,7 @@ async def run_bot():
     dp.include_router(start_router)
     dp.include_router(donation_router)
     dp.include_router(errors_router)
-    allowed_updates = ["message", "callback_query"]
+    allowed_updates = ["message", "callback_query", "pre_checkout_query"]
     if BOT_WEBHOOK_URL:
         await bot.set_webhook(
             f"{BOT_WEBHOOK_URL.rstrip('/')}{BOT_WEBHOOK_PATH}",
