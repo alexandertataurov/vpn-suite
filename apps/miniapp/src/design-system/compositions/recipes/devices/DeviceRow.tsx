@@ -1,7 +1,8 @@
 import { IconCircleX, IconDownload, IconMonitor, IconPencil, IconShield } from "@/design-system/icons";
 import { Button } from "../../../components";
 import { formatDate } from "@/lib/utils/format";
-import { useI18n, useTelegramHaptics } from "@/hooks";
+import { useTelegramHaptics } from "@/hooks";
+import { useI18n } from "@/hooks/useI18n";
 import { OverflowActionMenu, type OverflowActionMenuItem, RowItem } from "../../patterns";
 import { DeviceStatusChip, type DeviceStatusVariant } from "./DeviceStatusChip";
 import "./DeviceRow.css";

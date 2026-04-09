@@ -29,7 +29,7 @@ import {
 import { FallbackScreen } from "@/design-system/patterns/FallbackScreen";
 import { useTelegramMainButton } from "@/hooks";
 import { useDevicesPageModel } from "@/page-models";
-import { useI18n } from "@/hooks";
+import { useI18n } from "@/hooks/useI18n";
 import { AMNEZIA_VPN_ANDROID_URL, AMNEZIA_VPN_IOS_URL } from "@/lib";
 import { useLocation, useNavigate } from "react-router-dom";
 

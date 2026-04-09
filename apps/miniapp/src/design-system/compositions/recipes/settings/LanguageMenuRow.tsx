@@ -1,5 +1,6 @@
-import { Button, ListRow, Popover } from "@/design-system";
+import { Button, Popover } from "@/design-system";
 import { IconChevronRight, IconGlobe } from "@/design-system/icons";
+import { ListRow } from "../../patterns/cards/ListCard";
 
 export interface LanguageOption {
   id: "auto" | "en" | "ru";

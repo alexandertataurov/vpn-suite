@@ -1,6 +1,7 @@
 import { IconFileText, IconTelegramStar } from "@/design-system/icons";
-import { ListCard, ListRow, MissionSecondaryButton, PageSection } from "@/design-system";
-import { useI18n } from "@/hooks";
+import { MissionSecondaryButton, PageSection } from "@/design-system";
+import { ListCard, ListRow } from "../../patterns/cards/ListCard";
+import { useI18n } from "@/hooks/useI18n";
 
 export interface PlanBillingHistoryItem {
   id: string;

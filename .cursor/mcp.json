@@ -2,7 +2,7 @@
   "mcpServers": {
     "filesystem": {
       "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/home/alex/projects/vpn"],
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/opt/vpn-suite"],
       "disabled": false
     },
     "memory": {
@@ -22,12 +22,12 @@
       "disabled": false
     },
     "git": {
-      "command": "backend/.venv/bin/python",
-      "args": ["-m", "mcp_server_git", "--repository", "/home/alex/projects/vpn"],
+      "command": "apps/admin-api/.venv/bin/python",
+      "args": ["-m", "mcp_server_git", "--repository", "/opt/vpn-suite"],
       "disabled": false
     },
     "github": {
-      "command": "/home/alex/projects/vpn/.cursor/run-github-mcp.sh",
+      "command": "/opt/vpn-suite/.cursor/run-github-mcp.sh",
       "args": [],
       "disabled": false
     },

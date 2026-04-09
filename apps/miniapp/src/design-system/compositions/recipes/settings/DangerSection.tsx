@@ -1,5 +1,6 @@
 import { IconChevronRight, IconCircleX, IconRotateCw, IconTrash2 } from "@/design-system/icons";
-import { HelperNote, ListCard, ListRow, PageSection } from "@/design-system";
+import { HelperNote, PageSection } from "@/design-system";
+import { ListCard, ListRow } from "../../patterns/cards/ListCard";
 
 export interface DangerSectionProps {
   sectionTitle: string;

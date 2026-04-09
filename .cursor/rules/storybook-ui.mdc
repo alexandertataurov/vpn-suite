@@ -1,6 +1,6 @@
 ---
 description: Storybook-first UI workflow for reusable frontend changes.
-globs: ["frontend/miniapp/**", "frontend/admin/**"]
+globs: ["apps/miniapp/**", "apps/admin-web/**", "apps/shared-web/**"]
 alwaysApply: false
 ---
 

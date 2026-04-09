@@ -5,7 +5,7 @@ import { webappApi, useWebappToken } from "@/api/client";
 import { useSession, useTrackScreen, useTelemetry } from "@/hooks";
 import type { StandardPageHeader, StandardPageState } from "./types";
 import { getActiveSubscription } from "./helpers";
-import { useI18n } from "@/hooks";
+import { useI18n } from "@/hooks/useI18n";
 import { webappQueryKeys } from "@/lib";
 
 /** Keep keys and order aligned with `apps/admin-api/app/api/v1/webapp.py` → `_WEBAPP_SUPPORT_FAQ_ITEMS`. */

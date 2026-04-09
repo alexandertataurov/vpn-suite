@@ -8,7 +8,8 @@ import { Textarea } from "../forms/Textarea";
 import { usePrefersReducedMotion } from "@/design-system/hooks";
 import { getMotionDurationMs } from "@/design-system/core/tokens";
 import { decrementBlockingOverlayCount, incrementBlockingOverlayCount } from "@/design-system/utils/overlayStack";
-import { useI18n, useTelegramHaptics } from "@/hooks";
+import { useTelegramHaptics } from "@/hooks";
+import { useI18n } from "@/hooks/useI18n";
 import { IconX } from "@/design-system/icons";
 
 const FOCUSABLE =

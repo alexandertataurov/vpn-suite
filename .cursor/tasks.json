@@ -5,27 +5,27 @@
       "label": "backend:check",
       "type": "shell",
       "command": "ruff check . && ruff format --check . && mypy . && vulture . --min-confidence 80 && pytest tests/ --cov=app --cov-report=term-missing -v",
-      "options": { "cwd": "${workspaceFolder}/backend" },
+      "options": { "cwd": "${workspaceFolder}/apps/admin-api" },
       "group": { "kind": "test", "isDefault": false }
     },
     {
       "label": "frontend:check",
       "type": "shell",
-      "command": "pnpm run lint && pnpm run typecheck && pnpm test -- --run",
-      "options": { "cwd": "${workspaceFolder}/frontend" },
+      "command": "pnpm run lint && pnpm run typecheck && pnpm run test -- --run",
+      "options": { "cwd": "${workspaceFolder}" },
       "group": { "kind": "test", "isDefault": false }
     },
     {
       "label": "design:check",
       "type": "shell",
-      "command": "set -euo pipefail; grep -rE '#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?' frontend --include='*.ts' --include='*.tsx' --include='*.css' && { echo 'design:check failed: hex colors'; exit 1; } || true; grep -rE 'style=\\{\\{' frontend --include='*.tsx' && { echo 'design:check failed: inline styles'; exit 1; } || true; [ -n \"$(grep -rEl \"from ['\\\"]lucide-react['\\\"]\" frontend/miniapp/src --include='*.ts' --include='*.tsx' | grep -vE 'lib/icons\.ts|design-system/icons')\" ] && { echo 'design:check failed: direct lucide in miniapp (use @/lib/icons)'; exit 1; } || true; F=$(grep -rl ':root' frontend --include='*.css' 2>/dev/null | grep -v -E 'tokens/tokens\\.css|miniapp-tokens\\.css' | head -1); if [ -n \"$F\" ]; then echo \"design:check failed: :root outside token files: $F\"; exit 1; fi",
+      "command": "set -euo pipefail; TARGETS='apps/admin-web apps/miniapp apps/shared-web'; grep -rE '#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?' $TARGETS --include='*.ts' --include='*.tsx' --include='*.css' && { echo 'design:check failed: hex colors'; exit 1; } || true; grep -rE 'style=\\{\\{' $TARGETS --include='*.tsx' && { echo 'design:check failed: inline styles'; exit 1; } || true; [ -n \"$(grep -rEl \"from ['\\\"]lucide-react['\\\"]\" apps/miniapp/src --include='*.ts' --include='*.tsx' | grep -vE 'lib/icons\\.ts|design-system/icons')\" ] && { echo 'design:check failed: direct lucide in miniapp (use @/lib/icons)'; exit 1; } || true; F=$(grep -rl ':root' $TARGETS --include='*.css' 2>/dev/null | grep -v -E 'apps/admin-web/src/design-system/tokens/tokens\\.css|apps/miniapp/src/design-system/styles/tokens/base\\.css' | head -1); if [ -n \"$F\" ]; then echo \"design:check failed: :root outside token files: $F\"; exit 1; fi",
       "options": { "cwd": "${workspaceFolder}" },
       "group": { "kind": "test", "isDefault": false }
     },
     {
       "label": "openapi:sync",
       "type": "shell",
-      "command": "(cd backend && python3 scripts/export_openapi.py) && git diff --exit-code openapi/openapi.json",
+      "command": "(cd apps/admin-api && python3 scripts/export_openapi.py) && git diff --exit-code openapi/openapi.json",
       "options": { "cwd": "${workspaceFolder}" },
       "group": { "kind": "test", "isDefault": false }
     },
@@ -33,13 +33,13 @@
       "label": "migrate:safe",
       "type": "shell",
       "command": "python -m alembic upgrade head && python -m alembic check",
-      "options": { "cwd": "${workspaceFolder}/backend" },
+      "options": { "cwd": "${workspaceFolder}/apps/admin-api" },
       "group": { "kind": "test", "isDefault": false }
     },
     {
       "label": "full:check",
       "type": "shell",
-      "command": "cd backend && (ruff check . && ruff format --check . && mypy . && vulture . --min-confidence 80 && pytest tests/ --cov=app --cov-report=term-missing -v) && cd ../frontend && (pnpm run lint && pnpm run typecheck && pnpm test -- --run) && cd .. && (set -euo pipefail; grep -rE '#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?' frontend --include='*.ts' --include='*.tsx' --include='*.css' && { echo 'design:check failed: hex'; exit 1; } || true; grep -rE 'style=\\{\\{' frontend --include='*.tsx' && { echo 'design:check failed: inline styles'; exit 1; } || true; [ -n \"$(grep -rEl \"from ['\\\"]lucide-react['\\\"]\" frontend/miniapp/src --include='*.ts' --include='*.tsx' | grep -vE 'lib/icons\.ts|design-system/icons')\" ] && { echo 'design:check failed: lucide'; exit 1; } || true; F=$(grep -rl ':root' frontend --include='*.css' 2>/dev/null | grep -v -E 'tokens/tokens\\.css|miniapp-tokens\\.css' | head -1); if [ -n \"$F\" ]; then echo \"design:check failed: :root in $F\"; exit 1; fi) && (cd backend && python3 scripts/export_openapi.py) && git diff --exit-code openapi/openapi.json && cd backend && (python -m alembic upgrade head && python -m alembic check)",
+      "command": "cd apps/admin-api && (ruff check . && ruff format --check . && mypy . && vulture . --min-confidence 80 && pytest tests/ --cov=app --cov-report=term-missing -v) && cd ../.. && (pnpm run lint && pnpm run typecheck && pnpm run test -- --run) && (set -euo pipefail; TARGETS='apps/admin-web apps/miniapp apps/shared-web'; grep -rE '#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?' $TARGETS --include='*.ts' --include='*.tsx' --include='*.css' && { echo 'design:check failed: hex'; exit 1; } || true; grep -rE 'style=\\{\\{' $TARGETS --include='*.tsx' && { echo 'design:check failed: inline styles'; exit 1; } || true; [ -n \"$(grep -rEl \"from ['\\\"]lucide-react['\\\"]\" apps/miniapp/src --include='*.ts' --include='*.tsx' | grep -vE 'lib/icons\\.ts|design-system/icons')\" ] && { echo 'design:check failed: lucide'; exit 1; } || true; F=$(grep -rl ':root' $TARGETS --include='*.css' 2>/dev/null | grep -v -E 'apps/admin-web/src/design-system/tokens/tokens\\.css|apps/miniapp/src/design-system/styles/tokens/base\\.css' | head -1); if [ -n \"$F\" ]; then echo \"design:check failed: :root in $F\"; exit 1; fi) && (cd apps/admin-api && python3 scripts/export_openapi.py) && git diff --exit-code openapi/openapi.json && cd apps/admin-api && (python -m alembic upgrade head && python -m alembic check)",
       "options": { "cwd": "${workspaceFolder}" },
       "group": { "kind": "test", "isDefault": false }
     }

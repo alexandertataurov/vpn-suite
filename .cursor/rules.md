@@ -88,15 +88,15 @@ Follow the workflow in **PROMPT.md**. Summary:
 ## Backend rules
 
 - **Type annotations**: All new functions and methods must have mypy-compatible type annotations (parameters and return type). Do not use `Any` unless explicitly commented with a reason.
-- **FastAPI + OpenAPI**: When you add or change FastAPI route handlers, run the OpenAPI export and update the committed spec. After adding routes, run `python scripts/export_openapi.py` from `backend/`. Commit changes to `openapi/openapi.json` and optionally `openapi/openapi.yaml`.
-- **Alembic**: New Alembic migrations must be followed by `alembic check` (from `backend/`) to confirm no un-generated schema changes remain. Do not hand-edit migration files to fix schema drift; create a new revision instead.
+- **FastAPI + OpenAPI**: When you add or change FastAPI route handlers, run the OpenAPI export and update the committed spec. After adding routes, run `python scripts/export_openapi.py` from `apps/admin-api/`. Commit changes to `openapi/openapi.json` and optionally `openapi/openapi.yaml`.
+- **Alembic**: New Alembic migrations must be followed by `alembic check` (from `apps/admin-api/`) to confirm no un-generated schema changes remain. Do not hand-edit migration files to fix schema drift; create a new revision instead.
 - **SQLAlchemy**: Use the async session pattern only. Use `async with session` / `await session.execute(select(...))`. Forbidden: synchronous `session.query()`.
 - **Vulture-clean**: Do not leave unused functions, variables, or imports. Remove them rather than commenting out.
 - **pip-audit**: Do not add new dependencies without checking for known CVEs first (e.g. run `pip-audit`).
 
 ### Async session consistency
 
-**Scope**: `backend/**/*.py`, `**/alembic/**`  
+**Scope**: `apps/admin-api/**/*.py`, `apps/admin-api/alembic/**`  
 **Rule**: Every DB call uses `await` inside `async def` with `AsyncSession`. Never use sync `session.query()` or wrap with `asyncio.run()`.  
 **Correct**: `await session.execute(select(User).where(User.id == id))`  
 **Incorrect**: `session.query(User).filter(User.id == id).first()` or `asyncio.run(...)` in a route  
@@ -104,7 +104,7 @@ Follow the workflow in **PROMPT.md**. Summary:
 
 ### Pydantic validation boundary
 
-**Scope**: `backend/**/*.py`  
+**Scope**: `apps/admin-api/**/*.py`  
 **Rule**: All incoming data goes through a Pydantic v2 model before touching ORM constructors. No `request.json()` parsed manually.  
 **Correct**: `body: CreateUserBody = await request.json()` then validate via Pydantic; use `body.name` etc.  
 **Incorrect**: `data = await request.json(); User(name=data["name"])`  
@@ -112,7 +112,7 @@ Follow the workflow in **PROMPT.md**. Summary:
 
 ### HTTPException only
 
-**Scope**: `backend/**/*.py`  
+**Scope**: `apps/admin-api/**/*.py`  
 **Rule**: HTTP errors are raised as `HTTPException(status_code=..., detail=...)`. No bare `raise Exception(...)` in route handlers.  
 **Correct**: `raise HTTPException(status_code=404, detail="User not found")`  
 **Incorrect**: `raise ValueError("not found")` in a route  
@@ -120,7 +120,7 @@ Follow the workflow in **PROMPT.md**. Summary:
 
 ### structlog only
 
-**Scope**: `backend/**/*.py`  
+**Scope**: `apps/admin-api/**/*.py`  
 **Rule**: Use `structlog.get_logger()` exclusively. No `print()`, no `logging.getLogger()`. Bind context keys via `log.bind(user_id=..., request_id=...)`.  
 **Correct**: `log = structlog.get_logger(); log.info("created", user_id=user.id)`  
 **Incorrect**: `print(x)`, `logging.getLogger(__name__).info(...)`  
@@ -128,7 +128,7 @@ Follow the workflow in **PROMPT.md**. Summary:
 
 ### Redis key namespacing
 
-**Scope**: `backend/**/*.py`  
+**Scope**: `apps/admin-api/**/*.py`  
 **Rule**: All Redis keys use a prefix constant from `app/cache/keys.py` (or project equivalent). No bare string keys like `"user:123"` in business logic.  
 **Correct**: `cache_key = f"{keys.USER_PREFIX}:{user_id}"`  
 **Incorrect**: `redis.get("user:123")`  
@@ -136,7 +136,7 @@ Follow the workflow in **PROMPT.md**. Summary:
 
 ### FastAPI dependency placement
 
-**Scope**: `backend/**/*.py`  
+**Scope**: `apps/admin-api/**/*.py`  
 **Rule**: `Depends(...)` factories shared across multiple routers live in `app/dependencies.py` (or project equivalent), not inline in routers.  
 **Correct**: `def get_db(): ...` in `dependencies.py`; in router `db: AsyncSession = Depends(get_db)`  
 **Incorrect**: Defining `get_db` inside the router module when used elsewhere  
@@ -148,7 +148,7 @@ Follow the workflow in **PROMPT.md**. Summary:
 
 - **No hardcoded hex colors**: Do not use `#rrggbb` or `#rgb` in TSX, TS, or CSS. Use CSS variables from the token file only.
 - **No inline styles**: Do not use `style={{}}` in JSX. Use Tailwind utility classes or CSS modules.
-- **Miniapp icons**: In `frontend/miniapp/src`, do not import directly from `lucide-react`. Import only from `@/lib/icons` or `@/design-system/icons`.
+- **Miniapp icons**: In `apps/miniapp/src`, do not import directly from `lucide-react`. Import only from `@/lib/icons` or `@/design-system/icons`.
 - **No circular imports**: If adding a new import would create a cycle, restructure (e.g. move shared types to a separate file) instead of adding the import.
 - **Exports**: Every new exported symbol (component, hook, util) must be imported somewhere, or have a JSDoc comment explaining it is a public API.
 - **API calls**: New API calls must use the existing typed API client. No raw `fetch()` or `axios` calls outside the client layer.
@@ -157,7 +157,7 @@ Follow the workflow in **PROMPT.md**. Summary:
 
 ### React Query for server state
 
-**Scope**: `frontend/**/*.ts`, `frontend/**/*.tsx`  
+**Scope**: `apps/admin-web/**/*.ts`, `apps/admin-web/**/*.tsx`, `apps/miniapp/**/*.ts`, `apps/miniapp/**/*.tsx`, `apps/shared-web/**/*.ts`, `apps/shared-web/**/*.tsx`  
 **Rule**: All server state via `useQuery`/`useMutation`. No `useEffect` + `useState` for data fetching. Mutations call `queryClient.invalidateQueries` on success.  
 **Correct**: `const { data } = useQuery({ queryKey: [...], queryFn }); mutation.mutate(..., { onSuccess: () => queryClient.invalidateQueries(...) })`  
 **Incorrect**: `useEffect(() => { fetch(...).then(setData); }, []);`  
@@ -165,7 +165,7 @@ Follow the workflow in **PROMPT.md**. Summary:
 
 ### 200-line component limit
 
-**Scope**: `frontend/**/*.tsx`  
+**Scope**: `apps/admin-web/**/*.tsx`, `apps/miniapp/**/*.tsx`, `apps/shared-web/**/*.tsx`  
 **Rule**: If an edit pushes a file over 200 lines, split first and state the split in the response.  
 **Correct**: Extract subcomponents or hooks into separate files before adding more logic.  
 **Incorrect**: Adding 50 lines to a 180-line component without splitting.  
@@ -173,7 +173,7 @@ Follow the workflow in **PROMPT.md**. Summary:
 
 ### Zod + react-hook-form
 
-**Scope**: `frontend/**/*.ts`, `frontend/**/*.tsx`  
+**Scope**: `apps/admin-web/**/*.ts`, `apps/admin-web/**/*.tsx`, `apps/miniapp/**/*.ts`, `apps/miniapp/**/*.tsx`, `apps/shared-web/**/*.ts`, `apps/shared-web/**/*.tsx`  
 **Rule**: All forms use `react-hook-form` with a `zod` resolver. No controlled `useState` forms. Schema in a sibling `*.schema.ts` file.  
 **Correct**: `useForm({ resolver: zodResolver(MySchema) });` and `MyForm.schema.ts`  
 **Incorrect**: `const [name, setName] = useState("");` for form fields  
@@ -181,7 +181,7 @@ Follow the workflow in **PROMPT.md**. Summary:
 
 ### Error boundary requirement
 
-**Scope**: `frontend/**/*.tsx`  
+**Scope**: `apps/admin-web/**/*.tsx`, `apps/miniapp/**/*.tsx`, `apps/shared-web/**/*.tsx`  
 **Rule**: Every new page-level component must have an `ErrorBoundary` at or above it in the router tree.  
 **Correct**: `<Route path="/devices" element={<ErrorBoundary><DevicesPage /></ErrorBoundary>} />`  
 **Incorrect**: New page route with no ErrorBoundary in the tree above it  
@@ -189,7 +189,7 @@ Follow the workflow in **PROMPT.md**. Summary:
 
 ### Storybook for shared components
 
-**Scope**: `frontend/shared/**/*.tsx`  
+**Scope**: `apps/shared-web/**/*.tsx`  
 **Rule**: Every new component added to `shared/` gets a `*.stories.tsx` with at least a `Default` variant created in the same edit.  
 **Correct**: Add `Button.tsx` and `Button.stories.tsx` with `Default` in one PR.  
 **Incorrect**: Adding only `Button.tsx` to shared  
@@ -197,7 +197,7 @@ Follow the workflow in **PROMPT.md**. Summary:
 
 ### No raw fetch
 
-**Scope**: `frontend/**/*.ts`, `frontend/**/*.tsx`  
+**Scope**: `apps/admin-web/**/*.ts`, `apps/admin-web/**/*.tsx`, `apps/miniapp/**/*.ts`, `apps/miniapp/**/*.tsx`, `apps/shared-web/**/*.ts`, `apps/shared-web/**/*.tsx`  
 **Rule**: No `fetch()` or `axios` outside the typed API client layer.  
 **Correct**: Call `apiClient.getUsers()` or equivalent from the project API layer.  
 **Incorrect**: `fetch("/api/users")` in a component  
@@ -227,12 +227,13 @@ Safety > speed. A confirmed action is always preferred over a fast irreversible 
 ### filesystem (scope: /opt/vpn-suite only)
 
 **Allowed reads:** any file within `/opt/vpn-suite` for context.
-**Allowed writes (no confirmation needed):** source files in `backend/`, `frontend/`,
-  `bot/`, `scripts/` as part of a coding task explicitly requested by the user.
+**Allowed writes (no confirmation needed):** source files in `apps/admin-api/`,
+  `apps/admin-web/`, `apps/miniapp/`, `apps/shared-web/`, `apps/telegram-bot/`,
+  `apps/node-agent/`, `scripts/` as part of a coding task explicitly requested by the user.
 **Allowed writes (requires confirmation):** show the full path and new content,
   wait for user to reply "confirm write [filename]" before writing to:
   - `alembic/versions/*.py`
-  - `frontend/shared/src/styles/tokens.css`
+  - `apps/shared-web/src/styles/tokens.css`
   - `openapi.json`
   - `docker-compose*.yml`
 **Never write or delete:**

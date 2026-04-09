@@ -15,7 +15,7 @@ import { useWebappToken, webappApi } from "@/api/client";
 import { useTelemetry, useTrackScreen } from "@/hooks";
 import { useToast } from "@/design-system";
 import { webappQueryKeys } from "@/lib";
-import { useI18n } from "@/hooks";
+import { useI18n } from "@/hooks/useI18n";
 import { setWebappToken } from "@/api/client";
 import { appVersion, buildId } from "@/config/env";
 import type { StandardPageHeader, StandardPageState } from "./types";

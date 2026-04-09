@@ -27,11 +27,11 @@ Containers resolve service names via Docker network (e.g. admin-api, postgres, r
 
 | Path | Purpose |
 |------|---------|
-| `backend/` | admin-api (FastAPI, app/main.py, app/api/v1/*) |
-| `frontend/admin/` | Admin SPA (React, Vite) |
-| `frontend/miniapp/` | Telegram Mini App |
-| `bot/` | Telegram bot (aiogram) |
-| `node-agent/` | Node reconciler |
+| `apps/admin-api/` | admin-api (FastAPI, app/main.py, app/api/v1/*) |
+| `apps/admin-web/` | Admin SPA (React, Vite) |
+| `apps/miniapp/` | Telegram Mini App |
+| `apps/telegram-bot/` | Telegram bot (aiogram) |
+| `apps/node-agent/` | Node reconciler |
 | `docker/reverse-proxy/` | Caddy |
 | `config/caddy/`, `config/monitoring/`, `config/redis/` | Service configs |
 

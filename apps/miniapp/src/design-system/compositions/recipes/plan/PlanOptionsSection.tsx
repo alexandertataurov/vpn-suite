@@ -1,5 +1,5 @@
 import { BillingPeriodToggle, Button, EmptyStateBlock, PageSection, StarsAmount, StatusChip } from "@/design-system";
-import { useI18n } from "@/hooks";
+import { useI18n } from "@/hooks/useI18n";
 import { featuresFromPlan, tierFeatureToRow, type BillingPeriod, type TierPair } from "@/page-models";
 
 export interface PlanOptionsSectionProps {

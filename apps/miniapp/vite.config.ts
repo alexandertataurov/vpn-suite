@@ -3,7 +3,7 @@ import react from "@vitejs/plugin-react";
 import { visualizer } from "rollup-plugin-visualizer";
 import { fileURLToPath } from "url";
 import path from "path";
-import { createManualChunks } from "./build/viteChunks";
+import { createManualChunks } from "./scripts/viteChunks";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const enableSourcemap = process.env.VITE_SENTRY_SOURCEMAPS === "1";

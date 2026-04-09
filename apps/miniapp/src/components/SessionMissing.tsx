@@ -11,7 +11,7 @@ import {
 } from "@/design-system";
 import { PageStateScreen } from "@/design-system/compositions/patterns/PageStateScreen";
 import { getSupportBotHref } from "@/config/env";
-import { useI18n } from "@/hooks";
+import { useI18n } from "@/hooks/useI18n";
 import { useTelegramWebApp } from "@/hooks";
 import { webappQueryKeys } from "@/lib";
 

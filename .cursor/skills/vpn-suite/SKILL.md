@@ -12,10 +12,10 @@ description: Understand, operate, and evolve a unified production system built w
 
   * `docker-compose.yml`, `docker-compose.observability.yml`
   * `manage.sh`
-  * `backend/` (admin-api FastAPI)
-  * `frontend/admin/`, `frontend/miniapp/`
-  * `bot/` (Telegram, aiogram)
-  * `node-agent/`
+  * `apps/admin-api/` (admin-api FastAPI)
+  * `apps/admin-web/`, `apps/miniapp/`, `apps/shared-web/`
+  * `apps/telegram-bot/` (Telegram, aiogram)
+  * `apps/node-agent/`
   * `config/` (caddy, monitoring, redis)
   * backend APIs
   * admin UI
@@ -142,12 +142,12 @@ Before migrations or rollouts:
 
 | Component     | Role                                      |
 | ------------- | ----------------------------------------- |
-| admin-api     | FastAPI control-plane API (backend/)      |
+| admin-api     | FastAPI control-plane API (`apps/admin-api/`)      |
 | postgres      | Primary data store                        |
 | redis         | FSM, rate limit, queues, ephemeral state  |
 | reverse-proxy | Caddy TLS + static frontends (docker/reverse-proxy/) |
-| telegram-vpn-bot | Sales gateway, payments (bot/)        |
-| node-agent    | Optional; per-node reconciler (node-agent/) |
+| telegram-vpn-bot | Sales gateway, payments (`apps/telegram-bot/`)        |
+| node-agent    | Optional; per-node reconciler (`apps/node-agent/`) |
 | monitoring    | Optional profile: Prometheus, Loki, Grafana, etc. (config/monitoring/) |
 
 ---

@@ -7,8 +7,8 @@ description: Expert frontend engineering skill for building performant, accessib
 
 ## VPN Suite context
 
-- **Admin SPA:** `frontend/admin/` — React 18, TypeScript, Vite 6, TanStack Query 5; devices, servers, telemetry, operator dashboard.
-- **Mini App:** `frontend/miniapp/` — Telegram Mini App (subscription & device management).
+- **Admin SPA:** `apps/admin-web/` — React 18, TypeScript, Vite 6, TanStack Query 5; devices, servers, telemetry, operator dashboard.
+- **Mini App:** `apps/miniapp/` — Telegram Mini App (subscription & device management).
 - **Design system / Storybook:** See [docs/frontend/design/design-system.md](../../docs/frontend/design/design-system.md) and [CONTRIBUTING.md](../../CONTRIBUTING.md).
 
 ## Overview

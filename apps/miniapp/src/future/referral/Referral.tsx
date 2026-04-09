@@ -13,7 +13,7 @@ import {
   Stack,
 } from "@/design-system";
 import { useReferralPageModel } from "@/page-models";
-import { useI18n } from "@/hooks";
+import { useI18n } from "@/hooks/useI18n";
 
 export function ReferralPage() {
   const navigate = useNavigate();

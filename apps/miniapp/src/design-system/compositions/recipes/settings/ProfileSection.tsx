@@ -1,6 +1,7 @@
 import { IconChevronRight, IconPencil } from "@/design-system/icons";
-import { ListCard, ListRow, PageSection } from "@/design-system";
+import { PageSection } from "@/design-system";
 import { LanguageMenuRow, type LanguageOption } from "./LanguageMenuRow";
+import { ListCard, ListRow } from "../../patterns/cards/ListCard";
 
 export interface ProfileSectionProps {
   sectionTitle: string;

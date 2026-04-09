@@ -5,7 +5,7 @@ import { ApiError } from "@vpn-suite/shared";
 import { webappApi } from "@/api/client";
 import { useTrackScreen, useTelemetry, useSession } from "@/hooks";
 import { webappQueryKeys } from "@/lib";
-import { useI18n } from "@/hooks";
+import { useI18n } from "@/hooks/useI18n";
 import { getPrimarySubscription } from "./helpers";
 
 function getRestoreErrorMessage(err: unknown, t: (k: string) => string): string {

@@ -25,7 +25,7 @@ import { FallbackScreen } from "@/design-system/patterns/FallbackScreen";
 import { SessionMissing } from "@/components";
 import { useWebappToken } from "@/api/client";
 import { useSession } from "@/hooks";
-import { useI18n } from "@/hooks";
+import { useI18n } from "@/hooks/useI18n";
 import { useAccessHomePageModel } from "@/page-models";
 
 function InviteFriendsRow({ t }: { t: (k: string) => string }) {

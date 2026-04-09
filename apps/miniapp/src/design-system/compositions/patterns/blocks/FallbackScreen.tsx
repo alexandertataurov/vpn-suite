@@ -1,7 +1,7 @@
 import { Button } from "../../../components/Button";
 import { MissionPrimaryAnchor, MissionSecondaryAnchor } from "../mission/Mission";
 import { PageStateScreen, type PageStateVariant } from "./PageStateScreen";
-import { useI18n } from "@/hooks";
+import { useI18n } from "@/hooks/useI18n";
 
 export type FallbackScenario = "retryable" | "non_retryable" | "auth_failure" | "timeout";
 

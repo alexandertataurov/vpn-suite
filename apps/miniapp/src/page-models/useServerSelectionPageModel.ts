@@ -5,7 +5,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useWebappToken, webappApi } from "@/api/client";
 import { useOnlineStatus, useSession, useTrackScreen, useTelemetry } from "@/hooks";
 import { useToast } from "@/design-system";
-import { useI18n } from "@/hooks";
+import { useI18n } from "@/hooks/useI18n";
 import { webappQueryKeys } from "@/lib";
 import type { StandardPageHeader, StandardPageState } from "./types";
 import { getActiveSubscription } from "./helpers";

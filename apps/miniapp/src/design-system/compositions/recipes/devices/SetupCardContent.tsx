@@ -1,5 +1,5 @@
 import { InlineAlert } from "../../../components/feedback/InlineAlert";
-import { useI18n } from "@/hooks";
+import { useI18n } from "@/hooks/useI18n";
 import { MissionPrimaryButton } from "../../patterns";
 import { CompactSummaryCard } from "../shared/CompactSummaryCard";
 import "./SetupCardContent.css";

@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../../../components/Button";
 import { IconChevronLeft } from "../../../icons";
-import { useI18n } from "@/hooks";
+import { useI18n } from "@/hooks/useI18n";
 import { ProfileRow } from "./ProfileRow";
 import { SettingsButton } from "../../patterns";
 

@@ -7,8 +7,9 @@ log() { printf '%s\n' "$*" >&2; }
 
 ENV_FILE="${ENV_FILE:-.env}"
 [[ -f "$ENV_FILE" ]] || { log "ENV_FILE not found: $ENV_FILE"; exit 1; }
+COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-vpn-suite}"
 
-DC=(env ENV_FILE="$ENV_FILE" docker compose --env-file "$ENV_FILE" -f infra/compose/docker-compose.yml)
+DC=(env ENV_FILE="$ENV_FILE" COMPOSE_PROJECT_NAME="$COMPOSE_PROJECT_NAME" docker compose --env-file "$ENV_FILE" -f infra/compose/docker-compose.yml)
 
 TS="$(date -u +%Y%m%dT%H%M%SZ)"
 OUT_DIR="${OUT_DIR:-backups/postgres}"

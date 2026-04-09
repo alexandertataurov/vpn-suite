@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes } from "react";
 import { IconSettings } from "../../../icons";
-import { useI18n } from "@/hooks";
+import { useI18n } from "@/hooks/useI18n";
 
 export interface SettingsButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children"> {
   onClick: () => void;

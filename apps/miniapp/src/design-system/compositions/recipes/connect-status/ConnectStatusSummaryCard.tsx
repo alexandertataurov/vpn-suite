@@ -1,5 +1,5 @@
 import { CompactSummaryCard } from "@/design-system";
-import { useI18n } from "@/hooks";
+import { useI18n } from "@/hooks/useI18n";
 import "./ConnectStatusCards.css";
 
 export interface ConnectStatusSummaryCardProps {

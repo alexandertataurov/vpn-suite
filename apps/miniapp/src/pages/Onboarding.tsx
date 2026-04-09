@@ -21,7 +21,7 @@ import { useOpenLink, useSession, useTelemetry, useTelegramWebApp } from "@/hook
 import { webappQueryKeys } from "@/lib";
 import { getActiveDevices, getActiveSubscription } from "@/page-models";
 import { getSupportBotHref } from "@/config/env";
-import { useI18n } from "@/hooks";
+import { useI18n } from "@/hooks/useI18n";
 import { AMNEZIA_VPN_ANDROID_URL, AMNEZIA_VPN_IOS_URL } from "@/lib";
 
 export function OnboardingPage() {

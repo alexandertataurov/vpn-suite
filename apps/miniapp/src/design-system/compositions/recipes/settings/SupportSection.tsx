@@ -5,7 +5,8 @@ import {
   IconMessageCircle,
   IconShield,
 } from "@/design-system/icons";
-import { ListCard, ListRow, PageSection } from "@/design-system";
+import { PageSection } from "@/design-system";
+import { ListCard, ListRow } from "../../patterns/cards/ListCard";
 
 export interface SupportSectionLegalLink {
   title: string;

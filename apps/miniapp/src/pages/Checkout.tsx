@@ -14,7 +14,7 @@ import {
 } from "@/design-system";
 import { FallbackScreen } from "@/design-system/patterns/FallbackScreen";
 import { useCheckoutPageModel } from "@/page-models";
-import { useI18n } from "@/hooks";
+import { useI18n } from "@/hooks/useI18n";
 
 export function CheckoutPage() {
   const navigate = useNavigate();

@@ -9,4 +9,4 @@ export const DOCS_EDIT_BASE_URL: string =
   "https://github.com/your-org/vpn-suite/edit/main";
 
 /** Default path under repo for design-system docs (used when meta.editPath is not set). */
-export const DEFAULT_DOCS_EDIT_PATH = "frontend/admin/src/design-system/docs";
+export const DEFAULT_DOCS_EDIT_PATH = "apps/admin-web/src/design-system/docs";

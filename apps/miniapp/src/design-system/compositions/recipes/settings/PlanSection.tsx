@@ -1,5 +1,6 @@
 import { IconChevronRight, IconCreditCard, IconRotateCw, IconSmartphone } from "@/design-system/icons";
-import { ListCard, ListRow, PageSection, ToggleRow } from "@/design-system";
+import { PageSection, ToggleRow } from "@/design-system";
+import { ListCard, ListRow } from "../../patterns/cards/ListCard";
 
 export interface PlanSectionProps {
   sectionTitle: string;

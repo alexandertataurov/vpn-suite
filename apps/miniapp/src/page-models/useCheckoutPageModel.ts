@@ -17,7 +17,7 @@ import {
   useTelemetry,
   useTrackScreen,
 } from "@/hooks";
-import { useI18n } from "@/hooks";
+import { useI18n } from "@/hooks/useI18n";
 import { webappQueryKeys } from "@/lib";
 import type { PromoErrorCode } from "./promoTypes";
 import type { StandardPageHeader, StandardPageState } from "./types";

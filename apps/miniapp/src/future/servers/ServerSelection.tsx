@@ -14,7 +14,7 @@ import {
 import { Stack } from "@/design-system/core/primitives";
 import { FallbackScreen } from "@/design-system/patterns/FallbackScreen";
 import { useServerSelectionPageModel } from "@/page-models";
-import { useI18n } from "@/hooks";
+import { useI18n } from "@/hooks/useI18n";
 
 export function ServerSelectionPage() {
   const navigate = useNavigate();

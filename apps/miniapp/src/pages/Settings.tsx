@@ -26,7 +26,8 @@ import {
   useToast,
 } from "@/design-system";
 import { FallbackScreen } from "@/design-system/patterns/FallbackScreen";
-import { useOpenLink, useI18n, useTelegramWebApp, useUpdateSubscription } from "@/hooks";
+import { useOpenLink, useTelegramWebApp, useUpdateSubscription } from "@/hooks";
+import { useI18n } from "@/hooks/useI18n";
 import { useSettingsPageModel } from "@/page-models";
 import { buildSettingsLegalLinks, getSupportContactDescription } from "@/support/resources";
 

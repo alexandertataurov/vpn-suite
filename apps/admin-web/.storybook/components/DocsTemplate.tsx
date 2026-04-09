@@ -6,7 +6,7 @@ export interface DocsTemplateMeta {
   lastUpdated?: string;
   /** Full URL override for "Edit this page". */
   editUrl?: string;
-  /** Relative path from repo root (e.g. "frontend/admin/src/design-system/docs/Introduction.mdx"). Used when editUrl is not set. */
+  /** Relative path from repo root (e.g. "apps/admin-web/src/design-system/docs/Introduction.mdx"). Used when editUrl is not set. */
   editPath?: string;
   readingMinutes?: number;
   prev?: { label: string; href: string };

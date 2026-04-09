@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { IconDownload } from "@/design-system/icons";
-import { useI18n } from "@/hooks";
+import { useI18n } from "@/hooks/useI18n";
 import { ButtonRowAuto, MissionPrimaryButton, MissionSecondaryButton } from "../../patterns";
 import { CompactSummaryCard } from "../shared/CompactSummaryCard";
 import { VpnBoundaryNote } from "../shared/VpnBoundaryNote";

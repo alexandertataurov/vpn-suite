@@ -5,7 +5,7 @@ import { getPlans } from "@/api";
 import { useWebappToken, webappApi } from "@/api/client";
 import { useSession, useTelemetry, useTrackScreen } from "@/hooks";
 import { webappQueryKeys } from "@/lib";
-import { useI18n } from "@/hooks";
+import { useI18n } from "@/hooks/useI18n";
 import { formatDate } from "@/lib/utils/format";
 import type { PlanItem, PlansResponse } from "@/api";
 import type { StandardPageHeader, StandardPageState } from "./types";

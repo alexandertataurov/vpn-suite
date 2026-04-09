@@ -42,7 +42,7 @@ Error:
 
 ## Database
 
-- **Postgres (admin-api):** Primary store; snake_case tables/columns. Migrations in `backend/` (Alembic or project convention); keep reversible where possible.
+- **Postgres (admin-api):** Primary store; snake_case tables/columns. Migrations in `apps/admin-api/` (Alembic or project convention); keep reversible where possible.
 - **Redis:** FSM, rate limit, queues, ephemeral state; no persistent schema.
 - **Backups:** Before migrations or rollouts run `./manage.sh backup-db`; see [docs/ops/runbook.md](../../docs/ops/runbook.md).
 

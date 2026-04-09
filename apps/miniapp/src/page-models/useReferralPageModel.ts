@@ -8,9 +8,9 @@ import {
   useTrackScreen,
   useTelegramHaptics,
   useTelegramMainButton,
-  useI18n,
   useOnlineStatus,
 } from "@/hooks";
+import { useI18n } from "@/hooks/useI18n";
 import { useToast } from "@/design-system";
 import { webappQueryKeys } from "@/lib";
 import type { PlanItem, PlansResponse } from "@/api";

@@ -17,12 +17,12 @@ import {
   SectionLabel,
   Skeleton,
   Stack,
-  VpnBoundaryNote,
 } from "@/design-system";
 import { IconClock, IconCreditCard, IconSmartphone } from "@/design-system/icons";
 import { FallbackScreen } from "@/design-system/patterns/FallbackScreen";
+import { VpnBoundaryNote } from "@/design-system/compositions/recipes/shared/VpnBoundaryNote";
 
-import { useI18n } from "@/hooks";
+import { useI18n } from "@/hooks/useI18n";
 import { usePlanPageModel, type BillingPeriod } from "@/page-models";
 
 function shouldReduceMotion(): boolean {

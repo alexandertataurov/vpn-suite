@@ -6,7 +6,7 @@ import {
   MissionPrimaryLink,
   MissionSecondaryLink,
 } from "@/design-system";
-import { useI18n } from "@/hooks";
+import { useI18n } from "@/hooks/useI18n";
 
 export interface PlanNextStepCardProps {
   title: string;

@@ -1,6 +1,7 @@
-import { CompactSummaryCard, MissionPrimaryButton, MissionPrimaryLink, VpnBoundaryNote } from "@/design-system";
-import { useI18n } from "@/hooks";
+import { CompactSummaryCard, MissionPrimaryButton, MissionPrimaryLink } from "@/design-system";
+import { useI18n } from "@/hooks/useI18n";
 import "./ConnectStatusCards.css";
+import { VpnBoundaryNote } from "../shared/VpnBoundaryNote";
 
 export interface ConnectStatusVerifyCardProps {
   showConfirmAction: boolean;

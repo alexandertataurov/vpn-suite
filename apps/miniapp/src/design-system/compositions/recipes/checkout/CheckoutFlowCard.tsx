@@ -1,6 +1,6 @@
 import { Button, InlineAlert, Input, StickyBottomBar } from "@/design-system";
 import { Stack } from "@/design-system/core/primitives";
-import { useI18n } from "@/hooks";
+import { useI18n } from "@/hooks/useI18n";
 
 export interface CheckoutFlowCardProps {
   showConfirmation: boolean;

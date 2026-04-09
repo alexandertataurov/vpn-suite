@@ -1,8 +1,9 @@
 import { useId } from "react";
 import type { WebAppSubscriptionOffersResponse } from "@vpn-suite/shared";
-import { Button, HelperNote, ListCard, ListRow, Modal } from "@/design-system";
+import { Button, HelperNote, Modal } from "@/design-system";
 import { IconAlertTriangle, IconClock, IconPause } from "@/design-system/icons";
-import { useI18n } from "@/hooks";
+import { ListCard, ListRow } from "../../patterns/cards/ListCard";
+import { useI18n } from "@/hooks/useI18n";
 import type { CancelReasonGroup, CancelReasonSelection } from "@/page-models";
 
 export interface SubscriptionCancellationModalProps {

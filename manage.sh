@@ -58,6 +58,7 @@ _subsystem_summary() {
 
 ENV_FILE="${ENV_FILE:-.env}"
 [[ -f "$ENV_FILE" ]] || die "ENV_FILE not found: $ENV_FILE"
+COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-vpn-suite}"
 
 # Pass ENV_FILE into Compose interpolation (used by infra/compose/docker-compose.yml env_file anchors).
 # Auto-detect DOCKER_GID for node-agent socket access if unset.
@@ -66,10 +67,10 @@ if [[ -z "${DOCKER_GID:-}" ]]; then
   [[ -n "${_gid:-}" ]] && export DOCKER_GID="$_gid"
 fi
 
-DC=(env ENV_FILE="$ENV_FILE" docker compose -f infra/compose/docker-compose.yml --env-file "$ENV_FILE" --profile docker-telemetry)
-DC_OBS=(env ENV_FILE="$ENV_FILE" docker compose -f infra/compose/docker-compose.yml -f infra/compose/docker-compose.observability.yml --env-file "$ENV_FILE" --profile docker-telemetry)
+DC=(env ENV_FILE="$ENV_FILE" COMPOSE_PROJECT_NAME="$COMPOSE_PROJECT_NAME" docker compose -f infra/compose/docker-compose.yml --env-file "$ENV_FILE" --profile docker-telemetry)
+DC_OBS=(env ENV_FILE="$ENV_FILE" COMPOSE_PROJECT_NAME="$COMPOSE_PROJECT_NAME" docker compose -f infra/compose/docker-compose.yml -f infra/compose/docker-compose.observability.yml --env-file "$ENV_FILE" --profile docker-telemetry)
 AUDIT_PROJECT="${AUDIT_PROJECT:-vpn-suite-audit}"
-DC_AUDIT=(docker compose -p "$AUDIT_PROJECT" -f infra/compose/docker-compose.audit.yml --env-file "$ENV_FILE")
+DC_AUDIT=(env ENV_FILE="$ENV_FILE" COMPOSE_PROJECT_NAME="$AUDIT_PROJECT" docker compose -p "$AUDIT_PROJECT" -f infra/compose/docker-compose.audit.yml --env-file "$ENV_FILE")
 MONITORING_SERVICES=(victoria-metrics prometheus alertmanager cadvisor node-exporter loki promtail grafana discovery-runner wg-exporter tempo otel-collector)
 
 _safe_disk_cleanup() {

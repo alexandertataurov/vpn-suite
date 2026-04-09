@@ -10,7 +10,7 @@
 ## Bot build fails (context / path)
 
 - **Cause:** Dockerfile build context or COPY paths don't match compose `context`/`dockerfile`.
-- **Fix:** In Dockerfile use paths relative to the compose build context (e.g. `bot/` if context is repo root). Check `docker-compose.yml` for `context` and `dockerfile`.
+- **Fix:** In Dockerfile use paths relative to the compose build context (e.g. `apps/telegram-bot/` if context is repo root). Check compose config for `context` and `dockerfile`.
 
 ## Healthcheck failing (bot / admin-api / postgres)
 

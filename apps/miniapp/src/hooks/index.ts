@@ -11,7 +11,6 @@ export { usePullToRefresh } from "./usePullToRefresh";
 export { useScrollInputIntoView } from "./useScrollInputIntoView";
 export { useEdgeSwipeGesture } from "./useEdgeSwipeGesture";
 export { useSession } from "./useSession";
-export { useI18n } from "./useI18n";
 export { useUpdateSubscription, type UseUpdateSubscriptionOptions } from "./useUpdateSubscription";
 export { useTelegramBackButtonController } from "./useTelegramBackButtonController";
 export { useTelegramHaptics } from "./useTelegramHaptics";

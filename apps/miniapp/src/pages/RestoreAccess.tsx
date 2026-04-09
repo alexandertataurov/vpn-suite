@@ -1,8 +1,9 @@
 import { useNavigate, Link } from "react-router-dom";
 import { SessionMissing } from "@/components";
-import { ActionCard, Button, FooterHelp, InlineAlert, PageScaffold, PageLayout, PageHeader, Stack, StickyBottomBar, VpnBoundaryNote } from "@/design-system";
+import { ActionCard, Button, FooterHelp, InlineAlert, PageScaffold, PageLayout, PageHeader, Stack, StickyBottomBar } from "@/design-system";
+import { VpnBoundaryNote } from "@/design-system/compositions/recipes/shared/VpnBoundaryNote";
 import { useRestoreAccessPageModel } from "@/page-models";
-import { useI18n } from "@/hooks";
+import { useI18n } from "@/hooks/useI18n";
 
 export function RestoreAccessPage() {
   const navigate = useNavigate();

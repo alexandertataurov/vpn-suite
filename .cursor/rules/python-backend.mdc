@@ -1,6 +1,6 @@
 ---
 description: Python backend standards — type hints, FastAPI, Alembic, SQLAlchemy async, vulture, pip-audit. CI enforces ruff, pytest, alembic.
-globs: ["backend/**/*.py", "**/alembic/**"]
+globs: ["apps/admin-api/**/*.py", "apps/admin-api/alembic/**"]
 alwaysApply: false
 ---
 
@@ -12,9 +12,9 @@ alwaysApply: false
   - Wrong: `def fetch_user(id): return session.query(User).get(id)`
   - Right: `def fetch_user(session: AsyncSession, id: int) -> User | None: ...`
 
-- **FastAPI + OpenAPI**: When you add or change FastAPI route handlers, run the OpenAPI export and update the committed spec. After adding routes, run `python scripts/export_openapi.py` from `backend/` (or `(cd backend && python3 scripts/export_openapi.py)` from repo root). Commit changes to `openapi/openapi.json` and optionally `openapi/openapi.yaml`.
+- **FastAPI + OpenAPI**: When you add or change FastAPI route handlers, run the OpenAPI export and update the committed spec. After adding routes, run `python scripts/export_openapi.py` from `apps/admin-api/` (or `(cd apps/admin-api && python3 scripts/export_openapi.py)` from repo root). Commit changes to `openapi/openapi.json` and optionally `openapi/openapi.yaml`.
 
-- **Alembic**: New Alembic migrations must be followed by `alembic check` (from `backend/`) to confirm no un-generated schema changes remain. Do not hand-edit migration files to fix schema drift; create a new revision instead.
+- **Alembic**: New Alembic migrations must be followed by `alembic check` (from `apps/admin-api/`) to confirm no un-generated schema changes remain. Do not hand-edit migration files to fix schema drift; create a new revision instead.
 
 - **SQLAlchemy**: Use the async session pattern only. Use `async with session` / `await session.execute(select(...))`. Forbidden: synchronous `session.query()`.
   - Wrong: `session.query(User).filter(User.id == id).first()`

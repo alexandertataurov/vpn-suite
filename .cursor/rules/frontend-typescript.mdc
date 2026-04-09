@@ -1,6 +1,6 @@
 ---
 description: Frontend and TypeScript standards — no hex colors, no inline styles, design-system icons in miniapp, no circular imports, typed API client, a11y. CI enforces eslint, typecheck, vitest, playwright, storybook guardrails.
-globs: ["frontend/**/*.ts", "frontend/**/*.tsx", "frontend/**/*.css"]
+globs: ["apps/admin-web/**/*.ts", "apps/admin-web/**/*.tsx", "apps/admin-web/**/*.css", "apps/miniapp/**/*.ts", "apps/miniapp/**/*.tsx", "apps/miniapp/**/*.css", "apps/shared-web/**/*.ts", "apps/shared-web/**/*.tsx", "apps/shared-web/**/*.css"]
 alwaysApply: false
 ---
 
@@ -16,7 +16,7 @@ alwaysApply: false
   - Wrong: `<div style={{ marginTop: 8, color: 'red' }}>`
   - Right: `<div className="mt-2 text-error">` or a CSS module class
 
-- **Miniapp icons**: In `frontend/miniapp/src`, do not import directly from `lucide-react`. Import only from `@/lib/icons` or `@/design-system/icons`.
+- **Miniapp icons**: In `apps/miniapp/src`, do not import directly from `lucide-react`. Import only from `@/lib/icons` or `@/design-system/icons`.
   - Wrong: `import { ChevronRight } from 'lucide-react'`
   - Right: `import { IconChevronRight } from '@/lib/icons'`
 

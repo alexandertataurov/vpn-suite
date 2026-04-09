@@ -6,7 +6,7 @@ import { useWebappToken } from "@/api/client";
 import { webappQueryKeys } from "@/lib";
 import { formatBytes } from "@/lib";
 import { formatDate } from "@/lib/utils/format";
-import { useI18n } from "@/hooks";
+import { useI18n } from "@/hooks/useI18n";
 import type { StandardPageState } from "./types";
 import { periodLabelForHeroLocalized, sanitizePlanDisplayName } from "./plan-helpers";
 

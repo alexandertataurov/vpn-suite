@@ -10,8 +10,8 @@ import {
   useTelegramHaptics,
   useTelemetry,
   useTrackScreen,
-  useI18n,
 } from "@/hooks";
+import { useI18n } from "@/hooks/useI18n";
 import { useToast } from "@/design-system";
 import { usePrefersReducedMotion } from "@/design-system";
 import { webappQueryKeys } from "@/lib";

@@ -3,7 +3,7 @@ import { SessionMissing } from "@/components";
 import { ConnectStatusSummaryCard, ConnectStatusVerifyCard, HelperNote, PageScaffold, PageHeader } from "@/design-system";
 import { useOpenLink } from "@/hooks";
 import { useConnectStatusPageModel } from "@/page-models";
-import { useI18n } from "@/hooks";
+import { useI18n } from "@/hooks/useI18n";
 
 export function ConnectStatusPage() {
   const navigate = useNavigate();
