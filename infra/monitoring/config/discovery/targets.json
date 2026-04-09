@@ -28,29 +28,29 @@
   },
   {
     "labels": {
-      "sd_job": "node-agent",
-      "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7"
-    },
-    "targets": [
-      "node-agent:9105"
-    ]
-  },
-  {
-    "labels": {
-      "sd_job": "telegram-vpn-bot",
-      "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7"
-    },
-    "targets": [
-      "telegram-vpn-bot:8090"
-    ]
-  },
-  {
-    "labels": {
       "sd_job": "alertmanager",
       "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7"
     },
     "targets": [
       "alertmanager:9093"
+    ]
+  },
+  {
+    "labels": {
+      "sd_job": "otel-collector",
+      "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7"
+    },
+    "targets": [
+      "otel-collector:8888"
+    ]
+  },
+  {
+    "labels": {
+      "sd_job": "tempo",
+      "host_id": "7c3719b3-709d-482c-be0c-fcdf6c0c03c7"
+    },
+    "targets": [
+      "tempo:3200"
     ]
   }
 ]
