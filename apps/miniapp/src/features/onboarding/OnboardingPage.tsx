@@ -38,6 +38,7 @@ export function OnboardingPage() {
   const [appAlreadyInstalled, setAppAlreadyInstalled] = useState(false);
   const completedThisSessionRef = useRef(false);
   const lastStepIndexRef = useRef(0);
+  const onboardingStartedTrackedRef = useRef(false);
 
   const stepIndex = useMemo(
     () => Math.max(0, Math.min(ONBOARDING_STEPS.length - 1, onboardingStep)),
@@ -45,11 +46,12 @@ export function OnboardingPage() {
   );
   const step = ONBOARDING_STEPS[stepIndex]!;
 
-  // Fire once on mount when session exists; session/track omitted intentionally (one-shot analytics)
+  // One-shot: fire when session first becomes available (not on every session object update)
   useEffect(() => {
-    if (session == null) return;
+    if (session == null || onboardingStartedTrackedRef.current) return;
+    onboardingStartedTrackedRef.current = true;
     track("onboarding_started", {});
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [session, track]);
 
   useEffect(() => {
     track("onboarding_step_viewed", { step: stepIndex, step_id: step.id });

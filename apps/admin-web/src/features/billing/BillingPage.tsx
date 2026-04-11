@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useApiQuery } from "@/hooks/api/useApiQuery";
@@ -216,7 +216,74 @@ export function BillingPage() {
     { retry: 1, enabled: active === "cancellation-reasons" }
   );
 
-  // Action handlers are defined later in the component and intentionally referenced here.
+  const runPlanAction = useCallback(async (fn: () => Promise<unknown>) => {
+    setActionError(null);
+    setActionPending(true);
+    try {
+      await fn();
+      await queryClient.invalidateQueries({ queryKey: [...billingKeys.plans()] });
+    } catch (e) {
+      setActionError(getErrorMessage(e, "Action failed"));
+    } finally {
+      setActionPending(false);
+    }
+  }, [queryClient]);
+
+  const handleClone = useCallback(
+    (p: PlanOut) => runPlanAction(() => api.post<PlanOut>(`/plans/${p.id}/clone`, {})),
+    [api, runPlanAction],
+  );
+
+  const handleArchive = useCallback(
+    (p: PlanOut) => runPlanAction(() => api.patch<PlanOut>(`/plans/${p.id}`, { is_archived: true })),
+    [api, runPlanAction],
+  );
+
+  const handleRestore = useCallback(
+    (p: PlanOut) => runPlanAction(() => api.patch<PlanOut>(`/plans/${p.id}`, { is_archived: false })),
+    [api, runPlanAction],
+  );
+
+  const handleMoveUp = useCallback(
+    (p: PlanOut) => {
+      if (!plans?.items?.length) return;
+      const reordered = [...plans.items].sort(
+        (a, b) => (a.display_order ?? 0) - (b.display_order ?? 0),
+      );
+      const planIdx = reordered.findIndex((x) => x.id === p.id);
+      if (planIdx <= 0) return;
+      const previousPlan = reordered[planIdx - 1];
+      const currentPlan = reordered[planIdx];
+      if (!previousPlan || !currentPlan) return;
+      reordered[planIdx - 1] = currentPlan;
+      reordered[planIdx] = previousPlan;
+      void runPlanAction(() =>
+        api.patch<PlanList>("/plans/reorder", { plan_ids: reordered.map((x) => x.id) }),
+      );
+    },
+    [api, plans, runPlanAction],
+  );
+
+  const handleMoveDown = useCallback(
+    (p: PlanOut) => {
+      if (!plans?.items?.length) return;
+      const reordered = [...plans.items].sort(
+        (a, b) => (a.display_order ?? 0) - (b.display_order ?? 0),
+      );
+      const planIdx = reordered.findIndex((x) => x.id === p.id);
+      if (planIdx < 0 || planIdx >= reordered.length - 1) return;
+      const currentPlan = reordered[planIdx];
+      const nextPlan = reordered[planIdx + 1];
+      if (!currentPlan || !nextPlan) return;
+      reordered[planIdx] = nextPlan;
+      reordered[planIdx + 1] = currentPlan;
+      void runPlanAction(() =>
+        api.patch<PlanList>("/plans/reorder", { plan_ids: reordered.map((x) => x.id) }),
+      );
+    },
+    [api, plans, runPlanAction],
+  );
+
   const planRows: PlanRow[] = useMemo(() => {
     if (!plans?.items?.length) return [];
     const sorted = [...plans.items].sort(
@@ -335,8 +402,15 @@ export function BillingPage() {
         ),
       };
     });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [plans, actionPending]);
+  }, [
+    plans,
+    actionPending,
+    handleMoveUp,
+    handleMoveDown,
+    handleClone,
+    handleArchive,
+    handleRestore,
+  ]);
 
   const openCreateModal = () => {
     setEditingPlan(null);
@@ -386,62 +460,6 @@ export function BillingPage() {
     } finally {
       setDeletePending(false);
     }
-  };
-
-  const runPlanAction = async (fn: () => Promise<unknown>) => {
-    setActionError(null);
-    setActionPending(true);
-    try {
-      await fn();
-      await queryClient.invalidateQueries({ queryKey: [...billingKeys.plans()] });
-    } catch (e) {
-      setActionError(getErrorMessage(e, "Action failed"));
-    } finally {
-      setActionPending(false);
-    }
-  };
-
-  const handleClone = (p: PlanOut) =>
-    runPlanAction(() => api.post<PlanOut>(`/plans/${p.id}/clone`, {}));
-
-  const handleArchive = (p: PlanOut) =>
-    runPlanAction(() => api.patch<PlanOut>(`/plans/${p.id}`, { is_archived: true }));
-
-  const handleRestore = (p: PlanOut) =>
-    runPlanAction(() => api.patch<PlanOut>(`/plans/${p.id}`, { is_archived: false }));
-
-  const handleMoveUp = (p: PlanOut) => {
-    if (!plans?.items?.length) return;
-    const reordered = [...plans.items].sort(
-      (a, b) => (a.display_order ?? 0) - (b.display_order ?? 0)
-    );
-    const planIdx = reordered.findIndex((x) => x.id === p.id);
-    if (planIdx <= 0) return;
-    const previousPlan = reordered[planIdx - 1];
-    const currentPlan = reordered[planIdx];
-    if (!previousPlan || !currentPlan) return;
-    reordered[planIdx - 1] = currentPlan;
-    reordered[planIdx] = previousPlan;
-    runPlanAction(() =>
-      api.patch<PlanList>("/plans/reorder", { plan_ids: reordered.map((x) => x.id) })
-    );
-  };
-
-  const handleMoveDown = (p: PlanOut) => {
-    if (!plans?.items?.length) return;
-    const reordered = [...plans.items].sort(
-      (a, b) => (a.display_order ?? 0) - (b.display_order ?? 0)
-    );
-    const planIdx = reordered.findIndex((x) => x.id === p.id);
-    if (planIdx < 0 || planIdx >= reordered.length - 1) return;
-    const currentPlan = reordered[planIdx];
-    const nextPlan = reordered[planIdx + 1];
-    if (!currentPlan || !nextPlan) return;
-    reordered[planIdx] = nextPlan;
-    reordered[planIdx + 1] = currentPlan;
-    runPlanAction(() =>
-      api.patch<PlanList>("/plans/reorder", { plan_ids: reordered.map((x) => x.id) })
-    );
   };
 
   const handleSubmit = async (event: React.FormEvent) => {

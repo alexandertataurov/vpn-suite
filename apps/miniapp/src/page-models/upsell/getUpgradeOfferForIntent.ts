@@ -54,11 +54,7 @@ function resolveExpiry(planId: string | null | undefined): { targetTo: string } 
   return { targetTo: `/plan/checkout/${planId}?intent=expiry` };
 }
 
-function resolveTrialEnd(
-  plans: PlanLikeForUpsell[],
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- kept for API consistency
-  _currentPlanId: string | null | undefined,
-): { targetTo: string; targetPlanId?: string } | null {
+function resolveTrialEnd(plans: PlanLikeForUpsell[]): { targetTo: string; targetPlanId?: string } | null {
   const fallback = "/plan?intent=trial_end";
   if (plans.length === 0) return { targetTo: fallback };
   const sorted = [...plans].sort((a, b) => {
@@ -114,7 +110,7 @@ export function getUpgradeOfferForIntent(
       target = resolveExpiry(currentPlan?.id ?? undefined);
       break;
     case "trial_end":
-      target = resolveTrialEnd(plans, currentPlan?.id ?? null);
+      target = resolveTrialEnd(plans);
       break;
     case "referral":
       target = resolveReferral(plans, currentPlan?.id ?? null);
