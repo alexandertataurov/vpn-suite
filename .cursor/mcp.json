@@ -2,8 +2,7 @@
   "mcpVersion": "1",
   "_comment": [
     "Setup: run `npm install` in ./mcp-servers/ before first use.",
-    "Set VAULT_PATH and PROJECT_PATH in your shell or in ./mcp-servers/.env (see ./mcp-servers/.env.example). Never commit .env or other secrets.",
-    "Env values below use ${env:...} so Cursor passes through your process environment; ensure those variables are set where Cursor is launched, or set real paths in env if your client does not interpolate.",
+    "Default VAULT_PATH/PROJECT_PATH use ${workspaceFolder} so MCP works when the IDE spawns the process without your shell env. Override in mcp-servers/.env (gitignored) if your vault lives elsewhere.",
     "Use ${workspaceFolder}/mcp-servers/... absolute paths in args; Cursor resolves ./ against the repo root, not cwd.",
     "Run ts-node via node (not npx) to avoid npm EOVERRIDE on root overrides."
   ],
@@ -17,8 +16,8 @@
       ],
       "cwd": "${workspaceFolder}/mcp-servers",
       "env": {
-        "VAULT_PATH": "${env:VAULT_PATH}",
-        "PROJECT_PATH": "${env:PROJECT_PATH}"
+        "VAULT_PATH": "${workspaceFolder}/vault",
+        "PROJECT_PATH": "${workspaceFolder}"
       }
     },
     "filesystem-mcp": {
@@ -30,8 +29,8 @@
       ],
       "cwd": "${workspaceFolder}/mcp-servers",
       "env": {
-        "VAULT_PATH": "${env:VAULT_PATH}",
-        "PROJECT_PATH": "${env:PROJECT_PATH}"
+        "VAULT_PATH": "${workspaceFolder}/vault",
+        "PROJECT_PATH": "${workspaceFolder}"
       }
     }
   }
