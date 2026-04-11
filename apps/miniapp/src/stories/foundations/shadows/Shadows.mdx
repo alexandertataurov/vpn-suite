@@ -1,0 +1,21 @@
+import { Meta, Canvas, Story } from "@storybook/addon-docs/blocks";
+import * as ShadowsStories from "./Shadows.stories";
+import { FoundationLinks, DoDont } from "../shared/components";
+
+<Meta of={ShadowsStories} title="Foundations/Shadows" />
+
+<DocPage>
+  <DocHero label="Foundations" title="Shadows" description="Minimal elevation language for depth, separation, and focus clarity." />
+  <FoundationLinks tokens="src/design-system/core/tokens/shadows.ts" />
+
+  <DocDivider label="Stories" />
+  <Canvas><Story of={ShadowsStories.Scale} /></Canvas>
+  <Canvas><Story of={ShadowsStories.Showcase} /></Canvas>
+  <Canvas><Story of={ShadowsStories.Playground} /></Canvas>
+
+  <DocDivider label="Guidance" />
+  <DoDont
+    do={<span>Combine subtle border and shadow cues for clear but restrained depth.</span>}
+    dont={<span>Stack dramatic shadows to add visual noise.</span>}
+  />
+</DocPage>

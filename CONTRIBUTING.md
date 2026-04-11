@@ -1,5 +1,7 @@
 # Contributing
 
+**Repository layout:** The Telegram **miniapp** lives in `apps/miniapp/`; the **admin** SPA in `apps/admin-web/`; shared TypeScript in `apps/shared-web/` (`@vpn-suite/shared`). Backend services are **Python**: `apps/admin-api/` (control plane), `apps/telegram-bot/`, `apps/node-agent/`. See [docs/codebase-map.md](docs/codebase-map.md#monorepo-boundaries) for which paths are in the pnpm workspace versus standalone services.
+
 ## Design System Contract
 
 These rules are enforced by CI. PRs that violate them will not merge.
@@ -17,7 +19,7 @@ These rules are enforced by CI. PRs that violate them will not merge.
 - **Build order:** Foundations → Primitives → Components → Patterns → Recipes → Pages (each layer may only use layers below it)
 - Need a UI pattern? Check design-system and components first
 - If it exists: use it — never rebuild inline
-- If it doesn't exist: build it in `apps/miniapp/src/design-system` or `apps/miniapp/src/components`, not in a feature folder
+- If it doesn't exist: build it in `apps/miniapp/src/design-system` or `apps/miniapp/src/app/components`, not in a feature folder
 - Feature folders contain data-fetching and composition only — never style primitives
 
 ### Icons (miniapp)
@@ -33,6 +35,10 @@ These rules are enforced by CI. PRs that violate them will not merge.
 - Every page uses `MiniappLayout`/`PageScaffold` — no exceptions
 - Every page handles all three data states: loading → error → populated
 - Page padding comes from shared layout components — never set manually
+
+### Storybook (miniapp)
+
+- Stories live under `apps/miniapp/src/stories/` (see `apps/miniapp/docs/storybook/AGENTS.md` for placement)
 
 ### Storybook (admin)
 

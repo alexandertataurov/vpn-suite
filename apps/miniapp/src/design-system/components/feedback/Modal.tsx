@@ -6,7 +6,7 @@ import { Button } from "../Button";
 import { Input } from "../forms/Input";
 import { Textarea } from "../forms/Textarea";
 import { usePrefersReducedMotion } from "@/design-system/hooks";
-import { getMotionDurationMs } from "@/design-system/core/tokens";
+import { getMotionDurationMs } from "@/design-system/foundations";
 import { decrementBlockingOverlayCount, incrementBlockingOverlayCount } from "@/design-system/utils/overlayStack";
 import { useTelegramHaptics } from "@/hooks";
 import { useI18n } from "@/hooks/useI18n";

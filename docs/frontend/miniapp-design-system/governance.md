@@ -39,8 +39,8 @@ All semantic tokens adapt to `data-theme`. Miniapp themes: `consumer-light`, `co
 
 Inline styles are forbidden in app and design-system production code.
 
-- **Allowed:** `src/design-system/stories/**` and `src/storybook/**` when used for foundations documentation or isolated visual scaffolding.
-- **Forbidden:** `src/components/**`, `src/pages/**`, `src/design-system/**` outside stories.
+- **Allowed:** `src/stories/**` and `src/storybook/**` when used for foundations documentation or isolated visual scaffolding.
+- **Forbidden:** `src/app/components/**`, `src/pages/**`, `src/design-system/**` outside stories.
 - Prefer extracting recurring story layout objects into shared story helpers instead of redeclaring them inline.
 
 ### 5. Typography

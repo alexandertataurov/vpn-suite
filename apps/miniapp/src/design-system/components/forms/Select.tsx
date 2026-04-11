@@ -2,7 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { ButtonHTMLAttributes } from "react";
 import { cn } from "@vpn-suite/shared";
-import { useSheetSwipeDismiss } from "@/design-system/hooks";
+import { useSheetSwipeDismiss } from "@/design-system/hooks/useSheetSwipeDismiss";
 import { decrementBlockingOverlayCount, incrementBlockingOverlayCount } from "@/design-system/utils/overlayStack";
 import { Field } from "./Field";
 

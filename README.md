@@ -144,7 +144,9 @@ Full list: [docs/ops/required-secrets.md](docs/ops/required-secrets.md).
 | `manage.sh` | Ops CLI; see [Usage](#usage) |
 | `docs/` | Guides, runbook, API, specs |
 
-Detailed map: [docs/codebase-map.md](docs/codebase-map.md).
+**pnpm workspace** (root `pnpm run lint` / `build` / etc.): [`apps/admin-web`](apps/admin-web), [`apps/miniapp`](apps/miniapp), [`apps/shared-web`](apps/shared-web) — see [`pnpm-workspace.yaml`](pnpm-workspace.yaml). Python apps (`admin-api`, `telegram-bot`, `node-agent`) use their own tooling and `./manage.sh`.
+
+Detailed map: [docs/codebase-map.md](docs/codebase-map.md#monorepo-boundaries) (including monorepo boundaries).
 
 ---
 

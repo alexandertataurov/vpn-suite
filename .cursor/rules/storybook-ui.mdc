@@ -13,5 +13,6 @@ Before modifying any reusable UI:
 
 For miniapp UI:
 - Storybook is the source of truth for reusable UI behavior and state coverage
+- **Story files**: place every `*.stories.tsx` under `apps/miniapp/src/stories/` only — design-system stories mirror `src/design-system/` under `src/stories/design-system/`; import components with `@/design-system/...`. Do not co-locate stories next to components. See `apps/miniapp/docs/storybook/AGENTS.md`.
 - update `play` coverage when changing interactive behavior
 - use realistic miniapp fixtures, not placeholder lorem or fake desktop layouts

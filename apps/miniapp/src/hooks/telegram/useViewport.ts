@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { telegramClient } from "@/telegram/telegramCoreClient";
+import { telegramClient } from "@/lib/telegram/telegramCoreClient";
 import { useTelegramEvent } from "./useTelegramEvent";
 
 type TelegramViewportState = {

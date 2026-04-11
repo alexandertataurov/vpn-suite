@@ -1,0 +1,22 @@
+import { Meta, Canvas, Story } from "@storybook/addon-docs/blocks";
+import * as MotionStories from "./Motion.stories";
+import { FoundationLinks, DoDont } from "../shared/components";
+
+<Meta of={MotionStories} title="Foundations/Motion" />
+
+<DocPage>
+  <DocHero label="Foundations" title="Motion" description="Predictable timing and easing that support orientation and preserve accessibility." />
+  <FoundationLinks tokens="src/design-system/core/tokens/motion.ts" />
+
+  <DocDivider label="Stories" />
+  <Canvas><Story of={MotionStories.Tokens} /></Canvas>
+  <Canvas><Story of={MotionStories.Showcase} /></Canvas>
+  <Canvas><Story of={MotionStories.MotionRules} /></Canvas>
+  <Canvas><Story of={MotionStories.Playground} /></Canvas>
+
+  <DocDivider label="Guidance" />
+  <DoDont
+    do={<span>Use duration and easing tokens for both CSS transitions and JS timing alignment.</span>}
+    dont={<span>Use arbitrary transition timing values or decorative animation patterns.</span>}
+  />
+</DocPage>

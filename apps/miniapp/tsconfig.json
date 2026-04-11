@@ -16,11 +16,16 @@
       "@/lib/*": ["./src/lib/*"],
       "@ds": ["./src/design-system/index.ts"],
       "@ds/core": ["./src/design-system/core/index.ts"],
+      "@ds/foundations": ["./src/design-system/foundations/index.ts"],
+      "@ds/primitives": ["./src/design-system/primitives/index.ts"],
       "@ds/components": ["./src/design-system/components/index.ts"],
-      "@ds/compositions": ["./src/design-system/compositions/index.ts"]
+      "@ds/compositions": ["./src/design-system/compositions/index.ts"],
+      "@ds/patterns": ["./src/design-system/patterns/index.ts"],
+      "@ds/recipes": ["./src/design-system/recipes/index.ts"],
+      "@ds/layouts": ["./src/design-system/layouts/index.ts"]
     }
   },
   "references": [{ "path": "../shared-web" }],
   "include": ["src/**/*"],
-  "exclude": ["src/**/*.stories.tsx", "src/**/*.stories.ts", "src/**/*.test.tsx", "src/**/*.test.ts", "src/storybook", "src/design-system/ui/__tests__", "src/future/useBetaHomePageModel"]
+  "exclude": ["src/**/*.stories.tsx", "src/**/*.stories.ts", "src/**/*.test.tsx", "src/**/*.test.ts", "src/storybook"]
 }

@@ -1,46 +1,59 @@
 import { Meta } from "@storybook/addon-docs/blocks";
-import { FoundationHeader } from "../foundations/components";
 
 <Meta title="Primitives/Overview" />
 
-<FoundationHeader
-  title="Primitives Overview"
-  description="Low-level layout and typography building blocks. No business logic; use design tokens."
-  status="Stable"
-/>
+<DocPage>
+  <DocHero
+    label="Primitives"
+    title="Primitives Overview"
+    description="Low-level layout and typography building blocks for composing product UI without business logic."
+    version="v2.0"
+  />
 
-## Why it exists
+  <DocSection>
+    <p>
+      Primitives are the stable base layer of the design system. They define spacing, structure, and typography behavior
+      so higher-level components can stay consistent.
+    </p>
+  </DocSection>
 
-Primitives are the smallest reusable units in the design system. They provide consistent structure (layout, spacing, typography) without business logic. All higher-level components compose these primitives.
+  <DocDivider label="Core Principles" />
 
-## Core principles
+  <DocSection>
+    <DocGrid columnCount={3}>
+      <DocRule title="Layout" tag="core">
+        Box, Container, Stack, Inline, and Panel establish predictable composition patterns.
+      </DocRule>
+      <DocRule title="Separation" tag="core">
+        Divider provides structural separation without introducing custom visual logic.
+      </DocRule>
+      <DocRule title="Typography" tag="tokens">
+        Text and Heading keep semantic type hierarchy aligned to token scale.
+      </DocRule>
+    </DocGrid>
+  </DocSection>
 
-- **Layout** = Box, Container, Stack, Inline, Panel
-- **Separator** = Divider
-- **Typography** = Text, Heading
-- Use design tokens via `className` or CSS; no hardcoded values in primitives
+  <DocDivider label="Primitive Map" />
 
-## Primitive map
+  <DocSection>
+    <DocTable
+      headers={["Group", "Primitive", "Purpose"]}
+      rows={[
+        ["Layout", "Box", "Base wrapper with ds-box behavior"],
+        ["Layout", "Container", "Constrained width and horizontal insets"],
+        ["Layout", "Stack", "Vertical or horizontal spacing with alignment control"],
+        ["Layout", "Inline", "Row-style composition with wrap and gap"],
+        ["Layout", "Panel", "Surface or outline container for grouped content"],
+        ["Separator", "Divider", "Horizontal or vertical separators"],
+        ["Typography", "Text", "Body, caption, and meta text roles"],
+        ["Typography", "Heading", "Semantic heading levels h1-h4"],
+      ]}
+    />
+  </DocSection>
 
-| Group | Primitive | Purpose |
-|-------|-----------|---------|
-| Layout | Box | Base div with `ds-box`; layout or wrapper |
-| Layout | Container | Constrained width + padding (`size`, `padding`) |
-| Layout | Stack | Vertical/horizontal flex with gap, align, justify |
-| Layout | Inline | Horizontal Stack (gap, align, wrap) |
-| Layout | Panel | Surface or outline panel (`variant`, `padding`) |
-| Separator | Divider | Horizontal/vertical separator (`orientation`, `tone`) |
-| Typography | Text | body, body-sm, meta, caption variants |
-| Typography | Heading | h1–h4 levels |
+  <DocDivider label="Guidance" />
 
-## Rules
-
-- Use semantic tokens (`--spacing-*`, `--color-*`, `--typo-*`) in CSS
-- Do not add business logic to primitives
-- Prefer composition: Stack > Stack > Panel for complex layouts
-
-## Related
-
-- Foundations / Spacing
-- Foundations / Typography
-- Components / Button
+  <DocCallout icon="◈" variant="rule">
+    Use design tokens for spacing, color, and type. Keep primitives behavior-focused and free of product-specific logic.
+  </DocCallout>
+</DocPage>

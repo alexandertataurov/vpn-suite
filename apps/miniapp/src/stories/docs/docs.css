@@ -1,0 +1,912 @@
+/* VPN Suite Miniapp — Premium Autodocs styling.
+ * Uses design tokens from base.css (loaded in preview).
+ * Dark default; data-theme="consumer-light" for light mode.
+ *
+ * Architecture
+ * ────────────
+ * 1. Custom properties  — shared tokens, easing, sizing
+ * 2. Storybook base     — body, root, selection, scroll
+ * 3. Prose              — headings, paragraphs, lists, links, blockquote,
+ *                         inline code, code blocks, tables
+ * 4. Preview framing    — docblock-preview
+ * 5. ComponentHero      — hero, badge, pills, meta row
+ * 6. Page layout        — docs-custom-page, docs-panel, docs-page-*
+ * 7. Block components   — Callout, StartHere, Limitations, Related,
+ *                         Recipes, Usage, WhenToUse
+ * 8. Responsive
+ *
+ * Patterns
+ * ────────
+ * • Tri-context selector groups collapsed using :is() — one rule per
+ *   element instead of three repeated selectors.
+ * • --_variant-color scoped props drive all status-variant blocks
+ *   (badge, callout, meta value, usage/when-to-use col) — adding a
+ *   new status is a two-line change.
+ * • Shared col block for docs-usage and docs-when-to-use extracted
+ *   once (they are structurally identical).
+ * • prefers-reduced-motion guard on all transitions.
+ * • forced-color-adjust: none on status badges.
+ * • :focus-visible ring baseline on interactive elements.
+ * • text-wrap: balance on headings; text-wrap: pretty on paragraphs.
+ * • Explicit link underline (a11y) — underline only removed on hover
+ *   replaced with thickness change, not removal.
+ */
+
+/* ─── 1. Custom properties ──────────────────────────────────────────────────── */
+
+:root {
+  --ds-docs-max:              var(--docs-pres-page-width, 68.75rem);
+  --ds-docs-section-gap:      var(--spacing-10);
+  --ds-radius:                var(--r-sm, 10px);
+  --ds-ease:                  var(--duration-normal) var(--ease-default);
+  --ds-table-cell-padding:    var(--spacing-3) var(--spacing-4);
+  --ds-docs-prose-size:       var(--typo-body-sm-size, 14px);
+  --ds-docs-prose-line:       1.65;
+  --ds-section-title-size:    var(--typo-h2-size, 20px);
+
+  /* Inline code chrome */
+  --ds-code-inline-bg:        var(--color-primary-subtle);
+  --ds-code-inline-color:     var(--color-accent);
+
+  /* Shared section-block bottom margin */
+  --ds-section-mb:            var(--spacing-8);
+}
+
+/* ─── 2. Storybook base ─────────────────────────────────────────────────────── */
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body.docs-docs,
+.sb-docs-container {
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  font-family: var(--font-sans);
+  font-size: var(--ds-docs-prose-size);
+  line-height: var(--ds-docs-prose-line);
+}
+
+/* Docs content region */
+:is(body.docs-docs [data-storybook-docs="docs-root"],
+    body.docs-docs .sbdocs-content,
+    .sb-docs-container .sbdocs-content) {
+  max-width: var(--ds-docs-max);
+  margin-inline: auto;
+  padding-inline: var(--spacing-4);
+  line-height: var(--ds-docs-prose-line);
+}
+
+body.docs-docs ::selection {
+  background: var(--color-primary-subtle);
+  color: var(--color-text);
+}
+
+/* ─── 3. Prose ──────────────────────────────────────────────────────────────── */
+
+/* Headings
+ * ─────────
+ * :is() collapses the three-context selector group into one rule per heading
+ * level. No behaviour change; specificity is identical to the original.
+ */
+:is(body.docs-docs [data-storybook-docs="docs-root"],
+    body.docs-docs .sbdocs,
+    .sb-docs-container) h1 {
+  font-family: var(--font-sans);
+  font-size: var(--typo-h1-size, 24px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  color: var(--color-text);
+  margin-top: 0;
+  margin-bottom: var(--spacing-2);
+  text-wrap: balance;
+}
+
+:is(body.docs-docs [data-storybook-docs="docs-root"],
+    body.docs-docs .sbdocs,
+    .sb-docs-container) h2 {
+  font-family: var(--font-sans);
+  font-size: var(--typo-h2-size, 20px);
+  font-weight: 600;
+  margin-top: var(--ds-docs-section-gap);
+  margin-bottom: var(--spacing-4);
+  padding-bottom: var(--spacing-2);
+  border-bottom: 1px solid var(--color-border-subtle);
+  text-wrap: balance;
+}
+
+:is(body.docs-docs [data-storybook-docs="docs-root"],
+    body.docs-docs .sbdocs,
+    .sb-docs-container) h3 {
+  font-size: var(--typo-h3-size, 17px);
+  font-weight: 600;
+  margin-top: var(--spacing-8);
+  margin-bottom: var(--spacing-3);
+  text-wrap: balance;
+}
+
+:is(body.docs-docs [data-storybook-docs="docs-root"],
+    body.docs-docs .sbdocs,
+    .sb-docs-container) h4 {
+  font-size: var(--typo-h4-size, 15px);
+  font-weight: 600;
+  margin-top: var(--spacing-6);
+  margin-bottom: var(--spacing-2);
+  text-wrap: balance;
+}
+
+/* Paragraphs */
+:is(body.docs-docs [data-storybook-docs="docs-root"],
+    body.docs-docs .sbdocs,
+    .sb-docs-container) p {
+  margin-top: 0;
+  margin-bottom: var(--spacing-4);
+  color: var(--color-text-muted);
+  line-height: var(--ds-docs-prose-line);
+  text-wrap: pretty;
+}
+
+/* Lists */
+:is(body.docs-docs [data-storybook-docs="docs-root"],
+    .sb-docs-container) ul {
+  list-style: disc;
+  padding-left: var(--spacing-6);
+  margin-bottom: var(--spacing-4);
+  color: var(--color-text-muted);
+}
+
+:is(body.docs-docs [data-storybook-docs="docs-root"],
+    .sb-docs-container) li {
+  margin-bottom: var(--spacing-1);
+}
+
+/* Links — always underlined (a11y); thickness increases on hover */
+:is(body.docs-docs [data-storybook-docs="docs-root"],
+    body.docs-docs .sbdocs,
+    .sb-docs-container) a {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition: color var(--ds-ease), text-decoration-thickness var(--ds-ease);
+}
+
+:is(body.docs-docs [data-storybook-docs="docs-root"],
+    body.docs-docs .sbdocs,
+    .sb-docs-container) a:hover {
+  color: var(--color-accent-hover);
+  text-decoration-thickness: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :is(body.docs-docs [data-storybook-docs="docs-root"],
+      body.docs-docs .sbdocs,
+      .sb-docs-container) a {
+    transition: none;
+  }
+}
+
+/* Blockquote */
+:is(body.docs-docs [data-storybook-docs="docs-root"],
+    body.docs-docs .sbdocs,
+    .sb-docs-container) blockquote {
+  margin: var(--spacing-6) 0;
+  padding: var(--spacing-2) var(--spacing-4);
+  border-left: 3px solid var(--color-accent);
+  font-style: italic;
+  color: var(--color-text-muted);
+  background: var(--color-primary-subtle);
+  border-radius: 0 var(--ds-radius) var(--ds-radius) 0;
+}
+
+/* Inline code */
+:is(body.docs-docs [data-storybook-docs="docs-root"] code:not([class*="prism"]),
+    body.docs-docs .sbdocs.sbdocs-code,
+    .sb-docs-container code:not(pre code)) {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  padding: 2px 6px;
+  border-radius: var(--ds-radius);
+  background: var(--ds-code-inline-bg);
+  color: var(--ds-code-inline-color);
+}
+
+/* Code blocks */
+:is(body.docs-docs [data-storybook-docs="docs-root"] pre[class*="prism"],
+    body.docs-docs .docblock-source,
+    .sb-docs-container pre,
+    .sb-docs-container .docblock-source) {
+  position: relative;
+  background: var(--color-surface);
+  border-radius: var(--ds-radius);
+  padding: var(--spacing-4);
+  padding-top: var(--spacing-10);
+  margin: var(--spacing-6) 0;
+  overflow-x: auto;
+  border: 1px solid var(--color-border-subtle);
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+/* Language badge — decorative, aria-hidden applied via pseudo-element */
+:is(body.docs-docs .docblock-source,
+    .sb-docs-container .docblock-source)::before {
+  content: attr(data-language);
+  position: absolute;
+  top: var(--spacing-2);
+  right: var(--spacing-2);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  background: var(--color-surface-2);
+  padding: var(--spacing-1) var(--spacing-2);
+  border-radius: 4px;
+}
+
+/* Copy button */
+:is(body.docs-docs .docblock-source,
+    .sb-docs-container .docblock-source) button[title="Copy"] {
+  position: absolute;
+  top: var(--spacing-2);
+  right: 72px;
+  padding: var(--spacing-1) var(--spacing-3);
+  font-size: 12px;
+  border-radius: var(--ds-radius);
+  background: var(--color-surface-2);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border-subtle);
+  cursor: pointer;
+  transition: background var(--ds-ease), color var(--ds-ease),
+    border-color var(--ds-ease);
+}
+
+:is(body.docs-docs .docblock-source,
+    .sb-docs-container .docblock-source) button[title="Copy"]:hover {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  border-color: var(--color-accent);
+}
+
+:is(body.docs-docs .docblock-source,
+    .sb-docs-container .docblock-source) button[title="Copy"]:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :is(body.docs-docs .docblock-source,
+      .sb-docs-container .docblock-source) button[title="Copy"] {
+    transition: none;
+  }
+}
+
+/* Tables */
+:is(body.docs-docs [data-storybook-docs="docs-root"] table,
+    body.docs-docs .sbdocs,
+    .sb-docs-container table,
+    .docblock-argstable) {
+  width: 100%;
+  border-collapse: collapse;
+  margin: var(--spacing-6) 0;
+  font-size: var(--typo-body-sm-size, 14px);
+  background: var(--color-surface);
+  border-radius: var(--ds-radius);
+  overflow: hidden;
+  border: 1px solid var(--color-border-subtle);
+}
+
+:is(body.docs-docs [data-storybook-docs="docs-root"] thead,
+    body.docs-docs .sbdocs,
+    .sb-docs-container thead,
+    .docblock-argstable thead) {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--color-surface-2);
+}
+
+:is(body.docs-docs [data-storybook-docs="docs-root"] th,
+    body.docs-docs .sbdocs,
+    .sb-docs-container th,
+    .docblock-argstable th) {
+  text-align: left;
+  padding: var(--ds-table-cell-padding);
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+:is(body.docs-docs [data-storybook-docs="docs-root"] td,
+    body.docs-docs .sbdocs,
+    .sb-docs-container td,
+    .docblock-argstable td) {
+  padding: var(--ds-table-cell-padding);
+  border-bottom: 1px solid var(--color-border-subtle);
+  color: var(--color-text-muted);
+}
+
+:is(body.docs-docs [data-storybook-docs="docs-root"] tbody tr:nth-child(even),
+    body.docs-docs .sbdocs tbody tr:nth-child(even),
+    .docblock-argstable tbody tr:nth-child(even)) {
+  background: var(--color-primary-subtle);
+}
+
+/* Code inside tables — strip the inline-code chrome */
+:is(body.docs-docs [data-storybook-docs="docs-root"] table code,
+    body.docs-docs .sbdocs table code,
+    .docblock-argstable code) {
+  background: transparent;
+  padding: 0;
+  color: var(--color-accent);
+}
+
+/* ─── 4. Preview framing ────────────────────────────────────────────────────── */
+
+:is(.docblock-preview,
+    .sb-docs-preview,
+    [data-testid="docblock-preview"],
+    .sbdocs-preview) {
+  margin: var(--spacing-6) 0;
+  padding: var(--spacing-5);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--ds-radius);
+  position: relative;
+}
+
+/* Decorative "Preview" label — pseudo-element, no a11y value */
+:is(.docblock-preview,
+    .sb-docs-preview)::before {
+  content: "Preview";
+  position: absolute;
+  top: var(--spacing-2);
+  right: var(--spacing-2);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+}
+
+/* ─── 5. ComponentHero ──────────────────────────────────────────────────────── */
+
+.docs-hero {
+  margin-bottom: var(--spacing-6);
+}
+
+.docs-hero__title-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  margin-bottom: var(--spacing-2);
+}
+
+.docs-hero__title {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--typo-h1-size, 24px);
+  font-weight: 600;
+  color: var(--color-text);
+  text-wrap: balance;
+}
+
+/*
+ * Status badge variants
+ * ─────────────────────
+ * --_badge-bg  and  --_badge-color  drive both badge and meta-value variants.
+ * forced-color-adjust: none preserves tint in Windows High Contrast mode.
+ *
+ * Adding a new status (e.g. "alpha"):
+ *   .docs-hero-badge--alpha, .docs-page-meta__value--alpha {
+ *     --_badge-bg: var(--color-whatever-bg);
+ *     --_badge-color: var(--color-whatever);
+ *   }
+ */
+.docs-hero-badge {
+  padding: 2px 8px;
+  border-radius: var(--r-sm, 10px);
+  font-size: var(--typo-caption-size, 12px);
+  font-weight: 600;
+  background: var(--_badge-bg);
+  color: var(--_badge-color);
+  forced-color-adjust: none;
+}
+
+.docs-hero-badge--stable { --_badge-bg: var(--color-success-bg); --_badge-color: var(--color-success); }
+.docs-hero-badge--beta   { --_badge-bg: var(--color-warning-bg); --_badge-color: var(--color-warning); }
+.docs-hero-badge--deprecated { --_badge-bg: var(--color-error-bg);   --_badge-color: var(--color-error);   }
+.docs-hero-badge--new    { --_badge-bg: var(--color-primary-subtle); --_badge-color: var(--color-accent);  }
+
+.docs-hero__description {
+  margin: 0 0 var(--spacing-3);
+  font-family: var(--font-sans);
+  font-size: var(--ds-docs-prose-size);
+  color: var(--color-text-muted);
+  line-height: var(--ds-docs-prose-line);
+  text-wrap: pretty;
+}
+
+.docs-hero__pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+  margin-bottom: var(--spacing-3);
+}
+
+.docs-hero__pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 4px;
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-surface-2);
+  color: var(--color-text-muted);
+}
+
+.docs-hero__divider {
+  margin: 0;
+  border: 0;
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+/* ─── 6. Page layout ────────────────────────────────────────────────────────── */
+
+.docs-custom-page {
+  max-width: var(--ds-docs-max);
+  margin-inline: auto;
+  padding-inline: var(--spacing-4);
+}
+
+.docs-page-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+  margin: var(--spacing-4) 0 0;
+}
+
+.docs-page-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-2) var(--spacing-3);
+  border-radius: var(--ds-radius);
+  border: 1px solid var(--color-border-subtle);
+  background: color-mix(in oklch, var(--color-surface) 88%, var(--color-surface-2) 12%);
+}
+
+.docs-page-meta__label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.docs-page-meta__value {
+  font-family: var(--font-sans);
+  font-size: var(--typo-caption-size, 12px);
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.docs-page-meta__value--mono { font-family: var(--font-mono); }
+
+/* Status colours reuse the same --_badge-color variable name for consistency */
+.docs-page-meta__value--stable     { color: var(--color-success); }
+.docs-page-meta__value--beta       { color: var(--color-warning); }
+.docs-page-meta__value--deprecated { color: var(--color-error);   }
+.docs-page-meta__value--new        { color: var(--color-accent);  }
+
+.docs-page-content {
+  margin-top: var(--spacing-5);
+  display: grid;
+  gap: var(--spacing-5);
+}
+
+.docs-page-stack {
+  display: grid;
+  gap: var(--spacing-5);
+}
+
+.docs-preview-section {
+  margin: var(--spacing-6) 0;
+}
+
+.docs-panel {
+  padding: var(--spacing-5);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: calc(var(--ds-radius) + 2px);
+  background: color-mix(in oklch, var(--color-surface) 94%, var(--color-surface-2) 6%);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Panel layout variants share `display: grid; gap: var(--spacing-4)` */
+.docs-panel--overview,
+.docs-panel--primary {
+  display: grid;
+  gap: var(--spacing-4);
+}
+
+/*
+ * Prevent global h2 border-left from leaking into custom block section titles.
+ * Applies to all block title classes in one selector group.
+ */
+.docs-custom-page
+  :is(.docs-start-here__title,
+      .docs-limitations__title,
+      .docs-related__title,
+      .docs-recipes__title,
+      .docs-usage__title,
+      .docs-when-to-use__title) {
+  border-left: 0;
+  padding-left: 0;
+  margin-top: 0;
+}
+
+.docs-custom-page
+  :is(.docs-recipes__item-title,
+      .docs-usage__col-title,
+      .docs-when-to-use__col-title) {
+  margin-top: 0;
+}
+
+/* ─── 7. Block components ───────────────────────────────────────────────────── */
+
+/* Callout ---------------------------------------------------------------- */
+
+/*
+ * Callout variants
+ * ─────────────────
+ * --_callout-border  left-border and bg-tint source.
+ * The base rule reads it; variants only set the two locals.
+ */
+.docs-callout {
+  margin: var(--spacing-6) 0;
+  padding: var(--spacing-3) var(--spacing-4);
+  border-left: 4px solid var(--_callout-border, var(--color-border-subtle));
+  border-radius: 0 var(--ds-radius) var(--ds-radius) 0;
+  background: var(--_callout-bg, var(--color-surface));
+}
+
+.docs-callout--info    { --_callout-border: var(--color-accent);   --_callout-bg: var(--color-primary-subtle); }
+.docs-callout--tip,
+.docs-callout--success { --_callout-border: var(--color-success);  --_callout-bg: var(--color-success-bg);     }
+.docs-callout--warning { --_callout-border: var(--color-warning);  --_callout-bg: var(--color-warning-bg);     }
+.docs-callout--danger  { --_callout-border: var(--color-error);    --_callout-bg: var(--color-error-bg);       }
+
+.docs-callout__title {
+  font-size: var(--typo-body-sm-size, 14px);
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: var(--spacing-1);
+}
+
+.docs-callout__content {
+  display: grid;
+  gap: var(--spacing-1);
+}
+
+.docs-callout__body {
+  font-size: var(--typo-body-sm-size, 14px);
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+/* Suppress inherited paragraph margin inside callout body */
+.docs-callout__body p       { margin: 0; }
+.docs-callout__body p + p   { margin-top: var(--spacing-2); }
+
+/* StartHere ------------------------------------------------------------- */
+
+.docs-start-here {
+  margin-bottom: var(--spacing-6);
+  padding: var(--spacing-4);
+  border: 1px solid var(--color-border-subtle);
+  border-left: 4px solid var(--color-accent);
+  border-radius: 0 var(--ds-radius) var(--ds-radius) 0;
+  background: var(--color-primary-subtle);
+}
+
+.docs-start-here__title {
+  margin: 0 0 var(--spacing-2);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+}
+
+.docs-start-here__content {
+  font-size: var(--typo-body-sm-size, 14px);
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.docs-start-here__content p     { margin: 0; }
+.docs-start-here__content p + p { margin-top: var(--spacing-2); }
+
+/* Limitations ----------------------------------------------------------- */
+
+.docs-limitations {
+  margin-bottom: var(--ds-section-mb);
+}
+
+.docs-limitations__title {
+  margin: 0 0 var(--spacing-4);
+  font-size: var(--ds-section-title-size);
+  font-weight: 600;
+  color: var(--color-text);
+  text-wrap: balance;
+}
+
+.docs-custom-page .docs-limitations__list {
+  margin: 0;
+  padding-left: var(--spacing-6);
+  list-style: disc;
+}
+
+.docs-custom-page .docs-limitations__list li {
+  margin-bottom: var(--spacing-2);
+  font-size: var(--typo-body-sm-size, 14px);
+  color: var(--color-text-muted);
+}
+
+/* Related --------------------------------------------------------------- */
+
+.docs-related {
+  margin-bottom: var(--ds-section-mb);
+}
+
+.docs-related__title {
+  margin: 0 0 var(--spacing-4);
+  font-size: var(--ds-section-title-size);
+  font-weight: 600;
+  color: var(--color-text);
+  text-wrap: balance;
+}
+
+.docs-related__grid {
+  display: grid;
+  gap: var(--spacing-4);
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+}
+
+.docs-related__link {
+  display: block;
+  padding: var(--spacing-4);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--ds-radius);
+  background: var(--color-surface);
+  color: var(--color-accent);
+  /* Keep underline from prose rule; related links are labelled by their content */
+  text-decoration: none;
+  transition: border-color var(--ds-ease), background var(--ds-ease);
+}
+
+.docs-related__link:hover {
+  border-color: var(--color-accent);
+  background: var(--color-surface-2);
+}
+
+.docs-related__link:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: var(--ds-radius);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .docs-related__link { transition: none; }
+}
+
+.docs-related__label {
+  display: block;
+  font-weight: 600;
+  font-size: var(--typo-body-sm-size, 14px);
+}
+
+.docs-related__desc {
+  display: block;
+  margin-top: var(--spacing-1);
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+/* Recipes --------------------------------------------------------------- */
+
+.docs-recipes {
+  margin-bottom: var(--ds-section-mb);
+}
+
+.docs-recipes__title {
+  margin: 0 0 var(--spacing-4);
+  font-size: var(--ds-section-title-size);
+  font-weight: 600;
+  color: var(--color-text);
+  text-wrap: balance;
+}
+
+.docs-recipes__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-6);
+}
+
+.docs-recipes__item-title {
+  margin: 0 0 var(--spacing-2);
+  font-size: var(--typo-body-sm-size, 14px);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.docs-recipes__item-desc {
+  margin: 0 0 var(--spacing-2);
+  font-size: var(--typo-body-sm-size, 14px);
+  color: var(--color-text-muted);
+}
+
+.docs-custom-page .docs-recipes__code {
+  margin: 0;
+  padding: var(--spacing-4);
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.6;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--ds-radius);
+  color: var(--color-text);
+}
+
+/*
+ * Usage & WhenToUse — shared col structure
+ * ─────────────────────────────────────────
+ * Both blocks are structurally identical: a titled two-column do/don't grid
+ * with coloured top borders and header bands. Shared rules extracted once
+ * under a two-context :is() selector; block-specific overrides follow only
+ * where they differ (none — they are completely identical in the original).
+ */
+:is(.docs-usage, .docs-when-to-use) {
+  margin-bottom: var(--ds-section-mb);
+}
+
+:is(.docs-usage__title, .docs-when-to-use__title) {
+  margin: 0 0 var(--spacing-4);
+  font-size: var(--ds-section-title-size);
+  font-weight: 600;
+  color: var(--color-text);
+  text-wrap: balance;
+}
+
+:is(.docs-usage__grid, .docs-when-to-use__grid) {
+  display: grid;
+  gap: var(--spacing-6);
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+:is(.docs-usage__col, .docs-when-to-use__col) {
+  border-radius: var(--ds-radius);
+  border: 1px solid var(--color-border-subtle);
+  overflow: hidden;
+}
+
+:is(.docs-usage__col--do, .docs-when-to-use__col--do) {
+  border-top: 3px solid var(--color-success);
+}
+
+:is(.docs-usage__col--dont, .docs-when-to-use__col--dont) {
+  border-top: 3px solid var(--color-error);
+}
+
+:is(.docs-usage__col-title, .docs-when-to-use__col-title) {
+  margin: 0;
+  padding: var(--spacing-2) var(--spacing-4);
+  font-size: var(--typo-body-sm-size, 14px);
+  font-weight: 600;
+}
+
+:is(.docs-usage__col--do .docs-usage__col-title,
+    .docs-when-to-use__col--do .docs-when-to-use__col-title) {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+:is(.docs-usage__col--dont .docs-usage__col-title,
+    .docs-when-to-use__col--dont .docs-when-to-use__col-title) {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+}
+
+/* Usage col body */
+.docs-usage__col-body {
+  padding: var(--spacing-4);
+  background: var(--color-surface);
+}
+
+.docs-usage__item {
+  padding: var(--spacing-3) 0;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.docs-usage__item:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.docs-usage__item:first-child {
+  padding-top: 0;
+}
+
+.docs-usage__item-label {
+  margin: 0 0 var(--spacing-2);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.docs-usage__item-preview {
+  margin-bottom: var(--spacing-1);
+}
+
+.docs-usage__item-explanation {
+  margin: 0;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+/* WhenToUse list (inside .docs-custom-page) */
+.docs-custom-page .docs-when-to-use__list {
+  margin: 0;
+  padding: var(--spacing-4) var(--spacing-4) var(--spacing-4) var(--spacing-6);
+  list-style: disc;
+  font-size: var(--typo-body-sm-size, 14px);
+  color: var(--color-text-muted);
+}
+
+.docs-custom-page .docs-when-to-use__list li {
+  margin-bottom: var(--spacing-1);
+}
+
+/* ─── 8. Responsive ─────────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .docs-custom-page {
+    padding-inline: var(--spacing-4);
+  }
+
+  .docs-page-content,
+  .docs-page-stack {
+    gap: var(--spacing-4);
+  }
+
+  .docs-panel {
+    padding: var(--spacing-4);
+  }
+
+  .docs-hero__title-row {
+    flex-wrap: wrap;
+  }
+
+  .docs-related__grid {
+    grid-template-columns: 1fr;
+  }
+
+  :is(.docs-usage__grid, .docs-when-to-use__grid) {
+    gap: var(--spacing-4);
+    grid-template-columns: 1fr;
+  }
+}

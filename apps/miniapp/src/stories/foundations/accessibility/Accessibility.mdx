@@ -1,0 +1,20 @@
+import { Meta, Canvas, Story } from "@storybook/addon-docs/blocks";
+import * as AccessibilityStories from "./Accessibility.stories";
+import { DoDont } from "../shared/components";
+
+<Meta of={AccessibilityStories} title="Foundations/Accessibility" />
+
+<DocPage>
+  <DocHero label="Foundations" title="Accessibility" description="Baseline interaction safety for focus visibility, semantic feedback, and motion reduction." />
+
+  <DocDivider label="Stories" />
+  <Canvas><Story of={AccessibilityStories.FocusAndTargets} /></Canvas>
+  <Canvas><Story of={AccessibilityStories.FeedbackRedundancy} /></Canvas>
+  <Canvas><Story of={AccessibilityStories.MotionSafety} /></Canvas>
+
+  <DocDivider label="Guidance" />
+  <DoDont
+    do={<span>Provide redundant cues through text, structure, and visible focus states.</span>}
+    dont={<span>Depend on color or animation alone to convey critical meaning.</span>}
+  />
+</DocPage>

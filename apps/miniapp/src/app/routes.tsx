@@ -1,23 +1,21 @@
 import { lazy } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import { useBootstrapContext } from "@/bootstrap/context";
+import { useBootstrapContext } from "@/app/bootstrap/context";
 
-const HomePage = lazy(() => import("@/pages/Home").then((m) => ({ default: m.HomePage })));
-const OnboardingPage = lazy(() => import("@/pages/Onboarding").then((m) => ({ default: m.OnboardingPage })));
-const CheckoutPage = lazy(() => import("@/pages/Checkout").then((m) => ({ default: m.CheckoutPage })));
-const PlanPage = lazy(() => import("@/pages/Plan").then((m) => ({ default: m.PlanPage })));
-const SettingsPage = lazy(() => import("@/pages/Settings").then((m) => ({ default: m.SettingsPage })));
-const DevicesPage = lazy(() => import("@/pages/Devices").then((m) => ({ default: m.DevicesPage })));
-const SupportPage = lazy(() => import("@/pages/Support").then((m) => ({ default: m.SupportPage })));
+const HomePage = lazy(() => import("@/features/home/HomePage").then((m) => ({ default: m.HomePage })));
+const OnboardingPage = lazy(() => import("@/features/onboarding/OnboardingPage").then((m) => ({ default: m.OnboardingPage })));
+const CheckoutPage = lazy(() => import("@/features/checkout/CheckoutPage").then((m) => ({ default: m.CheckoutPage })));
+const PlanPage = lazy(() => import("@/features/plan/PlanPage").then((m) => ({ default: m.PlanPage })));
+const SettingsPage = lazy(() => import("@/features/settings/SettingsPage").then((m) => ({ default: m.SettingsPage })));
+const DevicesPage = lazy(() => import("@/features/devices/DevicesPage").then((m) => ({ default: m.DevicesPage })));
+const SupportPage = lazy(() => import("@/features/support/SupportPage").then((m) => ({ default: m.SupportPage })));
 const RestoreAccessPage = lazy(() =>
-  import("@/pages/RestoreAccess").then((m) => ({ default: m.RestoreAccessPage })),
+  import("@/features/restore-access/RestoreAccessPage").then((m) => ({ default: m.RestoreAccessPage })),
 );
 const ConnectStatusPage = lazy(() =>
-  import("@/pages/ConnectStatus").then((m) => ({ default: m.ConnectStatusPage })),
+  import("@/features/connect-status/ConnectStatusPage").then((m) => ({ default: m.ConnectStatusPage })),
 );
-const ReferralPage = lazy(() =>
-  import("@/future/referral/Referral").then((m) => ({ default: m.ReferralPage })),
-);
+const ReferralPage = lazy(() => import("@/features/referral/ReferralPage").then((m) => ({ default: m.ReferralPage })));
 const StackFlowLayout = lazy(() =>
   import("@/app/ViewportLayout").then((m) => ({ default: m.StackFlowLayout })),
 );

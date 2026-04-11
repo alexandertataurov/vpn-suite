@@ -1,0 +1,21 @@
+import { Meta, Canvas, Story } from "@storybook/addon-docs/blocks";
+import * as RadiusStories from "./Radius.stories";
+import { FoundationLinks, DoDont } from "../shared/components";
+
+<Meta of={RadiusStories} title="Foundations/Radius" />
+
+<DocPage>
+  <DocHero label="Foundations" title="Radius" description="Tokenized corner geometry for controls, badges, cards, and surface containers." />
+  <FoundationLinks tokens="src/design-system/core/tokens/radius.ts" />
+
+  <DocDivider label="Stories" />
+  <Canvas><Story of={RadiusStories.Scale} /></Canvas>
+  <Canvas><Story of={RadiusStories.Showcase} /></Canvas>
+  <Canvas><Story of={RadiusStories.Playground} /></Canvas>
+
+  <DocDivider label="Guidance" />
+  <DoDont
+    do={<span>Apply semantic radius tokens for consistent shape language across components.</span>}
+    dont={<span>Mix unrelated corner shapes inside one UI region without reason.</span>}
+  />
+</DocPage>

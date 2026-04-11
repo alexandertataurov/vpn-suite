@@ -141,8 +141,8 @@ if ! node "$ROOT/scripts/check-token-drift.mjs" 2>/dev/null; then
 fi
 
 # 10. Typography parity test must pass whenever token or CSS layers drift.
-if ! pnpm exec vitest run src/test/token-parity.test.ts >/dev/null 2>&1; then
-  echo "design:check — typography/breakpoint token parity failed. Run: pnpm exec vitest run src/test/token-parity.test.ts"
+if ! pnpm exec vitest run src/design-system/core/tokens/__tests__/token-parity.test.ts >/dev/null 2>&1; then
+  echo "design:check — typography/breakpoint token parity failed. Run: pnpm exec vitest run src/design-system/core/tokens/__tests__/token-parity.test.ts"
   VIOLATIONS=$((VIOLATIONS + 1))
 fi
 

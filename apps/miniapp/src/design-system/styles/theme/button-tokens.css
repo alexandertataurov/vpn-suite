@@ -5,9 +5,9 @@
 [data-theme="light"],
 html[data-theme="consumer-light"],
 [data-theme="consumer-light"] {
-  --btn-primary-bg: #111110;
-  --btn-primary-text: #ffffff;
-  --btn-primary-hover-bg: #2a2a28;
+  --btn-primary-bg: var(--color-accent);
+  --btn-primary-text: var(--color-on-accent);
+  --btn-primary-hover-bg: var(--color-accent-hover);
 
   --btn-secondary-bg: transparent;
   --btn-secondary-text: #63625f;
@@ -44,9 +44,9 @@ html[data-theme="consumer-light"],
 html[data-theme="consumer-dark"],
 [data-theme="consumer-dark"],
 html:not([data-theme]) {
-  --btn-primary-bg: #f0f2f8;
-  --btn-primary-text: #111110;
-  --btn-primary-hover-bg: #ffffff;
+  --btn-primary-bg: var(--color-accent);
+  --btn-primary-text: var(--color-on-accent);
+  --btn-primary-hover-bg: var(--color-accent-hover);
 
   --btn-secondary-bg: transparent;
   --btn-secondary-text: rgba(255, 255, 255, 0.55);

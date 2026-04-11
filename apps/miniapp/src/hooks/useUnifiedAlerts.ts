@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useToast, type HeaderAlertItem } from "@/design-system";
-import { useHeaderAlerts } from "@/page-models";
+import { useHeaderAlerts } from "@/page-models/useHeaderAlerts";
 import { useOnlineStatus } from "@/hooks";
 
 export interface UseUnifiedAlertsResult {

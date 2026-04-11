@@ -49,8 +49,8 @@ export type { DataGridProps, DataCellProps, DataCellValueTone, DataCellType, Dat
 
 export { ListCard, ListRow } from "./cards/ListCard";
 export type { ListCardProps, ListRowProps, ListRowIconTone, ListRowDeviceType, DeviceStatus } from "./cards/ListCard";
-export { RowItem, CardRow, RowItemSkeleton } from "./RowItem";
-export type { RowItemProps, RowItemIconVariant, CardRowProps, RowItemSkeletonProps } from "./RowItem";
+export { RowItem, CardRow, RowItemSkeleton } from "./row-item";
+export type { RowItemProps, RowItemIconVariant, CardRowProps, RowItemSkeletonProps } from "./row-item";
 
 export {
   FormField,
@@ -117,4 +117,3 @@ export { HeaderBar } from "./content/HeaderBar";
 export type { HeaderBarProps } from "./content/HeaderBar";
 export { LabeledRow } from "./content/LabeledRow";
 export type { LabeledRowProps } from "./content/LabeledRow";
-

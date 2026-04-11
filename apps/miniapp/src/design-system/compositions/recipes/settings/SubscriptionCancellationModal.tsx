@@ -1,10 +1,12 @@
 import { useId } from "react";
 import type { WebAppSubscriptionOffersResponse } from "@vpn-suite/shared";
-import { Button, HelperNote, Modal } from "@/design-system";
+import { Button } from "@/design-system/components/Button";
+import { Modal } from "@/design-system/components/feedback/Modal";
 import { IconAlertTriangle, IconClock, IconPause } from "@/design-system/icons";
 import { ListCard, ListRow } from "../../patterns/cards/ListCard";
+import { HelperNote } from "../../patterns/blocks/HelperNote";
 import { useI18n } from "@/hooks/useI18n";
-import type { CancelReasonGroup, CancelReasonSelection } from "@/page-models";
+import type { CancelReasonGroup, CancelReasonSelection } from "@/features/settings/model/useSettingsPageModel";
 
 export interface SubscriptionCancellationModalProps {
   isOpen: boolean;

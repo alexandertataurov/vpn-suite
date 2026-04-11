@@ -29,6 +29,7 @@ Archive policy: active operator/developer docs live in the main tree below. Hist
 | Release & quality gates | [ops/release-checklist.md](ops/release-checklist.md) · [ops/quality-gates.md](ops/quality-gates.md) · [security/hardening.md](security/hardening.md) |
 | Production hardening (Ubuntu LTS reference) | [ops/hardening-reference-ubuntu.md](ops/hardening-reference-ubuntu.md) |
 | Codebase layout | [codebase-map.md](codebase-map.md) |
+| Monorepo vs Python apps | [codebase-map.md — Monorepo boundaries](codebase-map.md#monorepo-boundaries) |
 | Agent mode setup | [ops/agent-mode-one-server.md](ops/agent-mode-one-server.md) |
 | DoD / MVP | [backlog/dod-mvp.md](backlog/dod-mvp.md) |
 | Mobile accessibility checklist (WCAG 2.2 A/AA) | [accessibility-checklist.md](accessibility-checklist.md) |

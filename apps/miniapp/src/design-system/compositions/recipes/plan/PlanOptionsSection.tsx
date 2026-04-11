@@ -1,6 +1,7 @@
 import { BillingPeriodToggle, Button, EmptyStateBlock, PageSection, StarsAmount, StatusChip } from "@/design-system";
 import { useI18n } from "@/hooks/useI18n";
-import { featuresFromPlan, tierFeatureToRow, type BillingPeriod, type TierPair } from "@/page-models";
+import { type BillingPeriod } from "@/features/plan/model/usePlanPageModel";
+import { featuresFromPlan, tierFeatureToRow, type TierPair } from "@/page-models/plan-helpers";
 
 export interface PlanOptionsSectionProps {
   isSubscribed: boolean;

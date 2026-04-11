@@ -1,5 +1,5 @@
 import { Button, InlineAlert, Input, StickyBottomBar } from "@/design-system";
-import { Stack } from "@/design-system/core/primitives";
+import { Stack } from "@/design-system/primitives";
 import { useI18n } from "@/hooks/useI18n";
 
 export interface CheckoutFlowCardProps {

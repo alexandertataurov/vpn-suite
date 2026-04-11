@@ -10,7 +10,9 @@
     "src/design-system/styles/theme/modal-tokens.css",
     "src/design-system/styles/theme/progress-bar-tokens.css",
     "src/design-system/styles/shell/frame.css",
-    "src/design-system/compositions/recipes/home/NoDeviceCallout.css"
+    "src/design-system/compositions/recipes/home/NoDeviceCallout.css",
+    "src/stories/docs/docs.css",
+    "src/stories/docs/presentation/storybookDocsBlocks.css"
   ],
   "allowedHexCss": [
     "src/design-system/styles/tokens/base.css",
@@ -31,7 +33,7 @@
   "enforcedCssRoots": [
     "src/design-system/components",
     "src/design-system/compositions",
-    "src/components",
+    "src/app/components",
     "src/styles/app"
   ]
 }

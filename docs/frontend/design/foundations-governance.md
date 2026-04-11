@@ -58,8 +58,8 @@ When adding a new component, document its token usage in `tokens-map.ts` → `CO
 
 Inline styles are forbidden in app and design-system production code.
 
-- Allowed: `src/design-system/stories/**` and `src/storybook/**` when used for foundations documentation or isolated visual scaffolding.
-- Forbidden: `src/components/**`, `src/pages/**`, `src/design-system/**` outside stories.
+- Allowed (paths relative to each app): **Admin** `apps/admin-web/src/design-system/stories/**`; **Miniapp** `apps/miniapp/src/stories/**` and `apps/miniapp/src/storybook/**` when used for foundations documentation or isolated visual scaffolding.
+- Forbidden: `src/app/components/**`, `src/pages/**`, `src/design-system/**` outside stories.
 - Prefer extracting recurring story layout objects into shared story helpers instead of redeclaring them inline.
 
 ### 6. Typography Policy
@@ -71,7 +71,7 @@ Inline styles are forbidden in app and design-system production code.
 ## Enforcement
 
 - **tokens-map.ts** — single source of truth for primitive vs semantic classification
-- **`src/test/token-parity.test.ts`** — verifies runtime CSS parity for typography and breakpoints
+- **`apps/miniapp/src/design-system/core/tokens/__tests__/token-parity.test.ts`** — verifies runtime CSS parity for typography and breakpoints
 - **storybook foundations** — documents environment parity, motion usage, color semantics, and production examples
 - **ESLint** — forbids inline `style` props outside Storybook-only folders
 - **`design:check`** — runs token drift plus runtime parity checks

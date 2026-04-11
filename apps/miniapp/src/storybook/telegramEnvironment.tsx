@@ -4,7 +4,8 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { StackFlowLayout } from "@/app/ViewportLayout";
 import { ToastContainer } from "@/design-system";
 import { StorybookQueryClientProvider } from "./queryClient";
-import { telegramClient } from "@/telegram/telegramCoreClient";
+import { telegramClient } from "@/lib/telegram/telegramCoreClient";
+import { resolveRootTheme, resolveThemeMode, resolveViewportSelection } from "./globals";
 
 // ---------------------------------------------------------------------------
 // Variant registry
@@ -145,9 +146,11 @@ export function withViewportShell(
 // Telegram environment decorator (Storybook toolbar -> window.Telegram.WebApp)
 // ---------------------------------------------------------------------------
 
-type TelegramToolbarGlobals = {
-  tgPlatform?: unknown;
-  tgFullscreen?: unknown;
+type TelegramEnvironmentParameters = {
+  telegramEnvironment?: {
+    platform?: unknown;
+    isFullscreen?: unknown;
+  };
 };
 
 function normalizePlatform(input: unknown): "ios" | "android" | "desktop" {
@@ -161,11 +164,16 @@ function normalizeFullscreen(input: unknown): boolean {
   return String(input ?? "false") === "true";
 }
 
-export function applyTelegramEnvironment(globals: TelegramToolbarGlobals): void {
+export function applyTelegramEnvironment(globals: {
+  platform?: unknown;
+  isFullscreen?: unknown;
+  colorScheme?: unknown;
+}): void {
   if (typeof window === "undefined" || typeof document === "undefined") return;
 
-  const platform = normalizePlatform(globals.tgPlatform);
-  const isFullscreen = normalizeFullscreen(globals.tgFullscreen);
+  const platform = normalizePlatform(globals.platform);
+  const isFullscreen = normalizeFullscreen(globals.isFullscreen);
+  const colorScheme = globals.colorScheme === "light" ? "light" : "dark";
 
   // Minimal mock for `telegramClient` (used by TelegramProvider + hooks).
   const mockWebApp = {
@@ -179,7 +187,7 @@ export function applyTelegramEnvironment(globals: TelegramToolbarGlobals): void 
     initData: "",
     initDataUnsafe: {},
     themeParams: {},
-    colorScheme: "dark",
+    colorScheme,
     ready: () => {},
     expand: () => {},
     close: () => {},
@@ -212,6 +220,15 @@ export function applyTelegramEnvironment(globals: TelegramToolbarGlobals): void 
 }
 
 export const withTelegramEnvironment: Decorator = (Story, context) => {
-  applyTelegramEnvironment(context.globals as TelegramToolbarGlobals);
+  const viewport = resolveViewportSelection(context);
+  const parameters = context.parameters as TelegramEnvironmentParameters;
+  const platform = normalizePlatform(parameters.telegramEnvironment?.platform ?? (viewport.isDesktop ? "desktop" : "ios"));
+  const isFullscreen =
+    typeof parameters.telegramEnvironment?.isFullscreen !== "undefined"
+      ? normalizeFullscreen(parameters.telegramEnvironment?.isFullscreen)
+      : platform !== "desktop";
+  const colorScheme = resolveRootTheme(resolveThemeMode(context.globals.theme));
+
+  applyTelegramEnvironment({ platform, isFullscreen, colorScheme });
   return <Story />;
 };

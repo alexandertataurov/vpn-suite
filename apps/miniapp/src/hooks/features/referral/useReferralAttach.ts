@@ -11,11 +11,11 @@ import {
   getPendingRefFromStorage,
   getEarlyCapturedRef,
   getEarlyCapturedSource,
-} from "@/bootstrap/referralCapture";
+} from "@/app/bootstrap/referralCapture";
 
 const RETRY_DELAY_MS = 1500;
 
-export type { RefCaptureSource } from "@/bootstrap/referralCapture";
+export type { RefCaptureSource } from "@/app/bootstrap/referralCapture";
 
 /**
  * Resolution chain: (1) start param, (2) URL query ref, (3) early capture, (4) sessionStorage.

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { telegramClient, type TelegramSafeAreaInsets } from "@/telegram/telegramCoreClient";
+import { telegramClient, type TelegramSafeAreaInsets } from "@/lib/telegram/telegramCoreClient";
 import { useTelegramEvent } from "./useTelegramEvent";
 
 type SafeAreaState = {

@@ -1,0 +1,22 @@
+import { Meta, Canvas, Story } from "@storybook/addon-docs/blocks";
+import * as TypographyStories from "./Typography.stories";
+import { FoundationLinks, DoDont } from "../shared/components";
+
+<Meta of={TypographyStories} title="Foundations/Typography" />
+
+<DocPage>
+  <DocHero label="Foundations" title="Typography" description="Legible type scale and stable text hierarchy for product interfaces." />
+  <FoundationLinks tokens="src/design-system/core/tokens/typography.ts" />
+
+  <DocDivider label="Stories" />
+  <Canvas><Story of={TypographyStories.Scale} /></Canvas>
+  <Canvas><Story of={TypographyStories.Sample} /></Canvas>
+  <Canvas><Story of={TypographyStories.Applied} /></Canvas>
+  <Canvas><Story of={TypographyStories.HierarchyChecklist} /></Canvas>
+
+  <DocDivider label="Guidance" />
+  <DoDont
+    do={<span>Use semantic text roles so headings, body, and metadata remain predictable.</span>}
+    dont={<span>Mix arbitrary font sizes and weights without hierarchy intent.</span>}
+  />
+</DocPage>

@@ -1,14 +1,28 @@
 # Miniapp design system
 
-Design system docs have moved to **[../../docs/design-system/](../../docs/design-system/)**.
+Documentation: [docs/design-system/README.md](../../docs/design-system/README.md).
 
-- Entry point and layer map: [../../docs/design-system/README.md](../../docs/design-system/README.md)
-- Architecture: [../../docs/design-system/architecture.md](../../docs/design-system/architecture.md)
-- Enforcement checklist: [../../docs/design-system/enforcement-checklist.md](../../docs/design-system/enforcement-checklist.md)
-- Mobile guidelines: [../../docs/design-system/mobile-platform-guidelines.md](../../docs/design-system/mobile-platform-guidelines.md)
+## Canonical structure
 
-Import reusable UI from `@/design-system`. Code lives in this folder (`tokens/`, `theme/`, `primitives/`, `components/`, `patterns/`, `recipes/`, `layouts/`, `styles/`).
+`src/design-system/`
 
-**Icons**: Import from `@/design-system/icons` for better tree-shaking (e.g. `import { IconShield } from "@/design-system/icons"`).
+- `foundations/` — tokens + theme runtime (`@ds/foundations`)
+- `primitives/` — low-level layout/typography primitives (`@ds/primitives`)
+- `components/` — reusable UI components (`@ds/components`)
+- `patterns/` — reusable composed UI structures (`@ds/patterns`)
+- `recipes/` — product-facing composed modules (`@ds/recipes`)
+- `layouts/` — page shells and structural composition (`@ds/layouts`)
+- `icons.ts` + `icons/` — icon exports
+- `hooks/` — design-system hooks
+- `utils/` — design-system utilities
 
-Route-owned presentation does not live here anymore. App-layer page families such as onboarding and page-specific route polish live under [`src/styles/app/`](/home/alex/projects/vpn/apps/miniapp/src/styles/app/index.css) and must not add ancestor-driven selectors back into `design-system/styles/`.
+## Compatibility
+
+- Legacy entrypoints (`core/`, `compositions/`) are still re-exported from `index.ts`.
+- Legacy `patterns/RowItem` deep imports are bridged to `patterns/row-item`.
+
+## Naming rules
+
+- Use `kebab-case` for new folders.
+- Keep component filenames in `PascalCase.tsx`.
+- Prefer importing through top-level entrypoints over deep paths unless the deep path is intentional.

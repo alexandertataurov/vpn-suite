@@ -2,32 +2,210 @@ import { Meta } from "@storybook/addon-docs/blocks";
 
 <Meta title="Introduction/Contribution Rules" />
 
-## Storybook taxonomy (naming rules)
+<DocPage>
+  <DocHero
+    label="Contribution Rules"
+    title="Every story earns its place"
+    description="Standards for writing, organizing, and verifying Storybook stories in the AmneziaVPN design system. A story exists for exactly one reason — or it does not exist."
+    version="v2.0"
+  />
 
-- Major sections must use one of the allowed roots: `Foundations`, `Primitives`, `Components`, `Patterns`, `Layouts`, `Recipes`, `Pages`, `States`.
-- Story titles must be explicit and human-readable (always prefer `Components/Button` over vague titles).
-- If you add a `Pages/*` story, keep it under `Pages/Contracts/*` or `Pages/Sandbox/*`.
+  <DocCallout icon="◈" variant="rule">
+    A story must serve at least one purpose: <strong>document a contract</strong>, <strong>teach the intended usage pattern</strong>, or <strong>catch regressions</strong>. If it serves none of these, delete it.
+  </DocCallout>
 
-## State coverage expectations
+  <DocDivider label="01 — Taxonomy" />
 
-For important UI components, include at minimum:
+  <DocSection>
+    <p>
+      Stories live under eight allowed roots. Any other root is a taxonomy violation caught by <code>storybook:taxonomy</code>.
+    </p>
 
-- Recommended/default story
-- Variants (at least the primary “appearance” variants)
-- Loading/disabled/error states when relevant
-- One showcase story designed to be walked through live
-- One interaction story using `play()` when the behavior has user-visible outcomes
+    <DocGrid columnCount={2}>
+      <DocRule title="Foundations" tag="tokens">Design tokens, applied token guidance, and design system rules.</DocRule>
+      <DocRule title="Primitives" tag="core">Low-level unstyled or minimally styled building blocks.</DocRule>
+      <DocRule title="Components" tag="ui">Reusable UI units with stable, documented APIs.</DocRule>
+      <DocRule title="Patterns" tag="multi">Multi-component solutions that repeat across screens.</DocRule>
+      <DocRule title="Layouts" tag="structure">Structural shells, grids, and page-level scaffolding.</DocRule>
+      <DocRule title="Recipes" tag="composed">Pre-assembled compositions for common product tasks.</DocRule>
+      <DocRule title="Pages/Contracts" tag="stable">Canonical route states that must stay deterministic.</DocRule>
+      <DocRule title="Pages/Sandbox" tag="explore">Exploratory surfaces, not the contract.</DocRule>
+    </DocGrid>
 
-## MDX vs Autodocs
+    <DocCallout icon="→" variant="note">
+      Titles are explicit and human-readable: <code>Components/Button</code> ✓ — <code>button2</code> ✗<br />
+      Story names describe what the story shows: <code>Validation states</code> ✓ — <code>Example 2</code> ✗<br />
+      Every <code>Pages/*</code> story lives under <code>Contracts</code> or <code>Sandbox</code> — no loose page stories.
+    </DocCallout>
+  </DocSection>
 
-- `Foundations` is MDX-first: curated pages with hero, rationale, live showcase, token inventory, rules, and applied examples.
-- `Components` are Autodocs-enhanced: keep metadata high-quality and add curated docs sections where needed.
-- If a page needs a “mini landing page” layout or do/don’t guidance, use MDX.
+  <DocDivider label="02 — Required story sets" />
 
-## Governance checks
+  <DocSection>
+    <p><strong>Components</strong> — minimum required stories per component file:</p>
 
-Before you rely on your changes for CI/stakeholder demos, run:
+    <DocTable
+      headers={["Story", "Required", "Condition"]}
+      columnWidths={["minmax(180px, 1.2fr)", "140px", "minmax(280px, 2fr)"]}
+      rows={[
+        ["Default", "Always", "The clearest baseline contract"],
+        ["Variant coverage", "Conditional", "When variants produce meaningful visual or behavioral differences"],
+        ["State coverage", "Conditional", "loading · disabled · error · empty · selected · success · destructive"],
+        ["Realistic showcase", "Always", "Demonstrates intended usage in product context"],
+        ["Interaction story with play()", "Conditional", "When UI has visible user outcomes"],
+      ]}
+    />
 
-- `pnpm --filter miniapp storybook:taxonomy`
-- `pnpm --filter miniapp storybook:contract`
+    <p><strong>Foundations</strong> — required stories per token category file:</p>
 
+    <DocTable
+      headers={["Story", "Required", "Condition"]}
+      columnWidths={["minmax(180px, 1.2fr)", "140px", "minmax(280px, 2fr)"]}
+      rows={[
+        ["Token inventory", "Always", "All tokens grouped by category"],
+        ["Theme comparison", "Always", "Same tokens resolved in light and dark"],
+        ["Usage showcase", "Always", "Tokens applied to real product UI"],
+        ["State semantics", "Conditional", "When feedback states exist: success · warning · error · info"],
+        ["Semantic roles", "Always", "Role → token mapping reference"],
+        ["Contrast audit", "Color only", "WCAG AA pairs + pass/fail in both themes"],
+        ["Playground", "Always", "Single-token interactive resolver with copy"],
+      ]}
+    />
+  </DocSection>
+
+  <DocDivider label="03 — Meta quality" />
+
+  <DocSection>
+    <p>Every story file must have a complete meta block:</p>
+
+    <DocCode>{`const meta: Meta = {
+  title: "Components/Button",
+  component: Button,
+  tags: ["autodocs"],
+  parameters: {
+    docs: {
+      description: {
+        component: "One sentence: what this component is for.",
+      },
+    },
+  },
+};`}</DocCode>
+
+    <DocCallout icon="!" variant="warning">
+      <code>argTypes</code> should group controls into at least <strong>Content</strong>, <strong>Behavior</strong>, and <strong>State</strong> when there are more than three args. Otherwise the controls panel turns into a junk drawer.
+    </DocCallout>
+  </DocSection>
+
+  <DocDivider label="04 — MDX vs Autodocs" />
+
+  <DocSection>
+    <DocGrid columnCount={2}>
+      <DocRule title="Foundations → MDX-first" tag="mdx">
+        Every Foundations category needs a curated page: <code>DocPage</code> + <code>DocHero</code>, <code>FoundationLinks</code>, rationale, token inventory, applied showcase, and do/don't examples.
+      </DocRule>
+      <DocRule title="Components → Autodocs-enhanced" tag="auto">
+        Keep <code>description.component</code> high-quality. Add MDX only when the component needs usage rules, migration notes, or do/don't guidance that Autodocs cannot generate.
+      </DocRule>
+    </DocGrid>
+
+    <DocCallout icon="✕" variant="error">
+      Do not write MDX pages that only repeat story descriptions. MDX earns its place by adding guidance that cannot be inferred from the component alone.
+    </DocCallout>
+  </DocSection>
+
+  <DocDivider label="05 — Globals contract" />
+
+  <DocSection>
+    <p>Five toolbar globals — each has a strict consumption rule:</p>
+
+    <DocTable
+      headers={["Global", "Key", "Who reads it"]}
+      columnWidths={["140px", "minmax(220px, 1.2fr)", "minmax(280px, 1.8fr)"]}
+      rows={[
+        ["Theme", "context.globals.theme", "All stories — via data-theme on the root element"],
+        ["Tokens", "context.globals.tokenMode", "Foundations only — hidden elsewhere via parameters"],
+        ["Density", "context.globals.density", "Only stories whose layout changes with density"],
+        ["Viewport", "—", "Never read directly — use parameters.viewport.defaultViewport"],
+        ["Animations", "context.globals.animations", "Only stories with explicit motion demos"],
+      ]}
+    />
+
+    <p>Standard render wrapper for stories that consume globals:</p>
+
+    <DocCode>{`render: (_args, context) => {
+  const theme = context.globals.theme === "light" ? "light" : "dark";
+  const tokenMode = context.globals.tokenMode === "primitives" ? "primitives" : "semantic";
+  const density = context.globals.density ?? "default";
+  const reducedMotion = context.globals.animations === "reduced";
+
+  return (
+    <div
+      data-theme={theme}
+      data-token-mode={tokenMode}
+      data-density={density}
+      data-reduced-motion={reducedMotion || undefined}
+    >
+      {/* story content */}
+    </div>
+  );
+},`}</DocCode>
+
+    <DocCallout icon="◉" variant="rule">
+      <strong>Every</strong> Foundations story wraps its root in <code>data-theme</code>, not only <code>ThemeComparison</code>. The active toolbar theme must be visible in every canvas.
+    </DocCallout>
+  </DocSection>
+
+  <DocDivider label="06 — Visual quality" />
+
+  <DocSection>
+    <DocGrid columnCount={3}>
+      <DocRule title="One idea per story" tag="focus">If a story needs a scrollbar to explain itself, it is probably trying to tell two stories at once.</DocRule>
+      <DocRule title="Realistic copy" tag="content">Demo text that is too short or too abstract hides layout problems.</DocRule>
+      <DocRule title="Mobile-first framing" tag="viewport">If a component is mobile-first in production, frame the story at mobile width too.</DocRule>
+    </DocGrid>
+  </DocSection>
+
+  <DocDivider label="07 — Common mistakes" />
+
+  <DocSection>
+    <DocTable
+      headers={["Mistake", "Why it breaks things"]}
+      columnWidths={["minmax(220px, 1.3fr)", "minmax(320px, 2fr)"]}
+      variant="danger"
+      rows={[
+        ["All variants in one unreadable story", "Reviewers cannot tell which variant regressed"],
+        ["Decorative stories that do not match product usage", "Creates false confidence because the real usage is untested"],
+        ["Raw hex or px values in example code", "Normalizes the wrong pattern for every future contributor who copies it"],
+        ["MDX pages that only repeat story descriptions", "Adds file weight without adding guidance"],
+        ["Skipping docs.description and relying on story names alone", "Autodocs output becomes a list of unlabeled controls"],
+        ["Sandbox page becoming the only component doc", "Silently removes the contract when the sandbox changes"],
+        ['variant="danger" when the type says "error"', "Prop and label disagree — TypeScript may pass, accessibility still loses"],
+        ["maxWidth: 420 inline", "Duplicates magic numbers across stories and drifts over time"],
+      ]}
+    />
+  </DocSection>
+
+  <DocDivider label="08 — Verification" />
+
+  <DocSection>
+    <p>Run before every PR that touches Storybook:</p>
+
+    <DocCode language="bash">{`pnpm --filter miniapp storybook:taxonomy   # title roots, naming rules
+pnpm --filter miniapp storybook:contract   # contract story stability
+pnpm --filter miniapp build-storybook      # no build-time errors
+pnpm --filter miniapp test-storybook       # interaction coverage`}</DocCode>
+
+    <p>Also inspect manually before merging:</p>
+
+    <DocChecklist items={[
+      'Both data-theme="light" and data-theme="dark" render correctly',
+      "Narrow (390px) and wider viewports where layout is involved",
+      "loading / error / disabled states where applicable",
+      "Docs tab readability — not only the preview canvas",
+      "No raw hex or px literals in example code",
+      "variant prop values match the component TypeScript union exactly",
+      "PREVIEW_MAX_WIDTH used — no inline magic numbers for maxWidth",
+      "Toolbar tokenMode hidden on all non-Foundations meta",
+    ]} />
+  </DocSection>
+</DocPage>

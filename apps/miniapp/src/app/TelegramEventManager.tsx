@@ -1,7 +1,7 @@
 import { useEffect } from "react";
-import { TELEGRAM_EVENT_NAMES } from "@/telegram/telegram.types";
-import { telegramClient } from "@/telegram/telegramCoreClient";
-import { emitTelegramEvent, setTelegramEventManagerActive } from "@/telegram/telegramEvents";
+import { TELEGRAM_EVENT_NAMES } from "@/lib/telegram/telegram.types";
+import { telegramClient } from "@/lib/telegram/telegramCoreClient";
+import { emitTelegramEvent, setTelegramEventManagerActive } from "@/lib/telegram/telegramEvents";
 
 /**
  * Single runtime event bridge for Telegram WebApp events.

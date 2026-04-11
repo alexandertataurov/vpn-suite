@@ -1,3 +1,42 @@
+.sb-miniapp-frame,
+.sb-story-root {
+  --sb-density-card-padding: var(--miniapp-card-padding);
+  --sb-density-card-gap: var(--spacing-2);
+  --sb-density-stack-gap: var(--spacing-3);
+  --sb-density-section-gap: 14px;
+  --sb-density-divider-gap: var(--spacing-3);
+  --sb-density-row-gap: var(--spacing-3);
+  --sb-density-row-pad-v: var(--spacing-3);
+  --sb-density-row-pad-h: var(--miniapp-card-padding-tight);
+  --sb-density-row-min-height: var(--miniapp-data-cell-min-height);
+}
+
+.sb-miniapp-frame[data-density="compact"],
+.sb-story-root[data-density="compact"] {
+  --sb-density-card-padding: var(--spacing-3);
+  --sb-density-card-gap: var(--spacing-1);
+  --sb-density-stack-gap: var(--spacing-2);
+  --sb-density-section-gap: 10px;
+  --sb-density-divider-gap: var(--spacing-2);
+  --sb-density-row-gap: var(--spacing-2);
+  --sb-density-row-pad-v: var(--spacing-2);
+  --sb-density-row-pad-h: var(--spacing-3);
+  --sb-density-row-min-height: 52px;
+}
+
+.sb-miniapp-frame[data-density="comfortable"],
+.sb-story-root[data-density="comfortable"] {
+  --sb-density-card-padding: var(--spacing-5);
+  --sb-density-card-gap: var(--spacing-3);
+  --sb-density-stack-gap: var(--spacing-4);
+  --sb-density-section-gap: 18px;
+  --sb-density-divider-gap: var(--spacing-4);
+  --sb-density-row-gap: var(--spacing-4);
+  --sb-density-row-pad-v: var(--spacing-4);
+  --sb-density-row-pad-h: var(--spacing-5);
+  --sb-density-row-min-height: 60px;
+}
+
 .sb-miniapp-frame {
   display: flex;
   justify-content: center;
@@ -15,6 +54,10 @@
 
 .sb-miniapp-frame[data-density="compact"] {
   padding: var(--spacing-4) var(--spacing-3);
+}
+
+.sb-miniapp-frame[data-density="comfortable"] {
+  padding: calc(var(--spacing-6) + var(--spacing-1)) var(--spacing-5);
 }
 
 .sb-miniapp-frame[data-page-story="true"] {
@@ -63,3 +106,14 @@
   box-shadow: var(--shadow-md);
 }
 
+html[data-reduced-motion="true"] *,
+html[data-reduced-motion="true"] *::before,
+html[data-reduced-motion="true"] *::after,
+.sb-story-root[data-reduced-motion="true"] *,
+.sb-story-root[data-reduced-motion="true"] *::before,
+.sb-story-root[data-reduced-motion="true"] *::after {
+  animation-duration: 1ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 1ms !important;
+  scroll-behavior: auto !important;
+}

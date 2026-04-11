@@ -1,6 +1,6 @@
 import { useCallback } from "react";
-import { telegramFeatureClient } from "@/telegram/telegramFeatureClient";
-import { subscribeTelegramEvent } from "@/telegram/telegramEvents";
+import { telegramFeatureClient } from "@/lib/telegram/telegramFeatureClient";
+import { subscribeTelegramEvent } from "@/lib/telegram/telegramEvents";
 
 export function usePayments() {
   const openInvoice = useCallback((url: string, onClosed?: (status: string) => void) => {

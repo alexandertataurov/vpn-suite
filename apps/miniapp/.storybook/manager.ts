@@ -1,5 +1,5 @@
 import { addons } from "storybook/manager-api";
-import { darkTheme } from "./theme";
+import { darkTheme } from "../src/stories/docs/storybookTheme";
 
 // Premium branding for the Storybook manager UI (sidebar + toolbar).
 addons.setConfig({
@@ -18,4 +18,3 @@ addons.setConfig({
   },
   navSize: 280,
 });
-

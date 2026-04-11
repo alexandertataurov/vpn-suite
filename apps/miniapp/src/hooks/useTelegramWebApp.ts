@@ -1,7 +1,7 @@
 import { useOpenLink } from "./features/useOpenLink";
 import { useTelegramApp } from "./telegram/useTelegramApp";
 import { useTelegramInitData } from "./telegram/useTelegramInitData";
-import { initTelegramRuntime as initRuntime } from "@/telegram/telegramCoreClient";
+import { initTelegramRuntime as initRuntime } from "@/lib/telegram/telegramCoreClient";
 
 export function useTelegramWebApp() {
   const { isAvailable } = useTelegramApp();

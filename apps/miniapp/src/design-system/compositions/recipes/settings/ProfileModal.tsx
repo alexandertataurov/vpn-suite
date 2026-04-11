@@ -1,4 +1,6 @@
-import { Button, Input, Modal } from "@/design-system";
+import { Button } from "@/design-system/components/Button";
+import { Input } from "@/design-system/components/forms/Input";
+import { Modal } from "@/design-system/components/feedback/Modal";
 import "./ProfileModal.css";
 
 export interface ProfileModalProps {

@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { useBackButton } from "./controls/useBackButton";
-import type { BootPhase } from "../bootstrap/useBootstrapMachine";
+import type { BootPhase } from "../app/bootstrap/useBootstrapMachine";
 
 interface UseTelegramBackButtonControllerOptions {
   phase: BootPhase;

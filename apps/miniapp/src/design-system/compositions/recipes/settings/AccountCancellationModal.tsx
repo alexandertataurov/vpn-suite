@@ -1,4 +1,4 @@
-import { ConfirmDanger } from "@/design-system";
+import { ConfirmDanger } from "@/design-system/components/feedback/Modal";
 import { useI18n } from "@/hooks/useI18n";
 
 export interface AccountCancellationModalProps {

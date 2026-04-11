@@ -1,0 +1,45 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+import { DoDont } from "../shared/components";
+
+<Meta title="Foundations/Overview" />
+
+<DocPage>
+  <DocHero
+    label="Foundations"
+    title="Foundations Overview"
+    description="Core visual and interaction tokens that keep miniapp UI consistent, legible, and reviewable."
+  />
+
+  <DocSection>
+    <p>
+      Foundations describe the contract for color, type, spacing, layout, motion, elevation, radius, iconography, and accessibility.
+      Use these pages before implementing or reviewing product UI.
+    </p>
+  </DocSection>
+
+  <DocDivider label="Foundation Map" />
+
+  <DocSection>
+    <DocTable
+      headers={["Foundation", "Purpose"]}
+      rows={[
+        ["Color", "Semantic hierarchy, action emphasis, and state meaning"],
+        ["Typography", "Readable scale and stable text priority"],
+        ["Spacing", "Tokenized rhythm and touch comfort"],
+        ["Layout", "Breakpoint-driven structure and density"],
+        ["Motion", "Predictable timing and transition logic"],
+        ["Shadows", "Minimal depth and separation cues"],
+        ["Radius", "Consistent shape language"],
+        ["Icons", "Stable icon source and sizing"],
+        ["Accessibility", "Usability baseline across input and perception modes"],
+      ]}
+    />
+  </DocSection>
+
+  <DocDivider label="Contributor Rule" />
+
+  <DoDont
+    do={<span>Start with semantic tokens and documented foundation rules before composing pages.</span>}
+    dont={<span>Invent local visual rules that bypass the foundation system.</span>}
+  />
+</DocPage>

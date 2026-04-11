@@ -15,7 +15,7 @@ import {
   IconSmartphone,
   IconTerminal,
 } from "../../../icons";
-import { RowItem, type RowItemIconVariant } from "../RowItem";
+import { RowItem, type RowItemIconVariant } from "../row-item";
 
 export interface ListCardProps extends Omit<HTMLAttributes<HTMLDivElement>, "title"> {
   title?: ReactNode;

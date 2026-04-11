@@ -10,7 +10,7 @@ import {
 import { createPortal } from "react-dom";
 import { cn } from "@vpn-suite/shared";
 import { usePrefersReducedMotion } from "@/design-system/hooks";
-import { getMotionDurationMs } from "@/design-system/core/tokens";
+import { getMotionDurationMs } from "@/design-system/foundations";
 
 export type ToastVariant = "success" | "error" | "info" | "persistent";
 

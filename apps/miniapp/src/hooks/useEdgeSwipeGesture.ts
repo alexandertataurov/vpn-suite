@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { RefObject } from "react";
 import { hasBlockingOverlayOpen } from "@/design-system/utils/overlayStack";
-import { telegramClient } from "@/telegram/telegramCoreClient";
+import { telegramClient } from "@/lib/telegram/telegramCoreClient";
 
 interface UseEdgeSwipeGestureOptions {
   enabled?: boolean;

@@ -1,7 +1,7 @@
 import appStoreBadgeUrl from "@/assets/badges/app-store-badge.svg";
 import googlePlayBadgeUrl from "@/assets/badges/google-play-badge.png";
 import { Button, InlineAlert } from "@/design-system";
-import { Stack } from "@/design-system/core/primitives";
+import { Stack } from "@/design-system/primitives";
 import {
   IconArrowRight,
   IconCheck,

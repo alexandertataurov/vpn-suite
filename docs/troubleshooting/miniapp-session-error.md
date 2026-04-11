@@ -2,7 +2,7 @@
 
 ## Where it comes from
 
-- **UI:** `BootstrapController` shows `BootErrorScreen` when bootstrap phase is `startup_error` (`apps/miniapp/src/bootstrap/BootstrapController.tsx`, `useBootstrapMachine.ts`).
+- **UI:** `BootstrapController` shows `BootErrorScreen` when bootstrap phase is `startup_error` (`apps/miniapp/src/app/bootstrap/BootstrapController.tsx`, `useBootstrapMachine.ts`).
 - **Trigger:** The message **"Session error"** + **"Session could not be started. Please try again."** is set when **POST `/api/v1/webapp/auth`** fails (non-timeout) in the `telegram_ready` → `authenticating` step.
 
 So the failure is in **webapp auth** (exchanging Telegram `init_data` for a session token).

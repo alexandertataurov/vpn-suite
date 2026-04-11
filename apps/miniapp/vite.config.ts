@@ -41,7 +41,6 @@ export default defineConfig({
       // Why: keep workspace package as source (no prebuild) for Vite dev/build.
       "@shared": path.resolve(__dirname, "../shared-web/src"),
       "@vpn-suite/shared": path.resolve(__dirname, "../shared-web/src"),
-      "tailwind-merge": path.resolve(__dirname, "./src/utils/tailwindMergeLite.ts"),
     },
   },
   server: {

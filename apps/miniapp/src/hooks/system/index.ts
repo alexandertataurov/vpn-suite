@@ -1,2 +1,0 @@
-export { useHaptics } from "./useHaptics";
-

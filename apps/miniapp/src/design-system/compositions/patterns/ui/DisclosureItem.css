@@ -1,5 +1,5 @@
 /* DisclosureItem — accordion trigger + collapsible content. Reuses RowItem tokens. */
-@import "../RowItem/RowItem.css";
+@import "../row-item/RowItem.css";
 
 .disclosure-item {
   border-bottom: var(--border-width-hairline) solid var(--row-divider, var(--color-border-subtle));

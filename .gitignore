@@ -24,6 +24,8 @@ wheels/
 
 # Deprecated: foundation/ merged into foundations/
 apps/miniapp/src/stories/foundation/
+# Duplicate page stories (canonical: apps/miniapp/src/stories/pages/)
+apps/miniapp/src/stories/design-system/stories/pages/
 
 # Node / frontend artifacts (global)
 **/node_modules/

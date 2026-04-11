@@ -1,0 +1,27 @@
+import { Meta, Canvas, Story } from "@storybook/addon-docs/blocks";
+import * as ColorStories from "./Color.stories";
+import { FoundationLinks, DoDont } from "../shared/components";
+
+<Meta of={ColorStories} title="Foundations/Color" />
+
+<DocPage>
+  <DocHero label="Foundations" title="Color" description="Semantic and primitive palette foundations with clear contrast and role discipline." />
+  <FoundationLinks tokens="src/design-system/core/tokens/colors.ts" />
+
+  <DocSection>
+    <p>Color is semantic: structure first, then hierarchy, action, and feedback.</p>
+  </DocSection>
+
+  <DocDivider label="Stories" />
+  <Canvas><Story of={ColorStories.All} /></Canvas>
+  <Canvas><Story of={ColorStories.ThemeComparison} /></Canvas>
+  <Canvas><Story of={ColorStories.ContrastAudit} /></Canvas>
+  <Canvas><Story of={ColorStories.SemanticRoles} /></Canvas>
+  <Canvas><Story of={ColorStories.Playground} /></Canvas>
+
+  <DocDivider label="Guidance" />
+  <DoDont
+    do={<span>Map meaning to semantic tokens like <code>--color-accent</code> and <code>--color-success</code>.</span>}
+    dont={<span>Hardcode hex values in component implementations.</span>}
+  />
+</DocPage>

@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { telegramClient } from "@/telegram/telegramCoreClient";
+import { telegramClient } from "@/lib/telegram/telegramCoreClient";
 
 export function useOpenLink() {
   const openLink = useCallback((url: string) => {

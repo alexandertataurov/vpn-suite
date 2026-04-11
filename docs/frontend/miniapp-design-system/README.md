@@ -61,7 +61,7 @@ Layers: **tokens** → **theme** → **primitives** → **components** → **pat
 - **theme/** — ThemeProvider, tokens-map, z-index constants
 - **primitives/** — Layout (Box, Container, Inline, Panel, Stack) → Separator (Divider) → Typography (Text, Heading). See [miniapp core primitives README](../../../apps/miniapp/src/design-system/core/primitives/README.md).
 - **components/** — typography (Display, H1–H3, Body, Caption) → Buttons → Forms → Feedback → Display → Utility. See [miniapp components README](../../../apps/miniapp/src/design-system/components/README.md).
-- **patterns/** — Grouped by domain: `mission/` (Mission*), `content/` (FormField, ButtonRow, ContentForms/ContentButtons), `blocks/` (FallbackScreen, PageStateScreen, EmptyStateBlock, OfflineBanner), `cards/` (ListCard, ServerCard), `home/` (Home*), `ui/` (DataGrid, StatusChip, OverflowActionMenu). Product-specific patterns (heroes, tier/usage/billing cards, SessionMissing) live in `src/components` and are imported from `@/components`.
+- **patterns/** — Grouped by domain: `mission/` (Mission*), `content/` (FormField, ButtonRow, ContentForms/ContentButtons), `blocks/` (FallbackScreen, PageStateScreen, EmptyStateBlock, OfflineBanner), `cards/` (ListCard, ServerCard), `home/` (Home*), `ui/` (DataGrid, StatusChip, OverflowActionMenu). Product-specific patterns (heroes, tier/usage/billing cards, SessionMissing) live in `src/app/components` and are imported from `@/app/components`.
 
 ### Field vs FormField
 

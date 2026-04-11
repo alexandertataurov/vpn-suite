@@ -1,0 +1,20 @@
+import { Meta, Canvas, Story } from "@storybook/addon-docs/blocks";
+import * as IconsStories from "./Icons.stories";
+import { FoundationLinks, DoDont } from "../shared/components";
+
+<Meta of={IconsStories} title="Foundations/Icons" />
+
+<DocPage>
+  <DocHero label="Foundations" title="Icons" description="Consistent icon sourcing, sizing, and stroke rhythm through design-system exports." />
+  <FoundationLinks tokens="src/design-system/styles/tokens/base.css" />
+
+  <DocDivider label="Stories" />
+  <Canvas><Story of={IconsStories.Sizes} /></Canvas>
+  <Canvas><Story of={IconsStories.Gallery} /></Canvas>
+
+  <DocDivider label="Guidance" />
+  <DoDont
+    do={<span>Import icons from <code>@/design-system/icons</code> and use icon size tokens.</span>}
+    dont={<span>Import raw icon packages directly in product components.</span>}
+  />
+</DocPage>

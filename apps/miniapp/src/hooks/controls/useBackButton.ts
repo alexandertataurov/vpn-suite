@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from "react";
-import { telegramClient } from "@/telegram/telegramCoreClient";
-import { subscribeTelegramEvent } from "@/telegram/telegramEvents";
+import { telegramClient } from "@/lib/telegram/telegramCoreClient";
+import { subscribeTelegramEvent } from "@/lib/telegram/telegramEvents";
 
 export function useBackButton() {
   const show = useCallback(() => {

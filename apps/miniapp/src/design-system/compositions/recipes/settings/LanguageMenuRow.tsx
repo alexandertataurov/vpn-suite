@@ -1,4 +1,5 @@
-import { Button, Popover } from "@/design-system";
+import { Button } from "@/design-system/components/Button";
+import { Popover } from "@/design-system/components/feedback/Popover";
 import { IconChevronRight, IconGlobe } from "@/design-system/icons";
 import { ListRow } from "../../patterns/cards/ListCard";
 

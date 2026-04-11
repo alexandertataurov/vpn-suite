@@ -6,7 +6,7 @@ import { useMainButtonReserve } from "@/context/MainButtonReserveContext";
 import { useTelegramHaptics, useOnlineStatus } from "@/hooks";
 import { useTelegramApp } from "@/hooks/telegram/useTelegramApp";
 import { OfflineBanner, ScrollZone, ShellContextBlock } from "@/design-system";
-import { HeaderZone } from "@/design-system/compositions/layouts/HeaderZone";
+import { HeaderZone } from "@/design-system/layouts";
 
 export function StackFlowLayout() {
   const queryClient = useQueryClient();
@@ -59,12 +59,3 @@ export function StackFlowLayout() {
     </div>
   );
 }
-
-/**
- * Main UI frame (HeaderZone + ScrollZone). Stack flow only; no bottom nav.
- */
-export function ViewportLayout() {
-  return <StackFlowLayout />;
-}
-
-export const MiniappLayout = StackFlowLayout;

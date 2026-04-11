@@ -23,7 +23,7 @@ if (typeof window !== "undefined") {
 import { ApiError } from "@vpn-suite/shared";
 import { webappQueryKeys } from "@/lib";
 import { wireGlobalErrors } from "@/telemetry/errors";
-import App from "./App";
+import App from "./app/App";
 import "@/design-system/styles/index.css";
 import "@/styles/app/index.css";
 
@@ -38,7 +38,7 @@ function bootstrapTelemetry(): void {
 
   const run = () => {
     wireGlobalErrors();
-    void import("./bootstrap/analytics").then(({ initAnalytics }) => {
+    void import("./app/bootstrap/analytics").then(({ initAnalytics }) => {
       initAnalytics();
     });
     void import("./telemetry/webVitals").then(({ initWebVitals }) => {

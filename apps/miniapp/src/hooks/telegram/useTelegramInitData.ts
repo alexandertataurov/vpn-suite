@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { telegramClient } from "@/telegram/telegramCoreClient";
-import type { TelegramInitDataChat, TelegramInitDataUnsafe, TelegramInitDataUser } from "@/telegram/telegram.types";
+import { telegramClient } from "@/lib/telegram/telegramCoreClient";
+import type { TelegramInitDataChat, TelegramInitDataUnsafe, TelegramInitDataUser } from "@/lib/telegram/telegram.types";
 
 type TelegramInitDataState = {
   initData: string;

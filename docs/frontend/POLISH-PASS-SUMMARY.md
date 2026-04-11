@@ -70,7 +70,7 @@ Use this summary for targeted polish prompts (UI visuals, spacing, animations, r
 ### Miniapp
 - **Layout:** `TabbedShellLayout` (header + main + bottom nav with tabs), `StackFlowLayout` (full-height scroll). `MiniappLayout.tsx` defines both; tabs: Home, Devices, Plan, Support, Account.
 - **Bootstrap:** `BootstrapController.tsx`, `useBootstrapMachine.ts` — splash, onboarding, session loading, error screens.
-- **UI:** `design-system/` — Button, InlineAlert, Skeleton, PageScaffold, ActionRow, etc.; pages use `@/design-system` and `@/components`.
+- **UI:** `design-system/` — Button, InlineAlert, Skeleton, PageScaffold, ActionRow, etc.; pages use `@/design-system` and `@/app/components`.
 - **Pages:** Self-contained; use `useSession`, `useWebappToken`, shared components (SessionMissing, FallbackScreen, DeviceCard, etc.).
 
 ### Shared (design / code)

@@ -4,6 +4,40 @@ Precise map of the repository structure, entry points, and responsibilities.
 
 ---
 
+## Monorepo boundaries
+
+Everything under `apps/` looks similar in the tree, but only three packages are part of the **pnpm workspace** ([`pnpm-workspace.yaml`](../pnpm-workspace.yaml)). Root scripts in [`package.json`](../package.json) (`pnpm run lint`, `typecheck`, `test`, `build`) apply to those packages only.
+
+| Boundary | Paths | Tooling |
+|----------|--------|---------|
+| **pnpm workspace** | `apps/admin-web`, `apps/miniapp`, `apps/shared-web` | Node, pnpm, ESLint/TS from repo root (miniapp may extend config locally) |
+| **Not in pnpm** | `apps/admin-api`, `apps/telegram-bot`, `apps/node-agent` | Python 3.12 per app (`pyproject.toml`, venv), tests via pytest; run and compose via [`manage.sh`](../manage.sh) / Docker |
+
+Shared TypeScript types and utilities ship as **`@vpn-suite/shared`** ([`apps/shared-web/package.json`](../apps/shared-web/package.json)); both admin and miniapp depend on it. HTTP API contracts are also published as OpenAPI at [`openapi/openapi.yaml`](../openapi/openapi.yaml) (`./manage.sh openapi`).
+
+```mermaid
+flowchart TB
+  subgraph pnpm [pnpm_workspace]
+    shared[apps/shared-web]
+    admin[apps/admin-web]
+    mini[apps/miniapp]
+  end
+  subgraph py [python_services]
+    api[apps/admin-api]
+    bot[apps/telegram-bot]
+    agent[apps/node-agent]
+  end
+  subgraph ops [operations]
+    infra[infra/]
+    manage[manage.sh]
+  end
+  manage --> infra
+  shared --> admin
+  shared --> mini
+```
+
+---
+
 ## 1. Root
 
 

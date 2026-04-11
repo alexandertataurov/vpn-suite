@@ -1,0 +1,22 @@
+import { Meta, Canvas, Story } from "@storybook/addon-docs/blocks";
+import * as SpacingStories from "./Spacing.stories";
+import { FoundationLinks, DoDont } from "../shared/components";
+
+<Meta of={SpacingStories} title="Foundations/Spacing" />
+
+<DocPage>
+  <DocHero label="Foundations" title="Spacing" description="Tokenized insets and gaps for alignment, rhythm, and touch comfort." />
+  <FoundationLinks tokens="src/design-system/core/tokens/spacing.ts" />
+
+  <DocDivider label="Stories" />
+  <Canvas><Story of={SpacingStories.Scale} /></Canvas>
+  <Canvas><Story of={SpacingStories.Showcase} /></Canvas>
+  <Canvas><Story of={SpacingStories.TouchTargets} /></Canvas>
+  <Canvas><Story of={SpacingStories.Playground} /></Canvas>
+
+  <DocDivider label="Guidance" />
+  <DoDont
+    do={<span>Use <code>--spacing-*</code> tokens for both padding and inter-item gaps.</span>}
+    dont={<span>Hardcode one-off pixel spacing in feature UI.</span>}
+  />
+</DocPage>

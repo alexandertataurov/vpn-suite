@@ -11,7 +11,7 @@ import { WebappAuthRefresh } from "@/app/WebappAuthRefresh";
 import { AppRoutes } from "@/app/routes";
 
 const BootstrapController = lazy(() =>
-  import("@/bootstrap/BootstrapController").then((m) => ({ default: m.BootstrapController })),
+  import("@/app/bootstrap/BootstrapController").then((m) => ({ default: m.BootstrapController })),
 );
 
 /**

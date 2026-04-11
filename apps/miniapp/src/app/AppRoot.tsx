@@ -1,6 +1,6 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { initTelegramRuntime } from "../hooks/useTelegramWebApp";
-import { telegramClient } from "../telegram/telegramCoreClient";
+import { telegramClient } from "../lib/telegram/telegramCoreClient";
 import {
   getBlockingOverlayCount,
   subscribeToBlockingOverlayChange,

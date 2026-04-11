@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
-import { useSheetSwipeDismiss } from "@/design-system/hooks";
+import { useSheetSwipeDismiss } from "@/design-system/hooks/useSheetSwipeDismiss";
 import { decrementBlockingOverlayCount, incrementBlockingOverlayCount } from "@/design-system/utils/overlayStack";
 import { useTelegramHaptics } from "@/hooks";
 

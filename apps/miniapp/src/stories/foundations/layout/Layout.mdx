@@ -1,0 +1,22 @@
+import { Meta, Canvas, Story } from "@storybook/addon-docs/blocks";
+import * as LayoutStories from "./Layout.stories";
+import { FoundationLinks, DoDont } from "../shared/components";
+
+<Meta of={LayoutStories} title="Foundations/Layout" />
+
+<DocPage>
+  <DocHero label="Foundations" title="Layout" description="Breakpoint-driven structure with stable reading width and responsive density." />
+  <FoundationLinks tokens="src/design-system/core/tokens/breakpoints.ts" />
+
+  <DocDivider label="Stories" />
+  <Canvas><Story of={LayoutStories.Tokens} /></Canvas>
+  <Canvas><Story of={LayoutStories.Showcase} /></Canvas>
+  <Canvas><Story of={LayoutStories.ResponsiveChecklist} /></Canvas>
+  <Canvas><Story of={LayoutStories.Playground} /></Canvas>
+
+  <DocDivider label="Guidance" />
+  <DoDont
+    do={<span>Use breakpoint tokens for all responsive branching in CSS and JS.</span>}
+    dont={<span>Introduce fixed media query values that drift from the system.</span>}
+  />
+</DocPage>

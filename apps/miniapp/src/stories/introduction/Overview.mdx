@@ -2,21 +2,68 @@ import { Meta } from "@storybook/addon-docs/blocks";
 
 <Meta title="Introduction/Overview" />
 
-## What you are looking at
+<DocPage>
+  <DocHero
+    label="Overview"
+    title="Presentation-grade Storybook, not a component graveyard"
+    description="This Storybook is built to explain the system, not just display it. Tokens, rules, and usage guidance should stay obvious so teams can ship UI without guesswork."
+    version="v2.0"
+  />
 
-This Storybook is a presentation-grade design system documentation environment, not a component dump.
+  <DocCallout icon="◈" variant="rule">
+    Treat Storybook as the operating manual for the UI layer. It should answer what exists, when to use it,
+    and what the contract is before anyone starts improvising in production.
+  </DocCallout>
 
-The goal is to make tokens, rules, and “how to use” guidance discoverable so teams can adopt the UI with confidence.
+  <DocDivider label="01 — What this Storybook is for" />
 
-## How to use
+  <DocSection>
+    <DocGrid columnCount={3}>
+      <DocRule title="Foundations first" tag="tokens">
+        Start with design tokens, semantics, and governance rules before looking at assembled UI.
+      </DocRule>
+      <DocRule title="Patterns over screenshots" tag="process">
+        Patterns and showcase stories explain how the system behaves in real product situations.
+      </DocRule>
+      <DocRule title="Walkthrough-friendly" tag="walkthrough">
+        Docs should hold up in stakeholder demos, design reviews, and implementation handoff.
+      </DocRule>
+    </DocGrid>
+  </DocSection>
 
-1. Start with `Foundations` to understand the token system and governance rules.
-2. Use `Patterns` and `Components` to see how foundations translate into real UI.
-3. For stakeholder walkthroughs, prefer showcase stories: they include applied examples and stable interactions.
+  <DocDivider label="02 — How to navigate it" />
 
-## Where the sources of truth live
+  <DocSection>
+    <DocChecklist
+      items={[
+        "Start with Foundations to understand tokens, theming, and the core governance rules.",
+        "Move to Patterns and Components to see how those rules become real UI behavior.",
+        "Use showcase stories for walkthroughs because they carry applied examples and more stable interactions.",
+      ]}
+    />
 
-- Tokens: `src/design-system/core/tokens` and `src/design-system/styles/`
-- Story governance checks: `storybook:taxonomy` and `storybook:contract` in the miniapp package
-- UI framing: `src/storybook/StorybookMiniappShell.tsx`
+    <DocCallout icon="→" variant="note">
+      The fastest path is simple: <strong>learn the rules once</strong>, then reuse the same patterns everywhere.
+      That is cheaper than rediscovering spacing, states, and composition on every screen.
+    </DocCallout>
+  </DocSection>
 
+  <DocDivider label="03 — Sources of truth" />
+
+  <DocSection>
+    <DocGrid columnCount={2}>
+      <DocRule title="Tokens" tag="source">
+        <code>src/design-system/core/tokens</code> and <code>src/design-system/styles/</code> define the visual system.
+      </DocRule>
+      <DocRule title="Story governance" tag="stable">
+        <code>storybook:taxonomy</code> and <code>storybook:contract</code> enforce naming and contract discipline in the miniapp package.
+      </DocRule>
+      <DocRule title="UI framing" tag="ui">
+        <code>src/storybook/StorybookMiniappShell.tsx</code> controls the presentation shell around the docs environment.
+      </DocRule>
+      <DocRule title="Applied documentation" tag="mdx">
+        Curated MDX pages should add rationale, do/don't guidance, and real usage context — not duplicate Autodocs noise.
+      </DocRule>
+    </DocGrid>
+  </DocSection>
+</DocPage>
