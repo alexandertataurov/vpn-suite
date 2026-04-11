@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 agent: cursor
 files:
   - mcp-servers/obsidian-mcp/index.ts
