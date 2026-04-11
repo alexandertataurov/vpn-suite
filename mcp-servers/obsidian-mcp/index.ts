@@ -296,6 +296,7 @@ async function main(): Promise<void> {
 
   const transport = new StdioServerTransport();
   await server.connect(transport);
+  console.error("MCP server listening on stdio");
 }
 
 main().catch((err) => {

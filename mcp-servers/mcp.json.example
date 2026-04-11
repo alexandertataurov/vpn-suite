@@ -2,16 +2,24 @@
   "mcpServers": {
     "obsidian-mcp": {
       "command": "node",
-      "args": ["/absolute/path/to/vpn/mcp-servers/dist/obsidian-mcp/index.js"],
+      "args": [
+        "/absolute/path/to/vpn/mcp-servers/dist/obsidian-mcp/index.js"
+      ],
+      "cwd": "/absolute/path/to/vpn/mcp-servers",
       "env": {
-        "VAULT_PATH": "/absolute/path/to/obsidian/vault"
+        "VAULT_PATH": "/absolute/path/to/vpn/vault",
+        "PROJECT_PATH": "/absolute/path/to/vpn"
       }
     },
     "filesystem-mcp": {
       "command": "node",
-      "args": ["/absolute/path/to/vpn/mcp-servers/dist/filesystem-mcp/index.js"],
+      "args": [
+        "/absolute/path/to/vpn/mcp-servers/dist/filesystem-mcp/index.js"
+      ],
+      "cwd": "/absolute/path/to/vpn/mcp-servers",
       "env": {
-        "PROJECT_PATH": "/absolute/path/to/your/git/repo"
+        "VAULT_PATH": "/absolute/path/to/vpn/vault",
+        "PROJECT_PATH": "/absolute/path/to/vpn"
       }
     }
   }
