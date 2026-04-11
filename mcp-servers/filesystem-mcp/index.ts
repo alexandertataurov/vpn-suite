@@ -1,4 +1,4 @@
-import "../lib/load-env.js";
+import "../lib/load-env.ts";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import fs from "node:fs/promises";
@@ -7,7 +7,7 @@ import { exec } from "node:child_process";
 import { promisify } from "node:util";
 import fg from "fast-glob";
 import { z } from "zod";
-import { resolveUnderRoot } from "../lib/safe-path.js";
+import { resolveUnderRoot } from "../lib/safe-path.ts";
 
 const execAsync = promisify(exec);
 

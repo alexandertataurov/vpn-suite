@@ -1,65 +1,29 @@
 {
+  "mcpVersion": "1",
+  "_comment": [
+    "Setup: run `npm install` in ./mcp-servers/ before first use.",
+    "Set VAULT_PATH and PROJECT_PATH in your shell or in ./mcp-servers/.env (see ./mcp-servers/.env.example). Never commit .env or other secrets.",
+    "Env values below use ${env:...} so Cursor passes through your process environment; ensure those variables are set where Cursor is launched, or set real paths in env if your client does not interpolate.",
+    "Launched with `npx ts-node --esm` from ./mcp-servers (local imports use .ts extensions; see tsconfig rewriteRelativeImportExtensions)."
+  ],
   "mcpServers": {
-    "filesystem": {
-      "command": "node",
-      "args": ["/home/alex/projects/vpn/mcp-servers/dist/filesystem-mcp/index.js"],
-      "env": {
-        "PROJECT_PATH": "/home/alex/projects/vpn"
-      },
-      "disabled": false
-    },
     "obsidian-mcp": {
-      "command": "node",
-      "args": ["/home/alex/projects/vpn/mcp-servers/dist/obsidian-mcp/index.js"],
+      "command": "npx",
+      "args": ["ts-node", "--esm", "./obsidian-mcp/index.ts"],
+      "cwd": "${workspaceFolder}/mcp-servers",
       "env": {
-        "VAULT_PATH": "/home/alex/projects/vpn/vault"
-      },
-      "disabled": false
+        "VAULT_PATH": "${env:VAULT_PATH}",
+        "PROJECT_PATH": "${env:PROJECT_PATH}"
+      }
     },
-    "memory": {
+    "filesystem-mcp": {
       "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-memory"],
-      "disabled": false
-    },
-    "sequential-thinking": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
-      "env": { "DISABLE_THOUGHT_LOGGING": "true" },
-      "disabled": false
-    },
-    "context7": {
-      "command": "npx",
-      "args": ["-y", "@upstash/context7-mcp"],
-      "disabled": false
-    },
-    "git": {
-      "command": "apps/admin-api/.venv/bin/python",
-      "args": ["-m", "mcp_server_git", "--repository", "/home/alex/projects/vpn"],
-      "disabled": false
-    },
-    "github": {
-      "command": "/home/alex/projects/vpn/.cursor/run-github-mcp.sh",
-      "args": [],
-      "disabled": false
-    },
-    "postgres": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-postgres",
-        "postgresql://postgres:postgres@localhost:5432/vpn_admin"
-      ],
-      "disabled": false
-    },
-    "redis": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-redis", "redis://localhost:6379"],
-      "disabled": false
-    },
-    "puppeteer": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-puppeteer"],
-      "disabled": false
+      "args": ["ts-node", "--esm", "./filesystem-mcp/index.ts"],
+      "cwd": "${workspaceFolder}/mcp-servers",
+      "env": {
+        "VAULT_PATH": "${env:VAULT_PATH}",
+        "PROJECT_PATH": "${env:PROJECT_PATH}"
+      }
     }
   }
 }

@@ -1,0 +1,48 @@
+# Cursor project rules (Obsidian + Filesystem MCP)
+
+These rules apply to every AI session. The repo uses **obsidian-mcp** (vault) and **filesystem-mcp** (project files).
+
+## Stack
+
+- **Backend:** FastAPI, Python 3.11, aiogram 3.x — tests: `pytest`; lint: `ruff`.
+- **Frontend:** React 18, Vite, TypeScript, Tailwind — tests: `vitest`; lint: `eslint` + `prettier`.
+- **Infra:** Docker, nginx, Linux (Ubuntu), WireGuard / AmneziaWG.
+
+## Session start (mandatory)
+
+1. Call **`task_next`** on **obsidian-mcp** before any other tool use or planning.
+2. If **`task_next`** returns **`null`** (no active task), reply exactly:  
+   `No active tasks. Add a note to 04-tasks/active/ with status: todo.`  
+   Then **stop**. Do not read the repo, suggest work, or continue.
+3. If a task is returned, read **every path in `files[]`** using **filesystem-mcp** (`fs_read` or equivalent) **before** planning or editing. If `files[]` is empty, say so and stop.
+
+## Scope and edits
+
+- **Only** create, edit, or delete files whose paths appear in the current task’s **`files[]`**. Do not touch other paths (including “small fixes” elsewhere).
+- If a required file is missing from **`files[]`**, **stop**, say which file is missing, and do not proceed until the task note is updated.
+
+## After each file write
+
+Run the correct linter via **filesystem-mcp** `fs_run` on that file (do not skip):
+
+- **`.ts` / `.tsx` / `.js` / `.jsx`:**  
+  `npx eslint <file> --fix`  
+  (from repo root or the path implied by the project; use the project’s eslint config.)
+- **`.py`:**  
+  `ruff check <file> --fix`  
+  (use the repo venv interpreter when the project expects it, e.g. `apps/admin-api/.venv/bin/ruff` if that is standard here.)
+
+If the linter fails, fix issues before moving on.
+
+## When implementation is complete
+
+1. Write a **journal entry** with **obsidian-mcp** `vault_write` to:  
+   `vault/05-journal/YYYY-MM-DD-<task-slug>.md`  
+   Use today’s date for `YYYY-MM-DD`; `<task-slug>` is a short kebab-case id from the task (e.g. from the task note filename or goal).
+2. **Frontmatter** (YAML): `date`, `task` (short title or goal), `files_changed` (array of paths touched).
+3. Body: a **`## Summary`** section, **3–5 sentences max**.
+4. Only **after** the journal file is written, call **`task_done`** on **obsidian-mcp** with the **vault-relative path** to the completed task note in `04-tasks/active/`.
+
+## Order of operations (recap)
+
+`task_next` → read `files[]` → implement within scope → lint after each write → `vault_write` journal → `task_done`.

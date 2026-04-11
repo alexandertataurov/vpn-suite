@@ -10,7 +10,9 @@
     "declaration": true,
     "esModuleInterop": true,
     "resolveJsonModule": true,
-    "noEmitOnError": true
+    "noEmitOnError": true,
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true
   },
   "include": ["lib/**/*.ts", "obsidian-mcp/**/*.ts", "filesystem-mcp/**/*.ts"],
   "exclude": ["node_modules", "dist"]

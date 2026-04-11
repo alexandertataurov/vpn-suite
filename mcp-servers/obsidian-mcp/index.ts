@@ -1,4 +1,4 @@
-import "../lib/load-env.js";
+import "../lib/load-env.ts";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import type { Dirent } from "node:fs";
@@ -6,7 +6,7 @@ import fsp from "node:fs/promises";
 import path from "node:path";
 import matter from "gray-matter";
 import { z } from "zod";
-import { resolveUnderRoot, toPosixRelative } from "../lib/safe-path.js";
+import { resolveUnderRoot, toPosixRelative } from "../lib/safe-path.ts";
 
 function requireVaultPath(): string {
   const p = process.env.VAULT_PATH?.trim();
