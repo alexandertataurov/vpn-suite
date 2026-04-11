@@ -1,8 +1,19 @@
 {
   "mcpServers": {
     "filesystem": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/opt/vpn-suite"],
+      "command": "node",
+      "args": ["/home/alex/projects/vpn/mcp-servers/dist/filesystem-mcp/index.js"],
+      "env": {
+        "PROJECT_PATH": "/home/alex/projects/vpn"
+      },
+      "disabled": false
+    },
+    "obsidian-mcp": {
+      "command": "node",
+      "args": ["/home/alex/projects/vpn/mcp-servers/dist/obsidian-mcp/index.js"],
+      "env": {
+        "VAULT_PATH": "/home/alex/projects/vpn/vault"
+      },
       "disabled": false
     },
     "memory": {
@@ -23,11 +34,11 @@
     },
     "git": {
       "command": "apps/admin-api/.venv/bin/python",
-      "args": ["-m", "mcp_server_git", "--repository", "/opt/vpn-suite"],
+      "args": ["-m", "mcp_server_git", "--repository", "/home/alex/projects/vpn"],
       "disabled": false
     },
     "github": {
-      "command": "/opt/vpn-suite/.cursor/run-github-mcp.sh",
+      "command": "/home/alex/projects/vpn/.cursor/run-github-mcp.sh",
       "args": [],
       "disabled": false
     },

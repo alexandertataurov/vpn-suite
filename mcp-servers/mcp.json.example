@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "obsidian-mcp": {
+      "command": "node",
+      "args": ["/absolute/path/to/vpn/mcp-servers/dist/obsidian-mcp/index.js"],
+      "env": {
+        "VAULT_PATH": "/absolute/path/to/obsidian/vault"
+      }
+    },
+    "filesystem-mcp": {
+      "command": "node",
+      "args": ["/absolute/path/to/vpn/mcp-servers/dist/filesystem-mcp/index.js"],
+      "env": {
+        "PROJECT_PATH": "/absolute/path/to/your/git/repo"
+      }
+    }
+  }
+}
