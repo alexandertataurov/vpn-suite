@@ -1,19 +1,15 @@
 {
   "mcpVersion": "1",
   "_comment": [
-    "Setup: run `npm install` in ./mcp-servers/ before first use.",
-    "Default VAULT_PATH/PROJECT_PATH use ${workspaceFolder} so MCP works when the IDE spawns the process without your shell env. Override in mcp-servers/.env (gitignored) if your vault lives elsewhere.",
-    "Use ${workspaceFolder}/mcp-servers/... absolute paths in args; Cursor resolves ./ against the repo root, not cwd.",
-    "Run ts-node via node (not npx) to avoid npm EOVERRIDE on root overrides."
+    "Setup: cd mcp-servers && npm install (runs prepare → tsc → dist/).",
+    "Default VAULT_PATH/PROJECT_PATH use ${workspaceFolder}. Override in mcp-servers/.env if needed; never commit .env.",
+    "Servers run compiled JS under dist/ (no ts-node) for stable startup on Node 22.",
+    "If tools fail after TS edits, run: cd mcp-servers && npm run build."
   ],
   "mcpServers": {
     "obsidian-mcp": {
       "command": "node",
-      "args": [
-        "${workspaceFolder}/mcp-servers/node_modules/ts-node/dist/bin.js",
-        "--esm",
-        "${workspaceFolder}/mcp-servers/obsidian-mcp/index.ts"
-      ],
+      "args": ["${workspaceFolder}/mcp-servers/dist/obsidian-mcp/index.js"],
       "cwd": "${workspaceFolder}/mcp-servers",
       "env": {
         "VAULT_PATH": "${workspaceFolder}/vault",
@@ -22,11 +18,7 @@
     },
     "filesystem-mcp": {
       "command": "node",
-      "args": [
-        "${workspaceFolder}/mcp-servers/node_modules/ts-node/dist/bin.js",
-        "--esm",
-        "${workspaceFolder}/mcp-servers/filesystem-mcp/index.ts"
-      ],
+      "args": ["${workspaceFolder}/mcp-servers/dist/filesystem-mcp/index.js"],
       "cwd": "${workspaceFolder}/mcp-servers",
       "env": {
         "VAULT_PATH": "${workspaceFolder}/vault",
