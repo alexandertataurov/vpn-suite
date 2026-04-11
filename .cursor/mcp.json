@@ -4,15 +4,16 @@
     "Setup: run `npm install` in ./mcp-servers/ before first use.",
     "Set VAULT_PATH and PROJECT_PATH in your shell or in ./mcp-servers/.env (see ./mcp-servers/.env.example). Never commit .env or other secrets.",
     "Env values below use ${env:...} so Cursor passes through your process environment; ensure those variables are set where Cursor is launched, or set real paths in env if your client does not interpolate.",
-    "Run via `node ./node_modules/ts-node/dist/bin.js --esm` (not `npx`) so npm never runs and does not hit the repo root overrides/devDependency conflict (EOVERRIDE on @types/react)."
+    "Use ${workspaceFolder}/mcp-servers/... absolute paths in args; Cursor resolves ./ against the repo root, not cwd.",
+    "Run ts-node via node (not npx) to avoid npm EOVERRIDE on root overrides."
   ],
   "mcpServers": {
     "obsidian-mcp": {
       "command": "node",
       "args": [
-        "./node_modules/ts-node/dist/bin.js",
+        "${workspaceFolder}/mcp-servers/node_modules/ts-node/dist/bin.js",
         "--esm",
-        "./obsidian-mcp/index.ts"
+        "${workspaceFolder}/mcp-servers/obsidian-mcp/index.ts"
       ],
       "cwd": "${workspaceFolder}/mcp-servers",
       "env": {
@@ -23,9 +24,9 @@
     "filesystem-mcp": {
       "command": "node",
       "args": [
-        "./node_modules/ts-node/dist/bin.js",
+        "${workspaceFolder}/mcp-servers/node_modules/ts-node/dist/bin.js",
         "--esm",
-        "./filesystem-mcp/index.ts"
+        "${workspaceFolder}/mcp-servers/filesystem-mcp/index.ts"
       ],
       "cwd": "${workspaceFolder}/mcp-servers",
       "env": {
