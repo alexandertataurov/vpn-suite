@@ -5,6 +5,7 @@
 - [[01-specs/project-map]] — Living project map (structure, entry points, modules, env keys, dependencies).
 - [[06-reference/stack]] — Languages, frameworks, infra, dev tools, external APIs.
 - [[01-specs/module-graph]] — Mermaid module dependency graph and caveats.
+- [[01-specs/vpn-suite-tech-spec-updated]] — Canonical **VPN Suite — Updated Tech Spec (2026-04-09)**, repo-aligned (as-built vs target); see §6.1 path callout.
 
 ## Documentation (mirrored from repo)
 

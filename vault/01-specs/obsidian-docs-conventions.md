@@ -46,5 +46,6 @@ This vault’s documentation mirror lives under **`07-docs/`** (see [[07-docs/RE
 
 ## Related
 
+- [[01-specs/vpn-suite-tech-spec-updated]] — Updated tech spec (canonical vault copy; path notes for §6.1).
 - [[07-docs/_index]] — MOC
 - [[07-docs/README]] — full hub

@@ -1,5 +1,5 @@
 ---
-status: todo
+status: done
 agent: cursor
 files:
   - vault/04-tasks/active/007-tech-spec-import-and-index.md
