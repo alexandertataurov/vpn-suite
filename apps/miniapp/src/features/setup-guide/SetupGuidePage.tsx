@@ -102,6 +102,9 @@ export function SetupGuidePage() {
     navigate("/devices");
   };
 
+  const storeActionLabel =
+    platform === "ios" ? t("guide.no_app_open_ios") : t("guide.no_app_open_android");
+
   return (
     <PageScaffold>
       <PageLayout scrollable={false}>
@@ -120,11 +123,15 @@ export function SetupGuidePage() {
           />
 
           <SectionLabel label={t("guide.platform_label")} />
-          <div className="setup-guide-tabs">
+          <div className="setup-guide-tabs" role="tablist" aria-label={t("guide.platform_label")}>
             <Button
               variant={platform === "ios" ? "primary" : "secondary"}
               size="sm"
               onClick={() => setPlatform("ios")}
+              className="setup-guide-tab-btn"
+              role="tab"
+              aria-selected={platform === "ios"}
+              aria-pressed={platform === "ios"}
               fullWidth
             >
               {t("guide.platform_ios")}
@@ -133,6 +140,10 @@ export function SetupGuidePage() {
               variant={platform === "android" ? "primary" : "secondary"}
               size="sm"
               onClick={() => setPlatform("android")}
+              className="setup-guide-tab-btn"
+              role="tab"
+              aria-selected={platform === "android"}
+              aria-pressed={platform === "android"}
               fullWidth
             >
               {t("guide.platform_android")}
@@ -156,10 +167,11 @@ export function SetupGuidePage() {
             <RowItem
               icon={<IconSmartphone size={15} strokeWidth={2} aria-hidden />}
               iconVariant="neutral"
-              label={t("guide.no_app_title")}
+              label={storeActionLabel}
               subtitle={t("guide.no_app_subtitle")}
               onClick={handleOpenStore}
               right={<IconExternalLink size={14} aria-hidden />}
+              showChevron={false}
             />
           </CardRow>
 

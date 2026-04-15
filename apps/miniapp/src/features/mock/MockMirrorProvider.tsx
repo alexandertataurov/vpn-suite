@@ -133,23 +133,33 @@ function getScenarioData(scenario: MirrorScenario) {
 
 function mapAppPathToMirror(pathname: string, search: string): string {
   if (!pathname.startsWith("/")) return pathname;
-  if (pathname.startsWith(`${MIRROR_PREFIX}/`) || pathname === MIRROR_PREFIX) return `${pathname}${search}`;
-  if (pathname.startsWith("/mock/")) return `${pathname}${search}`;
+  const normalizedPathname =
+    pathname === "/webapp"
+      ? "/"
+      : pathname.startsWith("/webapp/")
+        ? pathname.replace(/^\/webapp/, "")
+        : pathname;
+  if (normalizedPathname.startsWith(`${MIRROR_PREFIX}/`) || normalizedPathname === MIRROR_PREFIX) {
+    return `${normalizedPathname}${search}`;
+  }
+  if (normalizedPathname.startsWith("/mock/")) return `${normalizedPathname}${search}`;
 
-  if (pathname === "/") return `${MIRROR_PREFIX}/home${search}`;
-  if (pathname === "/onboarding") return `${MIRROR_PREFIX}/onboarding${search}`;
-  if (pathname === "/plan") return `${MIRROR_PREFIX}/plan${search}`;
-  if (pathname.startsWith("/plan/checkout/")) return `${MIRROR_PREFIX}${pathname}${search}`;
-  if (pathname === "/devices" || pathname === "/devices/issue") return `${MIRROR_PREFIX}/devices${search}`;
-  if (pathname === "/settings") return `${MIRROR_PREFIX}/settings${search}`;
-  if (pathname === "/support") return `${MIRROR_PREFIX}/support${search}`;
-  if (pathname === "/setup-guide") return `${MIRROR_PREFIX}/setup-guide${search}`;
-  if (pathname === "/connect-status") return `${MIRROR_PREFIX}/connect-status${search}`;
-  if (pathname === "/restore-access") return `${MIRROR_PREFIX}/restore-access${search}`;
-  if (pathname === "/referral") return `${MIRROR_PREFIX}/referral${search}`;
-  if (pathname === "/servers") return `${MIRROR_PREFIX}/home${search}`;
-  if (pathname === "/account/subscription") return `${MIRROR_PREFIX}/plan${search}`;
-  return `${pathname}${search}`;
+  if (normalizedPathname === "/") return `${MIRROR_PREFIX}/home${search}`;
+  if (normalizedPathname === "/onboarding") return `${MIRROR_PREFIX}/onboarding${search}`;
+  if (normalizedPathname === "/plan") return `${MIRROR_PREFIX}/plan${search}`;
+  if (normalizedPathname.startsWith("/plan/checkout/")) return `${MIRROR_PREFIX}${normalizedPathname}${search}`;
+  if (normalizedPathname === "/devices" || normalizedPathname === "/devices/issue") {
+    return `${MIRROR_PREFIX}/devices${search}`;
+  }
+  if (normalizedPathname === "/settings") return `${MIRROR_PREFIX}/settings${search}`;
+  if (normalizedPathname === "/support") return `${MIRROR_PREFIX}/support${search}`;
+  if (normalizedPathname === "/setup-guide") return `${MIRROR_PREFIX}/setup-guide${search}`;
+  if (normalizedPathname === "/connect-status") return `${MIRROR_PREFIX}/connect-status${search}`;
+  if (normalizedPathname === "/restore-access") return `${MIRROR_PREFIX}/restore-access${search}`;
+  if (normalizedPathname === "/referral") return `${MIRROR_PREFIX}/referral${search}`;
+  if (normalizedPathname === "/servers") return `${MIRROR_PREFIX}/home${search}`;
+  if (normalizedPathname === "/account/subscription") return `${MIRROR_PREFIX}/plan${search}`;
+  return `${normalizedPathname}${search}`;
 }
 
 function rewriteUrlIfNeeded(input: string | URL | null | undefined): string | URL | null | undefined {

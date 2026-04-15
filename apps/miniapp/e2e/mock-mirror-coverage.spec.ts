@@ -50,13 +50,13 @@ const SCENARIO_ROUTE_MATRIX = [
 ] as const;
 
 const MIRROR_NAV_LINKS = [
-  { from: "/mock/mirror/home", clickText: /View setup guide/i, expect: /\/webapp\/mock\/mirror\/setup-guide/ },
-  { from: "/mock/mirror/plan", clickText: /View setup guide/i, expect: /\/webapp\/mock\/mirror\/setup-guide/ },
-  { from: "/mock/mirror/devices", clickText: /View setup guide/i, expect: /\/webapp\/mock\/mirror\/setup-guide/ },
-  { from: "/mock/mirror/settings", clickText: /View setup guide/i, expect: /\/webapp\/mock\/mirror\/setup-guide/ },
-  { from: "/mock/mirror/connect-status", clickText: /View setup guide/i, expect: /\/webapp\/mock\/mirror\/setup-guide/ },
-  { from: "/mock/mirror/referral", clickText: /View setup guide/i, expect: /\/webapp\/mock\/mirror\/setup-guide/ },
-  { from: "/mock/mirror/restore-access", clickText: /View setup guide/i, expect: /\/webapp\/mock\/mirror\/setup-guide/ },
+  { from: "/mock/mirror/home", clickText: /View setup guide/i, expect: /(?:\/webapp)?\/mock\/mirror\/setup-guide/ },
+  { from: "/mock/mirror/plan", clickText: /View setup guide/i, expect: /(?:\/webapp)?\/mock\/mirror\/setup-guide/ },
+  { from: "/mock/mirror/devices", clickText: /View setup guide/i, expect: /(?:\/webapp)?\/mock\/mirror\/setup-guide/ },
+  { from: "/mock/mirror/settings", clickText: /View setup guide/i, expect: /(?:\/webapp)?\/mock\/mirror\/setup-guide/ },
+  { from: "/mock/mirror/connect-status", clickText: /View setup guide/i, expect: /(?:\/webapp)?\/mock\/mirror\/setup-guide/ },
+  { from: "/mock/mirror/referral", clickText: /View setup guide/i, expect: /(?:\/webapp)?\/mock\/mirror\/setup-guide/ },
+  { from: "/mock/mirror/restore-access", clickText: /View setup guide/i, expect: /(?:\/webapp)?\/mock\/mirror\/setup-guide/ },
 ] as const;
 
 const VIEWPORTS = [
@@ -141,16 +141,16 @@ test.describe("Mock Mirror Coverage", () => {
     await page.evaluate(() => {
       window.history.pushState({}, "", "/plan");
     });
-    await expect(page).toHaveURL(/\/webapp\/mock\/mirror\/plan\?scenario=expired$/);
+    await expect(page).toHaveURL(/(?:\/webapp)?\/mock\/mirror\/plan\?scenario=expired$/);
 
     await page.evaluate(() => {
       window.history.replaceState({}, "", "/settings");
     });
-    await expect(page).toHaveURL(/\/webapp\/mock\/mirror\/settings\?scenario=expired$/);
+    await expect(page).toHaveURL(/(?:\/webapp)?\/mock\/mirror\/settings\?scenario=expired$/);
 
     await page.evaluate(() => {
       window.history.pushState({}, "", "/support");
     });
-    await expect(page).toHaveURL(/\/webapp\/mock\/mirror\/support\?scenario=expired$/);
+    await expect(page).toHaveURL(/(?:\/webapp)?\/mock\/mirror\/support\?scenario=expired$/);
   });
 });

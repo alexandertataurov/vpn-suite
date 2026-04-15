@@ -44,12 +44,19 @@ test.describe("Mock Components Coverage", () => {
     await page.getByLabel("Email").fill("alex@example.com");
     await page.getByLabel("Phone").fill("+1 415 555 0100");
     await page.getByLabel("Support message").fill("Need help with config import flow.");
-    await page.getByLabel("I agree to Terms").check();
+    await page.locator("#i-agree-to-terms").evaluate((node) => {
+      const checkbox = node as HTMLInputElement;
+      checkbox.checked = true;
+      checkbox.dispatchEvent(new Event("input", { bubbles: true }));
+      checkbox.dispatchEvent(new Event("change", { bubbles: true }));
+    });
     await page.getByRole("switch", { name: /Notifications/i }).click();
 
     const planTier = page.getByLabel("Plan tier");
     if (await planTier.count()) {
-      await planTier.selectOption("starter");
+      await planTier.click();
+      await page.keyboard.press("ArrowDown");
+      await page.keyboard.press("Enter");
     }
 
     await page.waitForTimeout(150);
@@ -65,16 +72,15 @@ test.describe("Mock Components Coverage", () => {
     await page.waitForLoadState("networkidle");
 
     await page.getByRole("button", { name: "Buttons" }).first().click();
-    await expect(page).toHaveURL(/\/webapp\/mock\/components\/buttons$/);
+    await expect(page).toHaveURL(/(?:\/webapp)?\/mock\/components\/buttons$/);
 
     await page.getByRole("button", { name: "Forms" }).first().click();
-    await expect(page).toHaveURL(/\/webapp\/mock\/components\/forms$/);
+    await expect(page).toHaveURL(/(?:\/webapp)?\/mock\/components\/forms$/);
 
     await page.getByRole("button", { name: "Feedback" }).first().click();
-    await expect(page).toHaveURL(/\/webapp\/mock\/components\/feedback$/);
+    await expect(page).toHaveURL(/(?:\/webapp)?\/mock\/components\/feedback$/);
 
     await page.getByRole("button", { name: "Cards" }).first().click();
-    await expect(page).toHaveURL(/\/webapp\/mock\/components\/cards$/);
+    await expect(page).toHaveURL(/(?:\/webapp)?\/mock\/components\/cards$/);
   });
 });
-

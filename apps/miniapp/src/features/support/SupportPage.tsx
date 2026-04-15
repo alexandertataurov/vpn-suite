@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { SessionMissing } from "@/app/components";
 import { useOpenLink } from "@/hooks";
 import {
-  IconBookOpen,
   IconCreditCard,
   IconFileText,
   IconHelpCircle,
@@ -150,13 +149,6 @@ export function SupportPage() {
               label={t("plan.header_title")}
               subtitle={t("support.quick_paths_plan_description")}
               onClick={() => navigate("/plan")}
-            />
-            <RowItem
-              icon={<IconBookOpen size={15} strokeWidth={2} aria-hidden />}
-              iconVariant="default"
-              label={t("footer.view_setup_guide")}
-              subtitle={t("support.quick_paths_setup_guide_description")}
-              onClick={() => navigate("/setup-guide")}
             />
             {legalQuickLinks.map((link) => (
               <RowItem

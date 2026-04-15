@@ -31,9 +31,13 @@ pnpm run typecheck
 pnpm run lint
 pnpm run design:check
 pnpm run storybook
+pnpm run test:e2e:local
+pnpm run test:e2e:mock
 ```
 
 Full CI-style check: `pnpm run ci` (see [package.json](package.json) for all scripts).
+
+`test:e2e:local` and `test:e2e:mock` automatically include local Playwright shared-lib fallback from `~/.local/pwlibs` when present.
 
 ## Source layout (`src/`)
 

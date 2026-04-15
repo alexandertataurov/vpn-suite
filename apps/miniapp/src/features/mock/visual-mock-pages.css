@@ -34,6 +34,12 @@
   border-color: var(--stroke-strong);
 }
 
+.mock-preview-card:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+  border-color: var(--stroke-strong);
+}
+
 .mock-preview-screen {
   height: 100px;
   border-radius: 10px;
