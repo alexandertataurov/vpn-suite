@@ -28,11 +28,11 @@ test.describe("Miniapp Device Issue Flow", () => {
     await gotoMiniapp(page, "/devices");
     await expect(page.getByRole("heading", { name: /Devices/i })).toBeVisible({ timeout: 10000 });
 
-    await page.getByRole("button", { name: /^Add device$/i }).click();
-    await page.getByRole("textbox", { name: /^Device name$/i }).fill("My iPhone");
-    await page.getByRole("button", { name: /^Continue$/i }).click();
-    await expect(page.getByText(/^Installation guide$/i)).toBeVisible({ timeout: 5000 });
-    await page.getByRole("button", { name: /^Create device$/i }).click();
+    await page.getByRole("button", { name: /Add new device|Add device/i }).first().click();
+    await page.getByPlaceholder(/My iPhone/i).fill("My iPhone");
+    await page.locator('button:has-text("Continue")').last().click();
+    await expect(page.getByText(/Install AmneziaVPN|Download app/i).first()).toBeVisible({ timeout: 5000 });
+    await page.locator('button:has-text("Create")').last().click();
 
     await expect(page.getByText(/^Config$/i)).toBeVisible({ timeout: 5000 });
     await expect(page.locator("pre.config-block")).toContainText("[Interface]");

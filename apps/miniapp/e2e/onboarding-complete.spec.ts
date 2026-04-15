@@ -22,10 +22,25 @@ test.describe("Miniapp Onboarding Completion", () => {
       },
     });
 
+    await gotoMiniapp(page, "/onboarding");
+    await expect(page.getByRole("heading", { name: /Set up VPN access/i })).toBeVisible({ timeout: 10000 });
+    for (let step = 0; step < 4 && !/\/plan$/.test(new URL(page.url()).pathname); step += 1) {
+      const choosePlan = page.getByRole("button", { name: /^Choose plan$/i });
+      if (await choosePlan.count()) {
+        await choosePlan.first().click();
+      } else {
+        const primaryContinue = page.getByRole("button", { name: /^Continue$/i });
+        if (await primaryContinue.count()) {
+          await primaryContinue.first().click();
+        }
+      }
+      await page.waitForTimeout(150);
+    }
     await gotoMiniapp(page, "/devices");
-    await expect(page.getByRole("heading", { name: /^Devices$/i })).toBeVisible({ timeout: 10000 });
-
-    await page.getByRole("button", { name: /^Add device$/i }).click();
+    await page.getByRole("button", { name: /Add new device|Add device/i }).first().click();
+    await expect(page.getByPlaceholder(/My iPhone/i)).toBeVisible({ timeout: 5000 });
+    await page.locator('button:has-text("Continue")').last().click();
+    await page.locator('button:has-text("Create")').last().click();
 
     await expect(page.getByText(/^Config$/i)).toBeVisible({ timeout: 5000 });
     await expect

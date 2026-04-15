@@ -74,6 +74,17 @@ class Settings(BaseSettings):
     admin_telemetry_sample_rate: float = 1.0
     # Telegram Stars webhook: secret for X-Telegram-Bot-Api-Secret-Token (empty = skip verify in dev)
     telegram_stars_webhook_secret: str = ""
+    # WebApp payment provider: telegram_stars | platega
+    webapp_payment_provider: str = "telegram_stars"
+    # Platega gateway credentials/config
+    platega_base_url: str = "https://app.platega.io/"
+    platega_merchant_id: str = ""
+    platega_secret: str = ""
+    platega_payment_method: int = 2
+    platega_currency: str = "RUB"
+    platega_timeout_seconds: float = 15.0
+    platega_return_url: str = ""
+    platega_failed_url: str = ""
     # Bot API: X-API-Key for /users/by-tg/{tg_id}, issue, reset (empty = only JWT)
     bot_api_key: str = ""
     # Telegram Bot token (for WebApp initData validation; empty = skip)
@@ -215,6 +226,16 @@ class Settings(BaseSettings):
             raise ValueError(
                 f"NODE_MODE must be 'mock', 'real' or 'agent', got: {self.node_mode!r}"
             )
+        return self
+
+    @model_validator(mode="after")
+    def check_webapp_payment_provider(self) -> "Settings":
+        provider = (self.webapp_payment_provider or "").strip().lower()
+        if provider not in {"telegram_stars", "platega"}:
+            raise ValueError(
+                "WEBAPP_PAYMENT_PROVIDER must be 'telegram_stars' or 'platega'"
+            )
+        object.__setattr__(self, "webapp_payment_provider", provider)
         return self
 
     @model_validator(mode="after")

@@ -21,9 +21,9 @@ test.describe("Miniapp Startup Deep Links", () => {
     await gotoMiniapp(page, "/devices");
 
     await expect(page).toHaveURL(/\/devices/);
-    await expect(page.getByText(/No active subscription/i)).toBeVisible({ timeout: 10000 });
-    await page.getByRole("link", { name: /Choose plan/i }).click();
-    await expect(page).toHaveURL(/\/plan$/);
+    await expect(page.getByText(/No active plan|Choose a plan/i).first()).toBeVisible({ timeout: 10000 });
+    await page.locator("a,button", { hasText: /Choose plan/i }).first().click();
+    await expect(page).toHaveURL(/\/(plan|onboarding|plan\/checkout\/[^/?#]+)(\?.*)?$/);
   });
 
   test("completed user deep link stays on target route", async ({ page }) => {
@@ -37,6 +37,6 @@ test.describe("Miniapp Startup Deep Links", () => {
     await gotoMiniapp(page, "/devices");
 
     await expect(page).toHaveURL(/\/devices/);
-    await expect(page.getByRole("heading", { name: /Devices/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Devices/i }).first()).toBeVisible();
   });
 });

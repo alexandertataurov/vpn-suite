@@ -3,6 +3,7 @@
 import pytest
 from httpx import ASGITransport, AsyncClient
 
+from app.core import config
 from app.main import app
 
 
@@ -28,6 +29,16 @@ async def test_webhook_unknown_provider_rejected(client: AsyncClient):
     code = err.get("code", "") if isinstance(err, dict) else ""
     msg = err.get("message", "") if isinstance(err, dict) else str(data)
     assert code == "UNKNOWN_PROVIDER" or "Unknown" in str(msg)
+
+
+@pytest.mark.asyncio
+async def test_webhook_platega_requires_valid_headers(
+    client: AsyncClient, monkeypatch: pytest.MonkeyPatch
+):
+    monkeypatch.setattr(config.settings, "platega_merchant_id", "merchant-1")
+    monkeypatch.setattr(config.settings, "platega_secret", "secret-1")
+    r = await client.post("/webhooks/payments/platega", json={"id": "plg-1", "status": "PENDING"})
+    assert r.status_code == 401
 
 
 @pytest.mark.asyncio
@@ -68,11 +79,12 @@ async def test_servers_requires_auth_401(client: AsyncClient):
     assert r.status_code == 401
 
 
-def test_webhook_allowed_providers_include_mock_and_telegram_stars():
-    """ALLOWED_WEBHOOK_PROVIDERS must include telegram_stars and mock."""
+def test_webhook_allowed_providers_include_mock_telegram_stars_and_platega():
+    """ALLOWED_WEBHOOK_PROVIDERS must include telegram_stars, platega, and mock."""
     from app.api.v1.webhooks import ALLOWED_WEBHOOK_PROVIDERS
 
     assert "telegram_stars" in ALLOWED_WEBHOOK_PROVIDERS
+    assert "platega" in ALLOWED_WEBHOOK_PROVIDERS
     assert "mock" in ALLOWED_WEBHOOK_PROVIDERS
 
 

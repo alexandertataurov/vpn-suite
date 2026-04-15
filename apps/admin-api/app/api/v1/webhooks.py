@@ -20,7 +20,7 @@ from app.services.payment_webhook_service import process_payment_webhook
 router = APIRouter(prefix="/webhooks", tags=["webhooks"])
 _log = logging.getLogger(__name__)
 
-ALLOWED_WEBHOOK_PROVIDERS = frozenset({"telegram_stars", "mock"})
+ALLOWED_WEBHOOK_PROVIDERS = frozenset({"telegram_stars", "platega", "mock"})
 
 
 def _external_id_from_payload(payload: dict) -> str | None:
@@ -51,6 +51,32 @@ def _verify_telegram_stars_secret(provider: str, secret_header: str | None) -> N
         )
 
 
+def _verify_platega_secret(
+    provider: str,
+    merchant_id_header: str | None,
+    secret_header: str | None,
+) -> None:
+    if provider != "platega":
+        return
+    configured_merchant_id = (settings.platega_merchant_id or "").strip()
+    configured_secret = (settings.platega_secret or "").strip()
+    if not configured_merchant_id or not configured_secret:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Platega webhook is not configured",
+        )
+    if not merchant_id_header or not secrets.compare_digest(
+        merchant_id_header, configured_merchant_id
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or missing webhook merchant id"
+        )
+    if not secret_header or not secrets.compare_digest(secret_header, configured_secret):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or missing webhook secret"
+        )
+
+
 WEBHOOK_MAX_BODY_BYTES = 1_000_000  # 1 MB
 
 
@@ -62,6 +88,8 @@ async def payment_webhook(
     x_telegram_bot_api_secret_token: str | None = Header(
         None, alias="X-Telegram-Bot-Api-Secret-Token"
     ),
+    x_merchant_id: str | None = Header(None, alias="X-MerchantId"),
+    x_secret: str | None = Header(None, alias="X-Secret"),
 ):
     """Idempotent: same external_id → 200, no duplicate charge. Telegram Stars: verify secret if set."""
     if provider not in ALLOWED_WEBHOOK_PROVIDERS:
@@ -103,6 +131,7 @@ async def payment_webhook(
     )
     try:
         _verify_telegram_stars_secret(provider, x_telegram_bot_api_secret_token)
+        _verify_platega_secret(provider, x_merchant_id, x_secret)
         result = await process_payment_webhook(db, provider=provider, payload=body)
         await db.commit()
         # DoD: audit all mutating operations; webhook has no admin, use actor "webhook"

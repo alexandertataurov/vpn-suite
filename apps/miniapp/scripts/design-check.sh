@@ -27,7 +27,7 @@ if [ -n "$ROOT_FILES" ]; then
 fi
 
 # 2. No inline style={ in miniapp-owned TSX (exclude *.stories.tsx, story-helpers, foundation story components)
-APP_TSX=$(find "$SRC" -name "*.tsx" 2>/dev/null | grep -vE '(\.stories\.tsx$|story-helpers\.tsx|foundations/(foundationShared|components/))' || true)
+APP_TSX=$(find "$SRC" -name "*.tsx" 2>/dev/null | grep -vE '(\.stories\.tsx$|story-helpers\.tsx|foundations/(shared/foundationShared|components/))' || true)
 for f in $APP_TSX; do
   if grep -q 'style=\s*{{' "$f" 2>/dev/null; then
     echo "design:check — no inline styles; use CSS classes. File: $f"

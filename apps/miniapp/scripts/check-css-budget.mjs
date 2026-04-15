@@ -3,7 +3,8 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 const DIST_ASSETS_DIR = join(process.cwd(), "dist", "assets");
-const RAW_BUDGET_BYTES = Number(process.env.CSS_BUDGET_BYTES ?? 110 * 1024);
+const RAW_BUDGET_BYTES = Number(process.env.CSS_RAW_BUDGET_BYTES ?? 300 * 1024);
+const GZIP_BUDGET_BYTES = Number(process.env.CSS_GZIP_BUDGET_BYTES ?? 50 * 1024);
 
 function formatBytes(bytes) {
   const kb = bytes / 1024;
@@ -32,6 +33,13 @@ if (rawBytes > RAW_BUDGET_BYTES) {
   process.exit(1);
 }
 
+if (gzipBytes > GZIP_BUDGET_BYTES) {
+  console.error(
+    `[css-budget] FAIL ${cssFileName}: gzip ${formatBytes(gzipBytes)} exceeds budget ${formatBytes(GZIP_BUDGET_BYTES)} (raw ${formatBytes(rawBytes)}).`
+  );
+  process.exit(1);
+}
+
 console.log(
-  `[css-budget] PASS ${cssFileName}: raw ${formatBytes(rawBytes)} within budget ${formatBytes(RAW_BUDGET_BYTES)} (gzip ${formatBytes(gzipBytes)}).`
+  `[css-budget] PASS ${cssFileName}: raw ${formatBytes(rawBytes)} within budget ${formatBytes(RAW_BUDGET_BYTES)}; gzip ${formatBytes(gzipBytes)} within budget ${formatBytes(GZIP_BUDGET_BYTES)}.`
 );

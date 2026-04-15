@@ -19,9 +19,7 @@ test.describe("Miniapp Home", () => {
 
     await gotoMiniapp(page, "/");
 
-    await expect(page.getByText(/Access is ready/i)).toBeVisible({ timeout: 10000 });
-    await expect(page.getByRole("button", { name: "Open AmneziaVPN" })).toBeVisible();
-    await expect(page.getByText(/Your devices/i)).toBeVisible();
-    await expect(page.getByText(/Share beta access/i)).toBeVisible();
+    await expect(page.getByText(/Manage Devices/i)).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/Invite Friends/i)).toBeVisible();
   });
 });

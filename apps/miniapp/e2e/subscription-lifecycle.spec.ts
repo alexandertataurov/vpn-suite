@@ -50,6 +50,26 @@ test.describe("Miniapp Subscription Lifecycle", () => {
         }),
       });
     });
+    await page.route("**/api/v1/webapp/user/access", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          status: "expired",
+          has_plan: true,
+          plan_id: "plan-restore",
+          plan_name: "Restore Plan",
+          plan_duration_days: 30,
+          devices_used: 0,
+          device_limit: 1,
+          traffic_used_bytes: 0,
+          config_ready: false,
+          config_id: null,
+          expires_at: "2024-01-01T00:00:00Z",
+          amnezia_vpn_key: null,
+        }),
+      });
+    });
     await page.route("**/api/v1/webapp/subscription/restore", async (route) => {
       await route.fulfill({
         status: 200,
@@ -88,6 +108,6 @@ test.describe("Miniapp Subscription Lifecycle", () => {
     await page.getByRole("button", { name: /Restore access/i }).click();
 
     await expect(page).toHaveURL(/.*\/plan\/checkout\/plan-restore$/, { timeout: 10000 });
-    await expect(page.getByRole("heading", { name: /Checkout/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Confirm your plan|Checkout|Review and pay/i }).first()).toBeVisible();
   });
 });

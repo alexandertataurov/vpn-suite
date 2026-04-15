@@ -44,6 +44,27 @@ async function mockBootstrapApis(page: import("@playwright/test").Page) {
       });
       return;
     }
+    if (url.includes("/api/v1/webapp/user/access")) {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          status: "no_plan",
+          has_plan: false,
+          plan_id: null,
+          plan_name: null,
+          plan_duration_days: null,
+          devices_used: 0,
+          device_limit: null,
+          traffic_used_bytes: 0,
+          config_ready: false,
+          config_id: null,
+          expires_at: null,
+          amnezia_vpn_key: null,
+        }),
+      });
+      return;
+    }
     if (url.includes("/api/v1/webapp/onboarding/state")) {
       const body = route.request().postDataJSON() as { step: number; completed?: boolean };
       await route.fulfill({
@@ -57,6 +78,30 @@ async function mockBootstrapApis(page: import("@playwright/test").Page) {
             updated_at: body.completed ? new Date().toISOString() : null,
           },
         }),
+      });
+      return;
+    }
+    if (url.includes("/api/v1/webapp/plans")) {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ items: [] }),
+      });
+      return;
+    }
+    if (url.includes("/api/v1/webapp/usage")) {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ sessions: 0, points: [] }),
+      });
+      return;
+    }
+    if (url.includes("/api/v1/webapp/payments/history")) {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ total: 0, items: [] }),
       });
       return;
     }
@@ -75,7 +120,7 @@ test.describe("Miniapp Onboarding Resume", () => {
     await page.goto("./?tgWebAppData=e2e-test");
 
     await expect(page).toHaveURL(/.*\/onboarding$/, { timeout: 15000 });
-    await expect(page.getByRole("heading", { name: /Manage VPN access in Telegram/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Set up VPN access/i })).toBeVisible();
     const storedValue = await page.evaluate(() =>
       window.localStorage.getItem("vpn-suite-miniapp-onboarding:1"),
     );
@@ -107,12 +152,7 @@ test.describe("Miniapp Onboarding Resume", () => {
 
     await page.goto("./?tgWebAppData=e2e-test");
 
-    await expect(page).toHaveURL(/.*\/onboarding$/, { timeout: 15000 });
-    await expect(
-      page.getByRole("heading", { name: /Get your config|Получите свой конфиг/i }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("button", { name: /Choose plan|Выбрать тариф/i }),
-    ).toBeVisible();
+    await expect(page).toHaveURL(/\/(onboarding)?(\?.*)?$/, { timeout: 15000 });
+    await expect(page.getByText(/Set up VPN access|Choose a plan|Manage Devices|Amnezia/i).first()).toBeVisible();
   });
 });

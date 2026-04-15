@@ -26,6 +26,7 @@ from app.models import (
 )
 from app.services.entitlement_service import emit_entitlement_event
 from app.services.funnel_service import log_funnel_event
+from app.services.platega_service import normalize_platega_status
 from app.services.referral_notification import notify_referrer_reward_granted
 from app.services.referral_service import grant_referral_reward
 from app.services.subscription_lifecycle_events import (
@@ -277,6 +278,32 @@ async def complete_pending_payment_by_bot(
     return True
 
 
+async def _process_platega_webhook(session: AsyncSession, payload: dict) -> WebhookResult:
+    external_id = payload.get("id") or payload.get("transactionId") or payload.get("external_id")
+    if not external_id:
+        raise ValueError("missing transaction id")
+    external_id = str(external_id)
+    existing = await session.execute(
+        select(Payment).where(Payment.external_id == external_id, Payment.provider == "platega")
+    )
+    payment = existing.scalar_one_or_none()
+    if not payment:
+        raise ValueError("payment not found for transaction id")
+    previous_status = str(payment.status or "")
+    next_status = normalize_platega_status(str(payload.get("status") or "PENDING"))
+
+    merged_payload = dict(payment.webhook_payload or {})
+    merged_payload["platega_last_webhook"] = payload
+    payment.webhook_payload = merged_payload
+    payment.status = next_status
+    event_type = "webhook_repeat" if previous_status == next_status else "webhook_status_update"
+    session.add(PaymentEvent(payment_id=payment.id, event_type=event_type, payload=payload))
+    await session.flush()
+    if next_status == "completed" and previous_status != "completed":
+        await _apply_payment_success_effects(session, payment, payload_for_promo=merged_payload)
+    return WebhookResult(payment_id=str(payment.id), created=False)
+
+
 async def process_payment_webhook(
     session: AsyncSession,
     *,
@@ -287,6 +314,10 @@ async def process_payment_webhook(
     Stub: expects payload with external_id, user_id, subscription_id, amount, currency.
     Real impl: provider-specific parse + signature verify.
     """
+    provider_normalized = (provider or "").strip().lower()
+    if provider_normalized == "platega":
+        return await _process_platega_webhook(session, payload)
+
     external_id = payload.get("external_id") or payload.get("id") or payload.get("payment_id")
     if not external_id:
         raise ValueError("missing external_id")

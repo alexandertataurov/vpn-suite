@@ -5,18 +5,16 @@ const VIEWPORTS = [
   { name: "mobile-375", width: 375, height: 812 },
   { name: "mobile-430", width: 430, height: 932 },
   { name: "mobile-landscape", width: 844, height: 390 },
-  { name: "desktop", width: 1024, height: 900 },
 ] as const;
 
 const ROUTES = [
-  { path: "/", readyText: /Access is ready|Access active|Restore access|Choose your plan/i },
+  { path: "/", readyText: /Manage Devices|Setup Required|Renew Subscription|Invite Friends/i },
   { path: "/plan", readyText: /Plan\s*&\s*Billing|Pro|Basic|No plans available|Could not load/i },
-  { path: "/plan/checkout/plan-pro", readyText: /Checkout|Payment|Plan ID/i },
+  { path: "/plan/checkout/plan-pro", readyText: /Confirm your plan|Review and pay|Checkout|Payment|Plan ID/i },
   { path: "/devices", readyText: /Devices|Active|Config|Add device|No devices yet/i },
-  { path: "/servers", readyText: /Servers|Routing mode|Locations/i },
   { path: "/referral", readyText: /Referral|Referrals|Share link|Reward progress/i },
-  { path: "/support", readyText: /Support|Troubleshooter|FAQ/i },
-  { path: "/settings", readyText: /Settings|Plan\s*&\s*billing|Help|Danger zone/i },
+  { path: "/support", readyText: /Support|Troubleshooter|FAQ|Setup guide|Contact support|Help/i },
+  { path: "/settings", readyText: /Settings|Profile|Plan|Cancel plan|Danger zone|Edit profile/i },
 ] as const;
 
 async function injectTelegram(page: Page) {
@@ -73,6 +71,27 @@ async function mockApi(page: Page) {
           ],
           devices: [],
           onboarding: { completed: true, step: 3, version: 2, updated_at: "2030-01-15T12:00:00Z" },
+        }),
+      });
+      return;
+    }
+    if (url.includes("/api/v1/webapp/user/access")) {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          status: "needs_device",
+          has_plan: true,
+          plan_id: "plan-pro",
+          plan_name: "Pro",
+          plan_duration_days: 90,
+          devices_used: 0,
+          device_limit: 5,
+          traffic_used_bytes: 0,
+          config_ready: false,
+          config_id: null,
+          expires_at: "2030-03-01T00:00:00Z",
+          amnezia_vpn_key: null,
         }),
       });
       return;

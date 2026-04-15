@@ -53,7 +53,9 @@ This document is the **single source of truth** for the API contract. It is deri
  - Agent API returns 503 if `AGENT_SHARED_TOKEN` is not configured.
 
 ### Webhooks
-- `/webhooks/payments/{provider}` is public but supports provider secret headers (Telegram Stars).
+- `/webhooks/payments/{provider}` is public but supports provider secret headers:
+- `telegram_stars`: `X-Telegram-Bot-Api-Secret-Token`
+- `platega`: `X-MerchantId` + `X-Secret`
 
 ---
 

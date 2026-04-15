@@ -1,5 +1,6 @@
 """WebApp: initData validation, session token, me (user + subscription + devices)."""
 
+import json
 import logging
 import math
 import re
@@ -69,6 +70,12 @@ from app.services.device_telemetry_cache import (
 from app.services.funnel_service import log_funnel_event
 from app.services.issue_service import issue_device
 from app.services.issued_config_service import persist_issued_configs
+from app.services.payment_webhook_service import process_payment_webhook
+from app.services.platega_service import (
+    PlategaError,
+    create_platega_transaction,
+    get_platega_transaction,
+)
 from app.services.promo_service import PromoCodeError, redeem_promo_code, validate_promo_code
 from app.services.retention_service import (
     pause_subscription,
@@ -2405,13 +2412,73 @@ async def _create_telegram_invoice_link(
         return ""
 
 
+def _webapp_payment_provider() -> str:
+    provider = (settings.webapp_payment_provider or "telegram_stars").strip().lower()
+    return provider if provider in {"telegram_stars", "platega"} else "telegram_stars"
+
+
+async def _create_platega_redirect(
+    *,
+    user_id: int,
+    subscription_id: str,
+    plan_id: str,
+    payment_amount: int,
+    promo_code: str | None,
+) -> tuple[str, str, dict]:
+    return_url = (settings.platega_return_url or "").strip()
+    failed_url = (settings.platega_failed_url or "").strip()
+    if not return_url or not failed_url:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={
+                "code": "PAYMENT_PROVIDER_MISCONFIGURED",
+                "message": "Platega return/failed URLs are not configured",
+            },
+        )
+    payload_data = {
+        "source": "webapp",
+        "user_id": int(user_id),
+        "subscription_id": subscription_id,
+        "plan_id": plan_id,
+        "promo_code": promo_code or "",
+    }
+    payload = json.dumps(payload_data, separators=(",", ":"), ensure_ascii=True)
+    try:
+        created = await create_platega_transaction(
+            amount=max(1, int(payment_amount)),
+            currency=(settings.platega_currency or "RUB").strip().upper(),
+            description=f"VPN plan {plan_id[:8]}",
+            return_url=return_url,
+            failed_url=failed_url,
+            payload=payload,
+        )
+    except PlategaError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail={
+                "code": "PAYMENT_PROVIDER_UNAVAILABLE",
+                "message": str(exc) or "Platega transaction creation failed",
+            },
+        ) from exc
+    webhook_payload = {
+        "promo_code": promo_code,
+        "platega_redirect_url": created.redirect_url,
+        "platega_status": created.status,
+        "platega_payment_method": created.payment_method,
+        "platega_expires_in": created.expires_in,
+        "platega_usdt_rate": created.usdt_rate,
+        "platega_payload": payload_data,
+    }
+    return created.transaction_id, created.redirect_url, webhook_payload
+
+
 @router.post("/payments/create-invoice")
 async def webapp_create_invoice(
     request: Request,
     body: CreateInvoiceWebAppBody,
     db: AsyncSession = Depends(get_db),
 ):
-    """Create pending/active subscription payment invoice for Telegram Stars. Bearer required."""
+    """Create pending/active subscription payment invoice for configured WebApp provider."""
     tg_id = _get_tg_id_from_bearer(request)
     if not tg_id:
         raise HTTPException(
@@ -2466,6 +2533,7 @@ async def webapp_create_invoice(
         normalize_pending_state(sub)
         db.add(sub)
         await db.flush()
+    payment_provider = _webapp_payment_provider()
     stars_amount = _stars_amount(plan.price_amount, plan.price_currency)
     original_price_xtr = int(stars_amount)
     final_price_xtr = original_price_xtr
@@ -2502,6 +2570,7 @@ async def webapp_create_invoice(
         .where(
             Payment.user_id == user.id,
             Payment.subscription_id == sub.id,
+            Payment.provider == payment_provider,
             Payment.status == "pending",
             Payment.created_at >= idem_cutoff,
         )
@@ -2516,13 +2585,18 @@ async def webapp_create_invoice(
         title = plan.name or "VPN"
         description = f"VPN plan, {plan.duration_days} days"
         invoice_link = ""
-        if not is_free:
+        invoice_url = ""
+        if not is_free and payment_provider == "telegram_stars":
             invoice_link = await _create_telegram_invoice_link(
                 title=title,
                 description=description,
                 payload=existing_payment.id,
                 star_count=star_count,
             )
+        if not is_free and payment_provider == "platega":
+            existing_payload = existing_payment.webhook_payload or {}
+            invoice_url = str(existing_payload.get("platega_redirect_url") or "").strip()
+            invoice_link = invoice_url
         discounted = (
             int(float(existing_payment.amount or 0)) if existing_payment.amount else star_count
         )
@@ -2534,7 +2608,7 @@ async def webapp_create_invoice(
             "payment_id": existing_payment.id,
             "title": title,
             "description": description,
-            "currency": "XTR",
+            "currency": existing_payment.currency,
             "star_count": star_count,
             "discounted_price_xtr": discounted,
             "promo_discount_applied": existing_discount,
@@ -2542,20 +2616,36 @@ async def webapp_create_invoice(
             "server_id": server.id if server else "",
             "subscription_id": sub.id,
             "invoice_link": invoice_link,
+            "invoice_url": invoice_url,
             "free_activation": is_free,
         }
     external_id = (
-        f"webapp:telegram_stars:{user.id}:{sub.id}:{getattr(request.state, 'request_id', 'none')}"
+        f"webapp:{payment_provider}:{user.id}:{sub.id}:{getattr(request.state, 'request_id', 'none')}"
     )
+    payment_currency = "XTR"
+    webhook_payload: dict | None = {"promo_code": body.promo_code} if body.promo_code else None
+    platega_redirect_url = ""
+    if not is_free and payment_provider == "platega":
+        tx_id, redirect_url, provider_payload = await _create_platega_redirect(
+            user_id=user.id,
+            subscription_id=sub.id,
+            plan_id=body.plan_id,
+            payment_amount=final_price_xtr,
+            promo_code=body.promo_code,
+        )
+        external_id = tx_id
+        payment_currency = (settings.platega_currency or "RUB").strip().upper()
+        platega_redirect_url = redirect_url
+        webhook_payload = provider_payload
     payment = Payment(
         user_id=user.id,
         subscription_id=sub.id,
-        provider="telegram_stars",
+        provider=payment_provider,
         status="completed" if is_free else "pending",
         amount=float(final_price_xtr),
-        currency="XTR",
+        currency=payment_currency,
         external_id=external_id,
-        webhook_payload={"promo_code": body.promo_code} if body.promo_code else None,
+        webhook_payload=webhook_payload,
     )
     db.add(payment)
     await db.flush()
@@ -2602,19 +2692,25 @@ async def webapp_create_invoice(
     title = plan.name or "VPN"
     description = f"VPN plan, {plan.duration_days} days"
     invoice_link = ""
-    if not is_free:
+    invoice_url = ""
+    if not is_free and payment_provider == "telegram_stars":
         invoice_link = await _create_telegram_invoice_link(
             title=title,
             description=description,
             payload=payment.id,
             star_count=star_count,
         )
+    if not is_free and payment_provider == "platega":
+        invoice_url = platega_redirect_url or str(
+            (payment.webhook_payload or {}).get("platega_redirect_url") or ""
+        ).strip()
+        invoice_link = invoice_url
     return {
         "invoice_id": payment.id,
         "payment_id": payment.id,
         "title": title,
         "description": description,
-        "currency": "XTR",
+        "currency": payment.currency,
         "star_count": star_count,
         "discounted_price_xtr": final_price_xtr,
         "promo_discount_applied": promo_discount_applied,
@@ -2622,6 +2718,7 @@ async def webapp_create_invoice(
         "server_id": server.id if server else "",
         "subscription_id": sub.id,
         "invoice_link": invoice_link,
+        "invoice_url": invoice_url,
         "free_activation": is_free,
     }
 
@@ -2689,13 +2786,18 @@ async def webapp_payments_history(
             has_refund_event=payment.id in refunded_payment_ids,
         )
         stars_amount = _stars_amount(payment.amount, payment.currency)
+        amount_value = float(stars_amount)
+        currency_value = "XTR"
+        if (payment.provider or "").strip().lower() == "platega":
+            amount_value = float(payment.amount or 0)
+            currency_value = payment.currency or "RUB"
         items.append(
             WebAppBillingHistoryItem(
                 payment_id=payment.id,
                 plan_id=subscription.plan_id if subscription else None,
                 plan_name=clean_plan_name or fallback_plan_name,
-                amount=float(stars_amount),
-                currency="XTR",
+                amount=amount_value,
+                currency=currency_value,
                 status=history_status,
                 created_at=payment.created_at,
                 invoice_ref=invoice_ref,
@@ -2731,6 +2833,32 @@ async def webapp_payment_status(
             detail={"code": "PAYMENT_NOT_FOUND", "message": "Payment not found"},
         )
     payment, sub, _user = row
+    if (payment.provider or "").strip().lower() == "platega" and payment.status == "pending":
+        try:
+            tx = await get_platega_transaction(payment.external_id)
+            if tx.status != payment.status:
+                await process_payment_webhook(
+                    db,
+                    provider="platega",
+                    payload={
+                        "id": payment.external_id,
+                        "status": str(tx.raw.get("status") or tx.status).upper(),
+                        "amount": str(tx.amount) if tx.amount is not None else None,
+                        "currency": tx.currency,
+                    },
+                )
+                await db.commit()
+                refreshed = await db.execute(
+                    select(Payment, Subscription)
+                    .join(Subscription, Payment.subscription_id == Subscription.id, isouter=True)
+                    .where(Payment.id == payment.id)
+                )
+                new_row = refreshed.first()
+                if new_row:
+                    payment, sub = new_row
+        except PlategaError:
+            # Keep serving local pending status; webhook may still complete the payment.
+            pass
     return WebAppPaymentStatusOut(
         payment_id=payment.id,
         status=payment.status,

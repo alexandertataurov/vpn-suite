@@ -1,5 +1,6 @@
 import { type Page, type Route } from "@playwright/test";
 import type {
+  UserAccessResponse,
   WebAppBillingHistoryResponse,
   WebAppCreateInvoiceResponse,
   WebAppIssueDeviceResponse,
@@ -54,6 +55,7 @@ export interface MiniappMockOptions {
   replaceDeviceReplies?: MockReply[];
   referralAttachReplies?: MockReply[];
   authReplies?: MockReply[];
+  access?: UserAccessResponse;
 }
 
 interface RecordedRequest {
@@ -276,6 +278,43 @@ function defaultPaymentStatus(planId: string): WebAppPaymentStatusOut {
   };
 }
 
+function toUserAccess(session: WebAppMeResponse, plans: PlansResponse): UserAccessResponse {
+  const subscription = session.subscriptions[0] ?? null;
+  const hasPlan = Boolean(subscription && subscription.status !== "cancelled");
+  const activeDevices = session.devices.filter((device) => device.revoked_at == null);
+  const devicesUsed = activeDevices.length;
+  const deviceLimit = subscription?.device_limit ?? null;
+  const plan = plans.items.find((item) => item.id === subscription?.plan_id) ?? null;
+  const planName = plan?.name ?? (subscription?.plan_id ?? null);
+  const planDurationDays = plan?.duration_days ?? null;
+  const expiresAt = subscription?.valid_until ?? null;
+  const status =
+    !hasPlan
+      ? "no_plan"
+      : subscription?.status === "expired"
+        ? "expired"
+        : deviceLimit != null && devicesUsed >= deviceLimit
+          ? "device_limit"
+          : devicesUsed === 0
+            ? "needs_device"
+            : "ready";
+
+  return {
+    status,
+    has_plan: hasPlan,
+    plan_id: subscription?.plan_id ?? null,
+    plan_name: planName,
+    plan_duration_days: planDurationDays,
+    devices_used: devicesUsed,
+    device_limit: deviceLimit,
+    traffic_used_bytes: 123_456_789,
+    config_ready: devicesUsed > 0,
+    config_id: session.latest_device_delivery?.device_id ?? null,
+    expires_at: expiresAt,
+    amnezia_vpn_key: session.latest_device_delivery?.amnezia_vpn_key ?? null,
+  };
+}
+
 async function fulfillJson(route: Route, status: number, body: unknown): Promise<void> {
   await route.fulfill({
     status,
@@ -482,6 +521,12 @@ export async function setupMiniappApi(
     if (path === "/api/v1/webapp/me" && method === "GET") {
       const reply = withStatus(nextReply(meReplies), state.session);
       await fulfillJson(route, reply.status, reply.body);
+      return;
+    }
+
+    if (path === "/api/v1/webapp/user/access" && method === "GET") {
+      const access = options.access ?? toUserAccess(state.session, state.plans);
+      await fulfillJson(route, 200, access);
       return;
     }
 

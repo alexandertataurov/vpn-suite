@@ -13,6 +13,7 @@ from app.core.database import get_db
 from app.core.security import create_webapp_session_token
 from app.main import app
 from app.models import Payment, Plan, Server, Subscription, User
+from app.services.platega_service import PlategaCreateTransactionResult
 from app.services.promo_service import PromoCodeError, PromoErrorCode
 
 
@@ -176,6 +177,122 @@ async def test_webapp_create_invoice_free_plan_activates_subscription(
         payment = pay_row.scalar_one_or_none()
         assert payment is not None
         assert payment.status == "completed"
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+
+
+@pytest.mark.asyncio
+async def test_webapp_create_invoice_platega_returns_redirect_url(
+    async_session: AsyncSession,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Platega provider: create-invoice returns redirect URL and persists payment with transactionId."""
+    now = datetime.now(timezone.utc)
+    tg_id = int(uuid.uuid4().int % 10_000_000_000)
+    user = User(tg_id=tg_id)
+    async_session.add(user)
+    await async_session.flush()
+
+    plan = Plan(
+        id=uuid.uuid4().hex[:32],
+        name="Pro",
+        duration_days=30,
+        device_limit=3,
+        price_currency="XTR",
+        price_amount=Decimal("100"),
+    )
+    async_session.add(plan)
+    await async_session.flush()
+
+    sub = Subscription(
+        id=uuid.uuid4().hex[:32],
+        user_id=user.id,
+        plan_id=plan.id,
+        valid_from=now - timedelta(days=1),
+        valid_until=now + timedelta(days=29),
+        device_limit=3,
+        status="active",
+        subscription_status="active",
+        access_status="enabled",
+        billing_status="paid",
+        renewal_status="auto_renew_on",
+    )
+    async_session.add(sub)
+
+    server = Server(
+        id=uuid.uuid4().hex[:32],
+        name="srv",
+        region="test",
+        api_endpoint="https://vpn-node.example.com/api",
+        public_key="xTIBA5rboUvnH4htodjb6e697QjLERt1NAB4mZqp8Dg=",
+        vpn_endpoint="vpn.example.com:47604",
+        is_active=True,
+    )
+    async_session.add(server)
+    await async_session.commit()
+
+    monkeypatch.setattr("app.api.v1.webapp.settings.webapp_payment_provider", "platega")
+    monkeypatch.setattr("app.api.v1.webapp.settings.platega_return_url", "https://miniapp.example/success")
+    monkeypatch.setattr("app.api.v1.webapp.settings.platega_failed_url", "https://miniapp.example/fail")
+    monkeypatch.setattr("app.api.v1.webapp.settings.platega_currency", "RUB")
+
+    async def fake_create_platega_transaction(
+        *,
+        amount: int,
+        currency: str,
+        description: str,
+        return_url: str,
+        failed_url: str,
+        payload: str,
+    ) -> PlategaCreateTransactionResult:
+        assert amount == 100
+        assert currency == "RUB"
+        assert description.startswith("VPN plan")
+        assert return_url == "https://miniapp.example/success"
+        assert failed_url == "https://miniapp.example/fail"
+        assert "subscription_id" in payload
+        return PlategaCreateTransactionResult(
+            transaction_id="platega-tx-001",
+            redirect_url="https://pay.platega.io/mock-checkout",
+            status="PENDING",
+            payment_method="SBPQR",
+            expires_in="00:15:00",
+            usdt_rate=95.0,
+        )
+
+    monkeypatch.setattr("app.api.v1.webapp.create_platega_transaction", fake_create_platega_transaction)
+    token = create_webapp_session_token(tg_id)
+
+    async def override_get_db():
+        yield async_session
+
+    app.dependency_overrides[get_db] = override_get_db
+    try:
+        async with AsyncClient(
+            transport=ASGITransport(app=app),
+            base_url="http://test",
+            timeout=10.0,
+        ) as client:
+            response = await client.post(
+                "/api/v1/webapp/payments/create-invoice",
+                headers={"Authorization": f"Bearer {token}"},
+                json={"plan_id": plan.id},
+            )
+        assert response.status_code == 200, response.text
+        payload = response.json()
+        assert payload["currency"] == "RUB"
+        assert payload["invoice_url"] == "https://pay.platega.io/mock-checkout"
+        assert payload["invoice_link"] == "https://pay.platega.io/mock-checkout"
+        assert payload["free_activation"] is False
+
+        result = await async_session.execute(
+            select(Payment).where(Payment.id == payload["payment_id"])
+        )
+        payment = result.scalar_one_or_none()
+        assert payment is not None
+        assert payment.provider == "platega"
+        assert payment.external_id == "platega-tx-001"
+        assert payment.status == "pending"
     finally:
         app.dependency_overrides.pop(get_db, None)
 

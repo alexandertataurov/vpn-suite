@@ -16,6 +16,7 @@ import { useBootstrapMachine } from "./useBootstrapMachine";
 import { BootErrorScreen, BootLoadingScreen, BrandSplashScreen } from "./BootScreens";
 
 function isOnboardingAllowedPath(pathname: string): boolean {
+  if (pathname.startsWith("/mock")) return true;
   if (ONBOARDING_ALLOWED_PATHS.includes(pathname)) return true;
   if (pathname.startsWith("/plan/checkout/")) return true;
   return false;

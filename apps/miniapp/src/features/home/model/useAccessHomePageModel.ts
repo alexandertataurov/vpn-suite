@@ -86,16 +86,23 @@ function buildAccessUiMap(t: (key: string, params?: Record<string, string | numb
   };
 }
 
-function formatExpiry(expiresAt: string | null): string {
+function resolveDateLocale(locale: "en" | "ru"): string {
+  return locale === "ru" ? "ru-RU" : "en-US";
+}
+
+function formatExpiry(expiresAt: string | null, locale: "en" | "ru"): string {
   if (!expiresAt) return "";
-  return formatDate(expiresAt, "en-US");
+  return formatDate(expiresAt, resolveDateLocale(locale));
 }
 
 export type PillChipVariant = "beta" | "active" | "expiring" | "expired";
 
-function daysUntil(expiresAt: string): number {
-  const now = new Date();
+function daysUntil(expiresAt: string): number | null {
   const exp = new Date(expiresAt);
+  if (Number.isNaN(exp.getTime())) {
+    return null;
+  }
+  const now = new Date();
   return Math.ceil((exp.getTime() - now.getTime()) / (24 * 60 * 60 * 1000));
 }
 
@@ -107,11 +114,17 @@ export function getPillChipForAccess(
 ): { variant: PillChipVariant; label: string } | null {
   if (status === "no_plan" || !hasPlan) return { variant: "beta", label: t("home.status_beta") };
   if (status === "expired") return { variant: "expired", label: t("home.expired_label") };
-  if (!hasPlan) return { variant: "beta", label: t("home.status_beta") };
   if (expiresAt) {
     const days = daysUntil(expiresAt);
-    if (days <= 0) return { variant: "expired", label: t("home.expired_label") };
-    if (days <= 14) return { variant: "expiring", label: `${t("home.status_pro")} · ${days}d left` };
+    if (days != null) {
+      if (days <= 0) return { variant: "expired", label: t("home.expired_label") };
+      if (days <= 14) {
+        return {
+          variant: "expiring",
+          label: `${t("home.status_pro")} · ${t("home.badge_days_left", { count: days })}`,
+        };
+      }
+    }
   }
   return { variant: "active", label: t("home.status_pro") };
 }
@@ -166,7 +179,8 @@ export function useAccessHomePageModel() {
     (status !== "ready" || data.config_ready === true);
   const devicesValue =
     data && data.device_limit != null ? `${data.devices_used} / ${data.device_limit}` : "";
-  const expiryValue = data?.expires_at ? formatExpiry(data.expires_at) : "";
+  const dateLocale = resolveDateLocale(locale);
+  const expiryValue = data?.expires_at ? formatExpiry(data.expires_at, locale) : "";
   const expiryLabel = uiConfig?.expiryLabel ?? t("home.expiry_valid_until");
 
   const pillChip =
@@ -200,11 +214,9 @@ export function useAccessHomePageModel() {
     ? periodLabelForHeroLocalized(data.plan_duration_days, locale).toLowerCase()
     : "";
   const planDisplayName = [planName, planPeriod].filter(Boolean).join(" ").trim();
-  const renewsValue =
-    data?.expires_at ? formatExpiry(data.expires_at) : "—";
+  const renewsValue = data?.expires_at ? formatExpiry(data.expires_at, locale) : "—";
 
-  const expiryDateShort =
-    data?.expires_at ? formatDate(data.expires_at, "en-US") : "";
+  const expiryDateShort = data?.expires_at ? formatDate(data.expires_at, dateLocale) : "";
 
   const subscriptionSubtitle =
     status === "expired"

@@ -296,7 +296,7 @@ export function SettingsPage() {
       <FooterHelp
         note={t("footer.having_trouble")}
         linkLabel={t("footer.view_setup_guide")}
-        onLinkClick={() => navigate("/support")}
+        onLinkClick={() => navigate("/setup-guide")}
       />
       </PageLayout>
     </PageScaffold>

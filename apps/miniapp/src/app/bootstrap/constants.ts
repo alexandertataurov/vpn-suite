@@ -7,4 +7,12 @@ export const ONBOARDING_VERSION = 2;
 export const ONBOARDING_ALLOWED_PATHS: readonly string[] = [
   "/onboarding",
   "/",
+  "/plan",
+  "/devices",
+  "/devices/issue",
+  "/setup-guide",
+  "/mock",
+  "/mock/design",
+  "/mock/design/checkout",
+  "/mock/design/settings",
 ];

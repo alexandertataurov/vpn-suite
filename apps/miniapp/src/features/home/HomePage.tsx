@@ -194,7 +194,7 @@ export function HomePage() {
           <FooterHelp
             note={t("footer.having_trouble")}
             linkLabel={t("footer.view_setup_guide")}
-            onLinkClick={() => navigate("/support")}
+            onLinkClick={() => navigate("/setup-guide")}
           />
         </PageLayout>
       </PageScaffold>
@@ -239,7 +239,7 @@ export function HomePage() {
                 title={t("home.setup_required_title")}
                 description={t("home.setup_required_description")}
                 onChoosePlan={() => navigate("/plan")}
-                onViewGuide={() => navigate("/support")}
+                onViewGuide={() => navigate("/setup-guide")}
                 choosePlanLabel={t("home.choose_plan_cta")}
                 viewGuideLabel={t("home.view_guide_label")}
               />
@@ -304,7 +304,7 @@ export function HomePage() {
           <FooterHelp
             note={t("footer.having_trouble")}
             linkLabel={t("footer.view_setup_guide")}
-            onLinkClick={() => navigate("/support")}
+            onLinkClick={() => navigate("/setup-guide")}
           />
         </Stack>
       </PageLayout>

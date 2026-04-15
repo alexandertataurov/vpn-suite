@@ -1,7 +1,7 @@
 import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { vi } from "vitest";
-import { useAccessHomePageModel } from "../useAccessHomePageModel";
+import { getPillChipForAccess, useAccessHomePageModel } from "../useAccessHomePageModel";
 
 const mockGetUserAccess = vi.fn();
 
@@ -31,6 +31,10 @@ describe("useAccessHomePageModel", () => {
   beforeEach(() => {
     mockGetUserAccess.mockReset();
     queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("returns loading state while fetching", () => {
@@ -178,5 +182,35 @@ describe("useAccessHomePageModel", () => {
 
     expect(result.current.pageState.title).toBe("Something went wrong");
     expect(result.current.pageState.onRetry).toBeDefined();
+  });
+});
+
+describe("getPillChipForAccess", () => {
+  it("returns localized expiring label using translation key", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-04-14T00:00:00Z"));
+
+    const t = (key: string, params?: Record<string, string | number | boolean>) => {
+      if (key === "home.status_pro") return "PRO";
+      if (key === "home.badge_days_left") return `Осталось ${params?.count ?? 0} дн.`;
+      if (key === "home.status_beta") return "Beta";
+      if (key === "home.expired_label") return "Истёк";
+      return key;
+    };
+
+    const result = getPillChipForAccess("ready", true, "2026-04-20T00:00:00Z", t);
+    expect(result).toEqual({ variant: "expiring", label: "PRO · Осталось 6 дн." });
+  });
+
+  it("falls back to active chip when expiry date is invalid", () => {
+    const t = (key: string) => {
+      if (key === "home.status_pro") return "PRO";
+      if (key === "home.status_beta") return "Beta";
+      if (key === "home.expired_label") return "Expired";
+      return key;
+    };
+
+    const result = getPillChipForAccess("ready", true, "not-a-date", t);
+    expect(result).toEqual({ variant: "active", label: "PRO" });
   });
 });

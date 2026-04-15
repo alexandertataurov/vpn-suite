@@ -19,6 +19,11 @@ function isAutomatedRuntime(): boolean {
   return typeof navigator !== "undefined" && navigator.webdriver;
 }
 
+function isMockPreviewPath(): boolean {
+  if (typeof window === "undefined") return false;
+  return window.location.pathname.includes("/mock");
+}
+
 export type BootPhase =
   | "boot_init"
   | "telegram_ready"
@@ -214,6 +219,11 @@ export function useBootstrapMachine({
 
   useEffect(() => {
     if (phase === "boot_init") {
+      if (isMockPreviewPath()) {
+        setStartupError(null);
+        setPhase("app_ready");
+        return;
+      }
       if (!initData) {
         const err = {
           ...getStartupError(isInsideTelegram),
@@ -232,6 +242,13 @@ export function useBootstrapMachine({
     }
 
     if (phase === "startup_error") return;
+    if (isMockPreviewPath()) {
+      if (phase !== "app_ready") {
+        setStartupError(null);
+        setPhase("app_ready");
+      }
+      return;
+    }
 
     if (phase === "telegram_ready") {
       if (hasToken) {

@@ -1,0 +1,253 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+.frame { background: var(--color-background-secondary); border-radius: var(--border-radius-lg); padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.controls { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.t-btn { font-size: 12px; padding: 5px 14px; border-radius: 20px; border: 0.5px solid var(--color-border-secondary); background: transparent; color: var(--color-text-secondary); cursor: pointer; }
+.t-btn.active { background: var(--color-background-primary); color: var(--color-text-primary); border-color: var(--color-border-primary); }
+.phone { width: 320px; border-radius: 28px; border: 0.5px solid var(--color-border-secondary); overflow: hidden; transition: background 0.2s; }
+.tg-bar { display: flex; align-items: center; gap: 10px; padding: 14px 16px 12px; }
+.back { width: 28px; height: 28px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+.bar-title { font-size: 15px; font-weight: 500; }
+.body { padding: 20px 16px 28px; }
+.icon-wrap { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
+.screen-h { font-size: 17px; font-weight: 500; line-height: 1.3; margin-bottom: 6px; }
+.screen-sub { font-size: 13px; line-height: 1.6; margin-bottom: 8px; }
+.platform-tabs { display: flex; gap: 6px; margin-bottom: 20px; }
+.p-tab { font-size: 12px; font-weight: 500; padding: 4px 12px; border-radius: 20px; border: 0.5px solid; cursor: pointer; transition: all 0.15s; }
+.steps { display: flex; flex-direction: column; margin-bottom: 18px; }
+.srow { display: flex; gap: 12px; padding-bottom: 14px; }
+.srow:last-child { padding-bottom: 0; }
+.sleft { display: flex; flex-direction: column; align-items: center; }
+.snum { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; flex-shrink: 0; }
+.sline { width: 1px; flex: 1; margin-top: 4px; min-height: 10px; }
+.scontent { flex: 1; padding-top: 2px; }
+.stitle { font-size: 13px; font-weight: 500; margin-bottom: 2px; }
+.sdesc { font-size: 12px; line-height: 1.55; }
+.chip { display: inline-flex; align-items: center; font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 4px; margin-top: 5px; font-family: monospace; }
+.no-app { border-radius: 10px; padding: 11px 13px; margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.no-app-text .label { font-size: 12px; font-weight: 500; margin-bottom: 1px; }
+.no-app-text .sub { font-size: 11px; }
+.no-app-link { font-size: 12px; font-weight: 500; white-space: nowrap; text-decoration: none; }
+.warn { border-radius: 8px; padding: 9px 11px; margin-bottom: 18px; display: flex; gap: 7px; align-items: flex-start; }
+.warn-t { font-size: 11px; line-height: 1.5; }
+.cta { width: 100%; padding: 13px; border-radius: 10px; border: none; font-size: 14px; font-weight: 500; cursor: pointer; text-align: center; }
+</style>
+
+<h2 class="sr-only">Мокап экрана гайда подключения в Telegram Mini App — светлая и тёмная тема, iOS и Android</h2>
+
+<div class="frame">
+  <div class="controls">
+    <button class="t-btn active" onclick="setTheme('light')">Светлая</button>
+    <button class="t-btn" onclick="setTheme('dark')">Тёмная</button>
+    <button class="t-btn active" id="ios-btn" onclick="setPlatform('ios')" style="margin-left:8px;">iOS</button>
+    <button class="t-btn" id="and-btn" onclick="setPlatform('android')">Android</button>
+  </div>
+
+  <div class="phone" id="phone">
+    <div class="tg-bar" id="tg-bar">
+      <button class="back" id="back">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="back-svg"><polyline points="9,2 4,7 9,12"/></svg>
+      </button>
+      <span class="bar-title" id="bar-title">Как подключиться</span>
+    </div>
+
+    <div class="body">
+      <div class="icon-wrap" id="icon-wrap">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" id="main-icon">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <polyline points="9,12 11,14 15,10"/>
+        </svg>
+      </div>
+
+      <p class="screen-h" id="screen-h">Настройка займёт минуту</p>
+      <p class="screen-sub" id="screen-sub">Скачайте файл конфигурации и откройте его в AmneziaVPN. Готово — VPN будет работать.</p>
+
+      <div class="platform-tabs" id="platform-tabs">
+        <div class="p-tab" id="tab-ios" onclick="setPlatform('ios')">iOS</div>
+        <div class="p-tab" id="tab-and" onclick="setPlatform('android')">Android</div>
+      </div>
+
+      <div class="steps" id="steps-ios">
+        <div class="srow">
+          <div class="sleft"><div class="snum" id="n1i">1</div><div class="sline" id="li1"></div></div>
+          <div class="scontent">
+            <p class="stitle" id="t1i">Скачайте файл</p>
+            <p class="sdesc" id="d1i">Нажмите кнопку ниже — файл откроется через «Поделиться».</p>
+            <span class="chip" id="c1i">.conf</span>
+          </div>
+        </div>
+        <div class="srow">
+          <div class="sleft"><div class="snum" id="n2i">2</div><div class="sline" id="li2"></div></div>
+          <div class="scontent">
+            <p class="stitle" id="t2i">Откройте AmneziaVPN</p>
+            <p class="sdesc" id="d2i">В диалоге «Открыть в...» выберите AmneziaVPN.</p>
+          </div>
+        </div>
+        <div class="srow">
+          <div class="sleft"><div class="snum" id="n3i">3</div><div class="sline" id="li3"></div></div>
+          <div class="scontent">
+            <p class="stitle" id="t3i">Подтвердите импорт</p>
+            <p class="sdesc" id="d3i">Приложение автоматически предложит добавить подключение — нажмите «Продолжить».</p>
+          </div>
+        </div>
+        <div class="srow">
+          <div class="sleft"><div class="snum" id="n4i">4</div></div>
+          <div class="scontent">
+            <p class="stitle" id="t4i">Готово — нажмите «Подключиться»</p>
+            <p class="sdesc" id="d4i">Подключение появится в списке. Разрешите добавление VPN-профиля при запросе.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="steps" id="steps-and" style="display:none;">
+        <div class="srow">
+          <div class="sleft"><div class="snum" id="n1a">1</div><div class="sline" id="la1"></div></div>
+          <div class="scontent">
+            <p class="stitle" id="t1a">Скачайте файл</p>
+            <p class="sdesc" id="d1a">Нажмите кнопку ниже — файл сохранится в «Загрузки».</p>
+            <span class="chip" id="c1a">.conf / .json</span>
+          </div>
+        </div>
+        <div class="srow">
+          <div class="sleft"><div class="snum" id="n2a">2</div><div class="sline" id="la2"></div></div>
+          <div class="scontent">
+            <p class="stitle" id="t2a">Откройте AmneziaVPN</p>
+            <p class="sdesc" id="d2a">Запустите приложение и нажмите ➕ или «Приступим».</p>
+          </div>
+        </div>
+        <div class="srow">
+          <div class="sleft"><div class="snum" id="n3a">3</div><div class="sline" id="la3"></div></div>
+          <div class="scontent">
+            <p class="stitle" id="t3a">Выберите «Файл с настройками»</p>
+            <p class="sdesc" id="d3a">В меню добавления подключения выберите этот вариант.</p>
+          </div>
+        </div>
+        <div class="srow">
+          <div class="sleft"><div class="snum" id="n4a">4</div></div>
+          <div class="scontent">
+            <p class="stitle" id="t4a">Найдите файл и подключитесь</p>
+            <p class="sdesc" id="d4a">Откройте файл из «Загрузок» → «Продолжить» → «Подключиться».</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="no-app" id="no-app">
+        <div class="no-app-text">
+          <p class="label" id="na-label">Нет приложения?</p>
+          <p class="sub" id="na-sub">Скачайте AmneziaVPN бесплатно</p>
+        </div>
+        <a class="no-app-link" id="na-link" href="https://apps.apple.com/app/amneziavpn/id1600529900">App Store →</a>
+      </div>
+
+      <div class="warn" id="warn">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#BA7517" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px;"><path d="M7 1.5L12.5 12H1.5L7 1.5z"/><line x1="7" y1="6" x2="7" y2="9"/><circle cx="7" cy="11" r="0.6" fill="#BA7517" stroke="none"/></svg>
+        <p class="warn-t" id="warn-t">Используйте только файлы из этого приложения — не импортируйте конфиги из неизвестных источников.</p>
+      </div>
+
+      <button class="cta" id="cta">Скачать файл конфигурации</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var isDark = false;
+var platform = 'ios';
+
+var accent = { light: '#1a6ed8', dark: '#378ADD' };
+var accentBg = { light: '#E6F1FB', dark: '#0c2a4a' };
+var accentText = { light: '#0C447C', dark: '#85B7EB' };
+var accentChip = { light: '#dbeeff', dark: '#0c2a4a' };
+var accentChipText = { light: '#0C447C', dark: '#85B7EB' };
+
+function applyTheme() {
+  var d = isDark;
+  var ph = document.getElementById('phone');
+  ph.style.background = d ? '#141414' : '#ffffff';
+  var bar = document.getElementById('tg-bar');
+  bar.style.background = d ? '#1c1c1e' : '#ffffff';
+  bar.style.borderBottom = '0.5px solid ' + (d ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)');
+  document.getElementById('back').style.background = d ? 'rgba(255,255,255,0.08)' : '#f0f0f0';
+  document.getElementById('back-svg').setAttribute('stroke', d ? 'rgba(255,255,255,0.55)' : '#888');
+  document.getElementById('bar-title').style.color = d ? '#f0f0f0' : '#111';
+  document.getElementById('icon-wrap').style.background = accentBg[d?'dark':'light'];
+  document.getElementById('main-icon').setAttribute('stroke', accent[d?'dark':'light']);
+  document.getElementById('screen-h').style.color = d ? '#f0f0f0' : '#111';
+  document.getElementById('screen-sub').style.color = d ? 'rgba(255,255,255,0.45)' : '#666';
+
+  ['tab-ios','tab-and'].forEach(function(id) {
+    var el = document.getElementById(id);
+    var active = (id === 'tab-ios' && platform === 'ios') || (id === 'tab-and' && platform === 'android');
+    el.style.background = active ? accent[d?'dark':'light'] : (d ? 'rgba(255,255,255,0.06)' : '#f2f2f2');
+    el.style.color = active ? '#fff' : (d ? 'rgba(255,255,255,0.45)' : '#888');
+    el.style.borderColor = active ? accent[d?'dark':'light'] : (d ? 'rgba(255,255,255,0.1)' : '#ddd');
+  });
+
+  var numIds = ['n1i','n2i','n3i','n4i','n1a','n2a','n3a','n4a'];
+  numIds.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.style.background = accentBg[d?'dark':'light'];
+    el.style.color = accentText[d?'dark':'light'];
+  });
+  ['li1','li2','li3','la1','la2','la3'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.style.background = d ? 'rgba(255,255,255,0.1)' : '#e0e0e0';
+  });
+  ['t1i','t2i','t3i','t4i','t1a','t2a','t3a','t4a'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.style.color = d ? '#e8e8e8' : '#111';
+  });
+  ['d1i','d2i','d3i','d4i','d1a','d2a','d3a','d4a'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.style.color = d ? 'rgba(255,255,255,0.4)' : '#777';
+  });
+  ['c1i','c1a'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.style.background = accentChip[d?'dark':'light'];
+    el.style.color = accentChipText[d?'dark':'light'];
+  });
+
+  var na = document.getElementById('no-app');
+  na.style.background = d ? 'rgba(255,255,255,0.05)' : '#f5f5f5';
+  document.getElementById('na-label').style.color = d ? '#e0e0e0' : '#111';
+  document.getElementById('na-sub').style.color = d ? 'rgba(255,255,255,0.4)' : '#888';
+  document.getElementById('na-link').style.color = accent[d?'dark':'light'];
+
+  var warn = document.getElementById('warn');
+  warn.style.background = d ? 'rgba(255,255,255,0.04)' : '#fdf4e7';
+  document.getElementById('warn-t').style.color = d ? 'rgba(255,255,255,0.38)' : '#7a5200';
+
+  var cta = document.getElementById('cta');
+  cta.style.background = accent[d?'dark':'light'];
+  cta.style.color = d ? '#0a1a2e' : '#ffffff';
+}
+
+function setTheme(t) {
+  isDark = t === 'dark';
+  document.querySelectorAll('.t-btn').forEach(function(b) {
+    if (b.textContent === (isDark ? 'Тёмная' : 'Светлая')) b.classList.add('active');
+    else if (b.textContent === 'Светлая' || b.textContent === 'Тёмная') b.classList.remove('active');
+  });
+  applyTheme();
+}
+
+function setPlatform(p) {
+  platform = p;
+  document.getElementById('steps-ios').style.display = p === 'ios' ? 'flex' : 'none';
+  document.getElementById('steps-and').style.display = p === 'android' ? 'flex' : 'none';
+  document.getElementById('na-link').textContent = p === 'ios' ? 'App Store →' : 'Google Play →';
+  document.getElementById('na-link').href = p === 'ios'
+    ? 'https://apps.apple.com/app/amneziavpn/id1600529900'
+    : 'https://play.google.com/store/apps/details?id=org.amnezia.vpn';
+  document.getElementById('ios-btn').className = p === 'ios' ? 't-btn active' : 't-btn';
+  document.getElementById('and-btn').className = p === 'android' ? 't-btn active' : 't-btn';
+  applyTheme();
+}
+
+applyTheme();
+</script>

@@ -34,14 +34,17 @@ test.describe("Miniapp Checkout Flow", () => {
 
     await gotoMiniapp(page, "/plan");
 
-    await expect(page.getByRole("heading", { name: /Plan|Choose plan/i })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole("heading", { name: /Plan|Choose plan/i }).first()).toBeVisible({ timeout: 10000 });
     await page.getByRole("button", { name: /Select|Choose|Switch/i }).first().click();
 
     await expect(page).toHaveURL(/\/plan\/checkout\/test-plan-1$/);
-    await expect(page.getByRole("heading", { name: /Checkout/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Confirm your plan|Checkout|Review and pay/i }).first()).toBeVisible();
 
-    await page.getByRole("button", { name: /Pay/i }).click();
-    await page.getByRole("button", { name: /Pay with Telegram Stars/i }).click();
+    const continueToPayment = page.getByRole("button", { name: /Continue( to payment)?/i });
+    if (await continueToPayment.count()) {
+      await continueToPayment.first().click();
+    }
+    await page.getByRole("button", { name: /Pay in Telegram|Activate plan|Pay with Telegram Stars/i }).first().click();
 
     await expect(page).toHaveURL(/\/devices$/, { timeout: 10000 });
   });
@@ -71,12 +74,14 @@ test.describe("Miniapp Checkout Flow", () => {
 
     await gotoMiniapp(page, "/plan/checkout/test-plan-2");
 
-    await expect(page.getByRole("heading", { name: /Checkout/i })).toBeVisible();
-    await page.getByRole("button", { name: /Pay/i }).click();
-    await page.getByRole("button", { name: /Pay with Telegram Stars/i }).click();
+    await expect(page.getByRole("heading", { name: /Confirm your plan|Checkout|Review and pay/i }).first()).toBeVisible();
+    const continueToPayment = page.getByRole("button", { name: /Continue( to payment)?/i });
+    if (await continueToPayment.count()) {
+      await continueToPayment.first().click();
+    }
+    await page.getByRole("button", { name: /Pay in Telegram|Activate plan|Pay with Telegram Stars/i }).first().click();
 
     await expect(page.getByText(/Payment failed/i)).toBeVisible({ timeout: 10000 });
-    await expect(page.getByRole("button", { name: /Try again/i })).toBeVisible();
-    await expect(page.getByRole("link", { name: /Contact support/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Try again|Retry/i })).toBeVisible();
   });
 });

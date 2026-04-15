@@ -9,6 +9,22 @@ async function injectTelegram(page: import("@playwright/test").Page) {
 }
 
 test.describe("Miniapp Onboarding", () => {
+  async function continueToPlan(page: import("@playwright/test").Page) {
+    for (let step = 0; step < 4; step += 1) {
+      if (/\/plan$/.test(new URL(page.url()).pathname)) return;
+      const choosePlan = page.getByRole("button", { name: /^Choose plan$/i });
+      if (await choosePlan.count()) {
+        await choosePlan.first().click();
+      } else {
+        const primaryContinue = page.getByRole("button", { name: /^Continue$/i });
+        if (await primaryContinue.count()) {
+          await primaryContinue.first().click();
+        }
+      }
+      await page.waitForTimeout(150);
+    }
+  }
+
   test("first-time user can move from onboarding to plan", async ({ page }) => {
     await injectTelegram(page);
 
@@ -55,6 +71,27 @@ test.describe("Miniapp Onboarding", () => {
         });
         return;
       }
+      if (url.includes("/api/v1/webapp/user/access")) {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            status: "no_plan",
+            has_plan: false,
+            plan_id: null,
+            plan_name: null,
+            plan_duration_days: null,
+            devices_used: 0,
+            device_limit: null,
+            traffic_used_bytes: 0,
+            config_ready: false,
+            config_id: null,
+            expires_at: null,
+            amnezia_vpn_key: null,
+          }),
+        });
+        return;
+      }
       if (url.includes("/api/v1/webapp/onboarding/state")) {
         const body = route.request().postDataJSON() as {
           step: number;
@@ -90,6 +127,22 @@ test.describe("Miniapp Onboarding", () => {
         });
         return;
       }
+      if (url.includes("/api/v1/webapp/usage")) {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({ sessions: 0, points: [] }),
+        });
+        return;
+      }
+      if (url.includes("/api/v1/webapp/payments/history")) {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({ total: 0, items: [] }),
+        });
+        return;
+      }
       await route.continue();
     });
 
@@ -97,14 +150,9 @@ test.describe("Miniapp Onboarding", () => {
 
     await expect(page).toHaveURL(/.*\/onboarding$/);
     await expect(page.getByRole("heading", { name: /Set up VPN access/i })).toBeVisible();
-    await expect(page.getByRole("heading", { name: /Manage VPN access in Telegram/i })).toBeVisible();
-    await page.getByRole("button", { name: /Install app/i }).click();
-    await expect(page.getByText(/Step 2 of 4/i)).toBeVisible();
-    await page.getByRole("button", { name: /Continue/i }).click();
-    await expect(page.getByText(/Step 3 of 4/i)).toBeVisible();
-    await page.getByRole("button", { name: /^Choose plan$/i }).first().click();
+    await continueToPlan(page);
 
-    await expect(page).toHaveURL(/.*\/plan$/);
+    await expect(page).toHaveURL(/.*\/plan(\?.*)?$/);
   });
 
   test("onboarding sync still lets user reach plan", async ({ page }) => {
@@ -150,6 +198,27 @@ test.describe("Miniapp Onboarding", () => {
         });
         return;
       }
+      if (url.includes("/api/v1/webapp/user/access")) {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            status: "no_plan",
+            has_plan: false,
+            plan_id: null,
+            plan_name: null,
+            plan_duration_days: null,
+            devices_used: 0,
+            device_limit: null,
+            traffic_used_bytes: 0,
+            config_ready: false,
+            config_id: null,
+            expires_at: null,
+            amnezia_vpn_key: null,
+          }),
+        });
+        return;
+      }
       if (url.includes("/api/v1/webapp/onboarding/state")) {
         const body = route.request().postDataJSON() as { completed?: boolean };
         if (body.completed) {
@@ -184,18 +253,30 @@ test.describe("Miniapp Onboarding", () => {
         });
         return;
       }
+      if (url.includes("/api/v1/webapp/usage")) {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({ sessions: 0, points: [] }),
+        });
+        return;
+      }
+      if (url.includes("/api/v1/webapp/payments/history")) {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({ total: 0, items: [] }),
+        });
+        return;
+      }
       await route.continue();
     });
 
     await page.goto("./?tgWebAppData=e2e-test");
 
     await expect(page).toHaveURL(/.*\/onboarding$/);
-    await page.getByRole("button", { name: /Install app/i }).click();
-    await expect(page.getByText(/Step 2 of 4/i)).toBeVisible();
-    await page.getByRole("button", { name: /Continue/i }).click();
-    await expect(page.getByText(/Step 3 of 4/i)).toBeVisible();
-    await page.getByRole("button", { name: /^Choose plan$/i }).first().click();
+    await continueToPlan(page);
 
-    await expect(page).toHaveURL(/.*\/plan$/);
+    await expect(page).toHaveURL(/.*\/plan(\?.*)?$/);
   });
 });
