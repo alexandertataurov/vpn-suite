@@ -2417,6 +2417,80 @@ def _webapp_payment_provider() -> str:
     return provider if provider in {"telegram_stars", "platega"} else "telegram_stars"
 
 
+def _post_trial_offer_discount_percent() -> int:
+    return max(0, min(100, int(getattr(settings, "post_trial_offer_discount_percent", 0) or 0)))
+
+
+def _post_trial_offer_duration_days() -> int:
+    return max(1, int(getattr(settings, "post_trial_offer_duration_days", 30) or 30))
+
+
+def _post_trial_offer_fixed_price_rub() -> int:
+    return max(0, int(getattr(settings, "post_trial_offer_fixed_price_rub", 0) or 0))
+
+
+async def _has_non_donation_paid_payment(db: AsyncSession, *, user_id: int) -> bool:
+    paid_rows = await db.execute(
+        select(Payment.webhook_payload)
+        .where(
+            Payment.user_id == user_id,
+            Payment.status == "completed",
+            Payment.amount > 0,
+        )
+        .order_by(Payment.created_at.desc())
+        .limit(100)
+    )
+    for (payload,) in paid_rows.all():
+        kind = str((payload or {}).get("kind") or "").strip().lower()
+        if kind != "donation":
+            return True
+    return False
+
+
+async def _is_post_trial_offer_eligible(
+    db: AsyncSession,
+    *,
+    user_id: int,
+    plan: Plan,
+    promo_code: str | None,
+) -> bool:
+    if not bool(getattr(settings, "post_trial_offer_enabled", False)):
+        return False
+    if promo_code and promo_code.strip():
+        return False
+    if int(getattr(plan, "duration_days", 0) or 0) != _post_trial_offer_duration_days():
+        return False
+    trial_row = await db.execute(
+        select(Subscription.id)
+        .where(
+            Subscription.user_id == user_id,
+            Subscription.is_trial.is_(True),
+        )
+        .limit(1)
+    )
+    if trial_row.scalar_one_or_none() is None:
+        return False
+    return not await _has_non_donation_paid_payment(db, user_id=user_id)
+
+
+def _apply_post_trial_offer_price(
+    *,
+    original_price: int,
+    payment_provider: str,
+) -> int:
+    price = max(0, int(original_price))
+    discount_pct = _post_trial_offer_discount_percent()
+    if discount_pct <= 0:
+        return price
+    discounted = int(round(price * (100 - discount_pct) / 100))
+    discounted = max(1, discounted) if price > 0 else 0
+    if payment_provider == "platega":
+        fixed_rub = _post_trial_offer_fixed_price_rub()
+        if fixed_rub > 0:
+            return min(discounted, fixed_rub)
+    return discounted
+
+
 async def _create_platega_redirect(
     *,
     user_id: int,
@@ -2538,6 +2612,7 @@ async def webapp_create_invoice(
     original_price_xtr = int(stars_amount)
     final_price_xtr = original_price_xtr
     promo_discount_applied = 0
+    post_trial_offer_applied = False
     if body.promo_code and body.promo_code.strip():
         try:
             val_result = await validate_promo_code(
@@ -2554,6 +2629,20 @@ async def webapp_create_invoice(
                 status_code=422,
                 detail={"code": e.code.value, "message": e.message},
             ) from e
+    elif await _is_post_trial_offer_eligible(
+        db,
+        user_id=user.id,
+        plan=plan,
+        promo_code=body.promo_code,
+    ):
+        discounted_price = _apply_post_trial_offer_price(
+            original_price=original_price_xtr,
+            payment_provider=payment_provider,
+        )
+        if discounted_price < final_price_xtr:
+            final_price_xtr = discounted_price
+            promo_discount_applied = max(0, original_price_xtr - final_price_xtr)
+            post_trial_offer_applied = True
     is_free = final_price_xtr <= 0
     server_result = await db.execute(select(Server).where(Server.is_active.is_(True)).limit(1))
     server = server_result.scalar_one_or_none()
@@ -2623,7 +2712,17 @@ async def webapp_create_invoice(
         f"webapp:{payment_provider}:{user.id}:{sub.id}:{getattr(request.state, 'request_id', 'none')}"
     )
     payment_currency = "XTR"
-    webhook_payload: dict | None = {"promo_code": body.promo_code} if body.promo_code else None
+    webhook_payload: dict | None = {"promo_code": body.promo_code} if body.promo_code else {}
+    if post_trial_offer_applied:
+        webhook_payload["post_trial_offer"] = {
+            "applied": True,
+            "discount_percent": _post_trial_offer_discount_percent(),
+            "original_price": original_price_xtr,
+            "discounted_price": final_price_xtr,
+            "duration_days": _post_trial_offer_duration_days(),
+        }
+    if not webhook_payload:
+        webhook_payload = None
     platega_redirect_url = ""
     if not is_free and payment_provider == "platega":
         tx_id, redirect_url, provider_payload = await _create_platega_redirect(
@@ -2636,7 +2735,7 @@ async def webapp_create_invoice(
         external_id = tx_id
         payment_currency = (settings.platega_currency or "RUB").strip().upper()
         platega_redirect_url = redirect_url
-        webhook_payload = provider_payload
+        webhook_payload = {**(webhook_payload or {}), **provider_payload}
     payment = Payment(
         user_id=user.id,
         subscription_id=sub.id,

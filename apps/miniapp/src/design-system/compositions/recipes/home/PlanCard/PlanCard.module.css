@@ -58,22 +58,23 @@
   flex-wrap: wrap;
   align-items: flex-start;
   justify-content: space-between;
-  gap: var(--spacing-2, 8px);
+  gap: var(--spacing-3);
 }
 
 .meta {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-1);
+  padding-right: var(--spacing-2);
   min-width: 0;
   flex: 1 1 auto;
 }
 
 .eyebrow {
   font-size: var(--amnezia-plan-eyebrow, var(--font-size-xs));
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-semibold);
   letter-spacing: var(--letter-spacing-widest);
-  color: var(--color-text-tertiary);
+  color: var(--color-text-muted);
   text-transform: none;
   line-height: var(--line-height-label);
 }
@@ -105,12 +106,13 @@
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   border-top: var(--border-width-hairline) solid var(--divider);
+  background: color-mix(in oklch, var(--color-surface) 96%, var(--color-surface-2) 4%);
 }
 
 .stat {
   padding: var(--spacing-3) calc(var(--spacing-4) + var(--spacing-0-5))
     calc(var(--spacing-3) + var(--spacing-0-5));
-  border-left: var(--border-width-hairline) solid var(--divider);
+  border-left: var(--border-width-hairline) solid color-mix(in oklch, var(--divider) 78%, var(--color-text) 22%);
 }
 
 .stat:first-child {
@@ -138,6 +140,7 @@
   letter-spacing: var(--letter-spacing-tight);
   line-height: var(--line-height-title);
   color: var(--color-text);
+  font-variant-numeric: tabular-nums;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -148,6 +151,7 @@
   font-size: var(--amnezia-stat-dim, var(--font-size-sm));
   font-weight: var(--font-weight-normal);
   color: var(--color-text-tertiary);
+  font-variant-numeric: tabular-nums;
 }
 
 .statValueExpiring {

@@ -143,8 +143,14 @@ class Settings(BaseSettings):
     # Referral: bonus days for referrer when referee pays first time
     referral_reward_bonus_days: int = 7
     # Trial: duration in hours; plan id optional (else first plan with price_amount <= 0)
-    trial_duration_hours: int = 24
+    trial_duration_hours: int = 72
     trial_plan_id: str = ""
+    # Post-trial checkout offer: first paid cycle for configured duration gets discount.
+    post_trial_offer_enabled: bool = True
+    post_trial_offer_duration_days: int = 30
+    post_trial_offer_discount_percent: int = 50
+    # For RUB providers (Platega), optional fixed post-trial checkout price.
+    post_trial_offer_fixed_price_rub: int = 150
     retention_discount_percent: int = 20
     # Grace window hours when subscription expires (24, 48, 72); 0 = disabled
     grace_window_hours: int = 24

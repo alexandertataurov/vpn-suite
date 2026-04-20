@@ -1,4 +1,4 @@
-"""Trial: one 24h trial per user, auto-provision subscription + one device + config."""
+"""Trial: one-time trial per user, auto-provision subscription + one device + config."""
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
@@ -37,7 +37,7 @@ async def start_trial(
     get_topology=None,
     runtime_adapter=None,
 ) -> TrialStartResult:
-    """Create or get user, ensure one trial per user, create 24h trial sub + one device, return configs."""
+    """Create/get user, enforce one trial per user, create trial sub + one device, return configs."""
     now = datetime.now(timezone.utc)
     # Get or create user
     user_result = await session.execute(select(User).where(User.tg_id == tg_id))

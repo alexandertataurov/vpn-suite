@@ -104,9 +104,9 @@
 }
 
 .badge--error {
-  color: var(--color-error);
-  background: var(--color-error-bg);
-  border-color: var(--color-error-border);
+  color: #dc2626;
+  background: #fee2e2;
+  border-color: color-mix(in srgb, #dc2626 24%, transparent);
 }
 
 .badge--success {
@@ -295,7 +295,7 @@
   height: var(--size-touch-target, 44px);
   border-radius: var(--radius-sm);
   background: var(--color-surface);
-  box-shadow: 0 0 0 1px var(--color-border);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-text) 8%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -638,15 +638,16 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
 .footer-help__link {
   color: var(--color-accent);
   font-weight: var(--font-weight-medium);
-  text-decoration: underline;
+  text-decoration: none;
   text-underline-offset: 2px;
   text-decoration-thickness: 1px;
   cursor: pointer;
-  transition: color var(--duration-fast) ease;
+  transition: color var(--duration-fast) ease, text-decoration-color var(--duration-fast) ease;
 }
 
 .footer-help__link:hover {
   color: var(--color-accent);
+  text-decoration: underline;
 }
 
 /* ---- HelperNote (pattern) — note with optional title and tone ---- */
@@ -1014,9 +1015,12 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
 .home-card-row.modern-list {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--r, var(--radius-lg));
+  border-radius: var(--radius-md);
   overflow: hidden;
   margin-bottom: var(--spacing-2);
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard);
 }
 
 /* Canonical home page nav cards — match screenshot layout */
@@ -1025,14 +1029,24 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
   padding-bottom: 0;
 }
 
+@media (pointer: fine) {
+  .home-card-row.modern-list:hover {
+    border-color: color-mix(in oklch, var(--color-accent) 28%, var(--color-border));
+  }
+}
+
 .home-content-stack .new-user-hero,
 .home-content-stack .home-card-row.modern-list,
 .home-content-stack .nd-callout {
   margin-bottom: 0;
 }
 
+.home-content-stack {
+  gap: var(--spacing-3);
+}
+
 .home-card-row .row-item {
-  padding: var(--amnezia-row-pad-v, var(--miniapp-data-cell-padding)) var(--amnezia-row-pad-h, var(--miniapp-card-padding));
+  padding: var(--spacing-2) var(--amnezia-row-pad-h, var(--miniapp-card-padding));
   gap: var(--spacing-3);
 }
 
@@ -1040,8 +1054,8 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
   width: 36px;
   height: 36px;
   border-radius: var(--r-sm, var(--radius-sm));
-  background: var(--color-surface-2);
-  border: 1px solid var(--color-border);
+  background: color-mix(in oklch, var(--color-surface-2) 68%, var(--color-surface) 32%);
+  border: 1px solid color-mix(in oklch, var(--color-border) 52%, transparent);
   color: var(--color-text-muted);
 }
 
@@ -1062,6 +1076,24 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
 
 .home-invite-card .ri-sub {
   font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.home-merged-subtitle-wrap {
+  display: block;
+  -webkit-line-clamp: unset;
+  overflow: visible;
+}
+
+.home-merged-subtitle {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-px);
+}
+
+.home-merged-subtitle-line {
+  display: block;
+  font-variant-numeric: tabular-nums;
 }
 
 .home-row-badge,
@@ -1083,9 +1115,31 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
 }
 
 .home-row-badge--red {
-  color: var(--color-error);
-  background: var(--color-error-soft);
-  border-color: var(--surface-border-error);
+  color: #dc2626;
+  background: #fee2e2;
+  border-color: color-mix(in srgb, #dc2626 24%, transparent);
+}
+
+.home-renewal-banner.action-banner {
+  border-radius: var(--radius-md);
+}
+
+.home-renewal-banner.action-banner--warning {
+  background: #fef3c7;
+  border-color: color-mix(in srgb, #f59e0b 24%, transparent);
+}
+
+.home-renewal-banner.action-banner--danger {
+  background: #fee2e2;
+  border-color: color-mix(in srgb, #ef4444 24%, transparent);
+}
+
+.home-renewal-banner .action-banner__icon-wrap {
+  margin: var(--spacing-2) 0;
+}
+
+.home-renewal-banner .action-banner__body {
+  padding: var(--spacing-2) 0;
 }
 
 .home-row-badge--full {

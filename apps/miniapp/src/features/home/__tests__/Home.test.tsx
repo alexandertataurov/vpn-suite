@@ -91,6 +91,8 @@ describe("HomePage", () => {
     expect(screen.getByText("Subscription")).toBeInTheDocument();
     expect(screen.getByText("Invite Friends")).toBeInTheDocument();
     expect(screen.getByText("2 of 5 active")).toBeInTheDocument();
+    expect(screen.getByText("Instruction")).toBeInTheDocument();
+    expect(screen.getByText("Donate via Platega")).toBeInTheDocument();
   });
 
   it("renders needs_device state", () => {

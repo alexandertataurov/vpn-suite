@@ -9,6 +9,12 @@ function readEnv(key: string): string | undefined {
   return env?.[key];
 }
 
+function readBooleanEnv(key: string, fallback: boolean): boolean {
+  const raw = (readEnv(key) ?? "").trim().toLowerCase();
+  if (!raw) return fallback;
+  return raw === "1" || raw === "true" || raw === "yes" || raw === "on";
+}
+
 /**
  * Control-plane API root. Must include the `/api/v1` suffix (e.g. `https://host/api/v1`).
  *
@@ -47,6 +53,18 @@ export const userAgreementUrl: string = (
   "https://telegra.ph/Polzovatelskoe-soglashenie-04-01-19"
 ).trim();
 
+/** Public Platega donation URL used by the Home screen donate action. */
+export const plategaDonateUrl: string = (
+  readEnv("VITE_PLATEGA_DONATE_URL") ??
+  "https://app.platega.io/"
+).trim();
+
+/** Home UI experiment: merge "Devices" + "Subscription" into one summary row. */
+export const homeMergedSummaryCardEnabled: boolean = readBooleanEnv(
+  "VITE_HOME_MERGED_SUMMARY_CARD",
+  false,
+);
+
 /** Build-visible app version for support/debug surfaces. */
 export const appVersion: string = (readEnv("VITE_APP_VERSION") ?? "1.0.0").trim();
 
@@ -68,4 +86,10 @@ export function getSupportContactHandle(): string | null {
 
 export function getSupportContactHref(): string | null {
   return supportContactUsername ? `https://t.me/${supportContactUsername}` : null;
+}
+
+export function getPlategaDonateHref(): string | null {
+  const normalized = plategaDonateUrl.trim();
+  if (!normalized) return null;
+  return /^https?:\/\//i.test(normalized) ? normalized : null;
 }

@@ -182,11 +182,19 @@
   display: flex;
   align-items: center;
   color: var(--color-text-tertiary);
+  opacity: 0.4;
+  transition: opacity var(--duration-fast, 150ms) var(--ease-standard, ease);
 }
 
 .ri-chev svg {
   width: 13px;
   height: 13px;
+}
+
+@media (pointer: fine) {
+  .row-item:hover .ri-chev {
+    opacity: 1;
+  }
 }
 
 .card-row {

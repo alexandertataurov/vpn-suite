@@ -717,7 +717,7 @@ async def bot_trial_start(
     db: AsyncSession = Depends(get_db),
     principal=Depends(get_admin_or_bot_only),
 ):
-    """Start 24h trial: create user if needed, one trial sub + one device, return configs. Bot only."""
+    """Start trial: create user if needed, one trial sub + one device, return configs. Bot only."""
     _require_bot(principal)
     tg_id = body.tg_id
     adapter = getattr(request.app.state, "node_runtime_adapter", None)

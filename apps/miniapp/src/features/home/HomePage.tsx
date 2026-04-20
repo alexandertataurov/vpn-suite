@@ -1,6 +1,8 @@
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
+  IconBookOpen,
   IconBox,
+  IconCreditCard,
   IconMonitor,
   IconPlus,
   IconUsers,
@@ -24,7 +26,9 @@ import { NewUserHero } from "@/design-system/recipes";
 import { FallbackScreen } from "@/design-system/patterns";
 import { SessionMissing } from "@/app/components";
 import { useWebappToken } from "@/api/client";
+import { getPlategaDonateHref, homeMergedSummaryCardEnabled } from "@/config/env";
 import { useSession } from "@/hooks";
+import { useOpenLink } from "@/hooks";
 import { useI18n } from "@/hooks/useI18n";
 import { useAccessHomePageModel } from "@/features/home/model/useAccessHomePageModel";
 
@@ -101,6 +105,58 @@ function HomePrimaryActions({
   );
 }
 
+function HomeMergedSummaryAction({
+  t,
+  devicesSubtitle,
+  subscriptionSubtitle,
+  showDevices,
+  showExpiry,
+  showNoDeviceCallout,
+  status,
+  daysLeft,
+  devicesFull,
+}: {
+  t: (k: string, params?: Record<string, string | number | boolean>) => string;
+  devicesSubtitle: string;
+  subscriptionSubtitle: string;
+  showDevices: boolean;
+  showExpiry: boolean;
+  showNoDeviceCallout: boolean;
+  status: string;
+  daysLeft: number | null;
+  devicesFull: boolean;
+}) {
+  const navigate = useNavigate();
+  const showMerged = (showDevices && !showNoDeviceCallout) || showExpiry || showNoDeviceCallout;
+  if (!showMerged) return null;
+  return (
+    <CardRow className="home-card-row home-quick-actions">
+      <RowItem
+        icon={<IconMonitor size={15} strokeWidth={2} aria-hidden />}
+        iconVariant="neutral"
+        label={t("home.devices_subscription_title")}
+        subtitle={(
+          <span className="home-merged-subtitle">
+            <span className="home-merged-subtitle-line">{devicesSubtitle}</span>
+            <span className="home-merged-subtitle-line">{subscriptionSubtitle}</span>
+          </span>
+        )}
+        subtitleClassName="home-merged-subtitle-wrap"
+        right={(
+          <>
+            {devicesFull ? <Badge label={t("home.badge_full")} variant="muted" /> : null}
+            {daysLeft != null && daysLeft > 0 && daysLeft <= 14 ? (
+              <Badge label={t("home.badge_days_left", { count: daysLeft })} variant="warning" />
+            ) : null}
+            {status === "expired" ? <Badge label={t("home.badge_renew")} variant="error" /> : null}
+          </>
+        )}
+        onClick={() => navigate(status === "expired" ? "/restore-access" : "/devices")}
+      />
+    </CardRow>
+  );
+}
+
 function HomeStatusRail({
   t,
   status,
@@ -150,6 +206,7 @@ function HomeStatusRail({
           variant={status === "expired" ? "expired" : "expiring"}
           title={status === "expired" ? t("home.renewal_expired_title") : t("home.renewal_expiring_title")}
           subtitle={status === "expired" ? t("home.renewal_expired_subtitle") : t("home.renewal_expiring_subtitle")}
+          className="home-renewal-banner"
           onClick={onRenewalClick}
         />
       ) : null}
@@ -166,12 +223,47 @@ function HomeStatusRail({
   );
 }
 
+function HomeInfoActions({
+  t,
+  onOpenGuide,
+  onDonate,
+  canDonate,
+}: {
+  t: (k: string) => string;
+  onOpenGuide: () => void;
+  onDonate: () => void;
+  canDonate: boolean;
+}) {
+  return (
+    <CardRow className="home-card-row home-info-card">
+      <RowItem
+        icon={<IconBookOpen size={15} strokeWidth={2} aria-hidden />}
+        iconVariant="neutral"
+        label={t("home.main_instruction_title")}
+        subtitle={t("home.main_instruction_subtitle")}
+        onClick={onOpenGuide}
+      />
+      <RowItem
+        icon={<IconCreditCard size={15} strokeWidth={2} aria-hidden />}
+        iconVariant="neutral"
+        label={t("home.donate_platega_title")}
+        subtitle={t("home.donate_platega_subtitle")}
+        onClick={canDonate ? onDonate : undefined}
+        showChevron={canDonate}
+      />
+    </CardRow>
+  );
+}
+
 export function HomePage() {
   const { t } = useI18n();
   const model = useAccessHomePageModel();
+  const location = useLocation();
   const navigate = useNavigate();
+  const { openLink } = useOpenLink();
   const hasToken = !!useWebappToken();
   const session = useSession(hasToken).data;
+  const donateHref = getPlategaDonateHref();
   const profileName = (session?.user?.display_name ?? "").trim() || t("home.guest_name");
   const profileInitial =
     (session?.user?.display_name ?? "").trim().length > 0
@@ -216,6 +308,12 @@ export function HomePage() {
   const isGenerating = status === "generating_config";
   const handleAddDevice = () => navigate("/devices");
   const handleRenewalClick = () => navigate(status === "expired" ? "/restore-access" : "/plan");
+  const handleGuideOpen = () => navigate("/setup-guide");
+  const handleDonateOpen = () => {
+    if (donateHref) openLink(donateHref);
+  };
+  const mergedByQuery = new URLSearchParams(location.search).get("homeMergedCard") === "1";
+  const useMergedSummaryCard = homeMergedSummaryCardEnabled || mergedByQuery;
 
   return (
     <PageScaffold>
@@ -281,18 +379,32 @@ export function HomePage() {
               />
               {!isGenerating ? (
                 <>
-                  <HomePrimaryActions
-                    t={t}
-                    showDevices={model.showDevices}
-                    showExpiry={model.showExpiry}
-                    showNoDeviceCallout={model.showNoDeviceCallout}
-                    devicesSubtitle={model.devicesSubtitle}
-                    devicesFull={model.devicesFull}
-                    subscriptionLabel={model.subscriptionLabel}
-                    subscriptionSubtitle={model.subscriptionSubtitle}
-                    status={status}
-                    daysLeft={model.daysLeft}
-                  />
+                  {useMergedSummaryCard ? (
+                    <HomeMergedSummaryAction
+                      t={t}
+                      showDevices={model.showDevices}
+                      showExpiry={model.showExpiry}
+                      showNoDeviceCallout={model.showNoDeviceCallout}
+                      devicesSubtitle={model.devicesSubtitle}
+                      subscriptionSubtitle={model.subscriptionSubtitle}
+                      status={status}
+                      daysLeft={model.daysLeft}
+                      devicesFull={model.devicesFull}
+                    />
+                  ) : (
+                    <HomePrimaryActions
+                      t={t}
+                      showDevices={model.showDevices}
+                      showExpiry={model.showExpiry}
+                      showNoDeviceCallout={model.showNoDeviceCallout}
+                      devicesSubtitle={model.devicesSubtitle}
+                      devicesFull={model.devicesFull}
+                      subscriptionLabel={model.subscriptionLabel}
+                      subscriptionSubtitle={model.subscriptionSubtitle}
+                      status={status}
+                      daysLeft={model.daysLeft}
+                    />
+                  )}
                   <CardRow className="home-card-row home-invite-card">
                     <InviteFriendsRow t={t} />
                   </CardRow>
@@ -300,6 +412,13 @@ export function HomePage() {
               ) : null}
             </>
           ) : null}
+
+          <HomeInfoActions
+            t={t}
+            onOpenGuide={handleGuideOpen}
+            onDonate={handleDonateOpen}
+            canDonate={Boolean(donateHref)}
+          />
 
           <FooterHelp
             note={t("footer.having_trouble")}
