@@ -66,9 +66,9 @@ const MOCK_LINKS: ReadonlyArray<{ key: MockKey; label: string; to: string; group
   { key: "support", label: "Support", to: "/mock/pages/support", group: "pages" },
   { key: "checkout", label: "Checkout", to: "/mock/pages/checkout", group: "pages" },
   { key: "onboarding", label: "Onboarding", to: "/mock/pages/onboarding", group: "pages" },
-  { key: "setupGuide", label: "Setup Guide", to: "/mock/pages/setup-guide", group: "pages" },
-  { key: "connectStatus", label: "Connect Status", to: "/mock/pages/connect-status", group: "pages" },
-  { key: "restoreAccess", label: "Restore Access", to: "/mock/pages/restore-access", group: "pages" },
+  { key: "setupGuide", label: "Setup guide", to: "/mock/pages/setup-guide", group: "pages" },
+  { key: "connectStatus", label: "Connect status", to: "/mock/pages/connect-status", group: "pages" },
+  { key: "restoreAccess", label: "Restore access", to: "/mock/pages/restore-access", group: "pages" },
   { key: "referral", label: "Referral", to: "/mock/pages/referral", group: "pages" },
   { key: "buttons", label: "Buttons", to: "/mock/components/buttons", group: "components" },
   { key: "forms", label: "Forms", to: "/mock/components/forms", group: "components" },
@@ -464,7 +464,7 @@ export function MockPageOnboarding() {
 export function MockPageSetupGuide() {
   return (
     <MockFrame
-      title="Page Mock · Setup Guide"
+      title="Page Mock · Setup guide"
       subtitle="Platform-specific install and connect guide."
       current="setupGuide"
       screenshotName="mock-page-setup-guide"
@@ -492,7 +492,7 @@ export function MockPageSetupGuide() {
 export function MockPageConnectStatus() {
   return (
     <MockFrame
-      title="Page Mock · Connect Status"
+      title="Page Mock · Connect status"
       subtitle="Connection verification and next actions."
       current="connectStatus"
       screenshotName="mock-page-connect-status"
@@ -526,7 +526,7 @@ export function MockPageConnectStatus() {
 export function MockPageRestoreAccess() {
   return (
     <MockFrame
-      title="Page Mock · Restore Access"
+      title="Page Mock · Restore access"
       subtitle="Expired plan recovery and billing handoff."
       current="restoreAccess"
       screenshotName="mock-page-restore-access"
@@ -539,7 +539,7 @@ export function MockPageRestoreAccess() {
       <PageSection title="Recovery actions">
         <Stack gap="2">
           <Button variant="primary" fullWidth>
-            Restore subscription
+            Restore access
           </Button>
           <Button variant="secondary" fullWidth>
             Contact support
