@@ -96,7 +96,7 @@ export const Variants: Story = {
 const HERO_STATS = [
   { label: "Devices", value: "2", dim: " / 5", tone: "default" as const },
   { label: "Renews", value: "Apr 1", tone: "default" as const },
-  { label: "Traffic", value: "∞", tone: "default" as const },
+  { label: "Traffic", value: "Unlimited", tone: "default" as const },
 ];
 
 export const HeroVariant: Story = {

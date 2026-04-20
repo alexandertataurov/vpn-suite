@@ -13,6 +13,7 @@ import {
   PlanCard,
   SectionLabel,
   Skeleton,
+  StarsAmount,
   Stack,
 } from "@/design-system";
 import { PlanBillingHistorySection } from "@/design-system/recipes";
@@ -179,6 +180,7 @@ export function PlanPage() {
             devices={activeDeviceCount}
             deviceLimit={deviceLimit}
             renewsLabel={heroView.expiryText}
+            trafficUnlimitedLabel={t("plan.usage_traffic_unlimited_chip")}
           />
           <Stack gap="2">
             <SectionLabel label={t("plan.current_plan_label")} />
@@ -187,7 +189,7 @@ export function PlanPage() {
                 icon={<IconCreditCard size={15} strokeWidth={2} aria-hidden />}
                 iconVariant="neutral"
                 label={t("plan.hero_price_label")}
-                subtitle={model.formatStars(heroView.heroStars)}
+                subtitle={<StarsAmount value={heroView.heroStars} />}
                 showChevron={false}
               />
               <RowItem

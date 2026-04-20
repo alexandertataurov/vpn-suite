@@ -3,7 +3,7 @@
  * Borders only, no shadows. StatusChip badge + 3-column stats strip.
  * Merged PlanCard + PlanHeroCard: supports optional eyebrow and flexible stats.
  */
-import type { HTMLAttributes } from "react";
+import type { HTMLAttributes, ReactNode } from "react";
 import { StatusChip } from "../../../patterns";
 import styles from "./PlanCard.module.css";
 
@@ -11,7 +11,7 @@ export type PlanCardStatus = "active" | "expiring" | "expired";
 
 export interface PlanCardStat {
   label: string;
-  value: string;
+  value: ReactNode;
   /** Dim fraction e.g. " / 5" — uses --text3 */
   dim?: string;
   /** When true, value uses --amber (expiring) or --red (expired) */
@@ -30,8 +30,9 @@ export interface PlanCardProps extends HTMLAttributes<HTMLDivElement> {
   devices?: number;
   deviceLimit?: number;
   renewsLabel?: string;
-  /** Traffic display; default "∞" */
+  /** Explicit traffic value. Leave empty to render unlimited icon + label mode. */
   traffic?: string;
+  trafficUnlimitedLabel?: string;
   statusLabel?: string;
 }
 
@@ -46,12 +47,22 @@ function buildStatsFromProps(props: {
   devices: number;
   deviceLimit: number;
   renewsLabel: string;
-  traffic: string;
+  traffic?: string;
+  trafficUnlimitedLabel: string;
 }): [PlanCardStat, PlanCardStat, PlanCardStat] {
-  const { status, devices, deviceLimit, renewsLabel, traffic } = props;
+  const { status, devices, deviceLimit, renewsLabel, traffic, trafficUnlimitedLabel } = props;
   const renewsStatLabel = status === "expired" ? "Expired" : "Renews";
   const renewsTone: PlanCardStat["tone"] =
     status === "expired" ? "expired" : status === "expiring" ? "expiring" : "default";
+  const trafficValue = traffic?.trim().length
+    ? traffic
+    : (
+      <span className={styles.statUnlimited}>
+        <span className={styles.statUnlimitedIcon} aria-hidden>∞</span>
+        <span>{trafficUnlimitedLabel}</span>
+      </span>
+    );
+
   return [
     {
       label: "Devices",
@@ -60,7 +71,7 @@ function buildStatsFromProps(props: {
       tone: "default",
     },
     { label: renewsStatLabel, value: renewsLabel, tone: renewsTone },
-    { label: "Traffic", value: traffic, tone: "default" },
+    { label: "Traffic", value: trafficValue, tone: "default" },
   ];
 }
 
@@ -73,14 +84,15 @@ export function PlanCard({
   devices = 0,
   deviceLimit = 0,
   renewsLabel = "",
-  traffic = "∞",
+  traffic,
+  trafficUnlimitedLabel = "Unlimited",
   statusLabel,
   className = "",
   ...props
 }: PlanCardProps) {
   const stats =
     statsProp ??
-    buildStatsFromProps({ status, devices, deviceLimit, renewsLabel, traffic });
+    buildStatsFromProps({ status, devices, deviceLimit, renewsLabel, traffic, trafficUnlimitedLabel });
   const heroClass = eyebrow ? "hero-card" : "";
   const isHero = !!eyebrow;
 

@@ -33,11 +33,11 @@ html[data-theme="consumer-light"] {
   --color-success-border: rgba(22, 101, 52, 0.22);
   --color-warning: #F59E0B;
   --color-warning-soft: #FEF3C7;
-  --color-warning-bg: rgba(146, 64, 14, 0.12);
+  --color-warning-bg: rgba(146, 64, 14, 0.08);
   --color-warning-border: rgba(146, 64, 14, 0.22);
   --color-error: #EF4444;
   --color-error-soft: #FEE2E2;
-  --color-error-bg: rgba(153, 27, 27, 0.12);
+  --color-error-bg: rgba(153, 27, 27, 0.08);
   --color-error-border: rgba(153, 27, 27, 0.22);
   --color-info: #3b82f6;
   --color-info-bg: rgba(59, 130, 246, 0.12);
@@ -118,10 +118,10 @@ html[data-theme="consumer-light"] {
   --device-imported-border: rgba(22, 101, 52, 0.22);
   --device-imported-text: #166534;
   --device-imported-dot: #22c55e;
-  --device-pending-bg: rgba(59, 130, 246, 0.10);
-  --device-pending-border: rgba(59, 130, 246, 0.22);
-  --device-pending-text: #1d4ed8;
-  --device-pending-dot: #3b82f6;
+  --device-pending-bg: rgba(245, 158, 11, 0.12);
+  --device-pending-border: rgba(245, 158, 11, 0.26);
+  --device-pending-text: #b45309;
+  --device-pending-dot: #f59e0b;
   --device-inactive-bg: rgba(0, 0, 0, 0.06);
   --device-inactive-border: rgba(0, 0, 0, 0.10);
   --device-inactive-text: #6b6a67;
@@ -161,10 +161,10 @@ html[data-theme="consumer-light"] {
   --letter-spacing-label: 0.08em;
 
   /* Radius (tighter, production-grade) */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 14px;
-  --radius-xl: 16px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
 
   /* Shadows (2 canonical: card + elevated) */
   --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
@@ -188,8 +188,8 @@ html[data-theme="consumer-light"] {
   --control-placeholder: var(--color-text-tertiary);
   --control-muted-border: var(--color-border-subtle);
   --control-muted-fg: var(--color-text-muted);
-  --seg-track-bg: rgba(0, 0, 0, 0.06);
-  --seg-track-border: rgba(0, 0, 0, 0.08);
+  --seg-track-bg: rgba(37, 99, 235, 0.06);
+  --seg-track-border: rgba(37, 99, 235, 0.16);
   --seg-thumb-bg: #ffffff;
   --seg-thumb-border: rgba(0, 0, 0, 0.10);
   --seg-thumb-shadow: 0 1px 4px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.08);
@@ -238,11 +238,11 @@ html[data-theme="consumer-dark"] {
   --color-success-border: rgba(34, 197, 94, 0.22);
   --color-warning: #D29922;
   --color-warning-soft: rgba(210,153,34,0.15);
-  --color-warning-bg: rgba(251, 191, 36, 0.09);
+  --color-warning-bg: rgba(251, 191, 36, 0.07);
   --color-warning-border: rgba(251, 191, 36, 0.22);
   --color-error: #F85149;
   --color-error-soft: rgba(248,81,73,0.15);
-  --color-error-bg: rgba(248, 113, 113, 0.09);
+  --color-error-bg: rgba(248, 113, 113, 0.07);
   --color-error-border: rgba(248, 113, 113, 0.22);
   --color-info: #58A6FF;
   --color-info-bg: rgba(59, 130, 246, 0.10);
@@ -323,10 +323,10 @@ html[data-theme="consumer-dark"] {
   --device-imported-border: rgba(34, 197, 94, 0.22);
   --device-imported-text: #4ade80;
   --device-imported-dot: #22c55e;
-  --device-pending-bg: rgba(59, 130, 246, 0.10);
-  --device-pending-border: rgba(59, 130, 246, 0.22);
-  --device-pending-text: #93c5fd;
-  --device-pending-dot: #60a5fa;
+  --device-pending-bg: rgba(251, 191, 36, 0.12);
+  --device-pending-border: rgba(251, 191, 36, 0.28);
+  --device-pending-text: #fcd34d;
+  --device-pending-dot: #f59e0b;
   --device-inactive-bg: rgba(255, 255, 255, 0.06);
   --device-inactive-border: rgba(255, 255, 255, 0.10);
   --device-inactive-text: #5a5f73;
@@ -366,10 +366,10 @@ html[data-theme="consumer-dark"] {
   --letter-spacing-label: 0.08em;
 
   /* Radius (tighter, production-grade) */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 14px;
-  --radius-xl: 16px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
 
   /* Shadows (2 canonical: card + elevated) */
   --shadow-sm: 0 1px 2px rgba(0,0,0,0.2);
@@ -393,8 +393,8 @@ html[data-theme="consumer-dark"] {
   --control-placeholder: var(--color-text-tertiary);
   --control-muted-border: var(--color-border-subtle);
   --control-muted-fg: var(--color-text-muted);
-  --seg-track-bg: rgba(255, 255, 255, 0.06);
-  --seg-track-border: rgba(255, 255, 255, 0.08);
+  --seg-track-bg: rgba(88, 166, 255, 0.1);
+  --seg-track-border: rgba(88, 166, 255, 0.18);
   --seg-thumb-bg: #252836;
   --seg-thumb-border: rgba(255, 255, 255, 0.12);
   --seg-thumb-shadow: 0 1px 4px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);

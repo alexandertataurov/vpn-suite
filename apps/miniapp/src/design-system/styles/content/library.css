@@ -694,8 +694,9 @@
 }
 
 .status-chip.pending {
-  background: var(--color-warning-soft, color-mix(in oklch, var(--color-warning) 12%, transparent));
-  color: var(--color-warning);
+  background: color-mix(in oklch, var(--color-warning) 14%, transparent);
+  border: 1px solid color-mix(in oklch, var(--color-warning) 24%, transparent);
+  color: color-mix(in oklch, var(--color-warning) 82%, var(--color-text) 18%);
 }
 
 .status-chip.expiring {
@@ -704,8 +705,9 @@
 }
 
 .status-chip.expired {
-  background: var(--color-error-bg, color-mix(in oklch, var(--color-error) 12%, transparent));
-  color: var(--color-error);
+  background: color-mix(in oklch, var(--color-error) 14%, transparent);
+  border: 1px solid color-mix(in oklch, var(--color-error) 24%, transparent);
+  color: color-mix(in oklch, var(--color-error) 82%, var(--color-text) 18%);
 }
 
 .status-chip.offline {
@@ -748,7 +750,7 @@
   gap: var(--sb-density-card-gap, var(--spacing-2));
   padding: var(--sb-density-card-padding, var(--miniapp-card-padding));
   border: 1px solid transparent;
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   background: color-mix(in oklch, var(--color-surface) 96%, var(--color-surface-2) 4%);
   transition:
     border-color var(--motion-duration-enter) var(--motion-ease-standard),

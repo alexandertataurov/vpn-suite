@@ -104,9 +104,9 @@
 }
 
 .badge--error {
-  color: #dc2626;
-  background: #fee2e2;
-  border-color: color-mix(in srgb, #dc2626 24%, transparent);
+  color: #ef4444;
+  background: color-mix(in oklch, var(--color-error) 14%, transparent);
+  border-color: color-mix(in oklch, var(--color-error) 24%, transparent);
 }
 
 .badge--success {
@@ -124,11 +124,11 @@
 /* ---- Section eyebrow + section subtitle (Support, Plan hero, SectionLabel) ---- */
 .section-label,
 .plan-hero-eyebrow {
-  font-size: var(--amnezia-plan-eyebrow, var(--typo-meta-size));
-  font-weight: var(--font-weight-medium);
-  letter-spacing: 0.6px;
+  font-size: var(--typo-meta-size, 11px);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--color-text-tertiary);
+  color: color-mix(in oklch, var(--color-text-tertiary) 88%, transparent);
 }
 
 .section-label {
@@ -287,7 +287,7 @@
 .modern-profile-block {
   display: flex;
   align-items: center;
-  gap: var(--spacing-2);
+  gap: var(--spacing-1-5);
 }
 
 .modern-avatar {
@@ -295,7 +295,7 @@
   height: var(--size-touch-target, 44px);
   border-radius: var(--radius-sm);
   background: var(--color-surface);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-text) 8%, transparent);
+  box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--color-text) 8%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -636,7 +636,7 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
 }
 
 .footer-help__link {
-  color: var(--color-accent);
+  color: color-mix(in oklch, var(--color-text-tertiary) 84%, var(--color-accent) 16%);
   font-weight: var(--font-weight-medium);
   text-decoration: none;
   text-underline-offset: 2px;
@@ -703,17 +703,18 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
 }
 
 .help-footer__link {
-  color: var(--color-accent);
+  color: color-mix(in oklch, var(--color-text-tertiary) 84%, var(--color-accent) 16%);
   font-weight: var(--font-weight-medium);
-  text-decoration: underline;
+  text-decoration: none;
   text-underline-offset: 2px;
   text-decoration-thickness: 1px;
   cursor: pointer;
-  transition: color var(--duration-fast) ease;
+  transition: color var(--duration-fast) ease, text-decoration-color var(--duration-fast) ease;
 }
 
 .help-footer__link:hover {
   color: var(--color-accent);
+  text-decoration: underline;
 }
 
 /* ---- Plan Hero Card (amnezia spec §4.3) ------------- */

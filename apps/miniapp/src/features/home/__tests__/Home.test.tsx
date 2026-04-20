@@ -61,7 +61,7 @@ function createBaseModel(overrides: Record<string, unknown> = {}) {
       stats: [
         { label: "DEVICES", value: "2", dim: " / 5", tone: "default" as const },
         { label: "Renews", value: "May 1", tone: "default" as const },
-        { label: "TRAFFIC", value: "∞", tone: "default" as const },
+        { label: "TRAFFIC", value: "Unlimited", tone: "default" as const },
       ],
     },
     showRenewalBanner: false,
@@ -91,8 +91,8 @@ describe("HomePage", () => {
     expect(screen.getByText("Subscription")).toBeInTheDocument();
     expect(screen.getByText("Invite Friends")).toBeInTheDocument();
     expect(screen.getByText("2 of 5 active")).toBeInTheDocument();
-    expect(screen.getByText("Setup guide")).toBeInTheDocument();
     expect(screen.getByText("Donate via Platega")).toBeInTheDocument();
+    expect(screen.queryAllByText("View setup guide")).toHaveLength(1);
   });
 
   it("renders needs_device state", () => {
@@ -135,7 +135,7 @@ describe("HomePage", () => {
         stats: [
           { label: "DEVICES", value: "0", dim: " / 5", tone: "default" as const },
           { label: "Renews", value: "—", tone: "default" as const },
-          { label: "TRAFFIC", value: "∞", tone: "default" as const },
+          { label: "TRAFFIC", value: "Unlimited", tone: "default" as const },
         ],
       },
     });
@@ -227,7 +227,7 @@ describe("HomePage", () => {
         stats: [
           { label: "DEVICES", value: "2", dim: " / 5", tone: "default" as const },
           { label: "Expired", value: "Mar 10, 2030", tone: "expired" as const },
-          { label: "TRAFFIC", value: "∞", tone: "default" as const },
+          { label: "TRAFFIC", value: "Unlimited", tone: "default" as const },
         ],
       },
       subscriptionLabel: "Renew Subscription",
@@ -283,7 +283,7 @@ describe("HomePage", () => {
         stats: [
           { label: "DEVICES", value: "1", dim: " / 5", tone: "default" as const },
           { label: "Renews", value: "May 1, 2030", tone: "default" as const },
-          { label: "TRAFFIC", value: "∞", tone: "default" as const },
+          { label: "TRAFFIC", value: "Unlimited", tone: "default" as const },
         ],
       },
       subscriptionLabel: "Subscription",

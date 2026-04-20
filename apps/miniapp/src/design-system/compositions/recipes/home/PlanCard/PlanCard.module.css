@@ -91,6 +91,7 @@
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  margin-right: var(--spacing-2);
 }
 
 .planSub {
@@ -145,6 +146,18 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 100%;
+}
+
+.statUnlimited {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+}
+
+.statUnlimitedIcon {
+  font-size: 1em;
+  line-height: 1;
+  opacity: 0.72;
 }
 
 .statDim {

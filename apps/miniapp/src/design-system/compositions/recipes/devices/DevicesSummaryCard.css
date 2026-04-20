@@ -1,5 +1,5 @@
 .device-hero-card {
-  border-radius: calc(var(--radius-xl) + var(--spacing-0-5));
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
 }
 
@@ -44,7 +44,7 @@
 .device-hero-card .modern-device-metric {
   min-height: 100%;
   padding: var(--spacing-3);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   background: color-mix(in oklch, var(--color-surface) 84%, var(--color-accent) 16%);
   border: var(--border-width-hairline) solid color-mix(in oklch, var(--color-accent) 10%, var(--color-border-subtle));
 }

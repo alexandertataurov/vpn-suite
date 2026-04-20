@@ -1,7 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import type { WebAppCreateInvoiceResponse } from "@vpn-suite/shared";
 import {
-  IconBookOpen,
   IconBox,
   IconCreditCard,
   IconMonitor,
@@ -238,24 +237,15 @@ function HomeStatusRail({
 
 function HomeInfoActions({
   t,
-  onOpenGuide,
   onDonate,
   canDonate,
 }: {
   t: (k: string) => string;
-  onOpenGuide: () => void;
   onDonate: () => void;
   canDonate: boolean;
 }) {
   return (
     <CardRow className="home-card-row home-info-card">
-      <RowItem
-        icon={<IconBookOpen size={15} strokeWidth={2} aria-hidden />}
-        iconVariant="neutral"
-        label={t("home.main_instruction_title")}
-        subtitle={t("home.main_instruction_subtitle")}
-        onClick={onOpenGuide}
-      />
       <RowItem
         icon={<IconCreditCard size={15} strokeWidth={2} aria-hidden />}
         iconVariant="neutral"
@@ -321,7 +311,6 @@ export function HomePage() {
   const isGenerating = status === "generating_config";
   const handleAddDevice = () => navigate("/devices");
   const handleRenewalClick = () => navigate(status === "expired" ? "/restore-access" : "/plan");
-  const handleGuideOpen = () => navigate("/setup-guide");
   const handleDonateOpen = async () => {
     if (typeof window === "undefined") return;
     const entered = window.prompt(
@@ -383,9 +372,7 @@ export function HomePage() {
                 title={t("home.setup_required_title")}
                 description={t("home.setup_required_description")}
                 onChoosePlan={() => navigate("/plan")}
-                onViewGuide={() => navigate("/setup-guide")}
                 choosePlanLabel={t("home.choose_plan_cta")}
-                viewGuideLabel={t("home.view_guide_label")}
               />
               <HomePrimaryActions
                 t={t}
@@ -461,7 +448,6 @@ export function HomePage() {
 
           <HomeInfoActions
             t={t}
-            onOpenGuide={handleGuideOpen}
             onDonate={handleDonateOpen}
             canDonate={hasToken}
           />

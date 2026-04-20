@@ -169,7 +169,7 @@ export function buildTierPairs(
 
 export function formatStars(value: number): string {
   const safe = Number.isFinite(value) ? value : 0;
-  return `⭐${Math.max(0, Math.round(safe))}`;
+  return String(Math.max(0, Math.round(safe)));
 }
 
 export function periodLabelForHero(durationDays: number): string {

@@ -46,6 +46,17 @@
   min-height: var(--height-btn-sm);
   padding-inline: var(--spacing-3);
   white-space: nowrap;
+  background: color-mix(in oklch, var(--color-accent) 12%, transparent);
+  border: var(--border-width-hairline) solid color-mix(in oklch, var(--color-accent) 26%, transparent);
+  color: color-mix(in oklch, var(--color-accent) 85%, var(--color-text) 15%);
+}
+
+.device-inline-action.btn:hover {
+  background: color-mix(in oklch, var(--color-accent) 16%, transparent);
+}
+
+.device-inline-action.btn:active {
+  background: color-mix(in oklch, var(--color-accent) 20%, transparent);
 }
 
 .device-meta {

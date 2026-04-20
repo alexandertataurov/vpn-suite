@@ -125,10 +125,10 @@ export function SetupGuidePage() {
           <SectionLabel label={t("guide.platform_label")} />
           <div className="setup-guide-tabs" role="tablist" aria-label={t("guide.platform_label")}>
             <Button
-              variant={platform === "ios" ? "primary" : "secondary"}
+              variant="secondary"
               size="sm"
               onClick={() => setPlatform("ios")}
-              className="setup-guide-tab-btn"
+              className={`setup-guide-tab-btn ${platform === "ios" ? "setup-guide-tab-btn--active" : ""}`.trim()}
               role="tab"
               aria-selected={platform === "ios"}
               aria-pressed={platform === "ios"}
@@ -137,10 +137,10 @@ export function SetupGuidePage() {
               {t("guide.platform_ios")}
             </Button>
             <Button
-              variant={platform === "android" ? "primary" : "secondary"}
+              variant="secondary"
               size="sm"
               onClick={() => setPlatform("android")}
-              className="setup-guide-tab-btn"
+              className={`setup-guide-tab-btn ${platform === "android" ? "setup-guide-tab-btn--active" : ""}`.trim()}
               role="tab"
               aria-selected={platform === "android"}
               aria-pressed={platform === "android"}
@@ -185,6 +185,7 @@ export function SetupGuidePage() {
             variant="primary"
             fullWidth
             onClick={handleDownloadConfig}
+            className="setup-guide-download-btn"
             endIcon={<IconDownload size={16} />}
           >
             {isReadyToDownloadConfig

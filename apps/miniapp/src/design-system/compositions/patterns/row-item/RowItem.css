@@ -186,7 +186,7 @@
   display: flex;
   align-items: center;
   color: var(--color-text-tertiary);
-  opacity: 0.4;
+  opacity: 0.3;
   transition: opacity var(--duration-fast, 150ms) var(--ease-standard, ease);
 }
 
@@ -196,9 +196,13 @@
 }
 
 @media (pointer: fine) {
-  .row-item:hover .ri-chev {
+  .row-item--interactive:hover .ri-chev {
     opacity: 1;
   }
+}
+
+.row-item--interactive:active .ri-chev {
+  opacity: 1;
 }
 
 .card-row {

@@ -19,10 +19,10 @@
   left: var(--seg-pad);
   width: calc(50% - var(--seg-pad));
   bottom: var(--seg-pad);
-  background: var(--seg-thumb-bg);
-  border: var(--spacing-px) solid var(--seg-thumb-border);
+  background: color-mix(in oklch, var(--color-accent) 14%, var(--seg-thumb-bg));
+  border: var(--spacing-px) solid color-mix(in oklch, var(--color-accent) 22%, var(--seg-thumb-border));
   border-radius: var(--radius-full);
-  box-shadow: var(--seg-thumb-shadow);
+  box-shadow: 0 2px 8px color-mix(in oklch, var(--color-accent) 22%, transparent);
   transition: transform var(--duration-panel) cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: none;
   z-index: 0;
@@ -65,13 +65,13 @@
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
   letter-spacing: var(--letter-spacing-tight, -0.025em);
-  color: var(--seg-label-inactive);
+  color: color-mix(in oklch, var(--seg-label-inactive) 88%, var(--color-text-tertiary) 12%);
   transition: color var(--duration-enter) ease;
   line-height: 1;
 }
 
 .seg-option--active .seg-label {
-  color: var(--seg-label-active);
+  color: color-mix(in oklch, var(--color-accent) 84%, var(--seg-label-active) 16%);
 }
 
 .seg-save-badge {
