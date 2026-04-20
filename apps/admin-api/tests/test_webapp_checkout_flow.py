@@ -559,3 +559,279 @@ async def test_webapp_promo_validate_returns_422_for_invalid_code(
         assert "expired" in payload["message"].lower()
     finally:
         app.dependency_overrides.pop(get_db, None)
+
+
+@pytest.mark.asyncio
+async def test_webapp_create_invoice_does_not_reuse_pending_payment_when_price_context_changes(
+    async_session: AsyncSession,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Second checkout with promo-changed price should create a new pending payment."""
+    now = datetime.now(timezone.utc)
+    tg_id = int(uuid.uuid4().int % 10_000_000_000)
+
+    user = User(tg_id=tg_id)
+    async_session.add(user)
+    await async_session.flush()
+
+    plan = Plan(
+        id=uuid.uuid4().hex[:32],
+        name="Pro",
+        duration_days=30,
+        device_limit=3,
+        price_currency="XTR",
+        price_amount=Decimal("100"),
+    )
+    async_session.add(plan)
+    await async_session.flush()
+
+    server = Server(
+        id=uuid.uuid4().hex[:32],
+        name="srv",
+        region="test",
+        api_endpoint="https://vpn-node.example.com/api",
+        public_key="xTIBA5rboUvnH4htodjb6e697QjLERt1NAB4mZqp8Dg=",
+        vpn_endpoint="vpn.example.com:47604",
+        is_active=True,
+    )
+    async_session.add(server)
+    await async_session.commit()
+
+    class DummyValidationResult:
+        discount_amount = 20
+        discounted_price = 80
+        display_label = "20 XTR off"
+
+    async def fake_validate_promo_code(db, code, user_id, plan_id, original_price_xtr):  # noqa: ARG001
+        return DummyValidationResult()
+
+    async def fake_redeem_promo_code(db, code, user_id, plan_id, payment_id, original_price_xtr):  # noqa: ARG001
+        return 80
+
+    monkeypatch.setattr("app.api.v1.webapp.validate_promo_code", fake_validate_promo_code)
+    monkeypatch.setattr("app.api.v1.webapp.redeem_promo_code", fake_redeem_promo_code)
+
+    token = create_webapp_session_token(tg_id)
+
+    async def override_get_db():
+        yield async_session
+
+    app.dependency_overrides[get_db] = override_get_db
+    try:
+        async with AsyncClient(
+            transport=ASGITransport(app=app),
+            base_url="http://test",
+            timeout=10.0,
+        ) as client:
+            first = await client.post(
+                "/api/v1/webapp/payments/create-invoice",
+                headers={"Authorization": f"Bearer {token}"},
+                json={"plan_id": plan.id},
+            )
+            assert first.status_code == 200, first.text
+            first_payload = first.json()
+            assert first_payload["discounted_price_xtr"] == 100
+
+            second = await client.post(
+                "/api/v1/webapp/payments/create-invoice",
+                headers={"Authorization": f"Bearer {token}"},
+                json={"plan_id": plan.id, "promo_code": "SAVE20"},
+            )
+            assert second.status_code == 200, second.text
+            second_payload = second.json()
+
+        assert second_payload["discounted_price_xtr"] == 80
+        assert second_payload["payment_id"] != first_payload["payment_id"]
+
+        first_payment = (
+            await async_session.execute(select(Payment).where(Payment.id == first_payload["payment_id"]))
+        ).scalar_one_or_none()
+        second_payment = (
+            await async_session.execute(select(Payment).where(Payment.id == second_payload["payment_id"]))
+        ).scalar_one_or_none()
+        assert first_payment is not None and second_payment is not None
+        assert first_payment.status == "pending"
+        assert second_payment.status == "pending"
+        assert int(first_payment.amount) == 100
+        assert int(second_payment.amount) == 80
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+
+
+@pytest.mark.asyncio
+async def test_webapp_create_invoice_returns_503_when_payment_gate_url_missing(
+    async_session: AsyncSession,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """If provider cannot generate launch URL, API must return explicit 503 error."""
+    tg_id = int(uuid.uuid4().int % 10_000_000_000)
+    user = User(tg_id=tg_id)
+    async_session.add(user)
+    await async_session.flush()
+
+    plan = Plan(
+        id=uuid.uuid4().hex[:32],
+        name="Pro",
+        duration_days=30,
+        device_limit=1,
+        price_currency="XTR",
+        price_amount=Decimal("100"),
+    )
+    async_session.add(plan)
+    await async_session.flush()
+
+    server = Server(
+        id=uuid.uuid4().hex[:32],
+        name="srv",
+        region="test",
+        api_endpoint="https://vpn-node.example.com/api",
+        public_key="xTIBA5rboUvnH4htodjb6e697QjLERt1NAB4mZqp8Dg=",
+        vpn_endpoint="vpn.example.com:47604",
+        is_active=True,
+    )
+    async_session.add(server)
+    await async_session.commit()
+
+    monkeypatch.setattr("app.api.v1.webapp.settings.webapp_payment_provider", "telegram_stars")
+
+    async def fake_create_telegram_invoice_link(**kwargs):  # noqa: ARG001
+        return ""
+
+    monkeypatch.setattr("app.api.v1.webapp._create_telegram_invoice_link", fake_create_telegram_invoice_link)
+
+    token = create_webapp_session_token(tg_id)
+
+    async def override_get_db():
+        yield async_session
+
+    app.dependency_overrides[get_db] = override_get_db
+    try:
+        async with AsyncClient(
+            transport=ASGITransport(app=app),
+            base_url="http://test",
+            timeout=10.0,
+        ) as client:
+            response = await client.post(
+                "/api/v1/webapp/payments/create-invoice",
+                headers={"Authorization": f"Bearer {token}"},
+                json={"plan_id": plan.id},
+            )
+        assert response.status_code == 503, response.text
+        payload = response.json()
+        assert payload["detail"]["code"] == "PAYMENT_GATE_UNAVAILABLE"
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+
+
+@pytest.mark.asyncio
+async def test_webapp_create_donation_invoice_platega_returns_redirect_url(
+    async_session: AsyncSession,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Donation endpoint should return a provider URL and store donation marker in payload."""
+    now = datetime.now(timezone.utc)
+    tg_id = int(uuid.uuid4().int % 10_000_000_000)
+    user = User(tg_id=tg_id)
+    async_session.add(user)
+    await async_session.flush()
+
+    plan = Plan(
+        id=uuid.uuid4().hex[:32],
+        name="Pro",
+        duration_days=30,
+        device_limit=3,
+        price_currency="XTR",
+        price_amount=Decimal("100"),
+    )
+    async_session.add(plan)
+    await async_session.flush()
+
+    sub = Subscription(
+        id=uuid.uuid4().hex[:32],
+        user_id=user.id,
+        plan_id=plan.id,
+        valid_from=now - timedelta(days=1),
+        valid_until=now + timedelta(days=29),
+        device_limit=3,
+        status="active",
+        subscription_status="active",
+        access_status="enabled",
+        billing_status="paid",
+        renewal_status="auto_renew_on",
+    )
+    async_session.add(sub)
+    await async_session.commit()
+
+    monkeypatch.setattr("app.api.v1.webapp.settings.webapp_payment_provider", "platega")
+    monkeypatch.setattr("app.api.v1.webapp.settings.platega_return_url", "https://miniapp.example/success")
+    monkeypatch.setattr("app.api.v1.webapp.settings.platega_failed_url", "https://miniapp.example/fail")
+    monkeypatch.setattr("app.api.v1.webapp.settings.platega_currency", "RUB")
+
+    async def fake_create_platega_transaction(
+        *,
+        amount: int,
+        currency: str,
+        description: str,
+        return_url: str,
+        failed_url: str,
+        payload: str,
+    ):
+        assert amount == 350
+        assert currency == "RUB"
+        assert return_url == "https://miniapp.example/success"
+        assert failed_url == "https://miniapp.example/fail"
+        assert payload
+        return PlategaCreateTransactionResult(
+            transaction_id="tx-donate-1",
+            redirect_url="https://pay.platega.io/mock-donate",
+            status="PENDING",
+            payment_method=2,
+            expires_in="00:15:00",
+            usdt_rate=None,
+            raw={"transactionId": "tx-donate-1"},
+        )
+
+    monkeypatch.setattr(
+        "app.api.v1.webapp.create_platega_transaction", fake_create_platega_transaction
+    )
+
+    token = create_webapp_session_token(tg_id)
+
+    async def override_get_db():
+        yield async_session
+
+    app.dependency_overrides[get_db] = override_get_db
+    try:
+        async with AsyncClient(
+            transport=ASGITransport(app=app),
+            base_url="http://test",
+            timeout=10.0,
+        ) as client:
+            response = await client.post(
+                "/api/v1/webapp/payments/create-donation-invoice",
+                headers={"Authorization": f"Bearer {token}"},
+                json={"amount": 350},
+            )
+        assert response.status_code == 200, response.text
+        payload = response.json()
+        assert payload["invoice_url"] == "https://pay.platega.io/mock-donate"
+        assert payload["invoice_link"] == "https://pay.platega.io/mock-donate"
+        assert payload["currency"] == "RUB"
+        assert payload["star_count"] == 350
+        assert payload["free_activation"] is False
+
+        payment_row = await async_session.execute(
+            select(Payment).where(Payment.id == payload["payment_id"])
+        )
+        payment = payment_row.scalar_one_or_none()
+        assert payment is not None
+        assert payment.provider == "platega"
+        assert payment.status == "pending"
+        assert payment.amount == 350.0
+        assert payment.currency == "RUB"
+        assert (payment.webhook_payload or {}).get("kind") == "donation"
+        assert (
+            (payment.webhook_payload or {}).get("platega_payload") or {}
+        ).get("kind") == "donation"
+    finally:
+        app.dependency_overrides.pop(get_db, None)

@@ -2346,6 +2346,10 @@ class CreateInvoiceWebAppBody(BaseModel):
     promo_code: str | None = None
 
 
+class CreateDonationInvoiceWebAppBody(BaseModel):
+    amount: int = Field(default=150, ge=1, le=25_000)
+
+
 class WebAppPaymentStatusOut(BaseModel):
     payment_id: str
     status: str
@@ -2489,6 +2493,29 @@ def _apply_post_trial_offer_price(
         if fixed_rub > 0:
             return min(discounted, fixed_rub)
     return discounted
+
+
+def _normalized_promo_code(value: str | None) -> str | None:
+    normalized = (value or "").strip()
+    return normalized or None
+
+
+def _pending_payment_matches_request(
+    *,
+    payment: Payment,
+    expected_amount: int,
+    promo_code: str | None,
+    post_trial_offer_applied: bool,
+) -> bool:
+    payload = payment.webhook_payload or {}
+    existing_promo_code = _normalized_promo_code(str(payload.get("promo_code") or ""))
+    existing_offer_applied = bool((payload.get("post_trial_offer") or {}).get("applied"))
+    existing_amount = int(float(payment.amount or 0))
+    return (
+        existing_amount == max(0, int(expected_amount))
+        and existing_promo_code == _normalized_promo_code(promo_code)
+        and existing_offer_applied == bool(post_trial_offer_applied)
+    )
 
 
 async def _create_platega_redirect(
@@ -2667,7 +2694,12 @@ async def webapp_create_invoice(
         .limit(1)
     )
     existing_payment = existing_payment_result.scalar_one_or_none()
-    if existing_payment:
+    if existing_payment and _pending_payment_matches_request(
+        payment=existing_payment,
+        expected_amount=final_price_xtr,
+        promo_code=body.promo_code,
+        post_trial_offer_applied=post_trial_offer_applied,
+    ):
         await db.commit()
         await db.refresh(existing_payment)
         star_count = 0 if is_free else max(1, int(float(existing_payment.amount or 0)))
@@ -2682,10 +2714,26 @@ async def webapp_create_invoice(
                 payload=existing_payment.id,
                 star_count=star_count,
             )
+            if not invoice_link:
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail={
+                        "code": "PAYMENT_GATE_UNAVAILABLE",
+                        "message": "Could not open Telegram payment gate",
+                    },
+                )
         if not is_free and payment_provider == "platega":
             existing_payload = existing_payment.webhook_payload or {}
             invoice_url = str(existing_payload.get("platega_redirect_url") or "").strip()
             invoice_link = invoice_url
+            if not invoice_url:
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail={
+                        "code": "PAYMENT_GATE_UNAVAILABLE",
+                        "message": "Could not open Platega payment gate",
+                    },
+                )
         discounted = (
             int(float(existing_payment.amount or 0)) if existing_payment.amount else star_count
         )
@@ -2799,11 +2847,27 @@ async def webapp_create_invoice(
             payload=payment.id,
             star_count=star_count,
         )
+        if not invoice_link:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail={
+                    "code": "PAYMENT_GATE_UNAVAILABLE",
+                    "message": "Could not open Telegram payment gate",
+                },
+            )
     if not is_free and payment_provider == "platega":
         invoice_url = platega_redirect_url or str(
             (payment.webhook_payload or {}).get("platega_redirect_url") or ""
         ).strip()
         invoice_link = invoice_url
+        if not invoice_url:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail={
+                    "code": "PAYMENT_GATE_UNAVAILABLE",
+                    "message": "Could not open Platega payment gate",
+                },
+            )
     return {
         "invoice_id": payment.id,
         "payment_id": payment.id,
@@ -2819,6 +2883,141 @@ async def webapp_create_invoice(
         "invoice_link": invoice_link,
         "invoice_url": invoice_url,
         "free_activation": is_free,
+    }
+
+
+@router.post("/payments/create-donation-invoice")
+async def webapp_create_donation_invoice(
+    request: Request,
+    body: CreateDonationInvoiceWebAppBody,
+    db: AsyncSession = Depends(get_db),
+):
+    """Create pending donation payment invoice for current WebApp user."""
+    tg_id = _get_tg_id_from_bearer(request)
+    if not tg_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"code": "UNAUTHORIZED", "message": "Invalid session"},
+        )
+    user = await _get_or_create_webapp_user(db, tg_id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"code": "USER_NOT_FOUND", "message": "User not found"},
+        )
+    now = datetime.now(timezone.utc)
+    sub_result = await db.execute(
+        select(Subscription)
+        .where(
+            Subscription.user_id == user.id,
+            Subscription.status.in_(("active", "trialing", "grace", "pending")),
+        )
+        .order_by(Subscription.created_at.desc())
+        .limit(1)
+    )
+    sub = sub_result.scalar_one_or_none()
+    if not sub:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "code": "SUBSCRIPTION_REQUIRED",
+                "message": "Donation is available after activating a subscription",
+            },
+        )
+
+    payment_provider = _webapp_payment_provider()
+    donation_amount = max(1, int(body.amount))
+    payment_currency = "XTR"
+    external_id = (
+        f"webapp:{payment_provider}:donation:{user.id}:{sub.id}:"
+        f"{getattr(request.state, 'request_id', 'none')}"
+    )
+    webhook_payload: dict = {"kind": "donation", "star_count": donation_amount}
+    invoice_link = ""
+    invoice_url = ""
+
+    if payment_provider == "platega":
+        tx_id, redirect_url, provider_payload = await _create_platega_redirect(
+            user_id=user.id,
+            subscription_id=sub.id,
+            plan_id=sub.plan_id,
+            payment_amount=donation_amount,
+            promo_code=None,
+        )
+        external_id = tx_id
+        payment_currency = (settings.platega_currency or "RUB").strip().upper()
+        invoice_url = redirect_url.strip()
+        invoice_link = invoice_url
+        webhook_payload = {
+            **webhook_payload,
+            **provider_payload,
+            "platega_payload": {
+                **(provider_payload.get("platega_payload") or {}),
+                "kind": "donation",
+            },
+        }
+
+    payment = Payment(
+        user_id=user.id,
+        subscription_id=sub.id,
+        provider=payment_provider,
+        status="pending",
+        amount=float(donation_amount),
+        currency=payment_currency,
+        external_id=external_id,
+        webhook_payload=webhook_payload,
+    )
+    db.add(payment)
+    await db.flush()
+
+    if payment_provider == "telegram_stars":
+        invoice_link = await _create_telegram_invoice_link(
+            title="Donation",
+            description="Support the VPN project",
+            payload=payment.id,
+            star_count=donation_amount,
+        )
+        if not invoice_link:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail={
+                    "code": "PAYMENT_GATE_UNAVAILABLE",
+                    "message": "Could not open Telegram payment gate",
+                },
+            )
+
+    if payment_provider == "platega" and not invoice_url:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={
+                "code": "PAYMENT_GATE_UNAVAILABLE",
+                "message": "Could not open Platega payment gate",
+            },
+        )
+
+    await log_funnel_event(
+        db,
+        event_type="invoice_created",
+        user_id=user.id,
+        payload={"kind": "donation", "payment_id": payment.id, "amount": donation_amount},
+    )
+    miniapp_events_total.labels(event="invoice_created").inc()
+    await db.commit()
+    return {
+        "invoice_id": payment.id,
+        "payment_id": payment.id,
+        "title": "Donation",
+        "description": "Support the VPN project",
+        "currency": payment.currency,
+        "star_count": donation_amount,
+        "discounted_price_xtr": donation_amount,
+        "promo_discount_applied": 0,
+        "payload": payment.id,
+        "server_id": "",
+        "subscription_id": sub.id,
+        "invoice_link": invoice_link,
+        "invoice_url": invoice_url,
+        "free_activation": False,
     }
 
 

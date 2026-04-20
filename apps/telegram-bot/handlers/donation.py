@@ -9,7 +9,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram import Bot
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 
-from api_client import create_donation_invoice
+from api_client import create_donation_invoice, get_user_by_tg
 from i18n import t
 from utils.logging import get_logger
 
@@ -43,6 +43,17 @@ def _donation_keyboard(locale: str) -> InlineKeyboardMarkup:
 
 
 async def _send_invoice_to_user(bot: Bot, *, tg_id: int, locale: str, stars: int) -> None:
+    user_result = await get_user_by_tg(tg_id)
+    if user_result.success and isinstance(user_result.data, dict):
+        subs = user_result.data.get("subscriptions")
+        if isinstance(subs, list) and len(subs) == 0:
+            await bot.send_message(
+                chat_id=tg_id,
+                text=t(locale, "donate_requires_subscription"),
+                parse_mode=None,
+            )
+            return
+
     result = await create_donation_invoice(tg_id=tg_id, star_count=stars)
     if not result.success or not isinstance(result.data, dict):
         _log.warning("donation_invoice_create_failed", tg_id=tg_id, stars=stars, error=result.error)
@@ -137,4 +148,3 @@ async def on_custom_amount(message: Message, state: FSMContext) -> None:
     if not tg_id:
         return
     await _send_invoice_to_user(message.bot, tg_id=tg_id, locale=locale, stars=stars)
-

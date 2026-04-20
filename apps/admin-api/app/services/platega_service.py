@@ -39,7 +39,9 @@ def normalize_platega_status(value: str | None) -> str:
     raw = (value or "").strip().upper()
     if raw == "CONFIRMED":
         return "completed"
-    if raw in {"CANCELED", "CHARGEBACKED"}:
+    # Docs and provider payloads may use both US/UK spellings and
+    # CHARGEBACK/CHARGEBACKED variants for unsuccessful/chargeback states.
+    if raw in {"CANCELED", "CANCELLED", "CHARGEBACK", "CHARGEBACKED"}:
         return "failed"
     return "pending"
 
@@ -121,8 +123,14 @@ async def get_platega_transaction(transaction_id: str) -> PlategaTransactionResu
         data = response.json()
     except json.JSONDecodeError as exc:
         raise PlategaError("Platega returned invalid JSON") from exc
+    payment_details = data.get("paymentDetails") if isinstance(data.get("paymentDetails"), dict) else {}
     amount_raw = data.get("amount")
+    if amount_raw is None and isinstance(payment_details, dict):
+        amount_raw = payment_details.get("amount")
     amount = Decimal(str(amount_raw)) if amount_raw is not None else None
+    currency_raw = data.get("currency")
+    if currency_raw is None and isinstance(payment_details, dict):
+        currency_raw = payment_details.get("currency")
     normalized = normalize_platega_status(str(data.get("status") or "PENDING"))
     raw = dict(data)
     raw["fetched_at"] = datetime.now(timezone.utc).isoformat()
@@ -130,6 +138,6 @@ async def get_platega_transaction(transaction_id: str) -> PlategaTransactionResu
         transaction_id=tx_id,
         status=normalized,
         amount=amount,
-        currency=str(data.get("currency") or "") or None,
+        currency=str(currency_raw or "") or None,
         raw=raw,
     )

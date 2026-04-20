@@ -326,16 +326,36 @@ async def process_payment_webhook(
     existing = await session.execute(select(Payment).where(Payment.external_id == external_id))
     payment = existing.scalar_one_or_none()
     if payment:
+        previous_status = str(payment.status or "").strip().lower()
+        incoming_status = str(payload.get("status") or "").strip().lower()
+        terminal_statuses = {"completed", "failed", "cancelled"}
+
+        # Allow forward status transitions for the same external_id (e.g. pending -> completed),
+        # but never downgrade terminal states back to pending/retry-like states.
+        can_transition = (
+            bool(incoming_status)
+            and incoming_status != previous_status
+            and not (
+                previous_status in terminal_statuses and incoming_status not in terminal_statuses
+            )
+        )
+        if can_transition:
+            payment.status = incoming_status[:32]
+            payment.webhook_payload = payload
+            event_type = "webhook_status_update"
+            if incoming_status == "completed" and previous_status != "completed":
+                await _apply_payment_success_effects(session, payment, payload_for_promo=payload)
+        else:
+            event_type = "webhook_repeat"
+
         session.add(
             PaymentEvent(
                 payment_id=payment.id,
-                event_type="webhook_repeat",
+                event_type=event_type,
                 payload=payload,
             )
         )
         await session.flush()
-        # Idempotent: replay must not change business state (P0). Do not overwrite status:
-        # a replayed "pending" would incorrectly overwrite existing "completed".
         return WebhookResult(payment_id=str(payment.id), created=False)
 
     raw_user_id = payload.get("user_id")

@@ -255,6 +255,81 @@ async def test_completed_webhook_updates_subscription_device_limit_from_plan(
 
 
 @pytest.mark.asyncio
+async def test_webhook_status_transition_pending_to_completed_for_existing_external_id(
+    client: AsyncClient, monkeypatch
+):
+    """Same external_id should transition pending->completed and apply subscription effects."""
+    if not await check_db():
+        pytest.skip("DB not available (requires Postgres)")
+    monkeypatch.setattr(config.settings, "bot_api_key", "test-bot-key")
+    monkeypatch.setattr(config.settings, "telegram_stars_webhook_secret", "")
+
+    duration_days = 30
+    plan = await _create_plan(duration_days=duration_days)
+    tg_id = int(uuid.uuid4().int % 10_000_000_000)
+
+    cog = await client.post(
+        "/api/v1/bot/subscriptions/create-or-get",
+        json={"tg_id": tg_id, "plan_id": plan.id},
+        headers={"X-API-Key": "test-bot-key"},
+    )
+    assert cog.status_code == 200, cog.text
+    sub = cog.json()["subscription"]
+    sub_id = cog.json()["subscription_id"]
+    user_id = cog.json()["user_id"]
+    before_until = _parse_dt(sub["valid_until"])
+
+    external_id = f"transition-{uuid.uuid4().hex}"
+    pending = await client.post(
+        "/webhooks/payments/telegram_stars",
+        json={
+            "external_id": external_id,
+            "user_id": user_id,
+            "subscription_id": sub_id,
+            "amount": 100,
+            "currency": "XTR",
+            "status": "pending",
+        },
+    )
+    assert pending.status_code == 200, pending.text
+    assert pending.json().get("created") is True
+
+    completed = await client.post(
+        "/webhooks/payments/telegram_stars",
+        json={
+            "external_id": external_id,
+            "user_id": user_id,
+            "subscription_id": sub_id,
+            "amount": 100,
+            "currency": "XTR",
+            "status": "completed",
+        },
+    )
+    assert completed.status_code == 200, completed.text
+    assert completed.json().get("created") is False
+
+    user = await client.get(
+        f"/api/v1/users/by-tg/{tg_id}",
+        headers={"X-API-Key": "test-bot-key"},
+    )
+    assert user.status_code == 200, user.text
+    subs = user.json().get("subscriptions") or []
+    sub_after = next(s for s in subs if s["id"] == sub_id)
+    assert sub_after["status"] == "active"
+    after_until = _parse_dt(sub_after["valid_until"])
+    delta_days = (after_until - before_until).total_seconds() / 86400
+    assert delta_days >= duration_days - 0.1
+
+    async with async_session_factory() as db:
+        from app.models import Payment
+
+        payment = (
+            await db.execute(select(Payment).where(Payment.external_id == external_id))
+        ).scalar_one()
+        assert payment.status == "completed"
+
+
+@pytest.mark.asyncio
 async def test_webhook_replay_is_idempotent_and_audited(client: AsyncClient, monkeypatch):
     """Same external_id must be safe to replay: 200, created=false, no double extension, audit logged."""
     if not await check_db():

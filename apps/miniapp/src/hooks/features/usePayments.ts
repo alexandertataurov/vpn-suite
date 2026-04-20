@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import { telegramFeatureClient } from "@/lib/telegram/telegramFeatureClient";
+import { telegramClient } from "@/lib/telegram/telegramCoreClient";
 import { subscribeTelegramEvent } from "@/lib/telegram/telegramEvents";
 import { useOpenLink } from "@/hooks/features/useOpenLink";
 
@@ -9,6 +10,11 @@ export function usePayments() {
   const openInvoice = useCallback((url: string, onClosed?: (status: string) => void) => {
     if (/^https:\/\/t\.me\/\$invoice\//i.test(url) || /^https:\/\/t\.me\/invoice\//i.test(url)) {
       telegramFeatureClient.openInvoice(url, onClosed);
+      return;
+    }
+    if (telegramClient.isInsideTelegram() && typeof window !== "undefined") {
+      // Keep checkout inside Telegram Mini App WebView for external payment gateways.
+      window.location.assign(url);
       return;
     }
     openLink(url);

@@ -1,4 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
+import type { WebAppCreateInvoiceResponse } from "@vpn-suite/shared";
 import {
   IconBookOpen,
   IconBox,
@@ -11,6 +12,7 @@ import {
   Badge,
   FooterHelp,
   CardRow,
+  useToast,
   Stack,
   NoDeviceCallout,
   PillChip,
@@ -25,12 +27,16 @@ import {
 import { NewUserHero } from "@/design-system/recipes";
 import { FallbackScreen } from "@/design-system/patterns";
 import { SessionMissing } from "@/app/components";
-import { useWebappToken } from "@/api/client";
-import { getPlategaDonateHref, homeMergedSummaryCardEnabled } from "@/config/env";
+import { useWebappToken, webappApi } from "@/api/client";
+import { homeMergedSummaryCardEnabled } from "@/config/env";
 import { useSession } from "@/hooks";
-import { useOpenLink } from "@/hooks";
+import { usePayments } from "@/hooks/features/usePayments";
 import { useI18n } from "@/hooks/useI18n";
 import { useAccessHomePageModel } from "@/features/home/model/useAccessHomePageModel";
+
+const DONATION_MIN_AMOUNT = 1;
+const DONATION_MAX_AMOUNT = 25_000;
+const DONATION_DEFAULT_AMOUNT = 150;
 
 function InviteFriendsRow({ t }: { t: (k: string) => string }) {
   const navigate = useNavigate();
@@ -264,13 +270,13 @@ function HomeInfoActions({
 
 export function HomePage() {
   const { t } = useI18n();
+  const { addToast } = useToast();
   const model = useAccessHomePageModel();
   const location = useLocation();
   const navigate = useNavigate();
-  const { openLink } = useOpenLink();
+  const { openInvoice } = usePayments();
   const hasToken = !!useWebappToken();
   const session = useSession(hasToken).data;
-  const donateHref = getPlategaDonateHref();
   const profileName = (session?.user?.display_name ?? "").trim() || t("home.guest_name");
   const profileInitial =
     (session?.user?.display_name ?? "").trim().length > 0
@@ -316,8 +322,41 @@ export function HomePage() {
   const handleAddDevice = () => navigate("/devices");
   const handleRenewalClick = () => navigate(status === "expired" ? "/restore-access" : "/plan");
   const handleGuideOpen = () => navigate("/setup-guide");
-  const handleDonateOpen = () => {
-    if (donateHref) openLink(donateHref);
+  const handleDonateOpen = async () => {
+    if (typeof window === "undefined") return;
+    const entered = window.prompt(
+      t("home.donate_amount_prompt", {
+        min: DONATION_MIN_AMOUNT,
+        max: DONATION_MAX_AMOUNT,
+      }),
+      String(DONATION_DEFAULT_AMOUNT),
+    );
+    if (entered == null) return;
+    const amount = Number.parseInt(entered.replace(/\s+/g, ""), 10);
+    if (!Number.isFinite(amount) || amount < DONATION_MIN_AMOUNT || amount > DONATION_MAX_AMOUNT) {
+      addToast(
+        t("home.donate_amount_invalid", {
+          min: DONATION_MIN_AMOUNT,
+          max: DONATION_MAX_AMOUNT,
+        }),
+        "error",
+      );
+      return;
+    }
+    try {
+      const invoice = await webappApi.post<WebAppCreateInvoiceResponse>(
+        "/webapp/payments/create-donation-invoice",
+        { amount },
+      );
+      const donateLink = String(invoice.invoice_link ?? invoice.invoice_url ?? "").trim();
+      if (!donateLink) {
+        addToast(t("home.donate_open_failed"), "error");
+        return;
+      }
+      openInvoice(donateLink);
+    } catch {
+      addToast(t("home.donate_open_failed"), "error");
+    }
   };
   const mergedByQuery = new URLSearchParams(location.search).get("homeMergedCard") === "1";
   const useMergedSummaryCard = homeMergedSummaryCardEnabled || mergedByQuery;
@@ -424,7 +463,7 @@ export function HomePage() {
             t={t}
             onOpenGuide={handleGuideOpen}
             onDonate={handleDonateOpen}
-            canDonate={Boolean(donateHref)}
+            canDonate={hasToken}
           />
 
           <FooterHelp

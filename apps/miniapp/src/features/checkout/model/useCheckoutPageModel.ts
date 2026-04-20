@@ -29,6 +29,13 @@ type PaymentPhase = "idle" | "creating_invoice" | "waiting" | "success" | "error
 type PromoStatus = "idle" | "validating" | "valid" | "invalid";
 type PromoErrorAction = "clear" | "retry";
 
+function shouldRetryPaymentStatusPoll(err: unknown): boolean {
+  const e = err as { code?: string; statusCode?: number };
+  if (e?.code === "NETWORK_UNREACHABLE" || e?.code === "TIMEOUT") return true;
+  if (typeof e?.statusCode === "number") return e.statusCode >= 500;
+  return false;
+}
+
 function resolvePromoValidationError(err: unknown): {
   key: string;
   action: PromoErrorAction;
@@ -212,16 +219,33 @@ export function useCheckoutPageModel() {
           track("payment_fail", { plan_id: selectedPlanId, reason: status.status });
           return;
         }
-      } catch {
-        if (!pollAbortRef.current?.signal.aborted) {
+      } catch (err: unknown) {
+        if (pollAbortRef.current?.signal.aborted) return;
+        if (shouldRetryPaymentStatusPoll(err)) {
           pollTimeoutRef.current = setTimeout(doPoll, POLL_INTERVAL_MS);
+          return;
         }
+        stopPolling();
+        setPhase("error");
+        const e = err as Error & { code?: string; statusCode?: number };
+        setErrorMessage(
+          e?.code === "NETWORK_UNREACHABLE" || e?.code === "TIMEOUT"
+            ? t("checkout.network_unreachable_message")
+            : e?.message || t("checkout.activate_failed_message"),
+        );
+        notify("error");
+        track("payment_fail", {
+          plan_id: selectedPlanId,
+          reason:
+            e?.code ??
+            (typeof e?.statusCode === "number" ? `status_${e.statusCode}` : "status_poll_failed"),
+        });
         return;
       }
       pollTimeoutRef.current = setTimeout(doPoll, POLL_INTERVAL_MS);
     };
     void doPoll();
-  }, [navigateToNextStep, notify, queryClient, selectedPlanId, stopPolling, track]);
+  }, [navigateToNextStep, notify, queryClient, selectedPlanId, stopPolling, t, track]);
 
   useEffect(() => () => stopPolling(), [stopPolling]);
 

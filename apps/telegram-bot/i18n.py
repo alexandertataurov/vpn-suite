@@ -205,6 +205,7 @@ TEXTS = {
         "donate_custom_btn": "Другая сумма",
         "donate_custom_prompt": "Введите сумму в ⭐ (числом):",
         "donate_custom_invalid": "Введите корректное число ⭐ (например 150).",
+        "donate_requires_subscription": "Донат доступен после активации подписки.",
         "donate_error": "Не получилось создать платёж. Попробуйте ещё раз чуть позже.",
     },
     "en": {
@@ -366,6 +367,7 @@ TEXTS = {
         "donate_custom_btn": "Custom amount",
         "donate_custom_prompt": "Enter Stars amount (number):",
         "donate_custom_invalid": "Enter a valid Stars number (e.g. 150).",
+        "donate_requires_subscription": "Donation is available after activating a subscription.",
         "donate_error": "Couldn't create payment. Please try again in a moment.",
     },
 }
