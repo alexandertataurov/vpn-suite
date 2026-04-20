@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { SessionMissing } from "@/app/components";
 import {
+  FooterHelp,
   HelperNote,
   InlineAlert,
   PageHeader,
@@ -46,6 +47,11 @@ export function CheckoutPage() {
                 }
               />
             </PageSection>
+            <FooterHelp
+              note={t("footer.having_trouble")}
+              linkLabel={t("footer.view_setup_guide")}
+              onLinkClick={() => navigate("/setup-guide")}
+            />
           </PageLayout>
         </PageScaffold>
       );
@@ -139,6 +145,11 @@ export function CheckoutPage() {
             <HelperNote>{t("checkout.footer_note")}</HelperNote>
           </div>
         </PageSection>
+        <FooterHelp
+          note={t("footer.having_trouble")}
+          linkLabel={t("footer.view_setup_guide")}
+          onLinkClick={() => navigate("/setup-guide")}
+        />
       </PageLayout>
     </PageScaffold>
   );
