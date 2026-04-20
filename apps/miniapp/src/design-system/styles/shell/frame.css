@@ -3239,12 +3239,15 @@ html[data-theme="consumer-dark"] .subscription-cancellation-modal {
 
 .toast-container {
   position: fixed;
-  top: calc(var(--miniapp-header-safe-top) + var(--miniapp-header-content-height, 48px) + var(--spacing-2));
-  left: calc(var(--spacing-4) + var(--safe-left));
-  right: calc(var(--spacing-4) + var(--safe-right));
+  top: auto;
+  bottom: calc(var(--safe-bottom, 0px) + var(--spacing-4));
+  left: auto;
+  right: calc(var(--safe-right) + var(--spacing-3));
+  width: calc(100vw - var(--safe-left) - var(--safe-right) - (var(--spacing-3) * 2));
+  max-width: 380px;
   z-index: var(--z-toast);
   display: grid;
-  gap: var(--spacing-1);
+  gap: var(--spacing-2);
   pointer-events: none;
 }
 
@@ -3252,20 +3255,20 @@ html[data-theme="consumer-dark"] .subscription-cancellation-modal {
   pointer-events: auto;
   position: relative;
   overflow: hidden;
-  min-height: 52px;
-  border-radius: 16px;
-  border: 1px solid color-mix(in oklch, var(--color-border) 84%, transparent);
+  min-height: 48px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in oklch, var(--color-border) 76%, transparent);
   background:
-    linear-gradient(135deg, color-mix(in oklch, currentColor 10%, transparent), transparent 58%),
+    linear-gradient(135deg, color-mix(in oklch, currentColor 7%, transparent), transparent 62%),
     color-mix(in oklch, var(--surface-glass, var(--color-surface)) 95%, transparent);
   backdrop-filter: blur(calc(var(--blur-md) * 0.88)) saturate(1.005);
   -webkit-backdrop-filter: blur(calc(var(--blur-md) * 0.88)) saturate(1.005);
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: start;
-  column-gap: 10px;
-  padding: 11px 12px 12px 0;
-  box-shadow: 0 8px 18px color-mix(in oklch, var(--color-bg) 90%, transparent);
+  column-gap: 8px;
+  padding: 9px 10px 10px 0;
+  box-shadow: 0 8px 18px -10px color-mix(in oklch, var(--color-bg) 90%, transparent);
   --toast-stack-index-number: var(--toast-stack-index, 0);
   --toast-stack-shift: calc(var(--toast-stack-index-number) * -7px);
   --toast-stack-scale: calc(1 - (var(--toast-stack-index-number) * 0.015));
@@ -3316,17 +3319,17 @@ html[data-theme="consumer-dark"] .subscription-cancellation-modal {
   min-width: 0;
   display: flex;
   align-items: start;
-  gap: 10px;
+  gap: 8px;
 }
 
 .toast-icon-shell {
   flex: 0 0 auto;
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   margin-top: 1px;
-  border-radius: 10px;
+  border-radius: 9px;
   border: 1px solid color-mix(in oklch, currentColor 14%, transparent);
-  background: color-mix(in oklch, currentColor 10%, transparent);
+  background: color-mix(in oklch, currentColor 7%, transparent);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -3347,20 +3350,20 @@ html[data-theme="consumer-dark"] .subscription-cancellation-modal {
 .toast-copy {
   min-width: 0;
   display: grid;
-  gap: 4px;
+  gap: 3px;
 }
 
 .toast-label {
   display: inline-flex;
   align-items: center;
   width: fit-content;
-  min-height: 18px;
-  padding: 0 7px;
+  min-height: 16px;
+  padding: 0 6px;
   border-radius: 999px;
   border: 1px solid color-mix(in oklch, currentColor 16%, transparent);
   background: color-mix(in oklch, currentColor 10%, transparent);
   color: color-mix(in oklch, currentColor 72%, var(--color-text-muted) 28%);
-  font: 600 10px/1 var(--font-mono);
+  font: 600 9px/1 var(--font-mono);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   white-space: nowrap;
@@ -3369,20 +3372,20 @@ html[data-theme="consumer-dark"] .subscription-cancellation-modal {
 .toast-message {
   min-width: 0;
   color: color-mix(in oklch, var(--color-text) 84%, var(--color-text-tertiary) 16%);
-  font: 500 13px/1.4 var(--font-sans);
+  font: 500 12px/1.35 var(--font-sans);
   letter-spacing: -0.005em;
 }
 
 .toast-dismiss {
   align-self: start;
   flex-shrink: 0;
-  width: 22px;
-  min-width: 22px;
-  height: 22px;
+  width: 20px;
+  min-width: 20px;
+  height: 20px;
   margin: 0;
   padding: 0;
   border: 1px solid color-mix(in oklch, var(--color-border) 78%, transparent);
-  border-radius: 10px;
+  border-radius: 8px;
   background: color-mix(in oklch, var(--color-surface-2) 54%, transparent);
   color: color-mix(in oklch, var(--color-text-tertiary) 82%, transparent);
   cursor: pointer;
@@ -3408,9 +3411,9 @@ html[data-theme="consumer-dark"] .subscription-cancellation-modal {
 
 .toast-progress {
   position: absolute;
-  left: 47px;
-  right: 12px;
-  bottom: 6px;
+  left: 42px;
+  right: 10px;
+  bottom: 5px;
   height: 2px;
   border-radius: 999px;
   overflow: hidden;
@@ -5777,36 +5780,37 @@ html:not([data-theme="consumer-dark"]):not([data-theme="consumer-light"]) {
 
 .toast-container {
   gap: 8px;
+  top: auto;
   bottom: calc(var(--safe-bottom, 0px) + 16px);
 }
 
 .toast {
-  min-height: 56px;
-  padding: 11px 12px 12px 0;
-  border-radius: 18px;
-  box-shadow: 0 14px 28px -22px color-mix(in oklch, black 84%, transparent);
+  min-height: 48px;
+  padding: 9px 10px 10px 0;
+  border-radius: 14px;
+  box-shadow: 0 12px 24px -22px color-mix(in oklch, black 84%, transparent);
   background:
-    linear-gradient(135deg, color-mix(in oklch, currentColor 12%, transparent), transparent 58%),
+    linear-gradient(135deg, color-mix(in oklch, currentColor 8%, transparent), transparent 62%),
     color-mix(in oklch, var(--color-surface) 94%, var(--color-surface-2) 6%);
 }
 
 .toast-content {
-  gap: 10px;
+  gap: 8px;
 }
 
 .toast-icon-shell {
-  width: 26px;
-  height: 26px;
-  border-radius: 11px;
+  width: 22px;
+  height: 22px;
+  border-radius: 9px;
 }
 
 .toast-copy {
-  gap: 4px;
+  gap: 3px;
 }
 
 .toast-label {
-  min-height: 19px;
-  padding-inline: 8px;
+  min-height: 16px;
+  padding-inline: 6px;
 }
 
 .toast-icon {
@@ -5816,22 +5820,22 @@ html:not([data-theme="consumer-dark"]):not([data-theme="consumer-light"]) {
 }
 
 .toast-message {
-  font-size: 13px;
-  line-height: 1.4;
+  font-size: 12px;
+  line-height: 1.35;
 }
 
 .toast-dismiss {
-  width: 24px;
-  min-width: 24px;
-  height: 24px;
+  width: 20px;
+  min-width: 20px;
+  height: 20px;
 }
 
 .toast-progress {
-  left: 51px;
-  right: 12px;
-  bottom: 7px;
+  left: 42px;
+  right: 10px;
+  bottom: 5px;
   height: 2px;
-  opacity: 0.8;
+  opacity: 0.68;
 }
 
 .toast-enter {
