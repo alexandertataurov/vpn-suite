@@ -265,10 +265,6 @@ pygments==2.19.2
     # via
     #   pytest
     #   rich
-pyjwt==2.11.0
-    # via
-    #   -r requirements.txt
-    #   redis
 pyotp==2.9.0
     # via -r requirements.txt
 pyparsing==3.3.2
@@ -300,7 +296,7 @@ pyyaml==6.0.3
     #   uvicorn
 qrcode[pil]==7.4.2
     # via -r requirements.txt
-redis==5.3.1
+redis==7.4.0
     # via -r requirements.txt
 requests==2.32.5
     # via
@@ -321,8 +317,6 @@ six==1.17.0
     # via
     #   -r requirements.txt
     #   ecdsa
-    #   html5lib
-
 sortedcontainers==2.4.0
     # via cyclonedx-python-lib
 sqlalchemy[asyncio]==2.0.46
