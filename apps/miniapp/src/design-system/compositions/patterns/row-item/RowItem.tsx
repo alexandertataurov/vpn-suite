@@ -62,10 +62,16 @@ export function RowItem({
           "aria-disabled": ariaDisabled ? true : undefined,
         }
       : {};
+  const isInteractive = onClick != null && !ariaDisabled;
 
   return (
     <div
-      className={[`row-item`, ariaDisabled && onClick != null ? "row-item--disabled" : "", className]
+      className={[
+        "row-item",
+        isInteractive ? "row-item--interactive" : "",
+        ariaDisabled && onClick != null ? "row-item--disabled" : "",
+        className,
+      ]
         .filter(Boolean)
         .join(" ")}
       {...a11y}

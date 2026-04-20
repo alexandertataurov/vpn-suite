@@ -7,7 +7,7 @@
     var(--sb-density-row-pad-h, var(--amnezia-row-pad-h, var(--space-md)));
   background: var(--row-bg, var(--color-surface));
   border-bottom: var(--border-width-hairline) solid var(--row-divider, var(--color-border-subtle));
-  cursor: pointer;
+  cursor: default;
   transition: background var(--duration-fast, 150ms) var(--ease-standard, ease);
   box-sizing: border-box;
   width: 100%;
@@ -20,12 +20,16 @@
 
 /* Hover only on non-touch (pointer: fine) devices */
 @media (pointer: fine) {
-  .row-item:hover {
+  .row-item--interactive:hover {
     background: var(--row-hover-bg, var(--color-surface-2));
   }
 }
-.row-item:active {
+.row-item--interactive:active {
   background: var(--row-active-bg, var(--color-surface-2));
+}
+
+.row-item--interactive {
+  cursor: pointer;
 }
 
 .row-item--disabled {

@@ -129,6 +129,13 @@ function HomeMergedSummaryAction({
   const navigate = useNavigate();
   const showMerged = (showDevices && !showNoDeviceCallout) || showExpiry || showNoDeviceCallout;
   if (!showMerged) return null;
+  const targetRoute = status === "expired"
+    ? "/restore-access"
+    : showNoDeviceCallout
+      ? "/devices"
+      : showExpiry
+        ? "/plan"
+        : "/devices";
   return (
     <CardRow className="home-card-row home-quick-actions">
       <RowItem
@@ -151,7 +158,7 @@ function HomeMergedSummaryAction({
             {status === "expired" ? <Badge label={t("home.badge_renew")} variant="error" /> : null}
           </>
         )}
-        onClick={() => navigate(status === "expired" ? "/restore-access" : "/devices")}
+        onClick={() => navigate(targetRoute)}
       />
     </CardRow>
   );

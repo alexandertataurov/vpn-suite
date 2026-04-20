@@ -166,6 +166,7 @@ export function SupportPage() {
               label={t("settings.contact_support_title")}
               subtitle={t("support.quick_paths_support_description")}
               onClick={supportHref ? openTelegramSupport : undefined}
+              showChevron={Boolean(supportHref)}
             />
           </CardRow>
 

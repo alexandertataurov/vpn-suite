@@ -205,7 +205,7 @@ export function SettingsPage() {
         sectionTitle={t("settings.section_help")}
         setupGuideTitle={t("settings.setup_guide_title")}
         setupGuideDescription={t("settings.setup_guide_description")}
-        onSetupGuideClick={() => navigate("/connect-status")}
+        onSetupGuideClick={() => navigate("/setup-guide")}
         faqTitle={t("settings.faq_title")}
         faqDescription={t("settings.faq_description")}
         onFaqClick={() => navigate(model.supportActionTo)}
