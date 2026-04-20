@@ -1970,7 +1970,7 @@ const messages: MessageTable = {
     "support.troubleshooter_step_support_body":
       "Если доступ, устройства или восстановление всё ещё не помогают, воспользуйтесь ссылкой поддержки на этой странице.",
     "support.troubleshooter_step_support_next": "Начать проверку заново",
-    "restore.header_title": "Восстановление доступа",
+    "restore.header_title": "Восстановить доступ",
     "restore.header_subtitle": "Восстановите оплату здесь, затем продолжайте в AmneziaVPN.",
     "restore.inline_no_expired_title": "Нет истёкшего доступа для восстановления",
     "restore.inline_no_expired_message":
