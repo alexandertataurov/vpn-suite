@@ -73,3 +73,337 @@
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: var(--sp-3);
 }
+
+/* Devices page */
+.devices-page__top-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.devices-page__updated {
+  color: var(--tx-sec);
+}
+
+.devices-page__cards {
+  margin-bottom: var(--sp-6);
+}
+
+.devices-page__config-health-content {
+  display: grid;
+  gap: var(--sp-4);
+  padding: var(--sp-4);
+}
+
+.devices-page__config-health-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.devices-page__table {
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.devices-page__filters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+  gap: var(--sp-3);
+  align-items: end;
+  padding: var(--sp-4);
+}
+
+.devices-page__filter-label {
+  display: grid;
+  gap: var(--sp-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--tx-mut);
+}
+
+.devices-page__filter-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+  min-height: 30px;
+}
+
+.devices-page__action-alert {
+  margin-top: var(--sp-3);
+}
+
+.devices-page__bulk-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+
+.devices-page__device-cell {
+  display: grid;
+  gap: 2px;
+}
+
+.devices-page__device-name {
+  font-family: var(--font-mono);
+  color: var(--tx-pri);
+}
+
+.devices-page__device-meta {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.04em;
+  color: var(--tx-mut);
+}
+
+.devices-page__row-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+}
+
+.devices-page__pagination-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+
+.devices-page__pagination-meta {
+  color: var(--tx-mut);
+}
+
+.devices-page__detail {
+  display: grid;
+  gap: var(--sp-4);
+}
+
+.devices-page__detail-dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: var(--sp-2) var(--sp-3);
+}
+
+.devices-page__detail-dl dt {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--tx-mut);
+}
+
+.devices-page__detail-dl dd {
+  margin: 0;
+  color: var(--tx-pri);
+}
+
+.devices-page__detail-id {
+  font-family: var(--font-mono);
+  word-break: break-all;
+}
+
+.devices-page__detail-health-meta,
+.devices-page__config-health-meta {
+  margin-left: var(--sp-2);
+  color: var(--tx-sec);
+}
+
+.devices-page__detail-error,
+.devices-page__detail-action-error {
+  color: var(--red);
+  margin: 0;
+}
+
+.devices-page__detail-buttons,
+.devices-page__config-actions,
+.devices-page__revoke-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.devices-page__detail-actions {
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.devices-page__detail-empty,
+.devices-page__revoke-hint {
+  margin: 0;
+  color: var(--tx-sec);
+}
+
+.devices-page__revoke-label {
+  display: grid;
+  gap: var(--sp-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--tx-mut);
+}
+
+.devices-page__reissue-groups {
+  display: grid;
+  gap: var(--sp-3);
+  margin-top: var(--sp-2);
+}
+
+.devices-page__reissue-group {
+  border: 1px solid var(--bd-def);
+  border-radius: var(--r-sm);
+  background: var(--s2);
+  padding: var(--sp-3);
+  display: grid;
+  gap: var(--sp-2);
+}
+
+.devices-page__reissue-group-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tx-mut);
+}
+
+.devices-page__qr {
+  display: grid;
+  justify-items: center;
+  gap: var(--sp-3);
+}
+
+.devices-page__qr-actions {
+  display: inline-flex;
+  gap: var(--sp-2);
+}
+
+@media (max-width: 1200px) {
+  .devices-page__filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .devices-page__filter-actions {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 768px) {
+  .devices-page__top-actions {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .devices-page__filters {
+    grid-template-columns: 1fr;
+  }
+
+  .devices-page__detail-dl {
+    grid-template-columns: 1fr;
+    gap: var(--sp-1);
+  }
+
+  .devices-page__detail-dl dt {
+    margin-top: var(--sp-2);
+  }
+}
+
+/* Billing page */
+.billing-page {
+  display: grid;
+  gap: var(--sp-4);
+}
+
+.billing-page__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.billing-page__tab {
+  border-color: var(--bd-def);
+}
+
+.billing-page__tab--active {
+  border-color: var(--bd-focus);
+  color: var(--tx-pri);
+  background: var(--s2);
+}
+
+.billing-page__panel {
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.billing-page__filters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sp-3);
+  align-items: end;
+  margin: var(--sp-3) 0;
+}
+
+.billing-page__filter-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: 30px;
+  color: var(--tx-sec);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.billing-page__filter-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+  min-height: 30px;
+}
+
+.billing-page__action-alert {
+  margin: var(--sp-2) 0;
+}
+
+.billing-page__plan-actions,
+.billing-page__sub-actions {
+  display: inline-flex;
+  gap: var(--sp-1);
+  flex-wrap: wrap;
+}
+
+.billing-page__table-wrap {
+  display: grid;
+  gap: var(--sp-2);
+}
+
+.billing-page__table-meta {
+  color: var(--tx-mut);
+}
+
+.billing-page__muted {
+  color: var(--tx-sec);
+}
+
+@media (max-width: 1200px) {
+  .billing-page__filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .billing-page__filter-actions {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 768px) {
+  .billing-page__filters {
+    grid-template-columns: 1fr;
+  }
+}

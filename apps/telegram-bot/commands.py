@@ -5,7 +5,7 @@ from aiogram.types import BotCommand
 
 COMMANDS = [
     ("start", "Запуск и открытие приложения"),
-    ("donate", "Донат через Telegram Stars"),
+    ("donate", "Донат (Platega / Stars)"),
 ]
 
 

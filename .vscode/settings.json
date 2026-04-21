@@ -18,5 +18,9 @@
     "**/*.min.js": true,
     "**/*.map": true,
     "**/.mypy_cache": true
+  },
+  "chat.tools.terminal.autoApprove": {
+    "git remote": true,
+    "git add": true
   }
 }

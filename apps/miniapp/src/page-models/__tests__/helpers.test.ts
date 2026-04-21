@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   daysUntil,
   getActiveDevices,
+  getActiveOrGraceSubscription,
   getActiveSubscription,
   getConfirmedDevices,
   getLatestActiveDevice,
@@ -83,6 +84,28 @@ describe("page-model subscription helpers", () => {
     } as never);
 
     expect(selected?.id).toBe("sub-active");
+  });
+
+  it("getActiveOrGraceSubscription includes grace access", () => {
+    const grace = makeSubscription({
+      id: "sub-grace",
+      access_status: "grace",
+    });
+    const pending = makeSubscription({
+      id: "sub-pending",
+      subscription_status: "pending",
+    });
+
+    const selected = getActiveOrGraceSubscription({
+      subscriptions: [pending, grace],
+      devices: [],
+      user: null,
+      onboarding: { completed: true, step: 3, version: 2, updated_at: null },
+      public_ip: null,
+      routing: { recommended_route: "/plan", reason: "unknown" },
+    } as never);
+
+    expect(selected?.id).toBe("sub-grace");
   });
 
   it("prefers grace over pending and expired subscriptions", () => {

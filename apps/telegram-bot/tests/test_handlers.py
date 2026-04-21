@@ -29,6 +29,7 @@ async def test_cmd_start_sends_greeting_and_button(mock_message):
     call_args = mock_message.answer.call_args
     text = call_args[0][0]
     assert t("en", "welcome") in text or "Welcome" in text
+    assert "example.com/webapp" in text
     reply_markup = call_args[1].get("reply_markup")
     assert reply_markup is not None
     assert len(reply_markup.inline_keyboard) == 1

@@ -18,7 +18,7 @@ import { useBootstrapContext } from "@/app/bootstrap/context";
 import { webappApi } from "@/api/client";
 import { useOpenLink, useSession, useTelemetry, useTelegramWebApp } from "@/hooks";
 import { webappQueryKeys } from "@/lib";
-import { getActiveDevices, getActiveSubscription } from "@/page-models/helpers";
+import { getActiveDevices, getActiveOrGraceSubscription } from "@/page-models/helpers";
 import { getSupportBotHref } from "@/config/env";
 import { useI18n } from "@/hooks/useI18n";
 import { AMNEZIA_VPN_ANDROID_URL, AMNEZIA_VPN_IOS_URL } from "@/lib";
@@ -71,7 +71,7 @@ export function OnboardingPage() {
   const isLastStep = stepIndex === ONBOARDING_STEPS.length - 1;
   const activeDevices = useMemo(() => getActiveDevices(session), [session]);
   const hasActiveDevice = activeDevices.length > 0;
-  const hasActivePlan = Boolean(getActiveSubscription(session));
+  const hasActivePlan = Boolean(getActiveOrGraceSubscription(session));
   const hasDetectedActivity = Boolean(session?.public_ip || activeDevices.some((d) => d.last_seen_handshake_at));
   const launchPayload = session?.latest_device_delivery?.amnezia_vpn_key ?? null;
 

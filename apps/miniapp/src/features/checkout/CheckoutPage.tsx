@@ -49,8 +49,8 @@ export function CheckoutPage() {
             </PageSection>
             <FooterHelp
               note={t("footer.having_trouble")}
-              linkLabel={t("footer.view_setup_guide")}
-              onLinkClick={() => navigate("/setup-guide")}
+              linkLabel={t("checkout.go_to_plans")}
+              onLinkClick={() => navigate("/plan")}
             />
           </PageLayout>
         </PageScaffold>
@@ -115,6 +115,8 @@ export function CheckoutPage() {
             showConfirmation={showConfirmation}
             planDurationDays={model.planDurationDays}
             planDeviceLimit={model.planDeviceLimit}
+            priceLabel={model.priceLabel}
+            originalPriceLabel={model.originalPriceLabel}
           />
 
           <CheckoutFlowCard

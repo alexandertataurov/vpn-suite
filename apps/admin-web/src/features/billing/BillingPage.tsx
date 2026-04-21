@@ -6,6 +6,7 @@ import { useApi } from "@/core/api/context";
 import { SubscriptionRecordsTab } from "@/features/billing/SubscriptionRecordsTab";
 import { billingKeys } from "@/features/billing/services/billing.query-keys";
 import {
+  Badge,
   Button,
   Card,
   DataTable,
@@ -43,6 +44,7 @@ const UPSELL_METHOD_OPTIONS: { value: string; label: string }[] = [
 ];
 
 type PlanStyle = "normal" | "popular" | "promotional";
+type PlanVisibilityFilter = "all" | "visible" | "hidden";
 
 interface PlanRow extends Record<string, unknown> {
   id: string;
@@ -52,11 +54,12 @@ interface PlanRow extends Record<string, unknown> {
   price: string;
   style: string;
   subscriptions: string;
-  archived: string;
+  archived: JSX.Element;
   upsellMethods: string;
   createdAt: string;
   order: JSX.Element;
   actions: JSX.Element;
+  hidden: boolean;
 }
 
 interface PlanFormState {
@@ -67,6 +70,7 @@ interface PlanFormState {
   priceAmount: string;
   style: PlanStyle;
   upsellMethods: string[];
+  hidden: boolean;
 }
 
 function parsePlanName(rawName: string | null | undefined): { style: PlanStyle; cleanName: string } {
@@ -102,7 +106,8 @@ export function BillingPage() {
   const api = useApi();
   const queryClient = useQueryClient();
 
-  const [includeArchived, setIncludeArchived] = useState(true);
+  const [planVisibilityFilter, setPlanVisibilityFilter] = useState<PlanVisibilityFilter>("all");
+  const includeArchived = planVisibilityFilter !== "visible";
   const plansPath = useMemo(
     () =>
       `/plans?limit=50&offset=0&include_archived=${includeArchived}`,
@@ -126,6 +131,7 @@ export function BillingPage() {
     priceAmount: "",
     style: "normal",
     upsellMethods: [],
+    hidden: false,
   });
   const [savePending, setSavePending] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -134,6 +140,7 @@ export function BillingPage() {
   const [deletePending, setDeletePending] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionPending, setActionPending] = useState(false);
+  const [planSearch, setPlanSearch] = useState("");
 
   const [paymentFilters, setPaymentFilters] = useState<{
     user_id: string;
@@ -244,6 +251,41 @@ export function BillingPage() {
     [api, runPlanAction],
   );
 
+  const freePlans = useMemo(
+    () => (plans?.items ?? []).filter((p) => Number(p.price_amount ?? 0) <= 0),
+    [plans?.items],
+  );
+  const visibleFreePlanIds = useMemo(
+    () => freePlans.filter((p) => !Boolean(p.is_archived)).map((p) => p.id),
+    [freePlans],
+  );
+  const hiddenFreePlanIds = useMemo(
+    () => freePlans.filter((p) => Boolean(p.is_archived)).map((p) => p.id),
+    [freePlans],
+  );
+
+  const hideFreePlans = useCallback(() => {
+    if (visibleFreePlanIds.length === 0) return;
+    void runPlanAction(async () => {
+      await Promise.all(
+        visibleFreePlanIds.map((planId) =>
+          api.patch<PlanOut>(`/plans/${planId}`, { is_archived: true }),
+        ),
+      );
+    });
+  }, [api, runPlanAction, visibleFreePlanIds]);
+
+  const unhideFreePlans = useCallback(() => {
+    if (hiddenFreePlanIds.length === 0) return;
+    void runPlanAction(async () => {
+      await Promise.all(
+        hiddenFreePlanIds.map((planId) =>
+          api.patch<PlanOut>(`/plans/${planId}`, { is_archived: false }),
+        ),
+      );
+    });
+  }, [api, hiddenFreePlanIds, runPlanAction]);
+
   const handleMoveUp = useCallback(
     (p: PlanOut) => {
       if (!plans?.items?.length) return;
@@ -304,9 +346,14 @@ export function BillingPage() {
         price: `${p.price_amount} ${p.price_currency}`,
         style: styleLabel,
         subscriptions: subCount > 0 ? `${subCount}` : "0 (can delete)",
-        archived: p.is_archived ? "Archived" : "—",
+        archived: (
+          <Badge variant={p.is_archived ? "warning" : "success"} size="sm">
+            {p.is_archived ? "Hidden" : "Visible"}
+          </Badge>
+        ),
         upsellMethods: upsellList,
         createdAt: new Date(p.created_at).toLocaleDateString(),
+        hidden: Boolean(p.is_archived),
         order: (
           <span className="billing-page__plan-actions">
             <Button
@@ -347,6 +394,7 @@ export function BillingPage() {
                   priceAmount: String(p.price_amount),
                   style,
                   upsellMethods: p.upsell_methods ?? [],
+                  hidden: Boolean(p.is_archived),
                 });
                 setSaveError(null);
                 setIsModalOpen(true);
@@ -366,22 +414,22 @@ export function BillingPage() {
             {p.is_archived ? (
               <Button
                 type="button"
-                variant="ghost"
+                variant="success"
                 size="sm"
                 onClick={() => handleRestore(p)}
                 disabled={actionPending}
               >
-                Restore
+                Unhide
               </Button>
             ) : (
               <Button
                 type="button"
-                variant="secondary"
+                variant="warning"
                 size="sm"
                 onClick={() => handleArchive(p)}
                 disabled={actionPending}
               >
-                Archive
+                Hide
               </Button>
             )}
             <Button
@@ -412,6 +460,24 @@ export function BillingPage() {
     handleRestore,
   ]);
 
+  const filteredPlanRows = useMemo(() => {
+    const q = planSearch.trim().toLowerCase();
+    return planRows.filter((row) => {
+      if (planVisibilityFilter === "visible" && row.hidden) return false;
+      if (planVisibilityFilter === "hidden" && !row.hidden) return false;
+      if (!q) return true;
+      const name = String(row.name ?? "").toLowerCase();
+      const id = String(row.id ?? "").toLowerCase();
+      return name.includes(q) || id.includes(q);
+    });
+  }, [planRows, planSearch, planVisibilityFilter]);
+
+  const planVisibilityStats = useMemo(() => {
+    const total = planRows.length;
+    const hidden = planRows.filter((row) => row.hidden).length;
+    return { total, hidden, visible: total - hidden };
+  }, [planRows]);
+
   const openCreateModal = () => {
     setEditingPlan(null);
     setForm({
@@ -422,6 +488,7 @@ export function BillingPage() {
       priceAmount: "",
       style: "normal",
       upsellMethods: [],
+      hidden: false,
     });
     setSaveError(null);
     setIsModalOpen(true);
@@ -443,6 +510,11 @@ export function BillingPage() {
     form.deviceLimit.trim().length > 0 &&
     form.priceCurrency.trim().length > 0 &&
     form.priceAmount.trim().length > 0;
+
+  const resetPlanFilters = () => {
+    setPlanVisibilityFilter("all");
+    setPlanSearch("");
+  };
 
   const handleDeletePlan = async () => {
     if (!planToDelete) return;
@@ -478,7 +550,10 @@ export function BillingPage() {
         upsell_methods: form.upsellMethods.length > 0 ? form.upsellMethods : null,
       };
       if (editingPlan) {
-        await api.patch<PlanOut>(`/plans/${editingPlan.id}`, body);
+        await api.patch<PlanOut>(`/plans/${editingPlan.id}`, {
+          ...body,
+          is_archived: form.hidden,
+        });
       } else {
         await api.post<PlanOut>("/plans", body);
       }
@@ -524,29 +599,74 @@ export function BillingPage() {
             )}
             {!isPlansLoading && !isPlansError && (
               <Card>
-                <SectionHeader
-                  label="Miniapp subscription plans"
-                  note={
+                <SectionHeader label="Miniapp subscription plans" />
+                <MetaText>Configure the subscription plans exposed in the Telegram miniapp.</MetaText>
+                <MetaText className="billing-page__table-meta">
+                  {planVisibilityStats.visible} visible · {planVisibilityStats.hidden} hidden ·{" "}
+                  {planVisibilityStats.total} total
+                </MetaText>
+                <div className="billing-page__filters">
+                  <label className="input-label">
+                    Search plan
+                    <Input
+                      type="search"
+                      value={planSearch}
+                      onChange={(e) => setPlanSearch(e.target.value)}
+                      placeholder="Name or ID"
+                    />
+                  </label>
+                  <label className="input-label">
+                    Visibility
+                    <select
+                      className="input"
+                      value={planVisibilityFilter}
+                      onChange={(e) =>
+                        setPlanVisibilityFilter(e.target.value as PlanVisibilityFilter)
+                      }
+                    >
+                      <option value="all">All (visible + hidden)</option>
+                      <option value="visible">Visible only</option>
+                      <option value="hidden">Hidden only</option>
+                    </select>
+                  </label>
+                  <div className="billing-page__filter-actions">
+                    <Button type="button" variant="default" onClick={() => refetchPlans()}>
+                      Load plans
+                    </Button>
+                    <Button type="button" variant="ghost" onClick={resetPlanFilters}>
+                      Reset filters
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="warning"
+                      onClick={hideFreePlans}
+                      disabled={actionPending || visibleFreePlanIds.length === 0}
+                    >
+                      Hide free plan{visibleFreePlanIds.length > 1 ? "s" : ""}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="success"
+                      onClick={unhideFreePlans}
+                      disabled={actionPending || hiddenFreePlanIds.length === 0}
+                    >
+                      Unhide free plan{hiddenFreePlanIds.length > 1 ? "s" : ""}
+                    </Button>
                     <Button type="button" onClick={openCreateModal}>
                       Add plan
                     </Button>
-                  }
-                />
-                <MetaText>Configure the subscription plans exposed in the Telegram miniapp.</MetaText>
-                <label className="billing-page__filter-inline">
-                  <input
-                    type="checkbox"
-                    checked={includeArchived}
-                    onChange={(e) => setIncludeArchived(e.target.checked)}
-                  />
-                  Include archived
-                </label>
+                  </div>
+                </div>
                 {actionError && (
-                  <p className="input-hint is-error" role="alert">
-                    {actionError}
-                  </p>
+                  <div className="alert danger billing-page__action-alert" role="alert">
+                    <span className="alert-icon" aria-hidden />
+                    <div>
+                      <div className="alert-title">Plan action failed</div>
+                      <div className="alert-desc">{actionError}</div>
+                    </div>
+                  </div>
                 )}
-                {planRows.length > 0 ? (
+                {filteredPlanRows.length > 0 ? (
                   <div className="data-table-wrap">
                     <DataTable<PlanRow>
                       density="compact"
@@ -557,13 +677,13 @@ export function BillingPage() {
                         { key: "deviceLimit", header: "Devices" },
                         { key: "price", header: "Price" },
                         { key: "subscriptions", header: "Subscriptions" },
-                        { key: "archived", header: "Archived" },
+                        { key: "archived", header: "Visibility" },
                         { key: "style", header: "Style" },
                         { key: "upsellMethods", header: "Upsell triggers" },
                         { key: "createdAt", header: "Created" },
                         { key: "actions", header: "Actions" },
                       ]}
-                      rows={planRows}
+                      rows={filteredPlanRows}
                       getRowKey={(row) => row.id}
                     />
                   </div>
@@ -653,6 +773,18 @@ export function BillingPage() {
                     </div>
                   </label>
                 </div>
+                {editingPlan && (
+                  <div className="input-wrap">
+                    <label className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={form.hidden}
+                        onChange={(e) => handleFormChange({ hidden: e.target.checked })}
+                      />
+                      Hidden in miniapp
+                    </label>
+                  </div>
+                )}
                 <div className="input-wrap">
                   <span className="input-label">Upsell triggers</span>
                   <div className="checkbox-group" role="group" aria-label="Upsell triggers">
@@ -791,6 +923,18 @@ export function BillingPage() {
                     placeholder="e.g. telegram_stars"
                   />
                 </label>
+                <div className="billing-page__filter-actions">
+                  <Button type="button" variant="default" onClick={() => refetchPayments()}>
+                    Load payments
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => setPaymentFilters({ user_id: "", status: "", provider: "" })}
+                  >
+                    Reset filters
+                  </Button>
+                </div>
               </div>
               {isPaymentsLoading && <Skeleton height={120} />}
               {isPaymentsError && (
@@ -805,18 +949,12 @@ export function BillingPage() {
               )}
               {!isPaymentsLoading && !isPaymentsError && paymentsData && (
                 paymentsData.items.length > 0 ? (
-                  <div className="data-table-wrap">
-                    <DataTable<{
-                      id: string;
-                      user_id: number;
-                      subscription_id: string;
-                      provider: string;
-                      status: string;
-                      amount: number;
-                      currency: string;
-                      external_id: string;
-                      created_at: string;
-                    }>
+                  <div className="billing-page__table-wrap">
+                    <MetaText className="billing-page__table-meta">
+                      {paymentsData.items.length} shown · {paymentsData.total} total payments
+                    </MetaText>
+                    <div className="data-table-wrap">
+                    <DataTable
                       density="compact"
                       columns={[
                         { key: "id", header: "ID" },
@@ -834,7 +972,20 @@ export function BillingPage() {
                         user_id: p.user_id,
                         subscription_id: p.subscription_id,
                         provider: p.provider,
-                        status: p.status,
+                        status: (
+                          <Badge
+                            variant={
+                              p.status === "completed"
+                                ? "success"
+                                : p.status === "pending"
+                                  ? "warning"
+                                  : "danger"
+                            }
+                            size="sm"
+                          >
+                            {p.status}
+                          </Badge>
+                        ),
                         amount: p.amount,
                         currency: p.currency,
                         external_id: p.external_id,
@@ -842,6 +993,7 @@ export function BillingPage() {
                       }))}
                       getRowKey={(row) => row.id}
                     />
+                    </div>
                   </div>
                 ) : (
                   <EmptyState message="No payments match the filters." />
@@ -893,6 +1045,20 @@ export function BillingPage() {
                     <option value="promo_applied">promo_applied</option>
                   </select>
                 </label>
+                <div className="billing-page__filter-actions">
+                  <Button type="button" variant="default" onClick={() => refetchEntitlementEvents()}>
+                    Load events
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() =>
+                      setEntitlementFilters({ user_id: "", subscription_id: "", event_type: "" })
+                    }
+                  >
+                    Reset filters
+                  </Button>
+                </div>
               </div>
               {isEntitlementEventsLoading && <Skeleton height={120} />}
               {isEntitlementEventsError && (
@@ -903,8 +1069,12 @@ export function BillingPage() {
               )}
               {!isEntitlementEventsLoading && !isEntitlementEventsError && entitlementEvents && (
                 entitlementEvents.length > 0 ? (
-                  <div className="data-table-wrap">
-                    <DataTable<{ id: string; created_at: string; event_type: string; user_id: number; subscription_id: string; payload: string }>
+                  <div className="billing-page__table-wrap">
+                    <MetaText className="billing-page__table-meta">
+                      {entitlementEvents.length} entitlement events
+                    </MetaText>
+                    <div className="data-table-wrap">
+                    <DataTable
                       density="compact"
                       columns={[
                         { key: "created_at", header: "Created" },
@@ -916,13 +1086,27 @@ export function BillingPage() {
                       rows={entitlementEvents.map((e) => ({
                         id: e.id,
                         created_at: e.created_at ? new Date(e.created_at).toLocaleString() : "",
-                        event_type: e.event_type,
+                        event_type: (
+                          <Badge
+                            variant={
+                              e.event_type.includes("grace")
+                                ? "warning"
+                                : e.event_type.includes("blocked")
+                                  ? "danger"
+                                  : "info"
+                            }
+                            size="sm"
+                          >
+                            {e.event_type}
+                          </Badge>
+                        ),
                         user_id: e.user_id,
                         subscription_id: e.subscription_id ?? "—",
                         payload: e.payload ? JSON.stringify(e.payload) : "—",
                       }))}
                       getRowKey={(row) => row.id}
                     />
+                    </div>
                   </div>
                 ) : (
                   <EmptyState message="No entitlement events match the filters." />
@@ -953,6 +1137,18 @@ export function BillingPage() {
                     placeholder="Filter by subscription_id"
                   />
                 </label>
+                <div className="billing-page__filter-actions">
+                  <Button type="button" variant="default" onClick={() => refetchChurnSurveys()}>
+                    Load reasons
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => setChurnSurveysFilters({ user_id: "", subscription_id: "" })}
+                  >
+                    Reset filters
+                  </Button>
+                </div>
               </div>
               {isChurnSurveysLoading && <Skeleton height={120} />}
               {isChurnSurveysError && (
@@ -967,18 +1163,12 @@ export function BillingPage() {
               )}
               {!isChurnSurveysLoading && !isChurnSurveysError && churnSurveys && (
                 churnSurveys.length > 0 ? (
-                  <div className="data-table-wrap">
-                    <DataTable<{
-                      id: string;
-                      user_id: number;
-                      subscription_id: string;
-                      reason: string;
-                      reason_code: string;
-                      free_text: string;
-                      discount_offered: string;
-                      offer_accepted: string;
-                      created_at: string;
-                    }>
+                  <div className="billing-page__table-wrap">
+                    <MetaText className="billing-page__table-meta">
+                      {churnSurveys.length} cancellation survey entries
+                    </MetaText>
+                    <div className="data-table-wrap">
+                    <DataTable
                       density="compact"
                       columns={[
                         { key: "id", header: "ID" },
@@ -998,12 +1188,24 @@ export function BillingPage() {
                         reason: c.reason_group ?? c.reason,
                         reason_code: c.reason_code ?? "—",
                         free_text: c.free_text ?? "—",
-                        discount_offered: c.discount_offered ? "Yes" : "No",
-                        offer_accepted: c.offer_accepted === null ? "—" : c.offer_accepted ? "Yes" : "No",
+                        discount_offered: (
+                          <Badge variant={c.discount_offered ? "warning" : "neutral"} size="sm">
+                            {c.discount_offered ? "Yes" : "No"}
+                          </Badge>
+                        ),
+                        offer_accepted:
+                          c.offer_accepted === null ? (
+                            "—"
+                          ) : (
+                            <Badge variant={c.offer_accepted ? "success" : "danger"} size="sm">
+                              {c.offer_accepted ? "Yes" : "No"}
+                            </Badge>
+                          ),
                         created_at: c.created_at ? new Date(c.created_at).toLocaleString() : "—",
                       }))}
                       getRowKey={(row) => row.id}
                     />
+                    </div>
                   </div>
                 ) : (
                   <EmptyState message="No churn surveys match the filters." />

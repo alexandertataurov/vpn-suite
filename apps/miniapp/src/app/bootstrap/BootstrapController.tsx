@@ -22,6 +22,13 @@ function isOnboardingAllowedPath(pathname: string): boolean {
   return false;
 }
 
+function getLaunchTarget(search: string): string | null {
+  const target = new URLSearchParams(search).get("open")?.trim().toLowerCase() ?? "";
+  if (target === "plan" || target === "pay") return "/plan";
+  if (target === "donate") return "/";
+  return null;
+}
+
 export function BootstrapController({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -42,6 +49,7 @@ export function BootstrapController({ children }: { children: ReactNode }) {
   } = machine;
 
   const recommendedRouteRedirectDone = useRef(false);
+  const launchTarget = getLaunchTarget(location.search);
 
   const handleOnboardingBack = useCallback(() => {
     if (onboardingStep <= 0) return;
@@ -69,13 +77,21 @@ export function BootstrapController({ children }: { children: ReactNode }) {
       location.pathname === "/" &&
       !recommendedRouteRedirectDone.current
     ) {
+      // If the launcher forces a target (including "/"), do not auto-redirect to recommended_route.
+      if (launchTarget) {
+        recommendedRouteRedirectDone.current = true;
+        if (launchTarget !== location.pathname) {
+          navigate(launchTarget, { replace: true });
+        }
+        return;
+      }
       const recommended = session?.routing?.recommended_route;
       if (recommended && recommended !== "/") {
         recommendedRouteRedirectDone.current = true;
         navigate(recommended, { replace: true });
       }
     }
-  }, [location.pathname, navigate, phase, session?.routing?.recommended_route]);
+  }, [launchTarget, location.pathname, navigate, phase, session?.routing?.recommended_route]);
 
   const readyTracked = useRef(false);
   useEffect(() => {

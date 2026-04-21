@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useApiQuery } from "@/hooks/api/useApiQuery";
 import { useApi } from "@/core/api/context";
 import { serverKeys } from "@/features/servers/services/server.query-keys";
@@ -63,6 +63,12 @@ interface ServerSnapshotSummaryEntry {
 
 interface ServersSnapshotSummaryOut {
   servers: Record<string, ServerSnapshotSummaryEntry>;
+}
+
+interface ServerLimitsOut {
+  traffic_limit_gb: number | null;
+  speed_limit_mbps: number | null;
+  max_connections: number | null;
 }
 
 function formatBps(bps: number): string {
@@ -400,6 +406,11 @@ function ServersSettingsPanel({
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionPending, setActionPending] = useState(false);
   const [syncResult, setSyncResult] = useState<ServerSyncResponse | null>(null);
+  const [limitsForm, setLimitsForm] = useState({
+    traffic_limit_gb: "",
+    speed_limit_mbps: "",
+    max_connections: "",
+  });
 
   const [createForm, setCreateForm] = useState({
     id: "",
@@ -423,6 +434,28 @@ function ServersSettingsPanel({
     staleTime: 15_000,
     }
   );
+
+  const {
+    data: serverLimits,
+    isLoading: isServerLimitsLoading,
+    refetch: refetchServerLimits,
+  } = useApiQuery<ServerLimitsOut>(
+    [...serverKeys.detail(selectedServer?.id ?? ""), "limits"],
+    `/servers/${selectedServer?.id ?? ""}/limits`,
+    { enabled: !!selectedServer, retry: 1, staleTime: 5_000 }
+  );
+
+  useEffect(() => {
+    if (!serverLimits) return;
+    setLimitsForm({
+      traffic_limit_gb:
+        serverLimits.traffic_limit_gb == null ? "" : String(serverLimits.traffic_limit_gb),
+      speed_limit_mbps:
+        serverLimits.speed_limit_mbps == null ? "" : String(serverLimits.speed_limit_mbps),
+      max_connections:
+        serverLimits.max_connections == null ? "" : String(serverLimits.max_connections),
+    });
+  }, [serverLimits]);
 
   const runAction = useCallback(
     async (fn: () => Promise<unknown>) => {
@@ -473,6 +506,37 @@ function ServersSettingsPanel({
         ops_notes: selectedServer.ops_notes ?? null,
         auto_sync_enabled: selectedServer.auto_sync_enabled ?? false,
       });
+      setSelectedServer(updated);
+    });
+  }, [api, runAction, selectedServer]);
+
+  const handleSaveLimits = useCallback(() => {
+    if (!selectedServer) return;
+    runAction(async () => {
+      await api.patch<ServerLimitsOut>(`/servers/${selectedServer.id}/limits`, {
+        traffic_limit_gb: limitsForm.traffic_limit_gb.trim()
+          ? Number(limitsForm.traffic_limit_gb)
+          : null,
+        speed_limit_mbps: limitsForm.speed_limit_mbps.trim()
+          ? Number(limitsForm.speed_limit_mbps)
+          : null,
+        max_connections: limitsForm.max_connections.trim()
+          ? Number(limitsForm.max_connections)
+          : null,
+      });
+      void refetchServerLimits();
+    });
+  }, [api, limitsForm.max_connections, limitsForm.speed_limit_mbps, limitsForm.traffic_limit_gb, refetchServerLimits, runAction, selectedServer]);
+
+  const handleToggleDraining = useCallback(() => {
+    if (!selectedServer) return;
+    runAction(async () => {
+      if (selectedServer.is_draining) {
+        await api.post(`/cluster/nodes/${selectedServer.id}/undrain`);
+      } else {
+        await api.post(`/cluster/nodes/${selectedServer.id}/drain`);
+      }
+      const updated = await api.get<ServerOut>(`/servers/${selectedServer.id}`);
       setSelectedServer(updated);
     });
   }, [api, runAction, selectedServer]);
@@ -634,6 +698,8 @@ function ServersSettingsPanel({
               <dd>{formatRelative(selectedServer.last_snapshot_at ?? null)}</dd>
               <dt>Provider</dt>
               <dd>{selectedServer.provider ?? "—"}</dd>
+              <dt>Draining</dt>
+              <dd>{selectedServer.is_draining ? "yes" : "no"}</dd>
               <dt>Tags</dt>
               <dd>{selectedServer.tags?.length ? selectedServer.tags.join(", ") : "—"}</dd>
               <dt>Cert expires</dt>
@@ -709,12 +775,51 @@ function ServersSettingsPanel({
                   }
                 />
               </label>
+              <label className="servers-page__filter">
+                <span className="servers-page__label">Traffic limit (GB)</span>
+                <Input
+                  type="number"
+                  value={limitsForm.traffic_limit_gb}
+                  onChange={(e) =>
+                    setLimitsForm((prev) => ({ ...prev, traffic_limit_gb: e.target.value }))
+                  }
+                  placeholder={isServerLimitsLoading ? "Loading..." : "No limit"}
+                />
+              </label>
+              <label className="servers-page__filter">
+                <span className="servers-page__label">Speed limit (Mbps)</span>
+                <Input
+                  type="number"
+                  value={limitsForm.speed_limit_mbps}
+                  onChange={(e) =>
+                    setLimitsForm((prev) => ({ ...prev, speed_limit_mbps: e.target.value }))
+                  }
+                  placeholder={isServerLimitsLoading ? "Loading..." : "No limit"}
+                />
+              </label>
+              <label className="servers-page__filter">
+                <span className="servers-page__label">Max connections</span>
+                <Input
+                  type="number"
+                  value={limitsForm.max_connections}
+                  onChange={(e) =>
+                    setLimitsForm((prev) => ({ ...prev, max_connections: e.target.value }))
+                  }
+                  placeholder={isServerLimitsLoading ? "Loading..." : "No limit"}
+                />
+              </label>
               <div className="servers-page__filter-actions servers-page__filter-actions--full">
                 <Button type="button" variant="secondary" disabled={actionPending} onClick={handleToggleActive}>
                   {selectedServer.is_active ? "Disable" : "Enable"}
                 </Button>
+                <Button type="button" variant="secondary" disabled={actionPending} onClick={handleToggleDraining}>
+                  {selectedServer.is_draining ? "Undrain node" : "Drain node"}
+                </Button>
                 <Button type="button" variant="secondary" disabled={actionPending} onClick={handleSaveNotesAndSync}>
                   Save settings
+                </Button>
+                <Button type="button" variant="secondary" disabled={actionPending} onClick={handleSaveLimits}>
+                  Save limits
                 </Button>
                 <Button type="button" variant="secondary" disabled={actionPending} onClick={handleSync}>
                   Sync now

@@ -318,6 +318,26 @@ class ApiClient:
             return Result.fail(err)
         return Result.ok(self._parse_json(r))
 
+    async def create_platega_donation_link(
+        self,
+        tg_id: int,
+        amount: int,
+        subscription_id: str | None = None,
+        idempotency_key: str | None = None,
+    ) -> Result:
+        body = {"tg_id": tg_id, "amount": int(amount), "subscription_id": subscription_id}
+        headers = {"Idempotency-Key": idempotency_key} if idempotency_key else None
+        r, err = await self._request_with_retry(
+            "POST",
+            "/api/v1/bot/payments/platega/create-donation-link",
+            json=body,
+            telegram_id=tg_id,
+            headers=headers or {},
+        )
+        if err:
+            return Result.fail(err)
+        return Result.ok(self._parse_json(r))
+
     async def get_payment_invoice(self, payment_id: str, tg_id: int) -> Result:
         r, err = await self._request_with_retry(
             "GET", f"/api/v1/bot/payments/{payment_id}/invoice",
@@ -504,6 +524,15 @@ async def create_donation_invoice(
     idempotency_key: str | None = None,
 ) -> Result:
     return await get_api().create_donation_invoice(tg_id, star_count, subscription_id, idempotency_key)
+
+
+async def create_platega_donation_link(
+    tg_id: int,
+    amount: int,
+    subscription_id: str | None = None,
+    idempotency_key: str | None = None,
+) -> Result:
+    return await get_api().create_platega_donation_link(tg_id, amount, subscription_id, idempotency_key)
 
 async def get_payment_invoice(payment_id: str, tg_id: int) -> Result:
     return await get_api().get_payment_invoice(payment_id, tg_id)

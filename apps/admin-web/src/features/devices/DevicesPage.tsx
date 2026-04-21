@@ -72,6 +72,45 @@ interface ConfigHealthOut {
   telemetry_last_updated: string | null;
 }
 
+type AdvancedDeviceActionType = "block" | "delete";
+
+function deviceStatusVariant(status: string): DeviceHealthVariant {
+  if (status === "active") return "success";
+  if (status === "suspended") return "warning";
+  if (status === "revoked") return "danger";
+  return "neutral";
+}
+
+function matchesDeviceQuery(device: DeviceOut, query: string): boolean {
+  if (!query) return true;
+  const q = query.toLowerCase();
+  return [
+    device.device_name,
+    device.user_email,
+    device.server_id,
+    device.id,
+    String(device.user_id),
+    device.subscription_id,
+  ]
+    .filter((value): value is string => Boolean(value))
+    .some((value) => value.toLowerCase().includes(q));
+}
+
+function getDeviceAttentionScore(device: DeviceOut): number {
+  const telemetry = device.telemetry;
+  const conn = connectionStatus(device);
+  let score = 0;
+  if (conn === "Node offline") score += 4;
+  if (conn === "Disconnected") score += 3;
+  if (conn === "No telemetry") score += 2;
+  if (telemetry?.reconciliation_status === "broken") score += 4;
+  if (telemetry?.reconciliation_status === "needs_reconcile") score += 2;
+  if (!device.allowed_ips) score += 2;
+  if ((telemetry?.transfer_rx_bytes ?? 0) + (telemetry?.transfer_tx_bytes ?? 0) === 0) score += 1;
+  if (device.suspended_at) score += 1;
+  return score;
+}
+
 export function DevicesPage() {
   const api = useApi();
   const queryClient = useQueryClient();
@@ -85,6 +124,16 @@ export function DevicesPage() {
   const [qrPayload, setQrPayload] = useState<string | null>(null);
   const [qrTitle, setQrTitle] = useState<string | null>(null);
   const [addDeviceModalOpen, setAddDeviceModalOpen] = useState(false);
+  const [bulkRevokeOpen, setBulkRevokeOpen] = useState(false);
+  const [bulkRevokeToken, setBulkRevokeToken] = useState("");
+  const [selectedDeviceIds, setSelectedDeviceIds] = useState<string[]>([]);
+  const [advancedActionType, setAdvancedActionType] = useState<AdvancedDeviceActionType | null>(
+    null
+  );
+  const [advancedActionDeviceId, setAdvancedActionDeviceId] = useState<string | null>(null);
+  const [advancedActionToken, setAdvancedActionToken] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [attentionOnly, setAttentionOnly] = useState(false);
   const [listParams, setListParams] = useState<DeviceListParams>({
     limit: 50,
     offset: 0,
@@ -269,6 +318,24 @@ export function DevicesPage() {
     setDetailDeviceId(null);
   }, [api, revokeDeviceId, revokeToken, runAction]);
 
+  const handleBulkRevokeSubmit = useCallback(async () => {
+    if (selectedDeviceIds.length === 0) return;
+    await runAction(() =>
+      api.post("/devices/bulk-revoke", {
+        device_ids: selectedDeviceIds,
+        confirm_token: bulkRevokeToken,
+      })
+    );
+    showToast({
+      variant: "success",
+      title: "Bulk revoke requested",
+      description: `${selectedDeviceIds.length} device(s) processed.`,
+    });
+    setBulkRevokeOpen(false);
+    setBulkRevokeToken("");
+    setSelectedDeviceIds([]);
+  }, [api, bulkRevokeToken, runAction, selectedDeviceIds, showToast]);
+
   const closeDetail = useCallback(() => {
     setDetailDeviceId(null);
     setActionError(null);
@@ -385,6 +452,70 @@ export function DevicesPage() {
     [api, showToast]
   );
 
+  const handleSyncPeer = useCallback(
+    async (deviceId: string) => {
+      await runAction(() => api.post(`/devices/${deviceId}/sync-peer`));
+      showToast({
+        variant: "success",
+        title: "Peer sync requested",
+        description: "Peer re-apply action sent to control plane.",
+      });
+    },
+    [api, runAction, showToast]
+  );
+
+  const handleResetDevice = useCallback(
+    async (deviceId: string) => {
+      await runAction(() => api.post(`/devices/${deviceId}/reset`));
+      showToast({
+        variant: "success",
+        title: "Device reset requested",
+      });
+      setDetailDeviceId(null);
+    },
+    [api, runAction, showToast]
+  );
+
+  const openAdvancedActionModal = useCallback((type: AdvancedDeviceActionType, deviceId: string) => {
+    setAdvancedActionType(type);
+    setAdvancedActionDeviceId(deviceId);
+    setAdvancedActionToken("");
+  }, []);
+
+  const closeAdvancedActionModal = useCallback(() => {
+    setAdvancedActionType(null);
+    setAdvancedActionDeviceId(null);
+    setAdvancedActionToken("");
+  }, []);
+
+  const handleConfirmAdvancedAction = useCallback(async () => {
+    if (!advancedActionType || !advancedActionDeviceId) return;
+    if (advancedActionType === "block") {
+      await runAction(() =>
+        api.post(`/devices/${advancedActionDeviceId}/block`, { confirm_token: advancedActionToken })
+      );
+      showToast({ variant: "success", title: "Block requested" });
+      closeAdvancedActionModal();
+      return;
+    }
+    await runAction(() =>
+      api.post(`/devices/${advancedActionDeviceId}/delete`, {
+        confirm_token: advancedActionToken.trim() || null,
+      })
+    );
+    showToast({ variant: "success", title: "Device deleted" });
+    closeAdvancedActionModal();
+    setDetailDeviceId(null);
+  }, [
+    advancedActionDeviceId,
+    advancedActionToken,
+    advancedActionType,
+    api,
+    closeAdvancedActionModal,
+    runAction,
+    showToast,
+  ]);
+
   const ratesMap = useMemo(() => {
     const prev = prevListRef.current;
     const prevTs = prevListTsRef.current;
@@ -414,6 +545,11 @@ export function DevicesPage() {
       prevListTsRef.current = Date.now();
     }
   }, [list]);
+
+  const handleLoadDevices = useCallback(() => {
+    void refetchSummary();
+    void refetchList();
+  }, [refetchList, refetchSummary]);
 
   if (isSummaryLoading || isListLoading) {
     return (
@@ -464,7 +600,45 @@ export function DevicesPage() {
     (summary.no_allowed_ips ?? 0) +
     (summary.traffic_zero_count ?? 0);
 
-  const rows = list.items.map((d) => {
+  const filteredDevices = list.items
+    .map((device) => ({
+      device,
+      attentionScore: getDeviceAttentionScore(device),
+    }))
+    .filter(({ device, attentionScore }) => {
+      if (attentionOnly && attentionScore === 0) return false;
+      return matchesDeviceQuery(device, searchQuery.trim());
+    })
+    .sort((a, b) => {
+      if (a.attentionScore !== b.attentionScore) return b.attentionScore - a.attentionScore;
+      const aLabel = (a.device.device_name || a.device.id).toLowerCase();
+      const bLabel = (b.device.device_name || b.device.id).toLowerCase();
+      return aLabel.localeCompare(bLabel);
+    });
+
+  const selectedOnPageCount = filteredDevices.filter(({ device }) =>
+    selectedDeviceIds.includes(device.id)
+  ).length;
+  const allOnPageSelected = filteredDevices.length > 0 && selectedOnPageCount === filteredDevices.length;
+
+  const toggleDeviceSelection = (deviceId: string) => {
+    setSelectedDeviceIds((prev) =>
+      prev.includes(deviceId) ? prev.filter((id) => id !== deviceId) : [...prev, deviceId]
+    );
+  };
+
+  const toggleSelectPage = () => {
+    if (allOnPageSelected) {
+      const onPage = new Set(filteredDevices.map(({ device }) => device.id));
+      setSelectedDeviceIds((prev) => prev.filter((id) => !onPage.has(id)));
+      return;
+    }
+    const next = new Set(selectedDeviceIds);
+    for (const { device } of filteredDevices) next.add(device.id);
+    setSelectedDeviceIds(Array.from(next));
+  };
+
+  const rows = filteredDevices.map(({ device: d, attentionScore }) => {
     const rxBytes = d.telemetry?.transfer_rx_bytes ?? null;
     const txBytes = d.telemetry?.transfer_tx_bytes ?? null;
     const totalBytes =
@@ -476,6 +650,7 @@ export function DevicesPage() {
         : formatBytes(totalBytes);
 
     const conn = connectionStatus(d);
+    const status = deviceStatus(d);
     const connectionVariant: DeviceHealthVariant =
       conn === "Connected" ? "success"
       : conn === "Idle" ? "info"
@@ -499,10 +674,35 @@ export function DevicesPage() {
     }
     return {
       id: d.id,
-      name: d.device_name || "(unnamed)",
+      select: (
+        <input
+          type="checkbox"
+          checked={selectedDeviceIds.includes(d.id)}
+          onChange={() => toggleDeviceSelection(d.id)}
+          aria-label={`Select ${d.device_name || d.id}`}
+        />
+      ),
+      name: (
+        <div className="devices-page__device-cell">
+          <span className="devices-page__device-name">{d.device_name || "(unnamed)"}</span>
+          <span className="devices-page__device-meta">{d.id.slice(0, 10)}</span>
+        </div>
+      ),
       user: d.user_email || `#${d.user_id}`,
       server: d.server_id,
-      status: deviceStatus(d),
+      status: (
+        <Badge variant={deviceStatusVariant(status)} size="sm">
+          {status}
+        </Badge>
+      ),
+      health: (
+        <Badge
+          variant={attentionScore >= 3 ? "danger" : attentionScore > 0 ? "warning" : "success"}
+          size="sm"
+        >
+          {attentionScore > 0 ? "Needs attention" : "Healthy"}
+        </Badge>
+      ),
       connection: <Badge variant={connectionVariant} size="sm">{conn}</Badge>,
       handshakeAge: formatHandshakeAge(d),
       latencyMs: latencyCell,
@@ -520,21 +720,44 @@ export function DevicesPage() {
           onClick={() => setDetailDeviceId(d.id)}
           aria-label={`View ${d.device_name || d.id}`}
         >
-          View
+          Open
         </Button>
       ),
     };
   });
 
+  const hasFilters =
+    Boolean(listParams.status) ||
+    Boolean(listParams.node_id) ||
+    Boolean(searchQuery.trim()) ||
+    attentionOnly;
+
+  const resetFilters = () => {
+    setListParams((prev) => ({ ...prev, offset: 0, status: null, node_id: null }));
+    setSearchQuery("");
+    setAttentionOnly(false);
+    setSelectedDeviceIds([]);
+  };
+
   const devicesDescription = (
-    <span className="devices-page__updated">
-      Telemetry updated {formatRelative(summary.telemetry_last_updated ?? null)}
-    </span>
+    <>
+      <span className="dot" />
+      <span>{rows.length} shown</span>
+      <span className="sep">·</span>
+      <span className="devices-page__updated">
+        Telemetry {formatRelative(summary.telemetry_last_updated ?? null)}
+      </span>
+    </>
   );
   const devicesActions = (
-    <Button type="button" variant="default" onClick={() => setAddDeviceModalOpen(true)}>
-      Add device
-    </Button>
+    <div className="devices-page__top-actions">
+      <Button type="button" variant="default" onClick={handleLoadDevices}>
+        Load devices
+      </Button>
+      <Button type="button" variant="default" onClick={() => setAddDeviceModalOpen(true)}>
+        Add device
+      </Button>
+    </div>
   );
   const addDeviceHint =
     list.items.length > 0
@@ -670,7 +893,7 @@ export function DevicesPage() {
                     { key: "server", header: "Server" },
                     { key: "recon", header: "Status" },
                     { key: "reason", header: "Reason" },
-                    { key: "view", header: "" },
+                    { key: "actions", header: "Actions" },
                   ]}
                   rows={configHealth.devices_needing_attention.map((e) => ({
                     ...e,
@@ -685,16 +908,28 @@ export function DevicesPage() {
                       </Badge>
                     ),
                     reason: e.reason ?? "—",
-                    view: (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setDetailDeviceId(e.device_id)}
-                        aria-label={`View ${e.device_id}`}
-                      >
-                        View
-                      </Button>
+                    actions: (
+                      <div className="devices-page__row-actions">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setDetailDeviceId(e.device_id)}
+                          aria-label={`View ${e.device_id}`}
+                        >
+                          Open
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="warning"
+                          size="sm"
+                          onClick={() => void handleReconcile(e.device_id)}
+                          disabled={actionPending}
+                          aria-label={`Reconcile ${e.device_id}`}
+                        >
+                          Reconcile
+                        </Button>
+                      </div>
                     ),
                   }))}
                   getRowKey={(row: { device_id: string }) => row.device_id}
@@ -709,53 +944,109 @@ export function DevicesPage() {
 
       <section className="devices-page__table" aria-label="Devices list">
         <SectionHeader label="Devices" size="lg" />
-        <div className="devices-page__filters">
-          <label className="devices-page__filter-label">
-            Status
-            <select
-              value={listParams.status ?? ""}
-              onChange={(e) => {
-                const v = e.target.value;
-                setListParams((p) => ({
-                  ...p,
-                  offset: 0,
-                  status: v ? v : null,
-                }));
-              }}
-              aria-label="Filter by status"
-            >
-              <option value="">All</option>
-              <option value="active">Active</option>
-              <option value="revoked">Revoked</option>
-            </select>
-          </label>
-          <label className="devices-page__filter-label">
-            Server (node ID)
-            <Input
-              type="text"
-              value={listParams.node_id ?? ""}
-              onChange={(e) =>
-                setListParams((p) => ({
-                  ...p,
-                  offset: 0,
-                  node_id: e.target.value.trim() || null,
-                }))
-              }
-              placeholder="e.g. node-1"
-              aria-label="Filter by server node ID"
-            />
-          </label>
-        </div>
+        <Card>
+          <div className="devices-page__filters">
+            <label className="devices-page__filter-label">
+              Search
+              <Input
+                type="search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Name, user, device ID, server, subscription"
+                aria-label="Search devices"
+              />
+            </label>
+            <label className="devices-page__filter-label">
+              Status
+              <select
+                className="input"
+                value={listParams.status ?? ""}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setListParams((p) => ({
+                    ...p,
+                    offset: 0,
+                    status: v ? v : null,
+                  }));
+                }}
+                aria-label="Filter by status"
+              >
+                <option value="">All</option>
+                <option value="active">Active</option>
+                <option value="revoked">Revoked</option>
+              </select>
+            </label>
+            <label className="devices-page__filter-label">
+              Server (node ID)
+              <Input
+                type="text"
+                value={listParams.node_id ?? ""}
+                onChange={(e) =>
+                  setListParams((p) => ({
+                    ...p,
+                    offset: 0,
+                    node_id: e.target.value.trim() || null,
+                  }))
+                }
+                placeholder="e.g. node-1"
+                aria-label="Filter by server node ID"
+              />
+            </label>
+            <div className="devices-page__filter-actions">
+              <Button type="button" variant="default" onClick={toggleSelectPage}>
+                {allOnPageSelected ? "Unselect page" : "Select page"}
+              </Button>
+              <Button
+                type="button"
+                variant={attentionOnly ? "warning" : "default"}
+                onClick={() => setAttentionOnly((current) => !current)}
+                aria-pressed={attentionOnly}
+              >
+                Attention only
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={resetFilters}
+                disabled={!hasFilters}
+              >
+                Reset filters
+              </Button>
+            </div>
+          </div>
+        </Card>
+        {actionError && (
+          <div className="alert danger devices-page__action-alert" role="alert">
+            <span className="alert-icon" aria-hidden />
+            <div>
+              <div className="alert-title">Action failed</div>
+              <div className="alert-desc">{actionError}</div>
+            </div>
+          </div>
+        )}
+        {selectedDeviceIds.length > 0 && (
+          <div className="devices-page__bulk-actions" role="toolbar" aria-label="selected actions">
+            <MetaText>{selectedDeviceIds.length} selected</MetaText>
+            <Button type="button" variant="warning" onClick={() => setBulkRevokeOpen(true)}>
+              Bulk revoke
+            </Button>
+            <Button type="button" variant="ghost" onClick={() => setSelectedDeviceIds([])}>
+              Clear selection
+            </Button>
+          </div>
+        )}
         {rows.length > 0 ? (
           <>
           <div className="data-table-wrap">
           <DataTable
             density="compact"
             columns={[
+              { key: "select", header: "Select" },
               { key: "name", header: "Device" },
               { key: "user", header: "User" },
               { key: "server", header: "Server" },
               { key: "status", header: "Status" },
+              { key: "health", header: "Health" },
               { key: "connection", header: "Connection" },
               { key: "handshakeAge", header: "Handshake age (s)", title: "Seconds since last handshake; 0 when disconnected." },
               { key: "latencyMs", header: "Latency (ms)", title: "Round-trip time (ms) from node; value when measured, \"—\" when not yet measured, Offline when disconnected." },
@@ -778,7 +1069,7 @@ export function DevicesPage() {
               }
             />
             <MetaText className="devices-page__pagination-meta">
-              {list.total} device{list.total !== 1 ? "s" : ""}
+              {rows.length} shown on this page · {list.total} total device{list.total !== 1 ? "s" : ""}
             </MetaText>
           </div>
           </>
@@ -801,6 +1092,10 @@ export function DevicesPage() {
         onSuspend={handleSuspend}
         onResume={handleResume}
         onRevokeClick={setRevokeDeviceId}
+        onSyncPeer={handleSyncPeer}
+        onResetDevice={handleResetDevice}
+        onBlockDeviceClick={(id) => openAdvancedActionModal("block", id)}
+        onDeleteDeviceClick={(id) => openAdvancedActionModal("delete", id)}
         onCopyToClipboard={copyToClipboard}
         onSetQr={(payload, title) => {
           setQrPayload(payload);
@@ -845,6 +1140,85 @@ export function DevicesPage() {
         onConfirm={handleRevokeSubmit}
         pending={actionPending}
       />
+
+      <Modal
+        open={bulkRevokeOpen}
+        onClose={() => {
+          setBulkRevokeOpen(false);
+          setBulkRevokeToken("");
+        }}
+        title="Bulk revoke devices"
+      >
+        <p className="devices-page__revoke-hint">
+          Revoke {selectedDeviceIds.length} selected device(s). Enter confirmation token.
+        </p>
+        <label className="devices-page__revoke-label">
+          Confirm token
+          <Input
+            type="password"
+            value={bulkRevokeToken}
+            onChange={(e) => setBulkRevokeToken(e.target.value)}
+            placeholder="Token"
+          />
+        </label>
+        <div className="devices-page__revoke-actions">
+          <Button type="button" variant="default" onClick={() => setBulkRevokeOpen(false)}>
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            variant="danger"
+            disabled={!bulkRevokeToken.trim() || selectedDeviceIds.length === 0 || actionPending}
+            onClick={() => void handleBulkRevokeSubmit()}
+          >
+            Revoke selected
+          </Button>
+        </div>
+      </Modal>
+
+      <Modal
+        open={!!advancedActionType && !!advancedActionDeviceId}
+        onClose={closeAdvancedActionModal}
+        title={
+          advancedActionType === "block"
+            ? "Block device on node"
+            : advancedActionType === "delete"
+              ? "Delete device record"
+              : "Confirm action"
+        }
+        variant={advancedActionType === "delete" ? "danger" : undefined}
+      >
+        <p className="devices-page__revoke-hint">
+          {advancedActionType === "block"
+            ? "This removes peer access on node runtime. Confirm token is required."
+            : "This permanently removes device record and issued config history."}
+        </p>
+        <label className="devices-page__revoke-label">
+          Confirm token {advancedActionType === "delete" ? "(optional)" : ""}
+          <Input
+            type="password"
+            value={advancedActionToken}
+            onChange={(e) => setAdvancedActionToken(e.target.value)}
+            placeholder="Token"
+          />
+        </label>
+        <div className="devices-page__revoke-actions">
+          <Button type="button" variant="default" onClick={closeAdvancedActionModal}>
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            variant={advancedActionType === "delete" ? "danger" : "warning"}
+            disabled={
+              actionPending ||
+              (advancedActionType === "block" && !advancedActionToken.trim())
+            }
+            onClick={() => void handleConfirmAdvancedAction()}
+          >
+            Confirm
+          </Button>
+        </div>
+      </Modal>
 
       <ConfigQrModal
         open={!!qrPayload}

@@ -96,18 +96,20 @@ export function DashboardTopbar({ onOpenMenu, isMenuOpen, navId }: DashboardTopb
       ) : null}
       {!isNarrow ? <TopbarCrumb segment="Console" page={pageLabel} /> : null}
       <TopbarRight>
-        <TopbarTime>{time}</TopbarTime>
+        {!isNarrow ? <TopbarTime>{time}</TopbarTime> : null}
         <TopbarLiveChip />
         <TopbarBtn aria-label="Open user settings" className="tb-user-btn">
           <TopbarAvatar initials="OP" />
-          <span className="tb-user-label">Settings</span>
+          {!isNarrow ? <span className="tb-user-label">Settings</span> : null}
         </TopbarBtn>
-        <TopbarBtn
-          aria-label="Sign out"
-          onClick={() => useAuthStore.getState().logout()}
-        >
-          Sign out
-        </TopbarBtn>
+        {!isNarrow ? (
+          <TopbarBtn
+            aria-label="Sign out"
+            onClick={() => useAuthStore.getState().logout()}
+          >
+            Sign out
+          </TopbarBtn>
+        ) : null}
       </TopbarRight>
     </TopbarRoot>
   );

@@ -62,6 +62,15 @@ export function getActiveSubscription(session?: WebAppMeResponse | null) {
   );
 }
 
+export function getActiveOrGraceSubscription(session?: WebAppMeResponse | null) {
+  return (
+    session?.subscriptions?.find(
+      (subscription) =>
+        isCommerciallyActive(subscription) && (isAccessEnabled(subscription) || isGrace(subscription)),
+    ) ?? null
+  );
+}
+
 export function getActiveDevices(session?: WebAppMeResponse | null) {
   return session?.devices?.filter((device) => !device.revoked_at) ?? [];
 }

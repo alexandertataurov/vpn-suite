@@ -1,7 +1,7 @@
-import { BillingPeriodToggle, Button, EmptyStateBlock, PageSection, StarsAmount, StatusChip } from "@/design-system";
+import { BillingPeriodToggle, Button, EmptyStateBlock, PageSection, StatusChip } from "@/design-system";
 import { useI18n } from "@/hooks/useI18n";
 import { type BillingPeriod } from "@/features/plan/model/usePlanPageModel";
-import { featuresFromPlan, tierFeatureToRow, type TierPair } from "@/page-models/plan-helpers";
+import { featuresFromPlan, formatPriceAmount, tierFeatureToRow, type TierPair } from "@/page-models/plan-helpers";
 
 export interface PlanOptionsSectionProps {
   isSubscribed: boolean;
@@ -106,7 +106,16 @@ export function PlanOptionsSection({
                   </div>
                   {displayed ? (
                     <div className="modern-plan-price">
-                      <StarsAmount value={displayed.price_amount} />
+                      <span>{formatPriceAmount(displayed.price_amount, displayed.price_currency, locale)}</span>
+                      {Number(displayed.original_price_amount ?? 0) > Number(displayed.price_amount) ? (
+                        <span className="modern-plan-price-previous">
+                          {formatPriceAmount(
+                            Number(displayed.original_price_amount ?? 0),
+                            displayed.price_currency,
+                            locale,
+                          )}
+                        </span>
+                      ) : null}
                       <span className="modern-plan-price-period">{billingPeriodLabel}</span>
                     </div>
                   ) : null}

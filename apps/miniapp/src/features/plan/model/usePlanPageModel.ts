@@ -11,7 +11,6 @@ import type { PlanItem, PlansResponse } from "@/api";
 import type { StandardPageHeader, StandardPageState } from "@/page-models/types";
 import {
   daysUntil,
-  getActiveSubscription,
   getPrimarySubscription,
   getRenewalCheckoutPath,
   getUpgradeCheckoutPath,
@@ -22,6 +21,7 @@ import {
   buildNextStepCard,
   tierSortRank,
   formatStars,
+  formatPriceAmount,
   periodLabelForHeroLocalized,
   planItemForBillingPeriod,
   sanitizePlanDisplayName,
@@ -62,8 +62,12 @@ export function usePlanPageModel(billingPeriod: BillingPeriod) {
   });
 
   const plans = useMemo(() => plansQuery.data?.items ?? [], [plansQuery.data?.items]);
-  const activeSub = getActiveSubscription(sessionQuery.data);
   const primarySub = getPrimarySubscription(sessionQuery.data);
+  const primaryAccessStatus = (primarySub?.access_status ?? "enabled").toLowerCase();
+  const graceUntilDate = primarySub?.grace_until ? new Date(primarySub.grace_until) : null;
+  const isGraceActive =
+    primaryAccessStatus === "grace" &&
+    (graceUntilDate == null || Number.isNaN(graceUntilDate.getTime()) || graceUntilDate.getTime() > Date.now());
   const recommendedRoute = sessionQuery.data?.routing?.recommended_route ?? "/plan";
   const routeReason = (sessionQuery.data?.routing?.reason ?? "unknown") as RecommendedRouteReason;
   const currentPlan = useMemo(
@@ -80,7 +84,7 @@ export function usePlanPageModel(billingPeriod: BillingPeriod) {
     ? getRenewalCheckoutPath(currentPlan.id)
     : getUpgradeCheckoutPath(plans, primarySub?.plan_id);
   const upgradeTargetTo = getUpgradeCheckoutPath(plans, primarySub?.plan_id);
-  const isSubscribed = activeSub != null;
+  const isSubscribed = Boolean(primarySub?.plan_id);
   const daysLeft = daysUntil(primarySub?.valid_until);
   const subscriptionState: SubscriptionState = !primarySub || daysLeft <= 0
     ? "expired"
@@ -89,6 +93,7 @@ export function usePlanPageModel(billingPeriod: BillingPeriod) {
       : "active";
   /** Renew (same-plan) only when: no auto_renew OR plan ends soon. Otherwise only upgrade. */
   const canShowRenew =
+    isGraceActive ||
     primarySub?.auto_renew === false ||
     subscriptionState === "expiring" ||
     subscriptionState === "expired";
@@ -161,12 +166,19 @@ export function usePlanPageModel(billingPeriod: BillingPeriod) {
       ),
       heroPlanPeriod: periodLabelForHeroLocalized(heroDurationDays, locale),
       heroStars: heroPlan?.price_amount ?? selectedTierPlan?.price_amount ?? 0,
+      heroPriceLabel: formatPriceAmount(
+        heroPlan?.price_amount ?? selectedTierPlan?.price_amount ?? 0,
+        heroPlan?.price_currency ?? selectedTierPlan?.price_currency ?? "XTR",
+        locale,
+      ),
       heroPeriodDetail: (() => {
         const days = heroPlan?.duration_days ?? selectedTierPlan?.duration_days;
         return days != null ? t("plan.hero_period_for_days", { days }) : "";
       })(),
       expiryText: primarySub?.valid_until
-        ? formatDate(primarySub.valid_until, "en-US")
+        ? isGraceActive && primarySub.grace_until
+          ? t("plan.grace_until_short", { date: formatDate(primarySub.grace_until, "en-US") })
+          : formatDate(primarySub.valid_until, "en-US")
         : t("plan.no_active_subscription"),
       expiryPercent,
       expiryFillClass: (subscriptionState === "expired"
@@ -181,7 +193,9 @@ export function usePlanPageModel(billingPeriod: BillingPeriod) {
           ? t("plan.devices_label_limited", { used: activeDeviceCount, limit: deviceLimit })
           : t("plan.devices_label_unbounded", { used: activeDeviceCount }),
       renewLabel:
-        subscriptionState === "expiring" || subscriptionState === "expired"
+        isGraceActive
+          ? t("plan.cta_restore_access")
+          : subscriptionState === "expiring" || subscriptionState === "expired"
           ? showUpsellExpiry || showUpsellTrialEnd
             ? t("plan.cta_renew_plan")
             : t("plan.cta_choose_plan")
@@ -222,9 +236,17 @@ export function usePlanPageModel(billingPeriod: BillingPeriod) {
       ? t("plan.header_subtitle_subscribed")
       : t("plan.header_subtitle_no_sub"),
     badge: {
-      tone: subscriptionState === "active" ? "success" : subscriptionState === "expiring" ? "warning" : "danger",
+      tone: isGraceActive
+        ? "warning"
+        : subscriptionState === "active"
+          ? "success"
+          : subscriptionState === "expiring"
+            ? "warning"
+            : "danger",
       label:
-        subscriptionState === "active"
+        isGraceActive
+          ? t("plan.badge_grace")
+          : subscriptionState === "active"
           ? t("plan.badge_active")
           : subscriptionState === "expiring"
             ? t("plan.badge_expiring")
@@ -257,7 +279,6 @@ export function usePlanPageModel(billingPeriod: BillingPeriod) {
     header,
     pageState,
     plans,
-    activeSub,
     primarySub,
     recommendedRoute,
     routeReason,

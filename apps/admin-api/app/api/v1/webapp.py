@@ -407,6 +407,26 @@ def _stars_amount(amount: object, currency: str) -> int:
     return max(0, int(round(value * float(STARS_PER_LEGACY_UNIT))))
 
 
+def _provider_plan_currency(provider: str) -> str:
+    normalized = (provider or "").strip().lower()
+    if normalized == "platega":
+        return (settings.platega_currency or "RUB").strip().upper()
+    return "XTR"
+
+
+def _provider_plan_price_amount(plan: Plan, provider: str) -> int:
+    normalized = (provider or "").strip().lower()
+    if normalized == "platega":
+        try:
+            value = float(plan.price_amount or 0)
+        except (TypeError, ValueError):
+            value = 0.0
+        if not math.isfinite(value) or value <= 0:
+            return 0
+        return max(0, int(round(value)))
+    return _stars_amount(plan.price_amount, plan.price_currency)
+
+
 class WebAppAuthRequest(BaseModel):
     """Accepts initData (Telegram) or init_data."""
 
@@ -1330,7 +1350,11 @@ def _extract_plan_style(name: str) -> tuple[str, str]:
 
 
 @router.get("/plans")
-async def webapp_list_plans(request: Request, db: AsyncSession = Depends(get_db)):
+async def webapp_list_plans(
+    request: Request,
+    payment_provider: str | None = Query(default=None),
+    db: AsyncSession = Depends(get_db),
+):
     """List active plans for Mini App. Bearer session token required."""
     tg_id = _get_tg_id_from_bearer(request)
     if not tg_id:
@@ -1354,18 +1378,38 @@ async def webapp_list_plans(request: Request, db: AsyncSession = Depends(get_db)
             payload={"source": "webapp"},
         )
         miniapp_events_total.labels(event="pricing_view").inc()
+    payment_provider = _resolve_webapp_payment_provider(payment_provider)
     items = []
     for p in plans:
         style, clean_name = _extract_plan_style(p.name)
-        stars = _stars_amount(p.price_amount, p.price_currency)
+        original_amount = _provider_plan_price_amount(p, payment_provider)
+        effective_amount = original_amount
+        discount_percent = 0
+        if user and await _is_post_trial_offer_eligible(
+            db,
+            user_id=user,
+            plan=p,
+            promo_code=None,
+        ):
+            discounted = _apply_post_trial_offer_price(
+                original_price=original_amount,
+                payment_provider=payment_provider,
+            )
+            if discounted < original_amount:
+                effective_amount = discounted
+                discount_percent = _post_trial_offer_discount_percent()
         items.append(
             {
                 "id": p.id,
                 "name": clean_name or p.id,
                 "duration_days": p.duration_days,
                 "device_limit": int(getattr(p, "device_limit", 1) or 1),
-                "price_currency": "XTR",
-                "price_amount": stars,
+                "price_currency": _provider_plan_currency(payment_provider),
+                "price_amount": effective_amount,
+                "original_price_amount": (
+                    original_amount if discount_percent > 0 and effective_amount < original_amount else None
+                ),
+                "discount_percent": discount_percent if discount_percent > 0 else None,
                 "style": style,
                 "upsell_methods": p.upsell_methods if p.upsell_methods is not None else [],
                 "display_order": int(getattr(p, "display_order", 0) or 0),
@@ -2295,6 +2339,7 @@ async def webapp_referral_stats(request: Request, db: AsyncSession = Depends(get
 class PromoValidateBody(BaseModel):
     code: str
     plan_id: str
+    payment_provider: str | None = None
 
 
 @router.post("/promo/validate")
@@ -2319,7 +2364,8 @@ async def webapp_promo_validate(
         raise HTTPException(
             status_code=404, detail={"code": "PLAN_NOT_FOUND", "message": "Plan not found"}
         )
-    original_price_xtr = int(_stars_amount(plan.price_amount, plan.price_currency))
+    payment_provider = _resolve_webapp_payment_provider(body.payment_provider)
+    original_price_xtr = int(_provider_plan_price_amount(plan, payment_provider))
     try:
         result = await validate_promo_code(
             db,
@@ -2344,10 +2390,12 @@ async def webapp_promo_validate(
 class CreateInvoiceWebAppBody(BaseModel):
     plan_id: str
     promo_code: str | None = None
+    payment_provider: str | None = None
 
 
 class CreateDonationInvoiceWebAppBody(BaseModel):
     amount: int = Field(default=150, ge=1, le=25_000)
+    payment_provider: str | None = None
 
 
 class WebAppPaymentStatusOut(BaseModel):
@@ -2419,6 +2467,13 @@ async def _create_telegram_invoice_link(
 def _webapp_payment_provider() -> str:
     provider = (settings.webapp_payment_provider or "telegram_stars").strip().lower()
     return provider if provider in {"telegram_stars", "platega"} else "telegram_stars"
+
+
+def _resolve_webapp_payment_provider(override: str | None = None) -> str:
+    candidate = (override or "").strip().lower()
+    if candidate in {"telegram_stars", "platega"}:
+        return candidate
+    return _webapp_payment_provider()
 
 
 def _post_trial_offer_discount_percent() -> int:
@@ -2634,9 +2689,9 @@ async def webapp_create_invoice(
         normalize_pending_state(sub)
         db.add(sub)
         await db.flush()
-    payment_provider = _webapp_payment_provider()
-    stars_amount = _stars_amount(plan.price_amount, plan.price_currency)
-    original_price_xtr = int(stars_amount)
+    payment_provider = _resolve_webapp_payment_provider(body.payment_provider)
+    provider_amount = _provider_plan_price_amount(plan, payment_provider)
+    original_price_xtr = int(provider_amount)
     final_price_xtr = original_price_xtr
     promo_discount_applied = 0
     post_trial_offer_applied = False
@@ -2925,7 +2980,7 @@ async def webapp_create_donation_invoice(
             },
         )
 
-    payment_provider = _webapp_payment_provider()
+    payment_provider = _resolve_webapp_payment_provider(body.payment_provider)
     donation_amount = max(1, int(body.amount))
     payment_currency = "XTR"
     external_id = (

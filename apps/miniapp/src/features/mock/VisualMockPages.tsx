@@ -422,6 +422,8 @@ export function MockPageCheckout() {
         showConfirmation={true}
         planDurationDays={90}
         planDeviceLimit={5}
+        priceLabel="299 ⭐"
+        originalPriceLabel="599 ⭐"
       />
       <InlineAlert variant="success" label="Promo applied" message="SPRING30 saves 30 Stars on this order." />
       <Stack gap="2">

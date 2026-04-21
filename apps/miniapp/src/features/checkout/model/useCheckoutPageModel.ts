@@ -19,8 +19,10 @@ import {
 } from "@/hooks";
 import { useI18n } from "@/hooks/useI18n";
 import { webappQueryKeys } from "@/lib";
+import { getPreferredPaymentProvider } from "@/lib/payments/provider";
 import type { PromoErrorCode } from "@/page-models/promoTypes";
 import type { StandardPageHeader, StandardPageState } from "@/page-models/types";
+import { formatPriceAmount } from "@/page-models/plan-helpers";
 
 const POLL_INTERVAL_MS = 2500;
 const POLL_TIMEOUT_MS = 5 * 60 * 1000;
@@ -91,7 +93,8 @@ export function useCheckoutPageModel() {
   const { impact, notify } = useTelegramHaptics();
   const { openInvoice } = usePayments();
   const hideKeyboard = useHideKeyboard();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const paymentProvider = getPreferredPaymentProvider();
   useTrackScreen("checkout", null);
   const { track } = useTelemetry(null);
 
@@ -116,6 +119,21 @@ export function useCheckoutPageModel() {
   const planPriceStars = selectedPlan != null && Number(selectedPlan.price_amount) > 0
     ? Math.round(Number(selectedPlan.price_amount))
     : null;
+  const planCurrency = selectedPlan?.price_currency ?? "XTR";
+  const basePlanAmount = selectedPlan != null && Number(selectedPlan.price_amount) > 0
+    ? Math.round(Number(selectedPlan.price_amount))
+    : 0;
+  const appliedAmount = discountedPriceXtr != null ? Math.max(0, Math.round(discountedPriceXtr)) : basePlanAmount;
+  const originalAmountRaw = selectedPlan != null ? Math.round(Number(selectedPlan.original_price_amount ?? 0)) : 0;
+  const originalAmount = promoStatus === "valid"
+    ? Math.max(basePlanAmount, originalAmountRaw)
+    : originalAmountRaw > appliedAmount
+      ? originalAmountRaw
+      : 0;
+  const priceLabel = formatPriceAmount(appliedAmount, planCurrency, locale);
+  const originalPriceLabel = originalAmount > 0
+    ? formatPriceAmount(originalAmount, planCurrency, locale)
+    : null;
   const planDurationDays = selectedPlan?.duration_days ?? 30;
   const planDeviceLimit = selectedPlan?.device_limit ?? 1;
 
@@ -125,6 +143,7 @@ export function useCheckoutPageModel() {
       return webappApi.post("/webapp/promo/validate", {
         code: promoCode.trim(),
         plan_id: selectedPlanId,
+        payment_provider: paymentProvider ?? undefined,
       });
     },
     onMutate: () => setPromoStatus("validating"),
@@ -252,8 +271,13 @@ export function useCheckoutPageModel() {
   const createInvoice = useMutation({
     mutationFn: async () => {
       if (!selectedPlanId) throw new Error("Plan is missing");
-      const body: { plan_id: string; promo_code?: string } = { plan_id: selectedPlanId };
+      const body: {
+        plan_id: string;
+        promo_code?: string;
+        payment_provider?: "telegram_stars" | "platega";
+      } = { plan_id: selectedPlanId };
       if (promoStatus === "valid" && promoCode.trim()) body.promo_code = promoCode.trim();
+      if (paymentProvider) body.payment_provider = paymentProvider;
       return webappApi.post<WebAppCreateInvoiceResponse>("/webapp/payments/create-invoice", body);
     },
     onMutate: () => {
@@ -363,6 +387,8 @@ export function useCheckoutPageModel() {
     isFreePlan,
     planDisplayName,
     planPriceStars,
+    priceLabel,
+    originalPriceLabel,
     promoCode,
     promoStatus,
     promoErrorKey,

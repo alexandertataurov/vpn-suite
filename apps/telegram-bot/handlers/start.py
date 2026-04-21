@@ -1,4 +1,4 @@
-"""Start command: greeting and one "Open app" Web App button."""
+"""Start command: greeting + launch Web App button."""
 
 from urllib.parse import urlencode
 
@@ -37,19 +37,36 @@ def _get_ref_from_start(text: str | None) -> str | None:
     return None
 
 
+def _build_webapp_url(
+    *,
+    ref: str | None = None,
+    payment_provider: str | None = None,
+    open_target: str | None = None,
+) -> str:
+    """Build MINIAPP_URL with optional ref/provider/open params."""
+    params: dict[str, str] = {}
+    if ref:
+        params["ref"] = ref[:64]
+    if payment_provider:
+        params["payment_provider"] = payment_provider
+    if open_target:
+        params["open"] = open_target
+    if not params:
+        return MINIAPP_URL
+    return f"{MINIAPP_URL}?{urlencode(params)}"
+
+
 def _open_app_keyboard(locale: str, ref: str | None) -> InlineKeyboardMarkup | None:
     """Return Web App keyboard only if MINIAPP_URL is HTTPS (Telegram requirement)."""
     if not MINIAPP_URL.startswith("https://"):
         return None
-    url = MINIAPP_URL
-    if ref:
-        url = f"{url}?{urlencode({'ref': ref[:64]})}"
+    launch_url = _build_webapp_url(ref=ref)
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
                 InlineKeyboardButton(
                     text=t(locale, "open_app"),
-                    web_app=WebAppInfo(url=url),
+                    web_app=WebAppInfo(url=launch_url),
                 )
             ]
         ]
@@ -91,6 +108,8 @@ async def cmd_start(message: Message):
                     greeting = f"{greeting}\n\n{t(locale, 'welcome_referral_line', link=link)}"
         except Exception as e:
             _log.debug("referral_link_skip", tg_id=tg_id, error=str(e))
+    launch_url = _build_webapp_url(ref=ref)
+    greeting = f"{greeting}\n\n{t(locale, 'welcome_launch_link_line', link=launch_url)}"
     keyboard = _open_app_keyboard(locale, ref)
     await message.answer(
         greeting,
@@ -99,9 +118,7 @@ async def cmd_start(message: Message):
     )
     if MINIAPP_URL.startswith("https://") and message.chat:
         try:
-            menu_url = MINIAPP_URL
-            if ref:
-                menu_url = f"{menu_url}?{urlencode({'ref': ref[:64]})}"
+            menu_url = _build_webapp_url(ref=ref)
             await message.bot.set_chat_menu_button(
                 chat_id=message.chat.id,
                 menu_button=MenuButtonWebApp(

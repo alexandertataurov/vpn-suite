@@ -112,7 +112,7 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
       const isTimeout = err instanceof DOMException && err.name === "AbortError" && !init.signal?.aborted;
       const isNetwork = err instanceof TypeError;
       if (isTimeout || isNetwork) {
-        if (retries < MAX_RETRIES) {
+        if (SAFE_METHODS.has(method) && retries < MAX_RETRIES) {
           await new Promise((r) => setTimeout(r, 500 * (retries + 1)));
           return request<T>(path, init, retries + 1);
         }

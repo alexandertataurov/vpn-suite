@@ -13,7 +13,6 @@ import {
   PlanCard,
   SectionLabel,
   Skeleton,
-  StarsAmount,
   Stack,
 } from "@/design-system";
 import { PlanBillingHistorySection } from "@/design-system/recipes";
@@ -49,6 +48,7 @@ export function PlanPage() {
     canShowRenew,
     showUpsellExpiry,
     showUpsellTrialEnd,
+    routeReason,
     renewalTargetTo,
     upgradeTargetTo,
     track,
@@ -134,6 +134,12 @@ export function PlanPage() {
   };
 
   const handleRenewAction = () => {
+    if (routeReason === "grace" || routeReason === "expired_with_grace") {
+      track("cta_click", { cta_name: "restore_access", screen_name: "plan" });
+      navigate("/restore-access");
+      return;
+    }
+
     if ((subscriptionState === "expiring" || subscriptionState === "expired") && showRenewOrUpgradeCta) {
       const targetTo = showUpsellTrialEnd ? upgradeTargetTo : renewalTargetTo;
       const targetPlanId = targetTo.startsWith("/plan/checkout/") ? targetTo.replace("/plan/checkout/", "") : null;
@@ -189,7 +195,7 @@ export function PlanPage() {
                 icon={<IconCreditCard size={15} strokeWidth={2} aria-hidden />}
                 iconVariant="neutral"
                 label={t("plan.hero_price_label")}
-                subtitle={<StarsAmount value={heroView.heroStars} />}
+                subtitle={heroView.heroPriceLabel}
                 showChevron={false}
               />
               <RowItem
@@ -214,7 +220,7 @@ export function PlanPage() {
             </Button>
             {canShowRenew && (
               <Button variant="secondary" fullWidth onClick={handleRenewAction}>
-                {t("plan.cta_renew_plan")}
+                {heroView.renewLabel}
               </Button>
             )}
           </Stack>

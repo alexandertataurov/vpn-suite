@@ -1,5 +1,6 @@
 """Bot-facing API: create-or-get subscription, create-invoice (Stars stub), revoke own device, funnel events."""
 
+import json
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
@@ -34,6 +35,8 @@ from app.schemas.bot import (
     CreateInvoiceResponse,
     CreateOrGetSubscriptionRequest,
     CreateOrGetSubscriptionResponse,
+    CreatePlategaDonationLinkRequest,
+    CreatePlategaDonationLinkResponse,
     PromoValidateRequest,
     ReferralAttachRequest,
     TelegramStarsConfirmRequest,
@@ -53,6 +56,7 @@ from app.services.subscription_state import (
 )
 from app.services.topology_engine import TopologyEngine
 from app.services.trial_service import start_trial
+from app.services.platega_service import PlategaError, create_platega_transaction
 
 router = APIRouter(prefix="/bot", tags=["bot"])
 
@@ -393,6 +397,139 @@ async def create_donation_invoice(
         subscription_id=sub.id,
         free_activation=False,
     )
+
+
+@router.post("/payments/platega/create-donation-link", response_model=CreatePlategaDonationLinkResponse)
+async def create_platega_donation_link(
+    request: Request,
+    body: CreatePlategaDonationLinkRequest,
+    db: AsyncSession = Depends(get_db),
+    principal=Depends(get_admin_or_bot_only),
+    idempotency_key: str | None = Header(None, alias="Idempotency-Key"),
+):
+    """Create a pending donation payment (Platega) and return redirect URL. Bot only."""
+    _require_bot(principal)
+    amount = int(body.amount or 0)
+    if amount <= 0 or amount > 25_000:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"code": "BAD_REQUEST", "message": "amount must be between 1 and 25000"},
+        )
+
+    return_url = (settings.platega_return_url or "").strip()
+    failed_url = (settings.platega_failed_url or "").strip()
+    if not return_url or not failed_url:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={
+                "code": "PAYMENT_PROVIDER_MISCONFIGURED",
+                "message": "Platega return/failed URLs are not configured",
+            },
+        )
+
+    user_result = await db.execute(select(User).where(User.tg_id == body.tg_id))
+    user = user_result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"code": "USER_NOT_FOUND", "message": "User not found"},
+        )
+
+    sub = None
+    if body.subscription_id:
+        sub_result = await db.execute(
+            select(Subscription).where(
+                Subscription.id == body.subscription_id,
+                Subscription.user_id == user.id,
+            )
+        )
+        sub = sub_result.scalar_one_or_none()
+    if not sub:
+        sub_result = await db.execute(
+            select(Subscription)
+            .where(Subscription.user_id == user.id)
+            .order_by(Subscription.created_at.desc())
+            .limit(1)
+        )
+        sub = sub_result.scalar_one_or_none()
+    if not sub:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"code": "SUBSCRIPTION_NOT_FOUND", "message": "No subscription found for user"},
+        )
+
+    external_id = (
+        f"bot:platega:donation:{user.id}:{sub.id}:{idempotency_key or request.state.request_id or 'none'}"
+    )
+
+    payload_data = {
+        "source": "bot",
+        "kind": "donation",
+        "user_id": int(user.id),
+        "subscription_id": str(sub.id),
+        "plan_id": str(sub.plan_id),
+        "amount": int(amount),
+    }
+    payload = json.dumps(payload_data, separators=(",", ":"), ensure_ascii=True)
+    try:
+        created = await create_platega_transaction(
+            amount=max(1, int(amount)),
+            currency=(settings.platega_currency or "RUB").strip().upper(),
+            description="Project donation",
+            return_url=return_url,
+            failed_url=failed_url,
+            payload=payload,
+        )
+    except PlategaError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail={
+                "code": "PAYMENT_PROVIDER_UNAVAILABLE",
+                "message": str(exc) or "Platega transaction creation failed",
+            },
+        ) from exc
+
+    payment = Payment(
+        user_id=user.id,
+        subscription_id=sub.id,
+        provider="platega",
+        status="pending",
+        amount=float(amount),
+        currency=(settings.platega_currency or "RUB").strip().upper(),
+        external_id=created.transaction_id,
+        webhook_payload={
+            "kind": "donation",
+            "star_count": amount,
+            "platega_redirect_url": created.redirect_url,
+            "platega_status": created.status,
+            "platega_payment_method": created.payment_method,
+            "platega_expires_in": created.expires_in,
+            "platega_usdt_rate": created.usdt_rate,
+            "platega_payload": payload_data,
+        },
+    )
+    db.add(payment)
+    try:
+        await db.flush()
+        await db.commit()
+        await db.refresh(payment)
+    except IntegrityError:
+        # Idempotency replay: return existing pending payment by external_id.
+        await db.rollback()
+        existing = (
+            await db.execute(select(Payment).where(Payment.external_id == created.transaction_id))
+        ).scalar_one_or_none()
+        if not existing:
+            raise
+        payment = existing
+
+    invoice_url = str((payment.webhook_payload or {}).get("platega_redirect_url") or "").strip()
+    if not invoice_url:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"code": "PAYMENT_GATE_UNAVAILABLE", "message": "Could not open Platega payment gate"},
+        )
+    return CreatePlategaDonationLinkResponse(payment_id=payment.id, invoice_url=invoice_url)
 
 
 @router.post("/payments/telegram-stars-confirm")

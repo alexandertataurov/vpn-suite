@@ -22,6 +22,7 @@ if (typeof window !== "undefined") {
 }
 import { ApiError } from "@vpn-suite/shared";
 import { webappQueryKeys } from "@/lib";
+import { capturePreferredPaymentProvider } from "@/lib/payments/provider";
 import { wireGlobalErrors } from "@/telemetry/errors";
 import App from "./app/App";
 import "@/design-system/styles/index.css";
@@ -55,6 +56,7 @@ function bootstrapTelemetry(): void {
 }
 
 bootstrapTelemetry();
+capturePreferredPaymentProvider();
 
 const QUERY_RETRY_LIMIT = 1;
 

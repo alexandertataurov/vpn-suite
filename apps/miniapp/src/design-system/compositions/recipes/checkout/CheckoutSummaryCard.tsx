@@ -6,6 +6,8 @@ export interface CheckoutSummaryCardProps {
   showConfirmation: boolean;
   planDurationDays: number | null | undefined;
   planDeviceLimit: number;
+  priceLabel: string;
+  originalPriceLabel?: string | null;
 }
 
 export function CheckoutSummaryCard({
@@ -13,6 +15,8 @@ export function CheckoutSummaryCard({
   showConfirmation,
   planDurationDays,
   planDeviceLimit,
+  priceLabel,
+  originalPriceLabel,
 }: CheckoutSummaryCardProps) {
   const { t } = useI18n();
   const gridColumns = showConfirmation ? 1 : 2;
@@ -20,6 +24,14 @@ export function CheckoutSummaryCard({
   return (
     <DataGrid columns={gridColumns}>
       <DataCell label={t("checkout.grid_key_plan")} value={planDisplayName} cellType="plan" />
+      <DataCell
+        label={t("checkout.grid_key_price")}
+        value={
+          originalPriceLabel
+            ? t("checkout.price_with_discount", { discounted: priceLabel, original: originalPriceLabel })
+            : priceLabel
+        }
+      />
       {showConfirmation ? (
         <>
           <DataCell

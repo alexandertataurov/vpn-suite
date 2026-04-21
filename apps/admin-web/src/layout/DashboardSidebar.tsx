@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import {
   SidebarNavFooter,
   SidebarNavLink,
@@ -196,6 +197,7 @@ export function DashboardSidebar({
   onCloseOverlay,
 }: DashboardSidebarProps) {
   const { pathname } = useLocation();
+  const isNarrow = useMediaQuery("(max-width: 768px)");
 
   useEffect(() => {
     if (isOverlayOpen && onCloseOverlay) onCloseOverlay();
@@ -205,6 +207,13 @@ export function DashboardSidebar({
     if (to === "/") return pathname === "/" || pathname === "";
     return pathname === to || pathname.startsWith(`${to}/`);
   };
+
+  const sidebarClassName = [
+    isNarrow ? "sidebar--mobile" : undefined,
+    isOverlayOpen ? "sidebar--overlay" : undefined,
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <>
@@ -218,9 +227,10 @@ export function DashboardSidebar({
         />
       ) : null}
       <SidebarNavRoot
-        className={isOverlayOpen ? "sidebar--overlay" : undefined}
+        className={sidebarClassName || undefined}
         id={SIDEBAR_NAV_ID}
         ariaLabel="Dashboard navigation"
+        data-testid="admin-sidebar"
       >
       <SidebarNavSection>Monitor</SidebarNavSection>
       {ITEMS.filter((i) => i.section === "Monitor").map((item) => (

@@ -1,5 +1,6 @@
+import { useCallback, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import type { WebAppCreateInvoiceResponse } from "@vpn-suite/shared";
+import { ApiError, type WebAppCreateInvoiceResponse } from "@vpn-suite/shared";
 import {
   IconBox,
   IconCreditCard,
@@ -32,6 +33,7 @@ import { useSession } from "@/hooks";
 import { usePayments } from "@/hooks/features/usePayments";
 import { useI18n } from "@/hooks/useI18n";
 import { useAccessHomePageModel } from "@/features/home/model/useAccessHomePageModel";
+import { getPreferredPaymentProvider } from "@/lib/payments/provider";
 
 const DONATION_MIN_AMOUNT = 1;
 const DONATION_MAX_AMOUNT = 25_000;
@@ -311,17 +313,7 @@ export function HomePage() {
   const isGenerating = status === "generating_config";
   const handleAddDevice = () => navigate("/devices");
   const handleRenewalClick = () => navigate(status === "expired" ? "/restore-access" : "/plan");
-  const handleDonateOpen = async () => {
-    if (typeof window === "undefined") return;
-    const entered = window.prompt(
-      t("home.donate_amount_prompt", {
-        min: DONATION_MIN_AMOUNT,
-        max: DONATION_MAX_AMOUNT,
-      }),
-      String(DONATION_DEFAULT_AMOUNT),
-    );
-    if (entered == null) return;
-    const amount = Number.parseInt(entered.replace(/\s+/g, ""), 10);
+  const handleDonateAmount = useCallback(async (amount: number) => {
     if (!Number.isFinite(amount) || amount < DONATION_MIN_AMOUNT || amount > DONATION_MAX_AMOUNT) {
       addToast(
         t("home.donate_amount_invalid", {
@@ -335,7 +327,10 @@ export function HomePage() {
     try {
       const invoice = await webappApi.post<WebAppCreateInvoiceResponse>(
         "/webapp/payments/create-donation-invoice",
-        { amount },
+        {
+          amount,
+          payment_provider: getPreferredPaymentProvider() ?? undefined,
+        },
       );
       const donateLink = String(invoice.invoice_link ?? invoice.invoice_url ?? "").trim();
       if (!donateLink) {
@@ -343,10 +338,48 @@ export function HomePage() {
         return;
       }
       openInvoice(donateLink);
-    } catch {
+    } catch (err: unknown) {
+      if (err instanceof ApiError) {
+        const code = (err.code || "").toUpperCase();
+        if (code === "SUBSCRIPTION_REQUIRED") {
+          addToast(t("home.donate_requires_subscription"), "error");
+          return;
+        }
+        const msg = String((err.details as { message?: unknown } | undefined)?.message ?? err.message ?? "").trim();
+        addToast(msg || t("home.donate_open_failed"), "error");
+        return;
+      }
       addToast(t("home.donate_open_failed"), "error");
     }
+  }, [addToast, openInvoice, t]);
+
+  const handleDonateOpen = async () => {
+    if (typeof window === "undefined") return;
+    const entered = window.prompt(
+      t("home.donate_amount_prompt", {
+        min: DONATION_MIN_AMOUNT,
+        max: DONATION_MAX_AMOUNT,
+      }),
+      String(DONATION_DEFAULT_AMOUNT),
+    );
+    if (entered == null) return;
+    const amount = Number.parseInt(entered.replace(/\s+/g, ""), 10);
+    await handleDonateAmount(amount);
   };
+
+  // Allow bot deep links to open the donation flow in-app (keeps gateway in Telegram webview).
+  // Supported query params: ?open=donate&donate_amount=150
+  const donateAutoOpenedRef = useRef(false);
+  useEffect(() => {
+    if (donateAutoOpenedRef.current) return;
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(location.search);
+    if ((params.get("open") ?? "").trim().toLowerCase() !== "donate") return;
+    donateAutoOpenedRef.current = true;
+    const raw = (params.get("donate_amount") ?? "").trim();
+    const amount = raw ? Number.parseInt(raw, 10) : DONATION_DEFAULT_AMOUNT;
+    void handleDonateAmount(amount);
+  }, [handleDonateAmount, location.search]);
   const mergedByQuery = new URLSearchParams(location.search).get("homeMergedCard") === "1";
   const useMergedSummaryCard = homeMergedSummaryCardEnabled || mergedByQuery;
 

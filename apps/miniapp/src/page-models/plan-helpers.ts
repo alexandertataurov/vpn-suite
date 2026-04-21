@@ -98,7 +98,13 @@ export function featuresFromPlan(plan: PlanItem | undefined, locale: "en" | "ru"
   }
   const dl = plan.device_limit ?? 1;
   const period = periodLabelForHeroLocalized(plan.duration_days, locale);
-  const stars = formatStars(plan.price_amount);
+  const amountLabel = formatPriceAmount(plan.price_amount, plan.price_currency, locale);
+  const originalAmount = Number(plan.original_price_amount ?? 0);
+  const discountPercent = Math.max(0, Math.round(Number(plan.discount_percent ?? 0)));
+  const hasDiscount = originalAmount > Number(plan.price_amount) && discountPercent > 0;
+  const originalAmountLabel = hasDiscount
+    ? formatPriceAmount(originalAmount, plan.price_currency, locale)
+    : "";
   return [
     {
       id: "devices",
@@ -113,8 +119,21 @@ export function featuresFromPlan(plan: PlanItem | undefined, locale: "en" | "ru"
     {
       id: "price",
       icon: "yes",
-      textPlain: translate(locale, "plan.feature_price_stars", { stars }),
+      textPlain: translate(locale, "plan.feature_price_amount", { amount: amountLabel }),
     },
+    ...(hasDiscount
+      ? [
+          {
+            id: "discount",
+            icon: "yes" as const,
+            textPlain: translate(locale, "plan.feature_discount_value", {
+              percent: discountPercent,
+              original: originalAmountLabel,
+              discounted: amountLabel,
+            }),
+          },
+        ]
+      : []),
   ];
 }
 
@@ -170,6 +189,29 @@ export function buildTierPairs(
 export function formatStars(value: number): string {
   const safe = Number.isFinite(value) ? value : 0;
   return String(Math.max(0, Math.round(safe)));
+}
+
+export function formatPriceAmount(
+  amount: number,
+  currency: string,
+  locale: "en" | "ru" = "en",
+): string {
+  const safe = Math.max(0, Number.isFinite(amount) ? Math.round(amount) : 0);
+  const normalized = (currency || "").trim().toUpperCase();
+  if (normalized === "XTR" || normalized === "STARS") return `${formatStars(safe)} ⭐`;
+  if (normalized === "RUB") return `${safe} ₽`;
+  if (normalized === "USD" || normalized === "EUR") {
+    try {
+      return new Intl.NumberFormat(locale === "ru" ? "ru-RU" : "en-US", {
+        style: "currency",
+        currency: normalized,
+        maximumFractionDigits: 0,
+      }).format(safe);
+    } catch {
+      return `${safe} ${normalized}`;
+    }
+  }
+  return normalized ? `${safe} ${normalized}` : String(safe);
 }
 
 export function periodLabelForHero(durationDays: number): string {

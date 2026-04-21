@@ -38,6 +38,12 @@ class CreateDonationInvoiceRequest(BaseModel):
     subscription_id: str | None = None
 
 
+class CreatePlategaDonationLinkRequest(BaseModel):
+    tg_id: int
+    amount: int
+    subscription_id: str | None = None
+
+
 class CreateInvoiceResponse(BaseModel):
     invoice_id: str
     payment_id: str
@@ -49,6 +55,11 @@ class CreateInvoiceResponse(BaseModel):
     server_id: str  # for subsequent issue call
     subscription_id: str
     free_activation: bool = False  # True when plan price is 0; bot should skip invoice
+
+
+class CreatePlategaDonationLinkResponse(BaseModel):
+    payment_id: str
+    invoice_url: str
 
 
 class TelegramStarsConfirmRequest(BaseModel):

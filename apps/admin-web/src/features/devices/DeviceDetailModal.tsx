@@ -38,6 +38,10 @@ export interface DeviceDetailModalProps {
   onSuspend: (id: string) => void;
   onResume: (id: string) => void;
   onRevokeClick: (id: string) => void;
+  onSyncPeer: (id: string) => void;
+  onResetDevice: (id: string) => void;
+  onBlockDeviceClick: (id: string) => void;
+  onDeleteDeviceClick: (id: string) => void;
   onCopyToClipboard: (value: string, title: string) => Promise<void>;
   onSetQr: (payload: string, title: string) => void;
   onDownloadIssuedConfig: (id: string) => void;
@@ -61,6 +65,10 @@ export function DeviceDetailModal({
   onSuspend,
   onResume,
   onRevokeClick,
+  onSyncPeer,
+  onResetDevice,
+  onBlockDeviceClick,
+  onDeleteDeviceClick,
   onCopyToClipboard,
   onSetQr,
   onDownloadIssuedConfig,
@@ -356,6 +364,43 @@ export function DeviceDetailModal({
                       Revoke
                     </Button>
                   )}
+                </div>
+                <SectionHeader label="Advanced actions" size="sm" />
+                <div className="devices-page__detail-buttons">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => onSyncPeer(device.id)}
+                    disabled={actionPending || !!device.revoked_at}
+                  >
+                    Sync peer
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => onResetDevice(device.id)}
+                    disabled={actionPending || !!device.revoked_at}
+                  >
+                    Reset session
+                  </Button>
+                  {!device.revoked_at && (
+                    <Button
+                      type="button"
+                      variant="warning"
+                      onClick={() => onBlockDeviceClick(device.id)}
+                      disabled={actionPending}
+                    >
+                      Block on node
+                    </Button>
+                  )}
+                  <Button
+                    type="button"
+                    variant="danger"
+                    onClick={() => onDeleteDeviceClick(device.id)}
+                    disabled={actionPending}
+                  >
+                    Delete record
+                  </Button>
                 </div>
               </div>
             </>

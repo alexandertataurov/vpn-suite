@@ -8,6 +8,7 @@ export const ONBOARDING_ALLOWED_PATHS: readonly string[] = [
   "/onboarding",
   "/",
   "/plan",
+  "/restore-access",
   "/devices",
   "/devices/issue",
   "/setup-guide",

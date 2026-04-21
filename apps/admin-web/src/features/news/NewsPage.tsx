@@ -20,11 +20,14 @@ export function NewsPage() {
   const [text, setText] = useState("");
   const [broadcastId, setBroadcastId] = useState<string | null>(null);
   const [status, setStatus] = useState<BroadcastStatus | null>(null);
-  const canSend = useMemo(() => text.trim().length > 0, [text]);
+  const [isSending, setIsSending] = useState(false);
+  const canSend = useMemo(() => text.trim().length > 0 && !isSending, [text, isSending]);
 
   const send = async () => {
+    if (isSending) return;
+    setIsSending(true);
     try {
-      const res = await api.post<BroadcastResponse>("/api/v1/admin/news/broadcast", {
+      const res = await api.post<BroadcastResponse>("/admin/news/broadcast", {
         text: text.trim(),
         parse_mode: "HTML",
         include_banned: false,
@@ -40,13 +43,15 @@ export function NewsPage() {
         variant: "danger",
         title: "Не удалось поставить рассылку в очередь",
       });
+    } finally {
+      setIsSending(false);
     }
   };
 
   const refresh = async () => {
     if (!broadcastId) return;
     try {
-      const st = await api.get<BroadcastStatus>(`/api/v1/admin/news/broadcast/${broadcastId}`);
+      const st = await api.get<BroadcastStatus>(`/admin/news/broadcast/${broadcastId}`);
       setStatus(st);
     } catch {
       toast.showToast({
@@ -78,7 +83,7 @@ export function NewsPage() {
         </div>
         <div className="news-page__actions">
           <Button onClick={send} disabled={!canSend}>
-            Отправить всем
+            {isSending ? "Отправка…" : "Отправить всем"}
           </Button>
           {broadcastId ? (
             <>

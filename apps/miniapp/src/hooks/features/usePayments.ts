@@ -13,7 +13,12 @@ export function usePayments() {
       return;
     }
     if (telegramClient.isInsideTelegram() && typeof window !== "undefined") {
-      // Keep checkout inside Telegram Mini App WebView for external payment gateways.
+      // External payment gateways: in Telegram iOS clients, hard navigation can be flaky.
+      // Prefer Telegram's openLink on iOS; otherwise keep it inside the WebView.
+      if (telegramClient.getPlatform() === "ios") {
+        telegramClient.openLink(url);
+        return;
+      }
       window.location.assign(url);
       return;
     }

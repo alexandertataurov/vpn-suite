@@ -4,7 +4,10 @@ TEXTS = {
     "ru": {
         "welcome": "Добро пожаловать! Откройте приложение для управления VPN.",
         "welcome_referral_line": "Ваша реферальная ссылка: {link}",
+        "welcome_launch_link_line": "Ссылка для запуска приложения: {link}",
         "open_app": "Открыть приложение",
+        "pay_with_platega": "💳 Оплатить через Platega",
+        "pay_with_stars": "⭐ Оплатить Stars",
         "choose_lang": "Выберите язык / Choose language:",
         "connect_cta": "Подключить",
         "my_cabinet": "Мой кабинет",
@@ -201,7 +204,11 @@ TEXTS = {
         "install_hint_open_connect_short": "Откройте меню Подключить ниже, чтобы получить конфиг.",
 
         # Donation flow
-        "donate_offer_text": "Поддержите проект донатом через Telegram Stars. Выберите сумму:",
+        "donate_offer_text": "Поддержите проект. Выберите способ оплаты:",
+        "donate_with_platega_btn": "💳 Донат через Platega",
+        "donate_with_stars_btn": "⭐ Донат через Stars",
+        "donate_open_payment_btn": "Открыть оплату",
+        "donate_open_payment_text": "Нажмите кнопку ниже, чтобы открыть платёж.",
         "donate_custom_btn": "Другая сумма",
         "donate_custom_prompt": "Введите сумму в ⭐ (числом):",
         "donate_custom_invalid": "Введите корректное число ⭐ (например 150).",
@@ -211,7 +218,10 @@ TEXTS = {
     "en": {
         "welcome": "Welcome! Open the app to manage your VPN.",
         "welcome_referral_line": "Your referral link: {link}",
+        "welcome_launch_link_line": "Launch app link: {link}",
         "open_app": "Open App",
+        "pay_with_platega": "💳 Pay with Platega",
+        "pay_with_stars": "⭐ Pay with Stars",
         "choose_lang": "Choose language:",
         "connect_cta": "Connect",
         "my_cabinet": "My cabinet",
@@ -363,7 +373,11 @@ TEXTS = {
         "install_hint_open_connect_short": "Open the Connect menu below to get your config.",
 
         # Donation flow
-        "donate_offer_text": "Support the project via Telegram Stars. Choose an amount:",
+        "donate_offer_text": "Support the project. Choose a payment method:",
+        "donate_with_platega_btn": "💳 Donate with Platega",
+        "donate_with_stars_btn": "⭐ Donate with Stars",
+        "donate_open_payment_btn": "Open payment",
+        "donate_open_payment_text": "Tap the button below to open the payment.",
         "donate_custom_btn": "Custom amount",
         "donate_custom_prompt": "Enter Stars amount (number):",
         "donate_custom_invalid": "Enter a valid Stars number (e.g. 150).",

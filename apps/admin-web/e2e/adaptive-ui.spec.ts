@@ -21,7 +21,7 @@ test.describe("Adaptive UI", () => {
   for (const vp of VIEWPORTS) {
     test("viewport " + vp.name + " no horizontal scroll on dashboard", async ({ page }) => {
       await page.setViewportSize({ width: vp.width, height: vp.height });
-      await page.goto("/");
+      await page.goto("");
       await page.waitForLoadState("domcontentloaded");
       await expect(page.getByTestId("dashboard-page")).toBeVisible({ timeout: 10000 });
       const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
@@ -32,7 +32,7 @@ test.describe("Adaptive UI", () => {
 
   test("XS sidebar is overlay", async ({ page }) => {
     await page.setViewportSize({ width: 360, height: 640 });
-    await page.goto("/");
+    await page.goto("");
     await page.waitForLoadState("domcontentloaded");
     const sidebar = page.getByTestId("admin-sidebar");
     await expect(sidebar).toBeAttached();
@@ -43,7 +43,7 @@ test.describe("Adaptive UI", () => {
 
   test("MD sidebar persistent", async ({ page }) => {
     await page.setViewportSize({ width: 1024, height: 800 });
-    await page.goto("/");
+    await page.goto("");
     await page.waitForLoadState("domcontentloaded");
     const sidebar = page.getByTestId("admin-sidebar");
     const box = await sidebar.boundingBox();
@@ -51,19 +51,18 @@ test.describe("Adaptive UI", () => {
     expect(box!.x).toBeGreaterThanOrEqual(0);
   });
 
-  test("XS Servers shows cards or table", async ({ page }) => {
+  test("XS Servers page has no horizontal scroll", async ({ page }) => {
     await page.setViewportSize({ width: 360, height: 640 });
-    await page.goto("/servers");
+    await page.goto("servers");
     await page.waitForLoadState("domcontentloaded");
-    const cards = page.getByTestId("servers-cards");
-    const table = page.getByTestId("servers-table");
-    const hasCards = await cards.isVisible().catch(() => false);
-    const hasTable = await table.isVisible().catch(() => false);
-    expect(hasCards || hasTable).toBe(true);
+    await expect(page.getByTestId("servers-page")).toBeVisible({ timeout: 10000 });
+    const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+    const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
+    expect(scrollWidth).toBeLessThanOrEqual(clientWidth + 1);
   });
 
   test("Skip link targets main", async ({ page }) => {
-    await page.goto("/");
+    await page.goto("");
     await page.waitForLoadState("domcontentloaded");
     const skipLink = page.locator("a.skip-link[href=\"#main-content\"]");
     await expect(skipLink).toBeVisible();

@@ -1,9 +1,10 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useApiQuery } from "@/hooks/api/useApiQuery";
 import { useApi } from "@/core/api/context";
 import { billingKeys } from "@/features/billing/services/billing.query-keys";
 import {
+  Badge,
   Button,
   Card,
   DataTable,
@@ -23,12 +24,18 @@ export function SubscriptionRecordsTab() {
   const queryClient = useQueryClient();
   const toast = useToast();
 
-  const [filters, setFilters] = useState({ user_id: "", plan_id: "" });
+  const [filters, setFilters] = useState({
+    user_id: "",
+    plan_id: "",
+    status: "",
+    access_status: "",
+  });
   const [graceModalSub, setGraceModalSub] = useState<SubscriptionOut | null>(null);
   const [graceUntil, setGraceUntil] = useState("");
   const [graceReason, setGraceReason] = useState("");
   const [graceSaving, setGraceSaving] = useState(false);
   const [graceError, setGraceError] = useState<string | null>(null);
+  const [stateActionPendingId, setStateActionPendingId] = useState<string | null>(null);
 
   const path = useMemo(() => {
     const p = new URLSearchParams();
@@ -37,7 +44,7 @@ export function SubscriptionRecordsTab() {
     if (filters.user_id.trim()) p.set("user_id", filters.user_id.trim());
     if (filters.plan_id.trim()) p.set("plan_id", filters.plan_id.trim());
     return `/subscriptions?${p.toString()}`;
-  }, [filters]);
+  }, [filters.plan_id, filters.user_id]);
 
   const {
     data,
@@ -59,7 +66,8 @@ export function SubscriptionRecordsTab() {
       setGraceModalSub(null);
       setGraceUntil("");
       setGraceReason("");
-      queryClient.invalidateQueries({ queryKey: billingKeys.subscriptions(filters) });
+      await queryClient.invalidateQueries({ queryKey: billingKeys.subscriptions(filters) });
+      void refetch();
     } catch (e) {
       setGraceError(e instanceof Error ? e.message : "Failed to set grace");
     } finally {
@@ -74,7 +82,9 @@ export function SubscriptionRecordsTab() {
         grace_until: null,
         grace_reason: null,
       });
-      queryClient.invalidateQueries({ queryKey: billingKeys.subscriptions(filters) });
+      await queryClient.invalidateQueries({ queryKey: billingKeys.subscriptions(filters) });
+      void refetch();
+      toast.showToast({ variant: "success", title: "Grace cleared" });
     } catch (e) {
       toast.showToast({
         variant: "danger",
@@ -84,6 +94,27 @@ export function SubscriptionRecordsTab() {
     }
   };
 
+  const patchSubscriptionState = useCallback(
+    async (subId: string, payload: Record<string, unknown>, successTitle: string) => {
+      setStateActionPendingId(subId);
+      try {
+        await api.patch(`/subscriptions/${subId}`, payload);
+        await queryClient.invalidateQueries({ queryKey: billingKeys.subscriptions(filters) });
+        void refetch();
+        toast.showToast({ variant: "success", title: successTitle });
+      } catch (e) {
+        toast.showToast({
+          variant: "danger",
+          title: "Subscription update failed",
+          description: e instanceof Error ? e.message : "Failed to update subscription state",
+        });
+      } finally {
+        setStateActionPendingId(null);
+      }
+    },
+    [api, filters, queryClient, refetch, toast]
+  );
+
   const openGraceModal = (s: SubscriptionOut) => {
     setGraceModalSub(s);
     const d = new Date();
@@ -92,6 +123,19 @@ export function SubscriptionRecordsTab() {
     setGraceReason("");
     setGraceError(null);
   };
+
+  const resetFilters = () => {
+    setFilters({ user_id: "", plan_id: "", status: "", access_status: "" });
+  };
+
+  const filteredItems = useMemo(() => {
+    const items = data?.items ?? [];
+    return items.filter((sub) => {
+      if (filters.status && (sub.effective_status ?? sub.status) !== filters.status) return false;
+      if (filters.access_status && (sub.access_status ?? "enabled") !== filters.access_status) return false;
+      return true;
+    });
+  }, [data?.items, filters.access_status, filters.status]);
 
   return (
     <>
@@ -115,6 +159,46 @@ export function SubscriptionRecordsTab() {
               placeholder="Filter by plan_id"
             />
           </label>
+          <label className="input-label">
+            Status
+            <select
+              className="input"
+              value={filters.status}
+              onChange={(e) => setFilters((f) => ({ ...f, status: e.target.value }))}
+            >
+              <option value="">All</option>
+              <option value="active">active</option>
+              <option value="grace">grace</option>
+              <option value="paused">paused</option>
+              <option value="expired">expired</option>
+              <option value="blocked">blocked</option>
+              <option value="cancelled">cancelled</option>
+              <option value="pending">pending</option>
+              <option value="cancel_at_period_end">cancel_at_period_end</option>
+            </select>
+          </label>
+          <label className="input-label">
+            Access
+            <select
+              className="input"
+              value={filters.access_status}
+              onChange={(e) => setFilters((f) => ({ ...f, access_status: e.target.value }))}
+            >
+              <option value="">All</option>
+              <option value="enabled">enabled</option>
+              <option value="paused">paused</option>
+              <option value="grace">grace</option>
+              <option value="blocked">blocked</option>
+            </select>
+          </label>
+          <div className="billing-page__filter-actions">
+            <Button type="button" variant="default" onClick={() => refetch()}>
+              Load subscriptions
+            </Button>
+            <Button type="button" variant="ghost" onClick={resetFilters}>
+              Reset filters
+            </Button>
+          </div>
         </div>
         {isLoading && <Skeleton height={120} />}
         {isError && (
@@ -124,8 +208,11 @@ export function SubscriptionRecordsTab() {
           />
         )}
         {!isLoading && !isError && data && (
-          data.items.length > 0 ? (
+          filteredItems.length > 0 ? (
             <>
+              <MetaText className="billing-page__table-meta">
+                {filteredItems.length} shown · {data.total} total subscriptions
+              </MetaText>
               <div className="data-table-wrap">
                 <DataTable
                   density="compact"
@@ -149,16 +236,46 @@ export function SubscriptionRecordsTab() {
                     { key: "created_at", header: "Created" },
                     { key: "actions", header: "Actions" },
                   ]}
-                  rows={data.items.map((s) => ({
+                  rows={filteredItems.map((s) => ({
                     id: s.id,
                     user_id: s.user_id,
                     plan_id: s.plan_id,
                     valid_from: s.valid_from ? new Date(s.valid_from).toLocaleString() : "—",
                     valid_until: s.valid_until ? new Date(s.valid_until).toLocaleString() : "—",
-                    status: s.effective_status ?? s.status,
+                    status: (
+                      <Badge
+                        variant={
+                          (s.effective_status ?? s.status) === "active"
+                            ? "success"
+                            : (s.effective_status ?? s.status) === "grace"
+                              ? "info"
+                              : (s.effective_status ?? s.status) === "paused"
+                                ? "warning"
+                                : "danger"
+                        }
+                        size="sm"
+                      >
+                        {s.effective_status ?? s.status}
+                      </Badge>
+                    ),
                     subscription_status: s.subscription_status ?? "—",
                     device_limit: s.device_limit,
-                    access_status: s.access_status ?? "—",
+                    access_status: (
+                      <Badge
+                        variant={
+                          (s.access_status ?? "enabled") === "enabled"
+                            ? "success"
+                            : (s.access_status ?? "enabled") === "grace"
+                              ? "info"
+                              : (s.access_status ?? "enabled") === "paused"
+                                ? "warning"
+                                : "danger"
+                        }
+                        size="sm"
+                      >
+                        {s.access_status ?? "—"}
+                      </Badge>
+                    ),
                     billing_status: s.billing_status ?? "—",
                     renewal_status: s.renewal_status ?? "—",
                     cancel_at_period_end: s.cancel_at_period_end ? "Yes" : "No",
@@ -177,6 +294,58 @@ export function SubscriptionRecordsTab() {
                             Clear grace
                           </Button>
                         )}
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          disabled={
+                            stateActionPendingId === s.id ||
+                            (s.subscription_status ?? "active") !== "active" ||
+                            (s.access_status ?? "enabled") === "paused"
+                          }
+                          onClick={() =>
+                            void patchSubscriptionState(
+                              s.id,
+                              { status: "active", access_status: "paused" },
+                              "Subscription paused"
+                            )
+                          }
+                        >
+                          Pause
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          disabled={
+                            stateActionPendingId === s.id ||
+                            (s.access_status ?? "enabled") === "enabled"
+                          }
+                          onClick={() =>
+                            void patchSubscriptionState(
+                              s.id,
+                              { status: "active", access_status: "enabled" },
+                              "Access enabled"
+                            )
+                          }
+                        >
+                          Enable
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="danger"
+                          disabled={
+                            stateActionPendingId === s.id ||
+                            (s.access_status ?? "enabled") === "blocked"
+                          }
+                          onClick={() =>
+                            void patchSubscriptionState(
+                              s.id,
+                              { status: "active", access_status: "blocked" },
+                              "Access blocked"
+                            )
+                          }
+                        >
+                          Block
+                        </Button>
                       </span>
                     ),
                   }))}

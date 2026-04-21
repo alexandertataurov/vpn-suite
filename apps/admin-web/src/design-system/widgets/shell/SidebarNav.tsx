@@ -6,6 +6,7 @@ interface SidebarNavRootProps {
   className?: string;
   id?: string;
   ariaLabel?: string;
+  "data-testid"?: string;
 }
 
 export function SidebarNavRoot({
@@ -13,12 +14,14 @@ export function SidebarNavRoot({
   className,
   id,
   ariaLabel = "Dashboard navigation",
+  "data-testid": dataTestId,
 }: SidebarNavRootProps) {
   return (
     <nav
       id={id}
       role="navigation"
       aria-label={ariaLabel}
+      data-testid={dataTestId}
       className={["sidebar", className].filter(Boolean).join(" ")}
     >
       {children}
