@@ -21,6 +21,7 @@ import {
 } from "@/design-system/widgets";
 import { VpnNodeDrilldown, VpnNodeGrid } from "@/design-system/widgets/vpn-node";
 import { PageLayout } from "@/layout/PageLayout";
+import { PageErrorState, PageLoadingState } from "@/layout/PageStates";
 import { MetaText } from "@/design-system/typography";
 import type {
   OperatorServerRow,
@@ -187,22 +188,18 @@ export function ServersPage() {
   const handleCloseVpnDrilldown = useCallback(() => setSelectedNodeId(null), []);
 
   if (isLoading) {
-    return (
-      <PageLayout title="Servers" pageClass="servers-page" dataTestId="servers-page" hideHeader>
-        <Skeleton height={32} width="30%" />
-        <Skeleton height={200} />
-      </PageLayout>
-    );
+    return <PageLoadingState title="Servers" pageClass="servers-page" dataTestId="servers-page" bodyHeight={200} />;
   }
 
   if (isError) {
     return (
-      <PageLayout title="Servers" pageClass="servers-page" dataTestId="servers-page" hideHeader>
-        <ErrorState
-          message={error instanceof Error ? error.message : "Failed to load servers"}
-          onRetry={() => refetch()}
-        />
-      </PageLayout>
+      <PageErrorState
+        title="Servers"
+        pageClass="servers-page"
+        dataTestId="servers-page"
+        message={error instanceof Error ? error.message : "Failed to load servers"}
+        onRetry={() => void refetch()}
+      />
     );
   }
 

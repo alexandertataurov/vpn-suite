@@ -63,6 +63,48 @@
   margin-bottom: 0;
 }
 
+/* Shared page-level building blocks (Wave 2 standardization) */
+.page-filters {
+  display: grid;
+  gap: var(--sp-3);
+  align-items: end;
+}
+
+.page-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+
+.page-kv {
+  margin: 0;
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: var(--sp-2) var(--sp-3);
+}
+
+.page-kv dt {
+  color: var(--tx-mut);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+}
+
+.page-kv dd {
+  margin: 0;
+  color: var(--tx-pri);
+}
+
+.page-table-footer {
+  margin-top: var(--sp-3);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+
 /* Servers widgets grid */
 .servers-page__widgets {
   margin-bottom: var(--sp-4);
@@ -405,5 +447,121 @@
 @media (max-width: 768px) {
   .billing-page__filters {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Automation and cluster ops page */
+.automation-page {
+  display: grid;
+  gap: var(--sp-4);
+}
+
+.automation-page__filters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+  gap: var(--sp-3);
+  align-items: end;
+}
+
+.automation-page__filter {
+  display: grid;
+  gap: var(--sp-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--tx-mut);
+}
+
+.automation-page__actions,
+.automation-page__buttons {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+
+.automation-page__dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: var(--sp-2) var(--sp-3);
+}
+
+.automation-page__dl dt {
+  color: var(--tx-mut);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+}
+
+.automation-page__dl dd {
+  margin: 0;
+  color: var(--tx-pri);
+}
+
+/* Audit page */
+.audit-page {
+  display: grid;
+  gap: var(--sp-4);
+}
+
+.audit-page__filters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+  gap: var(--sp-3);
+  align-items: end;
+}
+
+.audit-page__filter {
+  display: grid;
+  gap: var(--sp-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--tx-mut);
+}
+
+.audit-page__actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+  min-height: 30px;
+}
+
+.audit-page__pagination {
+  margin-top: var(--sp-3);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+
+.audit-page__meta {
+  color: var(--tx-mut);
+}
+
+@media (max-width: 1200px) {
+  .automation-page__filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .audit-page__filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .audit-page__actions {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 768px) {
+  .automation-page__filters,
+  .audit-page__filters {
+    grid-template-columns: 1fr;
+  }
+
+  .automation-page__dl {
+    grid-template-columns: 1fr;
+    gap: var(--sp-1);
   }
 }

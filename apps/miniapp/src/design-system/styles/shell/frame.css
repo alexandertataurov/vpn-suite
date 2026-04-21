@@ -1711,7 +1711,7 @@ html:not([data-theme="consumer-light"]) .miniapp-popover-panel {
 .btn {
   --btn-height: var(--height-btn-lg);
   --btn-padding-x: var(--spacing-5);
-  --btn-padding-y: var(--spacing-3);
+  --btn-padding-y: var(--spacing-4);
   --btn-font-size: var(--typo-body-sm-size);
   --btn-icon-size: var(--typo-body-sm-size);
   --btn-press-scale: 0.99;
@@ -1721,10 +1721,10 @@ html:not([data-theme="consumer-light"]) .miniapp-popover-panel {
   gap: var(--spacing-2);
   width: auto;
   min-height: var(--btn-height);
-  padding: var(--spacing-3) var(--spacing-5);
+  padding: var(--btn-padding-y) var(--btn-padding-x);
   font-family: var(--font-sans);
-  font-size: var(--typo-body-sm-size);
-  font-weight: 600;
+  font-size: var(--btn-font-size);
+  font-weight: 400;
   letter-spacing: -0.2px;
   line-height: 1;
   text-transform: none !important;
@@ -1734,6 +1734,7 @@ html:not([data-theme="consumer-light"]) .miniapp-popover-panel {
     background var(--duration-fast) ease,
     color var(--duration-fast) ease,
     border-color var(--duration-fast) ease,
+    box-shadow var(--duration-fast) ease,
     opacity var(--duration-fast) ease,
     filter var(--duration-fast) ease,
     transform var(--duration-tap) ease;
@@ -1811,9 +1812,9 @@ html:not([data-theme="consumer-light"]) .miniapp-popover-panel {
 }
 
 .btn-md {
-  --btn-height: var(--height-btn-lg);
+  --btn-height: var(--size-touch-target);
   --btn-padding-x: var(--spacing-5);
-  --btn-padding-y: var(--spacing-3);
+  --btn-padding-y: var(--spacing-4);
   --btn-font-size: var(--typo-body-sm-size);
   --btn-icon-size: var(--typo-body-sm-size);
 }
@@ -1847,10 +1848,14 @@ html:not([data-theme="consumer-light"]) .miniapp-popover-panel {
   background: var(--btn-primary-bg);
   color: var(--btn-primary-text);
   border: none;
+  font-weight: 600;
 }
 .btn--primary:hover:not(:disabled),
 .btn-primary:hover:not(:disabled) {
   background: var(--btn-primary-hover-bg);
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px color-mix(in oklch, var(--btn-primary-bg) 22%, transparent);
 }
 .btn--primary:active:not(:disabled),
 .btn-primary:active:not(:disabled) {
@@ -1862,12 +1867,12 @@ html:not([data-theme="consumer-light"]) .miniapp-popover-panel {
 .btn-secondary {
   background: transparent;
   color: var(--btn-secondary-text);
-  border: 1px solid var(--btn-secondary-border);
+  border: none;
 }
 .btn--secondary:hover:not(:disabled),
 .btn-secondary:hover:not(:disabled) {
-  border-color: var(--btn-secondary-hover-border);
   color: var(--btn-secondary-hover-text);
+  background: color-mix(in oklch, var(--btn-secondary-hover-text) 10%, transparent);
 }
 
 .btn--danger,
@@ -1886,10 +1891,13 @@ html:not([data-theme="consumer-light"]) .miniapp-popover-panel {
   background: var(--btn-external-bg);
   color: var(--btn-external-text);
   border: none;
+  font-weight: 400;
 }
 .btn--external:hover:not(:disabled),
 .btn-external:hover:not(:disabled) {
-  opacity: 0.88;
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px color-mix(in oklch, var(--btn-external-bg) 20%, transparent);
 }
 
 /* Tone modifiers on primary */
@@ -1898,21 +1906,21 @@ html:not([data-theme="consumer-light"]) .miniapp-popover-panel {
 .btn-primary.btn--tone-success {
   background: var(--btn-success-bg);
   color: var(--btn-success-text);
-  border: 1px solid var(--btn-success-border);
+  border: none;
 }
 .btn--primary.btn--tone-warning,
 .btn-primary.btn-tone-warning,
 .btn-primary.btn--tone-warning {
   background: var(--btn-warning-bg);
   color: var(--btn-warning-text);
-  border: 1px solid var(--btn-warning-border);
+  border: none;
 }
 .btn--primary.btn--tone-danger,
 .btn-primary.btn-tone-danger,
 .btn-primary.btn--tone-danger {
   background: var(--btn-danger-bg);
   color: var(--btn-danger-text);
-  border: 1px solid var(--btn-danger-border);
+  border: none;
 }
 .btn--primary.btn--tone-success:hover:not(:disabled),
 .btn--primary.btn--tone-warning:hover:not(:disabled),
@@ -1932,13 +1940,13 @@ html:not([data-theme="consumer-light"]) .miniapp-popover-panel {
 .btn-primary.warning {
   background: var(--btn-warning-bg);
   color: var(--btn-warning-text);
-  border: 1px solid var(--btn-warning-border);
+  border: none;
 }
 .btn--primary.danger,
 .btn-primary.danger {
   background: var(--btn-danger-bg);
   color: var(--btn-danger-text);
-  border: 1px solid var(--btn-danger-border);
+  border: none;
 }
 
 /* loading state */
@@ -1966,8 +1974,20 @@ html:not([data-theme="consumer-light"]) .miniapp-popover-panel {
 .btn-transient-success {
   background: var(--btn-success-bg) !important;
   color: var(--btn-success-text) !important;
-  border: 1px solid var(--btn-success-border) !important;
+  border: none !important;
+  opacity: 0.65 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+  box-shadow: none !important;
+  transform: none !important;
   transition: background 0.2s ease;
+}
+
+.btn-transient-success:hover:not(:disabled),
+.btn-transient-success:active:not(:disabled) {
+  filter: none !important;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 .btn-transient-error {
@@ -2892,9 +2912,10 @@ html:not([data-theme="consumer-light"]) .miniapp-popover-panel {
 }
 
 .modal-footer .btn-danger:not(:disabled) {
-  background: var(--color-error);
-  border-color: color-mix(in oklch, var(--color-error) 70%, black 30%);
-  color: var(--color-on-accent);
+  background: var(--btn-danger-bg);
+  border: 1px solid var(--btn-danger-border);
+  color: var(--btn-danger-text);
+  font-weight: 600;
 }
 
 .modal-footer .btn-danger:disabled {
@@ -2916,18 +2937,18 @@ html:not([data-theme="consumer-light"]) .miniapp-popover-panel {
 }
 
 .modal-danger-confirm--enabled {
-  background: var(--color-error);
-  border-width: 1.5px;
-  border-color: color-mix(in oklch, var(--color-error) 72%, black 28%);
-  color: var(--color-on-accent);
+  background: var(--btn-danger-bg);
+  border-width: 1px;
+  border-color: var(--btn-danger-border);
+  color: var(--btn-danger-text);
   opacity: 1;
   font-weight: 600;
 }
 
 .modal-danger-confirm--disabled {
   background: transparent;
-  border-color: color-mix(in oklch, var(--color-error) 30%, transparent);
-  color: color-mix(in oklch, var(--color-error) 35%, transparent);
+  border-color: color-mix(in oklch, var(--btn-danger-border) 30%, transparent);
+  color: color-mix(in oklch, var(--btn-danger-text) 35%, transparent);
   box-shadow: none;
   opacity: 1;
   cursor: not-allowed;
@@ -3594,7 +3615,7 @@ html[data-theme="consumer-dark"] .subscription-cancellation-modal {
   letter-spacing: -0.2px;
   font-family: Inter, var(--font-sans), system-ui, sans-serif;
   font-size: var(--typo-body-sm-size);
-  font-weight: 600;
+  font-weight: 400;
   border-radius: var(--r-sm);
 }
 
@@ -3604,7 +3625,6 @@ html[data-theme="consumer-dark"] .subscription-cancellation-modal {
 
 .miniapp-shell :is(.btn, a.btn):hover:not(:disabled) {
   box-shadow: none;
-  transform: none;
 }
 
 .miniapp-shell :is(.btn, a.btn):focus-visible {
@@ -3628,13 +3648,16 @@ html[data-theme="consumer-dark"] .subscription-cancellation-modal {
   letter-spacing: -0.2px;
   text-transform: none;
   border-radius: var(--r-sm);
-  padding: var(--spacing-3) var(--spacing-5);
+  padding: var(--spacing-4) var(--spacing-5);
   width: 100%;
   box-shadow: none;
 }
 
 .miniapp-shell :is(.btn--primary, .btn-primary, a.btn.btn--primary, a.btn.btn-primary):not(.btn-accent):hover:not(:disabled) {
   background: var(--btn-primary-hover-bg);
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px color-mix(in oklch, var(--btn-primary-bg) 22%, transparent);
 }
 
 .miniapp-shell :is(.btn-accent, a.btn.btn-accent) {
@@ -3651,18 +3674,18 @@ html[data-theme="consumer-dark"] .subscription-cancellation-modal {
 
 .miniapp-shell :is(.btn--secondary, .btn-secondary, a.btn.btn--secondary, a.btn.btn-secondary) {
   background: transparent;
-  border: 1px solid var(--btn-secondary-border);
+  border: none;
   color: var(--btn-secondary-text);
   font-family: Inter, var(--font-sans), system-ui, sans-serif;
-  font-weight: 600;
+  font-weight: 400;
   font-size: var(--typo-body-sm-size);
   letter-spacing: -0.2px;
   text-transform: none;
 }
 
 .miniapp-shell :is(.btn--secondary, .btn-secondary, a.btn.btn--secondary, a.btn.btn-secondary):hover:not(:disabled) {
-  border-color: var(--btn-secondary-hover-border);
   color: var(--btn-secondary-hover-text);
+  background: color-mix(in oklch, var(--btn-secondary-hover-text) 10%, transparent);
 }
 
 .miniapp-shell :is(.btn--danger, .btn-danger, a.btn.btn--danger, a.btn.btn-danger) {
@@ -3680,7 +3703,7 @@ html[data-theme="consumer-dark"] .subscription-cancellation-modal {
   color: var(--btn-external-text);
   border: none;
   font-family: Inter, var(--font-sans), system-ui, sans-serif;
-  font-weight: 600;
+  font-weight: 400;
   font-size: var(--typo-body-sm-size);
   letter-spacing: -0.2px;
   text-transform: none;
@@ -3688,7 +3711,9 @@ html[data-theme="consumer-dark"] .subscription-cancellation-modal {
 }
 
 .miniapp-shell :is(.btn--external, .btn-external, a.btn.btn--external, a.btn.btn-external):hover:not(:disabled) {
-  opacity: 0.88;
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px color-mix(in oklch, var(--btn-external-bg) 20%, transparent);
 }
 
 .miniapp-shell .connect-button {

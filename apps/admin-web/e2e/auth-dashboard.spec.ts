@@ -18,8 +18,7 @@ test.describe("Login and Dashboard", () => {
     test.skip(!ok, "Skipping authenticated flow: valid admin credentials or auth API unavailable.");
     // SPA pages may keep polling; "networkidle" can hang indefinitely.
     await page.waitForLoadState("domcontentloaded");
-    // Dashboard title is "Dashboard"; the "Overview" label is a nav link.
-    await expect(page.getByRole("heading", { name: /Dashboard/i })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole("heading", { name: /Overview|Dashboard/i })).toBeVisible({ timeout: 10000 });
   });
 });
 
@@ -28,8 +27,8 @@ test.describe("Dashboard when authenticated", () => {
     const ok = await login(page, request);
     test.skip(!ok, "Skipping authenticated flow: valid admin credentials or auth API unavailable.");
     await page.goto("");
-    await expect(page.getByRole("heading", { name: /Dashboard/i })).toBeVisible({ timeout: 10000 });
-    const nav = page.getByTestId("admin-nav");
+    await expect(page.getByRole("heading", { name: /Overview|Dashboard/i })).toBeVisible({ timeout: 10000 });
+    const nav = page.getByTestId("admin-sidebar");
     await expect(nav.getByRole("link", { name: "Servers" })).toBeVisible();
     await expect(nav.getByRole("link", { name: "Users" })).toBeVisible();
   });

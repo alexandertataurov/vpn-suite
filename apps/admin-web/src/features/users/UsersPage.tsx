@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useApi } from "@/core/api/context";
 import { useApiQuery } from "@/hooks/api/useApiQuery";
+import { buildUsersPath } from "@/hooks/useUsers";
 import { deviceKeys } from "@/features/devices/services/device.query-keys";
 import { userKeys } from "@/features/users/services/user.query-keys";
 import {
@@ -9,12 +10,12 @@ import {
   Card,
   DataTable,
   EmptyState,
-  ErrorState,
   Input,
   Modal,
   Skeleton,
 } from "@/design-system/primitives";
 import { PageLayout } from "@/layout/PageLayout";
+import { PageErrorState, PageLoadingState } from "@/layout/PageStates";
 import { CardTitle, MetaText } from "@/design-system/typography";
 
 /** Telegram user requisites from backend User.meta.tg (WebApp/bot). */
@@ -145,24 +146,6 @@ function formatRelative(iso: string | null): string {
 }
 
 type BannedFilter = "all" | "true" | "false";
-
-function buildUsersPath(args: {
-  limit: number;
-  offset: number;
-  tgId?: string;
-  email?: string;
-  phone?: string;
-  isBanned?: BannedFilter;
-}): string {
-  const qs = new URLSearchParams();
-  qs.set("limit", String(args.limit));
-  qs.set("offset", String(args.offset));
-  if (args.tgId && args.tgId.trim()) qs.set("tg_id", args.tgId.trim());
-  if (args.email && args.email.trim()) qs.set("email", args.email.trim());
-  if (args.phone && args.phone.trim()) qs.set("phone", args.phone.trim());
-  if (args.isBanned && args.isBanned !== "all") qs.set("is_banned", args.isBanned);
-  return `/users?${qs.toString()}`;
-}
 
 export function UsersPage() {
   const api = useApi();
@@ -433,20 +416,13 @@ export function UsersPage() {
   );
 
   if (isUsersLoading) {
-    return (
-      <PageLayout title="Users" pageClass="users-page" hideHeader>
-        <Skeleton height={32} width="30%" />
-        <Skeleton height={160} />
-      </PageLayout>
-    );
+    return <PageLoadingState title="Users" pageClass="users-page" bodyHeight={160} />;
   }
 
   if (isUsersError) {
     const message = usersError instanceof Error ? usersError.message : "Failed to load users";
     return (
-      <PageLayout title="Users" pageClass="users-page" hideHeader>
-        <ErrorState message={message} onRetry={() => void refetchUsers()} />
-      </PageLayout>
+      <PageErrorState title="Users" pageClass="users-page" message={message} onRetry={() => void refetchUsers()} />
     );
   }
 

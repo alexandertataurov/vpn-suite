@@ -36,12 +36,12 @@ export function NewsPage() {
       setStatus(null);
       toast.showToast({
         variant: "success",
-        title: "Рассылка поставлена в очередь",
+        title: "Broadcast queued",
       });
     } catch {
       toast.showToast({
         variant: "danger",
-        title: "Не удалось поставить рассылку в очередь",
+        title: "Failed to queue broadcast",
       });
     } finally {
       setIsSending(false);
@@ -56,39 +56,39 @@ export function NewsPage() {
     } catch {
       toast.showToast({
         variant: "danger",
-        title: "Не удалось получить статус",
+        title: "Failed to fetch status",
       });
     }
   };
 
   return (
     <PageLayout
-      title="Новости"
-      description="Отправка сообщений всем пользователям через Telegram."
+      title="News"
+      description="Broadcast messages to all users via Telegram."
       pageClass="news-page"
     >
       <section className="card">
         <div className="input-wrap">
-          <label className="input-label">Текст новости (HTML)</label>
+          <label className="input-label">Broadcast message (HTML)</label>
           <textarea
             className="input"
             rows={8}
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="Например: <b>Обновление</b>…"
+            placeholder="Example: <b>Service update</b>..."
           />
           <span className="input-hint">
-            Сообщение будет отправлено всем пользователям. Используйте аккуратно.
+            This message will be sent to all users. Use carefully.
           </span>
         </div>
         <div className="news-page__actions">
           <Button onClick={send} disabled={!canSend}>
-            {isSending ? "Отправка…" : "Отправить всем"}
+            {isSending ? "Sending..." : "Send to all"}
           </Button>
           {broadcastId ? (
             <>
               <Button variant="secondary" onClick={refresh}>
-                Обновить статус
+                Refresh status
               </Button>
               <span className="news-page__id mono">
                 id: {broadcastId}
@@ -98,11 +98,11 @@ export function NewsPage() {
         </div>
         {status ? (
           <div className="card news-page__status">
-            <div>Статус: {status.status}</div>
+            <div>Status: {status.status}</div>
             <div>
-              Отправлено: {status.sent} / {status.total} (ошибок: {status.failed})
+              Sent: {status.sent} / {status.total} (failed: {status.failed})
             </div>
-            {status.last_error ? <div>Последняя ошибка: {status.last_error}</div> : null}
+            {status.last_error ? <div>Last error: {status.last_error}</div> : null}
           </div>
         ) : null}
       </section>

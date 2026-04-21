@@ -42,7 +42,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "Primary action control. Variants: primary, secondary, danger, external. Tones (primary only): default, success, warning, danger. Theme-aware via --btn-* tokens.",
+          "Primary action control. Variants: primary, secondary, danger, external. Danger keeps explicit 1px emphasis border; other variants stay borderless. Theme-aware via --btn-* tokens.",
       },
     },
   },
@@ -87,7 +87,7 @@ export const VariantHierarchy: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Use one primary CTA per screen.",
+        story: "Use one primary CTA per screen. Keep danger visually emphasized and isolated.",
       },
     },
   },
@@ -128,14 +128,14 @@ export const Tones: Story = {
     docs: {
       description: {
         story:
-          "Semantic tones for primary buttons. All use tinted backgrounds. Dark theme: Default = near-white, Success = green tint, Warning = amber tint, Danger = red tint. Light theme: Default = near-black, all tones = pale tinted bg. If Default appears blue in either theme, --btn-primary-bg token is not resolving — check [data-theme] selector scope.",
+          "Semantic tones for primary buttons with borderless presentation. Success is reserved for status feedback; danger tone is informational and does not replace the danger variant for destructive actions.",
       },
     },
   },
   render: () => (
     <StorySection
       title="Primary tones"
-      description="Semantic tones for primary buttons. All use tinted backgrounds."
+      description="Semantic tones for primary buttons. Use danger variant for destructive CTA emphasis."
     >
       <StoryShowcase>
         <WithThemes>
@@ -256,7 +256,7 @@ function StatesStory() {
   return (
     <StorySection
       title="States"
-      description="Loading, disabled, active, success, error. Active uses :active styles (opacity 0.85, scale 0.99)."
+      description="Loading, disabled, active, success, error. Success is rendered as a non-interactive status indicator."
       >
         <StoryShowcase>
           <WithThemes>
@@ -284,7 +284,7 @@ function StatesStory() {
                   transientState={successState}
                   onClick={() => setSuccessState("success")}
                 >
-                  Save changes
+                  Changes saved
                 </Button>
               </div>
               <div className="story-stack story-stack--tight">
@@ -310,7 +310,7 @@ export const States: Story = {
     docs: {
       description: {
         story:
-          "Loading, disabled, active, success, error. Active uses :active styles (opacity 0.85, scale 0.99).",
+          "Loading, disabled, active, success, error. Success state is visually dimmed and non-clickable to communicate status, not action.",
       },
     },
   },

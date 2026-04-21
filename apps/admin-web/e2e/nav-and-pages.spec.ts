@@ -54,19 +54,19 @@ test.describe("Nav and protected pages", () => {
     await page.goto("promo");
     await page.waitForLoadState("domcontentloaded");
     await expect(page).toHaveURL(/\/admin\/?$/);
-    await expect(page.getByRole("heading", { name: /Dashboard/i })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole("heading", { name: /Overview|Dashboard/i })).toBeVisible({ timeout: 10000 });
 
     await page.goto("referrals");
     await page.waitForLoadState("domcontentloaded");
     await expect(page).toHaveURL(/\/admin\/?$/);
-    await expect(page.getByRole("heading", { name: /Dashboard/i })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole("heading", { name: /Overview|Dashboard/i })).toBeVisible({ timeout: 10000 });
   });
 
   test("Dashboard Servers card navigates to servers", async ({ page }) => {
     await page.goto("");
     await page.waitForLoadState("domcontentloaded");
     // Dashboard cards are not links; navigate via sidebar to validate routing.
-    await page.getByTestId("admin-nav").getByRole("link", { name: "Servers" }).click();
+    await page.getByTestId("admin-sidebar").getByRole("link", { name: "Servers" }).click();
     await expect(page).toHaveURL(/\/servers$/);
     await expect(page.getByRole("heading", { name: /Servers/i })).toBeVisible({ timeout: 5000 });
   });
@@ -84,7 +84,7 @@ test.describe("Nav and protected pages", () => {
   test("Dashboard Users card navigates to users", async ({ page }) => {
     await page.goto("");
     await page.waitForLoadState("domcontentloaded");
-    await page.getByTestId("admin-nav").getByRole("link", { name: "Users" }).click();
+    await page.getByTestId("admin-sidebar").getByRole("link", { name: "Users" }).click();
     await expect(page).toHaveURL(/\/users$/);
     await expect(page.getByRole("heading", { name: /Users/i })).toBeVisible({ timeout: 5000 });
   });

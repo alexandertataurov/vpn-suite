@@ -6,14 +6,13 @@ import {
   Badge,
   Button,
   DataTable,
-  EmptyState,
-  ErrorState,
   SectionHeader,
-  Skeleton,
   Widget,
 } from "@/design-system/primitives";
 import { PageLayout } from "@/layout/PageLayout";
+import { PageEmptyState, PageErrorState, PageLoadingState } from "@/layout/PageStates";
 import { KpiValue, KpiValueUnit } from "@/design-system/typography";
+import { telemetryKeys } from "@/features/telemetry/services/telemetry.query-keys";
 import type {
   ContainerSummary,
   ContainerSummaryListOut,
@@ -128,7 +127,7 @@ export function TelemetryPage() {
   const [actionError, setActionError] = useState<string | null>(null);
 
   const { data, isLoading, isError, error, refetch } = useApiQuery<TelemetrySnapshotOut>(
-    ["telemetry", "snapshot"],
+    [...telemetryKeys.snapshot()],
     "/telemetry/snapshot?scope=all&fields=meta,nodes.summary,devices.summary,sessions",
     { retry: 1 }
   );
@@ -140,7 +139,7 @@ export function TelemetryPage() {
   );
 
   const { data: dockerData, refetch: refetchDocker } = useApiQuery<ContainerSummaryListOut>(
-    ["telemetry", "docker", "containers"],
+    [...telemetryKeys.dockerContainers()],
     "/telemetry/docker/containers",
     { retry: 1, staleTime: 30_000 }
   );
@@ -150,7 +149,7 @@ export function TelemetryPage() {
     isLoading: isServicesLoading,
     isError: isServicesError,
   } = useApiQuery<TelemetryServicesOut>(
-    ["telemetry", "services"],
+    [...telemetryKeys.services()],
     "/analytics/telemetry/services",
     { retry: 1, staleTime: 30_000 }
   );
@@ -160,7 +159,7 @@ export function TelemetryPage() {
     isLoading: isAlertsLoading,
     isError: isAlertsError,
   } = useApiQuery<AlertItemListOut>(
-    ["telemetry", "docker", "alerts"],
+    [...telemetryKeys.dockerAlerts()],
     "/telemetry/docker/alerts",
     { retry: 1, staleTime: 15_000 }
   );
@@ -220,31 +219,23 @@ export function TelemetryPage() {
   const otherContainers = dockerByCategory["Other containers"] ?? [];
 
   if (isLoading) {
-    return (
-      <PageLayout title="Telemetry" pageClass="telemetry-page" dataTestId="telemetry-page" hideHeader>
-        <Skeleton height={32} width="30%" />
-        <Skeleton height={120} />
-      </PageLayout>
-    );
+    return <PageLoadingState title="Telemetry" pageClass="telemetry-page" dataTestId="telemetry-page" bodyHeight={120} />;
   }
 
   if (isError) {
     return (
-      <PageLayout title="Telemetry" pageClass="telemetry-page" dataTestId="telemetry-page" hideHeader>
-        <ErrorState
-          message={error instanceof Error ? error.message : "Failed to load telemetry"}
-          onRetry={() => refetch()}
-        />
-      </PageLayout>
+      <PageErrorState
+        title="Telemetry"
+        pageClass="telemetry-page"
+        dataTestId="telemetry-page"
+        message={error instanceof Error ? error.message : "Failed to load telemetry"}
+        onRetry={() => void refetch()}
+      />
     );
   }
 
   if (!data) {
-    return (
-      <PageLayout title="Telemetry" pageClass="telemetry-page" dataTestId="telemetry-page" hideHeader>
-        <EmptyState message="No telemetry data yet." />
-      </PageLayout>
-    );
+    return <PageEmptyState title="Telemetry" pageClass="telemetry-page" dataTestId="telemetry-page" message="No telemetry data yet." />;
   }
 
   const { meta, nodes, devices, sessions } = data;

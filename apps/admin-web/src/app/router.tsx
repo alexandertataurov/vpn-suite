@@ -4,28 +4,12 @@ import { track } from "@vpn-suite/shared";
 import { RootLayout } from "./RootLayout";
 import { ErrorBoundary } from "@/core/errors/Boundary";
 import { Skeleton } from "@/design-system/primitives";
+import { getRouteTitle } from "./route-meta";
 
 const BASE_TITLE = "VPN Suite Admin";
-const ROUTE_TITLES: Record<string, string> = {
-  "/": "Overview",
-  "/login": "Login",
-  "/servers": "Servers",
-  "/servers/nodes": "VPN Nodes",
-  "/telemetry": "Telemetry",
-  "/users": "Users",
-  "/devices": "Devices",
-  "/automation": "Automation",
-  "/revenue": "Revenue",
-  "/billing": "Billing",
-  "/audit": "Audit",
-  "/news": "News",
-  "/settings": "Settings",
-  "/styleguide": "Styleguide",
-};
-
 function DocumentTitle() {
   const { pathname } = useLocation();
-  const pageTitle = ROUTE_TITLES[pathname] ?? "Overview";
+  const pageTitle = getRouteTitle(pathname);
   useEffect(() => {
     document.title = pageTitle === BASE_TITLE ? BASE_TITLE : `${pageTitle} — ${BASE_TITLE}`;
   }, [pageTitle]);

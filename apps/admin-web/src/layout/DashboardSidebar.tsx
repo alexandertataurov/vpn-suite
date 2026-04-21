@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { getSidebarRoutes } from "@/app/route-meta";
 import {
   SidebarNavFooter,
   SidebarNavLink,
@@ -16,12 +17,8 @@ interface SidebarItem {
   icon: JSX.Element;
 }
 
-const ITEMS: SidebarItem[] = [
-  {
-    to: "/",
-    label: "Overview",
-    section: "Monitor",
-    icon: (
+const ICONS: Record<string, JSX.Element> = {
+  "/": (
       <svg
         viewBox="0 0 14 14"
         aria-hidden="true"
@@ -31,13 +28,8 @@ const ITEMS: SidebarItem[] = [
         <rect x="1" y="8" width="5" height="5" rx=".5" />
         <rect x="8" y="8" width="5" height="5" rx=".5" />
       </svg>
-    ),
-  },
-  {
-    to: "/servers",
-    label: "Servers",
-    section: "Monitor",
-    icon: (
+  ),
+  "/servers": (
       <svg
         viewBox="0 0 14 14"
         aria-hidden="true"
@@ -47,26 +39,16 @@ const ITEMS: SidebarItem[] = [
         <line x1="4.5" y1="1.5" x2="4.5" y2="4.5" />
         <line x1="9.5" y1="1.5" x2="9.5" y2="4.5" />
       </svg>
-    ),
-  },
-  {
-    to: "/telemetry",
-    label: "Telemetry",
-    section: "Monitor",
-    icon: (
+  ),
+  "/telemetry": (
       <svg
         viewBox="0 0 14 14"
         aria-hidden="true"
       >
         <polyline points="1 10 4 5.5 7 7.5 10 3 13 5" />
       </svg>
-    ),
-  },
-  {
-    to: "/users",
-    label: "Users",
-    section: "Monitor",
-    icon: (
+  ),
+  "/users": (
       <svg
         viewBox="0 0 14 14"
         aria-hidden="true"
@@ -76,13 +58,8 @@ const ITEMS: SidebarItem[] = [
         <path d="M1.5 11c0-2 1.5-3 3-3s3 1 3 3" />
         <path d="M7 11c0-1.6 1.1-2.4 2.5-2.4S12 9.4 12 11" />
       </svg>
-    ),
-  },
-  {
-    to: "/devices",
-    label: "Devices",
-    section: "Monitor",
-    icon: (
+  ),
+  "/devices": (
       <svg
         viewBox="0 0 14 14"
         aria-hidden="true"
@@ -90,13 +67,8 @@ const ITEMS: SidebarItem[] = [
         <rect x="2" y="3" width="10" height="7" rx="1" />
         <rect x="5" y="10.5" width="4" height="1" rx=".5" />
       </svg>
-    ),
-  },
-  {
-    to: "/automation",
-    label: "Automation",
-    section: "Monitor",
-    icon: (
+  ),
+  "/automation": (
       <svg
         viewBox="0 0 14 14"
         aria-hidden="true"
@@ -107,13 +79,8 @@ const ITEMS: SidebarItem[] = [
         <path d="M5.2 6.4 8.7 4.6" />
         <path d="M5.2 7.6 8.7 9.4" />
       </svg>
-    ),
-  },
-  {
-    to: "/audit",
-    label: "Audit Log",
-    section: "Monitor",
-    icon: (
+  ),
+  "/audit": (
       <svg
         viewBox="0 0 14 14"
         aria-hidden="true"
@@ -122,13 +89,8 @@ const ITEMS: SidebarItem[] = [
         <line x1="5" y1="5.5" x2="9" y2="5.5" />
         <line x1="5" y1="8" x2="7.5" y2="8" />
       </svg>
-    ),
-  },
-  {
-    to: "/revenue",
-    label: "Revenue",
-    section: "Monitor",
-    icon: (
+  ),
+  "/revenue": (
       <svg
         viewBox="0 0 14 14"
         aria-hidden="true"
@@ -136,13 +98,8 @@ const ITEMS: SidebarItem[] = [
         <path d="M2 11.5V8l2.5-3 2.5 2 3-4" />
         <path d="M1 11.5h12" />
       </svg>
-    ),
-  },
-  {
-    to: "/billing",
-    label: "Billing",
-    section: "Monitor",
-    icon: (
+  ),
+  "/billing": (
       <svg
         viewBox="0 0 14 14"
         aria-hidden="true"
@@ -151,13 +108,8 @@ const ITEMS: SidebarItem[] = [
         <rect x="3" y="4" width="8" height="2.2" />
         <line x1="4" y1="8" x2="7" y2="8" />
       </svg>
-    ),
-  },
-  {
-    to: "/settings",
-    label: "Settings",
-    section: "Config",
-    icon: (
+  ),
+  "/settings": (
       <svg
         viewBox="0 0 14 14"
         aria-hidden="true"
@@ -165,13 +117,8 @@ const ITEMS: SidebarItem[] = [
         <circle cx="7" cy="7" r="2" />
         <path d="M7 1v2M7 11v2M1 7h2M11 7h2M2.9 2.9l1.4 1.4M9.7 9.7l1.4 1.4M2.9 11.1l1.4-1.4M9.7 4.3l1.4-1.4" />
       </svg>
-    ),
-  },
-  {
-    to: "/news",
-    label: "News",
-    section: "Config",
-    icon: (
+  ),
+  "/news": (
       <svg
         viewBox="0 0 14 14"
         aria-hidden="true"
@@ -181,9 +128,17 @@ const ITEMS: SidebarItem[] = [
         <line x1="4" y1="7" x2="9" y2="7" />
         <line x1="4" y1="9" x2="8" y2="9" />
       </svg>
-    ),
-  },
-];
+  ),
+};
+
+function getIcon(path: string): JSX.Element {
+  if (path in ICONS) return ICONS[path]!;
+  return (
+    <svg viewBox="0 0 14 14" aria-hidden="true">
+      <circle cx="7" cy="7" r="4" />
+    </svg>
+  );
+}
 
 export const SIDEBAR_NAV_ID = "dashboard-sidebar-nav";
 
@@ -233,7 +188,7 @@ export function DashboardSidebar({
         data-testid="admin-sidebar"
       >
       <SidebarNavSection>Monitor</SidebarNavSection>
-      {ITEMS.filter((i) => i.section === "Monitor").map((item) => (
+      {items.filter((i) => i.section === "Monitor").map((item) => (
         <SidebarNavLink
           key={item.to}
           to={item.to}
@@ -245,7 +200,7 @@ export function DashboardSidebar({
       ))}
 
       <SidebarNavSection>Config</SidebarNavSection>
-      {ITEMS.filter((i) => i.section === "Config").map((item) => (
+      {items.filter((i) => i.section === "Config").map((item) => (
         <SidebarNavLink
           key={item.to}
           to={item.to}
@@ -258,13 +213,27 @@ export function DashboardSidebar({
       <SidebarNavFooter>
         <div className="sb-foot-row">
           <div className="dot" />
-          v2.4.1 · All systems
+          System status
         </div>
         <div className="sb-foot-row sb-foot-row--dim">
-          Uptime 14d 6h 22m
+          See bottom status bar for live metrics
         </div>
       </SidebarNavFooter>
     </SidebarNavRoot>
     </>
   );
 }
+  const items: SidebarItem[] = [
+    ...getSidebarRoutes("Monitor").map((item) => ({
+      to: item.path,
+      label: item.navLabel ?? item.title,
+      section: "Monitor" as const,
+      icon: getIcon(item.path),
+    })),
+    ...getSidebarRoutes("Config").map((item) => ({
+      to: item.path,
+      label: item.navLabel ?? item.title,
+      section: "Config" as const,
+      icon: getIcon(item.path),
+    })),
+  ];

@@ -19,9 +19,9 @@ html[data-theme="consumer-light"],
   --btn-success-border: rgba(22, 101, 52, 0.26);
   --btn-success-text: #166534;
 
-  --btn-warning-bg: rgba(146, 64, 14, 0.13);
-  --btn-warning-border: rgba(146, 64, 14, 0.26);
-  --btn-warning-text: #92400e;
+  --btn-warning-bg: rgba(122, 52, 8, 0.16);
+  --btn-warning-border: rgba(122, 52, 8, 0.34);
+  --btn-warning-text: #7a3408;
 
   --btn-danger-bg: rgba(153, 27, 27, 0.13);
   --btn-danger-border: rgba(153, 27, 27, 0.26);
@@ -44,9 +44,9 @@ html[data-theme="consumer-light"],
 html[data-theme="consumer-dark"],
 [data-theme="consumer-dark"],
 html:not([data-theme]) {
-  --btn-primary-bg: var(--color-accent);
+  --btn-primary-bg: #5b9fed;
   --btn-primary-text: var(--color-on-accent);
-  --btn-primary-hover-bg: var(--color-accent-hover);
+  --btn-primary-hover-bg: #6fb0f2;
 
   --btn-secondary-bg: transparent;
   --btn-secondary-text: rgba(255, 255, 255, 0.55);
@@ -63,9 +63,9 @@ html:not([data-theme]) {
   --btn-warning-border: rgba(251, 191, 36, 0.28);
   --btn-warning-text: #fbbf24;
 
-  --btn-danger-bg: rgba(248, 113, 113, 0.14);
-  --btn-danger-border: rgba(248, 113, 113, 0.28);
-  --btn-danger-text: #f87171;
+  --btn-danger-bg: #4a2020;
+  --btn-danger-border: #c96767;
+  --btn-danger-text: #ffc2c2;
 
   --btn-external-bg: #3b7ef8;
   --btn-external-text: #ffffff;

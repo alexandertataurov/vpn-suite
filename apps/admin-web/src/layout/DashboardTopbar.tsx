@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useAuthStore } from "@/core/auth/store";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { getRouteTitle } from "@/app/route-meta";
 import {
   TopbarAvatar,
   TopbarBrand,
@@ -38,34 +39,12 @@ export function useLiveClock() {
   return time;
 }
 
-const PATH_TITLES: Record<string, string> = {
-  "/": "Overview",
-  "/servers": "Servers",
-  "/telemetry": "Telemetry",
-  "/users": "Users",
-  "/devices": "Devices",
-  "/automation": "Automation",
-  "/revenue": "Revenue",
-  "/billing": "Billing",
-  "/audit": "Audit",
-  "/settings": "Settings",
-  "/styleguide": "Styleguide",
-};
-
 function MenuIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
       <path d="M1 3h14M1 8h14M1 13h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   );
-}
-
-function getPageLabel(pathname: string): string {
-  if (pathname in PATH_TITLES) return PATH_TITLES[pathname] ?? "Admin";
-  for (const path of Object.keys(PATH_TITLES)) {
-    if (path !== "/" && pathname.startsWith(path)) return PATH_TITLES[path] ?? "Admin";
-  }
-  return "Admin";
 }
 
 interface DashboardTopbarProps {
@@ -77,7 +56,7 @@ interface DashboardTopbarProps {
 export function DashboardTopbar({ onOpenMenu, isMenuOpen, navId }: DashboardTopbarProps) {
   const { pathname } = useLocation();
   const time = useLiveClock();
-  const pageLabel = getPageLabel(pathname);
+  const pageLabel = getRouteTitle(pathname);
   const isNarrow = useMediaQuery("(max-width: 768px)");
   const menuExpanded = Boolean(isMenuOpen);
 

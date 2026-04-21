@@ -1,40 +1,48 @@
+import { Link } from "react-router-dom";
+
+interface StatusQuickLink {
+  to: string;
+  label: string;
+}
+
 interface DashboardStatusBarProps {
-  uptimeLabel?: string;
   buildLabel?: string;
   clockText?: string;
+  environmentLabel?: string;
+  clusterLabel?: string;
+  quickLinks?: StatusQuickLink[];
 }
 
 export function DashboardStatusBar({
-  uptimeLabel = "14d 6h 22m",
-  buildLabel = "v2.4.1",
+  buildLabel = "unknown",
   clockText,
+  environmentLabel = "Environment unknown",
+  clusterLabel = "Cluster unavailable",
+  quickLinks = [],
 }: DashboardStatusBarProps) {
   return (
     <div className="statusbar" aria-label="Quick links and system status">
       <div className="sb-ql-label">Quick links</div>
       <div className="sb-links">
-        <button type="button" className="ql">
-          Servers
-        </button>
-        <button type="button" className="ql">
-          Telemetry
-        </button>
-        <button type="button" className="ql">
-          Audit Log
-        </button>
+        {quickLinks.map((item) => (
+          <Link key={item.to} className="ql" to={item.to}>
+            {item.label}
+          </Link>
+        ))}
       </div>
       <div className="sb-right">
         <div className="sb-stat">
-          Uptime <strong>{uptimeLabel}</strong>
+          {environmentLabel}
         </div>
         <div className="sb-sep">·</div>
         <div className="sb-stat">
           Build <strong>{buildLabel}</strong>
         </div>
         <div className="sb-sep">·</div>
+        <div className="sb-stat">{clusterLabel}</div>
+        <div className="sb-sep">·</div>
         <div className="sb-stat">{clockText}</div>
       </div>
     </div>
   );
 }
-

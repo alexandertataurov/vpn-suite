@@ -21,7 +21,6 @@ import {
   Card,
   DataTable,
   EmptyState,
-  ErrorState,
   Input,
   LinkButton,
   Modal,
@@ -32,6 +31,7 @@ import {
   Widget,
 } from "@/design-system/primitives";
 import { PageLayout } from "@/layout/PageLayout";
+import { PageErrorState, PageLoadingState } from "@/layout/PageStates";
 import { KpiValue, MetaText } from "@/design-system/typography";
 import type { DeviceList, DeviceOut, DeviceSummaryOut } from "@/shared/types/admin-api";
 import { ConfigQrModal } from "@/features/devices/ConfigQrModal";
@@ -552,12 +552,7 @@ export function DevicesPage() {
   }, [refetchList, refetchSummary]);
 
   if (isSummaryLoading || isListLoading) {
-    return (
-      <PageLayout title="Devices" pageClass="devices-page" hideHeader>
-        <Skeleton height={32} width="30%" />
-        <Skeleton height={160} />
-      </PageLayout>
-    );
+    return <PageLoadingState title="Devices" pageClass="devices-page" bodyHeight={160} />;
   }
 
   if (isSummaryError || isListError) {
@@ -568,15 +563,15 @@ export function DevicesPage() {
           ? listError.message
           : "Failed to load devices";
     return (
-      <PageLayout title="Devices" pageClass="devices-page" hideHeader>
-        <ErrorState
-          message={message}
-          onRetry={() => {
-            void refetchSummary();
-            void refetchList();
-          }}
-        />
-      </PageLayout>
+      <PageErrorState
+        title="Devices"
+        pageClass="devices-page"
+        message={message}
+        onRetry={() => {
+          void refetchSummary();
+          void refetchList();
+        }}
+      />
     );
   }
 
