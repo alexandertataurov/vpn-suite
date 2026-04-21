@@ -153,8 +153,6 @@ pyjwt==2.11.0
     # via redis
 pyotp==2.9.0
     # via -r requirements.in
-pypng==0.20220715.0
-    # via qrcode
 python-dotenv==1.2.1
     # via
     #   pydantic-settings
@@ -163,7 +161,7 @@ python-jose[cryptography]==3.5.0
     # via -r requirements.in
 pyyaml==6.0.3
     # via uvicorn
-qrcode[pil]==7.4.2
+qrcode[pil]==8.2
     # via -r requirements.in
 redis==5.3.1
     # via -r requirements.in
@@ -199,7 +197,6 @@ typing-extensions==4.15.0
     #   opentelemetry-semantic-conventions
     #   pydantic
     #   pydantic-core
-    #   qrcode
     #   sqlalchemy
     #   starlette
     #   typing-inspection
