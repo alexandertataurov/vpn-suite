@@ -16,7 +16,7 @@ import {
 } from "@/storybook/page-contracts";
 
 const DOC_BODY = [
-  "**Devices** (`/devices`) covers the device hero metrics, list actions, add-device wizard, setup card, config delivery flow, and revoke confirmation.",
+  "**Devices** (`/devices`) covers the device hero metrics, list actions, add-device wizard, setup card, pre-import guidance, config delivery flow, and revoke confirmation.",
   "**Scenarios** (from `page-contracts`) cover ready, empty devices, limit reached, no plan, loading (`me` pending), load error (`me` 500), and session missing.",
   "**Interactions**: the primary CTA opens the wizard; the first row `Device actions → Rename` opens the rename modal; `Device actions → Remove device` opens the revoke confirm modal; config delivery appears after issuing a device and exposes copy/download actions.",
   "Viewport stories use `iphoneSE` and `adminDesktop` to catch layout regressions.",
@@ -128,7 +128,7 @@ export const ActiveDevices = scenarioStory(
 export const EmptyDeviceList = scenarioStory(
   "No devices yet",
   emptyDevicesScenario,
-  "Subscribed user awaiting first issuance — empty list + setup guidance.",
+  "Subscribed user awaiting first issuance — empty list + setup guidance that points to the native app handoff.",
 );
 
 export const DeviceLimitReached = scenarioStory(
@@ -140,7 +140,7 @@ export const DeviceLimitReached = scenarioStory(
 export const PlanRequired = scenarioStory(
   "Plan required",
   noPlanScenario,
-  "No subscription — gating copy before add-device actions.",
+  "No subscription — gating copy before add-device actions and config import.",
 );
 
 export const Loading = scenarioStory(
@@ -174,6 +174,20 @@ export const ViewportWide = scenarioStory(
   "Wide layout — cards and device table spacing.",
   VIEW_WIDE,
 );
+
+export const ViewportNarrowConfigDelivery: Story = {
+  name: "Viewport · narrow (config delivery)",
+  render: () => renderConfigDeliveryDevices(),
+  parameters: {
+    ...VIEW_NARROW,
+    docs: {
+      description: {
+        story:
+          "320px — config delivery branch after a device is issued; checks copy/download buttons and raw-config expansion in the smallest phone frame.",
+      },
+    },
+  },
+};
 
 export const InteractiveAddDeviceWizard: Story = {
   name: "Interactive · add device wizard",

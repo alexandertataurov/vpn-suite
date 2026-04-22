@@ -19,9 +19,9 @@ const supportFaqEndpointErrorScenario = {
 } satisfies MockScenario;
 
 const DOC_BODY = [
-  "**Support** (`/support`) combines the contact card, quick paths, stepped troubleshooter, and FAQ disclosures into one reviewable contract.",
+  "**Support** (`/support`) combines the contact card, diagnostics handoff, quick paths, stepped troubleshooter, and FAQ disclosures into one reviewable contract.",
   "**States** cover ready, `me` + `access` loading, `me` error, logged out, and the inline FAQ endpoint failure (`supportFaq` 500).",
-  "FAQ button text matches **`support.faq_item_connection_title`** (EN: **VPN not connecting**). The troubleshooter primary action on step 1 is **`support.troubleshooter_step_access_next`** (EN: **Access is active**).",
+  "FAQ button text matches **`support.faq_item_connection_title`** (EN: **VPN not connecting**). The diagnostics card is the handoff surface before chat escalation. The troubleshooter primary action on step 1 is **`support.troubleshooter_step_access_next`** (EN: **Access is active**).",
 ].join("\n\n");
 
 const VIEW_NARROW = { viewport: { defaultViewport: "mobile390" as const } };
@@ -58,7 +58,7 @@ export const HelpCenter: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Full page: hero, quick paths, troubleshooter card, FAQ list.",
+        story: "Full page: hero, diagnostics handoff, quick paths, troubleshooter card, FAQ list.",
       },
     },
   },

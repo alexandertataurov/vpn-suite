@@ -71,6 +71,7 @@
 .nd-cta {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: var(--spacing-1);
   font-family: var(--font-sans);
   font-size: var(--font-size-xs);
@@ -81,7 +82,8 @@
   border: var(--border-width-hairline) solid var(--color-border);
   border-radius: var(--radius-full);
   padding: 0 var(--spacing-3);
-  min-height: var(--height-btn-md, 36px);
+  min-height: var(--size-touch-target);
+  min-width: var(--size-touch-target);
   flex-shrink: 0;
   white-space: nowrap;
   cursor: pointer;
@@ -154,6 +156,7 @@
 
   .nd-cta {
     margin-left: calc(var(--spacing-10) + var(--spacing-3));
+    min-width: min(100%, var(--size-touch-target));
   }
 }
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { RefObject } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { WebAppIssueDeviceResponse, WebAppUsageResponse } from "@vpn-suite/shared";
@@ -30,6 +30,13 @@ import {
 } from "@/page-models/helpers";
 import { getUpgradeOfferForIntent, type PlanLikeForUpsell } from "@/page-models/upsell";
 import { clamp, DEFAULT_USAGE_SOFT_CAP_BYTES } from "@/page-models/plan-helpers";
+import {
+  buildGuidanceTelemetryContext,
+  buildSupportContext,
+  useGuidanceContextId,
+  type GuidanceFlowStage,
+} from "@/features/support/support-context";
+import { telegramClient } from "@/lib/telegram/telegramCoreClient";
 
 function formatIssuedAt(value: string, locale: SupportedLocale): string {
   const resolvedLocale = locale === "ru" ? "ru-RU" : "en-US";
@@ -41,6 +48,15 @@ function formatIssuedAt(value: string, locale: SupportedLocale): string {
     year: "numeric",
   }).format(date);
 }
+
+const DEVICE_GUIDANCE_STEPS = {
+  device_issue_started: { flowStage: "device_setup", stepIndex: 0, stepId: "add_device" },
+  config_download: { flowStage: "device_setup", stepIndex: 1, stepId: "deliver_config" },
+  device_issue_success: { flowStage: "device_setup", stepIndex: 2, stepId: "config_ready" },
+  connect_confirmed: { flowStage: "device_setup", stepIndex: 3, stepId: "connect_confirmed" },
+  device_revoked: { flowStage: "device_management", stepIndex: 0, stepId: "revoke_device" },
+  device_limit_reached: { flowStage: "device_limit", stepIndex: 0, stepId: "device_limit" },
+} as const;
 
 export interface DevicesPageModel {
   header: StandardPageHeader;
@@ -122,10 +138,31 @@ export function useDevicesPageModel(): DevicesPageModel {
   const configSectionRef = useRef<HTMLDivElement>(null);
   const { impact, notify } = useTelegramHaptics();
   const { t, locale } = useI18n();
+  const guidanceContextId = useGuidanceContextId();
+  const platform = telegramClient.getPlatform();
   const activeSub = useMemo(() => getActiveSubscription(data), [data]);
   const activeDevices = useMemo(() => getActiveDevices(data), [data]);
   const recommendedRoute = data?.routing?.recommended_route ?? "/devices";
   const routeReason = (data?.routing?.reason ?? "unknown") as RecommendedRouteReason;
+  const buildGuidancePayload = useCallback(
+    (
+      lastAction: string,
+      flowStage: GuidanceFlowStage,
+      stepIndex: number | null,
+      stepId: string | null,
+    ) => {
+      const context = buildSupportContext({
+        session: data,
+        currentRoute: "/devices",
+        lastAction,
+        platform,
+        locale,
+        guidanceContextId,
+      });
+      return buildGuidanceTelemetryContext(context, flowStage, stepIndex, stepId);
+    },
+    [data, platform, locale, guidanceContextId],
+  );
 
   const plansQuery = useQuery<PlansResponse>({
     queryKey: [...webappQueryKeys.plans()],
@@ -172,7 +209,15 @@ export function useDevicesPageModel(): DevicesPageModel {
         }
       }
       queryClient.invalidateQueries({ queryKey: [...webappQueryKeys.me()] });
-      track("config_download", { screen_name: "devices" });
+      track("config_download", {
+        screen_name: "devices",
+        ...buildGuidancePayload(
+          "config_download",
+          DEVICE_GUIDANCE_STEPS.config_download.flowStage,
+          DEVICE_GUIDANCE_STEPS.config_download.stepIndex,
+          DEVICE_GUIDANCE_STEPS.config_download.stepId,
+        ),
+      });
       if (response.peer_created) {
         addToast(t("devices.toast_device_added"), "success");
         notify("success");
@@ -187,8 +232,14 @@ export function useDevicesPageModel(): DevicesPageModel {
       if (/device limit/i.test(getErrorMessage(err, ""))) {
         track("device_limit_reached", {
           screen_name: "devices",
-          device_limit: activeSub?.device_limit ?? undefined,
           devices_used: activeDevices.length,
+          ...buildGuidancePayload(
+            "device_limit_reached",
+            DEVICE_GUIDANCE_STEPS.device_limit_reached.flowStage,
+            DEVICE_GUIDANCE_STEPS.device_limit_reached.stepIndex,
+            DEVICE_GUIDANCE_STEPS.device_limit_reached.stepId,
+          ),
+          device_limit: activeSub?.device_limit ?? undefined,
         });
       }
     },
@@ -201,7 +252,15 @@ export function useDevicesPageModel(): DevicesPageModel {
     onSuccess: (res) => {
       setIssuedConfig(res);
       queryClient.invalidateQueries({ queryKey: [...webappQueryKeys.me()] });
-      track("device_issue_success", { screen_name: "devices" });
+      track("device_issue_success", {
+        screen_name: "devices",
+        ...buildGuidancePayload(
+          "device_issue_success",
+          DEVICE_GUIDANCE_STEPS.device_issue_success.flowStage,
+          DEVICE_GUIDANCE_STEPS.device_issue_success.stepIndex,
+          DEVICE_GUIDANCE_STEPS.device_issue_success.stepId,
+        ),
+      });
       addToast(t("devices.toast_device_replaced"), "success");
       notify("success");
     },
@@ -217,7 +276,15 @@ export function useDevicesPageModel(): DevicesPageModel {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [...webappQueryKeys.me()] });
-      track("connect_confirmed", { screen_name: "devices" });
+      track("connect_confirmed", {
+        screen_name: "devices",
+        ...buildGuidancePayload(
+          "connect_confirmed",
+          DEVICE_GUIDANCE_STEPS.connect_confirmed.flowStage,
+          DEVICE_GUIDANCE_STEPS.connect_confirmed.stepIndex,
+          DEVICE_GUIDANCE_STEPS.connect_confirmed.stepId,
+        ),
+      });
       addToast(t("devices.toast_connection_confirmed"), "success");
       notify("success");
     },
@@ -234,7 +301,15 @@ export function useDevicesPageModel(): DevicesPageModel {
     onSuccess: () => {
       addToast(t("devices.toast_device_revoked"), "success");
       notify("success");
-      track("device_revoked", { screen_name: "devices" });
+      track("device_revoked", {
+        screen_name: "devices",
+        ...buildGuidancePayload(
+          "device_revoked",
+          DEVICE_GUIDANCE_STEPS.device_revoked.flowStage,
+          DEVICE_GUIDANCE_STEPS.device_revoked.stepIndex,
+          DEVICE_GUIDANCE_STEPS.device_revoked.stepId,
+        ),
+      });
       setRevokeId(null);
       queryClient.invalidateQueries({ queryKey: [...webappQueryKeys.me()] });
     },
@@ -379,7 +454,15 @@ export function useDevicesPageModel(): DevicesPageModel {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      track("config_download", { screen_name: "devices" });
+      track("config_download", {
+        screen_name: "devices",
+        ...buildGuidancePayload(
+          "config_download",
+          DEVICE_GUIDANCE_STEPS.config_download.flowStage,
+          DEVICE_GUIDANCE_STEPS.config_download.stepIndex,
+          DEVICE_GUIDANCE_STEPS.config_download.stepId,
+        ),
+      });
     } catch {
       addToast(t("devices.toast_download_failed"), "error");
     }
@@ -390,7 +473,15 @@ export function useDevicesPageModel(): DevicesPageModel {
     try {
       await navigator.clipboard.writeText(configText);
       notify("success");
-      track("config_download", { screen_name: "devices" });
+      track("config_download", {
+        screen_name: "devices",
+        ...buildGuidancePayload(
+          "config_download",
+          DEVICE_GUIDANCE_STEPS.config_download.flowStage,
+          DEVICE_GUIDANCE_STEPS.config_download.stepIndex,
+          DEVICE_GUIDANCE_STEPS.config_download.stepId,
+        ),
+      });
       return true;
     } catch {
       addToast(t("devices.toast_copy_failed"), "error");
@@ -401,7 +492,15 @@ export function useDevicesPageModel(): DevicesPageModel {
 
   const handleIssueDevice = (deviceName?: string) => {
     impact("medium");
-    track("device_issue_started", { screen_name: "devices" });
+    track("device_issue_started", {
+      screen_name: "devices",
+      ...buildGuidancePayload(
+        "device_issue_started",
+        DEVICE_GUIDANCE_STEPS.device_issue_started.flowStage,
+        DEVICE_GUIDANCE_STEPS.device_issue_started.stepIndex,
+        DEVICE_GUIDANCE_STEPS.device_issue_started.stepId,
+      ),
+    });
     issueMutation.mutate(deviceName);
   };
 

@@ -25,27 +25,19 @@ import {
   Stack,
   StatusChip,
 } from "@/design-system";
-import { TroubleshooterFlowCard } from "@/design-system/recipes";
+import { SupportDiagnosticsCard, TroubleshooterFlowCard } from "@/design-system/recipes";
 import { FallbackScreen } from "@/design-system/patterns";
 import { useSupportPageModel } from "@/features/support/model/useSupportPageModel";
 import { useI18n } from "@/hooks/useI18n";
-import {
-  getSupportContactHref,
-} from "@/config/env";
 import { buildSupportLegalQuickLinks, getSupportCardDescription } from "@/lib/help-resources/resources";
 
 export function SupportPage() {
   const navigate = useNavigate();
   const model = useSupportPageModel();
-  const supportHref = getSupportContactHref();
   const { t, tOr } = useI18n();
   const { openLink } = useOpenLink();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const legalQuickLinks = buildSupportLegalQuickLinks({ t, openLink });
-
-  const openTelegramSupport = () => {
-    if (supportHref) openLink(supportHref);
-  };
 
   if (model.pageState.status === "empty") {
     return <SessionMissing />;
@@ -83,8 +75,10 @@ export function SupportPage() {
     );
   }
 
-  const supportStatus = supportHref ? "active" : "offline";
-  const statusLabel = supportHref ? tOr("common.status_online", "Online") : tOr("common.status_offline", "Offline");
+  const supportStatus = model.supportHref ? "active" : "offline";
+  const statusLabel = model.supportHref
+    ? tOr("common.status_online", "Online")
+    : tOr("common.status_offline", "Offline");
 
   return (
     <PageScaffold>
@@ -117,13 +111,26 @@ export function SupportPage() {
               showChevron={false}
             />
           </CardRow>
-          {!supportHref && (
+          {!model.supportHref && (
             <InlineAlert
               variant="warning"
               label={t("support.support_link_unavailable_title")}
               message={t("support.support_link_unavailable_message")}
             />
           )}
+
+          <SectionLabel label={t("support.diagnostics_title")} />
+          <p className="section-desc">{t("support.diagnostics_subtitle")}</p>
+          <SupportDiagnosticsCard
+            eyebrow={t("support.contact_card_title")}
+            title={t("support.diagnostics_title")}
+            subtitle={t("support.diagnostics_subtitle")}
+            stats={model.diagnosticStats}
+            copyLabel={t("support.diagnostics_copy")}
+            contactLabel={t("support.diagnostics_contact")}
+            onCopy={() => void model.copyDiagnostics()}
+            onContactSupport={() => void model.contactSupport()}
+          />
 
           {/* Common Fixes */}
           <SectionLabel label={t("support.quick_paths_title")} />
@@ -165,8 +172,8 @@ export function SupportPage() {
               iconVariant="default"
               label={t("settings.contact_support_title")}
               subtitle={t("support.quick_paths_support_description")}
-              onClick={supportHref ? openTelegramSupport : undefined}
-              showChevron={Boolean(supportHref)}
+              onClick={model.supportHref ? () => void model.contactSupport() : undefined}
+              showChevron={Boolean(model.supportHref)}
             />
           </CardRow>
 

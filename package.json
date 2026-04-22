@@ -22,6 +22,7 @@
     "test:e2e": "pnpm --filter admin test:e2e",
     "test:e2e:ci": "pnpm --filter admin test:e2e:dev",
     "test:e2e:miniapp": "pnpm --filter miniapp test:e2e",
+    "test:responsive:audit:miniapp": "pnpm --filter miniapp run test:responsive:audit",
     "test:e2e:ui": "pnpm --filter admin test:e2e:ui",
     "e2e:admin": "pnpm --filter admin test:e2e",
     "e2e:miniapp": "pnpm --filter miniapp test:e2e",

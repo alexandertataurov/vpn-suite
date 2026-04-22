@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Route } from "react-router-dom";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 import { PlanPage } from "@/features/plan/PlanPage";
 import {
   type MockScenario,
@@ -138,3 +139,23 @@ export const ViewportWide = scenarioStory(
   "Wider canvas — multi-column layout and section gutters.",
   VIEW_WIDE,
 );
+
+export const InteractiveBillingPeriodToggle: Story = {
+  name: "Interactive · billing period toggle",
+  render: () => renderPlan(readyScenario),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const monthlyOption = await canvas.findByRole("radio", { name: "Monthly" });
+    await userEvent.click(monthlyOption);
+    await waitFor(() => {
+      expect(monthlyOption).toHaveAttribute("aria-checked", "true");
+    });
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: "Switches the billing period control to prove the plan page updates its contract state.",
+      },
+    },
+  },
+};

@@ -1,11 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-
-const VIEWPORTS = [
-  { name: "mobile-360", width: 360, height: 800 },
-  { name: "mobile-375", width: 375, height: 812 },
-  { name: "mobile-430", width: 430, height: 932 },
-  { name: "mobile-landscape", width: 844, height: 390 },
-] as const;
+import { RESPONSIVE_VIEWPORTS } from "./responsive-matrix";
 
 const ROUTES = [
   { path: "/", readyText: /Manage Devices|Setup Required|Renew Subscription|Invite Friends/i },
@@ -295,19 +289,19 @@ test.describe("Miniapp Visual Regression", () => {
     await injectTelegram(page);
     await mockApi(page);
 
-    for (const viewport of VIEWPORTS) {
+    for (const viewport of RESPONSIVE_VIEWPORTS) {
       await page.setViewportSize({ width: viewport.width, height: viewport.height });
 
       for (const route of ROUTES) {
-        const url = route.path === "/"
-          ? "/webapp/?tgWebAppData=e2e-test"
-          : `/webapp${route.path}?tgWebAppData=e2e-test`;
+        const url =
+          route.path === "/" ? "/webapp/?tgWebAppData=e2e-test" : `/webapp${route.path}?tgWebAppData=e2e-test`;
         await page.goto(url);
         await expect(page.getByText(route.readyText).first()).toBeVisible({ timeout: 15000 });
         await page.waitForTimeout(300);
 
         const routeId = route.path === "/" ? "home" : route.path.replaceAll("/", "-").replace(/^-/, "");
-        await expect(page).toHaveScreenshot(`spacex-${routeId}-${viewport.name}.png`, {
+        const viewportId = viewport.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+        await expect(page).toHaveScreenshot(`spacex-${routeId}-${viewportId}.png`, {
           fullPage: true,
           maxDiffPixels: 1600,
           maxDiffPixelRatio: 0.005,

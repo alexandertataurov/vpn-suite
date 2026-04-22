@@ -16,6 +16,7 @@ Single source for VPN Suite frontend: apps, design system, components, tables, t
 | **Adaptive UI** | [adaptive-ui.md](adaptive-ui.md) · [adaptive-ui-test-plan.md](adaptive-ui-test-plan.md) |
 | **Miniapp layout** | [miniapp-layout-architecture.md](miniapp-layout-architecture.md) |
 | **Miniapp app overview** | [miniapp-app.md](miniapp-app.md) |
+| **Miniapp guidance system** | [miniapp-guidance-system.md](miniapp-guidance-system.md) |
 | **Miniapp design system** | [miniapp-design-system-overview.md](miniapp-design-system-overview.md) · [miniapp-design-system/](miniapp-design-system/) |
 | **Admin design system** | [admin-design-system/README.md](admin-design-system/README.md) |
 | **Navigation catalog** | [navigation-patterns-catalog.md](navigation-patterns-catalog.md) |
@@ -95,6 +96,7 @@ Single source for VPN Suite frontend: apps, design system, components, tables, t
 |-----|---------|
 | [admin-design-system/README.md](admin-design-system/README.md) | Migrated admin design-system docs, QA checklists, and accessibility notes |
 | [miniapp-app.md](miniapp-app.md) | Miniapp app entrypoint, Storybook contract, run commands |
+| [miniapp-guidance-system.md](miniapp-guidance-system.md) | Current vs target user journeys, guidance surfaces, copy, and support handoff |
 | [miniapp-design-system-overview.md](miniapp-design-system-overview.md) | Miniapp design-system overview and doc map |
 | [miniapp-design-system/README.md](miniapp-design-system/README.md) | Canonical miniapp design-system guide |
 

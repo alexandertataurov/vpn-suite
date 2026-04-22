@@ -6,7 +6,7 @@ export interface SettingsButtonProps extends Omit<ButtonHTMLAttributes<HTMLButto
   onClick: () => void;
 }
 
-/** 34×34 circular settings gear button for profile row. */
+/** 48×48 circular settings gear button for profile row. */
 export function SettingsButton({ onClick, className = "", "aria-label": ariaLabel, ...props }: SettingsButtonProps) {
   const { t } = useI18n();
   return (

@@ -94,18 +94,24 @@ export function OnboardingStepCard({
 }: OnboardingStepCardProps) {
   const { t } = useI18n();
 
-  const primaryLabel =
-    step.id === "intro"
-      ? t("onboarding.step_intro_cta")
-      : step.id === "install_app"
-        ? appAlreadyInstalled ? t("onboarding.continue") : t("onboarding.step_install_cta")
-        : step.id === "get_config"
-          ? hasActivePlan
-            ? t("onboarding.go_to_devices")
-            : t("onboarding.choose_plan")
-          : step.id === "open_vpn"
-            ? t("onboarding.open_amneziavpn")
-            : t("onboarding.step_confirm_primary");
+  function getPrimaryLabel(): string {
+    switch (step.id) {
+      case "intro":
+        return t("onboarding.step_intro_cta");
+      case "install_app":
+        return appAlreadyInstalled ? t("onboarding.step_install_ready_cta") : t("onboarding.step_install_cta");
+      case "get_config":
+        return hasActivePlan ? t("onboarding.go_to_devices") : t("onboarding.choose_plan");
+      case "open_vpn":
+        return t("onboarding.open_amneziavpn");
+      case "confirm_connected":
+        return t("onboarding.step_confirm_primary");
+      default:
+        return t("onboarding.step_confirm_primary");
+    }
+  }
+
+  const primaryLabel = getPrimaryLabel();
 
   const renderStepContent = () => {
     switch (step.id) {

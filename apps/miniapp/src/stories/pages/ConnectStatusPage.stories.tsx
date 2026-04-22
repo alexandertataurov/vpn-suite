@@ -198,3 +198,25 @@ export const ViewportNarrow = scenarioStory(
   "320px — verify card stacks and primary actions.",
   VIEW_NARROW,
 );
+
+export const InteractiveConfirmSetup: Story = {
+  name: "Interactive · confirm setup",
+  render: () => renderConnect(pendingConfirmationScenario),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const confirmButton = await canvas.findByRole("button", { name: "Confirm setup" });
+    await userEvent.click(confirmButton);
+    await waitFor(() => {
+      expect(canvas.getByText("Access ready")).toBeInTheDocument();
+      expect(canvas.queryByRole("button", { name: "Confirm setup" })).not.toBeInTheDocument();
+    });
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Clicks the pending-summary CTA in the story-local confirmation branch, then asserts the page flips to the confirmed summary state.",
+      },
+    },
+  },
+};

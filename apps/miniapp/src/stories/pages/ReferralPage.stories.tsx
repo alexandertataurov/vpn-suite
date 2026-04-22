@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import type { WebAppMeResponse } from "@vpn-suite/shared";
 import type { PlanItem, PlansResponse } from "@/api";
 import { Route } from "react-router-dom";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 import { ReferralPage } from "@/features/referral/ReferralPage";
 import {
   type MockScenario,
@@ -19,6 +20,7 @@ const DOC_BODY = [
 ].join("\n\n");
 
 const VIEW_NARROW = { viewport: { defaultViewport: "mobile390" as const } };
+const VIEW_WIDE = { viewport: { defaultViewport: "desktop" as const } };
 
 const baseReadyMe = readyScenario.responses?.me as WebAppMeResponse;
 const basePlans = readyScenario.responses?.plans as PlansResponse;
@@ -162,3 +164,61 @@ export const ViewportNarrow = scenarioStory(
   "320px (**iphoneSE**) — referral layout, stats block, and share card at narrow width.",
   VIEW_NARROW,
 );
+
+export const ViewportWide = scenarioStory(
+  "Viewport · wide",
+  readyScenario,
+  "Desktop-width frame — share card, reward stats, and referral upsell remain readable at wider canvas sizes.",
+  VIEW_WIDE,
+);
+
+export const InteractiveCopyReferralLink: Story = {
+  name: "Interactive · copy referral link",
+  render: () => renderReferral(readyScenario),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const previewDocument = canvasElement.ownerDocument;
+    const originalClipboard = previewDocument.defaultView?.navigator.clipboard;
+    const clipboardWriteText = async () => undefined;
+
+    try {
+      Object.defineProperty(previewDocument.defaultView!.navigator, "clipboard", {
+        configurable: true,
+        value: { writeText: clipboardWriteText },
+      });
+    } catch {
+      if (previewDocument.defaultView?.navigator.clipboard) {
+        previewDocument.defaultView.navigator.clipboard.writeText = clipboardWriteText;
+      }
+    }
+
+    const copyButton = await canvas.findByRole("button", { name: "Copy link" });
+    await userEvent.click(copyButton);
+
+    await waitFor(() => {
+      const shareSurface = previewDocument.querySelector(".referral-share-card__surface");
+      expect(shareSurface).toHaveAttribute("data-copied", "true");
+      expect(canvas.getByText("https://t.me/vpn_suite_bot?startapp=abc")).toBeInTheDocument();
+      expect(canvas.getByText("Your referrals")).toBeInTheDocument();
+    });
+
+    if (originalClipboard != null) {
+      try {
+        Object.defineProperty(previewDocument.defaultView!.navigator, "clipboard", {
+          configurable: true,
+          value: originalClipboard,
+        });
+      } catch {
+        // Ignore cleanup failures in Storybook test environments.
+      }
+    }
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Copies the invite link, then asserts the referral share surface stays mounted and marks itself as copied without losing the stats block.",
+      },
+    },
+  },
+};

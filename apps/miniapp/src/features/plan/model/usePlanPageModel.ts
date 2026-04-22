@@ -221,6 +221,7 @@ export function usePlanPageModel(billingPeriod: BillingPeriod) {
       activeDeviceCount,
       atDeviceLimit,
       canShowRenew,
+      isGraceActive,
       showUpsellExpiry,
       showUpsellTrialEnd,
       isSubscribed,

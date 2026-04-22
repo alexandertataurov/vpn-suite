@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { TelegramLoadingScreen } from "@/app/TelegramLoadingScreen";
 import {
   BootLoadingScreen,
@@ -8,6 +8,7 @@ import {
 } from "@/app/bootstrap/BootScreens";
 import { StorySection } from "@/design-system";
 import { pageStoryParameters } from "@/storybook/page-contracts";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 
 const DOC_BODY = [
   "**Bootstrap surfaces** shown outside normal page routes: Telegram Suspense fallback, session load, brand splash, and fatal boot error.",
@@ -43,6 +44,8 @@ const meta = {
 export default meta;
 
 type Story = StoryObj<typeof meta>;
+
+const VIEW_NARROW = { viewport: { defaultViewport: "mobile390" as const } };
 
 /** Sets consumer theme tokens for bootstrap-only stories; clears on unmount to avoid polluting other docs/canvas stories. */
 function ThemeWrapper({
@@ -125,6 +128,45 @@ export const BootstrapLoadingSlowNetwork: Story = {
   },
 };
 
+export const InteractiveSlowNetworkRetry: Story = {
+  name: "Interactive · slow network retry",
+  render: (args) => {
+    function RetryHarness() {
+      const [retryCount, setRetryCount] = useState(0);
+      return (
+        <ThemeWrapper theme={args.theme ?? "dark"}>
+          <StorySection
+            title="BootLoadingScreen (slow)"
+            description="Bootstrap retry surface with visible retry counter for contract verification."
+          >
+            <div className="boot-retry-harness">
+              <BootLoadingScreen slowNetwork onRetry={() => setRetryCount((value) => value + 1)} />
+              <p aria-live="polite">Retries: {retryCount}</p>
+            </div>
+          </StorySection>
+        </ThemeWrapper>
+      );
+    }
+
+    return <RetryHarness />;
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(await canvas.findByRole("button", { name: "Retry connection" }));
+    await waitFor(() => {
+      expect(canvas.getByText("Retries: 1")).toBeInTheDocument();
+    });
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Clicks the slow-network bootstrap retry control and asserts the harness observes the retry callback.",
+      },
+    },
+  },
+};
+
 export const BrandSplash: Story = {
   name: "Brand splash",
   render: (args) => (
@@ -138,6 +180,25 @@ export const BrandSplash: Story = {
     docs: {
       description: {
         story: "Logo and tagline splash screen. Check both themes via Controls.",
+      },
+    },
+  },
+};
+
+export const ViewportNarrowBrandSplash: Story = {
+  name: "Viewport · narrow (splash)",
+  render: (args) => (
+    <ThemeWrapper theme={args.theme ?? "dark"}>
+      <StorySection title="BrandSplashScreen" description="Mobile-width splash frame for the earliest bootstrap surface.">
+        <BrandSplashScreen />
+      </StorySection>
+    </ThemeWrapper>
+  ),
+  parameters: {
+    ...VIEW_NARROW,
+    docs: {
+      description: {
+        story: "Mobile-width splash state. Use this to confirm the brand frame and copy spacing at 390px.",
       },
     },
   },

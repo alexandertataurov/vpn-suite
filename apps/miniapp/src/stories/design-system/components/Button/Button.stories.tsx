@@ -58,7 +58,7 @@ const meta = {
       control: "select",
       options: ["primary", "secondary", "danger", "external"],
     },
-    size: { control: "select", options: ["sm", "md"] },
+    size: { control: "select", options: ["sm", "md", "lg"] },
     tone: { control: "select", options: ["default", "success", "warning", "danger"] },
     loading: { control: "boolean" },
     fullWidth: { control: "boolean" },
@@ -168,11 +168,17 @@ export const Sizes: Story = {
           <Button variant="primary" size="md">
             Primary md
           </Button>
+          <Button variant="primary" size="lg">
+            Primary lg
+          </Button>
           <Button variant="primary" size="sm">
             Primary sm
           </Button>
           <Button variant="secondary" size="md">
             Secondary md
+          </Button>
+          <Button variant="secondary" size="lg">
+            Secondary lg
           </Button>
           <Button variant="secondary" size="sm">
             Secondary sm

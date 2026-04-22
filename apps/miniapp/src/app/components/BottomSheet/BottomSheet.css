@@ -146,10 +146,10 @@
 }
 
 .bs-close {
-  width: var(--spacing-8);
-  height: var(--spacing-8);
-  min-width: var(--spacing-8);
-  min-height: unset;
+  width: var(--size-touch-target);
+  height: var(--size-touch-target);
+  min-width: var(--size-touch-target);
+  min-height: var(--size-touch-target);
   border-radius: var(--radius-full);
   border: none;
   background: transparent;

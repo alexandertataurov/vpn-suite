@@ -33,11 +33,14 @@ pnpm run design:check
 pnpm run storybook
 pnpm run test:e2e:local
 pnpm run test:e2e:mock
+pnpm run test:responsive:audit
 ```
 
 Full CI-style check: `pnpm run ci` (see [package.json](package.json) for all scripts).
 
-`test:e2e:local` and `test:e2e:mock` automatically include local Playwright shared-lib fallback from `~/.local/pwlibs` when present.
+`test:e2e:local`, `test:e2e:mock`, and `test:responsive:audit` automatically include local Playwright shared-lib fallback from `~/.local/pwlibs` when present. On Linux, the wrapper can bootstrap missing Chromium shared libraries into that directory without `sudo`.
+
+Responsive audit output is written to `test-results/responsive-audit/` and includes the generated ledger (`ledger.md` / `ledger.json`) plus Playwright screenshots from failing cases.
 
 ## Source layout (`src/`)
 

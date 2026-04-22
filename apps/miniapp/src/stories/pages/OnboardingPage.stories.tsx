@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Route } from "react-router-dom";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 import { OnboardingPage } from "@/features/onboarding/OnboardingPage";
 import {
   type MockScenario,
@@ -11,7 +12,7 @@ import {
 } from "@/storybook/page-contracts";
 
 const DOC_BODY = [
-  "**Onboarding** (`/onboarding`) is the stepped pre-app flow: welcome, install, plan or device setup, VPN, and confirmation.",
+  "**Onboarding** (`/onboarding`) is the guided two-app flow: get access, install if needed, import the config, connect in AmneziaVPN, and confirm setup.",
   "Matches `AppRoutes`: `/onboarding` with `OnboardingPage` whenever bootstrap `phase !== \"app_ready\"` (the sandbox forces `phase: \"onboarding\"`).",
   "`OnboardingSandbox` sets `initialEntries: ['/onboarding']` and syncs bootstrap `onboardingStep` to the `step` prop so every story is a stable visual slice.",
   "Use these stories alongside **Home** and **Devices** to validate the handoff after onboarding completes.",
@@ -56,7 +57,7 @@ export const StepWelcome: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Intro hero and first CTA — no subscription assumptions yet.",
+        story: "Intro hero and first CTA — explains the two-app model before any plan decision.",
       },
     },
   },
@@ -68,7 +69,7 @@ export const StepInstallApp: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Client install guidance and store/deep-link copy.",
+        story: "Install guidance and store/deep-link copy for users who do not have the native app yet.",
       },
     },
   },
@@ -80,7 +81,7 @@ export const StepChoosePlan: Story = {
   parameters: {
     docs: {
       description: {
-        story: "User has **no plan** — onboarding surfaces catalog / CTA toward purchase.",
+        story: "User has **no plan** — onboarding surfaces the purchase path before device setup.",
       },
     },
   },
@@ -92,7 +93,7 @@ export const StepAddFirstDevice: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Subscribed but **no devices** — issuance / setup instructions in onboarding skin.",
+        story: "Subscribed but **no devices** — onboarding moves into device guidance instead of re-explaining payment.",
       },
     },
   },
@@ -104,7 +105,7 @@ export const StepOpenVpn: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Connect-out — deep link and reminder to open AmneziaVPN.",
+        story: "Connect-out — deep link and reminder to open AmneziaVPN for the actual VPN connection.",
       },
     },
   },
@@ -116,7 +117,7 @@ export const StepConfirmConnection: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Handshake confirmation — ties into connect-status semantics after success.",
+        story: "Handshake confirmation — ties into connect-status semantics after the import completes.",
       },
     },
   },
@@ -143,6 +144,25 @@ export const ViewportNarrowChoosePlan: Story = {
     docs: {
       description: {
         story: "320px — catalog / plan CTAs at step 2 with **no subscription** (`noPlanScenario`).",
+      },
+    },
+  },
+};
+
+export const InteractiveInstallReady: Story = {
+  name: "Interactive · install ready",
+  render: () => renderOnboarding({ scenario: readyScenario, step: 1 }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(await canvas.findByRole("button", { name: "Already installed? Continue" }));
+    await waitFor(() => {
+      expect(canvas.getByRole("button", { name: "Continue setup" })).toBeInTheDocument();
+    });
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: "Exercises the install step's ready-state transition after the user confirms the app is already installed.",
       },
     },
   },

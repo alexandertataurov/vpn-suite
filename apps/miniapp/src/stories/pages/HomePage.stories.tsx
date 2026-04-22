@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Route } from "react-router-dom";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 import { HomePage } from "@/features/home/HomePage";
+import { PlanPage } from "@/features/plan/PlanPage";
 import {
   type MockScenario,
   accessErrorScenario,
@@ -83,11 +85,11 @@ function scenarioStory(
   return {
     name,
     render: () => renderHome(scenario),
-    parameters: {
-      ...extraParameters,
-      docs: {
-        description: {
-          story: storyDescription,
+  parameters: {
+    ...extraParameters,
+    docs: {
+      description: {
+        story: storyDescription,
         },
       },
     },
@@ -186,3 +188,27 @@ export const ViewportWideActive = scenarioStory(
   "Desktop-sized frame — section spacing and sticky regions at admin width.",
   VIEW_WIDE,
 );
+
+export const InteractiveChoosePlan: Story = {
+  name: "Interactive · choose plan",
+  render: () => (
+    <PageSandbox scenario={noPlanScenario} initialEntries={["/"]}>
+      <Route path="/" element={<HomePage />} />
+      <Route path="/plan" element={<PlanPage />} />
+    </PageSandbox>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(await canvas.findByRole("button", { name: "Choose plan" }));
+    await waitFor(() => {
+      expect(canvas.getByRole("heading", { name: "Plan & billing" })).toBeInTheDocument();
+    });
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: "Clicks the new-user hero CTA and confirms the flow reaches the plan page contract.",
+      },
+    },
+  },
+};

@@ -263,6 +263,7 @@ body {
 }
 
 .miniapp-shell-context-action {
+  min-height: var(--size-touch-target);
   position: relative;
   isolation: isolate;
   overflow: hidden;
@@ -690,7 +691,7 @@ html:not([data-theme="consumer-light"]) .miniapp-popover-panel {
 
 .miniapp-popover-notice-dismiss {
   min-width: 88px;
-  min-height: 36px;
+  min-height: var(--size-touch-target);
 }
 
 @keyframes miniapp-popover-progress-bar {
@@ -843,8 +844,8 @@ html:not([data-theme="consumer-light"]) .miniapp-popover-panel {
   display: inline-flex;
   align-items: center;
   margin-top: 8px;
-  min-height: 28px;
-  padding: 0 10px;
+  min-height: var(--size-touch-target);
+  padding: 0 14px;
   border-radius: 999px;
   border: 1px solid var(--color-border);
   background: var(--color-surface);
@@ -956,8 +957,10 @@ html:not([data-theme="consumer-light"]) .miniapp-popover-panel {
 
 .miniapp-content-bell {
   position: relative;
-  width: 40px;
-  height: 40px;
+  width: var(--size-touch-target);
+  height: var(--size-touch-target);
+  min-width: var(--size-touch-target);
+  min-height: var(--size-touch-target);
   border-radius: 999px;
   border: 1px solid var(--surface-border);
   background: color-mix(in oklch, var(--color-text) 8%, transparent);
@@ -2390,9 +2393,10 @@ html:not([data-theme="consumer-light"]) .miniapp-popover-panel {
 }
 
 .select-sheet-close {
-  width: var(--height-btn-md);
-  min-width: var(--height-btn-md);
-  height: var(--height-btn-md);
+  width: var(--size-touch-target);
+  min-width: var(--size-touch-target);
+  height: var(--size-touch-target);
+  min-height: var(--size-touch-target);
   border: 0;
   border-radius: 999px;
   background: transparent;
@@ -2583,7 +2587,8 @@ html:not([data-theme="consumer-light"]) .miniapp-popover-panel {
 .inline-alert-action-link {
   display: inline-flex;
   align-items: center;
-  min-height: 28px;
+  min-height: var(--size-touch-target);
+  padding: 0 14px;
   font-family: var(--font-sans);
   font-size: 12px;
   font-weight: 600;
@@ -3400,18 +3405,22 @@ html[data-theme="consumer-dark"] .subscription-cancellation-modal {
 .toast-dismiss {
   align-self: start;
   flex-shrink: 0;
-  width: 20px;
-  min-width: 20px;
-  height: 20px;
+  width: var(--size-touch-target);
+  min-width: var(--size-touch-target);
+  height: var(--size-touch-target);
+  min-height: var(--size-touch-target);
   margin: 0;
   padding: 0;
   border: 1px solid color-mix(in oklch, var(--color-border) 78%, transparent);
-  border-radius: 8px;
+  border-radius: 10px;
   background: color-mix(in oklch, var(--color-surface-2) 54%, transparent);
   color: color-mix(in oklch, var(--color-text-tertiary) 82%, transparent);
   cursor: pointer;
   font-size: 12px;
   line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   opacity: 0.82;
   transition:
     opacity 120ms var(--ease-out),
@@ -5850,9 +5859,10 @@ html:not([data-theme="consumer-dark"]):not([data-theme="consumer-light"]) {
 }
 
 .toast-dismiss {
-  width: 20px;
-  min-width: 20px;
-  height: 20px;
+  width: var(--size-touch-target);
+  min-width: var(--size-touch-target);
+  height: var(--size-touch-target);
+  min-height: var(--size-touch-target);
 }
 
 .toast-progress {

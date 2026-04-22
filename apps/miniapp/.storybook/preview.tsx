@@ -75,9 +75,39 @@ const STORYBOOK_INITIAL_GLOBALS: Preview["initialGlobals"] = {
 };
 
 const STORYBOOK_VIEWPORTS = {
+  mobile320: {
+    name: "Mobile 320",
+    styles: { width: "320px", height: "568px" },
+    type: "mobile",
+  },
+  mobile375: {
+    name: "Mobile 375",
+    styles: { width: "375px", height: "812px" },
+    type: "mobile",
+  },
   mobile390: {
     name: "Mobile 390",
     styles: { width: "390px", height: "844px" },
+    type: "mobile",
+  },
+  mobile393: {
+    name: "Mobile 393",
+    styles: { width: "393px", height: "852px" },
+    type: "mobile",
+  },
+  mobile412: {
+    name: "Mobile 412",
+    styles: { width: "412px", height: "915px" },
+    type: "mobile",
+  },
+  mobile428: {
+    name: "Mobile 428",
+    styles: { width: "428px", height: "926px" },
+    type: "mobile",
+  },
+  mobile430: {
+    name: "Mobile 430",
+    styles: { width: "430px", height: "932px" },
     type: "mobile",
   },
   tablet768: {

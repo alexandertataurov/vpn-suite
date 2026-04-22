@@ -27,18 +27,23 @@ import { SubscriptionCancellationModal } from "@/design-system/recipes";
 import { SupportSection } from "@/design-system/recipes";
 import { FallbackScreen } from "@/design-system/patterns";
 import { useOpenLink, useTelegramWebApp, useUpdateSubscription } from "@/hooks";
+import { useSession } from "@/hooks";
 import { useI18n } from "@/hooks/useI18n";
 import { useSettingsPageModel } from "@/features/settings/model/useSettingsPageModel";
 import { buildSettingsLegalLinks, getSupportContactDescription } from "@/lib/help-resources/resources";
+import { buildSupportContext, persistSupportContext, useGuidanceContextId } from "@/features/support/support-context";
+import { telegramClient } from "@/lib/telegram/telegramCoreClient";
 
 export function SettingsPage() {
   const model = useSettingsPageModel();
+  const { data: session } = useSession(true);
   const { openLink } = useOpenLink();
   const { addToast } = useToast();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { initData } = useTelegramWebApp();
   const { t } = useI18n();
+  const guidanceContextId = useGuidanceContextId();
   const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
   const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
   const supportHref = getSupportContactHref();
@@ -214,6 +219,16 @@ export function SettingsPage() {
         contactSupportDescription={getSupportContactDescription(t)}
         onContactSupportClick={() => {
           if (supportHref) {
+            persistSupportContext(
+              buildSupportContext({
+                session,
+                currentRoute: "/settings",
+                lastAction: "settings_contact_support",
+                platform: telegramClient.getPlatform(),
+                locale: model.effectiveTelegramLocale,
+                guidanceContextId,
+              }),
+            );
             openLink(supportHref);
           } else {
             addToast(t("settings.support_unavailable"), "error");

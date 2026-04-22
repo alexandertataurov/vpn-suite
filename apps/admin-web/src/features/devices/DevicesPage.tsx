@@ -9,7 +9,6 @@ import {
   formatRate,
   formatRelative,
   connectionStatus,
-  formatHandshakeAge,
   formatLatencyMs,
   deviceStatus,
   type DeviceHealthVariant,
@@ -594,6 +593,11 @@ export function DevicesPage() {
     (summary.no_handshake_count ?? 0) +
     (summary.no_allowed_ips ?? 0) +
     (summary.traffic_zero_count ?? 0);
+  const activeFiltersCount =
+    Number(Boolean(listParams.status)) +
+    Number(Boolean(listParams.node_id)) +
+    Number(Boolean(searchQuery.trim())) +
+    Number(attentionOnly);
 
   const filteredDevices = list.items
     .map((device) => ({
@@ -642,7 +646,9 @@ export function DevicesPage() {
     const liveBandwidth =
       rates != null
         ? `${formatRate(rates.rx)} ↓ ${formatRate(rates.tx)} ↑`
-        : formatBytes(totalBytes);
+        : totalBytes == null
+          ? "No telemetry"
+          : formatBytes(totalBytes);
 
     const conn = connectionStatus(d);
     const status = deviceStatus(d);
@@ -665,8 +671,14 @@ export function DevicesPage() {
       );
     } else {
       const label = formatLatencyMs(d);
-      latencyCell = label;
+      latencyCell = label === "—" ? "Not measured" : label;
     }
+    const handshakeAge =
+      d.telemetry?.handshake_age_sec != null
+        ? String(d.telemetry.handshake_age_sec)
+        : d.telemetry
+          ? "No handshake"
+          : "No telemetry";
     return {
       id: d.id,
       select: (
@@ -699,7 +711,7 @@ export function DevicesPage() {
         </Badge>
       ),
       connection: <Badge variant={connectionVariant} size="sm">{conn}</Badge>,
-      handshakeAge: formatHandshakeAge(d),
+      handshakeAge,
       latencyMs: latencyCell,
       lastHandshake: d.telemetry?.handshake_latest_at
         ? formatRelative(d.telemetry.handshake_latest_at)
@@ -713,9 +725,9 @@ export function DevicesPage() {
           variant="default"
           size="sm"
           onClick={() => setDetailDeviceId(d.id)}
-          aria-label={`View ${d.device_name || d.id}`}
+          aria-label={`Inspect ${d.device_name || d.id}`}
         >
-          Open
+          Inspect
         </Button>
       ),
     };
@@ -739,6 +751,8 @@ export function DevicesPage() {
       <span className="dot" />
       <span>{rows.length} shown</span>
       <span className="sep">·</span>
+      <span>{attentionCount} attention</span>
+      <span className="sep">·</span>
       <span className="devices-page__updated">
         Telemetry {formatRelative(summary.telemetry_last_updated ?? null)}
       </span>
@@ -749,6 +763,9 @@ export function DevicesPage() {
       <Button type="button" variant="default" onClick={handleLoadDevices}>
         Load devices
       </Button>
+      <Badge variant={attentionCount > 0 ? "warning" : "success"} size="sm">
+        Attention {attentionCount}
+      </Badge>
       <Button type="button" variant="default" onClick={() => setAddDeviceModalOpen(true)}>
         Add device
       </Button>
@@ -768,7 +785,7 @@ export function DevicesPage() {
     >
       <SectionHeader label="Summary" size="lg" />
       <div className="kpi-grid devices-page__cards">
-        <Widget title="Total devices" subtitle="inventory" variant="kpi" href="/devices" size="medium">
+        <Widget title="Total devices" subtitle="fleet inventory" variant="kpi" href="/devices" size="medium">
           <KpiValue as="div" className="kpi__value">
             <AnimatedNumber value={summary.total} />
           </KpiValue>
@@ -777,7 +794,7 @@ export function DevicesPage() {
             <span className="kpi__meta-item">{summary.revoked} revoked</span>
           </div>
         </Widget>
-        <Widget title="Active share" subtitle="fleet" variant="kpi" size="medium">
+        <Widget title="Active share" subtitle="serving traffic" variant="kpi" size="medium">
           <KpiValue as="div" className="kpi__value">
             <AnimatedNumber value={activePercent} decimals={1} />%
           </KpiValue>
@@ -787,7 +804,7 @@ export function DevicesPage() {
             </span>
           </div>
         </Widget>
-        <Widget title="Handshake health" subtitle="recent handshake" variant="kpi" size="medium">
+        <Widget title="Handshake health" subtitle="fresh handshakes" variant="kpi" size="medium">
           <KpiValue as="div" className="kpi__value">
             <AnimatedNumber value={healthy} />
           </KpiValue>
@@ -800,7 +817,7 @@ export function DevicesPage() {
             )}
           </div>
         </Widget>
-        <Widget title="Traffic" subtitle="recent" variant="kpi" size="medium">
+        <Widget title="Traffic gaps" subtitle="no transfer observed" variant="kpi" size="medium">
           <KpiValue as="div" className="kpi__value">
             <AnimatedNumber value={telemetryNone} />
           </KpiValue>
@@ -808,7 +825,7 @@ export function DevicesPage() {
             <span className="kpi__meta-item">zero traffic devices</span>
           </div>
         </Widget>
-        <Widget title="Config quality" subtitle="configs" variant="kpi" size="medium">
+        <Widget title="Config quality" subtitle="runtime config hygiene" variant="kpi" size="medium">
           <KpiValue as="div" className="kpi__value">
             <AnimatedNumber value={summary.unused_configs} />
           </KpiValue>
@@ -910,9 +927,9 @@ export function DevicesPage() {
                           variant="ghost"
                           size="sm"
                           onClick={() => setDetailDeviceId(e.device_id)}
-                          aria-label={`View ${e.device_id}`}
+                          aria-label={`Inspect ${e.device_id}`}
                         >
-                          Open
+                          Inspect
                         </Button>
                         <Button
                           type="button"
@@ -920,9 +937,9 @@ export function DevicesPage() {
                           size="sm"
                           onClick={() => void handleReconcile(e.device_id)}
                           disabled={actionPending}
-                          aria-label={`Reconcile ${e.device_id}`}
+                          aria-label={`Recover ${e.device_id}`}
                         >
-                          Reconcile
+                          Recover
                         </Button>
                       </div>
                     ),
@@ -938,7 +955,7 @@ export function DevicesPage() {
       </Card>
 
       <section className="devices-page__table" aria-label="Devices list">
-        <SectionHeader label="Devices" size="lg" />
+        <SectionHeader label="Devices" size="lg" note={`Attention flagged: ${attentionCount}`} />
         <Card>
           <div className="devices-page__filters">
             <label className="devices-page__filter-label">
@@ -997,7 +1014,7 @@ export function DevicesPage() {
                 onClick={() => setAttentionOnly((current) => !current)}
                 aria-pressed={attentionOnly}
               >
-                Attention only
+                Attention only ({attentionCount})
               </Button>
               <Button
                 type="button"
@@ -1005,10 +1022,13 @@ export function DevicesPage() {
                 onClick={resetFilters}
                 disabled={!hasFilters}
               >
-                Reset filters
+                Reset filters{activeFiltersCount > 0 ? ` (${activeFiltersCount})` : ""}
               </Button>
             </div>
           </div>
+          <MetaText className="devices-page__filters-meta">
+            Actions: Inspect for details, Recover for reconciliation, Restrict from the detail panel.
+          </MetaText>
         </Card>
         {actionError && (
           <div className="alert danger devices-page__action-alert" role="alert">
@@ -1043,12 +1063,12 @@ export function DevicesPage() {
               { key: "status", header: "Status" },
               { key: "health", header: "Health" },
               { key: "connection", header: "Connection" },
-              { key: "handshakeAge", header: "Handshake age (s)", title: "Seconds since last handshake; 0 when disconnected." },
-              { key: "latencyMs", header: "Latency (ms)", title: "Round-trip time (ms) from node; value when measured, \"—\" when not yet measured, Offline when disconnected." },
+              { key: "handshakeAge", header: "Handshake age", title: "Seconds since last handshake. Shows \"No handshake\" or \"No telemetry\" when unavailable." },
+              { key: "latencyMs", header: "Latency", title: "Round-trip time in ms when measured. Shows \"Not measured\" when telemetry has no RTT sample." },
               { key: "lastHandshake", header: "Last handshake" },
               { key: "rx", header: "RX" },
               { key: "tx", header: "TX" },
-              { key: "bandwidth", header: "Live bandwidth" },
+              { key: "bandwidth", header: "Traffic / live bandwidth", title: "Shows live RX/TX rate when polling delta is available; otherwise cumulative traffic or telemetry fallback." },
               { key: "actions", header: "Actions" },
             ]}
             rows={rows}

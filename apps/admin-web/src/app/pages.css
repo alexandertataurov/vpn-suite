@@ -105,6 +105,11 @@
   flex-wrap: wrap;
 }
 
+/* Shared page rhythm utility */
+.page-stack > * + * {
+  margin-top: var(--sp-3);
+}
+
 /* Servers widgets grid */
 .servers-page__widgets {
   margin-bottom: var(--sp-4);
@@ -114,6 +119,180 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: var(--sp-3);
+}
+
+/* Users page */
+.users-page {
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.users-page__block-title,
+.users-page__section-title {
+  margin: 0;
+}
+
+.users-page__pager-meta {
+  color: var(--tx-mut);
+}
+
+.users-page__filters {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
+  gap: var(--sp-3);
+  align-items: end;
+  padding: var(--sp-4);
+}
+
+.users-page__filter {
+  display: grid;
+  gap: var(--sp-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--tx-mut);
+}
+
+.users-page__filter--full {
+  grid-column: 1 / -1;
+}
+
+.users-page__filter-actions {
+  display: inline-flex;
+  gap: var(--sp-2);
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 30px;
+  flex-wrap: wrap;
+}
+
+.users-page__filter-actions--full {
+  justify-content: flex-start;
+}
+
+.users-page__select,
+.users-page__textarea {
+  width: 100%;
+}
+
+.users-page__table,
+.users-page__detail {
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.users-page__row-cell {
+  display: grid;
+  gap: 2px;
+}
+
+.users-page__row-meta {
+  color: var(--tx-mut);
+}
+
+.users-page__selection {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+}
+
+.users-page__selection-main {
+  display: grid;
+  gap: var(--sp-1);
+}
+
+.users-page__selection-name {
+  color: var(--tx-pri);
+  font-weight: 600;
+}
+
+.users-page__selection-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+
+.users-page__detail-top {
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.users-page__detail-dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: var(--sp-2) var(--sp-3);
+}
+
+.users-page__detail-dl dt {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--tx-mut);
+}
+
+.users-page__detail-dl dd {
+  margin: 0;
+  color: var(--tx-pri);
+}
+
+.users-page__detail-error {
+  margin: 0;
+  color: var(--red);
+}
+
+.users-page__operational-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-3);
+}
+
+.users-page__operational-card {
+  border: 1px solid var(--bd-def);
+  border-radius: var(--r-sm);
+  background: var(--s2);
+  padding: var(--sp-3);
+  display: grid;
+  gap: var(--sp-2);
+}
+
+.users-page__badge-row {
+  display: flex;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+
+.users-page__edit-grid,
+.users-page__issue-grid,
+.users-page__issue-result {
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.users-page__danger-zone {
+  border: 1px solid color-mix(in srgb, var(--red) 30%, var(--bd-def));
+  border-radius: var(--r-sm);
+  background: color-mix(in srgb, var(--red) 8%, var(--s1));
+  padding: var(--sp-3);
+  display: grid;
+  gap: var(--sp-2);
+}
+
+.users-page__detail-actions,
+.users-page__modal-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+
+.users-page__muted {
+  color: var(--tx-sec);
 }
 
 /* Devices page */
@@ -155,6 +334,12 @@
   gap: var(--sp-3);
   align-items: end;
   padding: var(--sp-4);
+}
+
+.devices-page__filters-meta {
+  margin: 0;
+  padding: 0 var(--sp-4) var(--sp-4);
+  color: var(--tx-sec);
 }
 
 .devices-page__filter-label {
@@ -327,6 +512,14 @@
 }
 
 @media (max-width: 1200px) {
+  .users-page__filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .users-page__filter-actions {
+    justify-content: flex-start;
+  }
+
   .devices-page__filters {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -337,6 +530,20 @@
 }
 
 @media (max-width: 768px) {
+  .users-page__filters,
+  .users-page__operational-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .users-page__detail-dl {
+    grid-template-columns: 1fr;
+    gap: var(--sp-1);
+  }
+
+  .users-page__detail-dl dt {
+    margin-top: var(--sp-2);
+  }
+
   .devices-page__top-actions {
     width: 100%;
     justify-content: flex-start;

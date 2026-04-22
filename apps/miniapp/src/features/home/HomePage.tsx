@@ -275,40 +275,6 @@ export function HomePage() {
       ? profileName.charAt(0).toUpperCase()
       : t("home.guest_initial").charAt(0).toUpperCase();
   const profilePhotoUrl = (session?.user?.photo_url ?? "").trim() || undefined;
-
-  if (model.pageState.status === "empty") {
-    return <SessionMissing />;
-  }
-
-  if (model.pageState.status === "loading") {
-    return (
-      <PageScaffold>
-        <PageLayout scrollable={false}>
-          <ModernHeader title={t("home.app_title")} />
-          <Skeleton variant="card" height={180} />
-          <Skeleton variant="card" height={120} />
-          <Skeleton variant="card" height={72} />
-          <FooterHelp
-            note={t("footer.having_trouble")}
-            linkLabel={t("footer.view_setup_guide")}
-            onLinkClick={() => navigate("/setup-guide")}
-          />
-        </PageLayout>
-      </PageScaffold>
-    );
-  }
-
-  if (model.pageState.status === "error") {
-    return (
-      <FallbackScreen
-        title={model.pageState.title}
-        message={model.pageState.message}
-        onRetry={model.onRetry}
-        retryLabel={t("common.retry")}
-      />
-    );
-  }
-
   const status = model.status;
   const isGenerating = status === "generating_config";
   const handleAddDevice = () => navigate("/devices");
@@ -382,6 +348,39 @@ export function HomePage() {
   }, [handleDonateAmount, location.search]);
   const mergedByQuery = new URLSearchParams(location.search).get("homeMergedCard") === "1";
   const useMergedSummaryCard = homeMergedSummaryCardEnabled || mergedByQuery;
+
+  if (model.pageState.status === "empty") {
+    return <SessionMissing />;
+  }
+
+  if (model.pageState.status === "loading") {
+    return (
+      <PageScaffold>
+        <PageLayout scrollable={false}>
+          <ModernHeader title={t("home.app_title")} />
+          <Skeleton variant="card" height={180} />
+          <Skeleton variant="card" height={120} />
+          <Skeleton variant="card" height={72} />
+          <FooterHelp
+            note={t("footer.having_trouble")}
+            linkLabel={t("footer.view_setup_guide")}
+            onLinkClick={() => navigate("/setup-guide")}
+          />
+        </PageLayout>
+      </PageScaffold>
+    );
+  }
+
+  if (model.pageState.status === "error") {
+    return (
+      <FallbackScreen
+        title={model.pageState.title}
+        message={model.pageState.message}
+        onRetry={model.onRetry}
+        retryLabel={t("common.retry")}
+      />
+    );
+  }
 
   return (
     <PageScaffold>

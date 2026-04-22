@@ -13,7 +13,7 @@ const variantClass: Record<ButtonVariant, string> = {
 const sizeClass: Record<ButtonSize, string> = {
   sm: "btn-sm",
   md: "btn-md",
-  lg: "btn-md",
+  lg: "btn-lg",
   icon: "btn-sm btn-icon",
 };
 

@@ -256,11 +256,11 @@ export function BillingPage() {
     [plans?.items],
   );
   const visibleFreePlanIds = useMemo(
-    () => freePlans.filter((p) => !Boolean(p.is_archived)).map((p) => p.id),
+    () => freePlans.filter((p) => !p.is_archived).map((p) => p.id),
     [freePlans],
   );
   const hiddenFreePlanIds = useMemo(
-    () => freePlans.filter((p) => Boolean(p.is_archived)).map((p) => p.id),
+    () => freePlans.filter((p) => p.is_archived).map((p) => p.id),
     [freePlans],
   );
 

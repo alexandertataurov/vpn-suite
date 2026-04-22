@@ -112,7 +112,7 @@
   cursor: pointer;
   transition: filter 0.15s ease;
   background: none;
-  min-height: var(--spacing-8);
+  min-height: var(--size-touch-target);
 }
 
 .alert-action:hover {
@@ -133,8 +133,8 @@
   position: absolute;
   top: var(--spacing-2);
   right: var(--spacing-2);
-  width: var(--spacing-8);
-  height: var(--spacing-8);
+  width: var(--size-touch-target);
+  height: var(--size-touch-target);
   display: flex;
   align-items: center;
   justify-content: center;

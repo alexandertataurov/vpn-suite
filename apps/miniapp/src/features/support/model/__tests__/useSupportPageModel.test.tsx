@@ -2,6 +2,8 @@ import { renderHook, act, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
+import { MemoryRouter } from "react-router-dom";
+import { ToastContainer } from "@/design-system";
 import { useSupportPageModel } from "../useSupportPageModel";
 
 const { mockUseWebappToken, mockUseSession, mockUseTelemetry, mockUseTrackScreen, mockWebappGet } = vi.hoisted(
@@ -38,7 +40,13 @@ function createWrapper() {
     defaultOptions: { queries: { retry: false } },
   });
   return function Wrapper({ children }: { children: ReactNode }) {
-    return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+    return (
+      <MemoryRouter initialEntries={["/support"]}>
+        <QueryClientProvider client={client}>
+          <ToastContainer>{children}</ToastContainer>
+        </QueryClientProvider>
+      </MemoryRouter>
+    );
   };
 }
 
@@ -77,7 +85,9 @@ describe("useSupportPageModel", () => {
     mockUseTelemetry.mockReturnValue({ track });
     mockUseSession.mockReturnValue({
       data: {
+        user: { id: 1, tg_id: 1001, locale: "en" },
         subscriptions: [{ id: "sub-1", plan_id: "plan-pro", status: "active", access_status: "enabled", valid_until: "2030-01-01T00:00:00Z", device_limit: 3 }],
+        devices: [],
       },
       isLoading: false,
       error: null,
@@ -86,9 +96,19 @@ describe("useSupportPageModel", () => {
 
     const { result } = renderHook(() => useSupportPageModel(), { wrapper: createWrapper() });
 
-    expect(track).toHaveBeenCalledWith("support_opened", { screen_name: "support" });
+    expect(track).toHaveBeenCalledWith(
+      "support_opened",
+      expect.objectContaining({
+        screen_name: "support",
+        route: "/support",
+        device_count: 0,
+        last_action: "support_opened",
+      }),
+    );
     expect(result.current.currentStep.title).toMatch(/Check access status/i);
     expect(result.current.currentStepAltLabel).toBe("No, choose plan");
+    expect(result.current.supportContext.current_route).toBe("/support");
+    expect(result.current.diagnosticStats[0]?.label).toBe("Context ID");
 
     act(() => result.current.nextStep());
     expect(result.current.step).toBe(1);

@@ -257,11 +257,11 @@ test.describe("Users", () => {
   test("open user panel when list has rows", async ({ page }) => {
     await page.goto("users");
     await page.waitForLoadState("domcontentloaded");
-    const openPanelBtn = page.getByRole("button", { name: /Open panel/i }).first();
+    const openPanelBtn = page.getByRole("button", { name: /Open profile/i }).first();
     if (await openPanelBtn.isVisible()) {
       await openPanelBtn.click();
       await expect(page.getByRole("heading", { name: /User #/i })).toBeVisible();
-      await expect(page.getByRole("button", { name: /Back/i })).toBeVisible();
+      await expect(page.getByRole("button", { name: /Cancel/i }).first()).toBeVisible();
     }
   });
 });

@@ -31,7 +31,6 @@ vi.mock("@/features/support/model/useSupportPageModel", () => ({
       edge: "e-b",
       glow: "g-blue",
     },
-    troubleshooterBadge: { tone: "neutral", label: "Step 1/4" },
     step: 0,
     totalSteps: 4,
     currentStep: {
@@ -44,6 +43,14 @@ vi.mock("@/features/support/model/useSupportPageModel", () => ({
     faqOffline: false,
     nextStep: vi.fn(),
     previousStep: undefined,
+    supportHref: undefined,
+    diagnosticStats: [
+      { label: "Subscription", value: "active" },
+      { label: "Devices", value: "2 / 3" },
+    ],
+    diagnosticCopyText: "diagnostic payload",
+    copyDiagnostics: vi.fn(),
+    contactSupport: vi.fn(),
   }),
 }));
 
@@ -72,6 +79,7 @@ describe("SupportPage", () => {
 
     expect(screen.getByText("Help is always available")).toBeInTheDocument();
     expect(screen.getAllByText("Contact support").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Diagnostics").length).toBeGreaterThan(0);
     expect(screen.getByText("FAQ")).toBeInTheDocument();
     expect(screen.getByText("Support link unavailable")).toBeInTheDocument();
     expect(screen.getByText("Privacy policy")).toBeInTheDocument();
@@ -82,6 +90,8 @@ describe("SupportPage", () => {
     expect(screen.getByRole("button", { name: "Restore access" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Replace device or config" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "When to contact support" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Copy diagnostics" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Contact support" })).toBeInTheDocument();
 
     const faqTrigger = screen.getByRole("button", { name: "VPN not connecting" });
     expect(faqTrigger).toHaveAttribute("aria-expanded", "false");

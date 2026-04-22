@@ -22,6 +22,8 @@ import { getActiveDevices, getActiveOrGraceSubscription } from "@/page-models/he
 import { getSupportBotHref } from "@/config/env";
 import { useI18n } from "@/hooks/useI18n";
 import { AMNEZIA_VPN_ANDROID_URL, AMNEZIA_VPN_IOS_URL } from "@/lib";
+import { buildGuidanceTelemetryContext, buildSupportContext, useGuidanceContextId } from "@/features/support/support-context";
+import { telegramClient } from "@/lib/telegram/telegramCoreClient";
 
 export function OnboardingPage() {
   const navigate = useNavigate();
@@ -33,7 +35,8 @@ export function OnboardingPage() {
   const { onboardingStep, onboardingError, isCompletingOnboarding, setOnboardingStep, completeOnboarding } =
     useBootstrapContext();
   const { addToast } = useToast();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const guidanceContextId = useGuidanceContextId();
   const [isAdvancing, setIsAdvancing] = useState(false);
   const [appAlreadyInstalled, setAppAlreadyInstalled] = useState(false);
   const completedThisSessionRef = useRef(false);
@@ -45,17 +48,39 @@ export function OnboardingPage() {
     [onboardingStep],
   );
   const step = ONBOARDING_STEPS[stepIndex]!;
+  const platform = telegramClient.getPlatform();
+
+  const buildGuidancePayload = useCallback(
+    (lastAction: string, flowStepIndex: number, flowStepId: string) => {
+      const context = buildSupportContext({
+        session,
+        currentRoute: "/onboarding",
+        lastAction,
+        platform,
+        locale,
+        guidanceContextId,
+      });
+      return buildGuidanceTelemetryContext(context, "onboarding", flowStepIndex, flowStepId);
+    },
+    [session, platform, locale, guidanceContextId],
+  );
 
   // One-shot: fire when session first becomes available (not on every session object update)
   useEffect(() => {
     if (session == null || onboardingStartedTrackedRef.current) return;
     onboardingStartedTrackedRef.current = true;
-    track("onboarding_started", {});
-  }, [session, track]);
+    track("onboarding_started", {
+      ...buildGuidancePayload("onboarding_started", 0, "intro"),
+      step: 0,
+      step_id: "intro",
+    });
+  }, [buildGuidancePayload, session, track]);
 
   useEffect(() => {
-    track("onboarding_step_viewed", { step: stepIndex, step_id: step.id });
-  }, [stepIndex, step.id, track]);
+    track("onboarding_step_viewed", {
+      ...buildGuidancePayload("onboarding_step_viewed", stepIndex, step.id),
+    });
+  }, [buildGuidancePayload, stepIndex, step.id, track]);
 
   lastStepIndexRef.current = stepIndex;
 
@@ -64,9 +89,13 @@ export function OnboardingPage() {
       if (completedThisSessionRef.current) return;
       const lastStep = lastStepIndexRef.current;
       const stepId = ONBOARDING_STEPS[Math.min(lastStep, ONBOARDING_STEPS.length - 1)]?.id;
-      track("onboarding_abandoned", { step: lastStep, step_id: stepId });
+      if (stepId) {
+        track("onboarding_abandoned", {
+          ...buildGuidancePayload("onboarding_abandoned", lastStep, stepId),
+        });
+      }
     };
-  }, [track]);
+  }, [buildGuidancePayload, track]);
 
   const isLastStep = stepIndex === ONBOARDING_STEPS.length - 1;
   const activeDevices = useMemo(() => getActiveDevices(session), [session]);
@@ -105,10 +134,12 @@ export function OnboardingPage() {
 
   const goToStep = useCallback(
     async (nextStep: number) => {
-      track("onboarding_step_completed", { step: stepIndex });
+      track("onboarding_step_completed", {
+        ...buildGuidancePayload("onboarding_step_completed", stepIndex, step.id),
+      });
       await setOnboardingStep(nextStep);
     },
-    [setOnboardingStep, stepIndex, track],
+    [buildGuidancePayload, setOnboardingStep, step.id, stepIndex, track],
   );
 
   const handlePrimaryAction = useCallback(async () => {

@@ -70,10 +70,10 @@
 }
 
 .device-menu-btn.btn {
-  width: var(--height-btn-sm);
-  height: var(--height-btn-sm);
-  min-width: var(--height-btn-sm);
-  min-height: var(--height-btn-sm);
+  width: var(--size-touch-target);
+  height: var(--size-touch-target);
+  min-width: var(--size-touch-target);
+  min-height: var(--size-touch-target);
   padding: 0;
   border: none;
   border-radius: var(--radius-sm);

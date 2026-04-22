@@ -55,3 +55,9 @@ main.tsx
 ## Bootstrap module
 
 `bootstrap/` (sibling to `app/`) owns auth, session, and onboarding flow. BootstrapController imports from bootstrap and is composed inside AppShell.
+
+## Responsive audit contract
+
+- Use `docs/design-system/responsive-matrix.md` as the canonical breakpoint and surface matrix.
+- Use `docs/design-system/responsive-audit-ledger.md` to record viewport-specific findings and fixes.
+- Keep Playwright responsive coverage and Storybook viewport presets aligned with the same matrix values.

@@ -22,10 +22,10 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const installSteps = [
-  "Download AmneziaVPN from the App Store or Google Play.",
-  "Create the device configuration in the miniapp.",
-  "Import the generated profile into the VPN app.",
-  "Connect once, then return to confirm the device.",
+  "Install AmneziaVPN from the App Store or Google Play if needed.",
+  "Create a fresh config for this device.",
+  "Import the generated profile into AmneziaVPN.",
+  "Connect there, then return here if you need help.",
 ];
 
 const links = (

@@ -1,7 +1,7 @@
 import { spawnSync } from "node:child_process";
 import path from "node:path";
-import fs from "node:fs";
 import { STORYBOOK_CONTRACT_STORIES } from "./storybook-contract-config.mjs";
+import { buildPlaywrightEnv, ensurePlaywrightLibraries } from "./playwright-env.mjs";
 
 const cwd = process.cwd();
 const projectName = `storybook:${path.join(cwd, ".storybook")}`;
@@ -9,21 +9,7 @@ const extraArgs = process.argv.slice(2);
 const storyFiles = extraArgs.length > 0 ? extraArgs : STORYBOOK_CONTRACT_STORIES;
 
 function buildStorybookTestEnv() {
-  const localLibraryDirs = [
-    path.join(cwd, ".cache", "playwright-libs", "root", "usr", "lib", "x86_64-linux-gnu"),
-    path.join(cwd, ".cache", "playwright-libs", "root", "lib", "x86_64-linux-gnu"),
-  ].filter((dir) => fs.existsSync(dir));
-
-  if (localLibraryDirs.length === 0) {
-    return process.env;
-  }
-
-  const currentLibraryPath = process.env.LD_LIBRARY_PATH;
-
-  return {
-    ...process.env,
-    LD_LIBRARY_PATH: [...localLibraryDirs, currentLibraryPath].filter(Boolean).join(":"),
-  };
+  return buildPlaywrightEnv({ cwd });
 }
 
 function cleanupStaleBrowserWorkers() {
@@ -41,6 +27,7 @@ function cleanupStaleBrowserWorkers() {
   }
 }
 
+ensurePlaywrightLibraries({ cwd });
 cleanupStaleBrowserWorkers();
 
 for (const storyFile of storyFiles) {

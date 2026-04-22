@@ -5,6 +5,11 @@ on:
     paths:
       - "apps/miniapp/src/**"
       - "apps/miniapp/.storybook/**"
+      - "apps/miniapp/e2e/**"
+      - "apps/miniapp/scripts/**"
+      - "apps/miniapp/playwright.config.ts"
+      - "apps/miniapp/README.md"
+      - "apps/miniapp/docs/**"
       - "apps/miniapp/package.json"
       - "package.json"
       - "pnpm-lock.yaml"
@@ -74,3 +79,38 @@ jobs:
       - name: Chromatic
         continue-on-error: true
         run: pnpm --filter miniapp run chromatic -- --project-token=${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+
+  responsive-audit:
+    needs: storybook
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install chromium --with-deps
+
+      - name: Responsive Audit
+        run: pnpm run test:responsive:audit:miniapp
+
+      - name: Upload Responsive Audit Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: miniapp-responsive-audit
+          path: apps/miniapp/test-results/responsive-audit

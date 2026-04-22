@@ -2,6 +2,7 @@ import { existsSync } from "node:fs";
 import { spawn, spawnSync } from "node:child_process";
 import path from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
+import { buildPlaywrightEnv, ensurePlaywrightLibraries } from "./playwright-env.mjs";
 
 const cwd = process.cwd();
 const buildDir = path.join(cwd, "storybook-static");
@@ -56,6 +57,7 @@ async function waitForServerReady() {
 }
 
 cleanupStaleRunnerProcesses();
+ensurePlaywrightLibraries({ cwd });
 
 const server = spawn("python3", ["-m", "http.server", String(port), "--bind", host, "--directory", buildDir], {
   cwd,
@@ -100,6 +102,7 @@ try {
     {
       cwd,
       encoding: "utf8",
+      env: buildPlaywrightEnv({ cwd }),
       shell: process.platform === "win32",
     },
   );
@@ -114,6 +117,7 @@ try {
 
     const fallback = spawnSync("node", ["scripts/run-storybook-vitest.mjs", ...extraArgs], {
       cwd,
+      env: buildPlaywrightEnv({ cwd }),
       stdio: "inherit",
       shell: process.platform === "win32",
     });

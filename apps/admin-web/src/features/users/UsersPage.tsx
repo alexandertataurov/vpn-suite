@@ -6,6 +6,7 @@ import { buildUsersPath } from "@/hooks/useUsers";
 import { deviceKeys } from "@/features/devices/services/device.query-keys";
 import { userKeys } from "@/features/users/services/user.query-keys";
 import {
+  Badge,
   Button,
   Card,
   DataTable,
@@ -147,6 +148,18 @@ function formatRelative(iso: string | null): string {
 
 type BannedFilter = "all" | "true" | "false";
 
+function getUserDeviceStatus(device: UserDeviceListItem): "active" | "suspended" | "revoked" {
+  if (device.revoked_at) return "revoked";
+  if (device.suspended_at) return "suspended";
+  return "active";
+}
+
+function statusVariant(status: "active" | "suspended" | "revoked"): "success" | "warning" | "danger" {
+  if (status === "revoked") return "danger";
+  if (status === "suspended") return "warning";
+  return "success";
+}
+
 export function UsersPage() {
   const api = useApi();
   const queryClient = useQueryClient();
@@ -163,6 +176,7 @@ export function UsersPage() {
   const [applied, setApplied] = useState(draft);
 
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [lastSelectedUserId, setLastSelectedUserId] = useState<number | null>(null);
   const [banUserId, setBanUserId] = useState<number | null>(null);
   const [banToken, setBanToken] = useState("");
   const [deleteUserId, setDeleteUserId] = useState<number | null>(null);
@@ -254,17 +268,41 @@ export function UsersPage() {
       const tg = getTgRequisites(u.meta ?? null);
       const tgDisplay =
         tg?.username ? `@${tg.username}` : [tg?.first_name, tg?.last_name].filter(Boolean).join(" ") || "—";
+      const rowStatus = u.is_banned ? "revoked" : "active";
       return {
         id: String(u.id),
         tg: u.tg_id,
-        tg_user: tgDisplay,
+        tg_user: (
+          <div className="users-page__row-cell">
+            <span>{tgDisplay}</span>
+            <MetaText className="users-page__row-meta">#{u.id}</MetaText>
+          </div>
+        ),
         email: u.email ?? "—",
         phone: u.phone ?? "—",
-        status: u.is_banned ? "banned" : "active",
-        created: formatRelative(u.created_at),
+        status: (
+          <Badge variant={u.is_banned ? "danger" : "success"} size="sm">
+            {u.is_banned ? "Banned" : "Active"}
+          </Badge>
+        ),
+        created: (
+          <div className="users-page__row-cell">
+            <span>{formatRelative(u.created_at)}</span>
+            <MetaText className="users-page__row-meta">Updated {formatRelative(u.updated_at)}</MetaText>
+          </div>
+        ),
+        statusKind: rowStatus,
         actions: (
-          <Button type="button" variant="default" size="sm" onClick={() => setSelectedUserId(u.id)}>
-            View
+          <Button
+            type="button"
+            variant="default"
+            size="sm"
+            onClick={() => {
+              setSelectedUserId(u.id);
+              setLastSelectedUserId(u.id);
+            }}
+          >
+            Open profile
           </Button>
         ),
       };
@@ -398,6 +436,28 @@ export function UsersPage() {
   }, [issueOk]);
 
   const total = userList?.total ?? 0;
+  const selectedSummaryUser = useMemo(
+    () => (userList?.items ?? []).find((u) => u.id === lastSelectedUserId) ?? null,
+    [lastSelectedUserId, userList?.items]
+  );
+  const userDeviceSummary = useMemo(() => {
+    const items = userDevices?.items ?? [];
+    return items.reduce(
+      (acc, device) => {
+        const status = getUserDeviceStatus(device);
+        acc[status] += 1;
+        return acc;
+      },
+      { active: 0, suspended: 0, revoked: 0 }
+    );
+  }, [userDevices?.items]);
+  const userSubscriptionSummary = useMemo(() => {
+    const items = userDetail?.subscriptions ?? [];
+    return items.reduce<Record<string, number>>((acc, sub) => {
+      acc[sub.status] = (acc[sub.status] ?? 0) + 1;
+      return acc;
+    }, {});
+  }, [userDetail?.subscriptions]);
   const canPrev = offset > 0;
   const canNext = offset + limit < total;
 
@@ -420,7 +480,7 @@ export function UsersPage() {
   }
 
   if (isUsersError) {
-    const message = usersError instanceof Error ? usersError.message : "Failed to load users";
+    const message = usersError instanceof Error ? usersError.message : "Users data is unavailable right now.";
     return (
       <PageErrorState title="Users" pageClass="users-page" message={message} onRetry={() => void refetchUsers()} />
     );
@@ -428,6 +488,9 @@ export function UsersPage() {
 
   return (
     <PageLayout title="Users" actions={usersActions} pageClass="users-page">
+      <CardTitle as="h2" className="users-page__block-title">
+        Filters
+      </CardTitle>
       <Card variant="outlined">
         <div className="users-page__filters">
           <label className="users-page__filter">
@@ -480,6 +543,9 @@ export function UsersPage() {
         </div>
       </Card>
 
+      <CardTitle as="h2" className="users-page__block-title">
+        Users list
+      </CardTitle>
       {rows.length > 0 ? (
         <section className="users-page__table" aria-label="Users list">
           <div className="data-table-wrap">
@@ -487,35 +553,73 @@ export function UsersPage() {
             density="compact"
             columns={[
               { key: "tg", header: "TG ID" },
-              { key: "tg_user", header: "TG user" },
-              { key: "email", header: "Email" },
-              { key: "phone", header: "Phone" },
-              { key: "status", header: "Status" },
-              { key: "created", header: "Created" },
+                  { key: "tg_user", header: "TG user" },
+                  { key: "email", header: "Email" },
+                  { key: "phone", header: "Phone" },
+                  { key: "status", header: "Status" },
+                  { key: "created", header: "Created" },
               { key: "actions", header: "Actions" },
             ]}
             rows={rows}
             getRowKey={(row: { id: string }) => row.id}
-            getRowClassName={(row: { status: string }) =>
-              row.status === "banned" ? "row-danger" : "row-success"
+            getRowClassName={(row: { statusKind: string }) =>
+              row.statusKind === "revoked" ? "row-danger" : "row-success"
             }
           />
           </div>
         </section>
       ) : (
-        <EmptyState message="No users found for current filters." />
+        <EmptyState message="No users match these filters. Adjust search criteria and try again." />
       )}
+
+      <CardTitle as="h2" className="users-page__block-title">
+        Selection detail
+      </CardTitle>
+      <Card variant="outlined">
+        {selectedSummaryUser ? (
+          <div className="users-page__selection">
+            <div className="users-page__selection-main">
+              <div className="users-page__selection-name">
+                {selectedSummaryUser.email || `User #${selectedSummaryUser.id}`}
+              </div>
+              <MetaText>
+                TG {selectedSummaryUser.tg_id} · created {formatRelative(selectedSummaryUser.created_at)}
+              </MetaText>
+            </div>
+            <div className="users-page__selection-actions">
+              <Badge variant={selectedSummaryUser.is_banned ? "danger" : "success"} size="sm">
+                {selectedSummaryUser.is_banned ? "Banned" : "Active"}
+              </Badge>
+              <Button
+                type="button"
+                variant="default"
+                onClick={() => {
+                  setSelectedUserId(selectedSummaryUser.id);
+                  setLastSelectedUserId(selectedSummaryUser.id);
+                }}
+              >
+                Open profile
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <MetaText>Select a user from the table to inspect profile, subscriptions, and device health.</MetaText>
+        )}
+      </Card>
 
       <Modal
         open={!!selectedUserId}
         onClose={closeUserModal}
-        title="User details"
+        title={userDetail ? `User #${userDetail.id}` : "User details"}
       >
         {selectedUserId && (
           <div className="users-page__detail">
             {(isUserLoading || !userDetail) && <Skeleton height={120} />}
             {userDetail && (
               <>
+                <CardTitle as="h3" className="users-page__section-title">
+                  Identity + status snapshot
+                </CardTitle>
                 <div className="users-page__detail-top">
                   <dl className="users-page__detail-dl">
                     <dt>ID</dt>
@@ -523,40 +627,16 @@ export function UsersPage() {
                     <dt>TG</dt>
                     <dd>{userDetail.tg_id}</dd>
                     <dt>Status</dt>
-                    <dd>{userDetail.is_banned ? "banned" : "active"}</dd>
+                    <dd>
+                      <Badge variant={userDetail.is_banned ? "danger" : "success"} size="sm">
+                        {userDetail.is_banned ? "Banned" : "Active"}
+                      </Badge>
+                    </dd>
                     <dt>Created</dt>
                     <dd>{formatRelative(userDetail.created_at)}</dd>
+                    <dt>Updated</dt>
+                    <dd>{formatRelative(userDetail.updated_at)}</dd>
                   </dl>
-                  <div className="users-page__detail-actions">
-                    {!userDetail.is_banned ? (
-                      <Button
-                        type="button"
-                        variant="danger"
-                        disabled={actionPending}
-                        onClick={() => {
-                          setBanUserId(userDetail.id);
-                          setBanToken("");
-                        }}
-                      >
-                        Ban
-                      </Button>
-                    ) : (
-                      <Button type="button" variant="default" disabled={actionPending} onClick={handleUnban}>
-                        Unban
-                      </Button>
-                    )}
-                    <Button
-                      type="button"
-                      variant="danger"
-                      disabled={actionPending}
-                      onClick={() => {
-                        setDeleteUserId(userDetail.id);
-                        setDeleteConfirm("");
-                      }}
-                    >
-                      Delete user
-                    </Button>
-                  </div>
                 </div>
 
                 {actionError && (
@@ -564,6 +644,40 @@ export function UsersPage() {
                     {actionError}
                   </p>
                 )}
+
+                <CardTitle as="h3" className="users-page__section-title">
+                  Operational context
+                </CardTitle>
+                <div className="users-page__operational-grid">
+                  <div className="users-page__operational-card">
+                    <MetaText>Subscriptions</MetaText>
+                    {Object.entries(userSubscriptionSummary).length > 0 ? (
+                      <div className="users-page__badge-row">
+                        {Object.entries(userSubscriptionSummary).map(([status, count]) => (
+                          <Badge key={status} size="sm" variant={status === "active" ? "success" : "warning"}>
+                            {status}: {count}
+                          </Badge>
+                        ))}
+                      </div>
+                    ) : (
+                      <MetaText>No subscriptions</MetaText>
+                    )}
+                  </div>
+                  <div className="users-page__operational-card">
+                    <MetaText>Devices</MetaText>
+                    <div className="users-page__badge-row">
+                      <Badge size="sm" variant="success">
+                        active: {userDeviceSummary.active}
+                      </Badge>
+                      <Badge size="sm" variant="warning">
+                        suspended: {userDeviceSummary.suspended}
+                      </Badge>
+                      <Badge size="sm" variant="danger">
+                        revoked: {userDeviceSummary.revoked}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
 
                 {(() => {
                   const tg = getTgRequisites(userDetail.meta ?? null);
@@ -626,7 +740,7 @@ export function UsersPage() {
                 })()}
 
                 <CardTitle as="h3" className="users-page__section-title">
-                  Profile
+                  Profile edit
                 </CardTitle>
                 <div className="users-page__edit-grid">
                   <label className="users-page__filter">
@@ -652,6 +766,45 @@ export function UsersPage() {
                     </Button>
                     <Button type="button" onClick={handleSaveUser} disabled={actionPending}>
                       Save
+                    </Button>
+                  </div>
+                </div>
+
+                <CardTitle as="h3" className="users-page__section-title">
+                  Account actions
+                </CardTitle>
+                <div className="users-page__danger-zone">
+                  <MetaText className="users-page__muted">
+                    Destructive actions require confirmation tokens and should be used only for verified incidents.
+                  </MetaText>
+                  <div className="users-page__detail-actions">
+                    {!userDetail.is_banned ? (
+                      <Button
+                        type="button"
+                        variant="danger"
+                        disabled={actionPending}
+                        onClick={() => {
+                          setBanUserId(userDetail.id);
+                          setBanToken("");
+                        }}
+                      >
+                        Ban user
+                      </Button>
+                    ) : (
+                      <Button type="button" variant="default" disabled={actionPending} onClick={handleUnban}>
+                        Unban user
+                      </Button>
+                    )}
+                    <Button
+                      type="button"
+                      variant="danger"
+                      disabled={actionPending}
+                      onClick={() => {
+                        setDeleteUserId(userDetail.id);
+                        setDeleteConfirm("");
+                      }}
+                    >
+                      Delete user
                     </Button>
                   </div>
                 </div>
@@ -692,6 +845,9 @@ export function UsersPage() {
                       onChange={(e) => setIssueSubId(e.target.value)}
                       placeholder={userDetail.subscriptions[0]?.id ? `e.g. ${userDetail.subscriptions[0]?.id}` : "subscription id"}
                     />
+                    <MetaText className="users-page__muted">
+                      Use an active subscription ID. The first active plan is preselected when available.
+                    </MetaText>
                   </label>
                   <label className="users-page__filter">
                     Server ID (optional)
@@ -719,10 +875,13 @@ export function UsersPage() {
                         {legacyRelayUnavailableReason}
                       </MetaText>
                     )}
+                    <MetaText className="users-page__muted">
+                      AmneziaWG is the default. Use Plain WireGuard for compatibility clients.
+                    </MetaText>
                   </label>
                   <div className="users-page__filter-actions">
                     <Button type="button" onClick={handleIssueDevice} disabled={actionPending}>
-                      Issue
+                      Issue device
                     </Button>
                   </div>
                 </div>
@@ -769,20 +928,26 @@ export function UsersPage() {
                   <DataTable
                     density="compact"
                     columns={[
+                      { key: "status", header: "Status" },
                       { key: "device", header: "Device" },
                       { key: "server_id", header: "Server" },
                       { key: "delivery_mode", header: "Mode" },
-                      { key: "status", header: "Status" },
                       { key: "issued_at", header: "Issued" },
+                      { key: "last_event", header: "Last event" },
                       { key: "apply_status", header: "Apply" },
                     ]}
                     rows={userDevices.items.map((d) => ({
                       id: d.id,
+                      status: (
+                        <Badge variant={statusVariant(getUserDeviceStatus(d))} size="sm">
+                          {getUserDeviceStatus(d)}
+                        </Badge>
+                      ),
                       device: d.device_name || d.id,
                       server_id: d.server_id,
                       delivery_mode: formatDeliveryMode(d.delivery_mode),
-                      status: d.revoked_at ? "revoked" : d.suspended_at ? "suspended" : "active",
                       issued_at: formatRelative(d.issued_at),
+                      last_event: formatRelative(d.revoked_at ?? d.suspended_at ?? d.created_at),
                       apply_status: d.apply_status ?? "—",
                     }))}
                     getRowKey={(row: { id: string }) => row.id}

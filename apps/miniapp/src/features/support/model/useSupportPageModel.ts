@@ -1,12 +1,24 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { WebAppSupportFaqResponse } from "@vpn-suite/shared";
 import { webappApi, useWebappToken } from "@/api/client";
 import { useSession, useTrackScreen, useTelemetry } from "@/hooks";
+import { useI18n } from "@/hooks/useI18n";
+import { useToast } from "@/design-system";
 import type { StandardPageHeader, StandardPageState } from "@/page-models/types";
 import { getActiveSubscription } from "@/page-models/helpers";
-import { useI18n } from "@/hooks/useI18n";
 import { webappQueryKeys } from "@/lib";
+import { getSupportContactHref } from "@/config/env";
+import { telegramClient } from "@/lib/telegram/telegramCoreClient";
+import {
+  buildSupportContext,
+  persistSupportContext,
+  readPersistedSupportContext,
+  useGuidanceContextId,
+  type SupportContextPayload,
+} from "../support-context";
+import type { TranslationParams } from "@/lib/i18n";
 
 /** Keep keys and order aligned with `apps/admin-api/app/api/v1/webapp.py` → `_WEBAPP_SUPPORT_FAQ_ITEMS`. */
 const FALLBACK_SUPPORT_FAQ_KEYS: ReadonlyArray<{ title_key: string; body_key: string }> = [
@@ -49,16 +61,80 @@ const TROUBLESHOOTER_STEPS = [
   },
 ] as const;
 
+function formatExpiresLabel(value: string | null, locale: string): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return new Intl.DateTimeFormat(locale === "ru" ? "ru-RU" : "en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(date);
+}
+
+function buildCopyText(payload: SupportContextPayload, t: (key: string, params?: TranslationParams) => string) {
+  const expiresAt = formatExpiresLabel(payload.subscription_expires_at, payload.locale);
+  const subscriptionValue =
+    payload.subscription_status === "active" && expiresAt
+      ? `${payload.subscription_status} · ${expiresAt}`
+      : payload.subscription_status;
+
+  return [
+    t("support.diagnostics_title"),
+    `${t("support.diagnostics_context_label")}: ${payload.guidance_context_id}`,
+    `${t("support.diagnostics_subscription_label")}: ${subscriptionValue}`,
+    `${t("support.diagnostics_devices_label")}: ${payload.device_count}${payload.device_limit != null ? ` / ${payload.device_limit}` : ""}`,
+    `${t("support.diagnostics_route_label")}: ${payload.current_route}`,
+    `${t("support.diagnostics_last_action_label")}: ${payload.last_action}`,
+    `${t("support.diagnostics_app_label")}: ${payload.app_version} (${payload.build_id})`,
+    `${t("support.diagnostics_platform_label")}: ${payload.platform}`,
+    `${t("support.diagnostics_locale_label")}: ${payload.locale}`,
+    payload.latest_device_name ? `Latest device: ${payload.latest_device_name}` : null,
+    payload.public_ip ? `Public IP: ${payload.public_ip}` : null,
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+function buildDiagnosticStats(
+  payload: SupportContextPayload,
+  t: (key: string, params?: TranslationParams) => string,
+) {
+  const expiresAt = formatExpiresLabel(payload.subscription_expires_at, payload.locale);
+  const subscriptionValue =
+    payload.subscription_status === "active" && expiresAt
+      ? `${payload.subscription_status} · ${expiresAt}`
+      : payload.subscription_status;
+  return [
+    { label: t("support.diagnostics_context_label"), value: payload.guidance_context_id },
+    { label: t("support.diagnostics_subscription_label"), value: subscriptionValue },
+    {
+      label: t("support.diagnostics_devices_label"),
+      value: payload.device_limit != null ? `${payload.device_count} / ${payload.device_limit}` : `${payload.device_count}`,
+    },
+    { label: t("support.diagnostics_route_label"), value: payload.current_route },
+    { label: t("support.diagnostics_last_action_label"), value: payload.last_action },
+    { label: t("support.diagnostics_app_label"), value: `${payload.app_version} (${payload.build_id})` },
+    { label: t("support.diagnostics_platform_label"), value: payload.platform },
+    { label: t("support.diagnostics_locale_label"), value: payload.locale },
+  ];
+}
+
 export function useSupportPageModel() {
+  const location = useLocation();
   const queryClient = useQueryClient();
   const hasToken = !!useWebappToken();
   const { data, isLoading, error, refetch } = useSession(hasToken);
   const activeSub = getActiveSubscription(data);
   useTrackScreen("support", activeSub?.plan_id ?? null);
   const { track } = useTelemetry(activeSub?.plan_id ?? null);
+  const { addToast } = useToast();
   const [step, setStep] = useState(0);
   const totalSteps = TROUBLESHOOTER_STEPS.length;
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const guidanceContextId = useGuidanceContextId();
+  const supportHref = getSupportContactHref();
+  const platform = telegramClient.getPlatform();
 
   const faqQuery = useQuery<WebAppSupportFaqResponse>({
     queryKey: [...webappQueryKeys.supportFaq()],
@@ -89,8 +165,7 @@ export function useSupportPageModel() {
     subtitle: t("support.header_subtitle"),
   };
 
-  const faqBlocking =
-    hasToken && !faqQuery.isFetched && (faqQuery.isPending || faqQuery.isFetching);
+  const faqBlocking = hasToken && !faqQuery.isFetched && (faqQuery.isPending || faqQuery.isFetching);
 
   const pageState: StandardPageState = !hasToken
     ? { status: "empty", title: t("common.session_missing_title") }
@@ -113,13 +188,60 @@ export function useSupportPageModel() {
     subtitle: t("support.hero_subtitle"),
   };
 
-  /** Only for step 0: label for the "No" path (e.g. navigate to plan). */
-  const currentStepAltLabel =
-    step === 0 ? t("support.troubleshooter_step_access_alt") : undefined;
+  const supportContext = useMemo(() => {
+    const persisted = readPersistedSupportContext();
+    if (persisted) return persisted;
+    return buildSupportContext({
+      session: data,
+      currentRoute: location.pathname,
+      lastAction: "support_opened",
+      platform,
+      locale,
+      guidanceContextId,
+    });
+  }, [data, guidanceContextId, location.pathname, platform, locale]);
+
+  const diagnosticStats = useMemo(() => buildDiagnosticStats(supportContext, t), [supportContext, t]);
+  const diagnosticCopyText = useMemo(() => buildCopyText(supportContext, t), [supportContext, t]);
+
+  const copyDiagnostics = useCallback(async (): Promise<boolean> => {
+    if (!navigator.clipboard?.writeText) {
+      addToast(t("support.diagnostics_copy_failed"), "error");
+      return false;
+    }
+    try {
+      await navigator.clipboard.writeText(diagnosticCopyText);
+      addToast(t("support.diagnostics_copied"), "success");
+      return true;
+    } catch {
+      addToast(t("support.diagnostics_copy_failed"), "error");
+      return false;
+    }
+  }, [addToast, diagnosticCopyText, t]);
+
+  const contactSupport = useCallback(async () => {
+    persistSupportContext({
+      ...supportContext,
+      last_action: "support_contact_opened",
+      current_route: location.pathname,
+    });
+    await copyDiagnostics();
+    if (supportHref) {
+      telegramClient.openLink(supportHref);
+    }
+  }, [copyDiagnostics, location.pathname, supportContext, supportHref]);
 
   useEffect(() => {
-    track("support_opened", { screen_name: "support" });
-  }, [track]);
+    track("support_opened", {
+      screen_name: "support",
+      route: location.pathname,
+      device_count: supportContext.device_count,
+      device_limit: supportContext.device_limit ?? undefined,
+      last_action: supportContext.last_action,
+    });
+  }, [location.pathname, supportContext.device_count, supportContext.device_limit, supportContext.last_action, track]);
+
+  const currentStepAltLabel = step === 0 ? t("support.troubleshooter_step_access_alt") : undefined;
 
   return {
     header,
@@ -127,7 +249,6 @@ export function useSupportPageModel() {
     hero,
     faqItems,
     refetchFaq,
-    /** True when `/webapp/support/faq` failed; UI still shows `faqItems` from fallback keys. */
     faqOffline: hasToken && faqQuery.isError,
     currentStep: {
       title: t(TROUBLESHOOTER_STEPS[step]?.titleKey ?? TROUBLESHOOTER_STEPS[0].titleKey),
@@ -140,5 +261,11 @@ export function useSupportPageModel() {
     currentStepAltLabel,
     nextStep: () => setStep((value) => (value + 1 < totalSteps ? value + 1 : 0)),
     previousStep: step > 0 ? () => setStep((value) => value - 1) : undefined,
+    supportContext,
+    diagnosticStats,
+    diagnosticCopyText,
+    copyDiagnostics,
+    contactSupport,
+    supportHref,
   };
 }

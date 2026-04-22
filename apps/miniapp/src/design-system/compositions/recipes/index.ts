@@ -16,6 +16,8 @@ export { FaqDisclosureItem } from "./support/FaqDisclosureItem";
 export type { FaqDisclosureItemProps } from "./support/FaqDisclosureItem";
 export { TroubleshooterFlowCard } from "./support/TroubleshooterFlowCard";
 export type { TroubleshooterFlowCardProps } from "./support/TroubleshooterFlowCard";
+export { SupportDiagnosticsCard } from "./support/SupportDiagnosticsCard";
+export type { SupportDiagnosticsCardProps } from "./support/SupportDiagnosticsCard";
 export { ConnectStatusSummaryCard } from "./connect-status/ConnectStatusSummaryCard";
 export type { ConnectStatusSummaryCardProps } from "./connect-status/ConnectStatusSummaryCard";
 export { ConnectStatusVerifyCard } from "./connect-status/ConnectStatusVerifyCard";

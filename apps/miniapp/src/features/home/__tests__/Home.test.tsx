@@ -89,9 +89,9 @@ describe("HomePage", () => {
     expect(screen.getByText("Pro")).toBeInTheDocument();
     expect(screen.getByText("Manage Devices")).toBeInTheDocument();
     expect(screen.getByText("Subscription")).toBeInTheDocument();
-    expect(screen.getByText("Invite Friends")).toBeInTheDocument();
+    expect(screen.getByText("Invite a friend")).toBeInTheDocument();
     expect(screen.getByText("2 of 5 active")).toBeInTheDocument();
-    expect(screen.getByText("Donate via Platega")).toBeInTheDocument();
+    expect(screen.getByText("Support project")).toBeInTheDocument();
     expect(screen.queryAllByText("View setup guide")).toHaveLength(1);
   });
 
@@ -185,7 +185,7 @@ describe("HomePage", () => {
 
     expect(screen.getByText("Setup Required")).toBeInTheDocument();
     expect(screen.getByText(/Choose a plan and add a device to get your secure configuration/)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Choose a Plan/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Choose plan/i })).toBeInTheDocument();
   });
 
   it("renders expired state", () => {
