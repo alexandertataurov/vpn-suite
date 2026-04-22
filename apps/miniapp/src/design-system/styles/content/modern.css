@@ -182,8 +182,10 @@
 
 /* ---- Toggle (amnezia spec) ------------------------- */
 .miniapp-shell .ts-toggle {
-  width: 38px;
-  height: 22px;
+  width: var(--size-touch-target);
+  height: var(--size-touch-target);
+  min-width: var(--size-touch-target);
+  min-height: var(--size-touch-target);
   padding: 0;
   border-radius: 100px;
   background: transparent;
@@ -204,6 +206,7 @@
   position: relative;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
 }
 
 .miniapp-shell .ts-toggle.on .ts-track {
@@ -638,6 +641,10 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
 }
 
 .footer-help__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--size-touch-target);
+  padding: 0 2px;
   color: color-mix(in oklch, var(--color-text-tertiary) 84%, var(--color-accent) 16%);
   font-weight: var(--font-weight-medium);
   text-decoration: none;
@@ -705,6 +712,10 @@ html[data-theme="consumer-dark"] .modern-profile-row .modern-avatar--profile {
 }
 
 .help-footer__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--size-touch-target);
+  padding: 0 2px;
   color: color-mix(in oklch, var(--color-text-tertiary) 84%, var(--color-accent) 16%);
   font-weight: var(--font-weight-medium);
   text-decoration: none;
