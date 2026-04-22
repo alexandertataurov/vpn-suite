@@ -3,6 +3,13 @@
 Перед тегом/релизом выполнить по порядку. Все пункты должны быть зелёными.  
 **Для v0.1.0-rc.1:** версия в `main.py` (API_VERSION), CHANGELOG, NODE_MODE в /health, E2E в CI.
 
+## Release shape
+
+- Day-to-day UI changes stay on local Docker services and local Storybook.
+- Beta releases are promoted through `beta-release`.
+- Production gets the same reviewed commit only after beta smoke passes.
+- For smaller slices, prefer feature flags over introducing a new canary environment.
+
 ---
 
 ## 1. Код и тесты
@@ -48,6 +55,15 @@
 - [ ] **Plans:** создан хотя бы один тариф (Plans) для бота и miniapp через Admin UI (Billing / Plans)
 - [ ] **Production (recommended):** `NODE_MODE=agent`, `NODE_DISCOVERY=agent`; ноды подключаются через `node-agent` (outbound-only) и mTLS на `https://$PUBLIC_DOMAIN:8443/api/v1/agent/*` (allowlist `AGENT_ALLOW_CIDRS`).
 - [ ] Резервное копирование настроено по расписанию (см. `docs/ops/runbook.md`).
+
+### Branch promotion flow
+
+1. Develop locally against `./manage.sh up-core`, `pnpm run storybook:*`, and `pnpm dev:*`.
+2. Merge to `beta-release` when local checks are green.
+3. Confirm the beta deployment is healthy.
+4. Run `./manage.sh smoke-staging` for the staged validation gate.
+5. If the change touches node scheduling, reconcile, or failover, run `./manage.sh smoke-staging-ha`.
+6. Promote the same reviewed commit to production only after beta smoke passes.
 
 ## 5. Функциональные упущения (известные)
 

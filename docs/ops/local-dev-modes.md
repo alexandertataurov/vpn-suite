@@ -1,6 +1,6 @@
 # Local Development Modes — Architecture & Workflow
 
-Архитектура локальной среды с переключением между режимами: local full-stack, local frontend + beta API, beta deployed.
+Default mode for day-to-day work: local full-stack plus local Storybook, with live beta/prod used only when you explicitly need to validate against remote data or a deployed release.
 
 ---
 
@@ -35,7 +35,25 @@
 
 ---
 
-## 2. UI Testing Workflow
+## 2. Local-First UI Workflow
+
+Use this as the default loop for both admin and miniapp work:
+
+```bash
+./manage.sh up-core
+pnpm run storybook:admin
+pnpm run storybook:miniapp
+pnpm run dev:admin
+pnpm run dev:miniapp
+```
+
+- `storybook:*` is for isolated component and page-state work without depending on the backend.
+- `dev:*` is for routing, API integration, auth, and end-to-end flow testing against the local stack.
+- Keep beta/prod out of the normal edit-test loop unless you need a live-data check.
+
+---
+
+## 3. UI Testing Workflow
 
 ### Mode A: Frontend vs Local Backend
 
@@ -77,7 +95,7 @@ open https://YOUR_BETA_DOMAIN/admin
 
 ---
 
-## 3. Env Design
+## 4. Env Design
 
 ### .env.local (local full-stack)
 
@@ -124,7 +142,7 @@ pnpm dev:admin
 
 ---
 
-## 4. Data Flow
+## 5. Data Flow
 
 | Шаг | Команда |
 |-----|---------|
@@ -138,7 +156,7 @@ pnpm dev:admin
 
 ---
 
-## 5. Commands & Scripts
+## 6. Commands & Scripts
 
 ### Exact Commands
 
@@ -172,27 +190,32 @@ cd apps/admin-api && .venv/bin/uvicorn app.main:app --reload --host 127.0.0.1 --
 
 ---
 
-## 6. Recommended Workflow
+## 7. Recommended Workflow
 
 ### Daily Local Dev
 
 1. `./manage.sh up-core`
-2. При необходимости: `./infra/scripts/runtime/refresh-local-from-vps.sh`
-3. `pnpm dev:admin` (или `dev:miniapp`)
-4. Разработка, тесты, `./manage.sh check`
+2. `pnpm run storybook:admin` или `pnpm run storybook:miniapp` для isolated UI work
+3. `pnpm dev:admin` или `pnpm dev:miniapp` для flow testing
+4. `./manage.sh check` перед пушем
+5. При необходимости: `./infra/scripts/runtime/refresh-local-from-vps.sh` для свежего sanitized snapshot
 
 ### Pre-Push Interface Testing
 
 1. `./manage.sh check`
-2. Локально: проверить ключевые экраны в Mode A
-3. Опционально: Mode B для проверки против beta API
-4. `git add -A && git status && git diff --stat`
-5. `git commit && git push origin beta-release`
+2. `pnpm run test`
+3. `pnpm run build`
+4. Локально: проверить ключевые экраны в Mode A
+5. Опционально: Mode B для проверки против beta API
+6. `git add -A && git status && git diff --stat`
+7. `git commit && git push origin beta-release`
 
 ### Push to Beta
 
-1. `git push origin beta-release`
-2. Дождаться деплоя (webhook/CI)
+1. Merge reviewed changes to `beta-release`
+2. Push `beta-release`
+3. Дождаться деплоя (webhook/CI)
+4. Запустить `./manage.sh smoke-staging`
 
 ### Final Beta Smoke Test
 
@@ -200,9 +223,15 @@ cd apps/admin-api && .venv/bin/uvicorn app.main:app --reload --host 127.0.0.1 --
 2. Логин, проверка основных flow
 3. При проблемах — логи на VPS, фикс локально, повторный push
 
+### Production Promotion
+
+1. После green beta smoke tagнуть reviewed commit
+2. Деплоить тот же SHA в production
+3. Проверить health, login, and the main user flows before widening access
+
 ---
 
-## 7. Safety Rules
+## 8. Safety Rules
 
 | Правило | Описание |
 |---------|----------|

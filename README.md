@@ -55,6 +55,8 @@ cp .env.example .env
 
 - **Admin:** `https://<PUBLIC_DOMAIN>/admin`
 - **API:** `https://<PUBLIC_DOMAIN>/api/v1`
+- **Local UI work:** `pnpm run storybook:admin`, `pnpm run storybook:miniapp`, `pnpm run dev:admin`, `pnpm run dev:miniapp`
+- **Local integration tests:** `pnpm run test:e2e:ci` for admin, `pnpm run test:e2e:miniapp` for miniapp
 
 **One-command bring-up (agent mode):**
 

@@ -60,6 +60,10 @@ Codebase layout, API, quality gates, and release flow.
 
 ## 5. Local development
 
+- **Default daily loop:** local Docker stack + local Storybook + local dev server.
+- **Admin UI:** `./manage.sh up-core` → `pnpm run storybook:admin` → `pnpm run dev:admin`
+- **Miniapp UI:** `./manage.sh up-core` → `pnpm run storybook:miniapp` → `pnpm run dev:miniapp`
+- **Server-backed flows:** use Playwright against the local dev server, not live beta/prod, unless you need to validate remote data.
 - [ops/local-dev-environment.md](../ops/local-dev-environment.md) — setup (WSL2, Docker, Node, Python)
 - [ops/local-dev-modes.md](../ops/local-dev-modes.md) — full-stack vs beta API vs deployed
 - [ops/local-first-data-sync.md](../ops/local-first-data-sync.md) — data sync from VPS
