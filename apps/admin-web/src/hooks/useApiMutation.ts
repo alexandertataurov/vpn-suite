@@ -4,7 +4,7 @@ import { useApi } from "@/core/api/context";
 /**
  * Thin wrapper around useMutation that uses the project's API client.
  * Purpose: POST/PATCH/PUT/DELETE with optional query invalidation on success.
- * Used in: useCreateServer, useUpdateServer, useDeleteServer, useUpdateUser, useDeleteUser, device action hooks.
+ * Used in: server and device action hooks.
  */
 export function useApiMutation<TData = unknown, TError = Error, TVariables = void>(
   options: {

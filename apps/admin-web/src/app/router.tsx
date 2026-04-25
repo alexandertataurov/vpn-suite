@@ -28,6 +28,7 @@ const VpnNodesPage = lazy(() => import("@/features/vpn-nodes/VpnNodesPage").then
 const TelemetryPage = lazy(() => import("@/features/telemetry/TelemetryPage").then((m) => ({ default: m.TelemetryPage })));
 const UsersPage = lazy(() => import("@/features/users/UsersPage").then((m) => ({ default: m.UsersPage })));
 const DevicesPage = lazy(() => import("@/features/devices/DevicesPage").then((m) => ({ default: m.DevicesPage })));
+const CustomerOpsPage = lazy(() => import("@/features/customer-ops/CustomerOpsPage").then((m) => ({ default: m.CustomerOpsPage })));
 const AutomationPage = lazy(() => import("@/features/automation/AutomationPage").then((m) => ({ default: m.AutomationPage })));
 const RevenuePage = lazy(() => import("@/features/revenue/RevenuePage").then((m) => ({ default: m.RevenuePage })));
 const BillingPage = lazy(() => import("@/features/billing/BillingPage").then((m) => ({ default: m.BillingPage })));
@@ -58,6 +59,7 @@ export function AppRouter() {
           <Route path="telemetry" element={<TelemetryPage />} />
           <Route path="users" element={<UsersPage />} />
           <Route path="devices" element={<DevicesPage />} />
+          <Route path="customer-360" element={<CustomerOpsPage />} />
           <Route path="automation" element={<AutomationPage />} />
           <Route path="revenue" element={<RevenuePage />} />
           <Route path="billing" element={<BillingPage />} />

@@ -254,14 +254,14 @@ test.describe("Users", () => {
     await expect(page.getByRole("heading", { name: /Users/i })).toBeVisible({ timeout: 10000 });
   });
 
-  test("open user panel when list has rows", async ({ page }) => {
+  test("user detail workspace opens when list has rows", async ({ page }) => {
     await page.goto("users");
     await page.waitForLoadState("domcontentloaded");
-    const openPanelBtn = page.getByRole("button", { name: /Open profile/i }).first();
-    if (await openPanelBtn.isVisible()) {
-      await openPanelBtn.click();
-      await expect(page.getByRole("heading", { name: /User #/i })).toBeVisible();
-      await expect(page.getByRole("button", { name: /Cancel/i }).first()).toBeVisible();
+    const inspectBtn = page.getByRole("button", { name: /Inspect/i }).first();
+    if (await inspectBtn.isVisible().catch(() => false)) {
+      await inspectBtn.click();
+      await expect(page.getByTestId("user-detail-workspace").or(page.getByTestId("users-detail-drawer"))).toBeVisible();
+      await expect(page.getByRole("tab", { name: /Overview/i })).toBeVisible();
     }
   });
 });

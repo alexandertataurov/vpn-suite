@@ -16,6 +16,7 @@ export const ROUTES_META: RouteMeta[] = [
   { path: "/servers", title: "Servers", requiresAuth: true, navVisible: true, navLabel: "Servers", navSection: "Monitor", navShort: "SV" },
   { path: "/servers/nodes", title: "VPN Nodes", requiresAuth: true, navVisible: false },
   { path: "/telemetry", title: "Telemetry", requiresAuth: true, navVisible: true, navLabel: "Telemetry", navSection: "Monitor", navShort: "TM" },
+  { path: "/customer-360", title: "Customer 360", requiresAuth: true, navVisible: true, navLabel: "Customer 360", navSection: "Monitor", navShort: "C3" },
   { path: "/users", title: "Users", requiresAuth: true, navVisible: true, navLabel: "Users", navSection: "Monitor", navShort: "US" },
   { path: "/devices", title: "Devices", requiresAuth: true, navVisible: true, navLabel: "Devices", navSection: "Monitor", navShort: "DV" },
   { path: "/automation", title: "Automation", requiresAuth: true, navVisible: true, navLabel: "Automation", navSection: "Monitor", navShort: "AT" },
