@@ -2,7 +2,8 @@ import { useMemo, useState, useCallback, useRef, useEffect } from "react";
 import { useApiQuery } from "@/hooks/api/useApiQuery";
 import { Button, Drawer, EmptyState, ErrorState, SectionHeader, Skeleton, useToast, Widget, Nbar } from "@/design-system/primitives";
 import { PageLayout } from "@/layout/PageLayout";
-import { BodyText } from "@/design-system/typography";
+import { MetaText } from "@/design-system/typography";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import {
   ApiLatencyWidget,
   ClusterLoadWidget,
@@ -53,6 +54,22 @@ interface OperatorDashboard {
     link?: string;
   }>;
 }
+
+type OverviewDensity = "comfortable" | "compact";
+type OverviewEmphasis = "balanced" | "operational";
+type OverviewAutoRefresh = "off" | "30" | "60";
+
+interface OverviewPreferences {
+  density: OverviewDensity;
+  emphasis: OverviewEmphasis;
+  autoRefresh: OverviewAutoRefresh;
+}
+
+const DEFAULT_OVERVIEW_PREFERENCES: OverviewPreferences = {
+  density: "comfortable",
+  emphasis: "balanced",
+  autoRefresh: "off",
+};
 
 function getServerStatusVisual(status: string) {
   const statusVariant = serverStatusToVariant(status);
@@ -153,6 +170,10 @@ function timeseriesToSparkPoints(
 
 export function OverviewPage() {
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [preferences, setPreferences] = useLocalStorage<OverviewPreferences>(
+    "admin-web:overview-preferences",
+    DEFAULT_OVERVIEW_PREFERENCES
+  );
   const [refreshLabel, setRefreshLabel] = useState<"Refresh" | "Updating..." | "Updated just now">("Refresh");
   const refreshLabelTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const toast = useToast();
@@ -195,6 +216,21 @@ export function OverviewPage() {
       setRefreshLabel("Refresh");
     }
   }, [refetch, refetchOperator, toast]);
+
+  useEffect(() => {
+    if (preferences.autoRefresh === "off") return;
+    const id = setInterval(() => {
+      void Promise.all([refetch(), refetchOperator()]);
+    }, Number(preferences.autoRefresh) * 1000);
+    return () => clearInterval(id);
+  }, [preferences.autoRefresh, refetch, refetchOperator]);
+
+  const updatePreferences = useCallback(
+    (patch: Partial<OverviewPreferences>) => {
+      setPreferences({ ...preferences, ...patch });
+    },
+    [preferences, setPreferences]
+  );
 
   const strip = operatorData?.health_strip;
   const servers = useMemo(
@@ -362,7 +398,11 @@ export function OverviewPage() {
       title="Overview"
       description={overviewDescription}
       actions={overviewActions}
-      pageClass="overview-page"
+      pageClass={[
+        "overview-page",
+        `overview-page--density-${preferences.density}`,
+        `overview-page--emphasis-${preferences.emphasis}`,
+      ].join(" ")}
       dataTestId="dashboard-page"
     >
       {(incidentCounts.critical ?? 0) > 0 && (
@@ -547,9 +587,48 @@ export function OverviewPage() {
         size="sm"
         data-testid="dashboard-settings-modal"
       >
-        <BodyText className="type-body-sm overview-page__settings-text">
-          Density, theme, and other preferences (placeholder).
-        </BodyText>
+        <div className="overview-page__settings">
+          <label className="input-label">
+            Density
+            <select
+              className="input"
+              value={preferences.density}
+              onChange={(event) => updatePreferences({ density: event.target.value as OverviewDensity })}
+              aria-label="Dashboard density"
+            >
+              <option value="comfortable">Comfortable</option>
+              <option value="compact">Compact</option>
+            </select>
+          </label>
+          <label className="input-label">
+            Widget emphasis
+            <select
+              className="input"
+              value={preferences.emphasis}
+              onChange={(event) => updatePreferences({ emphasis: event.target.value as OverviewEmphasis })}
+              aria-label="Widget emphasis"
+            >
+              <option value="balanced">Balanced</option>
+              <option value="operational">Operational</option>
+            </select>
+          </label>
+          <label className="input-label">
+            Auto-refresh
+            <select
+              className="input"
+              value={preferences.autoRefresh}
+              onChange={(event) => updatePreferences({ autoRefresh: event.target.value as OverviewAutoRefresh })}
+              aria-label="Auto-refresh"
+            >
+              <option value="off">Off</option>
+              <option value="30">Every 30 seconds</option>
+              <option value="60">Every 60 seconds</option>
+            </select>
+          </label>
+          <MetaText className="overview-page__settings-text">
+            Preferences are stored in this browser and apply immediately to the dashboard layout.
+          </MetaText>
+        </div>
       </Drawer>
     </PageLayout>
   );

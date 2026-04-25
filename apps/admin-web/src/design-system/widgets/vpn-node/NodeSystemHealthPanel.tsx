@@ -45,9 +45,7 @@ export function NodeSystemHealthPanel({ system }: NodeSystemHealthPanelProps) {
         <span className="vpn-node-drilldown-v type-data-mono">{dash(system.container_health)}</span>
       </div>
       <div className="vpn-node-drilldown-kv">
-        <span className="vpn-node-drilldown-k" title="NTP/clock (placeholder when available)">
-          NTP
-        </span>
+        <span className="vpn-node-drilldown-k">NTP</span>
         <span className="vpn-node-drilldown-v type-data-mono">{dash(system.ntp_status)}</span>
       </div>
     </section>

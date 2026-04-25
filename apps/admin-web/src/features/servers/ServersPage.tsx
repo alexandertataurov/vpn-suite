@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useApiQuery } from "@/hooks/api/useApiQuery";
 import { useApi } from "@/core/api/context";
 import { serverKeys } from "@/features/servers/services/server.query-keys";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import {
   Badge,
   Button,
@@ -80,6 +81,24 @@ function formatBps(bps: number): string {
   return `${bps} bps`;
 }
 
+function formatBytes(bytes: number): string {
+  if (!Number.isFinite(bytes) || bytes <= 0) return "0 B";
+  if (bytes >= 1e12) return `${(bytes / 1e12).toFixed(2)} TB`;
+  if (bytes >= 1e9) return `${(bytes / 1e9).toFixed(2)} GB`;
+  if (bytes >= 1e6) return `${(bytes / 1e6).toFixed(1)} MB`;
+  if (bytes >= 1e3) return `${(bytes / 1e3).toFixed(0)} KB`;
+  return `${Math.round(bytes)} B`;
+}
+
+function formatUsd(value: number): string {
+  if (!Number.isFinite(value)) return "$0.00";
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: value >= 100 ? 0 : 2,
+  }).format(value);
+}
+
 function formatPercent(v: number | null | undefined): string {
   if (v == null) return "—";
   return `${Math.round(v)}%`;
@@ -94,6 +113,10 @@ function formatRatio(numerator: number | null | undefined, denominator: number |
 export function ServersPage() {
   const [serverFilter, setServerFilter] = useState("");
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [egressRateUsdPerTb, setEgressRateUsdPerTb] = useLocalStorage<number>(
+    "admin-web:servers-egress-rate-usd-per-tb",
+    5
+  );
 
   const { data, isLoading, isError, error, refetch } = useApiQuery<ServersSnapshotSummaryOut>(
     [...serverKeys.snapshotsSummary()],
@@ -145,6 +168,19 @@ export function ServersPage() {
       { key: "Bandwidth", value: formatBps(totalThroughput) },
     ];
   }, [operatorServers]);
+
+  const egressEstimate = useMemo(() => {
+    const totalThroughputBps = operatorServers.reduce((sum, server) => sum + (server.throughput_bps ?? 0), 0);
+    const bytesPerDay = (totalThroughputBps / 8) * 86_400;
+    const tbPerDay = bytesPerDay / 1e12;
+    const dailyCost = tbPerDay * egressRateUsdPerTb;
+    return {
+      totalThroughputBps,
+      bytesPerDay,
+      dailyCost,
+      monthlyCost: dailyCost * 30,
+    };
+  }, [egressRateUsdPerTb, operatorServers]);
 
   const incidentsData = useMemo(
     () => ({
@@ -318,13 +354,44 @@ export function ServersPage() {
           />
           <Widget
             title="Egress cost estimator"
-            subtitle="Placeholder"
+            subtitle="traffic × provider rate"
             size="medium"
             className="edge eb cc"
           >
-            <p className="servers-page__muted type-meta">
-              Coming soon. Estimate egress cost from traffic and provider rates.
-            </p>
+            <div className="servers-page__egress-estimator">
+              <div className="servers-page__egress-metrics" aria-label="Egress cost estimate">
+                <div>
+                  <MetaText>Current egress</MetaText>
+                  <strong>{formatBps(egressEstimate.totalThroughputBps)}</strong>
+                </div>
+                <div>
+                  <MetaText>Projected 24h</MetaText>
+                  <strong>{formatBytes(egressEstimate.bytesPerDay)}</strong>
+                </div>
+                <div>
+                  <MetaText>Daily cost</MetaText>
+                  <strong>{formatUsd(egressEstimate.dailyCost)}</strong>
+                </div>
+                <div>
+                  <MetaText>Monthly cost</MetaText>
+                  <strong>{formatUsd(egressEstimate.monthlyCost)}</strong>
+                </div>
+              </div>
+              <label className="input-label">
+                Provider rate per TB
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={String(egressRateUsdPerTb)}
+                  onChange={(event) => {
+                    const next = Number(event.target.value);
+                    setEgressRateUsdPerTb(Number.isFinite(next) && next >= 0 ? next : 0);
+                  }}
+                  aria-label="Provider rate per TB"
+                />
+              </label>
+            </div>
           </Widget>
         </div>
       </section>
