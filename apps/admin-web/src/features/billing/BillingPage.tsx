@@ -16,6 +16,10 @@ import {
   Modal,
   SectionHeader,
   Skeleton,
+  Tabs,
+  TabsList,
+  TabsPanel,
+  TabsTrigger,
 } from "@/design-system/primitives";
 import { PageLayout } from "@/layout/PageLayout";
 import { MetaText } from "@/design-system/typography";
@@ -26,6 +30,7 @@ import type {
   PaymentList,
   PlanList,
   PlanOut,
+  SubscriptionList,
 } from "@/shared/types/admin-api";
 
 const TABS = [
@@ -48,18 +53,17 @@ type PlanVisibilityFilter = "all" | "visible" | "hidden";
 
 interface PlanRow extends Record<string, unknown> {
   id: string;
-  name: string;
+  name: JSX.Element;
   duration: string;
   deviceLimit: string;
-  price: string;
-  style: string;
+  price: JSX.Element;
+  style: JSX.Element;
   subscriptions: string;
   archived: JSX.Element;
-  upsellMethods: string;
-  createdAt: string;
   order: JSX.Element;
   actions: JSX.Element;
   hidden: boolean;
+  searchText: string;
 }
 
 interface PlanFormState {
@@ -95,13 +99,54 @@ function applyPlanStyle(cleanName: string, style: PlanStyle): string {
   return `${prefix}${base}`;
 }
 
+function formatDateTime(value: string | null | undefined): string {
+  return value ? new Date(value).toLocaleString() : "—";
+}
+
+function formatMoney(amount: string | number | null | undefined, currency: string | null | undefined): string {
+  return `${amount ?? "—"} ${currency ?? ""}`.trim();
+}
+
+function paymentStatusVariant(status: string): "success" | "warning" | "danger" | "neutral" {
+  if (status === "completed") return "success";
+  if (status === "pending") return "warning";
+  if (status === "failed") return "danger";
+  return "neutral";
+}
+
+interface PaymentAggregate {
+  amount: number;
+  currency: string | null;
+  mixed: boolean;
+}
+
+function sumCompletedPayments(payments: PaymentList | undefined): PaymentAggregate {
+  return (payments?.items ?? [])
+    .filter((payment) => payment.status === "completed")
+    .reduce<PaymentAggregate>(
+      (state, payment) => {
+        const amount = Number(payment.amount || 0);
+        const currency = payment.currency || null;
+        return {
+          amount: state.amount + (Number.isFinite(amount) ? amount : 0),
+          currency: state.currency ?? currency,
+          mixed: state.mixed || (state.currency != null && currency != null && state.currency !== currency),
+        };
+      },
+      { amount: 0, currency: null, mixed: false }
+    );
+}
+
 export function BillingPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const tabParam = searchParams.get("tab");
   const active = tabParam && TABS.some((t) => t.id === tabParam) ? tabParam : TABS[0].id;
-  const panelId = `billing-tabpanel-${active}`;
 
-  const setActive = (id: string) => setSearchParams({ tab: id });
+  const setActive = (id: string) => {
+    const next = new URLSearchParams(searchParams);
+    next.set("tab", id);
+    setSearchParams(next);
+  };
 
   const api = useApi();
   const queryClient = useQueryClient();
@@ -178,7 +223,16 @@ export function BillingPage() {
   } = useApiQuery<PaymentList>(
     [...billingKeys.payments(paymentFilters)],
     paymentsPath,
-    { retry: 1, enabled: active === "payments" }
+    { retry: 1 }
+  );
+
+  const {
+    data: cockpitSubscriptions,
+    isLoading: isCockpitSubscriptionsLoading,
+  } = useApiQuery<SubscriptionList>(
+    [...billingKeys.subscriptions({ limit: 50, offset: 0 })],
+    "/subscriptions?limit=50&offset=0",
+    { retry: 1, staleTime: 15_000 }
   );
 
   const entitlementEventsPath = useMemo(() => {
@@ -340,20 +394,37 @@ export function BillingPage() {
       const canDelete = subCount === 0;
       return {
         id: p.id,
-        name: cleanName || p.id,
+        name: (
+          <span className="billing-page__entity-cell">
+            <strong>{cleanName || p.id}</strong>
+            <MetaText>{p.id}</MetaText>
+            {upsellList !== "—" ? <MetaText>Upsell: {upsellList}</MetaText> : null}
+          </span>
+        ),
         duration: `${p.duration_days} days`,
         deviceLimit: `${p.device_limit ?? 1}`,
-        price: `${p.price_amount} ${p.price_currency}`,
-        style: styleLabel,
+        price: (
+          <span className="billing-page__money-cell">
+            <strong>{formatMoney(p.price_amount, p.price_currency)}</strong>
+            <MetaText>{Number(p.price_amount ?? 0) <= 0 ? "Free" : "Paid"}</MetaText>
+          </span>
+        ),
+        style: (
+          <Badge
+            variant={style === "promotional" ? "warning" : style === "popular" ? "info" : "neutral"}
+            size="sm"
+          >
+            {styleLabel}
+          </Badge>
+        ),
         subscriptions: subCount > 0 ? `${subCount}` : "0 (can delete)",
         archived: (
           <Badge variant={p.is_archived ? "warning" : "success"} size="sm">
             {p.is_archived ? "Hidden" : "Visible"}
           </Badge>
         ),
-        upsellMethods: upsellList,
-        createdAt: new Date(p.created_at).toLocaleDateString(),
         hidden: Boolean(p.is_archived),
+        searchText: `${cleanName || ""} ${p.id}`.toLowerCase(),
         order: (
           <span className="billing-page__plan-actions">
             <Button
@@ -466,9 +537,7 @@ export function BillingPage() {
       if (planVisibilityFilter === "visible" && row.hidden) return false;
       if (planVisibilityFilter === "hidden" && !row.hidden) return false;
       if (!q) return true;
-      const name = String(row.name ?? "").toLowerCase();
-      const id = String(row.id ?? "").toLowerCase();
-      return name.includes(q) || id.includes(q);
+      return row.searchText.includes(q);
     });
   }, [planRows, planSearch, planVisibilityFilter]);
 
@@ -477,6 +546,18 @@ export function BillingPage() {
     const hidden = planRows.filter((row) => row.hidden).length;
     return { total, hidden, visible: total - hidden };
   }, [planRows]);
+
+  const completedPayments = useMemo(() => sumCompletedPayments(paymentsData), [paymentsData]);
+  const paymentVolumeLabel =
+    completedPayments.mixed || !completedPayments.currency
+      ? `${paymentsData?.items.filter((payment) => payment.status === "completed").length ?? 0} completed loaded`
+      : formatMoney(completedPayments.amount, completedPayments.currency);
+  const loadedSubscriptionsLabel = isCockpitSubscriptionsLoading
+    ? "Loading"
+    : `${cockpitSubscriptions?.items.length ?? 0} loaded`;
+  const loadedPaymentsLabel = `${paymentsData?.items.length ?? 0} loaded`;
+  const loadedEntitlementsLabel = entitlementEvents ? `${entitlementEvents.length} loaded` : "Open tab to load";
+  const loadedChurnLabel = churnSurveys ? `${churnSurveys.length} loaded` : "Open tab to load";
 
   const openCreateModal = () => {
     setEditingPlan(null);
@@ -568,28 +649,34 @@ export function BillingPage() {
   };
 
   return (
-    <PageLayout title="Billing" pageClass="billing-page" dataTestId="billing-page">
-      <div className="billing-page__tabs" role="tablist">
-        {TABS.map((tab) => (
-          <Button
-            key={tab.id}
-            type="button"
-            role="tab"
-            id={`billing-tab-${tab.id}`}
-            aria-controls={`billing-tabpanel-${tab.id}`}
-            aria-selected={active === tab.id}
-            tabIndex={active === tab.id ? 0 : -1}
-            variant="default"
-            className={`billing-page__tab${active === tab.id ? " billing-page__tab--active" : ""}`}
-            onClick={() => setActive(tab.id)}
-          >
-            {tab.label}
-          </Button>
-        ))}
-      </div>
-      <div className="billing-page__panel" role="tabpanel" id={panelId} aria-labelledby={`billing-tab-${active}`}>
-        {active === "plans" && (
-          <>
+    <PageLayout
+      title="Billing"
+      description="Plan setup, subscription state, payment ledger, and retention signals."
+      pageClass="billing-page"
+      dataTestId="billing-page"
+    >
+      <Card variant="outlined" className="billing-page__cockpit" aria-label="Billing cockpit">
+        <SectionHeader label="Billing cockpit" note="Loaded operational view across plans, payments, subscriptions, and retention." />
+        <div className="billing-page__cockpit-grid">
+          <BillingMetric label="Plans" value={`${planVisibilityStats.visible} visible`} detail={`${planVisibilityStats.hidden} hidden · ${planVisibilityStats.total} total`} tone="info" />
+          <BillingMetric label="Subscriptions" value={loadedSubscriptionsLabel} detail={`${cockpitSubscriptions?.total ?? 0} total from endpoint`} tone="success" />
+          <BillingMetric label="Payments" value={loadedPaymentsLabel} detail={paymentVolumeLabel} tone="success" />
+          <BillingMetric label="Entitlements" value={loadedEntitlementsLabel} detail={loadedChurnLabel === "Open tab to load" ? "Churn not loaded" : `Churn ${loadedChurnLabel}`} tone="neutral" />
+        </div>
+      </Card>
+
+      <Tabs value={active} onValueChange={setActive} variant="pill" className="billing-page__tabs">
+        <TabsList className="billing-page__tabs-list">
+          {TABS.map((tab) => (
+            <TabsTrigger key={tab.id} value={tab.id}>
+              {tab.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+        <div className="billing-page__panel">
+          <TabsPanel value="plans">
+            {active === "plans" && (
+              <>
             {isPlansLoading && <Skeleton height={120} />}
             {isPlansError && (
               <ErrorState
@@ -598,11 +685,18 @@ export function BillingPage() {
               />
             )}
             {!isPlansLoading && !isPlansError && (
-              <Card>
-                <SectionHeader label="Miniapp subscription plans" />
-                <MetaText>Configure the subscription plans exposed in the Telegram miniapp.</MetaText>
+              <Card className="billing-page__section-card">
+                <div className="billing-page__section-head">
+                  <div>
+                    <SectionHeader label="Miniapp subscription plans" />
+                    <MetaText>Configure the subscription plans exposed in the Telegram miniapp.</MetaText>
+                  </div>
+                  <Button type="button" onClick={openCreateModal}>
+                    Add plan
+                  </Button>
+                </div>
                 <MetaText className="billing-page__table-meta">
-                  {planVisibilityStats.visible} visible · {planVisibilityStats.hidden} hidden ·{" "}
+                  {filteredPlanRows.length} shown · {planVisibilityStats.visible} visible · {planVisibilityStats.hidden} hidden ·{" "}
                   {planVisibilityStats.total} total
                 </MetaText>
                 <div className="billing-page__filters">
@@ -630,7 +724,7 @@ export function BillingPage() {
                     </select>
                   </label>
                   <div className="billing-page__filter-actions">
-                    <Button type="button" variant="default" onClick={() => refetchPlans()}>
+                    <Button type="button" variant="secondary" onClick={() => refetchPlans()}>
                       Load plans
                     </Button>
                     <Button type="button" variant="ghost" onClick={resetPlanFilters}>
@@ -652,9 +746,6 @@ export function BillingPage() {
                     >
                       Unhide free plan{hiddenFreePlanIds.length > 1 ? "s" : ""}
                     </Button>
-                    <Button type="button" onClick={openCreateModal}>
-                      Add plan
-                    </Button>
                   </div>
                 </div>
                 {actionError && (
@@ -673,14 +764,12 @@ export function BillingPage() {
                       columns={[
                         { key: "order", header: "Order" },
                         { key: "name", header: "Plan" },
+                        { key: "price", header: "Price" },
                         { key: "duration", header: "Duration" },
                         { key: "deviceLimit", header: "Devices" },
-                        { key: "price", header: "Price" },
                         { key: "subscriptions", header: "Subscriptions" },
                         { key: "archived", header: "Visibility" },
                         { key: "style", header: "Style" },
-                        { key: "upsellMethods", header: "Upsell triggers" },
-                        { key: "createdAt", header: "Created" },
                         { key: "actions", header: "Actions" },
                       ]}
                       rows={filteredPlanRows}
@@ -698,8 +787,8 @@ export function BillingPage() {
               onClose={closeModal}
               title={editingPlan ? "Edit plan" : "Add plan"}
             >
-              <form onSubmit={handleSubmit} className="settings-page__form">
-                <div className="input-wrap">
+              <form onSubmit={handleSubmit} className="billing-page__modal-form">
+                <div className="billing-page__modal-grid">
                   <label className="input-label">
                     Name
                     <Input
@@ -709,8 +798,6 @@ export function BillingPage() {
                       placeholder="Pro monthly"
                     />
                   </label>
-                </div>
-                <div className="input-wrap">
                   <label className="input-label">
                     Duration (days)
                     <Input
@@ -721,8 +808,6 @@ export function BillingPage() {
                       placeholder="30"
                     />
                   </label>
-                </div>
-                <div className="input-wrap">
                   <label className="input-label">
                     Device limit
                     <Input
@@ -733,8 +818,6 @@ export function BillingPage() {
                       placeholder="5"
                     />
                   </label>
-                </div>
-                <div className="input-wrap">
                   <label className="input-label">
                     Price currency
                     <Input
@@ -743,8 +826,6 @@ export function BillingPage() {
                       placeholder="XTR"
                     />
                   </label>
-                </div>
-                <div className="input-wrap">
                   <label className="input-label">
                     Price amount (Stars)
                     <Input
@@ -756,25 +837,21 @@ export function BillingPage() {
                       placeholder="100"
                     />
                   </label>
-                </div>
-                <div className="input-wrap">
                   <label className="input-label">
                     Plan style
-                    <div className="select-wrap full">
-                      <select
-                        className="input"
-                        value={form.style}
-                        onChange={(e) => handleFormChange({ style: e.target.value as PlanStyle })}
-                      >
-                        <option value="normal">Normal</option>
-                        <option value="popular">Popular</option>
-                        <option value="promotional">Promotional</option>
-                      </select>
-                    </div>
+                    <select
+                      className="input"
+                      value={form.style}
+                      onChange={(e) => handleFormChange({ style: e.target.value as PlanStyle })}
+                    >
+                      <option value="normal">Normal</option>
+                      <option value="popular">Popular</option>
+                      <option value="promotional">Promotional</option>
+                    </select>
                   </label>
                 </div>
                 {editingPlan && (
-                  <div className="input-wrap">
+                  <div className="billing-page__modal-row">
                     <label className="checkbox-label">
                       <input
                         type="checkbox"
@@ -785,7 +862,7 @@ export function BillingPage() {
                     </label>
                   </div>
                 )}
-                <div className="input-wrap">
+                <div className="billing-page__modal-row">
                   <span className="input-label">Upsell triggers</span>
                   <div className="checkbox-group" role="group" aria-label="Upsell triggers">
                     {UPSELL_METHOD_OPTIONS.map((opt) => (
@@ -810,7 +887,7 @@ export function BillingPage() {
                     {saveError}
                   </p>
                 )}
-                <div className="users-page__modal-actions">
+                <div className="billing-page__modal-actions">
                   <Button
                     type="button"
                     variant="default"
@@ -838,26 +915,29 @@ export function BillingPage() {
               title="Delete plan"
               variant="danger"
             >
-              <p className="billing-page__muted type-meta">
-                {planToDelete
-                  ? `This permanently removes the plan "${parsePlanName(planToDelete.name).cleanName}". Type the plan name to confirm.`
-                  : ""}
-              </p>
-              <label className="input-label">
-                Confirm
-                <Input
-                  value={deleteConfirmText}
-                  onChange={(e) => setDeleteConfirmText(e.target.value)}
-                  placeholder={planToDelete ? parsePlanName(planToDelete.name).cleanName : ""}
-                  aria-label="Type plan name to confirm deletion"
-                />
-              </label>
+              <div className="billing-page__danger-section">
+                <strong>Permanent destructive action</strong>
+                <p className="billing-page__muted type-meta">
+                  {planToDelete
+                    ? `This permanently removes the plan "${parsePlanName(planToDelete.name).cleanName}". Type the plan name to confirm.`
+                    : ""}
+                </p>
+                <label className="input-label">
+                  Confirm
+                  <Input
+                    value={deleteConfirmText}
+                    onChange={(e) => setDeleteConfirmText(e.target.value)}
+                    placeholder={planToDelete ? parsePlanName(planToDelete.name).cleanName : ""}
+                    aria-label="Type plan name to confirm deletion"
+                  />
+                </label>
+              </div>
               {saveError && (
                 <p className="input-hint is-error" role="alert">
                   {saveError}
                 </p>
               )}
-              <div className="users-page__modal-actions">
+              <div className="billing-page__modal-actions">
                 <Button
                   type="button"
                   variant="default"
@@ -885,12 +965,15 @@ export function BillingPage() {
                 </Button>
               </div>
             </Modal>
-          </>
-        )}
-        {active === "subscription-records" && <SubscriptionRecordsTab />}
-        {active === "payments" && (
-          <>
-            <Card>
+              </>
+            )}
+          </TabsPanel>
+          <TabsPanel value="subscription-records">
+            {active === "subscription-records" && <SubscriptionRecordsTab />}
+          </TabsPanel>
+          <TabsPanel value="payments">
+            {active === "payments" && (
+              <Card className="billing-page__section-card">
               <SectionHeader label="Payments" note="Payment history (Telegram Stars, etc.)." />
               <div className="billing-page__filters">
                 <label className="input-label">
@@ -924,7 +1007,7 @@ export function BillingPage() {
                   />
                 </label>
                 <div className="billing-page__filter-actions">
-                  <Button type="button" variant="default" onClick={() => refetchPayments()}>
+                  <Button type="button" variant="secondary" onClick={() => refetchPayments()}>
                     Load payments
                   </Button>
                   <Button
@@ -957,41 +1040,34 @@ export function BillingPage() {
                     <DataTable
                       density="compact"
                       columns={[
-                        { key: "id", header: "ID" },
-                        { key: "user_id", header: "User ID" },
-                        { key: "subscription_id", header: "Subscription ID" },
+                        { key: "id", header: "Payment" },
+                        { key: "user_id", header: "User" },
+                        { key: "subscription_id", header: "Subscription" },
                         { key: "provider", header: "Provider" },
                         { key: "status", header: "Status" },
                         { key: "amount", header: "Amount" },
-                        { key: "currency", header: "Currency" },
-                        { key: "external_id", header: "External ID" },
                         { key: "created_at", header: "Created" },
                       ]}
                       rows={paymentsData.items.map((p) => ({
-                        id: p.id,
+                        key: p.id,
+                        id: (
+                          <span className="billing-page__entity-cell">
+                            <strong>{p.id}</strong>
+                            <MetaText>{p.external_id ?? "No external ID"}</MetaText>
+                          </span>
+                        ),
                         user_id: p.user_id,
                         subscription_id: p.subscription_id,
                         provider: p.provider,
                         status: (
-                          <Badge
-                            variant={
-                              p.status === "completed"
-                                ? "success"
-                                : p.status === "pending"
-                                  ? "warning"
-                                  : "danger"
-                            }
-                            size="sm"
-                          >
+                          <Badge variant={paymentStatusVariant(p.status)} size="sm">
                             {p.status}
                           </Badge>
                         ),
-                        amount: p.amount,
-                        currency: p.currency,
-                        external_id: p.external_id,
-                        created_at: p.created_at ? new Date(p.created_at).toLocaleString() : "—",
+                        amount: formatMoney(p.amount, p.currency),
+                        created_at: formatDateTime(p.created_at),
                       }))}
-                      getRowKey={(row) => row.id}
+                      getRowKey={(row) => String(row.key)}
                     />
                     </div>
                   </div>
@@ -999,12 +1075,12 @@ export function BillingPage() {
                   <EmptyState message="No payments match the filters." />
                 )
               )}
-            </Card>
-          </>
-        )}
-        {active === "entitlement-events" && (
-          <>
-            <Card>
+              </Card>
+            )}
+          </TabsPanel>
+          <TabsPanel value="entitlement-events">
+            {active === "entitlement-events" && (
+              <Card className="billing-page__section-card">
               <SectionHeader label="Entitlement events" note="Subscription/access audit ledger." />
               <div className="billing-page__filters">
                 <label className="input-label">
@@ -1046,7 +1122,7 @@ export function BillingPage() {
                   </select>
                 </label>
                 <div className="billing-page__filter-actions">
-                  <Button type="button" variant="default" onClick={() => refetchEntitlementEvents()}>
+                  <Button type="button" variant="secondary" onClick={() => refetchEntitlementEvents()}>
                     Load events
                   </Button>
                   <Button
@@ -1078,14 +1154,14 @@ export function BillingPage() {
                       density="compact"
                       columns={[
                         { key: "created_at", header: "Created" },
-                        { key: "event_type", header: "Event type" },
-                        { key: "user_id", header: "User ID" },
-                        { key: "subscription_id", header: "Subscription ID" },
+                        { key: "event_type", header: "Event" },
+                        { key: "user_id", header: "User" },
+                        { key: "subscription_id", header: "Subscription" },
                         { key: "payload", header: "Payload" },
                       ]}
                       rows={entitlementEvents.map((e) => ({
                         id: e.id,
-                        created_at: e.created_at ? new Date(e.created_at).toLocaleString() : "",
+                        created_at: formatDateTime(e.created_at),
                         event_type: (
                           <Badge
                             variant={
@@ -1112,12 +1188,12 @@ export function BillingPage() {
                   <EmptyState message="No entitlement events match the filters." />
                 )
               )}
-            </Card>
-          </>
-        )}
-        {active === "cancellation-reasons" && (
-          <>
-            <Card>
+              </Card>
+            )}
+          </TabsPanel>
+          <TabsPanel value="cancellation-reasons">
+            {active === "cancellation-reasons" && (
+              <Card className="billing-page__section-card">
               <SectionHeader label="Cancellation reasons" note="Churn survey: reason and offer acceptance." />
               <div className="billing-page__filters">
                 <label className="input-label">
@@ -1138,7 +1214,7 @@ export function BillingPage() {
                   />
                 </label>
                 <div className="billing-page__filter-actions">
-                  <Button type="button" variant="default" onClick={() => refetchChurnSurveys()}>
+                  <Button type="button" variant="secondary" onClick={() => refetchChurnSurveys()}>
                     Load reasons
                   </Button>
                   <Button
@@ -1171,22 +1247,26 @@ export function BillingPage() {
                     <DataTable
                       density="compact"
                       columns={[
-                        { key: "id", header: "ID" },
-                        { key: "user_id", header: "User ID" },
-                        { key: "subscription_id", header: "Subscription ID" },
+                        { key: "id", header: "Survey" },
+                        { key: "user_id", header: "User" },
+                        { key: "subscription_id", header: "Subscription" },
                         { key: "reason", header: "Reason" },
-                        { key: "reason_code", header: "Reason code" },
                         { key: "free_text", header: "Free text" },
-                        { key: "discount_offered", header: "Discount offered" },
-                        { key: "offer_accepted", header: "Offer accepted" },
+                        { key: "discount_offered", header: "Discount" },
+                        { key: "offer_accepted", header: "Accepted" },
                         { key: "created_at", header: "Created" },
                       ]}
                       rows={churnSurveys.map((c) => ({
-                        id: c.id,
+                        id: (
+                          <span className="billing-page__entity-cell">
+                            <strong>{c.id}</strong>
+                            <MetaText>{c.reason_code ?? "No reason code"}</MetaText>
+                          </span>
+                        ),
+                        key: c.id,
                         user_id: c.user_id,
                         subscription_id: c.subscription_id ?? "—",
                         reason: c.reason_group ?? c.reason,
-                        reason_code: c.reason_code ?? "—",
                         free_text: c.free_text ?? "—",
                         discount_offered: (
                           <Badge variant={c.discount_offered ? "warning" : "neutral"} size="sm">
@@ -1201,9 +1281,9 @@ export function BillingPage() {
                               {c.offer_accepted ? "Yes" : "No"}
                             </Badge>
                           ),
-                        created_at: c.created_at ? new Date(c.created_at).toLocaleString() : "—",
+                        created_at: formatDateTime(c.created_at),
                       }))}
-                      getRowKey={(row) => row.id}
+                      getRowKey={(row) => String(row.key)}
                     />
                     </div>
                   </div>
@@ -1211,10 +1291,31 @@ export function BillingPage() {
                   <EmptyState message="No churn surveys match the filters." />
                 )
               )}
-            </Card>
-          </>
-        )}
-      </div>
+              </Card>
+            )}
+          </TabsPanel>
+        </div>
+      </Tabs>
     </PageLayout>
+  );
+}
+
+function BillingMetric({
+  label,
+  value,
+  detail,
+  tone,
+}: {
+  label: string;
+  value: string;
+  detail: string;
+  tone: "success" | "info" | "neutral";
+}) {
+  return (
+    <div className={`billing-page__metric billing-page__metric--${tone}`}>
+      <MetaText>{label}</MetaText>
+      <strong>{value}</strong>
+      <span>{detail}</span>
+    </div>
   );
 }

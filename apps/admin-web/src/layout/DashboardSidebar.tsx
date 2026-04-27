@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
-import { getSidebarRoutes } from "@/app/route-meta";
+import { getSidebarRoutes, type NavSection } from "@/app/route-meta";
 import {
   SidebarNavFooter,
   SidebarNavLink,
@@ -12,7 +12,7 @@ import {
 interface SidebarItem {
   to: string;
   label: string;
-  section: "Monitor" | "Config";
+  section: NavSection;
   badgeCount?: number;
   icon: JSX.Element;
 }
@@ -46,6 +46,18 @@ const ICONS: Record<string, JSX.Element> = {
         aria-hidden="true"
       >
         <polyline points="1 10 4 5.5 7 7.5 10 3 13 5" />
+      </svg>
+  ),
+  "/customer-360": (
+      <svg
+        viewBox="0 0 14 14"
+        aria-hidden="true"
+      >
+        <circle cx="5" cy="5" r="2" />
+        <path d="M2 11c0-2 1.2-3.2 3-3.2S8 9 8 11" />
+        <path d="M9 3.5h3" />
+        <path d="M9 6.5h3" />
+        <path d="M9 9.5h3" />
       </svg>
   ),
   "/users": (
@@ -170,6 +182,27 @@ export function DashboardSidebar({
     .filter(Boolean)
     .join(" ");
 
+  const items: SidebarItem[] = [
+    ...getSidebarRoutes("Monitor").map((item) => ({
+      to: item.path,
+      label: item.navLabel ?? item.title,
+      section: "Monitor" as const,
+      icon: getIcon(item.path),
+    })),
+    ...getSidebarRoutes("Customers").map((item) => ({
+      to: item.path,
+      label: item.navLabel ?? item.title,
+      section: "Customers" as const,
+      icon: getIcon(item.path),
+    })),
+    ...getSidebarRoutes("Config").map((item) => ({
+      to: item.path,
+      label: item.navLabel ?? item.title,
+      section: "Config" as const,
+      icon: getIcon(item.path),
+    })),
+  ];
+
   return (
     <>
       {isOverlayOpen && onCloseOverlay ? (
@@ -187,28 +220,40 @@ export function DashboardSidebar({
         ariaLabel="Dashboard navigation"
         data-testid="admin-sidebar"
       >
-      <SidebarNavSection>Monitor</SidebarNavSection>
-      {items.filter((i) => i.section === "Monitor").map((item) => (
-        <SidebarNavLink
-          key={item.to}
-          to={item.to}
-          label={item.label}
-          icon={item.icon}
-          badgeCount={item.badgeCount}
-          isActive={isActive(item.to)}
-        />
-      ))}
+        <SidebarNavSection>Monitor</SidebarNavSection>
+        {items.filter((i) => i.section === "Monitor").map((item) => (
+          <SidebarNavLink
+            key={item.to}
+            to={item.to}
+            label={item.label}
+            icon={item.icon}
+            badgeCount={item.badgeCount}
+            isActive={isActive(item.to)}
+          />
+        ))}
 
-      <SidebarNavSection>Config</SidebarNavSection>
-      {items.filter((i) => i.section === "Config").map((item) => (
-        <SidebarNavLink
-          key={item.to}
-          to={item.to}
-          label={item.label}
-          icon={item.icon}
-          isActive={isActive(item.to)}
-        />
-      ))}
+        <SidebarNavSection>Customers</SidebarNavSection>
+        {items.filter((i) => i.section === "Customers").map((item) => (
+          <SidebarNavLink
+            key={item.to}
+            to={item.to}
+            label={item.label}
+            icon={item.icon}
+            badgeCount={item.badgeCount}
+            isActive={isActive(item.to)}
+          />
+        ))}
+
+        <SidebarNavSection>Config</SidebarNavSection>
+        {items.filter((i) => i.section === "Config").map((item) => (
+          <SidebarNavLink
+            key={item.to}
+            to={item.to}
+            label={item.label}
+            icon={item.icon}
+            isActive={isActive(item.to)}
+          />
+        ))}
 
       <SidebarNavFooter>
         <div className="sb-foot-row">
@@ -223,17 +268,3 @@ export function DashboardSidebar({
     </>
   );
 }
-  const items: SidebarItem[] = [
-    ...getSidebarRoutes("Monitor").map((item) => ({
-      to: item.path,
-      label: item.navLabel ?? item.title,
-      section: "Monitor" as const,
-      icon: getIcon(item.path),
-    })),
-    ...getSidebarRoutes("Config").map((item) => ({
-      to: item.path,
-      label: item.navLabel ?? item.title,
-      section: "Config" as const,
-      icon: getIcon(item.path),
-    })),
-  ];

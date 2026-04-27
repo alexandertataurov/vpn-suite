@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { CreditCard, RefreshCw, Search, SlidersHorizontal, X } from "lucide-react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useApiQuery } from "@/hooks/api/useApiQuery";
 import { buildUsersPath } from "@/hooks/useUsers";
 import { userKeys } from "@/features/users/services/user.query-keys";
@@ -74,6 +74,8 @@ const DEFAULT_FILTERS: CustomerFilters = {
   deviceSort: "issued_at_desc",
 };
 
+const RECENT_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+
 function resolveSearchTarget(value: string): { tgId?: string; email?: string; phone?: string } {
   const query = value.trim();
   if (!query) return {};
@@ -91,6 +93,39 @@ function parseSelectedUserId(searchParams: URLSearchParams): number | null {
 
 function formatMoney(payment: PaymentOut): string {
   return `${payment.amount} ${payment.currency}`;
+}
+
+function formatCurrencyAmount(amount: number, currency: string): string {
+  return `${amount.toLocaleString(undefined, { maximumFractionDigits: 2 })} ${currency}`;
+}
+
+function isRecent(value: string | null | undefined): boolean {
+  if (!value) return false;
+  const timestamp = new Date(value).getTime();
+  return Number.isFinite(timestamp) && Date.now() - timestamp <= RECENT_WINDOW_MS;
+}
+
+interface PaymentAggregate {
+  amount: number;
+  currency: string | null;
+  mixed: boolean;
+}
+
+function sumCompletedPayments(payments: PaymentOut[]): PaymentAggregate {
+  return payments
+    .filter((payment) => payment.status === "completed")
+    .reduce<PaymentAggregate>(
+      (state, payment) => {
+        const amount = Number(payment.amount || 0);
+        const nextCurrency = payment.currency || null;
+        return {
+          amount: state.amount + (Number.isFinite(amount) ? amount : 0),
+          currency: state.currency ?? nextCurrency,
+          mixed: state.mixed || (state.currency != null && nextCurrency != null && state.currency !== nextCurrency),
+        };
+      },
+      { amount: 0, currency: null, mixed: false }
+    );
 }
 
 function badgeForPayment(status: string): "success" | "warning" | "danger" | "neutral" {
@@ -228,6 +263,15 @@ export function CustomerOpsPage() {
     staleTime: 10_000,
   });
 
+  const globalDevicePath = useMemo(() => buildDevicePath(null, filters), [filters]);
+  const {
+    data: globalDevices,
+    refetch: refetchGlobalDevices,
+  } = useApiQuery<DeviceList>(["customer-ops", "global-devices", globalDevicePath], globalDevicePath, {
+    retry: 1,
+    staleTime: 10_000,
+  });
+
   const subscriptionsPath = useMemo(() => buildSubscriptionsPath(selectedUserId, filters), [filters, selectedUserId]);
   const {
     data: subscriptions,
@@ -239,6 +283,16 @@ export function CustomerOpsPage() {
     { enabled: selectedUserId != null, retry: 1, staleTime: 15_000 }
   );
 
+  const globalSubscriptionsPath = useMemo(() => buildSubscriptionsPath(null, filters), [filters]);
+  const {
+    data: globalSubscriptions,
+    refetch: refetchGlobalSubscriptions,
+  } = useApiQuery<SubscriptionList>(
+    ["customer-ops", "global-subscriptions", globalSubscriptionsPath],
+    globalSubscriptionsPath,
+    { retry: 1, staleTime: 15_000 }
+  );
+
   const paymentsPath = useMemo(() => buildPaymentsPath(selectedUserId, filters), [filters, selectedUserId]);
   const {
     data: payments,
@@ -248,6 +302,16 @@ export function CustomerOpsPage() {
     ["customer-ops", "payments", paymentsPath],
     paymentsPath,
     { enabled: selectedUserId != null, retry: 1, staleTime: 15_000 }
+  );
+
+  const globalPaymentsPath = useMemo(() => buildPaymentsPath(null, filters), [filters]);
+  const {
+    data: globalPayments,
+    refetch: refetchGlobalPayments,
+  } = useApiQuery<PaymentList>(
+    ["customer-ops", "global-payments", globalPaymentsPath],
+    globalPaymentsPath,
+    { retry: 1, staleTime: 15_000 }
   );
 
   const { data: plans } = useApiQuery<PlanList>(
@@ -302,7 +366,18 @@ export function CustomerOpsPage() {
     void refetchDevices();
     void refetchSubscriptions();
     void refetchPayments();
-  }, [refetchDevices, refetchPayments, refetchSubscriptions, refetchUsers]);
+    void refetchGlobalDevices();
+    void refetchGlobalSubscriptions();
+    void refetchGlobalPayments();
+  }, [
+    refetchDevices,
+    refetchGlobalDevices,
+    refetchGlobalPayments,
+    refetchGlobalSubscriptions,
+    refetchPayments,
+    refetchSubscriptions,
+    refetchUsers,
+  ]);
 
   if (usersLoading) {
     return <PageLoadingState title="Customer 360" pageClass="customer-ops-page" bodyHeight={260} />;
@@ -322,9 +397,21 @@ export function CustomerOpsPage() {
   const deviceItems = devices?.items ?? [];
   const subscriptionItems = subscriptions?.items ?? selectedUser?.subscriptions ?? [];
   const paymentItems = payments?.items ?? [];
+  const globalDeviceItems = globalDevices?.items ?? [];
+  const globalSubscriptionItems = globalSubscriptions?.items ?? [];
+  const globalPaymentItems = globalPayments?.items ?? [];
   const activeDevices = deviceItems.filter((device) => !device.revoked_at).length;
   const completedPayments = paymentItems.filter((payment) => payment.status === "completed").length;
   const activeSubscriptions = subscriptionItems.filter((sub) => (sub.effective_status ?? sub.status) === "active").length;
+  const paidUserIds = new Set(globalPaymentItems.filter((payment) => payment.status === "completed").map((payment) => payment.user_id));
+  const globalPaid = sumCompletedPayments(globalPaymentItems);
+  const globalPaidLabel = globalPaid.mixed || !globalPaid.currency
+    ? `${globalPaymentItems.filter((payment) => payment.status === "completed").length} paid`
+    : formatCurrencyAmount(globalPaid.amount, globalPaid.currency);
+  const activeGlobalDevices = globalDeviceItems.filter((device) => deviceStatus(device) === "active").length;
+  const newUsers = sortedUsers.filter((user) => isRecent(user.created_at)).length;
+  const newDevices = globalDeviceItems.filter((device) => isRecent(device.issued_at)).length;
+  const activeGlobalSubscriptions = globalSubscriptionItems.filter((sub) => (sub.effective_status ?? sub.status) === "active").length;
 
   const userRows = sortedUsers.map((user) => {
     const tg = getTgRequisites(user.meta);
@@ -377,6 +464,46 @@ export function CustomerOpsPage() {
         </Button>
       }
     >
+      <Card variant="outlined" className="customer-ops-page__cockpit" aria-label="Customer operations cockpit">
+        <div className="customer-ops-page__cockpit-head">
+          <SectionHeader
+            label="Customer cockpit"
+            note="Users, devices, subscriptions, and payments under one wing"
+          />
+          <div className="customer-ops-page__quick-links" aria-label="Related customer workspaces">
+            <Link to={selectedUserId ? `/users?user=${selectedUserId}` : "/users"}>Open Users</Link>
+            <Link to="/devices">Open Devices</Link>
+            <Link to="/billing">Open Billing</Link>
+          </div>
+        </div>
+        <div className="customer-ops-page__cockpit-grid">
+          <InsightMetric
+            label="Users in scope"
+            value={String(userList?.total ?? sortedUsers.length)}
+            detail={`${newUsers} new in 7d`}
+            tone={newUsers > 0 ? "info" : "neutral"}
+          />
+          <InsightMetric
+            label="Paid users"
+            value={String(paidUserIds.size)}
+            detail={globalPaidLabel}
+            tone={paidUserIds.size > 0 ? "success" : "neutral"}
+          />
+          <InsightMetric
+            label="Active devices"
+            value={String(activeGlobalDevices)}
+            detail={`${newDevices} new in 7d`}
+            tone={activeGlobalDevices > 0 ? "success" : "neutral"}
+          />
+          <InsightMetric
+            label="Active subscriptions"
+            value={String(activeGlobalSubscriptions)}
+            detail={`${globalSubscriptionItems.length} loaded`}
+            tone={activeGlobalSubscriptions > 0 ? "success" : "neutral"}
+          />
+        </div>
+      </Card>
+
       <Card variant="outlined" className="customer-ops-page__filters">
         <SectionHeader label="Advanced filters" note={`${userList?.total ?? 0} users in scope`} />
         <div className="customer-ops-page__filter-grid">
@@ -637,6 +764,26 @@ function Metric({ label, value }: { label: string; value: string }) {
     <div className="customer-ops-page__metric">
       <MetaText>{label}</MetaText>
       <strong>{value}</strong>
+    </div>
+  );
+}
+
+function InsightMetric({
+  label,
+  value,
+  detail,
+  tone,
+}: {
+  label: string;
+  value: string;
+  detail: string;
+  tone: "success" | "info" | "neutral";
+}) {
+  return (
+    <div className={`customer-ops-page__insight customer-ops-page__insight--${tone}`}>
+      <MetaText>{label}</MetaText>
+      <strong>{value}</strong>
+      <span>{detail}</span>
     </div>
   );
 }

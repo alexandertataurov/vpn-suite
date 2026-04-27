@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { CustomerOpsPage } from "@/features/customer-ops/CustomerOpsPage";
 import { server } from "@/test/mocks/server";
@@ -156,6 +156,20 @@ function setupHandlers(observedUsers?: Array<Record<string, string>>) {
 }
 
 describe("CustomerOpsPage", () => {
+  it("renders a unified customer cockpit across users, devices, and billing", async () => {
+    setupHandlers();
+    renderWithProviders(<CustomerOpsPage />, { route: "/customer-360?user=11" });
+
+    const cockpit = await screen.findByLabelText("Customer operations cockpit");
+    expect(within(cockpit).getByText("Customer cockpit")).toBeInTheDocument();
+    expect(within(cockpit).getByText("Users in scope")).toBeInTheDocument();
+    expect(within(cockpit).getAllByText("1 new in 7d")).toHaveLength(2);
+    expect(within(cockpit).getByText("Paid users")).toBeInTheDocument();
+    expect(within(cockpit).getByText("100 XTR")).toBeInTheDocument();
+    expect(within(cockpit).getByText("Active devices")).toBeInTheDocument();
+    expect(within(cockpit).getByText("Open Billing")).toHaveAttribute("href", "/billing");
+  });
+
   it("applies cross-domain filters to user query params", async () => {
     const observedUsers: Array<Record<string, string>> = [];
     setupHandlers(observedUsers);

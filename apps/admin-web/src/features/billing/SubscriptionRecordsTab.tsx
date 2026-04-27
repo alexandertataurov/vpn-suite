@@ -19,6 +19,10 @@ import {
 import { MetaText } from "@/design-system/typography";
 import type { SubscriptionList, SubscriptionOut } from "@/shared/types/admin-api";
 
+function formatDateTime(value: string | null | undefined): string {
+  return value ? new Date(value).toLocaleString() : "—";
+}
+
 export function SubscriptionRecordsTab() {
   const api = useApi();
   const queryClient = useQueryClient();
@@ -139,7 +143,7 @@ export function SubscriptionRecordsTab() {
 
   return (
     <>
-      <Card>
+      <Card className="billing-page__section-card">
         <SectionHeader label="Subscription records" note="User subscriptions (active, expired, cancelled)." />
         <div className="billing-page__filters">
           <label className="input-label">
@@ -192,7 +196,7 @@ export function SubscriptionRecordsTab() {
             </select>
           </label>
           <div className="billing-page__filter-actions">
-            <Button type="button" variant="default" onClick={() => refetch()}>
+            <Button type="button" variant="secondary" onClick={() => refetch()}>
               Load subscriptions
             </Button>
             <Button type="button" variant="ghost" onClick={resetFilters}>
@@ -217,31 +221,28 @@ export function SubscriptionRecordsTab() {
                 <DataTable
                   density="compact"
                   columns={[
-                    { key: "id", header: "ID" },
-                    { key: "user_id", header: "User ID" },
-                    { key: "plan_id", header: "Plan ID" },
-                    { key: "valid_from", header: "Valid from" },
+                    { key: "id", header: "Subscription" },
+                    { key: "user_id", header: "User" },
+                    { key: "plan_id", header: "Plan" },
                     { key: "valid_until", header: "Valid until" },
                     { key: "status", header: "Status" },
-                    { key: "subscription_status", header: "Sub status" },
-                    { key: "device_limit", header: "Devices" },
                     { key: "access_status", header: "Access" },
                     { key: "billing_status", header: "Billing" },
                     { key: "renewal_status", header: "Renewal" },
-                    { key: "cancel_at_period_end", header: "Cancel at end" },
-                    { key: "paused_at", header: "Paused at" },
-                    { key: "pause_reason", header: "Pause reason" },
                     { key: "grace_until", header: "Grace until" },
-                    { key: "grace_reason", header: "Grace reason" },
-                    { key: "created_at", header: "Created" },
                     { key: "actions", header: "Actions" },
                   ]}
                   rows={filteredItems.map((s) => ({
-                    id: s.id,
+                    id: (
+                      <span className="billing-page__entity-cell">
+                        <strong>{s.id}</strong>
+                        <MetaText>Created {formatDateTime(s.created_at)}</MetaText>
+                      </span>
+                    ),
+                    key: s.id,
                     user_id: s.user_id,
                     plan_id: s.plan_id,
-                    valid_from: s.valid_from ? new Date(s.valid_from).toLocaleString() : "—",
-                    valid_until: s.valid_until ? new Date(s.valid_until).toLocaleString() : "—",
+                    valid_until: formatDateTime(s.valid_until),
                     status: (
                       <Badge
                         variant={
@@ -258,8 +259,6 @@ export function SubscriptionRecordsTab() {
                         {s.effective_status ?? s.status}
                       </Badge>
                     ),
-                    subscription_status: s.subscription_status ?? "—",
-                    device_limit: s.device_limit,
                     access_status: (
                       <Badge
                         variant={
@@ -278,12 +277,12 @@ export function SubscriptionRecordsTab() {
                     ),
                     billing_status: s.billing_status ?? "—",
                     renewal_status: s.renewal_status ?? "—",
-                    cancel_at_period_end: s.cancel_at_period_end ? "Yes" : "No",
-                    paused_at: s.paused_at ? new Date(s.paused_at).toLocaleString() : "—",
-                    pause_reason: s.pause_reason ?? "—",
-                    grace_until: s.grace_until ? new Date(s.grace_until).toLocaleString() : "—",
-                    grace_reason: s.grace_reason ?? "—",
-                    created_at: s.created_at ? new Date(s.created_at).toLocaleString() : "—",
+                    grace_until: s.grace_until ? (
+                      <span className="billing-page__entity-cell">
+                        <strong>{formatDateTime(s.grace_until)}</strong>
+                        <MetaText>{s.grace_reason ?? "No reason"}</MetaText>
+                      </span>
+                    ) : "—",
                     actions: (
                       <span className="billing-page__sub-actions">
                         <Button size="sm" variant="secondary" onClick={() => openGraceModal(s)}>
@@ -349,7 +348,7 @@ export function SubscriptionRecordsTab() {
                       </span>
                     ),
                   }))}
-                  getRowKey={(row) => row.id}
+                  getRowKey={(row) => String(row.key)}
                 />
               </div>
               {graceModalSub && (
@@ -381,7 +380,7 @@ export function SubscriptionRecordsTab() {
                       />
                     </label>
                     {graceError && <MetaText className="text-error">{graceError}</MetaText>}
-                    <div className="ph-actions billing-page__grace-form-actions">
+                    <div className="billing-page__modal-actions">
                       <Button type="submit" disabled={graceSaving || !graceUntil}>
                         {graceSaving ? "Saving…" : "Set grace"}
                       </Button>
