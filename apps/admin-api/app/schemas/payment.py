@@ -27,6 +27,19 @@ class PaymentOut(OrmSchema):
     amount: Decimal
     currency: str
     external_id: str
+    kind: str | None = None
+    source: str | None = None
+    idempotency_key: str | None = None
+    provider_payment_id: str | None = None
+    provider_status: str | None = None
+    invoice_url: str | None = None
+    expected_amount: Decimal | None = None
+    paid_amount: Decimal | None = None
+    paid_at: datetime | None = None
+    expires_at: datetime | None = None
+    subscription_applied_at: datetime | None = None
+    failure_code: str | None = None
+    failure_message: str | None = None
     created_at: datetime
 
 

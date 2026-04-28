@@ -11,11 +11,13 @@ from app.services.platega_service import get_platega_transaction, normalize_plat
 @pytest.mark.parametrize(
     ("raw_status", "expected"),
     [
-        ("CONFIRMED", "completed"),
+        ("CONFIRMED", "succeeded"),
         ("CANCELED", "failed"),
         ("CANCELLED", "failed"),
-        ("CHARGEBACK", "failed"),
-        ("CHARGEBACKED", "failed"),
+        ("CHARGEBACK", "chargeback"),
+        ("CHARGEBACKED", "chargeback"),
+        ("REFUND", "refunded"),
+        ("REFUNDED", "refunded"),
         ("PENDING", "pending"),
         ("UNKNOWN", "pending"),
     ],

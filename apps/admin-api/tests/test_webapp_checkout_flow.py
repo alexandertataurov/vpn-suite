@@ -176,7 +176,7 @@ async def test_webapp_create_invoice_free_plan_activates_subscription(
         )
         payment = pay_row.scalar_one_or_none()
         assert payment is not None
-        assert payment.status == "completed"
+        assert payment.status == "succeeded"
     finally:
         app.dependency_overrides.pop(get_db, None)
 
@@ -409,7 +409,7 @@ async def test_webapp_create_invoice_applies_post_trial_discount_once_then_full_
             select(Payment).where(Payment.id == first_payload["payment_id"])
         )
         first_payment = first_payment_result.scalar_one()
-        first_payment.status = "completed"
+        first_payment.status = "succeeded"
         await async_session.commit()
 
         async with AsyncClient(
@@ -605,11 +605,7 @@ async def test_webapp_create_invoice_does_not_reuse_pending_payment_when_price_c
     async def fake_validate_promo_code(db, code, user_id, plan_id, original_price_xtr):  # noqa: ARG001
         return DummyValidationResult()
 
-    async def fake_redeem_promo_code(db, code, user_id, plan_id, payment_id, original_price_xtr):  # noqa: ARG001
-        return 80
-
     monkeypatch.setattr("app.api.v1.webapp.validate_promo_code", fake_validate_promo_code)
-    monkeypatch.setattr("app.api.v1.webapp.redeem_promo_code", fake_redeem_promo_code)
 
     token = create_webapp_session_token(tg_id)
 

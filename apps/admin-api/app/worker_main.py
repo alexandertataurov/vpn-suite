@@ -19,9 +19,10 @@ from app.core.handshake_quality_gate_task import run_handshake_quality_gate_loop
 from app.core.health_check_task import run_health_check_loop
 from app.core.limits_check_task import run_limits_check_loop
 from app.core.logging_config import configure_logging, extra_for_event, set_log_context
-from app.core.node_scan_task import run_node_scan_loop, run_node_scan_once
 from app.core.news_broadcast_task import run_news_broadcast_loop
+from app.core.node_scan_task import run_node_scan_loop, run_node_scan_once
 from app.core.onboarding_abandonment_task import run_onboarding_abandonment_loop
+from app.core.payment_expiry_task import run_payment_expiry_loop
 from app.core.redaction import redact_for_log
 from app.core.redis_client import check_redis, close_redis, init_redis
 from app.core.revenue_metrics_task import run_revenue_metrics_loop
@@ -97,11 +98,8 @@ async def _run_worker_loops() -> None:
         if exc is not None:
             _log.error("news_broadcast_task_crashed: %s", exc, exc_info=True)
     news_broadcast_task.add_done_callback(_log_task_result)
-    grace_task = (
-        asyncio.create_task(run_grace_on_expiry_loop())
-        if getattr(settings, "grace_window_hours", 0) > 0
-        else None
-    )
+    grace_task = asyncio.create_task(run_grace_on_expiry_loop())
+    payment_expiry_task = asyncio.create_task(run_payment_expiry_loop())
     handshake_gate_task = asyncio.create_task(run_handshake_quality_gate_loop())
     sync_task = asyncio.create_task(run_server_sync_loop(lambda: adapter))
     admin_control_center_task = asyncio.create_task(run_admin_control_center_loops())
@@ -156,6 +154,7 @@ async def _run_worker_loops() -> None:
             handshake_gate_task,
             live_metrics_task,
             grace_task,
+            payment_expiry_task,
             onboarding_abandonment_task,
             news_broadcast_task,
         ):
@@ -174,6 +173,7 @@ async def _run_worker_loops() -> None:
             device_expiry_task,
             reminder_task,
             grace_task,
+            payment_expiry_task,
             docker_alert_task,
             sync_task,
             handshake_gate_task,

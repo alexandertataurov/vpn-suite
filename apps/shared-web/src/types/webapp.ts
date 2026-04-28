@@ -199,16 +199,36 @@ export interface WebAppCreateInvoiceResponse {
   invoice_url?: string;
   /** True when plan is free (e.g. operator); subscription activated without payment. */
   free_activation?: boolean;
+  status?: string;
+  kind?: "subscription" | "donation" | string;
+  provider?: "telegram_stars" | "platega" | string;
+  expected_amount?: number;
+  expires_at?: string | null;
 }
 
 export interface WebAppPaymentStatusOut {
   payment_id: string;
   status: string;
+  kind?: "subscription" | "donation" | string | null;
+  provider?: "telegram_stars" | "platega" | string | null;
+  expected_amount?: number | null;
+  currency?: string | null;
+  invoice_url?: string | null;
+  expires_at?: string | null;
+  subscription_id?: string | null;
+  free_activation?: boolean;
   plan_id: string | null;
   valid_until: string | null;
 }
 
-export type WebAppBillingHistoryStatus = "paid" | "pending" | "failed" | "refunded";
+export type WebAppBillingHistoryStatus =
+  | "paid"
+  | "pending"
+  | "failed"
+  | "refunded"
+  | "expired"
+  | "cancelled"
+  | "chargeback";
 
 export interface WebAppBillingHistoryItem {
   payment_id: string;

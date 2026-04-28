@@ -92,7 +92,7 @@ async def test_bot_create_donation_invoice_and_confirm_does_not_extend_subscript
 
         pay_row = await async_session.execute(select(Payment).where(Payment.id == payment_id))
         payment = pay_row.scalar_one()
-        assert payment.status == "completed"
+        assert payment.status == "succeeded"
         assert (payment.webhook_payload or {}).get("kind") == "donation"
 
         sub_row = await async_session.execute(select(Subscription).where(Subscription.id == sub.id))
@@ -100,4 +100,3 @@ async def test_bot_create_donation_invoice_and_confirm_does_not_extend_subscript
         assert sub_after.valid_until == original_valid_until
     finally:
         app.dependency_overrides.pop(get_db, None)
-

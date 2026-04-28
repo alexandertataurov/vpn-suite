@@ -221,7 +221,7 @@ export function useCheckoutPageModel() {
       try {
         pollAbortRef.current = new AbortController();
         const status = await webappApi.get<WebAppPaymentStatusOut>(`/webapp/payments/${pid}/status`, { signal: pollAbortRef.current.signal });
-        if (status.status === "completed") {
+        if (status.status === "completed" || status.status === "succeeded") {
           stopPolling();
           setPhase("success");
           notify("success");
@@ -230,10 +230,10 @@ export function useCheckoutPageModel() {
           await navigateToNextStep();
           return;
         }
-        if (status.status === "failed" || status.status === "cancelled") {
+        if (["failed", "cancelled", "expired", "refunded", "chargeback"].includes(status.status)) {
           stopPolling();
           setPhase("error");
-          setErrorMessage("Payment was not completed.");
+          setErrorMessage(status.status === "expired" ? "Payment expired. Please create a new invoice." : "Payment was not completed.");
           notify("error");
           track("payment_fail", { plan_id: selectedPlanId, reason: status.status });
           return;

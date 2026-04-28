@@ -29,6 +29,17 @@ from app.services.funnel_service import log_funnel_event
 from app.services.platega_service import normalize_platega_status
 from app.services.referral_notification import notify_referrer_reward_granted
 from app.services.referral_service import grant_referral_reward
+from app.services.payment_state_service import (
+    PAYMENT_REFUND_STATUSES,
+    PAYMENT_STATUS_CANCELLED,
+    PAYMENT_STATUS_FAILED,
+    PAYMENT_STATUS_PENDING,
+    PAYMENT_STATUS_SUCCEEDED,
+    create_payment_intent,
+    mark_payment_succeeded,
+    mark_payment_terminal,
+    normalize_payment_status,
+)
 from app.services.subscription_lifecycle_events import (
     emit_payment_lifecycle,
     emit_referral_reward_accrued,
@@ -243,6 +254,8 @@ async def complete_pending_payment_by_bot(
     payment_id: str,
     tg_id: int,
     telegram_payment_charge_id: str | None = None,
+    total_amount: int | None = None,
+    currency: str | None = None,
 ) -> bool:
     """Complete a pending payment created by bot (invoice). Idempotent: already completed -> True.
     Returns True if payment was found and (was or is now) completed; False if not found / wrong user."""
@@ -261,9 +274,10 @@ async def complete_pending_payment_by_bot(
         return False
     if payment.status == "completed":
         return True
-    if payment.status != "pending":
+    if normalize_payment_status(payment.status) == PAYMENT_STATUS_SUCCEEDED:
+        return True
+    if normalize_payment_status(payment.status) != PAYMENT_STATUS_PENDING:
         return False
-    payment.status = "completed"
     session.add(
         PaymentEvent(
             payment_id=payment.id,
@@ -272,10 +286,22 @@ async def complete_pending_payment_by_bot(
         )
     )
     await session.flush()
-    payload = payment.webhook_payload or {}
-    if str(payload.get("kind") or "").strip().lower() != "donation":
-        await _apply_payment_success_effects(session, payment)
-    return True
+    result = await mark_payment_succeeded(
+        session,
+        payment.id,
+        paid_amount=total_amount if total_amount is not None else payment.expected_amount or payment.amount,
+        currency=currency or payment.currency,
+        provider_payment_id=telegram_payment_charge_id,
+        provider_status="CONFIRMED",
+        telegram_payment_charge_id=telegram_payment_charge_id,
+        payload={
+            "tg_id": tg_id,
+            "telegram_payment_charge_id": telegram_payment_charge_id,
+            "total_amount": total_amount,
+            "currency": currency,
+        },
+    )
+    return normalize_payment_status(result.payment.status) == PAYMENT_STATUS_SUCCEEDED
 
 
 async def _process_platega_webhook(session: AsyncSession, payload: dict) -> WebhookResult:
@@ -289,18 +315,45 @@ async def _process_platega_webhook(session: AsyncSession, payload: dict) -> Webh
     payment = existing.scalar_one_or_none()
     if not payment:
         raise ValueError("payment not found for transaction id")
-    previous_status = str(payment.status or "")
     next_status = normalize_platega_status(str(payload.get("status") or "PENDING"))
 
     merged_payload = dict(payment.webhook_payload or {})
     merged_payload["platega_last_webhook"] = payload
     payment.webhook_payload = merged_payload
-    payment.status = next_status
-    event_type = "webhook_repeat" if previous_status == next_status else "webhook_status_update"
-    session.add(PaymentEvent(payment_id=payment.id, event_type=event_type, payload=payload))
-    await session.flush()
-    if next_status == "completed" and previous_status != "completed":
-        await _apply_payment_success_effects(session, payment, payload_for_promo=merged_payload)
+    if next_status == PAYMENT_STATUS_SUCCEEDED:
+        await mark_payment_succeeded(
+            session,
+            payment.id,
+            paid_amount=payload.get("amount") if payload.get("amount") is not None else payment.amount,
+            currency=payload.get("currency") or payment.currency,
+            provider_payment_id=external_id,
+            provider_status=str(payload.get("status") or ""),
+            payload=payload,
+        )
+    elif next_status in PAYMENT_REFUND_STATUSES:
+        await mark_payment_terminal(
+            session,
+            payment.id,
+            status=next_status,
+            code=next_status,
+            message=f"Platega {next_status}",
+            payload=payload,
+        )
+    elif next_status in {PAYMENT_STATUS_FAILED, PAYMENT_STATUS_CANCELLED}:
+        await mark_payment_terminal(
+            session,
+            payment.id,
+            status=next_status,
+            code=next_status,
+            message=f"Platega {next_status}",
+            payload=payload,
+        )
+    else:
+        event_type = "webhook_repeat" if normalize_payment_status(payment.status) == next_status else "webhook_status_update"
+        payment.status = next_status
+        payment.provider_status = str(payload.get("status") or "")
+        session.add(PaymentEvent(payment_id=payment.id, event_type=event_type, payload=payload))
+        await session.flush()
     return WebhookResult(payment_id=str(payment.id), created=False)
 
 
@@ -327,8 +380,15 @@ async def process_payment_webhook(
     payment = existing.scalar_one_or_none()
     if payment:
         previous_status = str(payment.status or "").strip().lower()
-        incoming_status = str(payload.get("status") or "").strip().lower()
-        terminal_statuses = {"completed", "failed", "cancelled"}
+        incoming_status = normalize_payment_status(str(payload.get("status") or ""))
+        terminal_statuses = {
+            PAYMENT_STATUS_SUCCEEDED,
+            PAYMENT_STATUS_FAILED,
+            PAYMENT_STATUS_CANCELLED,
+            "completed",
+            "failed",
+            "cancelled",
+        }
 
         # Allow forward status transitions for the same external_id (e.g. pending -> completed),
         # but never downgrade terminal states back to pending/retry-like states.
@@ -340,11 +400,38 @@ async def process_payment_webhook(
             )
         )
         if can_transition:
-            payment.status = incoming_status[:32]
-            payment.webhook_payload = payload
             event_type = "webhook_status_update"
-            if incoming_status == "completed" and previous_status != "completed":
-                await _apply_payment_success_effects(session, payment, payload_for_promo=payload)
+            if incoming_status == PAYMENT_STATUS_SUCCEEDED:
+                await mark_payment_succeeded(
+                    session,
+                    payment.id,
+                    paid_amount=payload.get("amount") if payload.get("amount") is not None else payment.amount,
+                    currency=payload.get("currency") or payment.currency,
+                    provider_payment_id=external_id,
+                    provider_status=str(payload.get("status") or ""),
+                    payload=payload,
+                )
+            elif incoming_status in PAYMENT_REFUND_STATUSES:
+                await mark_payment_terminal(
+                    session,
+                    payment.id,
+                    status=incoming_status,
+                    code=incoming_status,
+                    message=f"{provider_normalized} {incoming_status}",
+                    payload=payload,
+                )
+            elif incoming_status in {PAYMENT_STATUS_FAILED, PAYMENT_STATUS_CANCELLED}:
+                await mark_payment_terminal(
+                    session,
+                    payment.id,
+                    status=incoming_status,
+                    code=incoming_status,
+                    message=f"{provider_normalized} {incoming_status}",
+                    payload=payload,
+                )
+            else:
+                payment.status = incoming_status[:32]
+                payment.webhook_payload = payload
         else:
             event_type = "webhook_repeat"
 
@@ -368,21 +455,32 @@ async def process_payment_webhook(
     status = str(payload.get("status", "completed"))[:32]
     currency = str(payload.get("currency", "XTR"))[:8]
 
-    payment = Payment(
+    payment = await create_payment_intent(
+        session,
         user_id=user_id,
         subscription_id=subscription_id,
         provider=provider,
-        status=status,
+        status=normalize_payment_status(status),
         amount=amount,
         currency=currency,
         external_id=external_id,
+        provider_payment_id=external_id,
+        provider_status=status,
+        kind=str((payload.get("kind") or "subscription")).strip().lower()[:32] or "subscription",
+        source="webhook",
         webhook_payload=payload,
     )
-    session.add(payment)
-    await session.flush()
     session.add(PaymentEvent(payment_id=payment.id, event_type="webhook_received", payload=payload))
     await session.flush()
 
-    if status == "completed":
-        await _apply_payment_success_effects(session, payment, payload_for_promo=payload)
+    if normalize_payment_status(status) == PAYMENT_STATUS_SUCCEEDED:
+        await mark_payment_succeeded(
+            session,
+            payment.id,
+            paid_amount=amount,
+            currency=currency,
+            provider_payment_id=external_id,
+            provider_status=status,
+            payload=payload,
+        )
     return WebhookResult(payment_id=payment.id, created=True)

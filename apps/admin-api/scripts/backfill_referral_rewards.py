@@ -40,7 +40,7 @@ async def main() -> int:
             .where(
                 Referral.reward_applied_at.is_(None),
                 Referral.referee_user_id.in_(
-                    select(Payment.user_id).where(Payment.status == "completed").distinct()
+                    select(Payment.user_id).where(Payment.status.in_(("succeeded", "completed"))).distinct()
                 ),
             )
             .order_by(Referral.created_at.asc())

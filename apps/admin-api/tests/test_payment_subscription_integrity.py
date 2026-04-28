@@ -326,7 +326,7 @@ async def test_webhook_status_transition_pending_to_completed_for_existing_exter
         payment = (
             await db.execute(select(Payment).where(Payment.external_id == external_id))
         ).scalar_one()
-        assert payment.status == "completed"
+        assert payment.status == "succeeded"
 
 
 @pytest.mark.asyncio

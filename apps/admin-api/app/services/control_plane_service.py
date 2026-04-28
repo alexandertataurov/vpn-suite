@@ -611,7 +611,7 @@ async def business_metrics(db: AsyncSession) -> BusinessMetricsOut:
     paid_users_30d = (
         await db.execute(
             select(func.count(func.distinct(Payment.user_id))).where(
-                Payment.status == "completed",
+                Payment.status.in_(("succeeded", "completed")),
                 Payment.created_at >= since_30d,
             )
         )
@@ -649,7 +649,7 @@ async def business_metrics(db: AsyncSession) -> BusinessMetricsOut:
     payment_rows = (
         await db.execute(
             select(Payment.subscription_id, Payment.amount).where(
-                Payment.status == "completed", Payment.created_at >= since_30d
+                Payment.status.in_(("succeeded", "completed")), Payment.created_at >= since_30d
             )
         )
     ).all()

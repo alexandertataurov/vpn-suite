@@ -38,10 +38,13 @@ class PlategaError(RuntimeError):
 def normalize_platega_status(value: str | None) -> str:
     raw = (value or "").strip().upper()
     if raw == "CONFIRMED":
-        return "completed"
-    # Docs and provider payloads may use both US/UK spellings and
-    # CHARGEBACK/CHARGEBACKED variants for unsuccessful/chargeback states.
-    if raw in {"CANCELED", "CANCELLED", "CHARGEBACK", "CHARGEBACKED"}:
+        return "succeeded"
+    if raw in {"CHARGEBACK", "CHARGEBACKED"}:
+        return "chargeback"
+    if raw in {"REFUND", "REFUNDED"}:
+        return "refunded"
+    # Docs and provider payloads may use both US/UK spellings.
+    if raw in {"CANCELED", "CANCELLED"}:
         return "failed"
     return "pending"
 

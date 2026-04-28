@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { telegramClient } from "@/lib/telegram/telegramCoreClient";
 import type { TelegramInitDataChat, TelegramInitDataUnsafe, TelegramInitDataUser } from "@/lib/telegram/telegram.types";
 
+const INIT_DATA_POLL_INTERVAL_MS = 250;
+const INIT_DATA_MAX_WAIT_MS = 5_000;
+
 type TelegramInitDataState = {
   initData: string;
   initDataUnsafe: TelegramInitDataUnsafe;
@@ -51,17 +54,62 @@ export function useTelegramInitData() {
   const [state, setState] = useState<TelegramInitDataState>(() => readState());
 
   useEffect(() => {
-    if (state.initData) return;
-    let attempts = 0;
+    if (typeof window === "undefined") return;
+
+    const syncState = () => {
+      setState((current) => {
+        const nextState = readState();
+        const unchanged =
+          current.initData === nextState.initData &&
+          current.startParam === nextState.startParam &&
+          current.isInsideTelegram === nextState.isInsideTelegram &&
+          current.user === nextState.user &&
+          current.chat === nextState.chat &&
+          current.initDataUnsafe === nextState.initDataUnsafe;
+        return unchanged ? current : nextState;
+      });
+    };
+
+    syncState();
+
+    if (state.initData) {
+      window.addEventListener("focus", syncState);
+      window.addEventListener("pageshow", syncState);
+      document.addEventListener("visibilitychange", syncState);
+      return () => {
+        window.removeEventListener("focus", syncState);
+        window.removeEventListener("pageshow", syncState);
+        document.removeEventListener("visibilitychange", syncState);
+      };
+    }
+
+    const startedAt = Date.now();
     const timer = window.setInterval(() => {
-      attempts += 1;
       const nextState = readState();
-      if (nextState.initData || attempts >= 10) {
-        setState(nextState);
+      setState(nextState);
+      if (nextState.initData || Date.now() - startedAt >= INIT_DATA_MAX_WAIT_MS) {
         window.clearInterval(timer);
       }
-    }, 100);
-    return () => window.clearInterval(timer);
+    }, INIT_DATA_POLL_INTERVAL_MS);
+
+    window.addEventListener("focus", syncState);
+    window.addEventListener("pageshow", syncState);
+    document.addEventListener("visibilitychange", syncState);
+
+    const rafId = window.requestAnimationFrame(() => {
+      const nextState = readState();
+      if (nextState.initData) {
+        setState(nextState);
+      }
+    });
+
+    return () => {
+      window.clearInterval(timer);
+      window.cancelAnimationFrame(rafId);
+      window.removeEventListener("focus", syncState);
+      window.removeEventListener("pageshow", syncState);
+      document.removeEventListener("visibilitychange", syncState);
+    };
   }, [state.initData]);
 
   return state;

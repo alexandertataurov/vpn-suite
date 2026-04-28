@@ -263,7 +263,7 @@ async def test_referral_reward_failure_does_not_fail_payment(
 
     assert ok is True
     await async_session.refresh(pay)
-    assert pay.status == "completed"
+    assert pay.status == "succeeded"
     await async_session.refresh(sub_refee)
     assert sub_refee.status == "active"
 
@@ -307,4 +307,4 @@ async def test_referral_reward_no_referral_no_error(async_session: AsyncSession,
 
     assert ok is True
     await async_session.refresh(pay)
-    assert pay.status == "completed"
+    assert pay.status == "succeeded"

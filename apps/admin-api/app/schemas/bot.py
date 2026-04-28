@@ -55,6 +55,12 @@ class CreateInvoiceResponse(BaseModel):
     server_id: str  # for subsequent issue call
     subscription_id: str
     free_activation: bool = False  # True when plan price is 0; bot should skip invoice
+    status: str = "pending"
+    kind: str = "subscription"
+    provider: str = "telegram_stars"
+    expected_amount: int | float | None = None
+    invoice_url: str | None = None
+    expires_at: str | None = None
 
 
 class CreatePlategaDonationLinkResponse(BaseModel):
@@ -69,6 +75,7 @@ class TelegramStarsConfirmRequest(BaseModel):
     invoice_payload: str  # payment_id from create-invoice
     telegram_payment_charge_id: str | None = None
     total_amount: int | None = None  # Stars
+    currency: str | None = "XTR"
 
 
 class BotRevokeDeviceRequest(BaseModel):

@@ -29,7 +29,7 @@ async def get_revenue_overview(session: AsyncSession) -> dict:
     rev_today = (
         await session.execute(
             select(func.coalesce(func.sum(Payment.amount), 0)).where(
-                Payment.status == "completed",
+                Payment.status.in_(("succeeded", "completed")),
                 Payment.created_at >= today_start,
             )
         )
@@ -37,7 +37,7 @@ async def get_revenue_overview(session: AsyncSession) -> dict:
     rev_7d = (
         await session.execute(
             select(func.coalesce(func.sum(Payment.amount), 0)).where(
-                Payment.status == "completed",
+                Payment.status.in_(("succeeded", "completed")),
                 Payment.created_at >= since_7d,
             )
         )
@@ -45,7 +45,7 @@ async def get_revenue_overview(session: AsyncSession) -> dict:
     rev_30d = (
         await session.execute(
             select(func.coalesce(func.sum(Payment.amount), 0)).where(
-                Payment.status == "completed",
+                Payment.status.in_(("succeeded", "completed")),
                 Payment.created_at >= since_30d,
             )
         )
@@ -89,7 +89,7 @@ async def get_revenue_overview(session: AsyncSession) -> dict:
     paid_users_30d = (
         await session.execute(
             select(func.count(func.distinct(Payment.user_id))).where(
-                Payment.status == "completed",
+                Payment.status.in_(("succeeded", "completed")),
                 Payment.created_at >= since_30d,
             )
         )
@@ -159,7 +159,7 @@ async def get_revenue_overview(session: AsyncSession) -> dict:
     renewal_count_30d = (
         await session.execute(
             select(func.count(func.distinct(Payment.subscription_id))).where(
-                Payment.status == "completed",
+                Payment.status.in_(("succeeded", "completed")),
                 Payment.created_at >= since_30d,
             )
         )
@@ -271,7 +271,7 @@ async def get_revenue_daily_series(session: AsyncSession, days: int = 30) -> lis
     q = (
         select(day_col, func.coalesce(func.sum(Payment.amount), 0))
         .where(
-            Payment.status == "completed",
+            Payment.status.in_(("succeeded", "completed")),
             Payment.created_at >= since,
         )
         .group_by(day_col)

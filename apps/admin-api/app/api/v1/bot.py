@@ -48,6 +48,14 @@ from app.schemas.user import UserOut
 from app.services.funnel_service import log_funnel_event
 from app.services.issued_config_service import persist_issued_configs
 from app.services.payment_webhook_service import complete_pending_payment_by_bot
+from app.services.payment_state_service import (
+    PAYMENT_ACTIVE_PENDING_STATUSES,
+    PAYMENT_STATUS_SUCCEEDED,
+    create_payment_intent,
+    default_payment_expiry,
+    normalize_payment_status,
+    platega_expiry_from_expires_in,
+)
 from app.services.retention_service import pause_subscription, retention_discount_percent
 from app.services.subscription_state import (
     apply_subscription_cycle,
@@ -254,20 +262,40 @@ async def create_invoice(
         f"bot:{provider}:{user.id}:{sub.id}:{idempotency_key or request.state.request_id or 'none'}"
     )
     is_free = plan.price_amount is not None and int(plan.price_amount) <= 0
-    payment = Payment(
-        user_id=user.id,
-        subscription_id=sub.id,
-        provider=provider,
-        status="completed" if is_free else "pending",
-        amount=plan.price_amount,
-        currency=plan.price_currency,
-        external_id=external_id,
-        webhook_payload={"promo_code": body.promo_code} if body.promo_code else None,
-    )
-    db.add(payment)
+    existing = (
+        await db.execute(
+            select(Payment)
+            .where(Payment.external_id == external_id)
+            .options(selectinload(Payment.subscription).selectinload(Subscription.plan))
+        )
+    ).scalar_one_or_none()
+    if existing:
+        payment = existing
+        sub = existing.subscription
+        plan = sub.plan
+        is_free = (
+            normalize_payment_status(existing.status) == PAYMENT_STATUS_SUCCEEDED
+            and int(existing.amount or 0) <= 0
+        )
+    else:
+        payment = await create_payment_intent(
+            db,
+            user_id=user.id,
+            subscription_id=sub.id,
+            provider=provider,
+            amount=plan.price_amount,
+            currency=plan.price_currency,
+            external_id=external_id,
+            kind="subscription",
+            source="bot",
+            idempotency_key=idempotency_key,
+            provider_payment_id=external_id,
+            webhook_payload={"promo_code": body.promo_code} if body.promo_code else None,
+            expires_at=default_payment_expiry(provider),
+            status=PAYMENT_STATUS_SUCCEEDED if is_free else "pending",
+        )
     try:
-        await db.flush()
-        if is_free and sub.status != "active":
+        if not existing and is_free and sub.status != "active":
             now = datetime.now(timezone.utc)
             apply_subscription_cycle(
                 sub,
@@ -277,6 +305,9 @@ async def create_invoice(
                     getattr(plan, "device_limit", sub.device_limit) or sub.device_limit
                 ),
             )
+            payment.subscription_applied_at = now
+            payment.paid_amount = 0
+            payment.paid_at = now
         await db.commit()
         await db.refresh(payment)
         await db.refresh(sub)
@@ -297,7 +328,7 @@ async def create_invoice(
         payment = existing
         sub = existing.subscription
         plan = sub.plan
-        is_free = existing.status == "completed" and int(existing.amount or 0) <= 0
+        is_free = normalize_payment_status(existing.status) == PAYMENT_STATUS_SUCCEEDED and int(existing.amount or 0) <= 0
     star_count = 0 if is_free else max(1, int(plan.price_amount))
     return CreateInvoiceResponse(
         invoice_id=payment.id,
@@ -310,6 +341,12 @@ async def create_invoice(
         server_id=server.id,
         subscription_id=sub.id,
         free_activation=is_free,
+        status=normalize_payment_status(payment.status),
+        kind=payment.kind or "subscription",
+        provider=payment.provider,
+        expected_amount=int(payment.expected_amount or payment.amount or 0),
+        invoice_url=payment.invoice_url,
+        expires_at=payment.expires_at.isoformat() if payment.expires_at else None,
     )
 
 
@@ -361,19 +398,29 @@ async def create_donation_invoice(
     external_id = (
         f"bot:telegram_stars:donation:{user.id}:{sub.id}:{idempotency_key or request.state.request_id or 'none'}"
     )
-    payment = Payment(
-        user_id=user.id,
-        subscription_id=sub.id,
-        provider="telegram_stars",
-        status="pending",
-        amount=star_count,
-        currency="XTR",
-        external_id=external_id,
-        webhook_payload={"kind": "donation", "star_count": star_count},
-    )
-    db.add(payment)
+    existing = (
+        await db.execute(select(Payment).where(Payment.external_id == external_id))
+    ).scalar_one_or_none()
+    if existing:
+        payment = existing
+    else:
+        payment = await create_payment_intent(
+            db,
+            user_id=user.id,
+            subscription_id=sub.id,
+            provider="telegram_stars",
+            amount=star_count,
+            currency="XTR",
+            external_id=external_id,
+            kind="donation",
+            source="bot",
+            idempotency_key=idempotency_key,
+            provider_payment_id=external_id,
+            webhook_payload={"kind": "donation", "star_count": star_count},
+            expires_at=default_payment_expiry("telegram_stars"),
+            status="pending",
+        )
     try:
-        await db.flush()
         await db.commit()
         await db.refresh(payment)
         await db.refresh(sub)
@@ -396,6 +443,12 @@ async def create_donation_invoice(
         server_id="",
         subscription_id=sub.id,
         free_activation=False,
+        status=normalize_payment_status(payment.status),
+        kind=payment.kind or "donation",
+        provider=payment.provider,
+        expected_amount=int(payment.expected_amount or payment.amount or 0),
+        invoice_url=payment.invoice_url,
+        expires_at=payment.expires_at.isoformat() if payment.expires_at else None,
     )
 
 
@@ -461,6 +514,32 @@ async def create_platega_donation_link(
     external_id = (
         f"bot:platega:donation:{user.id}:{sub.id}:{idempotency_key or request.state.request_id or 'none'}"
     )
+    if idempotency_key:
+        existing = (
+            await db.execute(
+                select(Payment).where(
+                    Payment.source == "bot",
+                    Payment.idempotency_key == idempotency_key,
+                    Payment.provider == "platega",
+                    Payment.kind == "donation",
+                )
+            )
+        ).scalar_one_or_none()
+        if existing:
+            invoice_url = str(
+                existing.invoice_url
+                or (existing.webhook_payload or {}).get("platega_redirect_url")
+                or ""
+            ).strip()
+            if not invoice_url:
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail={
+                        "code": "PAYMENT_GATE_UNAVAILABLE",
+                        "message": "Could not open Platega payment gate",
+                    },
+                )
+            return CreatePlategaDonationLinkResponse(payment_id=existing.id, invoice_url=invoice_url)
 
     payload_data = {
         "source": "bot",
@@ -489,28 +568,36 @@ async def create_platega_donation_link(
             },
         ) from exc
 
-    payment = Payment(
+    webhook_payload = {
+        "kind": "donation",
+        "star_count": amount,
+        "platega_redirect_url": created.redirect_url,
+        "platega_status": created.status,
+        "platega_payment_method": created.payment_method,
+        "platega_expires_in": created.expires_in,
+        "platega_usdt_rate": created.usdt_rate,
+        "platega_payload": payload_data,
+    }
+    payment = await create_payment_intent(
+        db,
         user_id=user.id,
         subscription_id=sub.id,
         provider="platega",
-        status="pending",
-        amount=float(amount),
+        amount=amount,
         currency=(settings.platega_currency or "RUB").strip().upper(),
         external_id=created.transaction_id,
-        webhook_payload={
-            "kind": "donation",
-            "star_count": amount,
-            "platega_redirect_url": created.redirect_url,
-            "platega_status": created.status,
-            "platega_payment_method": created.payment_method,
-            "platega_expires_in": created.expires_in,
-            "platega_usdt_rate": created.usdt_rate,
-            "platega_payload": payload_data,
-        },
+        kind="donation",
+        source="bot",
+        idempotency_key=idempotency_key,
+        provider_payment_id=created.transaction_id,
+        provider_status=created.status,
+        invoice_url=created.redirect_url,
+        expires_at=platega_expiry_from_expires_in(created.expires_in)
+        or default_payment_expiry("platega"),
+        webhook_payload=webhook_payload,
+        status="pending",
     )
-    db.add(payment)
     try:
-        await db.flush()
         await db.commit()
         await db.refresh(payment)
     except IntegrityError:
@@ -545,6 +632,8 @@ async def telegram_stars_confirm(
         payment_id=body.invoice_payload,
         tg_id=body.tg_id,
         telegram_payment_charge_id=body.telegram_payment_charge_id,
+        total_amount=body.total_amount,
+        currency=body.currency,
     )
     if not ok:
         raise HTTPException(
@@ -569,7 +658,10 @@ async def get_payment_invoice(
     _require_bot(principal)
     result = await db.execute(
         select(Payment)
-        .where(Payment.id == payment_id, Payment.status == "pending")
+        .where(
+            Payment.id == payment_id,
+            Payment.status.in_(tuple(PAYMENT_ACTIVE_PENDING_STATUSES)),
+        )
         .options(
             selectinload(Payment.user),
             selectinload(Payment.subscription).selectinload(Subscription.plan),
@@ -598,6 +690,12 @@ async def get_payment_invoice(
         server_id=server_id,
         subscription_id=payment.subscription_id,
         free_activation=free_activation,
+        status=normalize_payment_status(payment.status),
+        kind=payment.kind or "subscription",
+        provider=payment.provider,
+        expected_amount=int(payment.expected_amount or payment.amount or 0),
+        invoice_url=payment.invoice_url,
+        expires_at=payment.expires_at.isoformat() if payment.expires_at else None,
     )
 
 

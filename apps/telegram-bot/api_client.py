@@ -356,6 +356,7 @@ class ApiClient:
         invoice_payload: str,
         telegram_payment_charge_id: str | None = None,
         total_amount: int | None = None,
+        currency: str | None = "XTR",
     ) -> Result:
         r, err = await self._request_with_retry(
             "POST", "/api/v1/bot/payments/telegram-stars-confirm",
@@ -364,6 +365,7 @@ class ApiClient:
                 "invoice_payload": invoice_payload,
                 "telegram_payment_charge_id": telegram_payment_charge_id,
                 "total_amount": total_amount,
+                "currency": currency,
             },
             telegram_id=tg_id,
         )
@@ -543,9 +545,10 @@ async def confirm_telegram_stars_payment(
     invoice_payload: str,
     telegram_payment_charge_id: str | None = None,
     total_amount: int | None = None,
+    currency: str | None = "XTR",
 ) -> Result:
     return await get_api().confirm_telegram_stars_payment(
-        tg_id, invoice_payload, telegram_payment_charge_id, total_amount
+        tg_id, invoice_payload, telegram_payment_charge_id, total_amount, currency
     )
 
 

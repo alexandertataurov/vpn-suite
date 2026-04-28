@@ -24,7 +24,7 @@ async def get_revenue_snapshot(session: AsyncSession) -> dict:
     # Simpler: count active * avg plan price normalized to monthly
     mrr_result = await session.execute(
         select(func.coalesce(func.sum(Payment.amount), 0)).where(
-            Payment.status == "completed",
+            Payment.status.in_(("succeeded", "completed")),
             Payment.created_at >= now - timedelta(days=90),
         )
     )

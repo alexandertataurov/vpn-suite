@@ -59,6 +59,8 @@ async def _create_promo(
     is_active: bool = True,
     expires_at: datetime | None = None,
     applicable_plan_ids: list[str] | None = None,
+    promo_type: str = "fixed_xtr",
+    value: Decimal | None = None,
 ) -> PromoCode:
     # Idempotent helper: reuse existing promo with same code if present.
     existing = await db.execute(select(PromoCode).where(PromoCode.code == code.upper()))
@@ -67,8 +69,8 @@ async def _create_promo(
         return promo
     promo = PromoCode(
         code=code.upper(),
-        type="fixed_xtr",
-        value=Decimal(str(discount_xtr)),
+        type=promo_type,
+        value=value if value is not None else Decimal(str(discount_xtr)),
         status="active",
         discount_xtr=discount_xtr,
         max_uses_per_user=1,
@@ -108,7 +110,42 @@ async def test_validate_promo_price_floor(async_session):
 
     result = await validate_promo_code(db, "floor1", user.id, plan.id, 5)
     assert result.discounted_price == MIN_PRICE_XTR
-    assert result.discount_amount == 10
+    assert result.discount_amount == 4
+    assert result.display_label == "4 XTR off"
+
+
+async def test_validate_promo_uses_discount_xtr_when_legacy_value_is_zero(async_session):
+    if not await check_db():
+        pytest.skip("DB not available (requires Postgres)")
+    db = async_session
+    plan = await _ensure_plan(db)
+    user = await _ensure_user(db, tg_id=999012)
+    await _create_promo(db, "ZEROLEGACY1", discount_xtr=3, value=Decimal("0"))
+    await db.commit()
+
+    result = await validate_promo_code(db, "zerolegacy1", user.id, plan.id, 10)
+    assert result.discount_amount == 3
+    assert result.discounted_price == 7
+
+
+async def test_validate_promo_percent_discount_is_capped_to_price_floor(async_session):
+    if not await check_db():
+        pytest.skip("DB not available (requires Postgres)")
+    db = async_session
+    plan = await _ensure_plan(db)
+    user = await _ensure_user(db, tg_id=999013)
+    await _create_promo(
+        db,
+        "HALF1",
+        discount_xtr=0,
+        promo_type="discount_percent",
+        value=Decimal("50"),
+    )
+    await db.commit()
+
+    result = await validate_promo_code(db, "half1", user.id, plan.id, 9)
+    assert result.discount_amount == 4
+    assert result.discounted_price == 5
 
 
 async def test_validate_promo_not_found(async_session):

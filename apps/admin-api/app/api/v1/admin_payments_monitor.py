@@ -21,6 +21,12 @@ class PaymentMonitorOut(BaseModel):
     success_24h: int
     failed_24h: int
     pending_count: int
+    stale_pending_count: int
+    expired_count: int
+    refunded_count: int
+    chargeback_count: int
+    amount_mismatch_count: int
+    provider_failure_count: int
     webhook_errors_24h: int
     refund_rate_30d: float
 
@@ -39,7 +45,7 @@ async def get_payments_monitor(
             select(func.count())
             .select_from(Payment)
             .where(
-                Payment.status == "completed",
+                Payment.status.in_(("succeeded", "completed")),
                 Payment.created_at >= since_24h,
             )
         )
@@ -49,14 +55,51 @@ async def get_payments_monitor(
             select(func.count())
             .select_from(Payment)
             .where(
-                Payment.status == "failed",
+                Payment.status.in_(("failed", "cancelled")),
                 Payment.created_at >= since_24h,
             )
         )
     ).scalar() or 0
     pending_count = (
         await db.execute(
-            select(func.count()).select_from(Payment).where(Payment.status == "pending")
+            select(func.count())
+            .select_from(Payment)
+            .where(Payment.status.in_(("created", "requires_action", "pending")))
+        )
+    ).scalar() or 0
+    stale_pending_count = (
+        await db.execute(
+            select(func.count())
+            .select_from(Payment)
+            .where(
+                Payment.status.in_(("created", "requires_action", "pending")),
+                Payment.expires_at.is_not(None),
+                Payment.expires_at <= now,
+            )
+        )
+    ).scalar() or 0
+    expired_count = (
+        await db.execute(select(func.count()).select_from(Payment).where(Payment.status == "expired"))
+    ).scalar() or 0
+    refunded_count = (
+        await db.execute(select(func.count()).select_from(Payment).where(Payment.status == "refunded"))
+    ).scalar() or 0
+    chargeback_count = (
+        await db.execute(select(func.count()).select_from(Payment).where(Payment.status == "chargeback"))
+    ).scalar() or 0
+    amount_mismatch_count = (
+        await db.execute(
+            select(func.count()).select_from(Payment).where(Payment.failure_code == "amount_mismatch")
+        )
+    ).scalar() or 0
+    provider_failure_count = (
+        await db.execute(
+            select(func.count())
+            .select_from(Payment)
+            .where(
+                Payment.status == "failed",
+                Payment.provider_status.is_not(None),
+            )
         )
     ).scalar() or 0
 
@@ -80,6 +123,12 @@ async def get_payments_monitor(
         success_24h=success_24h,
         failed_24h=failed_24h,
         pending_count=pending_count,
+        stale_pending_count=stale_pending_count,
+        expired_count=expired_count,
+        refunded_count=refunded_count,
+        chargeback_count=chargeback_count,
+        amount_mismatch_count=amount_mismatch_count,
+        provider_failure_count=provider_failure_count,
         webhook_errors_24h=webhook_errors_24h,
         refund_rate_30d=refund_rate_30d,
     )

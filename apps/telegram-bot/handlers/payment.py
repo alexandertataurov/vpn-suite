@@ -38,12 +38,14 @@ async def on_successful_payment(message: Message):
     invoice_payload = sp.invoice_payload
     telegram_payment_charge_id = getattr(sp, "telegram_payment_charge_id", None) or None
     total_amount = getattr(sp, "total_amount", None)
+    currency = getattr(sp, "currency", None) or "XTR"
 
     result = await confirm_telegram_stars_payment(
         tg_id=tg_id,
         invoice_payload=invoice_payload,
         telegram_payment_charge_id=telegram_payment_charge_id,
         total_amount=total_amount,
+        currency=currency,
     )
     success = result.success
     record_payment_confirm(success)

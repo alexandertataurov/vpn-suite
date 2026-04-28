@@ -238,7 +238,7 @@ export function MockMirrorProvider({ children }: { children: ReactNode }) {
         return jsonResponse(supportFaqDefault);
       }
       if (method === "GET" && /\/webapp\/payments\/.+\/status/.test(url)) {
-        return jsonResponse({ status: "completed" });
+        return jsonResponse({ status: "succeeded" });
       }
       if (method === "GET" && url.includes("/webapp/subscription/offers")) {
         return jsonResponse(subscriptionOffers);
