@@ -357,11 +357,11 @@
 
 /* Modal sizes */
 .modal-sm {
-  width: 360px;
+  width: min(360px, calc(100vw - var(--sp-4)));
 }
 
 .modal-lg {
-  width: 640px;
+  width: min(640px, calc(100vw - var(--sp-4)));
 }
 
 /* Danger modal */
@@ -396,6 +396,24 @@
   pointer-events: none;
   transform: translateY(-4px);
   transition: opacity .12s, transform .12s;
+}
+
+.action-menu__trigger {
+  display: inline-flex;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.action-menu__icon-button {
+  min-width: 32px;
+}
+
+.action-menu__menu--end {
+  right: 0;
+  left: auto;
 }
 
 .dropdown-menu.open {
@@ -442,6 +460,11 @@
   background: var(--danger-dim);
 }
 
+.dropdown-item:disabled {
+  cursor: not-allowed;
+  opacity: .48;
+}
+
 .dropdown-item .item-icon {
   width: 14px;
   height: 14px;
@@ -470,6 +493,32 @@
   text-transform: uppercase;
   color: var(--text-muted);
   padding: 6px 10px 4px;
+}
+
+@media (max-width: 640px) {
+  .modal {
+    width: calc(100vw - var(--sp-4));
+    max-height: calc(100vh - var(--sp-4));
+  }
+
+  .modal-body {
+    max-height: calc(100vh - 170px);
+    overflow: auto;
+  }
+
+  .modal-footer {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+
+  .dropdown-menu {
+    position: fixed;
+    right: var(--sp-3);
+    left: var(--sp-3);
+    top: auto;
+    bottom: var(--sp-3);
+    min-width: 0;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -2283,7 +2332,7 @@ input[type="range"].danger::-webkit-slider-thumb {
   top: 0;
   right: 0;
   bottom: 0;
-  width: 360px;
+  width: min(360px, calc(100vw - var(--sp-4)));
   background: var(--surface-1);
   border-left: 1px solid var(--border-bright);
   box-shadow: var(--shadow-drawer-r);
@@ -2310,8 +2359,8 @@ input[type="range"].danger::-webkit-slider-thumb {
   transform: translateX(0);
 }
 
-.drawer-sm { width: 280px; }
-.drawer-lg { width: 440px; }
+.drawer-sm { width: min(280px, calc(100vw - var(--sp-4))); }
+.drawer-lg { width: min(440px, calc(100vw - var(--sp-4))); }
 
 .drawer-header {
   display: flex;
@@ -2362,4 +2411,17 @@ input[type="range"].danger::-webkit-slider-thumb {
   gap: var(--sp-2);
   padding: var(--sp-4) var(--sp-5);
   border-top: 1px solid var(--border-default);
+}
+
+@media (max-width: 640px) {
+  .drawer,
+  .drawer-sm,
+  .drawer-lg {
+    width: 100vw;
+  }
+
+  .drawer-footer {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
 }

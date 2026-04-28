@@ -27,6 +27,8 @@ Repository-aligned API inventory for the current codebase.
 | `wg.py` | `/api/v1/wg/*` | Raw WG peer provisioning endpoints |
 | `peers.py` | `/api/v1/peers*` | Peer-centric control endpoints |
 | `plans.py`, `subscriptions.py`, `payments.py` | `/api/v1/*` | Billing, plans, subscriptions |
+| `admin_news.py` | `/api/v1/admin/news/*` | Operator news campaigns, targeted broadcasts, direct Telegram messages, broadcast status/history |
+| `admin_grants.py` | `/api/v1/admin/grants/*` | Manual trial, subscription extension, and user-scoped discount grants |
 | `admin_configs.py` | `/api/v1/admin/configs/*` | Tokenized config download and QR access |
 | `live_metrics.py`, `telemetry_*`, `servers_stream.py` | `/api/v1/*` | Near-real-time and telemetry endpoints |
 
@@ -71,6 +73,13 @@ Repository-aligned API inventory for the current codebase.
 - Admin/operator issue and rotate flows in `servers_peers.py` and `devices.py`
 - WebApp issuance flow in `webapp.py`
 - Bot device issuance/revoke flows in `bot.py`
+
+## Customer communications and grants
+
+- `POST /admin/news/broadcast` queues a Redis-backed Telegram broadcast. Legacy all-user payloads still work; new payloads may include `target.kind` of `all`, `filters`, `user_ids`, or `tg_ids`.
+- `GET /admin/news/broadcast/{broadcast_id}` and `GET /admin/news/broadcasts` expose delivery status and recent campaign history for operators.
+- `POST /admin/news/direct` sends a server-side Telegram message to one user; the admin frontend never calls Telegram directly.
+- `POST /admin/grants/trial`, `POST /admin/grants/extension`, and `POST /admin/grants/discount` apply manual retention/support grants and write entitlement/audit records.
 
 ## Agent API surface
 

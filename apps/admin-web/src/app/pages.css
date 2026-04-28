@@ -380,6 +380,27 @@
   padding: var(--sp-4);
 }
 
+.customer-ops-page__attention {
+  display: grid;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+}
+
+.customer-ops-page__attention-head,
+.customer-ops-page__attention-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.customer-ops-page__attention-filters {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  justify-content: flex-end;
+}
+
 .customer-ops-page__cockpit {
   display: grid;
   gap: var(--sp-3);
@@ -513,6 +534,11 @@
   gap: 3px;
 }
 
+.customer-ops-page__cell-stack strong {
+  color: var(--tx-pri);
+  font-size: var(--text-sm);
+}
+
 .customer-ops-page__detail-head {
   display: flex;
   justify-content: space-between;
@@ -522,6 +548,14 @@
 
 .customer-ops-page__tabs {
   margin-bottom: var(--sp-3);
+}
+
+.customer-ops-page__recommendation {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+  margin-top: var(--sp-2);
 }
 
 .customer-ops-page__profile-grid {
@@ -542,6 +576,28 @@
   border-radius: var(--r-sm);
   background: var(--s2);
   padding: var(--sp-3);
+}
+
+.customer-ops-page__attention-list {
+  display: grid;
+  gap: var(--sp-2);
+}
+
+.customer-ops-page__attention-item {
+  border: 1px solid var(--bd-def);
+  border-radius: var(--r-sm);
+  background: var(--s2);
+  padding: var(--sp-3);
+}
+
+.customer-ops-page__attention-item-copy {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-2);
+}
+
+.customer-ops-page__attention-item-copy strong {
+  color: var(--tx-pri);
 }
 
 .customer-ops-page__metric-grid {
@@ -840,6 +896,8 @@
   }
 
   .customer-ops-page__detail-head,
+  .customer-ops-page__attention-head,
+  .customer-ops-page__attention-item,
   .customer-ops-page__cockpit-head,
   .customer-ops-page__filter-actions {
     align-items: flex-start;
@@ -856,6 +914,10 @@
 
   .customer-ops-page__dl {
     grid-template-columns: 1fr;
+  }
+
+  .customer-ops-page__attention-filters {
+    justify-content: flex-start;
   }
 
   .devices-page__top-actions {

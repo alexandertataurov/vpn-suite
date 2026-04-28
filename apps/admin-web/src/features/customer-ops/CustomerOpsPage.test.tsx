@@ -168,6 +168,8 @@ describe("CustomerOpsPage", () => {
     expect(within(cockpit).getByText("100 XTR")).toBeInTheDocument();
     expect(within(cockpit).getByText("Active devices")).toBeInTheDocument();
     expect(within(cockpit).getByText("Open Billing")).toHaveAttribute("href", "/billing");
+    expect(await screen.findByLabelText("Customer attention queue")).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Attention" })).toBeInTheDocument();
   });
 
   it("applies cross-domain filters to user query params", async () => {
@@ -199,7 +201,8 @@ describe("CustomerOpsPage", () => {
     await screen.findByTestId("customer-ops-page");
     fireEvent.click(screen.getByRole("tab", { name: "Devices" }));
     await screen.findByText("iphone");
-    fireEvent.click(screen.getByRole("button", { name: "Open" }));
+    fireEvent.click(screen.getByRole("button", { name: /Device actions/i }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Inspect" }));
 
     await screen.findByRole("dialog", { name: /Device iphone/i });
     expect(screen.getByText("10.0.0.2/32")).toBeInTheDocument();
@@ -212,13 +215,26 @@ describe("CustomerOpsPage", () => {
     await screen.findByTestId("customer-ops-page");
     fireEvent.click(screen.getByRole("tab", { name: "Payments" }));
     await screen.findByText("telegram_stars");
-    fireEvent.click(screen.getByRole("button", { name: "Open" }));
+    fireEvent.click(screen.getByRole("button", { name: /Payment actions/i }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Inspect" }));
     await screen.findByRole("heading", { name: "Payment detail" });
-    fireEvent.click(screen.getByRole("button", { name: "Back" }));
+    fireEvent.click(screen.getByRole("button", { name: "Close" }));
 
     fireEvent.click(screen.getByRole("tab", { name: "Billing" }));
     await waitFor(() => expect(screen.getAllByText("plan-pro").length).toBeGreaterThan(0));
-    fireEvent.click(screen.getAllByRole("button", { name: "Open" })[0]!);
+    fireEvent.click(screen.getByRole("button", { name: /Subscription actions/i }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Inspect" }));
     await screen.findByRole("heading", { name: "Subscription detail" });
+  });
+
+  it("filters the attention queue and deep-links the selected tab", async () => {
+    setupHandlers();
+    renderWithProviders(<CustomerOpsPage />, { route: "/customer-360?user=11&tab=attention" });
+
+    await screen.findByLabelText("Customer attention queue");
+    fireEvent.click(screen.getByRole("button", { name: "Device health" }));
+    expect(screen.getByRole("button", { name: "Device health" })).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(within(screen.getByLabelText("Customer attention queue")).getByRole("button", { name: "Recover" }));
+    await waitFor(() => expect(screen.getByRole("tab", { name: "Devices" })).toHaveAttribute("aria-selected", "true"));
   });
 });

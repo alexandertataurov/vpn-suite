@@ -21,6 +21,7 @@ from app.api.v1.admin_cohorts import router as admin_cohorts_router
 from app.api.v1.admin_configs import router as admin_configs_router
 from app.api.v1.admin_devops import router as admin_devops_router
 from app.api.v1.admin_entitlement_events import router as admin_entitlement_events_router
+from app.api.v1.admin_grants import router as admin_grants_router
 from app.api.v1.admin_news import router as admin_news_router
 from app.api.v1.admin_payments_monitor import router as admin_payments_monitor_router
 from app.api.v1.admin_pricing import router as admin_pricing_router
@@ -267,6 +268,7 @@ app.include_router(admin_pricing_router, prefix="/api/v1")
 app.include_router(admin_promos_router, prefix="/api/v1")
 app.include_router(admin_payments_monitor_router, prefix="/api/v1")
 app.include_router(admin_entitlement_events_router, prefix="/api/v1")
+app.include_router(admin_grants_router, prefix="/api/v1")
 app.include_router(admin_churn_surveys_router, prefix="/api/v1")
 app.include_router(admin_churn_router, prefix="/api/v1")
 app.include_router(admin_devops_router, prefix="/api/v1")

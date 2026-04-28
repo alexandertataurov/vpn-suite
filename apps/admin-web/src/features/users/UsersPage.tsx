@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useApi } from "@/core/api/context";
 import { useApiQuery } from "@/hooks/api/useApiQuery";
 import { buildUsersPath, type UserDeviceListOut } from "@/hooks/useUsers";
@@ -24,7 +24,7 @@ import {
   getIssuedConfigText,
   getTgRequisites,
 } from "@/features/users/UsersPage.sections";
-import { Badge, Button } from "@/design-system/primitives";
+import { ActionMenu, Badge } from "@/design-system/primitives";
 import { PageLayout } from "@/layout/PageLayout";
 import { PageErrorState, PageLoadingState } from "@/layout/PageStates";
 import { MetaText } from "@/design-system/typography";
@@ -80,6 +80,7 @@ function stringifyMeta(meta: Record<string, unknown> | null | undefined): string
 
 export function UsersPage() {
   const api = useApi();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const desktopWorkspace = useMediaQuery("(min-width: 1024px)");
   const [searchParams, setSearchParams] = useSearchParams();
@@ -395,6 +396,13 @@ export function UsersPage() {
       const primaryLabel =
         user.email || (tg?.username ? `@${tg.username}` : [tg?.first_name, tg?.last_name].filter(Boolean).join(" ")) || `User #${user.id}`;
       const contextBadges: ReactNode[] = [];
+      if (user.is_banned) {
+        contextBadges.push(
+          <Badge key="banned-attention" size="sm" variant="warning">
+            Attention
+          </Badge>
+        );
+      }
       if (selectedUserId === user.id && detailSubscriptionCount > 0) {
         contextBadges.push(
           <Badge key="subs" size="sm" variant="neutral">
@@ -406,6 +414,20 @@ export function UsersPage() {
         contextBadges.push(
           <Badge key="devices" size="sm" variant="neutral">
             {detailDeviceCount} devices
+          </Badge>
+        );
+      }
+      if (selectedUserId === user.id && detailSubscriptionCount === 0) {
+        contextBadges.push(
+          <Badge key="no-subscription" size="sm" variant="danger">
+            No subscription
+          </Badge>
+        );
+      }
+      if (selectedUserId === user.id && detailSubscriptionCount > 0 && detailDeviceCount === 0) {
+        contextBadges.push(
+          <Badge key="no-devices" size="sm" variant="warning">
+            No devices
           </Badge>
         );
       }
@@ -437,13 +459,21 @@ export function UsersPage() {
           <MetaText className="users-page__muted">No cached context</MetaText>
         ),
         action: (
-          <Button type="button" variant="ghost" size="sm" onClick={() => setSelectedUser(user.id)}>
-            Inspect
-          </Button>
+          <ActionMenu
+            label={`Actions for user ${user.id}`}
+            items={[
+              { id: "inspect", label: "Inspect", onSelect: () => setSelectedUser(user.id) },
+              {
+                id: "attention",
+                label: "Review in Customer 360",
+                onSelect: () => navigate(`/customer-360?user=${user.id}&tab=attention`),
+              },
+            ]}
+          />
         ),
       };
     });
-  }, [selectedUserId, setSelectedUser, userDetail?.subscriptions.length, userDevices?.items.length, userList?.items]);
+  }, [navigate, selectedUserId, setSelectedUser, userDetail?.subscriptions.length, userDevices?.items.length, userList?.items]);
 
   const total = userList?.total ?? 0;
   const canPrev = offset > 0;

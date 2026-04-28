@@ -12,6 +12,7 @@ export { Widget, type WidgetEdgeAccent } from "./Widget";
 
 /* Buttons / links */
 export { Button } from "./Button";
+export { ActionMenu, type ActionMenuItem } from "./ActionMenu";
 export { AnchorButton } from "./AnchorButton";
 export { LinkButton } from "./LinkButton";
 
@@ -53,4 +54,3 @@ export { ErrorState } from "./ErrorState";
 /* Composite */
 export { CommandPalette } from "./CommandPalette";
 export { Avatar, AvatarGroup } from "./Avatar";
-

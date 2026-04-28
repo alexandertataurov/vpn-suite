@@ -6,6 +6,7 @@ import { useApi } from "@/core/api/context";
 import { SubscriptionRecordsTab } from "@/features/billing/SubscriptionRecordsTab";
 import { billingKeys } from "@/features/billing/services/billing.query-keys";
 import {
+  ActionMenu,
   Badge,
   Button,
   Card,
@@ -450,74 +451,48 @@ export function BillingPage() {
           </span>
         ),
         actions: (
-          <span className="billing-page__plan-actions">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setEditingPlan(p);
-                setForm({
-                  name: cleanName,
-                  durationDays: String(p.duration_days),
-                  deviceLimit: String(p.device_limit ?? 1),
-                  priceCurrency: p.price_currency,
-                  priceAmount: String(p.price_amount),
-                  style,
-                  upsellMethods: p.upsell_methods ?? [],
-                  hidden: Boolean(p.is_archived),
-                });
-                setSaveError(null);
-                setIsModalOpen(true);
-              }}
-            >
-              Edit
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => handleClone(p)}
-              disabled={actionPending}
-            >
-              Clone
-            </Button>
-            {p.is_archived ? (
-              <Button
-                type="button"
-                variant="success"
-                size="sm"
-                onClick={() => handleRestore(p)}
-                disabled={actionPending}
-              >
-                Unhide
-              </Button>
-            ) : (
-              <Button
-                type="button"
-                variant="warning"
-                size="sm"
-                onClick={() => handleArchive(p)}
-                disabled={actionPending}
-              >
-                Hide
-              </Button>
-            )}
-            <Button
-              type="button"
-              variant="danger"
-              size="sm"
-              disabled={!canDelete || actionPending}
-              title={!canDelete ? `${subCount} subscription(s) — cannot delete` : undefined}
-              onClick={() => {
-                setPlanToDelete(p);
-                setDeleteConfirmText("");
-                setSaveError(null);
-              }}
-            >
-              Delete
-            </Button>
-          </span>
+          <ActionMenu
+            label={`Actions for plan ${p.id}`}
+            items={[
+              {
+                id: "edit",
+                label: "Edit",
+                onSelect: () => {
+                  setEditingPlan(p);
+                  setForm({
+                    name: cleanName,
+                    durationDays: String(p.duration_days),
+                    deviceLimit: String(p.device_limit ?? 1),
+                    priceCurrency: p.price_currency,
+                    priceAmount: String(p.price_amount),
+                    style,
+                    upsellMethods: p.upsell_methods ?? [],
+                    hidden: Boolean(p.is_archived),
+                  });
+                  setSaveError(null);
+                  setIsModalOpen(true);
+                },
+              },
+              { id: "clone", label: "Clone", disabled: actionPending, onSelect: () => handleClone(p) },
+              {
+                id: p.is_archived ? "unhide" : "hide",
+                label: p.is_archived ? "Unhide" : "Hide",
+                disabled: actionPending,
+                onSelect: () => (p.is_archived ? handleRestore(p) : handleArchive(p)),
+              },
+              {
+                id: "delete",
+                label: !canDelete ? `Delete disabled (${subCount} subscriptions)` : "Delete",
+                danger: true,
+                disabled: !canDelete || actionPending,
+                onSelect: () => {
+                  setPlanToDelete(p);
+                  setDeleteConfirmText("");
+                  setSaveError(null);
+                },
+              },
+            ]}
+          />
         ),
       };
     });

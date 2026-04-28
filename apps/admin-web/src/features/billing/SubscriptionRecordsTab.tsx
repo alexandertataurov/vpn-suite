@@ -4,6 +4,7 @@ import { useApiQuery } from "@/hooks/api/useApiQuery";
 import { useApi } from "@/core/api/context";
 import { billingKeys } from "@/features/billing/services/billing.query-keys";
 import {
+  ActionMenu,
   Badge,
   Button,
   Card,
@@ -21,6 +22,23 @@ import type { SubscriptionList, SubscriptionOut } from "@/shared/types/admin-api
 
 function formatDateTime(value: string | null | undefined): string {
   return value ? new Date(value).toLocaleString() : "—";
+}
+
+function subscriptionAttentionVariant(sub: SubscriptionOut): "danger" | "warning" | "info" | "success" {
+  const status = sub.effective_status ?? sub.status;
+  if (status === "blocked" || sub.access_status === "blocked") return "danger";
+  if (status === "expired" || status === "cancelled" || status === "paused") return "warning";
+  if (sub.access_status === "grace" || sub.grace_until) return "info";
+  return "success";
+}
+
+function subscriptionAttentionLabel(sub: SubscriptionOut): string {
+  const status = sub.effective_status ?? sub.status;
+  if (status === "blocked" || sub.access_status === "blocked") return "Needs attention";
+  if (status === "expired" || status === "cancelled") return "Expired";
+  if (status === "paused" || sub.access_status === "paused") return "Paused";
+  if (sub.access_status === "grace" || sub.grace_until) return "Grace";
+  return "Healthy";
 }
 
 export function SubscriptionRecordsTab() {
@@ -244,20 +262,25 @@ export function SubscriptionRecordsTab() {
                     plan_id: s.plan_id,
                     valid_until: formatDateTime(s.valid_until),
                     status: (
-                      <Badge
-                        variant={
-                          (s.effective_status ?? s.status) === "active"
-                            ? "success"
-                            : (s.effective_status ?? s.status) === "grace"
-                              ? "info"
-                              : (s.effective_status ?? s.status) === "paused"
-                                ? "warning"
-                                : "danger"
-                        }
-                        size="sm"
-                      >
-                        {s.effective_status ?? s.status}
-                      </Badge>
+                      <span className="billing-page__entity-cell">
+                        <Badge
+                          variant={
+                            (s.effective_status ?? s.status) === "active"
+                              ? "success"
+                              : (s.effective_status ?? s.status) === "grace"
+                                ? "info"
+                                : (s.effective_status ?? s.status) === "paused"
+                                  ? "warning"
+                                  : "danger"
+                          }
+                          size="sm"
+                        >
+                          {s.effective_status ?? s.status}
+                        </Badge>
+                        <Badge variant={subscriptionAttentionVariant(s)} size="sm">
+                          {subscriptionAttentionLabel(s)}
+                        </Badge>
+                      </span>
                     ),
                     access_status: (
                       <Badge
@@ -284,68 +307,59 @@ export function SubscriptionRecordsTab() {
                       </span>
                     ) : "—",
                     actions: (
-                      <span className="billing-page__sub-actions">
-                        <Button size="sm" variant="secondary" onClick={() => openGraceModal(s)}>
-                          Set grace
-                        </Button>
-                        {(s.access_status === "grace" || s.grace_until) && (
-                          <Button size="sm" variant="secondary" onClick={() => clearGrace(s.id)}>
-                            Clear grace
-                          </Button>
-                        )}
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          disabled={
-                            stateActionPendingId === s.id ||
-                            (s.subscription_status ?? "active") !== "active" ||
-                            (s.access_status ?? "enabled") === "paused"
-                          }
-                          onClick={() =>
-                            void patchSubscriptionState(
-                              s.id,
-                              { status: "active", access_status: "paused" },
-                              "Subscription paused"
-                            )
-                          }
-                        >
-                          Pause
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          disabled={
-                            stateActionPendingId === s.id ||
-                            (s.access_status ?? "enabled") === "enabled"
-                          }
-                          onClick={() =>
-                            void patchSubscriptionState(
-                              s.id,
-                              { status: "active", access_status: "enabled" },
-                              "Access enabled"
-                            )
-                          }
-                        >
-                          Enable
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="danger"
-                          disabled={
-                            stateActionPendingId === s.id ||
-                            (s.access_status ?? "enabled") === "blocked"
-                          }
-                          onClick={() =>
-                            void patchSubscriptionState(
-                              s.id,
-                              { status: "active", access_status: "blocked" },
-                              "Access blocked"
-                            )
-                          }
-                        >
-                          Block
-                        </Button>
-                      </span>
+                      <ActionMenu
+                        label={`Actions for subscription ${s.id}`}
+                        items={[
+                          { id: "grace", label: "Set grace", onSelect: () => openGraceModal(s) },
+                          {
+                            id: "clear-grace",
+                            label: "Clear grace",
+                            disabled: !(s.access_status === "grace" || s.grace_until),
+                            onSelect: () => void clearGrace(s.id),
+                          },
+                          {
+                            id: "pause",
+                            label: "Pause",
+                            disabled:
+                              stateActionPendingId === s.id ||
+                              (s.subscription_status ?? "active") !== "active" ||
+                              (s.access_status ?? "enabled") === "paused",
+                            onSelect: () =>
+                              void patchSubscriptionState(
+                                s.id,
+                                { status: "active", access_status: "paused" },
+                                "Subscription paused"
+                              ),
+                          },
+                          {
+                            id: "enable",
+                            label: "Enable",
+                            disabled:
+                              stateActionPendingId === s.id ||
+                              (s.access_status ?? "enabled") === "enabled",
+                            onSelect: () =>
+                              void patchSubscriptionState(
+                                s.id,
+                                { status: "active", access_status: "enabled" },
+                                "Access enabled"
+                              ),
+                          },
+                          {
+                            id: "block",
+                            label: "Block",
+                            danger: true,
+                            disabled:
+                              stateActionPendingId === s.id ||
+                              (s.access_status ?? "enabled") === "blocked",
+                            onSelect: () =>
+                              void patchSubscriptionState(
+                                s.id,
+                                { status: "active", access_status: "blocked" },
+                                "Access blocked"
+                              ),
+                          },
+                        ]}
+                      />
                     ),
                   }))}
                   getRowKey={(row) => String(row.key)}

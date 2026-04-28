@@ -1279,6 +1279,87 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/grants/trial:
+    post:
+      tags:
+      - admin-grants
+      summary: Grant Trial
+      operationId: grant_trial_api_v1_admin_grants_trial_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TrialGrantRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GrantResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /api/v1/admin/grants/extension:
+    post:
+      tags:
+      - admin-grants
+      summary: Grant Extension
+      operationId: grant_extension_api_v1_admin_grants_extension_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExtensionGrantRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GrantResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /api/v1/admin/grants/discount:
+    post:
+      tags:
+      - admin-grants
+      summary: Grant Discount
+      operationId: grant_discount_api_v1_admin_grants_discount_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DiscountGrantRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GrantResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
   /api/v1/admin/churn-surveys/:
     get:
       tags:
@@ -1443,6 +1524,33 @@ paths:
                 $ref: '#/components/schemas/HTTPValidationError'
       security:
       - HTTPBearer: []
+  /api/v1/admin/news/direct:
+    post:
+      tags:
+      - admin-news
+      summary: Send Direct Message
+      operationId: send_direct_message_api_v1_admin_news_direct_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DirectMessageRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DirectMessageResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
   /api/v1/admin/news/broadcast/{broadcast_id}:
     get:
       tags:
@@ -1458,6 +1566,36 @@ paths:
         schema:
           type: string
           title: Broadcast Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/admin/news/broadcasts:
+    get:
+      tags:
+      - admin-news
+      summary: Recent News Broadcasts
+      operationId: recent_news_broadcasts_api_v1_admin_news_broadcasts_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 50
+          minimum: 1
+          default: 20
+          title: Limit
       responses:
         '200':
           description: Successful Response
@@ -6169,6 +6307,22 @@ paths:
           - type: string
           - type: 'null'
           title: X-Telegram-Bot-Api-Secret-Token
+      - name: X-MerchantId
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Merchantid
+      - name: X-Secret
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Secret
       responses:
         '200':
           description: Successful Response
@@ -6311,6 +6465,52 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CreateInvoiceResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/bot/payments/platega/create-donation-link:
+    post:
+      tags:
+      - bot
+      summary: Create Platega Donation Link
+      description: Create a pending donation payment (Platega) and return redirect
+        URL. Bot only.
+      operationId: create_platega_donation_link_api_v1_bot_payments_platega_create_donation_link_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePlategaDonationLinkRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatePlategaDonationLinkResponse'
         '422':
           description: Validation Error
           content:
@@ -6635,7 +6835,7 @@ paths:
       tags:
       - bot
       summary: Bot Trial Start
-      description: 'Start 24h trial: create user if needed, one trial sub + one device,
+      description: 'Start trial: create user if needed, one trial sub + one device,
         return configs. Bot only.'
       operationId: bot_trial_start_api_v1_bot_trial_start_post
       security:
@@ -6909,12 +7109,27 @@ paths:
       summary: Webapp List Plans
       description: List active plans for Mini App. Bearer session token required.
       operationId: webapp_list_plans_api_v1_webapp_plans_get
+      parameters:
+      - name: payment_provider
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Payment Provider
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
               schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/v1/webapp/support/faq:
     get:
       tags:
@@ -7173,14 +7388,39 @@ paths:
       tags:
       - webapp
       summary: Webapp Create Invoice
-      description: Create pending/active subscription payment invoice for Telegram
-        Stars. Bearer required.
+      description: Create pending/active subscription payment invoice for configured
+        WebApp provider.
       operationId: webapp_create_invoice_api_v1_webapp_payments_create_invoice_post
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/CreateInvoiceWebAppBody'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/webapp/payments/create-donation-invoice:
+    post:
+      tags:
+      - webapp
+      summary: Webapp Create Donation Invoice
+      description: Create pending donation payment invoice for current WebApp user.
+      operationId: webapp_create_donation_invoice_api_v1_webapp_payments_create_donation_invoice_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDonationInvoiceWebAppBody'
         required: true
       responses:
         '200':
@@ -9494,6 +9734,21 @@ components:
       - tg_id
       - star_count
       title: CreateDonationInvoiceRequest
+    CreateDonationInvoiceWebAppBody:
+      properties:
+        amount:
+          type: integer
+          maximum: 25000.0
+          minimum: 1.0
+          title: Amount
+          default: 150
+        payment_provider:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Payment Provider
+      type: object
+      title: CreateDonationInvoiceWebAppBody
     CreateInvoiceRequest:
       properties:
         tg_id:
@@ -9551,6 +9806,34 @@ components:
           type: boolean
           title: Free Activation
           default: false
+        status:
+          type: string
+          title: Status
+          default: pending
+        kind:
+          type: string
+          title: Kind
+          default: subscription
+        provider:
+          type: string
+          title: Provider
+          default: telegram_stars
+        expected_amount:
+          anyOf:
+          - type: integer
+          - type: number
+          - type: 'null'
+          title: Expected Amount
+        invoice_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Invoice Url
+        expires_at:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Expires At
       type: object
       required:
       - invoice_id
@@ -9572,6 +9855,11 @@ components:
           - type: string
           - type: 'null'
           title: Promo Code
+        payment_provider:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Payment Provider
       type: object
       required:
       - plan_id
@@ -9614,6 +9902,37 @@ components:
       - subscription_id
       - subscription
       title: CreateOrGetSubscriptionResponse
+    CreatePlategaDonationLinkRequest:
+      properties:
+        tg_id:
+          type: integer
+          title: Tg Id
+        amount:
+          type: integer
+          title: Amount
+        subscription_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Subscription Id
+      type: object
+      required:
+      - tg_id
+      - amount
+      title: CreatePlategaDonationLinkRequest
+    CreatePlategaDonationLinkResponse:
+      properties:
+        payment_id:
+          type: string
+          title: Payment Id
+        invoice_url:
+          type: string
+          title: Invoice Url
+      type: object
+      required:
+      - payment_id
+      - invoice_url
+      title: CreatePlategaDonationLinkResponse
     DashboardTimeseriesOut:
       properties:
         points:
@@ -10150,6 +10469,89 @@ components:
           title: List
       type: object
       title: DevicesSnapshotOut
+    DirectMessageRequest:
+      properties:
+        user_id:
+          type: integer
+          title: User Id
+        text:
+          type: string
+          maxLength: 3500
+          minLength: 1
+          title: Text
+        parse_mode:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Parse Mode
+          description: 'Telegram parse_mode: HTML/MarkdownV2 or null'
+          default: HTML
+      type: object
+      required:
+      - user_id
+      - text
+      title: DirectMessageRequest
+    DirectMessageResponse:
+      properties:
+        user_id:
+          type: integer
+          title: User Id
+        tg_id:
+          type: integer
+          title: Tg Id
+        status:
+          type: string
+          title: Status
+        error:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Error
+      type: object
+      required:
+      - user_id
+      - tg_id
+      - status
+      title: DirectMessageResponse
+    DiscountGrantRequest:
+      properties:
+        user_id:
+          type: integer
+          title: User Id
+        valid_until:
+          type: string
+          format: date-time
+          title: Valid Until
+        discount_percent:
+          anyOf:
+          - type: integer
+            maximum: 100.0
+            minimum: 1.0
+          - type: 'null'
+          title: Discount Percent
+        fixed_amount_xtr:
+          anyOf:
+          - type: integer
+            maximum: 100000.0
+            minimum: 1.0
+          - type: 'null'
+          title: Fixed Amount Xtr
+        plan_ids:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Plan Ids
+        notify_user:
+          type: boolean
+          title: Notify User
+          default: false
+      type: object
+      required:
+      - user_id
+      - valid_until
+      title: DiscountGrantRequest
     DrainBody:
       properties:
         reason:
@@ -10226,6 +10628,35 @@ components:
       - content
       title: EnvFileUpdateBody
       description: Body for updating the env file.
+    ExtensionGrantRequest:
+      properties:
+        user_id:
+          type: integer
+          title: User Id
+        subscription_id:
+          type: string
+          title: Subscription Id
+        days:
+          type: integer
+          maximum: 365.0
+          minimum: 1.0
+          title: Days
+        reason:
+          type: string
+          maxLength: 160
+          minLength: 2
+          title: Reason
+        notify_user:
+          type: boolean
+          title: Notify User
+          default: false
+      type: object
+      required:
+      - user_id
+      - subscription_id
+      - days
+      - reason
+      title: ExtensionGrantRequest
     FailoverEvaluateOut:
       properties:
         generated_at:
@@ -10435,6 +10866,37 @@ components:
       title: FunnelKpisOut
       description: Funnel event counts and conversion ratios (spec 11.4). Window =
         last N days.
+    GrantResponse:
+      properties:
+        status:
+          type: string
+          title: Status
+        user_id:
+          type: integer
+          title: User Id
+        subscription:
+          anyOf:
+          - $ref: '#/components/schemas/SubscriptionOut'
+          - type: 'null'
+        promo_code:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Promo Code
+        event_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Event Id
+        notified:
+          type: boolean
+          title: Notified
+          default: false
+      type: object
+      required:
+      - status
+      - user_id
+      title: GrantResponse
     HTTPValidationError:
       properties:
         detail:
@@ -11044,6 +11506,10 @@ components:
           type: boolean
           title: Include Banned
           default: false
+        target:
+          anyOf:
+          - $ref: '#/components/schemas/NewsSendTarget'
+          - type: 'null'
       type: object
       required:
       - text
@@ -11061,6 +11527,62 @@ components:
       - broadcast_id
       - status
       title: NewsBroadcastResponse
+    NewsSendTarget:
+      properties:
+        kind:
+          type: string
+          pattern: ^(all|user_ids|tg_ids|filters)$
+          title: Kind
+          default: all
+        user_ids:
+          anyOf:
+          - items:
+              type: integer
+            type: array
+          - type: 'null'
+          title: User Ids
+        tg_ids:
+          anyOf:
+          - items:
+              type: integer
+            type: array
+          - type: 'null'
+          title: Tg Ids
+        filters:
+          anyOf:
+          - $ref: '#/components/schemas/NewsTargetFilters'
+          - type: 'null'
+        include_banned:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Include Banned
+      type: object
+      title: NewsSendTarget
+    NewsTargetFilters:
+      properties:
+        search:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Search
+        is_banned:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Banned
+        plan_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Plan Id
+        region:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Region
+      type: object
+      title: NewsTargetFilters
     NodeEntryOut:
       properties:
         id:
@@ -11315,6 +11837,24 @@ components:
         pending_count:
           type: integer
           title: Pending Count
+        stale_pending_count:
+          type: integer
+          title: Stale Pending Count
+        expired_count:
+          type: integer
+          title: Expired Count
+        refunded_count:
+          type: integer
+          title: Refunded Count
+        chargeback_count:
+          type: integer
+          title: Chargeback Count
+        amount_mismatch_count:
+          type: integer
+          title: Amount Mismatch Count
+        provider_failure_count:
+          type: integer
+          title: Provider Failure Count
         webhook_errors_24h:
           type: integer
           title: Webhook Errors 24H
@@ -11326,6 +11866,12 @@ components:
       - success_24h
       - failed_24h
       - pending_count
+      - stale_pending_count
+      - expired_count
+      - refunded_count
+      - chargeback_count
+      - amount_mismatch_count
+      - provider_failure_count
       - webhook_errors_24h
       - refund_rate_30d
       title: PaymentMonitorOut
@@ -11356,6 +11902,76 @@ components:
         external_id:
           type: string
           title: External Id
+        kind:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Kind
+        source:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Source
+        idempotency_key:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency Key
+        provider_payment_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Provider Payment Id
+        provider_status:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Provider Status
+        invoice_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Invoice Url
+        expected_amount:
+          anyOf:
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          - type: 'null'
+          title: Expected Amount
+        paid_amount:
+          anyOf:
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          - type: 'null'
+          title: Paid Amount
+        paid_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Paid At
+        expires_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Expires At
+        subscription_applied_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Subscription Applied At
+        failure_code:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Failure Code
+        failure_message:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Failure Message
         created_at:
           type: string
           format: date-time
@@ -12173,6 +12789,11 @@ components:
         plan_id:
           type: string
           title: Plan Id
+        payment_provider:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Payment Provider
       type: object
       required:
       - code
@@ -13883,6 +14504,12 @@ components:
           - type: integer
           - type: 'null'
           title: Total Amount
+        currency:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Currency
+          default: XTR
       type: object
       required:
       - tg_id
@@ -14183,6 +14810,35 @@ components:
       - secret
       - provisioning_uri
       title: TotpSetupResponse
+    TrialGrantRequest:
+      properties:
+        user_id:
+          type: integer
+          title: User Id
+        plan_id:
+          type: string
+          title: Plan Id
+        duration_hours:
+          type: integer
+          maximum: 720.0
+          minimum: 1.0
+          title: Duration Hours
+        device_limit:
+          type: integer
+          maximum: 20.0
+          minimum: 1.0
+          title: Device Limit
+          default: 1
+        notify_user:
+          type: boolean
+          title: Notify User
+          default: false
+      type: object
+      required:
+      - user_id
+      - plan_id
+      - duration_hours
+      title: TrialGrantRequest
     TrialStartRequest:
       properties:
         tg_id:
@@ -15063,6 +15719,46 @@ components:
         status:
           type: string
           title: Status
+        kind:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Kind
+        provider:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Provider
+        expected_amount:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Expected Amount
+        currency:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Currency
+        invoice_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Invoice Url
+        expires_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Expires At
+        subscription_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Subscription Id
+        free_activation:
+          type: boolean
+          title: Free Activation
+          default: false
         plan_id:
           anyOf:
           - type: string

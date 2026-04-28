@@ -14,20 +14,22 @@ import logging
 import time
 import uuid
 from datetime import datetime, timezone
+from typing import Any
 
 import httpx
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.logging_config import extra_for_event
 from app.core.redis_client import get_redis
-from app.models import User
+from app.models import Device, Server, Subscription, User
 
 _log = logging.getLogger(__name__)
 
 REDIS_QUEUE_KEY = "news:broadcast:queue"
 REDIS_STATUS_KEY_PREFIX = "news:broadcast:status:"
+REDIS_HISTORY_KEY = "news:broadcast:history"
 
 # Conservative: keep well under typical Telegram limits.
 DEFAULT_SEND_QPS = 20.0
@@ -43,6 +45,7 @@ async def enqueue_news_broadcast(
     parse_mode: str | None,
     include_banned: bool,
     created_by: str,
+    target: dict[str, Any] | None = None,
 ) -> str:
     """Create a broadcast job in Redis and enqueue it. Returns broadcast_id."""
     broadcast_id = uuid.uuid4().hex
@@ -56,6 +59,7 @@ async def enqueue_news_broadcast(
             "text": text,
             "parse_mode": parse_mode or "",
             "include_banned": "1" if include_banned else "0",
+            "target": json.dumps(target or {"kind": "all", "include_banned": include_banned}),
             "created_by": created_by,
             "created_at": now,
             "started_at": "",
@@ -67,6 +71,8 @@ async def enqueue_news_broadcast(
         },
     )
     await r.rpush(REDIS_QUEUE_KEY, broadcast_id)
+    await r.lpush(REDIS_HISTORY_KEY, broadcast_id)
+    await r.ltrim(REDIS_HISTORY_KEY, 0, 49)
     return broadcast_id
 
 
@@ -76,7 +82,18 @@ async def get_news_broadcast_status(broadcast_id: str) -> dict[str, str] | None:
     return data or None
 
 
-async def _send_telegram_message(
+async def get_recent_news_broadcasts(limit: int = 20) -> list[dict[str, str]]:
+    r = get_redis()
+    ids = await r.lrange(REDIS_HISTORY_KEY, 0, max(0, limit - 1))
+    items: list[dict[str, str]] = []
+    for broadcast_id in ids:
+        data = await get_news_broadcast_status(str(broadcast_id))
+        if data:
+            items.append(data)
+    return items
+
+
+async def send_telegram_message(
     client: httpx.AsyncClient,
     *,
     token: str,
@@ -98,6 +115,48 @@ async def _send_telegram_message(
         return False, f"telegram_exc_{type(e).__name__}"
 
 
+def _targeted_users_query(target: dict[str, Any], include_banned: bool):
+    query = select(User.tg_id).where(User.tg_id.isnot(None))
+    if not include_banned:
+        query = query.where(User.is_banned.is_(False))
+
+    kind = str(target.get("kind") or "all")
+    if kind == "user_ids":
+        ids = [int(v) for v in target.get("user_ids") or []]
+        query = query.where(User.id.in_(ids or [-1]))
+    elif kind == "tg_ids":
+        ids = [int(v) for v in target.get("tg_ids") or []]
+        query = query.where(User.tg_id.in_(ids or [-1]))
+    elif kind == "filters":
+        filters = target.get("filters") if isinstance(target.get("filters"), dict) else {}
+        search = str(filters.get("search") or "").strip()
+        if search:
+            if search.isdigit():
+                query = query.where(User.tg_id == int(search))
+            elif search.startswith("+"):
+                query = query.where(User.phone.ilike(f"%{search}%"))
+            else:
+                query = query.where(
+                    or_(User.email.ilike(f"%{search}%"), User.phone.ilike(f"%{search}%"))
+                )
+        banned = filters.get("is_banned")
+        if isinstance(banned, bool):
+            query = query.where(User.is_banned.is_(banned))
+        plan_id = str(filters.get("plan_id") or "").strip()
+        if plan_id:
+            query = query.join(Subscription, Subscription.user_id == User.id).where(
+                Subscription.plan_id == plan_id
+            )
+        region = str(filters.get("region") or "").strip()
+        if region:
+            query = query.join(Device, Device.user_id == User.id).join(
+                Server, Server.id == Device.server_id
+            ).where(Server.region == region)
+        if plan_id or region:
+            query = query.distinct()
+    return query
+
+
 async def _run_one_broadcast(session: AsyncSession, broadcast_id: str) -> None:
     r = get_redis()
     status_key = _status_key(broadcast_id)
@@ -107,6 +166,10 @@ async def _run_one_broadcast(session: AsyncSession, broadcast_id: str) -> None:
     text = raw.get("text", "")
     parse_mode = (raw.get("parse_mode") or "").strip() or None
     include_banned = raw.get("include_banned", "0") == "1"
+    try:
+        target = json.loads(raw.get("target") or "{}")
+    except json.JSONDecodeError:
+        target = {"kind": "all"}
     token = (getattr(settings, "telegram_bot_token", None) or "").strip()
     if not token:
         await r.hset(status_key, mapping={"status": "failed", "last_error": "no_bot_token"})
@@ -123,9 +186,7 @@ async def _run_one_broadcast(session: AsyncSession, broadcast_id: str) -> None:
     qps = float(getattr(settings, "news_broadcast_qps", 0) or 0) or DEFAULT_SEND_QPS
     delay_s = 1.0 / max(1.0, qps)
 
-    query = select(User.tg_id).where(User.tg_id.isnot(None))
-    if not include_banned:
-        query = query.where(User.is_banned.is_(False))
+    query = _targeted_users_query(target if isinstance(target, dict) else {}, include_banned)
     result = await session.stream(query)
 
     sent = failed = total = 0
@@ -135,7 +196,7 @@ async def _run_one_broadcast(session: AsyncSession, broadcast_id: str) -> None:
         async for row in result:
             (tg_id,) = row
             total += 1
-            ok, err = await _send_telegram_message(
+            ok, err = await send_telegram_message(
                 client,
                 token=token,
                 tg_id=int(tg_id),
@@ -212,4 +273,3 @@ async def run_news_broadcast_loop() -> None:
                 exc_info=True,
             )
             await asyncio.sleep(1.0)
-

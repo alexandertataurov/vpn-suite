@@ -159,10 +159,10 @@ describe("BillingPage", () => {
 
     fireEvent.click(await screen.findByRole("button", { name: "Add plan" }));
     expect(await screen.findByRole("dialog", { name: "Add plan" })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Back" }));
+    fireEvent.click(screen.getByRole("button", { name: "Close" }));
 
-    const deleteButtons = await screen.findAllByRole("button", { name: "Delete" });
-    fireEvent.click(deleteButtons[1]!);
+    fireEvent.click(await screen.findByRole("button", { name: "Actions for plan plan-free" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Delete" }));
     const dialog = await screen.findByRole("dialog", { name: "Delete plan" });
     expect(within(dialog).getByText("Permanent destructive action")).toBeInTheDocument();
     expect(within(dialog).getByRole("button", { name: "Delete plan" })).toBeDisabled();
@@ -203,7 +203,8 @@ describe("BillingPage", () => {
     setupBillingHandlers();
     renderBilling("/billing?tab=subscription-records");
 
-    fireEvent.click(await screen.findByRole("button", { name: "Set grace" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Actions for subscription sub-1" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Set grace" }));
 
     expect(await screen.findByRole("dialog", { name: "Set grace period" })).toBeInTheDocument();
   });

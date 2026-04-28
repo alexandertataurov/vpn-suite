@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { CreditCard, RefreshCw, Search, SlidersHorizontal, X } from "lucide-react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useApiQuery } from "@/hooks/api/useApiQuery";
 import { buildUsersPath } from "@/hooks/useUsers";
 import { userKeys } from "@/features/users/services/user.query-keys";
 import {
   Badge,
+  ActionMenu,
   Button,
   Card,
   DataTable,
@@ -31,6 +32,14 @@ import {
   getTgRequisites,
   statusVariant,
 } from "@/features/users/UsersPage.sections";
+import {
+  attentionSeverityVariant,
+  compareAttentionSummaries,
+  computeCustomerAttention,
+  computeDeviceAttentionSignal,
+  type CustomerAttentionSignal,
+  type CustomerAttentionSummary,
+} from "@/features/customer-attention/attention";
 import type {
   DeviceList,
   DeviceOut,
@@ -46,9 +55,10 @@ import type {
 } from "@/shared/types/admin-api";
 
 type UserStatusFilter = "all" | "true" | "false";
-type CustomerTab = "profile" | "devices" | "billing" | "payments";
+type CustomerTab = "attention" | "profile" | "devices" | "billing" | "payments";
 type SortMode = "updated_desc" | "created_desc" | "email_asc" | "tg_asc" | "status";
 type DeviceSort = "issued_at_desc" | "issued_at_asc" | "user" | "node" | "status";
+type AttentionFilter = "all" | "critical" | "billing" | "device" | "trial" | "banned" | "no_devices";
 
 interface CustomerFilters {
   search: string;
@@ -89,6 +99,14 @@ function parseSelectedUserId(searchParams: URLSearchParams): number | null {
   if (!raw) return null;
   const parsed = Number(raw);
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
+function parseTab(searchParams: URLSearchParams): CustomerTab {
+  const value = searchParams.get("tab");
+  if (value === "attention" || value === "profile" || value === "devices" || value === "billing" || value === "payments") {
+    return value;
+  }
+  return "attention";
 }
 
 function formatMoney(payment: PaymentOut): string {
@@ -146,6 +164,32 @@ function deviceStatus(device: DeviceOut): "active" | "suspended" | "revoked" {
   if (device.revoked_at) return "revoked";
   if (device.suspended_at) return "suspended";
   return "active";
+}
+
+function attentionActionLabel(action: CustomerAttentionSignal["action"]): string {
+  if (action === "recover_device") return "Recover";
+  if (action === "message_user") return "Message";
+  if (action === "grant_extension") return "Grant";
+  if (action === "open_billing") return "Billing";
+  if (action === "review_plan") return "Review plan";
+  return "Inspect";
+}
+
+function tabForAttention(signal: CustomerAttentionSignal): CustomerTab {
+  if (signal.source === "device") return "devices";
+  if (signal.source === "payment" || signal.source === "subscription" || signal.source === "plan") return "billing";
+  return "profile";
+}
+
+function matchesAttentionFilter(summary: CustomerAttentionSummary, filter: AttentionFilter): boolean {
+  if (filter === "all") return summary.topSignal.severity !== "healthy";
+  if (filter === "critical") return summary.signals.some((signal) => signal.severity === "critical");
+  if (filter === "billing") return summary.signals.some((signal) => signal.category === "billing");
+  if (filter === "device") return summary.signals.some((signal) => signal.category === "device" && signal.source === "device");
+  if (filter === "trial") return summary.signals.some((signal) => signal.category === "trial");
+  if (filter === "banned") return summary.signals.some((signal) => signal.id.includes(":banned"));
+  if (filter === "no_devices") return summary.signals.some((signal) => signal.id.includes(":none"));
+  return true;
 }
 
 function sortUsers(users: UserOut[], mode: SortMode): UserOut[] {
@@ -210,10 +254,12 @@ function CopyIdButton({ value }: { value: string }) {
 
 export function CustomerOpsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const selectedUserId = parseSelectedUserId(searchParams);
   const [draft, setDraft] = useState<CustomerFilters>(DEFAULT_FILTERS);
   const [filters, setFilters] = useState<CustomerFilters>(DEFAULT_FILTERS);
-  const [activeTab, setActiveTab] = useState<CustomerTab>("profile");
+  const [activeTab, setActiveTab] = useState<CustomerTab>(() => parseTab(searchParams));
+  const [attentionFilter, setAttentionFilter] = useState<AttentionFilter>("all");
   const [selectedDevice, setSelectedDevice] = useState<DeviceOut | null>(null);
   const [selectedPayment, setSelectedPayment] = useState<PaymentOut | null>(null);
   const [selectedSubscription, setSelectedSubscription] = useState<SubscriptionOut | null>(null);
@@ -330,6 +376,10 @@ export function CustomerOpsPage() {
   const selectedSummary = sortedUsers.find((user) => user.id === selectedUserId) ?? null;
 
   useEffect(() => {
+    setActiveTab(parseTab(searchParams));
+  }, [searchParams]);
+
+  useEffect(() => {
     if (selectedUserId != null) return;
     const firstUser = sortedUsers[0];
     if (!firstUser) return;
@@ -356,7 +406,26 @@ export function CustomerOpsPage() {
       const next = new URLSearchParams(searchParams);
       next.set("user", String(userId));
       setSearchParams(next, { replace: true });
-      setActiveTab("profile");
+    },
+    [searchParams, setSearchParams]
+  );
+
+  const setTab = useCallback(
+    (tab: CustomerTab) => {
+      const next = new URLSearchParams(searchParams);
+      next.set("tab", tab);
+      setSearchParams(next, { replace: true });
+      setActiveTab(tab);
+    },
+    [searchParams, setSearchParams]
+  );
+
+  const selectAttention = useCallback(
+    (signal: CustomerAttentionSignal) => {
+      const next = new URLSearchParams(searchParams);
+      next.set("user", String(signal.userId));
+      next.set("tab", tabForAttention(signal));
+      setSearchParams(next, { replace: true });
     },
     [searchParams, setSearchParams]
   );
@@ -412,10 +481,53 @@ export function CustomerOpsPage() {
   const newUsers = sortedUsers.filter((user) => isRecent(user.created_at)).length;
   const newDevices = globalDeviceItems.filter((device) => isRecent(device.issued_at)).length;
   const activeGlobalSubscriptions = globalSubscriptionItems.filter((sub) => (sub.effective_status ?? sub.status) === "active").length;
+  const devicesByUser = new Map<number, DeviceOut[]>();
+  for (const device of globalDeviceItems) {
+    const next = devicesByUser.get(device.user_id) ?? [];
+    next.push(device);
+    devicesByUser.set(device.user_id, next);
+  }
+  const subscriptionsByUser = new Map<number, SubscriptionOut[]>();
+  for (const sub of globalSubscriptionItems) {
+    const next = subscriptionsByUser.get(sub.user_id) ?? [];
+    next.push(sub);
+    subscriptionsByUser.set(sub.user_id, next);
+  }
+  const paymentsByUser = new Map<number, PaymentOut[]>();
+  for (const payment of globalPaymentItems) {
+    const next = paymentsByUser.get(payment.user_id) ?? [];
+    next.push(payment);
+    paymentsByUser.set(payment.user_id, next);
+  }
+  const attentionSummaries = sortedUsers
+    .map((user) =>
+      computeCustomerAttention({
+        user,
+        devices: devicesByUser.get(user.id) ?? [],
+        subscriptions: subscriptionsByUser.get(user.id) ?? [],
+        payments: paymentsByUser.get(user.id) ?? [],
+        plans: plans?.items ?? [],
+      })
+    )
+    .sort(compareAttentionSummaries);
+  const attentionByUser = new Map(attentionSummaries.map((summary) => [summary.userId, summary]));
+  const filteredAttention = attentionSummaries.filter((summary) => matchesAttentionFilter(summary, attentionFilter));
+  const criticalAttention = attentionSummaries.filter((summary) =>
+    summary.signals.some((signal) => signal.severity === "critical")
+  ).length;
+  const billingAttention = attentionSummaries.filter((summary) =>
+    summary.signals.some((signal) => signal.category === "billing")
+  ).length;
+  const deviceAttention = attentionSummaries.filter((summary) =>
+    summary.signals.some((signal) => signal.category === "device" && signal.source === "device")
+  ).length;
+  const selectedAttention = selectedUserId != null ? attentionByUser.get(selectedUserId) ?? null : null;
+  const selectedTopSignal = selectedAttention?.topSignal ?? null;
 
   const userRows = sortedUsers.map((user) => {
     const tg = getTgRequisites(user.meta);
     const display = user.email || (tg?.username ? `@${tg.username}` : null) || `User #${user.id}`;
+    const userAttention = attentionByUser.get(user.id);
     return {
       id: String(user.id),
       user: (
@@ -432,9 +544,16 @@ export function CustomerOpsPage() {
         </button>
       ),
       status: (
-        <Badge size="sm" variant={user.is_banned ? "danger" : "success"}>
-          {user.is_banned ? "Banned" : "Active"}
-        </Badge>
+        <div className="customer-ops-page__cell-stack">
+          <Badge size="sm" variant={user.is_banned ? "danger" : "success"}>
+            {user.is_banned ? "Banned" : "Active"}
+          </Badge>
+          {userAttention ? (
+            <Badge size="sm" variant={attentionSeverityVariant(userAttention.topSignal.severity)}>
+              {userAttention.topSignal.title}
+            </Badge>
+          ) : null}
+        </div>
       ),
       contact: (
         <div className="customer-ops-page__cell-stack">
@@ -443,9 +562,27 @@ export function CustomerOpsPage() {
         </div>
       ),
       action: (
-        <Button type="button" size="sm" variant={selectedUserId === user.id ? "primary" : "ghost"} onClick={() => selectUser(user.id)}>
-          Drill down
-        </Button>
+        <ActionMenu
+          label={`Actions for user ${user.id}`}
+          items={[
+            { id: "inspect", label: "Inspect", onSelect: () => selectUser(user.id) },
+            {
+              id: "attention",
+              label: "Review attention",
+              onSelect: () => {
+                selectUser(user.id);
+                setTab("attention");
+              },
+            },
+            {
+              id: "customer-ops",
+              label: "Open Users page",
+              onSelect: () => {
+                navigate(`/users?user=${user.id}`);
+              },
+            },
+          ]}
+        />
       ),
       selected: selectedUserId === user.id,
     };
@@ -496,10 +633,10 @@ export function CustomerOpsPage() {
             tone={activeGlobalDevices > 0 ? "success" : "neutral"}
           />
           <InsightMetric
-            label="Active subscriptions"
-            value={String(activeGlobalSubscriptions)}
-            detail={`${globalSubscriptionItems.length} loaded`}
-            tone={activeGlobalSubscriptions > 0 ? "success" : "neutral"}
+            label="Needs attention"
+            value={String(attentionSummaries.filter((summary) => summary.topSignal.severity !== "healthy").length)}
+            detail={`${criticalAttention} critical · ${billingAttention} billing`}
+            tone={criticalAttention > 0 ? "info" : activeGlobalSubscriptions > 0 ? "success" : "neutral"}
           />
         </div>
       </Card>
@@ -618,6 +755,90 @@ export function CustomerOpsPage() {
         </div>
       </Card>
 
+      <Card variant="outlined" className="customer-ops-page__attention" aria-label="Customer attention queue">
+        <div className="customer-ops-page__attention-head">
+          <SectionHeader
+            label="Attention queue"
+            note={`${filteredAttention.length} shown · ${criticalAttention} critical · ${deviceAttention} device health`}
+          />
+          <div className="customer-ops-page__attention-filters" aria-label="Attention filters">
+            {([
+              ["all", "Open"],
+              ["critical", "Critical"],
+              ["billing", "Billing"],
+              ["device", "Device health"],
+              ["trial", "Trial"],
+              ["banned", "Banned"],
+              ["no_devices", "No devices"],
+            ] as Array<[AttentionFilter, string]>).map(([value, label]) => (
+              <Button
+                key={value}
+                type="button"
+                size="sm"
+                variant={attentionFilter === value ? "primary" : "ghost"}
+                onClick={() => setAttentionFilter(value)}
+                aria-pressed={attentionFilter === value}
+              >
+                {label}
+              </Button>
+            ))}
+          </div>
+        </div>
+        {filteredAttention.length > 0 ? (
+          <div className="data-table-wrap">
+            <DataTable
+              density="compact"
+              columns={[
+                { key: "severity", header: "Severity" },
+                { key: "customer", header: "Customer" },
+                { key: "issue", header: "Issue" },
+                { key: "source", header: "Source" },
+                { key: "action", header: "Action" },
+              ]}
+              rows={filteredAttention.map((summary) => {
+                const user = sortedUsers.find((item) => item.id === summary.userId);
+                const signal = summary.topSignal;
+                return {
+                  id: String(summary.userId),
+                  severity: (
+                    <Badge size="sm" variant={attentionSeverityVariant(signal.severity)}>
+                      {signal.severity}
+                    </Badge>
+                  ),
+                  customer: (
+                    <button
+                      type="button"
+                      className="customer-ops-page__user-button"
+                      onClick={() => selectAttention(signal)}
+                    >
+                      <span>{user?.email || `User #${summary.userId}`}</span>
+                      <MetaText>TG {user?.tg_id ?? "—"}</MetaText>
+                    </button>
+                  ),
+                  issue: (
+                    <div className="customer-ops-page__cell-stack">
+                      <strong>{signal.title}</strong>
+                      <MetaText>{signal.detail}</MetaText>
+                    </div>
+                  ),
+                  source: `${signal.source} · ${signal.category}`,
+                  action: (
+                    <Button type="button" size="sm" variant="default" onClick={() => selectAttention(signal)}>
+                      {attentionActionLabel(signal.action)}
+                    </Button>
+                  ),
+                  selected: selectedUserId === summary.userId,
+                };
+              })}
+              getRowKey={(row) => row.id}
+              getRowClassName={(row) => (row.selected ? "customer-ops-page__row--selected" : "")}
+            />
+          </div>
+        ) : (
+          <EmptyState message="No customers match this attention filter." />
+        )}
+      </Card>
+
       <section className="customer-ops-page__workspace">
         <Card variant="outlined" className="customer-ops-page__list-pane">
           <SectionHeader label="Customers" note={`${sortedUsers.length} loaded`} />
@@ -656,6 +877,14 @@ export function CustomerOpsPage() {
                   <MetaText>
                     TG {selectedUser?.tg_id ?? selectedSummary?.tg_id ?? "—"} · {selectedUser?.is_banned ? "banned" : "active"}
                   </MetaText>
+                  {selectedTopSignal ? (
+                    <div className="customer-ops-page__recommendation">
+                      <Badge size="sm" variant={attentionSeverityVariant(selectedTopSignal.severity)}>
+                        {selectedTopSignal.title}
+                      </Badge>
+                      <MetaText>{selectedTopSignal.detail}</MetaText>
+                    </div>
+                  ) : null}
                 </div>
                 <div className="customer-ops-page__kpis">
                   <Badge variant={activeSubscriptions > 0 ? "success" : "neutral"}>{activeSubscriptions} active subs</Badge>
@@ -664,13 +893,18 @@ export function CustomerOpsPage() {
                 </div>
               </div>
 
-              <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as CustomerTab)}>
+              <Tabs value={activeTab} onValueChange={(value) => setTab(value as CustomerTab)}>
                 <TabsList className="customer-ops-page__tabs">
+                  <TabsTrigger value="attention">Attention</TabsTrigger>
                   <TabsTrigger value="profile">Profile</TabsTrigger>
                   <TabsTrigger value="devices">Devices</TabsTrigger>
                   <TabsTrigger value="billing">Billing</TabsTrigger>
                   <TabsTrigger value="payments">Payments</TabsTrigger>
                 </TabsList>
+
+                <TabsPanel value="attention">
+                  <AttentionPanel summary={selectedAttention} onSelectSignal={selectAttention} />
+                </TabsPanel>
 
                 <TabsPanel value="profile">
                   <ProfilePanel user={selectedUser} devices={deviceItems} subscriptions={subscriptionItems} payments={paymentItems} />
@@ -759,6 +993,36 @@ function ProfilePanel({
   );
 }
 
+function AttentionPanel({
+  summary,
+  onSelectSignal,
+}: {
+  summary: CustomerAttentionSummary | null;
+  onSelectSignal: (signal: CustomerAttentionSignal) => void;
+}) {
+  if (!summary) return <EmptyState message="No attention context is loaded for this customer." />;
+  return (
+    <div className="customer-ops-page__attention-list">
+      {summary.signals.map((signal) => (
+        <section key={signal.id} className="customer-ops-page__attention-item">
+          <div className="customer-ops-page__attention-item-copy">
+            <Badge size="sm" variant={attentionSeverityVariant(signal.severity)}>
+              {signal.severity}
+            </Badge>
+            <div>
+              <strong>{signal.title}</strong>
+              <MetaText>{signal.detail}</MetaText>
+            </div>
+          </div>
+          <Button type="button" size="sm" variant="default" onClick={() => onSelectSignal(signal)}>
+            {attentionActionLabel(signal.action)}
+          </Button>
+        </section>
+      ))}
+    </div>
+  );
+}
+
 function Metric({ label, value }: { label: string; value: string }) {
   return (
     <div className="customer-ops-page__metric">
@@ -817,21 +1081,33 @@ function DevicesPanel({
         ]}
         rows={devices.map((device) => {
           const status = deviceStatus(device);
+          const attentionSignal = computeDeviceAttentionSignal(device);
           return {
             id: device.id,
             status: (
-              <Badge size="sm" variant={statusVariant(status)}>
-                {status}
-              </Badge>
+              <div className="customer-ops-page__cell-stack">
+                <Badge size="sm" variant={statusVariant(status)}>
+                  {status}
+                </Badge>
+                {attentionSignal ? (
+                  <Badge size="sm" variant={attentionSeverityVariant(attentionSignal.severity)}>
+                    {attentionSignal.title}
+                  </Badge>
+                ) : null}
+              </div>
             ),
             device: device.device_name ?? device.id,
             server: device.server_id,
             mode: formatDeliveryMode(device.delivery_mode),
             issued: formatRelative(device.issued_at),
             action: (
-              <Button type="button" size="sm" variant="ghost" onClick={() => onOpenDevice(device)}>
-                Open
-              </Button>
+              <ActionMenu
+                label={`Device actions for ${device.device_name ?? device.id}`}
+                items={[
+                  { id: "open", label: "Inspect", onSelect: () => onOpenDevice(device) },
+                  { id: "recover", label: "Recover", onSelect: () => onOpenDevice(device), disabled: !attentionSignal },
+                ]}
+              />
             ),
           };
         })}
@@ -879,9 +1155,13 @@ function BillingPanel({
             valid: formatRelative(sub.valid_until),
             devices: sub.device_limit,
             action: (
-              <Button type="button" size="sm" variant="ghost" onClick={() => onOpenSubscription(sub)}>
-                Open
-              </Button>
+              <ActionMenu
+                label={`Subscription actions for ${sub.id}`}
+                items={[
+                  { id: "open", label: "Inspect", onSelect: () => onOpenSubscription(sub) },
+                  { id: "grant", label: "Grant extension", onSelect: () => onOpenSubscription(sub) },
+                ]}
+              />
             ),
           };
         })}
@@ -927,9 +1207,13 @@ function PaymentsPanel({
           subscription: payment.subscription_id,
           created: formatRelative(payment.created_at),
           action: (
-            <Button type="button" size="sm" variant="ghost" onClick={() => onOpenPayment(payment)}>
-              Open
-            </Button>
+            <ActionMenu
+              label={`Payment actions for ${payment.id}`}
+              items={[
+                { id: "open", label: "Inspect", onSelect: () => onOpenPayment(payment) },
+                { id: "billing", label: "Open billing context", onSelect: () => onOpenPayment(payment) },
+              ]}
+            />
           ),
         }))}
         getRowKey={(row) => row.id}

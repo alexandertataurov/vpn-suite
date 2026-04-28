@@ -36,6 +36,7 @@ import type { DeviceList, DeviceOut, DeviceSummaryOut } from "@/shared/types/adm
 import { ConfigQrModal } from "@/features/devices/ConfigQrModal";
 import { DeviceDetailModal } from "@/features/devices/DeviceDetailModal";
 import { RevokeDeviceModal } from "@/features/devices/RevokeDeviceModal";
+import { getDeviceAttentionScore } from "@/features/customer-attention/attention";
 
 interface ConfigEntryOut {
   download_url: string;
@@ -93,21 +94,6 @@ function matchesDeviceQuery(device: DeviceOut, query: string): boolean {
   ]
     .filter((value): value is string => Boolean(value))
     .some((value) => value.toLowerCase().includes(q));
-}
-
-function getDeviceAttentionScore(device: DeviceOut): number {
-  const telemetry = device.telemetry;
-  const conn = connectionStatus(device);
-  let score = 0;
-  if (conn === "Node offline") score += 4;
-  if (conn === "Disconnected") score += 3;
-  if (conn === "No telemetry") score += 2;
-  if (telemetry?.reconciliation_status === "broken") score += 4;
-  if (telemetry?.reconciliation_status === "needs_reconcile") score += 2;
-  if (!device.allowed_ips) score += 2;
-  if ((telemetry?.transfer_rx_bytes ?? 0) + (telemetry?.transfer_tx_bytes ?? 0) === 0) score += 1;
-  if (device.suspended_at) score += 1;
-  return score;
 }
 
 export function DevicesPage() {

@@ -109,6 +109,16 @@ async def validate_promo_code(
     if applicable is not None and len(applicable) > 0 and plan_id not in applicable:
         raise PromoCodeError(PromoErrorCode.PROMO_PLAN_INELIGIBLE, "Not valid for plan")
 
+    constraints = getattr(promo, "constraints", None) or {}
+    allowed_user_ids = constraints.get("user_ids")
+    if isinstance(allowed_user_ids, list) and allowed_user_ids:
+        try:
+            allowed = {int(v) for v in allowed_user_ids}
+        except (TypeError, ValueError):
+            allowed = set()
+        if user_id not in allowed:
+            raise PromoCodeError(PromoErrorCode.PROMO_PLAN_INELIGIBLE, "Not valid for user")
+
     max_per_user = getattr(promo, "max_uses_per_user", 1)
     red_count = await db.execute(
         select(func.count())
